@@ -1,5 +1,6 @@
 /* point class
  * stores an n-tuple with a time of appearance
+ * DOES NOT store the dimension of the point
  */
 
 #include <iostream>
