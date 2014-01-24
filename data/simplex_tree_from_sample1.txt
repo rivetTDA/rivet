@@ -1,0 +1,49 @@
+mlwright@prune % ./run data/sample1.txt
+READING FILE:
+  dimension of data: 2
+  maximum dimension of simplices: 4
+  maximum distance: 4.1
+  read 5 points; input finished
+SORTING POINTS BY BIRTH TIME
+TESTING VECTOR:
+  point 0: (0.3, 1.5) born at time 1
+  point 1: (5.6, 2.3) born at time 2
+  point 2: (3.3, 2) born at time 2.5
+  point 3: (4.2, 3.8) born at time 3.2
+  point 4: (2.9, 5.1) born at time 4
+COMPUTING DISTANCES:
+TESTING EDGES:
+  distance from point 0 to point 1: 5.36004
+  distance from point 0 to point 2: 3.04138
+  distance from point 0 to point 3: 4.52769
+  distance from point 0 to point 4: 4.44072
+  distance from point 1 to point 2: 2.31948
+  distance from point 1 to point 3: 2.05183
+  distance from point 1 to point 4: 3.88973
+  distance from point 2 to point 3: 2.01246
+  distance from point 2 to point 4: 3.1257
+  distance from point 3 to point 4: 1.83848
+BUILDING FILTRATION:
+TESTING SIMPLEX TREE:
+  NODE: vertex -1; index (-1, -1); parent: NULL; children: 0, 1, 2, 3, 4
+    NODE: vertex 0; index (1, 0); parent: -1; children: 2
+      NODE: vertex 2; index (2.5, 3.04138); parent: 0; children: 3, 4
+        NODE: vertex 3; index (3.2, 3.04138); parent: 2; children: 4
+          NODE: vertex 4; index (4, 3.04138); parent: 3; children: NONE
+        NODE: vertex 4; index (4, 3.1257); parent: 2; children: NONE
+    NODE: vertex 1; index (2, 0); parent: -1; children: 2, 3, 4
+      NODE: vertex 2; index (2.5, 2.31948); parent: 1; children: 3, 4
+        NODE: vertex 3; index (3.2, 2.31948); parent: 2; children: 4
+          NODE: vertex 4; index (4, 2.31948); parent: 3; children: NONE
+        NODE: vertex 4; index (4, 3.1257); parent: 2; children: NONE
+      NODE: vertex 3; index (3.2, 2.05183); parent: 1; children: 4
+        NODE: vertex 4; index (4, 2.05183); parent: 3; children: NONE
+      NODE: vertex 4; index (4, 3.88973); parent: 1; children: NONE
+    NODE: vertex 2; index (2.5, 0); parent: -1; children: 3, 4
+      NODE: vertex 3; index (3.2, 2.01246); parent: 2; children: 4
+        NODE: vertex 4; index (4, 2.01246); parent: 3; children: NONE
+      NODE: vertex 4; index (4, 3.1257); parent: 2; children: NONE
+    NODE: vertex 3; index (3.2, 0); parent: -1; children: 4
+      NODE: vertex 4; index (4, 1.83848); parent: 3; children: NONE
+    NODE: vertex 4; index (4, 0); parent: -1; children: NONE
+

@@ -11,6 +11,7 @@ class Point {
 		double* get_coords();		//returns the n-tuple of coordinates
 		double get_birth();		//returns the time that this point appears
 		void print();	//TESTING
+		bool operator < (const Point &) const;	//comparison operator
 		
 	private:
 		double* coords;	//stores the n-tuple of coordinates
@@ -42,3 +43,18 @@ void Point::print()
 {
 	std::cout << "  Point.print(): " << coords[0] << ", " << coords[1] << "; " << birth << "; coords-address: " << coords << "\n ";
 }
+
+//overloaded less than operator, for sorting a list of Points
+bool Point::operator < (const Point & other) const
+{
+	if(birth < other.birth)
+		return true;
+	/* else */
+	return false;
+}
+
+//SHOULD OVERLOAD OTHER COMPARISON OPERATORS TOO!!!
+
+
+
+

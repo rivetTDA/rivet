@@ -20,7 +20,7 @@ class STNode {
 		void add_child(STNode*);		//adds a new child to this node
 		std::vector<STNode*> get_children();		//returns a vector of pointers to children nodes
 		
-		//also needs a function to return the SIMPLEX represented by this node
+		//also needs a function to return the SIMPLEX represented by this node??
 		
 		void print();				//print a text representation of this node
 		
