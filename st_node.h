@@ -10,17 +10,18 @@
 class STNode {
 	public:
 		STNode();					//constructor for empty node
-		STNode(int, STNode*, double, double);		//constructor for non-empty node
+		STNode(int, STNode*, int, int, int);		//constructor for non-empty node
 		
 		int get_vertex();			//returns the vertex index
 		STNode get_parent();			//returns a pointer to the parent node
-		double get_birth();			//returns the minimum time at which this simplex exits
-		double get_dist();			//returns the minimum distance at which this simplex exists
+		int get_birth();			//returns the minimum time index at which this simplex exits
+		int get_dist();			//returns the minimum distance index at which this simplex exists
+		
+		void set_global_index(int);		//sets the global index for the simplex represented by this node
+		int get_global_index();			//returns the global index for the simplex represented by this node
 		
 		void add_child(STNode*);		//adds a new child to this node
 		std::vector<STNode*> get_children();		//returns a vector of pointers to children nodes
-		
-		//also needs a function to return the SIMPLEX represented by this node??
 		
 		void print();				//print a text representation of this node
 		
@@ -28,9 +29,9 @@ class STNode {
 		int vertex;			//the index of the vertex represented by this node
 		STNode * parent;		//pointer to the parent node
 		std::vector<STNode*> children;	//pointers to children nodes
-		double birth;			//minimum time at which this simplex exists
-		double dist;			//minimum distance at which this simplex exists
-		
+		int birth;			//minimum time at which this simplex exists
+		int dist;			//minimum distance at which this simplex exists
+		int g_index;		//global index of this simplex (global indexes provide a total ordering of simplices in the tree)
 		
 };
 

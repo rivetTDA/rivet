@@ -10,6 +10,7 @@
 #include "point.h"
 #include "simplex_tree.h"
 #include "st_node.h"
+#include "map_matrix.h"
 
 using namespace std;
 
@@ -122,8 +123,41 @@ int main(int argc, char* argv[])
 	cout << "TESTING SIMPLEX TREE:\n";
 	simplex_tree.print();	
 	
+	//TEST: 
+	cout << "  vertex lists for each of the " << simplex_tree.get_num_simplices() << " simplices:\n";
+	for(int i=0; i < simplex_tree.get_num_simplices(); i++)
+	{
+		cout << "    simplex " << i << ": ";
+		vector<int> vert = simplex_tree.find_vertices(i);
+		for(int j=0; j<vert.size(); j++)
+			cout << vert[j] << ", ";
+		cout << "\n";
+	}
 	
 	
+	//build boundary matrices
+	cout << "COMPUTING BOUNDARY MATRICES\n";
+	
+	//MapMatrix* m = simplex_tree.get_boundary_mx(time, dist, dim);
+	MapMatrix* m = simplex_tree.get_boundary_mx(4, 3, 1);
+	(*m).print();
+	
+	m = simplex_tree.get_boundary_mx(4, 7, 1);
+	(*m).print();
+	
+	m = simplex_tree.get_boundary_mx(4, 7, 2);
+	(*m).print();
+	
+	m = simplex_tree.get_boundary_mx(4, 7, 3);
+	(*m).print();
+	
+	m = simplex_tree.get_boundary_mx(4, 7, 4);
+	(*m).print();
+
+	m = simplex_tree.get_boundary_mx(4, 7, 5);
+	(*m).print();
+		
+	cout << "TO DO: store local index lists with each boundary matrix\n";
 	
 	//end
 	cout << "Done.\n\n";

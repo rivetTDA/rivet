@@ -10,16 +10,18 @@ STNode::STNode()
 	parent = NULL;
 	birth = -1;
 	dist = -1;
+	g_index = -1;
 }
 
 //constructor for non-empty node
-STNode::STNode(int v, STNode* p, double b, double d)
+STNode::STNode(int v, STNode* p, int b, int d, int g)
 {
 	//set private values
 	vertex = v;
 	parent = p;
 	birth = b;
 	dist = d;
+	g_index = g;
 	
 	//add this node as a child of its parent
 	if(parent)
@@ -39,16 +41,29 @@ STNode STNode::get_parent()
 }
 
 //returns the minimum time at which this simplex exits
-double STNode::get_birth()
+int STNode::get_birth()
 {
 	return birth;
 }	
 
 //returns the minimum distance at which this simplex exists
-double STNode::get_dist()
+int STNode::get_dist()
 {
 	return dist;
 }
+
+//sets the global index for the simplex represented by this node
+void STNode::set_global_index(int i)
+{
+	g_index = i;
+}
+
+//returns the global index for the simplex represented by this node
+int STNode::get_global_index()
+{
+	return g_index;
+}
+
 
 //adds a new child to this node
 void STNode::add_child(STNode* child)
@@ -69,7 +84,7 @@ std::vector<STNode*> STNode::get_children()
 //print a text representation of this node
 void STNode::print()
 {
-	std::cout << "NODE: vertex " << vertex <<  "; index (" << birth << ", " << dist << "); parent: ";
+	std::cout << "NODE: vertex " << vertex <<  "; global index: " << g_index << "; multi-index: (" << birth << ", " << dist << "); parent: ";
 	if(parent)
 		std::cout << (*parent).get_vertex() << "; ";
 	else
