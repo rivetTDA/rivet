@@ -18,6 +18,7 @@ class SimplexTree {
 		int time_index(double);				//returns the index of a time value, or -1 if not found
 		
 		MapMatrix* get_boundary_mx(int time, int dist, int dim);	//computes a boundary matrix for simplices of a given dimension at the specified multi-index
+		MapMatrix* get_merge_mx(int time, int dist, int dim);	//computes a matrix representing the map [B+C,D], the direct sum of two inclusion maps into the dim-skeleton at the specified multi-index
 		
 		std::vector<int> find_vertices(int);	//given a global index, return (a vector containing) the vertices of the simplex
 		int find_index(std::vector<int>&);		//given a sorted vector of vertex indexes, return the global index of the corresponding simplex (or -1 if it doesn't exist)

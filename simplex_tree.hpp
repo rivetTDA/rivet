@@ -254,7 +254,74 @@ MapMatrix* SimplexTree::get_boundary_mx(int time, int dist, int dim)
 	
 	//return the MapMatrix
 	return mat;
-}
+}//end get_boundary_mx()
+
+//computes a matrix representing the map [B+C,D], the direct sum of two inclusion maps into the dim-skeleton at the specified multi-index
+MapMatrix* SimplexTree::get_merge_mx(int time, int dist, int dim)
+{
+	if(verbose) { cout << "  boundary matrix for dimension " << dim << " at index (" << time << ", " << dist << "): \n"; }
+	
+	//find (global indexes of) all simplices of dimension dim that exist at (time, dist)
+	vector<int> vec_d;
+	find_nodes(root, 0, vec_d, time, dist, dim);
+	
+	if(verbose)
+	{
+		cout << "    D: simplices of dimension " << dim << " at index (" << time << ", " << dist << "): ";
+		for(int i=0; i<vec_d.size(); i++)
+			cout << vec_d[i] << ", ";
+		cout << "\n";
+	}
+	
+	//find (global indexes of) all simplices of dimension dim that exist at (time-1, dist)
+	vector<int> vec_c;
+	find_nodes(root, 0, vec_c, time-1, dist, dim);
+	
+	if(verbose)
+	{
+		cout << "    C: simplices of dimension " << dim << " at index (" << (time-1) << ", " << dist << "): ";
+		for(int i=0; i<vec_c.size(); i++)
+			cout << vec_c[i] << ", ";
+		cout << "\n";
+	}
+	
+	//find (global indexes of) all simplices of dimension dim that exist at (time, dist-1)
+	vector<int> vec_b;
+	find_nodes(root, 0, vec_b, time, dist-1, dim);
+	
+	if(verbose)
+	{
+		cout << "    B: simplices of dimension " << dim << " at index (" << time << ", " << (dist-1) << "): ";
+		for(int i=0; i<vec_b.size(); i++)
+			cout << vec_b[i] << ", ";
+		cout << "\n";
+	}
+	
+	//create the matrix
+	MapMatrix* mat = new MapMatrix(vec_d.size(), vec_b.size()+vec_c.size());			//DELETE this object later???
+	
+	//add nodes for inclusion map B->D
+	int r = 0;	//row counter
+	for(int i=0; i<vec_b.size(); i++)
+	{
+		while(vec_d[r] != vec_b[i])
+			r++;
+		(*mat).set(r+1,i+1);
+	}
+	
+	//add nodes for inclusion map C->D
+	r = 0;	//row counter
+	for(int i=0; i<vec_c.size(); i++)
+	{
+		while(vec_d[r] != vec_c[i])
+			r++;
+		(*mat).set(r+1,i+1+vec_b.size());
+	}
+	
+	//return the MapMatrix
+	return mat;
+}//end get_merge_mx()
+
 
 //recursively search tree for simplices of specified dimension that exist at specified multi-index
 void SimplexTree::find_nodes(STNode &node, int level, vector<int> &vec, int time, int dist, int dim)

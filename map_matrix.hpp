@@ -7,7 +7,7 @@
 MapMatrix::MapMatrix(int i, int j)
 {
 	columns.resize(j);
-	height = i;
+	num_rows = i;
 }
 
 //returns the number of columns in the matrix
@@ -17,9 +17,9 @@ int MapMatrix::width()
 }
 
 //returns the number of rows in the matrix
-int MapMatrix::heigth()
+int MapMatrix::height()
 {
-	return height;
+	return num_rows;
 }				
 
 //sets (to 1) the entry in row i, column j 
@@ -127,7 +127,7 @@ bool MapMatrix::entry(int i, int j)
 	return false;
 }
 
-//returns the "low" index in the specified column
+//returns the "low" index in the specified column, or 0 if the column is empty or does not exist
 //  NOTE: in matrix perspective, row and columns are indexed starting at 1, not 0
 int MapMatrix::low(int j)
 {
@@ -145,6 +145,84 @@ int MapMatrix::low(int j)
 	return (*columns[j-1]).get_row();
 	
 }
+
+
+//modifies this matrix to create a block-diagonal matrix with "other" positioned below and to the right of "this"
+//  QUESTION: would it be better if this function returned a copy of this matrix instead of modifying it?
+/* void MapMatrix::append_block_diag(MapMatrix& other)
+{
+	//remember initial size of this matrix
+	int prev_width = width();
+	int prev_height = num_rows;
+	
+	//create new columns
+	columns.resize(prev_width + other.width());
+	
+	//insert data into each new column
+	for(int j=0; j<other.width(); j++)
+	{
+		MapMatrixNode* handle = NULL;
+		MapMatrixNode* othernode = other.columns[j];
+		
+		while(othernode != NULL)
+		{
+			int row = (*othernode).get_row() + prev_height;
+			if(row > num_rows)
+				num_rows = row;
+			
+			MapMatrixNode* newnode = new MapMatrixNode(row);
+			
+			if(handle == NULL) //then the column is empty
+				columns[prev_width + j] = newnode;
+			else
+				(*handle).set_next(newnode);
+				
+			handle = newnode;
+			othernode = (*othernode).get_next();
+		}
+	}
+}//end append_block_diag() */
+
+//modifies this matrix to create a larger matrix with "other" positioned to the right of "this", with a vertical offset
+//  EXAMPLE: if vert_offset is 0, then "other" is positioned directly to the right of "this" (corresponding rows align)
+//			if vert_offset equals "this".num_rows, then the new matrix will be block-diagonal
+//  QUESTION: would it be better if this function returned a copy of this matrix instead of modifying it?
+void MapMatrix::append_block(MapMatrix& other, int vert_offset)
+{
+	//remember initial size of this matrix
+	int prev_width = width();
+	
+	//create new columns
+	columns.resize(prev_width + other.width());
+	
+	//insert data into each new column
+	for(int j=0; j<other.width(); j++)
+	{
+		MapMatrixNode* handle = NULL;
+		MapMatrixNode* othernode = other.columns[j];
+		
+		while(othernode != NULL)
+		{
+			int row = (*othernode).get_row() + vert_offset;
+			if(row > num_rows)
+				num_rows = row;
+			
+			MapMatrixNode* newnode = new MapMatrixNode(row);
+			
+			if(handle == NULL) //then the column is empty
+				columns[prev_width + j] = newnode;
+			else
+				(*handle).set_next(newnode);
+				
+			handle = newnode;
+			othernode = (*othernode).get_next();
+		}
+	}
+}//end append_block_diag()
+
+
+
+
 
 //adds column j to column k
 //  NOTE: in matrix perspective, row and columns are indexed starting at 1, not 0
@@ -168,14 +246,14 @@ void MapMatrix::add_column(int j, int k)
 		int row = (*jnode).get_row();
 		
 		//so we want to add row to column k
-		std::cout << "  --we want to add row " << row << " to column " << k << "\n";
+//		std::cout << "  --we want to add row " << row << " to column " << k << "\n";
 		
 		//loop through entries in column k, starting at the current position
 		bool added = false;
 		
 		if(columns[k-1] == NULL) //then column k is empty, so insert initial node
 		{
-			std::cout << "    -inserting new node in initial position into column " << k << "\n";
+//			std::cout << "    -inserting new node in initial position into column " << k << "\n";
 			MapMatrixNode* newnode = new MapMatrixNode(row);
 			columns[k-1] = newnode;
 			khandle = newnode;
@@ -187,7 +265,7 @@ void MapMatrix::add_column(int j, int k)
 		{
 			if((*columns[k-1]).get_row() == row) //then remove this node (since 1+1=0)
 			{
-				std::cout << "    -removing node " << row << " from initial position (since 1+1=0)\n";
+//				std::cout << "    -removing node " << row << " from initial position (since 1+1=0)\n";
 				MapMatrixNode* next = (*columns[k-1]).get_next();
 				delete columns[k-1];
 				columns[k-1] = next;
@@ -195,7 +273,7 @@ void MapMatrix::add_column(int j, int k)
 			}
 			else if((*columns[k-1]).get_row() < row) //then insert new initial node into column k
 			{
-				std::cout << "    -inserting new node " << row << " into initial position\n";
+//				std::cout << "    -inserting new node " << row << " into initial position\n";
 				MapMatrixNode* newnode = new MapMatrixNode(row);
 				(*newnode).set_next(columns[k-1]);
 				columns[k-1] = newnode;
@@ -216,14 +294,14 @@ void MapMatrix::add_column(int j, int k)
 			
 			if((*next).get_row() == row) //then remove the next node (since 1+1=0)
 			{
-				std::cout << "    -removing node " << row << " (since 1+1=0)\n";
+//				std::cout << "    -removing node " << row << " (since 1+1=0)\n";
 				(*khandle).set_next( (*next).get_next() );
 				delete next;
 				added = true; //proceed with next element from column j
 			}
 			else if((*next).get_row() < row) //then insert new initial node into column k
 			{
-				std::cout << "    -inserting new node " << row << "\n";
+//				std::cout << "    -inserting new node " << row << "\n";
 				MapMatrixNode* newnode = new MapMatrixNode(row);
 				(*newnode).set_next(next);
 				(*khandle).set_next(newnode);
@@ -237,7 +315,7 @@ void MapMatrix::add_column(int j, int k)
 		
 		if(!added && ( (*khandle).get_next() == NULL )) //then we have reached the end of the list, and we should append a new node
 		{
-			std::cout << "    -appending a new node " << row << " to the end of column\n";
+//			std::cout << "    -appending a new node " << row << " to the end of column\n";
 			MapMatrixNode* newnode = new MapMatrixNode(row);
 			(*khandle).set_next(newnode);
 			khandle = newnode;
@@ -249,19 +327,80 @@ void MapMatrix::add_column(int j, int k)
 }//end add_column(int, int)
 
 
+//applies the column reduction algorithm to this matrix
+void MapMatrix::col_reduce()
+{
+	//loop through columns
+	for(int j=1; j<=columns.size(); j++)
+	{
+		int k=1;	//we loop as long as there exists k<j such that low(k) == low(j) != 0
+		while(low(j) > 0 && k<j)
+		{
+			if(low(k) == low(j))	//then add column k to column j, and reset k to 1
+			{
+				add_column(k,j);
+				k=1;
+			}
+			else	//then increment k
+				k++;
+		}
+	}
+}//end col_reduce()
+
+//applies the column reduction algorithm to this matrix, and also performs the same column operations on the other matrix
+void MapMatrix::col_reduce(MapMatrix* other)
+{
+	//loop through columns
+	for(int j=1; j<=columns.size(); j++)
+	{
+		int k=1;	//we loop as long as there exists k<j such that low(k) == low(j) != 0
+		while(low(j) > 0 && k<j)
+		{
+			if(low(k) == low(j))	//then add column k to column j, and reset k to 1
+			{
+				add_column(k,j);
+				(*other).add_column(k,j);
+				k=1;
+			}
+			else	//then increment k
+				k++;
+		}
+	}
+}//end col_reduce(MapMatrix* other)
+
+
+//removes column j from the matrix (decreasing width by 1)
+//  NOTE: in matrix perspective, row and columns are indexed starting at 1, not 0
+void MapMatrix::remove_column(int j)
+{
+//	std::cout << "   --deleting column " << j << "\n";
+	MapMatrixNode* node = columns[j-1];
+	while(node != NULL)
+	{
+		MapMatrixNode* prev = node;
+		node = (*prev).get_next();
+//		std::cout << "   ----deleting node at row " << (*prev).get_row() << "\n";
+		delete prev;
+	}
+	columns.erase( columns.begin() + j-1);			//this is probably inefficient---HOW TO IMPROVE???
+}//end remove_column()
+
+
+
+
 //function to print the matrix to standard output, mainly for testing purposes
 void MapMatrix::print()
 {
 	//handle empty matrix
-	if(height == 0 || columns.size() == 0)
+	if(num_rows == 0 || columns.size() == 0)
 	{
 		std::cout << "    (empty matrix)\n";
 		return;
 	}
 	
 	//create a 2D array of booleans to temporarily store the matrix
-	bool mx[height][columns.size()];
-	for(int i=0; i<height; i++)
+	bool mx[num_rows][columns.size()];
+	for(int i=0; i<num_rows; i++)
 		for(int j=0; j<columns.size(); j++)
 			mx[i][j] = false;
 	
@@ -280,7 +419,7 @@ void MapMatrix::print()
 	}
 	
 	//print the matrix
-	for(int i=0; i<height; i++)
+	for(int i=0; i<num_rows; i++)
 	{
 		std::cout << "    |";
 		for(int j=0; j<columns.size(); j++)
