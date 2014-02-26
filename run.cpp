@@ -11,6 +11,7 @@
 #include "simplex_tree.h"
 #include "st_node.h"
 #include "map_matrix.h"
+#include "multi_betti.h"
 
 using namespace std;
 
@@ -131,108 +132,42 @@ int main(int argc, char* argv[])
 	}
 	
 	
-	//build matrices
-	cout << "COMPUTING BOUNDARY MATRICES\n";
-	int time = 1;
-	int dist = 1;
-	int dim = 1;
+
+	//compute xi_0 and xi_1
+	cout << "COMPUTING xi_0 AND xi_1:\n";
+	int dim = 1;	//dimension of homology
+	MultiBetti mb(&simplex_tree, dim);
 	
-	//MapMatrix* m = simplex_tree.get_boundary_mx(time, dist, dim);
-	
-	
-	cout << "  boundary matrix A:";
-	MapMatrix* ma = simplex_tree.get_boundary_mx(time-1, dist-1, dim);
-	(*ma).print();
-	
-	cout << "  boundary matrix B:";
-	MapMatrix* mb = simplex_tree.get_boundary_mx(time, dist-1, dim);
-	(*mb).print();
-	
-	cout << "  boundary matrix C:";
-	MapMatrix* mc = simplex_tree.get_boundary_mx(time-1, dist, dim);
-	(*mc).print();
-	
-	cout << "  boundary matrix D:";
-	MapMatrix* md = simplex_tree.get_boundary_mx(time, dist, dim);
-	(*md).print();
-	
-	cout << "  boundary matrix for direct sum B+C:\n";
-	(*mb).append_block( (*mc), (*mb).height() );
-	(*mb).print();
-	
-	cout << "  map matrix [B+C,D]:";
-	MapMatrix* bcd = simplex_tree.get_merge_mx(time, dist, dim);
-	(*bcd).print();
-	
-	//apply column-reduction algorithm to boundary matrix for B+C, and do the same column operations to [B+C,D]
-	cout << "  reducing boundary matrix B+C, and applying same column operations to [B+C,D]\n";
-	(*mb).col_reduce(bcd);
-	cout << "    reduced boundary matrix B+C:\n";
-	(*mb).print();
-	cout << "    reduced matrix [B+C,D]:\n";
-	(*bcd).print();
-	
-	//identify zero columns from boundary matrix for B+C, and select those columns from [B+C,D]
-	int c=1;	//keep track of current column in [B+C,D]
-	for(int j=1; j<=(*mb).width(); j++)
+	cout << "  VALUES OF xi_0(time, dist):\n";
+	cout << "        dist 0  1  2\n    -----------------\n";
+	for(int i=0; i<simplex_tree.get_num_times(); i++)
 	{
-		if((*mb).low(j) > 0)	//then delete this column from [B+C,D]
-			(*bcd).remove_column(c);
-		else
-			c++;
+		cout << "    time " << i << " | ";
+		for(int j=0; j<simplex_tree.get_num_dists(); j++)
+		{
+			if(i==0 || j==0)
+				cout << "x  ";
+			else
+				cout << mb.xi0(i,j) << "  ";
+		}
+		cout << "\n";
 	}
-	//now bcd contains a basis for [B+C,D](ker(boundary map B+C))
-	cout << "    basis for [B+C,D](ker(boundary map B+C)):\n";
-	(*bcd).print();
+	cout << "\n  VALUES OF xi_1(time, dist):\n";
+	cout << "        dist 0  1  2\n    -----------------\n";
+	for(int i=0; i<simplex_tree.get_num_times(); i++)
+	{
+		cout << "    time " << i << " | ";
+		for(int j=0; j<simplex_tree.get_num_dists(); j++)
+		{
+			if(i==0 || j==0)
+				cout << "x  ";
+			else
+				cout << mb.xi1(i,j) << "  ";
+		}
+		cout << "\n";
+	}
+	cout << "\n";
 	
-	//form concatenated matrix
-	cout << "  boundary matrix D in one dimension higher:";
-	MapMatrix* boundary_d2 = simplex_tree.get_boundary_mx(time, dist, dim+1);
-	(*boundary_d2).print();
-	
-	cout << "  concatenating D2 with [B+C,D](ker(..)):\n";
-	int right_block = (*boundary_d2).width() + 1;
-	(*boundary_d2).append_block( (*bcd), 0);
-	(*boundary_d2).print();
-	
-	//reduce the concatenated matrix
-	(*boundary_d2).col_reduce();
-	cout << "  reduced form of concatenated matrix:\n";
-	(*boundary_d2).print();
-	
-	//count nonzero columns in reduced form of right block of concatenated matrix
-	int nonzero_cols = 0;
-	for(int j = right_block; j<=(*boundary_d2).width(); j++)
-		if((*boundary_d2).low(j) > 0)
-			nonzero_cols++;
-	cout << "  number of nonzero columns in right block: " << nonzero_cols << "\n";
-	
-	//compute nullity of boundary matrix D
-	cout << "  nullity of boundary matrix D:\n";
-	(*md).col_reduce();
-	(*md).print();
-	
-	int nullity = 0;
-	for(int j=1; j<=(*md).width(); j++)
-		if( (*md).low(j) == 0)
-			nullity++;
-	cout << "    nullity is: " << nullity << "\n";
-	
-	//compute rank of boundary matrix D2
-	cout << "  rank of boundary matrix D2:\n";
-	MapMatrix* bd2 = simplex_tree.get_boundary_mx(time, dist, dim+1);
-	(*bd2).col_reduce();
-	(*bd2).print();
-	
-	int rank = 0;
-	for(int j=1; j<=(*bd2).width(); j++)
-		if( (*bd2).low(j) > 0)
-			rank++;
-	cout << "    rank is: " << rank << "\n";
-	
-	//compute \xi_0
-	int xi0 = nullity - rank - nonzero_cols;
-	cout << "  finally: xi_0(" << time << "," << dist << ") = " << xi0 << "\n";
 	
 	
 	//end

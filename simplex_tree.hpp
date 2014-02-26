@@ -256,10 +256,10 @@ MapMatrix* SimplexTree::get_boundary_mx(int time, int dist, int dim)
 	return mat;
 }//end get_boundary_mx()
 
-//computes a matrix representing the map [B+C,D], the direct sum of two inclusion maps into the dim-skeleton at the specified multi-index
+//computes a matrix representing the map [B+C,D], for inclusion maps into the dim-skeleton at the specified multi-index
 MapMatrix* SimplexTree::get_merge_mx(int time, int dist, int dim)
 {
-	if(verbose) { cout << "  boundary matrix for dimension " << dim << " at index (" << time << ", " << dist << "): \n"; }
+	if(verbose) { cout << "  merge matrix for dimension " << dim << " at index (" << time << ", " << dist << "): \n"; }
 	
 	//find (global indexes of) all simplices of dimension dim that exist at (time, dist)
 	vector<int> vec_d;
@@ -321,6 +321,73 @@ MapMatrix* SimplexTree::get_merge_mx(int time, int dist, int dim)
 	//return the MapMatrix
 	return mat;
 }//end get_merge_mx()
+
+//computes a matrix representing the map [A,B+C], for the dim-skeleton at the specified multi-index
+MapMatrix* SimplexTree::get_split_mx(int time, int dist, int dim)
+{
+	if(verbose) { cout << "  split matrix for dimension " << dim << " at index (" << time << ", " << dist << "): \n"; }
+	
+	//find (global indexes of) all simplices of dimension dim that exist at (time-1, dist-1)
+	vector<int> vec_a;
+	find_nodes(root, 0, vec_a, time-1, dist-1, dim);
+	
+	if(verbose)
+	{
+		cout << "    A: simplices of dimension " << dim << " at index (" << (time-1) << ", " << (dist-1) << "): ";
+		for(int i=0; i<vec_a.size(); i++)
+			cout << vec_a[i] << ", ";
+		cout << "\n";
+	}
+	
+	//find (global indexes of) all simplices of dimension dim that exist at (time, dist-1)
+	vector<int> vec_b;
+	find_nodes(root, 0, vec_b, time, dist-1, dim);
+	
+	if(verbose)
+	{
+		cout << "    B: simplices of dimension " << dim << " at index (" << time << ", " << (dist-1) << "): ";
+		for(int i=0; i<vec_b.size(); i++)
+			cout << vec_b[i] << ", ";
+		cout << "\n";
+	}
+	
+	//find (global indexes of) all simplices of dimension dim that exist at (time-1, dist)
+	vector<int> vec_c;
+	find_nodes(root, 0, vec_c, time-1, dist, dim);
+	
+	if(verbose)
+	{
+		cout << "    C: simplices of dimension " << dim << " at index (" << (time-1) << ", " << dist << "): ";
+		for(int i=0; i<vec_c.size(); i++)
+			cout << vec_c[i] << ", ";
+		cout << "\n";
+	}
+	
+	//create the matrix
+	MapMatrix* mat = new MapMatrix(vec_b.size()+vec_c.size(), vec_a.size());			//DELETE this object later???
+	
+	//add nodes for inclusion map A->B
+	int r = 0;	//row counter
+	for(int j=0; j<vec_a.size(); j++)
+	{
+		while(vec_b[r] != vec_a[j])
+			r++;
+		(*mat).set(r+1,j+1);
+	}
+	
+	//add nodes for inclusion map C->D
+	r = 0;	//row counter
+	for(int j=0; j<vec_a.size(); j++)
+	{
+		while(vec_c[r] != vec_a[j])
+			r++;
+		(*mat).set(r+1+vec_b.size(),j+1);
+	}
+	
+	//return the MapMatrix
+	return mat;
+}//end get_split_mx()
+
 
 
 //recursively search tree for simplices of specified dimension that exist at specified multi-index
@@ -419,6 +486,19 @@ int SimplexTree::find_index(vector<int>& vertices)
 	return (*node).get_global_index();
 }//end find_index()
 
+
+//returns the number of unique distance indexes
+int SimplexTree::get_num_dists()
+{
+	return dist_list.size();
+}
+
+//returns the number of unique time indexes
+int SimplexTree::get_num_times()
+{
+	return time_list.size();
+}	
+		
 
 
 
