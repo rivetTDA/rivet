@@ -178,7 +178,7 @@ int SimplexTree::time_index(double key)
 //computes a boundary matrix for simplices of a given dimension at the specified multi-index
 MapMatrix* SimplexTree::get_boundary_mx(int time, int dist, int dim)
 {
-	if(verbose) { cout << "  boundary matrix for dimension " << dim << " at index (" << time << ", " << dist << "): \n"; }
+	if(verbose) { cout << "    boundary matrix for dimension " << dim << " at index (" << time << ", " << dist << "): \n"; }
 	
 	//find (global indexes of) all simplices of dimension dim that exist at (time, dist)
 	vector<int> cols;
@@ -186,7 +186,7 @@ MapMatrix* SimplexTree::get_boundary_mx(int time, int dist, int dim)
 	
 	if(verbose)
 	{
-		cout << "    simplices of dimension " << dim << " at index (" << time << ", " << dist << "): ";
+		cout << "      simplices of dimension " << dim << " at index (" << time << ", " << dist << "): ";
 		for(int i=0; i<cols.size(); i++)
 			cout << cols[i] << ", ";
 		cout << "\n";
@@ -198,7 +198,7 @@ MapMatrix* SimplexTree::get_boundary_mx(int time, int dist, int dim)
 	
 	if(verbose)
 	{
-		cout << "    simplices of dimension " << (dim-1) << " at index (" << time << ", " << dist << "): ";
+		cout << "      simplices of dimension " << (dim-1) << " at index (" << time << ", " << dist << "): ";
 		for(int i=0; i<rows.size(); i++)
 			cout << rows[i] << ", ";
 		cout << "\n";
@@ -207,6 +207,13 @@ MapMatrix* SimplexTree::get_boundary_mx(int time, int dist, int dim)
 	//create the matrix
 	MapMatrix* mat = new MapMatrix(rows.size(), cols.size());			//DELETE this object later???
 	
+	//if we want a boundary matrix for 0-simplices, then we are done
+	if(dim == 0)
+	{
+		return mat;
+	}
+	
+	//otherwise (we want a boundary for n-simplices, with n > 0), we need to find boundaries
 	//loop through columns
 	for(int j=0; j<cols.size(); j++)
 	{
@@ -248,9 +255,8 @@ MapMatrix* SimplexTree::get_boundary_mx(int time, int dist, int dim)
 			//for this boundary simplex, enter "1" in the appropriate cell in the matrix
 //			cout << "     enter 1 in column " << j << ", row " << mid << "\n";
 			(*mat).set(mid+1,j+1);
-		}
-		
-	}
+		}//end for(k=0;...)
+	}//end for(j=0;...)
 	
 	//return the MapMatrix
 	return mat;
@@ -259,7 +265,7 @@ MapMatrix* SimplexTree::get_boundary_mx(int time, int dist, int dim)
 //computes a matrix representing the map [B+C,D], for inclusion maps into the dim-skeleton at the specified multi-index
 MapMatrix* SimplexTree::get_merge_mx(int time, int dist, int dim)
 {
-	if(verbose) { cout << "  merge matrix for dimension " << dim << " at index (" << time << ", " << dist << "): \n"; }
+	if(verbose) { cout << "    merge matrix for dimension " << dim << " at index (" << time << ", " << dist << "): \n"; }
 	
 	//find (global indexes of) all simplices of dimension dim that exist at (time, dist)
 	vector<int> vec_d;
@@ -267,7 +273,7 @@ MapMatrix* SimplexTree::get_merge_mx(int time, int dist, int dim)
 	
 	if(verbose)
 	{
-		cout << "    D: simplices of dimension " << dim << " at index (" << time << ", " << dist << "): ";
+		cout << "      D: simplices of dimension " << dim << " at index (" << time << ", " << dist << "): ";
 		for(int i=0; i<vec_d.size(); i++)
 			cout << vec_d[i] << ", ";
 		cout << "\n";
@@ -279,7 +285,7 @@ MapMatrix* SimplexTree::get_merge_mx(int time, int dist, int dim)
 	
 	if(verbose)
 	{
-		cout << "    C: simplices of dimension " << dim << " at index (" << (time-1) << ", " << dist << "): ";
+		cout << "      C: simplices of dimension " << dim << " at index (" << (time-1) << ", " << dist << "): ";
 		for(int i=0; i<vec_c.size(); i++)
 			cout << vec_c[i] << ", ";
 		cout << "\n";
@@ -291,7 +297,7 @@ MapMatrix* SimplexTree::get_merge_mx(int time, int dist, int dim)
 	
 	if(verbose)
 	{
-		cout << "    B: simplices of dimension " << dim << " at index (" << time << ", " << (dist-1) << "): ";
+		cout << "      B: simplices of dimension " << dim << " at index (" << time << ", " << (dist-1) << "): ";
 		for(int i=0; i<vec_b.size(); i++)
 			cout << vec_b[i] << ", ";
 		cout << "\n";
@@ -325,7 +331,7 @@ MapMatrix* SimplexTree::get_merge_mx(int time, int dist, int dim)
 //computes a matrix representing the map [A,B+C], for the dim-skeleton at the specified multi-index
 MapMatrix* SimplexTree::get_split_mx(int time, int dist, int dim)
 {
-	if(verbose) { cout << "  split matrix for dimension " << dim << " at index (" << time << ", " << dist << "): \n"; }
+	if(verbose) { cout << "    split matrix for dimension " << dim << " at index (" << time << ", " << dist << "): \n"; }
 	
 	//find (global indexes of) all simplices of dimension dim that exist at (time-1, dist-1)
 	vector<int> vec_a;
@@ -333,7 +339,7 @@ MapMatrix* SimplexTree::get_split_mx(int time, int dist, int dim)
 	
 	if(verbose)
 	{
-		cout << "    A: simplices of dimension " << dim << " at index (" << (time-1) << ", " << (dist-1) << "): ";
+		cout << "      A: simplices of dimension " << dim << " at index (" << (time-1) << ", " << (dist-1) << "): ";
 		for(int i=0; i<vec_a.size(); i++)
 			cout << vec_a[i] << ", ";
 		cout << "\n";
@@ -345,7 +351,7 @@ MapMatrix* SimplexTree::get_split_mx(int time, int dist, int dim)
 	
 	if(verbose)
 	{
-		cout << "    B: simplices of dimension " << dim << " at index (" << time << ", " << (dist-1) << "): ";
+		cout << "      B: simplices of dimension " << dim << " at index (" << time << ", " << (dist-1) << "): ";
 		for(int i=0; i<vec_b.size(); i++)
 			cout << vec_b[i] << ", ";
 		cout << "\n";
@@ -357,7 +363,7 @@ MapMatrix* SimplexTree::get_split_mx(int time, int dist, int dim)
 	
 	if(verbose)
 	{
-		cout << "    C: simplices of dimension " << dim << " at index (" << (time-1) << ", " << dist << "): ";
+		cout << "      C: simplices of dimension " << dim << " at index (" << (time-1) << ", " << dist << "): ";
 		for(int i=0; i<vec_c.size(); i++)
 			cout << vec_c[i] << ", ";
 		cout << "\n";
@@ -393,6 +399,12 @@ MapMatrix* SimplexTree::get_split_mx(int time, int dist, int dim)
 //recursively search tree for simplices of specified dimension that exist at specified multi-index
 void SimplexTree::find_nodes(STNode &node, int level, vector<int> &vec, int time, int dist, int dim)
 {
+	//if either time, dist, or dim is negative, then there are no nodes
+	if(time < 0 || dist < 0 || dim < 0)
+	{
+		return;
+	}
+	
 	//consider current node
 	if( (level == dim+1) && (node.get_birth() <= time) && (node.get_dist() <= dist) )
 	{

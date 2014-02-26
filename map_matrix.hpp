@@ -394,7 +394,7 @@ void MapMatrix::print()
 	//handle empty matrix
 	if(num_rows == 0 || columns.size() == 0)
 	{
-		std::cout << "    (empty matrix)\n";
+		std::cout << "        (empty matrix)\n";
 		return;
 	}
 	
@@ -421,7 +421,7 @@ void MapMatrix::print()
 	//print the matrix
 	for(int i=0; i<num_rows; i++)
 	{
-		std::cout << "    |";
+		std::cout << "        |";
 		for(int j=0; j<columns.size(); j++)
 		{
 			if(mx[i][j])

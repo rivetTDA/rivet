@@ -3,6 +3,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <sstream>
 #include <vector>
 #include <math.h>
 #include <algorithm>
@@ -138,31 +139,41 @@ int main(int argc, char* argv[])
 	int dim = 1;	//dimension of homology
 	MultiBetti mb(&simplex_tree, dim);
 	
-	cout << "  VALUES OF xi_0(time, dist):\n";
-	cout << "        dist 0  1  2\n    -----------------\n";
+	
+	//build column labels for output
+	string col_labels = "        dist ";
+	string hline = "    --------";
+	for(int j=0; j<simplex_tree.get_num_dists(); j++)
+	{
+		ostringstream oss;
+		oss << j;
+		col_labels += oss.str() + "  ";
+		hline += "---";
+	}
+	col_labels += "\n" + hline + "\n";
+	
+	//output xi_0
+	cout << "  VALUES OF xi_0 for dimension " << dim << ":\n";
+	cout << col_labels;
 	for(int i=0; i<simplex_tree.get_num_times(); i++)
 	{
 		cout << "    time " << i << " | ";
 		for(int j=0; j<simplex_tree.get_num_dists(); j++)
 		{
-			if(i==0 || j==0)
-				cout << "x  ";
-			else
-				cout << mb.xi0(i,j) << "  ";
+			cout << mb.xi0(i,j) << "  ";
 		}
 		cout << "\n";
 	}
-	cout << "\n  VALUES OF xi_1(time, dist):\n";
-	cout << "        dist 0  1  2\n    -----------------\n";
+	
+	//output xi_1
+	cout << "\n  VALUES OF xi_1 for dimension " << dim << ":\n";
+	cout << col_labels;
 	for(int i=0; i<simplex_tree.get_num_times(); i++)
 	{
 		cout << "    time " << i << " | ";
 		for(int j=0; j<simplex_tree.get_num_dists(); j++)
 		{
-			if(i==0 || j==0)
-				cout << "x  ";
-			else
-				cout << mb.xi1(i,j) << "  ";
+			cout << mb.xi1(i,j) << "  ";
 		}
 		cout << "\n";
 	}

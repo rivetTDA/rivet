@@ -28,7 +28,10 @@ class MultiBetti
 		
 		boost::multi_array<int, 3> xi;		//matrix to hold xi values; indices: xi[time][dist][subscript]
 
+		void compute_xi(int time, int dist);	//computes xi_0 and xi_1 at a specified multi-index
+		
 		static const bool print_matrices = true;	//controls display of output, for debugging
+		
 };
 
 #include "multi_betti.hpp"
