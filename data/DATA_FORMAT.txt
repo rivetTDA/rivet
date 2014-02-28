@@ -17,6 +17,7 @@ II. Bifiltration
 		vertices are labeled 0, 1, 2, ..., N
 		times and distances are nonnegative integers (preferably 0, 1, ..., max_time and 0, 1, ..., max_dist, respectively)
 	The program does NOT currently check that the data file represents a logically-consistent bifiltration.
+	If an n-simplex and (some of) its faces appear at the same multi-index, it is only necessary to give the n-simplex in the input file; its faces will automatically be included.
 	
 
 	First line:	the word "bifiltration"
