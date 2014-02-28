@@ -1,20 +1,16 @@
 //test program
 #include <iostream>
-#include <fstream>
 #include <sstream>
 #include <string>
-#include <sstream>
 #include <vector>
 #include <math.h>
 #include <algorithm>
+#include <stdlib.h>
 
-#include "point.h"
+#include "input_manager.h"
 #include "simplex_tree.h"
-#include "st_node.h"
-#include "map_matrix.h"
 #include "multi_betti.h"
 
-using namespace std;
 
 
 int main(int argc, char* argv[])
@@ -25,164 +21,106 @@ int main(int argc, char* argv[])
 	//check for name of data file
 	if(argc == 1)
 	{
-		cout << "USAGE: run <filename>\n";
+		std::cout << "USAGE: run <filename> [dimension of homology] [time] [distance]\n";
 		return 1;
 	}
 	
-	//integer dimension of data
-	int dimension;	
+	//start the input manager
+	InputManager im;
+	im.start(argv[1]);
 	
-	//maximum dimension of simplices in Vietoris-Rips complex
-	int max_dim;
-	
-	//maximum distance for edges in Vietoris-Rips complex
-	double max_dist;
-	
-	//create vector for points
-	vector<Point> points;
-		
-	//read points from file
-	if(verbose) { cout << "READING FILE:\n"; }
-	string line;
-	ifstream myfile(argv[1]);
-	if(myfile.is_open())
-	{
-		//get dimension of the points from the first line of the file
-		getline(myfile,line);
-		stringstream(line) >> dimension;
-		if(verbose) { cout << "  dimension of data: " << dimension << "\n"; }
-		
-		//get maximum dimension of simplices in Vietoris-Rips complex
-		getline(myfile,line);
-		stringstream(line) >> max_dim;
-		if(verbose) { cout << "  maximum dimension of simplices: " << max_dim << "\n"; }
-		
-		//get maximum distance for edges in Vietoris-Rips complex
-		getline(myfile,line);
-		stringstream(line) >> max_dist;
-		if(verbose) { cout << "  maximum distance: " << max_dist << "\n"; }
-		
-		//get points
-		while( getline(myfile,line) )
-		{
-			//parse current point from string
-			istringstream iss(line);
-			double* n = new double[dimension];				//DO I NEED TO delete THESE LATER???
-			for(int i=0; i<dimension; i++)
-			{
-				iss >> n[i];	//extract the next double from the string
-			}
-			double t;	//time of birth for this point
-			iss >> t; 
-			
-			Point p (n, t);
-			
-			//add current point to the vector
-			points.push_back(p);
-		}
-		myfile.close();
-		if(verbose) { cout << "  read " << points.size() << " points; input finished\n"; }
-	}
-	else
-	{
-		cout << "Error: Unable to open file " << argv[1] << ".\n";
-		return 1;
-	}
-	
-	//sort the points
-	if(verbose) { cout << "SORTING POINTS BY BIRTH TIME\n"; }
-	sort(points.begin(), points.end());
-	
-	
-	//test points vector
-	if(verbose) {
-		cout << "TESTING VECTOR:\n";
-		for(int i=0; i<points.size(); i++)
-		{
-			Point p = points.at(i);
-			double *m = p.get_coords();
-			cout << "  point " << i << ": (";
-			for(int i=0; i<dimension; i++)
-			{
-				cout << m[i];
-				if(i<dimension-1) { cout << ", "; }
-			}
-			cout << ") born at time " << p.get_birth() << "\n";		
-		}
-		cout << "  found " << points.size() << " points\n";
-	}
-	
-	
-	//build the filtration
-	if(verbose) { cout << "BUILDING FILTRATION\n"; }
-	SimplexTree simplex_tree(points, dimension, max_dim+1, max_dist);
+	//get the bifiltration from the input manager
+	SimplexTree* bifiltration = im.get_bifiltration();
 	
 	//print simplex tree
-	cout << "TESTING SIMPLEX TREE:\n";
-	simplex_tree.print();	
+	std::cout << "SIMPLEX TREE:\n";
+	(*bifiltration).print();	
 	
 	//TEST: 
-	cout << "  vertex lists for each of the " << simplex_tree.get_num_simplices() << " simplices:\n";
-	for(int i=0; i < simplex_tree.get_num_simplices(); i++)
+	std::cout << "  vertex lists for each of the " << (*bifiltration).get_num_simplices() << " simplices:\n";
+	for(int i=0; i < (*bifiltration).get_num_simplices(); i++)
 	{
-		cout << "    simplex " << i << ": ";
-		vector<int> vert = simplex_tree.find_vertices(i);
+		std::cout << "    simplex " << i << ": ";
+		std::vector<int> vert = (*bifiltration).find_vertices(i);
 		for(int j=0; j<vert.size(); j++)
-			cout << vert[j] << ", ";
-		cout << "\n";
+			std::cout << vert[j] << ", ";
+		std::cout << "\n";
 	}
-	
-	
 
+	//set dimension of homology
+	int dim = 1;	//default
+	if(argc >= 3)
+		dim = std::atoi(argv[2]);
+	
 	//compute xi_0 and xi_1
-	cout << "COMPUTING xi_0 AND xi_1:\n";
-	int dim = 1;	//dimension of homology
-	MultiBetti mb(&simplex_tree, dim);
-	
-	
-	//build column labels for output
-	string col_labels = "        dist ";
-	string hline = "    --------";
-	for(int j=0; j<simplex_tree.get_num_dists(); j++)
+	std::cout << "COMPUTING xi_0 AND xi_1:\n";
+	MultiBetti mb(bifiltration, dim);
+	if(argc >= 5)	//then compute xi_0 and xi_1 at a specific multi-index
 	{
-		ostringstream oss;
-		oss << j;
-		col_labels += oss.str() + "  ";
-		hline += "---";
+		int time = std::atoi(argv[3]);
+		int dist = std::atoi(argv[4]);
+		
+		mb.compute_xi(time, dist);
+		
+		//output
+		std::cout << "COMPUTATION FINISHED:\n";
+		std::cout << "  at multi-index (time, distance)=(" << time << "," << dist << "):\n";
+		std::cout << "    xi_0 = " << mb.xi0(time, dist) << "\n";
+		std::cout << "    xi_1 = " << mb.xi1(time, dist) << "\n";
 	}
-	col_labels += "\n" + hline + "\n";
-	
-	//output xi_0
-	cout << "  VALUES OF xi_0 for dimension " << dim << ":\n";
-	cout << col_labels;
-	for(int i=0; i<simplex_tree.get_num_times(); i++)
+	else	//then compute xi_0 and xi_1 at ALL multi-indexes
 	{
-		cout << "    time " << i << " | ";
-		for(int j=0; j<simplex_tree.get_num_dists(); j++)
+		mb.compute_all_xi();
+		std::cout << "COMPUTATION FINISHED:\n";
+		
+		//build column labels for output
+		std::string col_labels = "        dist ";
+		std::string hline = "    --------";
+		for(int j=0; j<(*bifiltration).get_num_dists(); j++)
 		{
-			cout << mb.xi0(i,j) << "  ";
+			std::ostringstream oss;
+			oss << j;
+			col_labels += oss.str() + "  ";
+			hline += "---";
 		}
-		cout << "\n";
-	}
+		col_labels += "\n" + hline + "\n";
 	
-	//output xi_1
-	cout << "\n  VALUES OF xi_1 for dimension " << dim << ":\n";
-	cout << col_labels;
-	for(int i=0; i<simplex_tree.get_num_times(); i++)
-	{
-		cout << "    time " << i << " | ";
-		for(int j=0; j<simplex_tree.get_num_dists(); j++)
+		//output xi_0
+		std::cout << "  VALUES OF xi_0 for dimension " << dim << ":\n";
+		std::cout << col_labels;
+		for(int i=0; i<(*bifiltration).get_num_times(); i++)
 		{
-			cout << mb.xi1(i,j) << "  ";
+			std::cout << "    time " << i << " | ";
+			for(int j=0; j<(*bifiltration).get_num_dists(); j++)
+			{
+				std::cout << mb.xi0(i,j) << "  ";
+			}
+			std::cout << "\n";
 		}
-		cout << "\n";
-	}
-	cout << "\n";
+	
+		//output xi_1
+		std::cout << "\n  VALUES OF xi_1 for dimension " << dim << ":\n";
+		std::cout << col_labels;
+		for(int i=0; i<(*bifiltration).get_num_times(); i++)
+		{
+			std::cout << "    time " << i << " | ";
+			for(int j=0; j<(*bifiltration).get_num_dists(); j++)
+			{
+				std::cout << mb.xi1(i,j) << "  ";
+			}
+			std::cout << "\n";
+		}
+		std::cout << "\n";
+	}//end else
 	
 	
 	
-	//end
-	cout << "Done.\n\n";
+	
+	
+	
+	
+	//done
+	std::cout << "Done.\n\n";
 }//end main()
 
 

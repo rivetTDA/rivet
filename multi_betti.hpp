@@ -16,7 +16,13 @@ MultiBetti::MultiBetti(SimplexTree* st, int dim)
 	num_times = (*bifiltration).get_num_times();
 	num_dists = (*bifiltration).get_num_dists();
 	xi.resize(boost::extents[num_times][num_dists][2]);
-	
+}//end constructor
+
+
+//computes xi_0 and xi_1 at ALL multi-indexes
+void MultiBetti::compute_all_xi()
+{
+	std::cout << "  computing xi_0 and xi_1; num_times=" << num_times << ", num_dists=" << num_dists << "\n";
 	
 	//compute and store xi_0 and xi_1 at ALL multi-indexes
 	for(int time = 0; time < num_times; time++)
@@ -26,8 +32,8 @@ MultiBetti::MultiBetti(SimplexTree* st, int dim)
 			compute_xi(time, dist);
 		}
 	}
-	
-}//end constructor
+}
+
 
 //computes xi_0 and xi_1 at a specified multi-index
 void MultiBetti::compute_xi(int time, int dist)
@@ -49,7 +55,7 @@ void MultiBetti::compute_xi(int time, int dist)
 	MapMatrix* bcd = (*bifiltration).get_merge_mx(time, dist, dimension);
 	if(print_matrices)
 	{
-		cout << "    map matrix [B+C,D]:\n";
+		std::cout << "    map matrix [B+C,D]:\n";
 		(*bcd).print();
 	}
 
@@ -57,10 +63,10 @@ void MultiBetti::compute_xi(int time, int dist)
 	(*bdry_bc).col_reduce(bcd);
 	if(print_matrices)
 	{
-		cout << "    reducing boundary matrix B+C, and applying same column operations to [B+C,D]\n";
-		cout << "      reduced boundary matrix B+C:\n";
+		std::cout << "    reducing boundary matrix B+C, and applying same column operations to [B+C,D]\n";
+		std::cout << "      reduced boundary matrix B+C:\n";
 		(*bdry_bc).print();
-		cout << "      reduced matrix [B+C,D]:\n";
+		std::cout << "      reduced matrix [B+C,D]:\n";
 		(*bcd).print();
 	}
 
@@ -77,7 +83,7 @@ void MultiBetti::compute_xi(int time, int dist)
 	//now bcd contains a basis for [B+C,D](ker(boundary map B+C))
 	if(print_matrices)
 	{
-		cout << "      basis for [B+C,D](ker(boundary map B+C)):\n";
+		std::cout << "      basis for [B+C,D](ker(boundary map B+C)):\n";
 		(*bcd).print();
 	}
 
@@ -85,14 +91,14 @@ void MultiBetti::compute_xi(int time, int dist)
 	MapMatrix* bdry_d2 = (*bifiltration).get_boundary_mx(time, dist, dimension+1);
 	if(print_matrices)
 	{
-		cout << "    boundary matrix D2:";
+		std::cout << "    boundary matrix D2:";
 		(*bdry_d2).print();
 	}	
 	int d2_width = (*bdry_d2).width();
 	(*bdry_d2).append_block( (*bcd), 0);
 	if(print_matrices)
 	{
-		cout << "    concatenating D2 with [B+C,D](ker(..)):\n";
+		std::cout << "    concatenating D2 with [B+C,D](ker(..)):\n";
 		(*bdry_d2).print();
 	}
 
@@ -100,7 +106,7 @@ void MultiBetti::compute_xi(int time, int dist)
 	(*bdry_d2).col_reduce();
 	if(print_matrices)
 	{
-		cout << "    reduced form of concatenated matrix:\n";
+		std::cout << "    reduced form of concatenated matrix:\n";
 		(*bdry_d2).print();
 	}
 
@@ -109,13 +115,13 @@ void MultiBetti::compute_xi(int time, int dist)
 	for(int j = d2_width+1; j<=(*bdry_d2).width(); j++)
 		if((*bdry_d2).low(j) > 0)
 			alpha++;
-	if(print_matrices) { cout << "    number of nonzero columns in right block: " << alpha << "\n"; }
+	if(print_matrices) { std::cout << "    number of nonzero columns in right block: " << alpha << "\n"; }
 
 	//compute dimensionension of homology at D
 	MapMatrix* bdry_d1 = (*bifiltration).get_boundary_mx(time, dist, dimension);
 	if(print_matrices)
 	{
-		cout << "    boundary matrix D1:\n";
+		std::cout << "    boundary matrix D1:\n";
 		(*bdry_d1).print();
 	}
 	//compute nullity of D1
@@ -131,8 +137,8 @@ void MultiBetti::compute_xi(int time, int dist)
 			rank_d2++;
 	if(print_matrices)
 	{
-		cout << "      nullity of D1 is: " << nullity_d1 << "\n";
-		cout << "      rank of D2 is: " << rank_d2 << "\n";
+		std::cout << "      nullity of D1 is: " << nullity_d1 << "\n";
+		std::cout << "      rank of D2 is: " << rank_d2 << "\n";
 	}
 
 	//compute xi_0
@@ -153,7 +159,7 @@ void MultiBetti::compute_xi(int time, int dist)
 	MapMatrix* abc = (*bifiltration).get_split_mx(time, dist, dimension);
 	if(print_matrices)
 	{
-		cout << "    map matrix [A,B+C]:\n";
+		std::cout << "    map matrix [A,B+C]:\n";
 		(*abc).print();
 	}
 
@@ -161,10 +167,10 @@ void MultiBetti::compute_xi(int time, int dist)
 	(*bdry_a).col_reduce(abc);
 	if(print_matrices)
 	{
-		cout << "    reducing boundary matrix A, and applying same column operations to [A,B+C]\n";
-		cout << "      reduced boundary matrix A:\n";
+		std::cout << "    reducing boundary matrix A, and applying same column operations to [A,B+C]\n";
+		std::cout << "      reduced boundary matrix A:\n";
 		(*bdry_a).print();
-		cout << "      reduced matrix [A,B+C]:\n";
+		std::cout << "      reduced matrix [A,B+C]:\n";
 		(*abc).print();
 	}
 
@@ -180,7 +186,7 @@ void MultiBetti::compute_xi(int time, int dist)
 	//now abc contains a basis for [A,B+C](ker(boundary map A))
 	if(print_matrices)
 	{
-		cout << "      basis for [A,B+C](ker(boundary map A)):\n";
+		std::cout << "      basis for [A,B+C](ker(boundary map A)):\n";
 		(*abc).print();
 	}
 
@@ -199,7 +205,7 @@ void MultiBetti::compute_xi(int time, int dist)
 	(*bdry_bc2).append_block( (*abc), 0);
 	if(print_matrices)
 	{
-		cout << "    concatenating B+C (2) with [A,B+C](ker(..)):\n";
+		std::cout << "    concatenating B+C (2) with [A,B+C](ker(..)):\n";
 		(*bdry_bc2).print();
 	}
 
@@ -207,7 +213,7 @@ void MultiBetti::compute_xi(int time, int dist)
 	(*bdry_bc2).col_reduce();
 	if(print_matrices)
 	{
-		cout << "    reduced form of concatenated matrix:\n";
+		std::cout << "    reduced form of concatenated matrix:\n";
 		(*bdry_bc2).print();
 	}
 
@@ -216,7 +222,7 @@ void MultiBetti::compute_xi(int time, int dist)
 	for(int j = bc2_width+1; j<=(*bdry_bc2).width(); j++)
 		if((*bdry_bc2).low(j) > 0)
 			nu++;
-	if(print_matrices) { cout << "    number of nonzero columns in right block: " << nu << "\n"; }
+	if(print_matrices) { std::cout << "    number of nonzero columns in right block: " << nu << "\n"; }
 
 	//compute dimension of homology at B+C
 	//compute nullity of boundary B+C (1) was computed earlier and stored in nullity_bc
@@ -229,8 +235,8 @@ void MultiBetti::compute_xi(int time, int dist)
 			rank_bc2++;
 	if(print_matrices)
 	{
-		cout << "      nullity of B+C (1) is: " << nullity_bc1 << "\n";
-		cout << "      rank of B+C (2) is: " << rank_bc2 << "\n";
+		std::cout << "      nullity of B+C (1) is: " << nullity_bc1 << "\n";
+		std::cout << "      rank of B+C (2) is: " << rank_bc2 << "\n";
 	}
 
 	//compute \xi_1

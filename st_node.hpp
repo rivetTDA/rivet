@@ -14,6 +14,7 @@ STNode::STNode()
 }
 
 //constructor for non-empty node
+//NOTE: node must still be added as a child of its parent after this constructor is called
 STNode::STNode(int v, STNode* p, int b, int d, int g)
 {
 	//set private values
@@ -22,10 +23,6 @@ STNode::STNode(int v, STNode* p, int b, int d, int g)
 	birth = b;
 	dist = d;
 	g_index = g;
-	
-	//add this node as a child of its parent
-	if(parent)
-		(*parent).add_child(this);
 }
 
 //returns the vertex index
@@ -65,19 +62,56 @@ int STNode::get_global_index()
 }
 
 
-//adds a new child to this node
-void STNode::add_child(STNode* child)
+//appends a new child to this node
+//WARNING: this should only be used if vertex index of child is greater than vertex indexes of all other children (to preserve order of children vector)
+void STNode::append_child(STNode* child)
 {
 	children.push_back(child);
 }
+
+
+//creates a new child node with given parameters and returns a pointer to the new node
+// NOTE: if child with given vertex index already exists, then returns pointer to this node
+// NOTE: global indexes must be re-computed after calling this function
+STNode* STNode::add_child(int v, int t, int d)
+{
+	//otherwise, node has children, so binary search to see if a child node with given vertex index already exists
+	int min = 0;
+	int max = children.size()-1;
+	int found = -1;
+	while(max >= min)
+	{
+		int mid = (min + max)/2;
+		if( (*children[mid]).get_vertex() == v )
+		{
+			found = mid;
+			break;
+		}
+		else if( (*children[mid]).get_vertex() < v )
+			min = mid + 1;
+		else
+			max = mid -1;
+	}
+	
+	//if found, then return pointer to the node
+	if(found != -1)
+	{
+		return children[found];
+	}
+	
+	//if not found, create a new node
+//	std::cout << " ---- creating new node with vertex index " << v << " as child of node with vertex index " << vertex << "\n";
+	STNode* newnode = new STNode(v, this, t, d, -1);
+	children.insert(children.begin() + max + 1, newnode);
+	return newnode;
+}//end add_child()
+
 
 //returns a vector of pointers to children nodes
 std::vector<STNode*> STNode::get_children()
 {
 	return children;
 }
-
-
 
 
 

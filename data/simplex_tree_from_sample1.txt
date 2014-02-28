@@ -1,4 +1,4 @@
-mlwright@prune % ./run data/sample1.txt
+Testing InputManager class
 READING FILE:
   dimension of data: 2
   maximum dimension of simplices: 4
@@ -11,8 +11,9 @@ TESTING VECTOR:
   point 2: (3.3, 2) born at time 2.5
   point 3: (4.2, 3.8) born at time 3.2
   point 4: (2.9, 5.1) born at time 4
+  found 5 points
+BUILDING FILTRATION
 COMPUTING DISTANCES:
-TESTING EDGES:
   distance from point 0 to point 1: 5.36004
   distance from point 0 to point 2: 3.04138
   distance from point 0 to point 3: 4.52769
@@ -23,27 +24,44 @@ TESTING EDGES:
   distance from point 2 to point 3: 2.01246
   distance from point 2 to point 4: 3.1257
   distance from point 3 to point 4: 1.83848
-BUILDING FILTRATION:
+  unique distances less than 4.1: 0, 1.83848, 2.01246, 2.05183, 2.31948, 3.04138, 3.1257, 3.88973, 
+  unique times: 1, 2, 2.5, 3.2, 4, 
+BUILDING SIMPLEX TREE:
+  adding node 0 as child of root 
+  adding node 2 as child of 0; current_dist = 3.04138
+  adding node 1 as child of root 
+  adding node 2 as child of 1; current_dist = 2.31948
+  adding node 3 as child of 2; current_dist = 2.31948
+  adding node 4 as child of 3; current_dist = 3.88973
+  adding node 4 as child of 2; current_dist = 3.88973
+  adding node 3 as child of 1; current_dist = 2.05183
+  adding node 4 as child of 3; current_dist = 3.88973
+  adding node 4 as child of 1; current_dist = 3.88973
+  adding node 2 as child of root 
+  adding node 3 as child of 2; current_dist = 2.01246
+  adding node 4 as child of 3; current_dist = 3.1257
+  adding node 4 as child of 2; current_dist = 3.1257
+  adding node 3 as child of root 
+  adding node 4 as child of 3; current_dist = 1.83848
+  adding node 4 as child of root 
 TESTING SIMPLEX TREE:
-  NODE: vertex -1; index (-1, -1); parent: NULL; children: 0, 1, 2, 3, 4
-    NODE: vertex 0; index (1, 0); parent: -1; children: 2
-      NODE: vertex 2; index (2.5, 3.04138); parent: 0; children: 3, 4
-        NODE: vertex 3; index (3.2, 3.04138); parent: 2; children: 4
-          NODE: vertex 4; index (4, 3.04138); parent: 3; children: NONE
-        NODE: vertex 4; index (4, 3.1257); parent: 2; children: NONE
-    NODE: vertex 1; index (2, 0); parent: -1; children: 2, 3, 4
-      NODE: vertex 2; index (2.5, 2.31948); parent: 1; children: 3, 4
-        NODE: vertex 3; index (3.2, 2.31948); parent: 2; children: 4
-          NODE: vertex 4; index (4, 2.31948); parent: 3; children: NONE
-        NODE: vertex 4; index (4, 3.1257); parent: 2; children: NONE
-      NODE: vertex 3; index (3.2, 2.05183); parent: 1; children: 4
-        NODE: vertex 4; index (4, 2.05183); parent: 3; children: NONE
-      NODE: vertex 4; index (4, 3.88973); parent: 1; children: NONE
-    NODE: vertex 2; index (2.5, 0); parent: -1; children: 3, 4
-      NODE: vertex 3; index (3.2, 2.01246); parent: 2; children: 4
-        NODE: vertex 4; index (4, 2.01246); parent: 3; children: NONE
-      NODE: vertex 4; index (4, 3.1257); parent: 2; children: NONE
-    NODE: vertex 3; index (3.2, 0); parent: -1; children: 4
-      NODE: vertex 4; index (4, 1.83848); parent: 3; children: NONE
-    NODE: vertex 4; index (4, 0); parent: -1; children: NONE
+  NODE: vertex -1; global index: -1; multi-index: (-1, -1); parent: NULL; children: 0, 1, 2, 3, 4
+    NODE: vertex 0; global index: 0; multi-index: (0, 0); parent: -1; children: 2
+      NODE: vertex 2; global index: 1; multi-index: (2, 5); parent: 0; children: NONE
+    NODE: vertex 1; global index: 2; multi-index: (1, 0); parent: -1; children: 2, 3, 4
+      NODE: vertex 2; global index: 3; multi-index: (2, 4); parent: 1; children: 3, 4
+        NODE: vertex 3; global index: 4; multi-index: (3, 4); parent: 2; children: 4
+          NODE: vertex 4; global index: 5; multi-index: (4, 7); parent: 3; children: NONE
+        NODE: vertex 4; global index: 6; multi-index: (4, 7); parent: 2; children: NONE
+      NODE: vertex 3; global index: 7; multi-index: (3, 3); parent: 1; children: 4
+        NODE: vertex 4; global index: 8; multi-index: (4, 7); parent: 3; children: NONE
+      NODE: vertex 4; global index: 9; multi-index: (4, 7); parent: 1; children: NONE
+    NODE: vertex 2; global index: 10; multi-index: (2, 0); parent: -1; children: 3, 4
+      NODE: vertex 3; global index: 11; multi-index: (3, 2); parent: 2; children: 4
+        NODE: vertex 4; global index: 12; multi-index: (4, 6); parent: 3; children: NONE
+      NODE: vertex 4; global index: 13; multi-index: (4, 6); parent: 2; children: NONE
+    NODE: vertex 3; global index: 14; multi-index: (3, 0); parent: -1; children: 4
+      NODE: vertex 4; global index: 15; multi-index: (4, 1); parent: 3; children: NONE
+    NODE: vertex 4; global index: 16; multi-index: (4, 0); parent: -1; children: NONE
+Done.
 

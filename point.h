@@ -3,6 +3,9 @@
  * DOES NOT store the dimension of the point
  */
 
+#ifndef __Point_H__
+#define __Point_H__
+
 #include <iostream>
 
 class Point {
@@ -55,6 +58,6 @@ bool Point::operator < (const Point & other) const
 
 //SHOULD OVERLOAD OTHER COMPARISON OPERATORS TOO!!!
 
-
+#endif // __Point_H__
 
 
