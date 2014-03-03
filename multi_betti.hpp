@@ -115,7 +115,7 @@ void MultiBetti::compute_xi(int time, int dist)
 	for(int j = d2_width+1; j<=(*bdry_d2).width(); j++)
 		if((*bdry_d2).low(j) > 0)
 			alpha++;
-	if(print_matrices) { std::cout << "    number of nonzero columns in right block: " << alpha << "\n"; }
+	if(print_matrices) { std::cout << "    number of nonzero columns in right block (alpha): " << alpha << "\n"; }
 
 	//compute dimensionension of homology at D
 	MapMatrix* bdry_d1 = (*bifiltration).get_boundary_mx(time, dist, dimension);
@@ -222,7 +222,7 @@ void MultiBetti::compute_xi(int time, int dist)
 	for(int j = bc2_width+1; j<=(*bdry_bc2).width(); j++)
 		if((*bdry_bc2).low(j) > 0)
 			nu++;
-	if(print_matrices) { std::cout << "    number of nonzero columns in right block: " << nu << "\n"; }
+	if(print_matrices) { std::cout << "    number of nonzero columns in right block (nu): " << nu << "\n"; }
 
 	//compute dimension of homology at B+C
 	//compute nullity of boundary B+C (1) was computed earlier and stored in nullity_bc
@@ -237,10 +237,12 @@ void MultiBetti::compute_xi(int time, int dist)
 	{
 		std::cout << "      nullity of B+C (1) is: " << nullity_bc1 << "\n";
 		std::cout << "      rank of B+C (2) is: " << rank_bc2 << "\n";
+		std::cout << "      nullity(gamma_M) = " << (nullity_bc1 - rank_bc2 - alpha) << "\n";
+		std::cout << "      alpha = " << alpha << "\n";
 	}
 
 	//compute \xi_1
-	xi[time][dist][1] = nullity_bc1 - rank_bc2 - nu;
+	xi[time][dist][1] = nullity_bc1 - rank_bc2 - alpha - nu;
 }//end compute_xi
 
 
@@ -258,5 +260,6 @@ int MultiBetti::xi1(int time, int dist)
 	return xi[time][dist][1];
 }
 	
+
 
 
