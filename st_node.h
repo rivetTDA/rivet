@@ -1,8 +1,13 @@
-/* simplex tree node class
- * stores a node that is used to build a simplex tree
- *
- * based on a 2012 paper by Boissonnat and Maria
+/**
+ * \class	STNode
+ * \brief	Implements a node of a SimplexTree
+ * \author	Matthew L. Wright
+ * \date	January 2014
+ * 
+ * Stores a node that is used to build a simplex tree and provides operations.
+ * Implementation is based on a 2012 paper by Boissonnat and Maria.
  */
+
 
 #ifndef __STNode_H__
 #define __STNode_H__

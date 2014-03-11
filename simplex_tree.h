@@ -1,8 +1,15 @@
-/* simplex tree class
- * works together with STNode class; also requires Point class
- *
- * based on a 2012 paper by Boissonnat and Maria
+/**
+ * \class	SimplexTree
+ * \brief	Stores a bifiltered simplicial complex in a simplex tree structure.
+ * \author	Matthew L. Wright
+ * \date	February 2014
+ * 
+ * The SimplexTree class stores a bifiltered simplicial complex in a simplex tree structure.
+ * Each node in the simplex tree (implemented by the STNode class) represents one simplex in the bifiltration.
+ * Each simplex has a multi-index at which it is born.
+ * Implementation is based on a 2012 paper by Boissonnat and Maria.
  */
+
 
 #ifndef __SimplexTree_H__
 #define __SimplexTree_H__

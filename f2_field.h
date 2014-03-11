@@ -1,4 +1,11 @@
-//F2 field class
+/**
+ * \class	F2
+ * \brief	This class implements arithmetic in the field of two elements.
+ * \author	Matthew L. Wright
+ * \date	February 2014
+ * 
+ * This was to be used to be used as a data type for sparse matrices, but I decided not to use it.
+ */
 
 class F2
 {

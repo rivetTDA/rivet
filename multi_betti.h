@@ -1,6 +1,11 @@
-/* multi-graded Betti number class
- * takes a bifiltration and computes the multi-graded Betti numbers
- *
+/**
+ * \class	MultiBetti
+ * \brief	Computes the multi-graded Betti numbers of a bifiltration.
+ * \author	Matthew L. Wright
+ * \date	February 2014
+ * 
+ * Given a bifiltration and a dimension of homology, this class computes the multi-graded Betti numbers (xi_0 and xi_1),
+ * either at all multi-index pairs or at specific pairs.
  */
  
 #ifndef __MultiBetti_H__

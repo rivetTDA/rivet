@@ -1,5 +1,10 @@
-/* map matrix node class
- * stores a node for the sparse matrix implementation of a simplex map
+/**
+ * \class	MapMatrixNode
+ * \brief	A node for the MapMatrix class.
+ * \author	Matthew L. Wright
+ * \date	February 2014
+ * 
+ * The MapMatrixNode class stores a node for the sparse implementation of a simplex map.
  */
  
 #ifndef __MapMatrixNode_H__

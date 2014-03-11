@@ -1,9 +1,18 @@
-/* map matrix class
- * stores a matrix representing a simplicial map
+/**
+ * \class	MapMatrix
+ * \brief	Stores a matrix representing a simplicial map and provides basic operations.
+ * \author	Matthew L. Wright
+ * \date	February 2014
+ * \warning	In the matrix perspective, row and column indices start at 1, not at 0.
+ * 
+ * The MapMatrix class stores a matrix representing a simplicial map, such as a boundary map.
+ * Such a matrix is a sparse matrix with entries in the two-element field.
+ * This implementation is based on that described in the persistent homology survey paper by Edelsbrunner and Harer.
+ * Operations are those necessary for persistence computations.
  *
- * based on survey paper by Edelsbrunner and Harer
- *
- * NOTE: from matrix perspective, row and column indices start at 1, not 0
+ * Implementation details: A vector contains pointers to the first element (possibly null) in each column; each column is represented by a linked list.
+ * Linked lists connecting entries in each row are not implemented.
+ * Each entry in the matrix is an instance of the MapMatrixNode class.
  */
  
 #ifndef __MapMatrix_H__

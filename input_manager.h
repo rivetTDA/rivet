@@ -1,7 +1,12 @@
-/* input manager class
- * handles input for the multi-persistence program
- *
+/**
+ * \class	InputManager
+ * \brief	Manages input for the persistence visualization program.
+ * \author	Matthew L. Wright
+ * \date	February 2014
+ * 
+ * The InputManager is able to identify the type of input, read the input, and construct the appropriate bifiltration.
  */
+
  
 #ifndef __InputManager_H__
 #define __InputManager_H__

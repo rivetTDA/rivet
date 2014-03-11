@@ -1,3 +1,16 @@
+/**
+ * \class	Simplex
+ * \brief	Stores the dimension of a simplex and indexes of its vertices.
+ * \author	Matthew L. Wright
+ * \date	January 2014
+ * 
+ * The Simplex class stores an abstract simplex, consisting of a dimension and an array of indexes of its vertices.
+ * This class does not store any geometric data, for a vertex index is simply a number and has no spatial coordinates.
+ * 
+ * \todo	Vertex indexes should probably be ints, not doubles.
+ */
+
+
 /* Simplex class
  * stores dimension of simplex and indices of its vertices
  */

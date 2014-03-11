@@ -1,7 +1,15 @@
-/* point class
- * stores an n-tuple with a time of appearance
- * DOES NOT store the dimension of the point
+/**
+ * \class	Point
+ * \brief	Stores an n-tuple with a time of appearance.
+ * \author	Matthew L. Wright
+ * \date	January 2014
+ * \warning	This class does not store the dimension of the point.
+ * 
+ * The Point class stores the coordinates of a geometric point (as a double array) along with its birth time (a double).
+ * 
+ * \todo	Only the less-than operator is overloaded; other comparison operators should also be overloaded.
  */
+
 
 #ifndef __Point_H__
 #define __Point_H__
