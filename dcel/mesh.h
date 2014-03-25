@@ -12,6 +12,7 @@
 #include <vector>
 #include <iostream>
 #include <limits>
+#include "lcm.h"
 #include "vertex.h"
 #include "halfedge.h"
 #include "face.h"

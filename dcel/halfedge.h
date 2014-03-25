@@ -9,15 +9,16 @@
 #define __DCEL_Halfedge_H__
 
 //includes????  namespace????
-#include <utility>
+//#include <utility>
 
+class LCM;
 class Vertex;
 class Face;
 
 class Halfedge
 {
 	public:
-		Halfedge(Vertex* v, double time, double dist);	//constructor, requires origin vertex as well as time and distance coordinates for the LCM corresponding to this halfedge (LCM never changes)
+		Halfedge(Vertex* v, LCM* p);	//constructor, requires origin vertex as well as LCM corresponding to this halfedge (LCM never changes)
 		
 		void set_twin(Halfedge* e);	//set the twin halfedge
 		Halfedge* get_twin();		//get the twin halfedge
@@ -34,7 +35,7 @@ class Halfedge
 		void set_face(Face* f);		//get the face that this halfedge borders
 		Face* get_face();		//set the face that this halfedge borders
 		
-		std::pair<double, double> get_LCM();	//get the LCM coordinates; ---> WARNING: THIS MAY UNNECESSARILY COPY A PAIR OBJECT
+		LCM* get_LCM();			//get the LCM coordinates
 		
 		friend std::ostream& operator<<(std::ostream& os, const Halfedge& e);	//for printing the halfedge
 		
@@ -44,17 +45,21 @@ class Halfedge
 		Halfedge* next;		//pointer to the next halfedge around the boundary of the face to the right of this halfedge
 		Halfedge* prev;		//pointer to the previous halfedge around the boundary of the face to the right of this halfedge
 		Face* face;		//pointer to the face to the right of this halfedge
-		std::pair<double, double> lcm_coords;	//coordinates (in the two-parameter persistence space) of the LCM corresponding to this halfedge
+		LCM* lcm;		//stores the (time, dist)-coordinates (in persistence space) of the LCM corresponding to this halfedge
 	
 };//end class Halfedge
 
 
 ////////// implementation //////////
 
-Halfedge::Halfedge(Vertex* v, double time, double dist) : lcm_coords(time, dist), face(NULL)	//IS THIS WHAT WE WANT???
-{
-	origin = v;
-}
+Halfedge::Halfedge(Vertex* v, LCM* p) : 
+	origin(v),
+	twin(NULL),
+	next(NULL),
+	prev(NULL),
+	face(NULL),
+	lcm(p)
+{ }
 
 void Halfedge::set_twin(Halfedge* e)
 {
@@ -101,15 +106,20 @@ Face* Halfedge::get_face()
 	return face;
 }
 
-std::pair<double, double> Halfedge::get_LCM()
+LCM* Halfedge::get_LCM()
 {
-	return lcm_coords;
+	return lcm;
 }
 
 std::ostream& operator<<(std::ostream& os, const Halfedge& e)
 {
 	Halfedge* t = e.twin;
-	os << *(e.origin) << "--" << *(t->origin) << ", LCM coords (" << e.lcm_coords.first << ", " << e.lcm_coords.second << ") face:" << (e.face);
+	os << *(e.origin) << "--" << *(t->origin) << "; ";
+	if(e.lcm == NULL)
+		os << "LCM null; ";
+	else
+		os << "LCM coords (" << e.lcm->get_time() << ", " << e.lcm->get_dist() << "); ";
+	os << "face: " << (e.face);
 	return os;
 }
 

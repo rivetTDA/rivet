@@ -14,8 +14,8 @@ Mesh::Mesh() : INFTY(std::numeric_limits<double>::infinity())
 	//create halfedges
 	for(int i=0; i<4; i++)
 	{
-		halfedges.push_back( new Halfedge( vertices[i], -1, -1) );		//index 0, 2, 4, 6 (inside halfedges)
-		halfedges.push_back( new Halfedge( vertices[(i+1)%4], -1, -1) );		//index 1, 3, 5, 7 (outside halfedges)
+		halfedges.push_back( new Halfedge( vertices[i], NULL) );		//index 0, 2, 4, 6 (inside halfedges)
+		halfedges.push_back( new Halfedge( vertices[(i+1)%4], NULL) );		//index 1, 3, 5, 7 (outside halfedges)
 		halfedges[2*i]->set_twin( halfedges[2*i+1] );
 		halfedges[2*i+1]->set_twin( halfedges[2*i] );
 	}
@@ -50,6 +50,86 @@ Mesh::~Mesh()
 //adds a curve representing LCM to the mesh
 void Mesh::add_curve(double time, double dist)
 {
+	//insert left endpoint
+	Halfedge* leftedge = halfedges[6];	//left edge
+	Halfedge* lefttwin = leftedge->get_twin();
+	
+	Vertex* leftend = new Vertex(0,dist);	//coordinates
+	vertices.push_back(leftend);
+	
+	Halfedge* leftup = new Halfedge(leftend, leftedge->get_LCM());
+	halfedges.push_back(leftup);
+	leftup->set_twin(lefttwin);
+	leftup->set_next(leftedge->get_next());
+	
+	Halfedge* leftdown = new Halfedge(leftend, lefttwin->get_LCM());
+	halfedges.push_back(leftdown);
+	leftdown->set_twin(leftedge);
+	leftdown->set_next(lefttwin->get_next());
+	leftdown->set_prev(lefttwin);
+	lefttwin->set_next(leftdown);
+	
+	leftedge->set_twin(leftdown);
+	lefttwin->set_twin(leftup);
+	
+	//insert right endpoint
+	Halfedge* rightedge = halfedges[2];	//right edge
+	Halfedge* righttwin = rightedge->get_twin();
+	
+	Vertex* rightend = new Vertex(HALF_PI,-1*time);	//coordinates
+	vertices.push_back(rightend);
+	
+	Halfedge* rightup = new Halfedge(rightend, righttwin->get_LCM());
+	halfedges.push_back(rightup);
+	rightup->set_twin(rightedge);
+	rightup->set_next(righttwin->get_next());
+	rightup->set_prev(righttwin);
+	righttwin->set_next(rightup);
+	
+	Halfedge* rightdown = new Halfedge(rightend, rightedge->get_LCM());
+	halfedges.push_back(rightdown);
+	rightdown->set_twin(righttwin);
+	rightdown->set_next(rightedge->get_next());
+	
+	rightedge->set_twin(rightup);
+	righttwin->set_twin(rightdown);
+	
+	//insert new edge
+	LCM* lcm = new LCM(time, dist);
+	Halfedge* fromleft = new Halfedge(leftend, lcm);
+	halfedges.push_back(fromleft);
+	
+	Halfedge* fromright = new Halfedge(rightend, lcm);
+	halfedges.push_back(fromright);
+	
+	fromleft->set_twin(fromright);
+	fromright->set_twin(fromleft);
+	
+	fromleft->set_next(rightdown);
+	rightdown->set_prev(fromleft);
+	fromleft->set_prev(leftedge);
+	leftedge->set_next(fromleft);
+	
+	fromright->set_next(leftup);
+	leftup->set_prev(fromright);
+	fromright->set_prev(rightedge);
+	rightedge->set_next(fromright);
+	
+	//insert new face and update face pointers
+	//   (old face becomes the face above the new edge; new face is the one below the new edge)
+	Face* topface = rightedge->get_face();
+	fromright->set_face(topface);
+	leftup->set_face(topface);
+	
+	Face* bottomface = new Face(fromleft);
+	faces.push_back(bottomface);
+	
+	Halfedge* curr = leftedge;	//loop around new face and update face pointers
+	do{
+		curr->set_face(bottomface);
+		curr = curr->get_next();
+	}while(curr != leftedge);
+	
 	
 	
 }//end add_curve()
@@ -75,7 +155,7 @@ void Mesh::print()
 	std::cout << "  Faces\n";
 	for(int i=0; i<faces.size(); i++)
 	{
-		std::cout << "    face " << i << ": " << *faces[i] << "\n";
+		std::cout << "    face " << i << " (" << faces[i] << "): " << *faces[i] << "\n";
 	}
 	
 	std::cout << "  Outside (unbounded) region: ";

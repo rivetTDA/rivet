@@ -1,3 +1,5 @@
+// program to test the DCEL structure
+
 #include <iostream>
 #include <limits>
 #include "mesh.h"
@@ -23,8 +25,10 @@ int main(int argc, char* argv[])
 	Mesh dcel;
 	dcel.print();
 	
-	
-	
+	//add a new curve
+	std::cout << "ADDING A CURVE FOR LCM(1,2)\n";
+	dcel.add_curve(1,2);
+	dcel.print();
 	
 	
 	
