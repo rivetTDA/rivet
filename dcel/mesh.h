@@ -11,7 +11,8 @@
 //includes????  namespace????
 #include <vector>
 #include <iostream>
-#include <limits>
+#include <limits>	//necessary for infinity
+#include <set>
 #include "lcm.h"
 #include "vertex.h"
 #include "halfedge.h"
@@ -42,7 +43,7 @@ class Mesh
 		const double INFTY;
 		static const double HALF_PI = 1.570796327;
 		
-		//list (maybe a set) of LCMs that are represented in the mesh
+		std::set<LCM> inserted_lcms;	//ordered container of LCMs that are represented in the mesh
 		
 	
 };//end class Mesh

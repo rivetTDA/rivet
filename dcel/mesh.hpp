@@ -38,7 +38,6 @@ Mesh::Mesh() : INFTY(std::numeric_limits<double>::infinity())
 	
 	
 	
-	
 }//end constructor
 
 //destructor: IMPLEMENT THIS, MAKE SURE ALL MEMORY IS RELEASED!!!!
@@ -132,6 +131,10 @@ void Mesh::add_curve(double time, double dist)
 	
 	
 	
+	//add this LCM to the ordered LCM container
+	inserted_lcms.insert( LCM(time, dist, fromleft) );
+	
+	
 }//end add_curve()
 
 
@@ -141,14 +144,12 @@ void Mesh::print()
 	std::cout << "  Vertices\n";
 	for(int i=0; i<vertices.size(); i++)
 	{
-		//Vertex* v = &(vertices[i]);
 		std::cout << "    vertex " << i << ": " << *vertices[i] << "\n";
 	}
 	
 	std::cout << "  Halfedges\n";
 	for(int i=0; i<halfedges.size(); i++)
 	{
-		//Halfedge* e = &(halfedges[i]);
 		std::cout << "    halfedge " << i << ": " << *halfedges[i] << "\n";
 	}
 	
@@ -166,6 +167,15 @@ void Mesh::print()
 		curr = curr->get_next();
 	}while(curr != start);
 	std::cout << "cycle\n";
+	
+	std::cout << "  LCM set: ";
+	std::set<LCM>::iterator it;
+	for(it = inserted_lcms.begin(); it != inserted_lcms.end(); ++it)
+	{
+		LCM cur = *it;
+		std::cout << "(" << cur.get_time() << ", " << cur.get_dist() << ") ";
+	}
+	std::cout << "\n";
 	
 }//end print()
 

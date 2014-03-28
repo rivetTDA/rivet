@@ -14,7 +14,15 @@ class Halfedge;
 class LCM
 {
 	public:
-		LCM(double t, double d);	//constructor, requires time and distance values
+		LCM(double t, double d);		//constructor, requires only time and distance values
+		LCM(double t, double d, Halfedge* e);	//constructor, requires all three parameters
+		LCM(const LCM& other);			//copy constructor
+		
+		LCM& operator= (const LCM& other);	//assignment operator
+		
+		bool operator== (const LCM& other) const;	//comparison operators
+		//bool operator!= (const LCM& other) const;
+		bool operator< (const LCM& other) const;
 		
 		double get_time();		//get the time-coordinate of the multi-index
 		double get_dist();		//get the distance-coordinate of the multi-index
@@ -32,10 +40,45 @@ class LCM
 
 ////////// implementation //////////
 
-LCM::LCM(double t, double d)
+LCM::LCM(double t, double d) : time(t), dist(d) 
+{ }
+
+LCM::LCM(double t, double d, Halfedge* e) : time(t), dist(d), curve(e)
+{ }
+
+LCM::LCM(const LCM& other)
 {
-	time = t;
-	dist = d;
+	time = other.time;
+	dist = other.dist;
+	curve = other.curve;
+}
+
+LCM& LCM::operator= (const LCM& other)
+{
+	//check for self-assignment
+	if(this == &other)
+		return *this;
+	
+	//do the copy
+	time = other.time;
+	dist = other.dist;
+	curve = other.curve;
+	
+	return *this;
+}
+
+bool LCM::operator== (const LCM& other) const
+{
+	return (time == other.time && dist == other.dist);
+}
+
+bool LCM::operator< (const LCM& other) const
+{
+	if(dist < other.dist)	//first compare distance value (natural order)
+		return true;
+	if(dist == other.dist && time > other.time)	//then compare time value (reverse order!)
+		return true;
+	return false;
 }
 
 double LCM::get_time()
