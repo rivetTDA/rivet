@@ -30,7 +30,9 @@ int main(int argc, char* argv[])
 	dcel.add_curve(1,2);
 	dcel.print();
 	
-	
+	//std::cout << "ADDING A CURVE FOR LCM(3,1)\n";
+	//dcel.add_curve(3,1);
+	//dcel.print();
 	
 	
 	

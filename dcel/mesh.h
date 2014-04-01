@@ -13,10 +13,12 @@
 #include <iostream>
 #include <limits>	//necessary for infinity
 #include <set>
-#include "lcm.h"
-#include "vertex.h"
-#include "halfedge.h"
-#include "face.h"
+#include "lcm.hpp"
+#include "lcm_left_comparator.hpp"
+#include "lcm_angle_comparator.hpp"
+#include "vertex.hpp"
+#include "halfedge.hpp"
+#include "face.hpp"
 
 class Mesh
 {
@@ -43,7 +45,7 @@ class Mesh
 		const double INFTY;
 		static const double HALF_PI = 1.570796327;
 		
-		std::set<LCM> inserted_lcms;	//ordered container of LCMs that are represented in the mesh
+		std::set<LCM, LCM_LeftComparator> inserted_lcms;	//ordered container of LCMs that are represented in the mesh
 		
 	
 };//end class Mesh

@@ -36,11 +36,11 @@ class Vertex
 
 ////////// implementation //////////
 
-Vertex::Vertex(double theta_coord, double r_coord) : incident_edge(NULL)
-{
-	theta = theta_coord;
-	r = r_coord;
-}
+Vertex::Vertex(double theta_coord, double r_coord) : 
+	incident_edge(NULL),
+	theta(theta_coord),
+	r(r_coord)
+{ }
 
 void Vertex::set_incident_edge(Halfedge* edge)
 {

@@ -19,13 +19,10 @@ class LCM
 		LCM(const LCM& other);			//copy constructor
 		
 		LCM& operator= (const LCM& other);	//assignment operator
+		bool operator== (const LCM& other) const;	//equality operator
 		
-		bool operator== (const LCM& other) const;	//comparison operators
-		//bool operator!= (const LCM& other) const;
-		bool operator< (const LCM& other) const;
-		
-		double get_time();		//get the time-coordinate of the multi-index
-		double get_dist();		//get the distance-coordinate of the multi-index
+		double get_time() const;		//get the time-coordinate of the multi-index
+		double get_dist() const;		//get the distance-coordinate of the multi-index
 		
 		void set_curve(Halfedge* e);	//set the pointer to the curve corresponding to this LCM in the arrangement
 		Halfedge* get_curve();		//get the pointer to the curve corresponding to this LCM in the arrangement
@@ -72,21 +69,12 @@ bool LCM::operator== (const LCM& other) const
 	return (time == other.time && dist == other.dist);
 }
 
-bool LCM::operator< (const LCM& other) const
-{
-	if(dist < other.dist)	//first compare distance value (natural order)
-		return true;
-	if(dist == other.dist && time > other.time)	//then compare time value (reverse order!)
-		return true;
-	return false;
-}
-
-double LCM::get_time()
+double LCM::get_time() const
 {
 	return time;
 }
 
-double LCM::get_dist()
+double LCM::get_dist() const
 {
 	return dist;
 }
