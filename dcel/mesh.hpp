@@ -9,7 +9,7 @@ Mesh::Mesh() : INFTY(std::numeric_limits<double>::infinity())
 	vertices.push_back( new Vertex(0, INFTY) );		//index 0
 	vertices.push_back( new Vertex(HALF_PI, INFTY) );	//index 1
 	vertices.push_back( new Vertex(HALF_PI, -INFTY) );	//index 2
-	vertices.push_back( new Vertex(0, -INFTY) );	//index 3
+	vertices.push_back( new Vertex(0, -INFTY) );		//index 3
 	
 	//create halfedges
 	for(int i=0; i<4; i++)
@@ -19,6 +19,8 @@ Mesh::Mesh() : INFTY(std::numeric_limits<double>::infinity())
 		halfedges[2*i]->set_twin( halfedges[2*i+1] );
 		halfedges[2*i+1]->set_twin( halfedges[2*i] );
 	}
+	
+	topleft = halfedges[7];	//remember this halfedge to make curve insertion easier
 	
 	//create face
 	faces.push_back( new Face( halfedges[0] ) );
@@ -49,7 +51,90 @@ Mesh::~Mesh()
 //adds a curve representing LCM to the mesh
 void Mesh::add_curve(double time, double dist)
 {
-	//insert left endpoint
+	//create LCM object
+	LCM current = LCM(time, dist);
+	if(verbose)
+		std::cout << "    inserting LCM: (" << current.get_time() << ", " << current.get_dist() << ")\n";
+	
+	//create set of LCMs ordered by LCM_AngleComparator
+	std::set<LCM, LCM_AngleComparator> intersections(current);
+	
+	//find all comparable, previously-inserted LCMs, add them to the set ordered by LCM_AngleComparator
+	std::set<LCM>::iterator it;
+	for(it = inserted_lcms.begin(); it != inserted_lcms.end(); ++it)
+	{
+		if( (it->get_time() >= time && it->get_dist() >= dist) || (it->get_time() <= time && it->get_dist() <= dist) )	//then the LCMs are comparable
+		{
+			if(verbose)
+				std::cout << "      comparable LCM: (" << it->get_time() << ", " << it->get_dist() << ")\n";
+			
+			intersections.insert(*it);
+		}
+	}
+	
+	if(verbose)
+	{
+		std::cout << "    intersections: ";
+		for(it = intersections.begin(); it != intersections.end(); ++it)
+		{
+			LCM cur = *it;
+			std::cout << "(" << cur.get_time() << ", " << cur.get_dist() << "), ";
+		}
+		std::cout << "\n";
+	}
+	
+	
+	//find where to insert left endpoint -- use the ordered LCM container, inserted_lcms
+	std::set<LCM>::iterator itleft;
+	itleft = inserted_lcms.upper_bound(current);	//returns an iterator to the first LCM that is greater than "current"
+
+	if(verbose)
+	{
+		if(itleft == inserted_lcms.end())
+			std::cout << "    LCM curve to be inserted after all existing LCM curves\n";
+		else
+			std::cout << "    LCM curve to be inserted before curve corresponding to LCM (" << itleft->get_time() << ", " << itleft->get_dist() << ")\n";
+	}
+	
+	//halfedge pointers to use for constructing the new curve
+	Halfedge* leftedge, rightedge;
+	
+	//find or create left endpoint for the new curve (on theta=0 edge of the strip)
+	if(itleft == inserted_lcms.end()) //then create a new vertex above the highest existing vertex on this edge of the strip
+	{
+		leftedge = insert_vertex(topleft->get_twin(), 0, dist);
+		
+	}
+	else if(itleft->get_dist() == dist)	//then use existing vertex
+	{
+		//FINISH THIS PART!!!
+		
+		leftedge= ???
+		
+	}
+	else	//then create new vertex
+	{
+		leftedge = insert_vertex(itleft->get_curve()->get_prev(), 0, dist);
+		
+	}
+	
+	
+	//loop through all existing curves that this new curve crosses
+	
+		//find or create right endpoint for the current face
+		
+		
+		
+		//subdivide the face
+	
+	
+	
+	//find or create right endpoint for the new curve (on theta=pi/2 edge of the strip)
+	
+	
+	
+	
+/*	//insert left endpoint (on theta=0 edge of the strip)
 	Halfedge* leftedge = halfedges[6];	//left edge
 	Halfedge* lefttwin = leftedge->get_twin();
 	
@@ -71,7 +156,21 @@ void Mesh::add_curve(double time, double dist)
 	leftedge->set_twin(leftdown);
 	lefttwin->set_twin(leftup);
 	
-	//insert right endpoint
+	//loop through the ordered LCMs that this new curve will intersect
+		
+		//identify or create right endpoint of current segment
+		
+		
+		//insert the segment
+		
+		
+		//insert new face and update pointers
+		
+		
+		
+	
+	
+	//insert right endpoint (on theta=pi/2 edge of strip)
 	Halfedge* rightedge = halfedges[2];	//right edge
 	Halfedge* righttwin = rightedge->get_twin();
 	
@@ -129,13 +228,58 @@ void Mesh::add_curve(double time, double dist)
 		curr = curr->get_next();
 	}while(curr != leftedge);
 	
+*/	
+	//add pointer to curve to LCM current
+	
 	
 	
 	//add this LCM to the ordered LCM container
-	inserted_lcms.insert( LCM(time, dist, fromleft) );
+	inserted_lcms.insert( current );
 	
 	
 }//end add_curve()
+
+//inserts a new vertex on the specified edge, with the specified coordinates, and updates all relevant pointers
+//  i.e. new vertex is between initial and termainal points of the specified edge
+//returns pointer to a new halfedge, whose initial point is the new vertex, and that follows the specified edge around its face
+Halfedge* Mesh::insert_vertex(Halfedge* edge, double t, double r)
+{
+	//create new vertex
+	Vertex* new_vertex = new Vertex(t, r);
+	vertices.push_back(new_vertex);
+	
+	//get twin and LCM of this edge
+	Halfedge* twin = edge->get_twin();
+	LCM* lcm = edge->get_LCM();
+	
+	//create new halfedges
+	Halfedge* up = new Halfedge(new_vertex, lcm);
+	halfedges.push_back(up);
+	Halfedge* dn = new Halfedge(new_vertex, lcm);
+	halfedges.push_back(dn);
+		
+	//update pointers
+	up.set_next(edge->get_next());
+	up.set_prev(edge);
+	up.set_twin(twin);
+	up.set_face(edge->get_face());
+	
+	edge.set_next(up);
+	edge.set_twin(dn);
+	
+	dn.set_next(twin->get_next());
+	dn.set_prev(twin);
+	dn.set_twin(edge);
+	dn.set_face(twin->get_face());
+	
+	twin.set_next(dn);
+	twin.set_twin(up);
+	
+	//return pointer to up
+	return up;
+}
+
+
 
 
 //print all the data from the mesh
