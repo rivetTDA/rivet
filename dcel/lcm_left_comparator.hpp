@@ -14,11 +14,11 @@
 class LCM_LeftComparator
 {
 	public:
-		bool operator() (const LCM& lhs, const LCM& rhs) const
+		bool operator() (const LCM* lhs, const LCM* rhs) const
 		{
-			if(lhs.get_dist() < rhs.get_dist())		//first compare distance value (natural order)
+			if(lhs->get_dist() < rhs->get_dist())		//first compare distance value (natural order)
 				return true;
-			if(lhs.get_dist() == rhs.get_dist() && lhs.get_time() > rhs.get_time())		//then compare time value (reverse order!)
+			if(lhs->get_dist() == rhs->get_dist() && lhs->get_time() > rhs->get_time())		//then compare time value (reverse order!)
 				return true;
 			return false;
 		}

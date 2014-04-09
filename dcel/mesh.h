@@ -12,6 +12,7 @@
 #include <vector>
 #include <iostream>
 #include <limits>	//necessary for infinity
+#include <math.h>	//necessary for atan
 #include <set>
 #include "lcm.hpp"
 #include "lcm_left_comparator.hpp"
@@ -46,13 +47,14 @@ class Mesh
 		const double INFTY;
 		static const double HALF_PI = 1.570796327;
 		
-		std::set<LCM, LCM_LeftComparator> inserted_lcms;	//ordered container of LCMs that are represented in the mesh
+		std::set<LCM*, LCM_LeftComparator> inserted_lcms;	//ordered container of LCMs that are represented in the mesh
 		
 		Halfedge* topleft;			//pointer to halfedge that points down from top left corner (theta=0, r=infty)
 		
 		static const bool verbose = true;	//controls display of output, for debugging
 		
-		Halfedge* Mesh::insert_vertex(Halfedge* edge, double t, double r)	//inserts a new vertex on the specified edge, with the specified coordinates, and updates all relevant pointers
+		Halfedge* insert_vertex(Halfedge* edge, double t, double r);	//inserts a new vertex on the specified edge, with the specified coordinates, and updates all relevant pointers
+		void insert_edge(Halfedge* leftedge, Halfedge* rightedge, LCM* lcm);	//inserts a new edge across an existing face; requires leftedge and rightedge, coherently oriented around the existing face, and whose origin vertices will be endpoints of the new edge; also requires the LCM to be associated with the new edge
 		
 };//end class Mesh
 

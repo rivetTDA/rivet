@@ -25,7 +25,7 @@ class LCM
 		double get_dist() const;		//get the distance-coordinate of the multi-index
 		
 		void set_curve(Halfedge* e);	//set the pointer to the curve corresponding to this LCM in the arrangement
-		Halfedge* get_curve();		//get the pointer to the curve corresponding to this LCM in the arrangement
+		Halfedge* get_curve() const;		//get the pointer to the curve corresponding to this LCM in the arrangement
 		
 	private:
 		double time;		//time-coordinate of multi-index
@@ -37,7 +37,7 @@ class LCM
 
 ////////// implementation //////////
 
-LCM::LCM(double t, double d) : time(t), dist(d) 
+LCM::LCM(double t, double d) : time(t), dist(d), curve(NULL)
 { }
 
 LCM::LCM(double t, double d, Halfedge* e) : time(t), dist(d), curve(e)
@@ -84,7 +84,7 @@ void LCM::set_curve(Halfedge* e)
 	curve = e;
 }
 
-Halfedge* LCM::get_curve()
+Halfedge* LCM::get_curve() const
 {
 	return curve;
 }

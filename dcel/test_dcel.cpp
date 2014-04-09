@@ -32,16 +32,17 @@ int main(int argc, char* argv[])
 	
 	std::cout << "ADDING A CURVE FOR LCM(3,1)\n";
 	dcel.add_curve(3,1);
-	//dcel.print();
+	dcel.print();
 	
 	std::cout << "ADDING A CURVE FOR LCM(4,3)\n";
 	dcel.add_curve(4,3);
+	dcel.print();
 	
-	std::cout << "ADDING A CURVE FOR LCM(2,4)\n";
+/*	std::cout << "ADDING A CURVE FOR LCM(2,4)\n";
 	dcel.add_curve(2,4);
 	
 	std::cout << "ADDING A CURVE FOR LCM(3,4)\n";
 	dcel.add_curve(3,4);
-	
+*/	
 	std::cout << "Done.\n\n";
 }

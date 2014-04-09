@@ -14,18 +14,18 @@
 class LCM_AngleComparator
 {
 	public:
-		LCM_AngleComparator(LCM& ref) : 		//constructor, requires a reference LCM
-			time(ref.get_time()), 
-			dist(ref.get_dist()) 
+		LCM_AngleComparator(const LCM* ref) : 		//constructor, requires a reference LCM
+			time(ref->get_time()), 
+			dist(ref->get_dist()) 
 		{ };
 		
-		bool operator() (const LCM& lhs, const LCM& rhs) const
+		bool operator() (const LCM* lhs, const LCM* rhs) const
 		{
-			double x1 = lhs.get_time() - time;
-			double y1 = lhs.get_dist() - dist;
+			double x1 = lhs->get_time() - time;
+			double y1 = lhs->get_dist() - dist;
 			
-			double x2 = rhs.get_time() - time;
-			double y2 = rhs.get_dist() - dist;
+			double x2 = rhs->get_time() - time;
+			double y2 = rhs->get_dist() - dist;
 			
 			if(x1 == 0)	//then lhs corresponds to vertical line
 			{

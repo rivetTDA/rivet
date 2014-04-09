@@ -19,23 +19,24 @@ class Halfedge
 {
 	public:
 		Halfedge(Vertex* v, LCM* p);	//constructor, requires origin vertex as well as LCM corresponding to this halfedge (LCM never changes)
+		Halfedge();			//constructor for a null Halfedge
 		
 		void set_twin(Halfedge* e);	//set the twin halfedge
-		Halfedge* get_twin();		//get the twin halfedge
+		Halfedge* get_twin() const;		//get the twin halfedge
 		
 		void set_next(Halfedge* e);	//set the next halfedge in the boundary of the face that this halfedge borders
-		Halfedge* get_next();		//get the next halfedge
+		Halfedge* get_next() const;		//get the next halfedge
 		
 		void set_prev(Halfedge* e);	//set the previous halfedge in the boundary of the face that this halfedge borders
-		Halfedge* get_prev();		//get the previous halfedge
+		Halfedge* get_prev() const;		//get the previous halfedge
 		
 		//void set_origin(Vertex* v); -- I don't think we will ever change the origin vertex
-		Vertex* get_origin();		//get the origin vertex
+		Vertex* get_origin() const;		//get the origin vertex
 		
 		void set_face(Face* f);		//get the face that this halfedge borders
-		Face* get_face();		//set the face that this halfedge borders
+		Face* get_face() const;		//set the face that this halfedge borders
 		
-		LCM* get_LCM();			//get the LCM coordinates
+		LCM* get_LCM() const;			//get the LCM coordinates
 		
 		friend std::ostream& operator<<(std::ostream& os, const Halfedge& e);	//for printing the halfedge
 		
@@ -61,12 +62,21 @@ Halfedge::Halfedge(Vertex* v, LCM* p) :
 	lcm(p)
 { }
 
+Halfedge::Halfedge() : 
+	origin(NULL),
+	twin(NULL),
+	next(NULL),
+	prev(NULL),
+	face(NULL),
+	lcm(NULL)
+{ }
+
 void Halfedge::set_twin(Halfedge* e)
 {
 	twin = e;
 }
 
-Halfedge* Halfedge::get_twin()
+Halfedge* Halfedge::get_twin() const
 {
 	return twin;
 }
@@ -76,7 +86,7 @@ void Halfedge::set_next(Halfedge* e)
 	next = e;
 }
 
-Halfedge* Halfedge::get_next()
+Halfedge* Halfedge::get_next() const
 {
 	return next;
 }
@@ -86,12 +96,12 @@ void Halfedge::set_prev(Halfedge* e)
 	prev = e;
 }
 
-Halfedge* Halfedge::get_prev()
+Halfedge* Halfedge::get_prev() const
 {
 	return prev;
 }
 
-Vertex* Halfedge::get_origin()
+Vertex* Halfedge::get_origin() const
 {
 	return origin;
 }
@@ -101,12 +111,12 @@ void Halfedge::set_face(Face* f)
 	face = f;
 }
 
-Face* Halfedge::get_face()
+Face* Halfedge::get_face() const
 {
 	return face;
 }
 
-LCM* Halfedge::get_LCM()
+LCM* Halfedge::get_LCM() const
 {
 	return lcm;
 }
@@ -119,7 +129,7 @@ std::ostream& operator<<(std::ostream& os, const Halfedge& e)
 		os << "LCM null; ";
 	else
 		os << "LCM coords (" << e.lcm->get_time() << ", " << e.lcm->get_dist() << "); ";
-	os << "face: " << (e.face);
+	os << "twin: " << (e.twin) << "; next: " << (e.next) << "; prev: " << (e.prev) << "; face: " << (e.face);
 	return os;
 }
 
