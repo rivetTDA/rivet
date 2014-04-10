@@ -52,6 +52,8 @@ Mesh::~Mesh()
 }//end destructor
 
 //adds a curve representing LCM to the mesh
+// TODO: make this better (I think it works now, but it is messy, and I am concerned about round-off error.)
+// IDEA: store the intersections not as a set of LCMs, but as a binary search tree of vectors of LCMs, where the LCMs in each vector share a common angle with the reference LCM
 void Mesh::add_curve(double time, double dist)
 {
 	//create LCM object 
@@ -119,7 +121,7 @@ void Mesh::add_curve(double time, double dist)
 		leftedge = insert_vertex( (**itleft).get_curve()->get_prev(), 0, dist);
 	}
 	
-	if(verbose) { std::cout << "    ----leftedge: " << leftedge << "\n"; }
+	if(verbose) { std::cout << "    ----leftedge: " << HID(leftedge) << "\n"; }
 	
 	//loop through all existing curves that this new curve crosses
 	std::set<LCM*>::iterator itint;
@@ -138,9 +140,10 @@ void Mesh::add_curve(double time, double dist)
 		
 		//find or create right endpoint for the current face
 		Halfedge* finger = leftedge->get_next();
-		while( finger != leftedge )	//this loop should end at a break statement, not when we traverse the entire face!
+		bool found_rightedge = false;
+		while( finger != leftedge && !found_rightedge )	//this loop should end when we find rightedge, not when we traverse the entire face!
 		{
-			if(verbose) { std::cout << "    ----checking finger: " << finger << "\n"; }
+			if(verbose) { std::cout << "    ----checking finger: " << HID(finger) << "\n"; }
 			
 			//is this the edge we are looking for?
 			if( finger->get_LCM() == *itint )	//then next intersection is with the curve that finger points to
@@ -154,53 +157,98 @@ void Mesh::add_curve(double time, double dist)
 					if(verbose) { std::cout << "    ----intersection at theta=pi/2\n"; }
 					
 					rightedge = finger->get_next();
-					break;	//found rightedge
+					found_rightedge = true;	//found rightedge
 				}
-				
-				double intersect_angle = atan( (intersect_LCM->get_dist() - dist)/(intersect_LCM->get_time() - time) );	//theta-coordinate of next intersection
-				//Vertex* endpt = finger->get_twin()->get_origin();	//terminal vertex of edge pointed to by finger
-				double begin_angle = finger->get_origin()->get_theta();	//theta-coordinate of initial vertex of edge pointed to by finger
-				double end_angle = finger->get_twin()->get_origin()->get_theta();	//theta-coordinate of terminal vertex of edge pointed to by finger
-				
-				if(verbose) { std::cout << "    ------comparing angles: " << begin_angle << ", " << intersect_angle << ", and " << end_angle << "\n"; }
-				
-				if( (begin_angle < intersect_angle && intersect_angle < end_angle) 
-					|| (end_angle < intersect_angle && intersect_angle < begin_angle) )	//then intersection is along edge pointed to by finger, so we must create a new vertex
+				else
 				{
-					double intersect_r;
-					if(time != 0)
-						intersect_r = sqrt( time*time + dist*dist ) * sin( atan(dist/time) - intersect_angle );	//////TODO: CHECK THIS; HOW CAN WE ELIMINATE ROUND-OFF ERROR???
-					else
-						intersect_r = sqrt( time*time + dist*dist ) * cos( intersect_angle );
+					double intersect_angle = atan( (intersect_LCM->get_dist() - dist)/(intersect_LCM->get_time() - time) );	//theta-coordinate of next intersection
+					//Vertex* endpt = finger->get_twin()->get_origin();	//terminal vertex of edge pointed to by finger
+					double begin_angle = finger->get_origin()->get_theta();	//theta-coordinate of initial vertex of edge pointed to by finger
+					double end_angle = finger->get_twin()->get_origin()->get_theta();	//theta-coordinate of terminal vertex of edge pointed to by finger
+				
+					if(verbose) { std::cout << "    ------comparing angles: " << begin_angle << ", " << intersect_angle << ", and " << end_angle << "\n"; }
+				
+					if( (begin_angle < intersect_angle && intersect_angle < end_angle) 
+						|| (end_angle < intersect_angle && intersect_angle < begin_angle) )	//then intersection is along edge pointed to by finger, so we must create a new vertex
+					{
+						double intersect_r;
+						if(time != 0)
+							intersect_r = sqrt( time*time + dist*dist ) * sin( atan(dist/time) - intersect_angle );	//////TODO: CHECK THIS; HOW CAN WE ELIMINATE ROUND-OFF ERROR???
+						else
+							intersect_r = sqrt( time*time + dist*dist ) * cos( intersect_angle );
 					
-					if(verbose) { std::cout << "    ----creating new vertex for intersection at (" << intersect_angle << ", " << intersect_r << ")\n"; }
+						if(verbose) { std::cout << "    ----creating new vertex for intersection at (" << intersect_angle << ", " << intersect_r << ")\n"; }
 					
-					rightedge = insert_vertex(finger, intersect_angle, intersect_r);
-					break;	//found rightedge
-				}
-				else	//then intersection is at terminal vertex of edge pointed to by finger //////TODO: can intersection be at INITIAL vertex???
-				{
-					rightedge = finger->get_next();
+						rightedge = insert_vertex(finger, intersect_angle, intersect_r);
+						found_rightedge = true;	//found rightedge
+					}
+					else	//then intersection is at terminal vertex of edge pointed to by finger //Can intersection be at INITIAL vertex? NO, because we would have detected it in previous iteration of the loop, in the endpoint check below.
+					{
+						rightedge = finger->get_next();
 					
-					if(verbose) { std::cout << "    ----intersection at existing vertex " << *(rightedge->get_origin()) << "\n"; }
+						if(verbose) { std::cout << "    ----intersection at existing vertex " << *(rightedge->get_origin()) << "\n"; }
 					
-					break;	//found rightedge
+						found_rightedge = true;	//found rightedge
+					}
 				}
 			}
 			else	//the intersection could still be at the endpoint
 			{
-				/////////////TODO: FINISH THIS!!!!
+				Halfedge* thumb = finger->get_next();
 				
+				if(verbose) { std::cout << "    ------checking thumb: " << HID(thumb) << "\n"; }
 				
+				while( thumb->get_LCM() != finger->get_LCM() && !found_rightedge)
+				{
+					if( thumb->get_LCM() == *itint )	//then next intersection is with the curve that thumb points to
+					{
+						if(verbose) { std::cout << "    --------found halfedge for LCM (" << (**itint).get_time() << "," << (**itint).get_dist() << ")\n"; }
+						
+						if( thumb != finger->get_next() )	//then intersection is at this vertex and not along the next edge
+						{
+							rightedge = finger->get_next();
+							found_rightedge = true;
+						}
+						else	//then intersection is either at this vertex or along the next edge
+						{
+							LCM* intersect_LCM = thumb->get_LCM();	//LCM corresponding to curve of next intersection
+							
+							if(intersect_LCM->get_time() == time)	//then next interesction is at theta=pi/2 (which must be at terminal vertex of edge pointed to by finger)
+							{
+								if(verbose) { std::cout << "    ------intersection at theta=pi/2\n"; }
+					
+								rightedge = finger->get_next();
+								found_rightedge = true;	//found rightedge
+							}
+							else
+							{
+								double intersect_angle = atan( (intersect_LCM->get_dist() - dist)/(intersect_LCM->get_time() - time) );	//theta-coordinate of next intersection
+							
+								if( intersect_angle == thumb->get_origin()->get_theta() )	//then intersection is at the vertex
+								{
+									rightedge = thumb;
+									found_rightedge = true;
+								}
+								//else, intersection is along the edge and will be handled by next iteration of the outer loop
+							}
+						}
+						
+					}
+					
+					//consider next edge CCW around vertex
+					thumb = thumb->get_twin()->get_next();
+				}
 				
-				
-				
+			}//end else
+			
+			if(!found_rightedge)	//still not found; consider to next edge around the curent face
+			{
+				finger = finger->get_next();
 			}
 			
-			//still not found; consider to next edge around the curent face
-			finger = finger->get_next();
-		}
+		}//end while( finger != leftedge && !found_rightedge )
 		
+		if(verbose) { std::cout << "    ----rightedge: " << HID(rightedge) << "; finger: " << HID(finger) << "\n"; }
 		
 		//insert a new edge to subdivide the face
 		insert_edge(leftedge, rightedge, current);
@@ -213,23 +261,35 @@ void Mesh::add_curve(double time, double dist)
 		}
 		
 		//make sure leftedge is correct for the next step
-		leftedge = rightedge->get_twin()->get_next();	////////////TODO: FINISH THIS!!!!!!!!!!!!!
+		Halfedge* thumb = rightedge;
+		while( thumb->get_LCM() != finger->get_LCM() )
+		{
+			if(verbose) { std::cout << "    ----updating leftedge; thumb: " << HID(thumb) << "\n"; }
 		
-	}
-	
+			thumb = thumb->get_twin()->get_next();
+		}
+		leftedge = thumb->get_twin()->get_next();
+		
+		if(verbose) { std::cout << "    ----leftedge: " << HID(leftedge) << "; finger: " << HID(finger) << "; thumb: " << HID(thumb) << "\n"; }
+		
+	}//end for
 	
 	//if necessary, create right endpoint for the new curve (on theta=pi/2 edge of the strip) and insert a new edge
-	if(true)					//REPLACE: should be if(previous vertex is not on theta=pi/2 edge
+	if( leftedge->get_origin()->get_theta() < HALF_PI )
 	{
 		//find the edge of the current face where theta=pi/2
 		Halfedge* finger = leftedge->get_next();
 		while(finger->get_origin()->get_theta() != HALF_PI)
 		{
+		//	if(verbose) { std::cout << "    ----looking for right edge; finger: " << HID(finger) << "; leftedge: " << HID(leftedge) << "\n"; }
+			
 			finger = finger->get_next();
 		}
 		
 		//insert a new vertex
 		rightedge = insert_vertex(finger, HALF_PI, -1*time);
+		
+		if(verbose) { std::cout << "    ----rightedge: " << HID(rightedge) << "\n"; }
 		
 		//insert a new edge to subdivide the face
 		insert_edge(leftedge, rightedge, current);
@@ -298,8 +358,14 @@ Halfedge* Mesh::insert_vertex(Halfedge* edge, double t, double r)
 //also requires the LCM to be associated with the new edge
 void Mesh::insert_edge(Halfedge* leftedge, Halfedge* rightedge, LCM* lcm)
 {
-	//TODO: Add consistency checking -- make sure leftedge and rightedge point to the same face???
+	//consistency checking -- make sure leftedge and rightedge point to the same face
+	if(leftedge->get_face() != rightedge->get_face())	//THIS SHOULD NEVER HAPPEN
+	{
+		std::cout << "===>>>ERROR: leftedge and rightedge do not point to the same face in insert_edge()\n";
+	}
 	
+	if(verbose) { std::cout << "    --inserting new edge using reference edges: " << HID(leftedge) << " and " << HID(rightedge) << "\n"; }
+		
 	//create new halfedges
 	Halfedge* fromleft = new Halfedge(leftedge->get_origin(), lcm);
 	halfedges.push_back(fromleft);
@@ -345,19 +411,28 @@ void Mesh::print()
 	std::cout << "  Vertices\n";
 	for(int i=0; i<vertices.size(); i++)
 	{
-		std::cout << "    vertex " << i << ": " << *vertices[i] << "; incident edge: " << vertices[i]->get_incident_edge() << "\n";
+		std::cout << "    vertex " << i << ": " << *vertices[i] << "; incident edge: " << HID(vertices[i]->get_incident_edge()) << "\n";
 	}
 	
 	std::cout << "  Halfedges\n";
 	for(int i=0; i<halfedges.size(); i++)
 	{
-		std::cout << "    halfedge " << i << " (" << halfedges[i] << "): " << *halfedges[i] << "\n";
+		Halfedge* e = halfedges[i];
+		Halfedge* t = e->get_twin();
+//		std::cout << "    halfedge " << i << " (" << e << "): " << *(e->get_origin()) << "--" << *(t->get_origin()) << "; ";	//also prints memory location
+		std::cout << "    halfedge " << i << ": " << *(e->get_origin()) << "--" << *(t->get_origin()) << "; ";
+		if(e->get_LCM() == NULL)
+			std::cout << "LCM null; ";
+		else
+			std::cout << "LCM coords (" << e->get_LCM()->get_time() << ", " << e->get_LCM()->get_dist() << "); ";
+		std::cout << "twin: " << HID(t) << "; next: " << HID(e->get_next()) << "; prev: " << HID(e->get_prev()) << "; face: " << FID(e->get_face()) << "\n";;
 	}
 	
 	std::cout << "  Faces\n";
 	for(int i=0; i<faces.size(); i++)
 	{
-		std::cout << "    face " << i << " (" << faces[i] << "): " << *faces[i] << "\n";
+//		std::cout << "    face " << i << " (" << faces[i] << "): " << *faces[i] << "\n";	//also prints memory location
+		std::cout << "    face " << i << ": " << *faces[i] << "\n";
 	}
 	
 	std::cout << "  Outside (unbounded) region: ";
@@ -374,9 +449,37 @@ void Mesh::print()
 	for(it = inserted_lcms.begin(); it != inserted_lcms.end(); ++it)
 	{
 		LCM cur = **it;
-		std::cout << "(" << cur.get_time() << ", " << cur.get_dist() << ") curve " << cur.get_curve() << "; ";
+		std::cout << "(" << cur.get_time() << ", " << cur.get_dist() << ") halfedge " << HID(cur.get_curve()) << "; ";
 	}
 	std::cout << "\n";
 	
 }//end print()
+
+//look up halfedge ID, used in print() for debugging
+// HID = halfedge ID
+int Mesh::HID(Halfedge* h)
+{
+	for(int i=0; i<halfedges.size(); i++)
+	{
+		if(halfedges[i] == h)
+			return i;
+	}
+	
+	//we should never get here
+	return -1;	
+}
+
+//look up face ID, used in print() for debugging
+// FID = face ID
+int Mesh::FID(Face* f)
+{
+	for(int i=0; i<faces.size(); i++)
+	{
+		if(faces[i] == f)
+			return i;
+	}
+	
+	//we should only get here if f is NULL (meaning the unbounded, outside face)
+	return -1;	
+}
 

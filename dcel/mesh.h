@@ -56,6 +56,8 @@ class Mesh
 		Halfedge* insert_vertex(Halfedge* edge, double t, double r);	//inserts a new vertex on the specified edge, with the specified coordinates, and updates all relevant pointers
 		void insert_edge(Halfedge* leftedge, Halfedge* rightedge, LCM* lcm);	//inserts a new edge across an existing face; requires leftedge and rightedge, coherently oriented around the existing face, and whose origin vertices will be endpoints of the new edge; also requires the LCM to be associated with the new edge
 		
+		int HID(Halfedge* h);		//halfedge ID, for printing and debugging
+		int FID(Face* f);		//face ID, for printing and debugging
 };//end class Mesh
 
 #include "mesh.hpp"

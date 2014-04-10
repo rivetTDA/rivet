@@ -25,24 +25,26 @@ int main(int argc, char* argv[])
 	Mesh dcel;
 	dcel.print();
 	
-	//add a new curve
-	std::cout << "ADDING A CURVE FOR LCM(1,2)\n";
-	dcel.add_curve(1,2);
-	dcel.print();
+	//add curves
+	int x_vals[] = {2,4,1,8,1};
+	int y_vals[] = {3,5,2,9,5};
+	std::vector<int> vx (x_vals, x_vals + sizeof(x_vals) / sizeof(int) );
+	std::vector<int> vy (y_vals, y_vals + sizeof(y_vals) / sizeof(int) );
 	
-	std::cout << "ADDING A CURVE FOR LCM(3,1)\n";
-	dcel.add_curve(3,1);
+	for(int i=0; i<vx.size(); i++)
+	{
+		std::cout << "ADDING A CURVE FOR LCM(" << vx[i] << "," << vy[i] << ")\n";
+		dcel.add_curve(vx[i],vy[i]);
+		dcel.print();
+	}
+	
+/*	std::cout << "ADDING A CURVE FOR LCM(2,1)\n";
+	dcel.add_curve(2,1);
 	dcel.print();
 	
 	std::cout << "ADDING A CURVE FOR LCM(4,3)\n";
 	dcel.add_curve(4,3);
 	dcel.print();
-	
-/*	std::cout << "ADDING A CURVE FOR LCM(2,4)\n";
-	dcel.add_curve(2,4);
-	
-	std::cout << "ADDING A CURVE FOR LCM(3,4)\n";
-	dcel.add_curve(3,4);
 */	
 	std::cout << "Done.\n\n";
 }
