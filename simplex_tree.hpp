@@ -6,7 +6,8 @@
 #include <vector>
 
 //constructor
-SimplexTree::SimplexTree()
+SimplexTree::SimplexTree(bool v) : 
+	verbose(v)
 {
 	//root node initialized automatically
 	
@@ -229,6 +230,12 @@ int SimplexTree::dist_index(double key)
 	return -1;
 } 
 
+//returns a distance value, given an index
+double SimplexTree::get_dist(int i)
+{
+	return dist_list[i];
+}
+
 //searches for a time value
 //returns the index if found; otherwise returns -1
 int SimplexTree::time_index(double key)
@@ -249,10 +256,16 @@ int SimplexTree::time_index(double key)
 	return -1;
 } 
 
+//returns a time value, given an index
+double SimplexTree::get_time(int i)
+{
+	return time_list[i];
+}
+
 //computes a boundary matrix for simplices of a given dimension at the specified multi-index
 MapMatrix* SimplexTree::get_boundary_mx(int time, int dist, int dim)
 {
-	if(verbose) { std::cout << "    boundary matrix for dimension " << dim << " at index (" << time << ", " << dist << "): \n"; }
+	if(verbose) { std::cout << "    computing boundary matrix for dimension " << dim << " at index (" << time << ", " << dist << "): \n"; }
 	
 	//find (global indexes of) all simplices of dimension dim that exist at (time, dist)
 	std::vector<int> cols;
@@ -339,7 +352,7 @@ MapMatrix* SimplexTree::get_boundary_mx(int time, int dist, int dim)
 //computes a matrix representing the map [B+C,D], for inclusion maps into the dim-skeleton at the specified multi-index
 MapMatrix* SimplexTree::get_merge_mx(int time, int dist, int dim)
 {
-	if(verbose) { std::cout << "    merge matrix for dimension " << dim << " at index (" << time << ", " << dist << "): \n"; }
+	if(verbose) { std::cout << "    computing merge matrix for dimension " << dim << " at index (" << time << ", " << dist << "): \n"; }
 	
 	//find (global indexes of) all simplices of dimension dim that exist at (time, dist)
 	std::vector<int> vec_d;

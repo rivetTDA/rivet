@@ -2,10 +2,10 @@
  */
 
 //constructor
-InputManager::InputManager()
-{
-	
-}
+InputManager::InputManager(bool v) :
+	verbose(v),
+	simplex_tree(v)
+{ }
 
 //function to run the input manager, requires a filename
 void InputManager::start(char* arg)

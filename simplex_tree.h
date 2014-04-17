@@ -20,7 +20,7 @@
 
 class SimplexTree {
 	public:
-		SimplexTree();							//constructor
+		SimplexTree(bool v);							//constructor
 		
 		void build_VR_complex(std::vector<Point> &, int, int, double);		//builds SimplexTree representing a Vietoris-Rips complex from a vector of points, with certain parameters
 		
@@ -29,7 +29,10 @@ class SimplexTree {
 		void update_global_indexes();			//updates the global indexes of all simplices in this simplex tree
 		
 		int dist_index(double);				//returns the index of a distance value, or -1 if not found
+		double get_dist(int);				//returns a distance value, given an index
+		
 		int time_index(double);				//returns the index of a time value, or -1 if not found
+		double get_time(int);				//returns a time value, given an index
 		
 		MapMatrix* get_boundary_mx(int time, int dist, int dim);	//computes a boundary matrix for simplices of a given dimension at the specified multi-index
 		MapMatrix* get_merge_mx(int time, int dist, int dim);		//computes a matrix representing the map [B+C,D], for inclusion maps into the dim-skeleton at the specified multi-index
@@ -50,7 +53,7 @@ class SimplexTree {
 		std::vector<double> time_list;	//sorted list of unique birth times, used for creating integer indexes
 		STNode root;		//root node of the simplex tree
 		
-		static const bool verbose = true;	//controls display of output, for debugging
+		const bool verbose;	//controls display of output, for debugging
 		
 		void build_VR_subtree(std::vector<Point> &points, double* distances, STNode &parent, std::vector<int> &parent_indexes, double prev_time, double prev_dist, int current_depth, int max_depth, int& gic);	//recursive function used in build_VR_complex()
 		

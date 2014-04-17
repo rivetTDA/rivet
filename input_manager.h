@@ -26,7 +26,7 @@
 class InputManager
 {
 	public:
-		InputManager();		//constructor
+		InputManager(bool v);		//constructor
 		void start(char* arg);	//function to run the input manager, requires a filename
 		
 		SimplexTree* get_bifiltration();	//returns a pointer to the simplex tree representing the bifiltration
@@ -34,7 +34,7 @@ class InputManager
 		
 		
 	private:
-		static const bool verbose = true;	//controls display of output, for debugging
+		const bool verbose;	//controls display of output, for debugging
 		
 		std::ifstream infile;			//file stream for the file containing the input
 		SimplexTree simplex_tree;		//simplex tree constructed from the input

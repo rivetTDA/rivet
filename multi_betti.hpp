@@ -4,14 +4,11 @@
 
 
 //constructor, which does the work of computing all the multi-graded Betti numbers
-MultiBetti::MultiBetti(SimplexTree* st, int dim)
+MultiBetti::MultiBetti(SimplexTree* st, int dim, bool pm) :
+	bifiltration(st),		//remember location of the simplex tree
+	dimension(dim),			//remember the dimension
+	print_matrices(pm)		//true for lots of output, false for minimal output
 {
-	//remember location of the simplex tree
-	bifiltration = st;
-	
-	//remember the dimension
-	dimension = dim;
-	
 	//ensure that xi matrix is the correct size
 	num_times = (*bifiltration).get_num_times();
 	num_dists = (*bifiltration).get_num_dists();
@@ -22,7 +19,7 @@ MultiBetti::MultiBetti(SimplexTree* st, int dim)
 //computes xi_0 and xi_1 at ALL multi-indexes
 void MultiBetti::compute_all_xi()
 {
-	std::cout << "  computing xi_0 and xi_1; num_times=" << num_times << ", num_dists=" << num_dists << "\n";
+	if(print_matrices) { std::cout << "  computing xi_0 and xi_1; num_times=" << num_times << ", num_dists=" << num_dists << "\n"; }
 	
 	//compute and store xi_0 and xi_1 at ALL multi-indexes
 	for(int time = 0; time < num_times; time++)
