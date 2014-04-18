@@ -1,5 +1,5 @@
 /**
- * \class	Face
+ * \class	Face 
  * \brief	Stores 2-dimensional cell in the DCEL decomposition of the affine Grassmannian.
  * \author	Matthew L. Wright
  * \date	March 2014
