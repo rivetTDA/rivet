@@ -146,43 +146,6 @@ int MapMatrix::low(int j)
 	
 }
 
-
-//modifies this matrix to create a block-diagonal matrix with "other" positioned below and to the right of "this"
-//  QUESTION: would it be better if this function returned a copy of this matrix instead of modifying it?
-/* void MapMatrix::append_block_diag(MapMatrix& other)
-{
-	//remember initial size of this matrix
-	int prev_width = width();
-	int prev_height = num_rows;
-	
-	//create new columns
-	columns.resize(prev_width + other.width());
-	
-	//insert data into each new column
-	for(int j=0; j<other.width(); j++)
-	{
-		MapMatrixNode* handle = NULL;
-		MapMatrixNode* othernode = other.columns[j];
-		
-		while(othernode != NULL)
-		{
-			int row = (*othernode).get_row() + prev_height;
-			if(row > num_rows)
-				num_rows = row;
-			
-			MapMatrixNode* newnode = new MapMatrixNode(row);
-			
-			if(handle == NULL) //then the column is empty
-				columns[prev_width + j] = newnode;
-			else
-				(*handle).set_next(newnode);
-				
-			handle = newnode;
-			othernode = (*othernode).get_next();
-		}
-	}
-}//end append_block_diag() */
-
 //modifies this matrix to create a larger matrix with "other" positioned to the right of "this", with a vertical offset
 //  EXAMPLE: if vert_offset is 0, then "other" is positioned directly to the right of "this" (corresponding rows align)
 //			if vert_offset equals "this".num_rows, then the new matrix will be block-diagonal

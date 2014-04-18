@@ -18,7 +18,7 @@
 class MultiBetti
 {
 	public:
-		MultiBetti(SimplexTree* st, int dim, bool pm);		//constructor sets up the data structure but doesn't compute the multi-graded Betti numbers xi_0 and xi_1
+		MultiBetti(SimplexTree* st, int dim, int v);		//constructor sets up the data structure but doesn't compute the multi-graded Betti numbers xi_0 and xi_1
 		
 		void compute_all_xi();			//computes xi_0 and xi_1 at ALL multi-indexes
 		void compute_xi(int time, int dist);	//computes xi_0 and xi_1 at a specified multi-index
@@ -36,9 +36,8 @@ class MultiBetti
 		int num_dists;		//number of distance indexes
 		
 		boost::multi_array<int, 3> xi;		//matrix to hold xi values; indices: xi[time][dist][subscript]
-
 		
-		const bool print_matrices;	//controls display of output, for debugging
+		const int verbosity;	//controls display of output, for debugging
 		
 };
 

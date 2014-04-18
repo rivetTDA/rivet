@@ -2,8 +2,8 @@
  */
 
 //constructor
-InputManager::InputManager(bool v) :
-	verbose(v),
+InputManager::InputManager(int v) :
+	verbosity(v),
 	simplex_tree(v)
 { }
 
@@ -11,7 +11,7 @@ InputManager::InputManager(bool v) :
 void InputManager::start(char* arg)
 {
 	//read the file
-	if(verbose) { std::cout << "READING FILE:\n"; }
+	if(verbosity >= 2) { std::cout << "READING FILE:\n"; }
 	std::string line;
 	infile.open(arg);
 	if(infile.is_open())
@@ -57,7 +57,7 @@ SimplexTree* InputManager::get_bifiltration()
 //reads a point cloud and constructs a simplex tree representing the bifiltered Vietoris-Rips complex
 void InputManager::read_point_cloud()
 {
-	if(verbose) { std::cout << "  Found a point cloud file.\n"; }
+	if(verbosity >= 2) { std::cout << "  Found a point cloud file.\n"; }
 	
 	//prepare (temporary) data structures
 	int dimension;			//integer dimension of data
@@ -69,17 +69,17 @@ void InputManager::read_point_cloud()
 	//read dimension of the points from the first line of the file
 	std::getline(infile,line);
 	std::stringstream(line) >> dimension;
-	if(verbose) { std::cout << "  dimension of data: " << dimension << "\n"; }
+	if(verbosity >= 4) { std::cout << "  dimension of data: " << dimension << "\n"; }
 	
 	//read maximum dimension of simplices in Vietoris-Rips complex
 	std::getline(infile,line);
 	std::stringstream(line) >> max_dim;
-	if(verbose) { std::cout << "  maximum dimension of simplices: " << max_dim << "\n"; }
+	if(verbosity >= 4) { std::cout << "  maximum dimension of simplices: " << max_dim << "\n"; }
 	
 	//read maximum distance for edges in Vietoris-Rips complex
 	std::getline(infile,line);
 	std::stringstream(line) >> max_dist;
-	if(verbose) { std::cout << "  maximum distance: " << max_dist << "\n"; }
+	if(verbosity >= 4) { std::cout << "  maximum distance: " << max_dist << "\n"; }
 		
 	//read points
 	while( std::getline(infile,line) )
@@ -100,14 +100,14 @@ void InputManager::read_point_cloud()
 		points.push_back(p);
 	}
 	
-	if(verbose) { std::cout << "  read " << points.size() << " points; input finished\n"; }
+	if(verbosity >= 4) { std::cout << "  read " << points.size() << " points; input finished\n"; }
 	
 	//sort the points
-	if(verbose) { std::cout << "SORTING POINTS BY BIRTH TIME\n"; }
+	if(verbosity >= 2) { std::cout << "SORTING POINTS BY BIRTH TIME\n"; }
 	sort(points.begin(), points.end());
 	
 	//test points vector
-	if(verbose) 
+	if(verbosity >= 6) 
 	{
 		std::cout << "TESTING VECTOR:\n";
 		for(int i=0; i<points.size(); i++)
@@ -126,7 +126,7 @@ void InputManager::read_point_cloud()
 	}
 	
 	//build the filtration
-	if(verbose) { std::cout << "BUILDING VIETORIS-RIPS BIFILTRATION\n"; }
+	if(verbosity >= 2) { std::cout << "BUILDING VIETORIS-RIPS BIFILTRATION\n"; }
 	simplex_tree.build_VR_complex(points, dimension, max_dim+1, max_dist);
 	
 	//clean up
@@ -140,7 +140,7 @@ void InputManager::read_point_cloud()
 //reads a bifiltration and constructs a simplex tree
 void InputManager::read_bifiltration()
 {
-	if(verbose) { std::cout << "  Found a bifiltration file.\n"; }
+	if(verbosity >= 2) { std::cout << "  Found a bifiltration file.\n"; }
 	
 	//prepare (temporary) data structures
 	std::string line;		//string to hold one line of input
@@ -168,7 +168,7 @@ void InputManager::read_bifiltration()
 		iss >> time;
 		iss >> dist;
 		
-		if(verbose)
+		if(verbosity >= 4)
 		{
 			std::cout << "    simplex [" << verts[0];
 			for(int i=1; i<=dim; i++)

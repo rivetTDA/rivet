@@ -20,7 +20,7 @@
 
 class SimplexTree {
 	public:
-		SimplexTree(bool v);							//constructor
+		SimplexTree(int v);							//constructor
 		
 		void build_VR_complex(std::vector<Point> &, int, int, double);		//builds SimplexTree representing a Vietoris-Rips complex from a vector of points, with certain parameters
 		
@@ -53,7 +53,7 @@ class SimplexTree {
 		std::vector<double> time_list;	//sorted list of unique birth times, used for creating integer indexes
 		STNode root;		//root node of the simplex tree
 		
-		const bool verbose;	//controls display of output, for debugging
+		const int verbosity;	//controls display of output, for debugging
 		
 		void build_VR_subtree(std::vector<Point> &points, double* distances, STNode &parent, std::vector<int> &parent_indexes, double prev_time, double prev_dist, int current_depth, int max_depth, int& gic);	//recursive function used in build_VR_complex()
 		

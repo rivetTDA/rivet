@@ -24,7 +24,7 @@
 class Mesh
 {
 	public:
-		Mesh();		//constructor; sets up bounding box (with empty interior) for the affine Grassmannian
+		Mesh(int v);		//constructor; sets up bounding box (with empty interior) for the affine Grassmannian
 		
 		~Mesh();	//destructor: IMPLEMENT THIS, MAKE SURE ALL MEMORY IS RELEASED!!!!
 		
@@ -51,7 +51,7 @@ class Mesh
 		
 		Halfedge* topleft;			//pointer to halfedge that points down from top left corner (theta=0, r=infty)
 		
-		static const bool verbose = true;	//controls display of output, for debugging
+		const int verbosity;			//controls display of output, for debugging
 		
 		Halfedge* insert_vertex(Halfedge* edge, double t, double r);	//inserts a new vertex on the specified edge, with the specified coordinates, and updates all relevant pointers
 		void insert_edge(Halfedge* leftedge, Halfedge* rightedge, LCM* lcm);	//inserts a new edge across an existing face; requires leftedge and rightedge, coherently oriented around the existing face, and whose origin vertices will be endpoints of the new edge; also requires the LCM to be associated with the new edge

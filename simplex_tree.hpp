@@ -6,12 +6,12 @@
 #include <vector>
 
 //constructor
-SimplexTree::SimplexTree(bool v) : 
-	verbose(v)
+SimplexTree::SimplexTree(int v) : 
+	verbosity(v)
 {
 	//root node initialized automatically
-	
 }
+
 //adds a simplex (including all of its faces) to the SimplexTree
 //if simplex or any of its faces already exist, they are not re-added
 void SimplexTree::add_simplex(std::vector<int> & vertices, int time, int dist)
@@ -89,7 +89,7 @@ void SimplexTree::build_VR_complex(std::vector<Point> &points, int pt_dim, int m
 {
 	//compute distances, stored in an array so that we can quickly look up the distance between any two points
 	//also create sets of all the unique times and distances less than max_dist
-	if(verbose) { std::cout << "COMPUTING DISTANCES:\n"; }
+	if(verbosity >= 2) { std::cout << "COMPUTING DISTANCES:\n"; }
 	int num_points = points.size();
 	double* distances = new double[(num_points*(num_points-1))/2];
 	int c=0;	//counter to track position in array of distances
@@ -121,7 +121,7 @@ void SimplexTree::build_VR_complex(std::vector<Point> &points, int pt_dim, int m
     		time_list.push_back(*it);		//is this also inefficient?
 	
 	//testing
-	if(verbose)
+	if(verbosity >= 4)
 	{	
 		for(int i=0; i<num_points; i++)
 			for(int j=i+1; j<num_points; j++)
@@ -143,12 +143,12 @@ void SimplexTree::build_VR_complex(std::vector<Point> &points, int pt_dim, int m
 	
 	//build simplex tree recursively
 	//this also assigns global indexes to each simplex
-	if(verbose) { std::cout << "BUILDING SIMPLEX TREE:\n"; }
+	if(verbosity >= 2) { std::cout << "BUILDING SIMPLEX TREE:\n"; }
 	int gic=0;	//global index counter
 	for(int i=0; i<points.size(); i++)
 	{
 		//create the node and add it as a child of root
-		if(verbose) { std::cout << "  adding node " << i << " as child of root \n"; }
+		if(verbosity >= 6) { std::cout << "  adding node " << i << " as child of root \n"; }
 		
 		STNode * node = new STNode(i, &root, time_index(points[i].get_birth()), 0, gic);			//DO I HAVE TO delete THIS OBJECT LATER???
 		root.append_child(node);
@@ -193,7 +193,7 @@ void SimplexTree::build_VR_subtree(std::vector<Point> &points, double* distances
 				current_time = prev_time;
 			
 			//create the node and add it as a child of its parent
-			if(verbose) { std::cout << "  adding node " << j << " as child of " << parent_indexes.back() << "; current_dist = " << current_dist << "\n"; }
+			if(verbosity >= 6) { std::cout << "  adding node " << j << " as child of " << parent_indexes.back() << "; current_dist = " << current_dist << "\n"; }
 			
 			STNode * node = new STNode(j, &parent, time_index(current_time), dist_index(current_dist), gic);				//DO I HAVE TO "delete" THIS LATER???
 			parent.append_child(node);
@@ -265,13 +265,13 @@ double SimplexTree::get_time(int i)
 //computes a boundary matrix for simplices of a given dimension at the specified multi-index
 MapMatrix* SimplexTree::get_boundary_mx(int time, int dist, int dim)
 {
-	if(verbose) { std::cout << "    computing boundary matrix for dimension " << dim << " at index (" << time << ", " << dist << "): \n"; }
+	if(verbosity >= 6) { std::cout << "    computing boundary matrix for dimension " << dim << " at index (" << time << ", " << dist << "): \n"; }
 	
 	//find (global indexes of) all simplices of dimension dim that exist at (time, dist)
 	std::vector<int> cols;
 	find_nodes(root, 0, cols, time, dist, dim);
 	
-	if(verbose)
+	if(verbosity >= 8)
 	{
 		std::cout << "      simplices of dimension " << dim << " at index (" << time << ", " << dist << "): ";
 		for(int i=0; i<cols.size(); i++)
@@ -283,7 +283,7 @@ MapMatrix* SimplexTree::get_boundary_mx(int time, int dist, int dim)
 	std::vector<int> rows;
 	find_nodes(root, 0, rows, time, dist, dim-1);
 	
-	if(verbose)
+	if(verbosity >= 8)
 	{
 		std::cout << "      simplices of dimension " << (dim-1) << " at index (" << time << ", " << dist << "): ";
 		for(int i=0; i<rows.size(); i++)
@@ -352,13 +352,13 @@ MapMatrix* SimplexTree::get_boundary_mx(int time, int dist, int dim)
 //computes a matrix representing the map [B+C,D], for inclusion maps into the dim-skeleton at the specified multi-index
 MapMatrix* SimplexTree::get_merge_mx(int time, int dist, int dim)
 {
-	if(verbose) { std::cout << "    computing merge matrix for dimension " << dim << " at index (" << time << ", " << dist << "): \n"; }
+	if(verbosity >= 6) { std::cout << "    computing merge matrix for dimension " << dim << " at index (" << time << ", " << dist << "): \n"; }
 	
 	//find (global indexes of) all simplices of dimension dim that exist at (time, dist)
 	std::vector<int> vec_d;
 	find_nodes(root, 0, vec_d, time, dist, dim);
 	
-	if(verbose)
+	if(verbosity >= 8)
 	{
 		std::cout << "      D: simplices of dimension " << dim << " at index (" << time << ", " << dist << "): ";
 		for(int i=0; i<vec_d.size(); i++)
@@ -370,7 +370,7 @@ MapMatrix* SimplexTree::get_merge_mx(int time, int dist, int dim)
 	std::vector<int> vec_c;
 	find_nodes(root, 0, vec_c, time-1, dist, dim);
 	
-	if(verbose)
+	if(verbosity >= 8)
 	{
 		std::cout << "      C: simplices of dimension " << dim << " at index (" << (time-1) << ", " << dist << "): ";
 		for(int i=0; i<vec_c.size(); i++)
@@ -382,7 +382,7 @@ MapMatrix* SimplexTree::get_merge_mx(int time, int dist, int dim)
 	std::vector<int> vec_b;
 	find_nodes(root, 0, vec_b, time, dist-1, dim);
 	
-	if(verbose)
+	if(verbosity >= 8)
 	{
 		std::cout << "      B: simplices of dimension " << dim << " at index (" << time << ", " << (dist-1) << "): ";
 		for(int i=0; i<vec_b.size(); i++)
@@ -418,13 +418,13 @@ MapMatrix* SimplexTree::get_merge_mx(int time, int dist, int dim)
 //computes a matrix representing the map [A,B+C], for the dim-skeleton at the specified multi-index
 MapMatrix* SimplexTree::get_split_mx(int time, int dist, int dim)
 {
-	if(verbose) { std::cout << "    split matrix for dimension " << dim << " at index (" << time << ", " << dist << "): \n"; }
+	if(verbosity >= 6) { std::cout << "    split matrix for dimension " << dim << " at index (" << time << ", " << dist << "): \n"; }
 	
 	//find (global indexes of) all simplices of dimension dim that exist at (time-1, dist-1)
 	std::vector<int> vec_a;
 	find_nodes(root, 0, vec_a, time-1, dist-1, dim);
 	
-	if(verbose)
+	if(verbosity >= 8)
 	{
 		std::cout << "      A: simplices of dimension " << dim << " at index (" << (time-1) << ", " << (dist-1) << "): ";
 		for(int i=0; i<vec_a.size(); i++)
@@ -436,7 +436,7 @@ MapMatrix* SimplexTree::get_split_mx(int time, int dist, int dim)
 	std::vector<int> vec_b;
 	find_nodes(root, 0, vec_b, time, dist-1, dim);
 	
-	if(verbose)
+	if(verbosity >= 8)
 	{
 		std::cout << "      B: simplices of dimension " << dim << " at index (" << time << ", " << (dist-1) << "): ";
 		for(int i=0; i<vec_b.size(); i++)
@@ -448,7 +448,7 @@ MapMatrix* SimplexTree::get_split_mx(int time, int dist, int dim)
 	std::vector<int> vec_c;
 	find_nodes(root, 0, vec_c, time-1, dist, dim);
 	
-	if(verbose)
+	if(verbosity >= 8)
 	{
 		std::cout << "      C: simplices of dimension " << dim << " at index (" << (time-1) << ", " << dist << "): ";
 		for(int i=0; i<vec_c.size(); i++)

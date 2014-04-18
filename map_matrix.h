@@ -37,7 +37,6 @@ class MapMatrix
 		
 		int low(int j);				//returns the "low" index in the specified column, or 0 if the column is empty or does not exist
 		
-// NOW UNNECESSARY:		void append_block_diag(MapMatrix& other);	//modifies this matrix to create a larger, block-diagonal matrix with "other" positioned below and to the right of "this"
 		void append_block(MapMatrix& other, int vert_offset);	//modifies this matrix to create a larger matrix with "other" positioned to the right of "this", with a specified vertical offset	
 		
 		void col_reduce();			//applies the column reduction algorithm to this matrix
