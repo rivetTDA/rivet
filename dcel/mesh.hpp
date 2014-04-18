@@ -406,6 +406,20 @@ void Mesh::insert_edge(Halfedge* leftedge, Halfedge* rightedge, LCM* lcm)
 	}while(finger != fromright);
 }
 
+//determines whether LCM (time, dist) is already represented in the mesh
+bool Mesh::contains(double time, double dist)
+{
+	LCM* test = new LCM(time, dist);
+	
+	if( inserted_lcms.find(test) == inserted_lcms.end() )
+	{
+		delete test;
+		return false;
+	}
+	/*else*/
+	delete test;
+	return true;
+}
 
 
 //print all the data from the mesh

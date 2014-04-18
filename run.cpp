@@ -154,9 +154,18 @@ int main(int argc, char* argv[])
 				double t = bifiltration->get_time(std::max(ax,bx));
 				double d = bifiltration->get_dist(std::max(ay,by));
 				
-				if(verbosity >= 4) { std::cout << "  LCM at (" << std::max(ax,bx) << "," << std::max(ay,by) << ") => (" << t << "," << d << ") determined by (" << ax << "," << ay << ") and (" << bx << "," << by << ")\n"; }
-				
-				dcel.add_curve(t,d);
+				if(!dcel.contains(t,d))	//then this LCM has not been inserted yet
+				{
+					if(verbosity >= 4) { std::cout << "  LCM at (" << std::max(ax,bx) << "," << std::max(ay,by) << ") => (" << t << "," << d << ") determined by (" << ax << "," << ay << ") and (" << bx << "," << by << ")\n"; }
+					
+					dcel.add_curve(t,d);
+					
+					if(verbosity >= 8) { dcel.print(); }
+				}
+				else
+				{
+					if(verbosity >=4) { std::cout << "  LCM (" << t << "," << d << ") already inserted.\n"; }
+				}
 			}
 			
 		}

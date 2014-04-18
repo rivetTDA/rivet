@@ -31,6 +31,8 @@ class Mesh
 		void add_curve(double time, double dist);	//adds a curve representing LCM (time, dist) to the mesh
 								//assumption: the same LCM may not be inserted into the mesh twice!
 		
+		bool contains(double time, double dist);	//determines whether LCM (time, dist) is already represented in the mesh
+		
 		//need ability to iterate over faces and associate a persistence diagram to each face...
 		
 		//need ability to return persistence diagram associated with the face containing a specified point...
