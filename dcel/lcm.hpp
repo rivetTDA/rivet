@@ -27,6 +27,8 @@ class LCM
 		void set_curve(Halfedge* e);	//set the pointer to the curve corresponding to this LCM in the arrangement
 		Halfedge* get_curve() const;		//get the pointer to the curve corresponding to this LCM in the arrangement
 		
+		double get_r_coord(double theta);	//returns the r-coordinate for the point on this LCM curve with the given value of theta
+		
 	private:
 		double time;		//time-coordinate of multi-index
 		double dist;		//distance-coordinate of multi-inded
@@ -87,6 +89,11 @@ void LCM::set_curve(Halfedge* e)
 Halfedge* LCM::get_curve() const
 {
 	return curve;
+}
+
+double LCM::get_r_coord(double theta)
+{
+	return sqrt( time*time + dist*dist ) * sin( atan(dist/time) - theta );
 }
 
 

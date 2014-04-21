@@ -33,7 +33,7 @@ class Mesh
 		
 		bool contains(double time, double dist);	//determines whether LCM (time, dist) is already represented in the mesh
 		
-		//need ability to iterate over faces and associate a persistence diagram to each face...
+		void build_persistence_data();			//associates a persistence diagram to each face (IN PROGRESS)
 		
 		//need ability to return persistence diagram associated with the face containing a specified point...
 		

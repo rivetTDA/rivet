@@ -23,6 +23,8 @@ class Face
 		void set_data(PersistenceData* pd);	//set the persistence data associated with this face
 		PersistenceData* get_data();		//returns the persistence data associated with this face
 		
+		std::pair<double, double> get_interior_point();		//returns coordinates of a point inside this face
+		
 		friend std::ostream& operator<<(std::ostream& os, const Face& f);	//for printing the face
 		
 	private:
@@ -56,6 +58,85 @@ PersistenceData* Face::get_data()
 {
 	return pdata;
 }
+
+std::pair<double, double> Face::get_interior_point()
+{
+	//find min and max theta coordinates of vertices adjacent to this face
+	double min_theta = boundary->get_origin()->get_theta();
+	double max_theta = min_theta;
+	
+	Halfedge* current = boundary->get_next();
+	
+	while(current != boundary)
+	{
+		double current_theta = current->get_origin()->get_theta();
+		
+		if(current_theta < min_theta)
+			min_theta = current_theta;
+		
+		if(current_theta > max_theta)
+			max_theta = current_theta;
+		
+		current = current->get_next();
+	}
+	
+	//find theta coordinate between min and max theta
+	double mid_theta = (min_theta + max_theta)/2;
+	
+	//find top and bottom edges that cross the vertical line theta=mid_theta
+	Halfedge* top_edge;
+	Halfedge* bottom_edge;
+	
+	current = boundary;
+	do{
+		double origin = current->get_origin()->get_theta();
+		double end = current->get_next()->get_origin()->get_theta();
+		
+		if(origin <= mid_theta && end > mid_theta)
+			top_edge = current;
+		
+		if(origin >= mid_theta && end < mid_theta)
+			bottom_edge = current;
+		
+		current = current->get_next();
+	}while(current != boundary);
+	
+	//find midpoint along vertical line theta=mid_theta
+	double mid_r = 0;
+	
+	//handle boundary cases
+	if(top_edge->get_LCM() == NULL)	//then top edge is at r=infinity
+	{
+		if(bottom_edge->get_LCM() == NULL)	//then bottom edge is also at r=infinity
+		{
+			mid_r = 0;
+		}
+		else
+		{
+			mid_r = bottom_edge->get_LCM()->get_r_coord(mid_theta) + 1;
+		}
+	}
+	else	//then top edge is not at r=infinity
+	{
+		if(bottom_edge->get_LCM() == NULL)	//then bottom edge is at r=infinity
+		{
+			mid_r = top_edge->get_LCM()->get_r_coord(mid_theta) - 1;
+		}
+		else
+		{
+			double top = top_edge->get_LCM()->get_r_coord(mid_theta);
+			double bottom = bottom_edge->get_LCM()->get_r_coord(mid_theta);
+			mid_r = (top + bottom)/2;
+		}
+		
+	}
+	
+	//return coordinate pair
+	return std::pair<double,double>(mid_theta,mid_r);
+	
+}//end get_interior_point()
+
+
 
 std::ostream& operator<<(std::ostream& os, const Face& f)
 {

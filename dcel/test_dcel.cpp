@@ -22,10 +22,12 @@ int main(int argc, char* argv[])
 	
 	//initialize the mesh
 	std::cout << "CREATING THE MESH:\n";
-	Mesh dcel;
+	Mesh dcel(10);
 	dcel.print();
 	
 	//add curves
+//	int x_vals[] = {2,2,4};
+//	int y_vals[] = {1,3,5};
 	int x_vals[] = {2,4,1,8,1};
 	int y_vals[] = {3,5,2,9,5};
 	std::vector<int> vx (x_vals, x_vals + sizeof(x_vals) / sizeof(int) );
@@ -38,13 +40,10 @@ int main(int argc, char* argv[])
 		dcel.print();
 	}
 	
-/*	std::cout << "ADDING A CURVE FOR LCM(2,1)\n";
-	dcel.add_curve(2,1);
-	dcel.print();
+	//test interior point routine
+	std::cout << "FINDING A POINT INSIDE EACH CELL:\n";
+	dcel.build_persistence_data();
 	
-	std::cout << "ADDING A CURVE FOR LCM(4,3)\n";
-	dcel.add_curve(4,3);
-	dcel.print();
-*/	
+
 	std::cout << "Done.\n\n";
 }

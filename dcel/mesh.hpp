@@ -360,7 +360,7 @@ Halfedge* Mesh::insert_vertex(Halfedge* edge, double t, double r)
 	
 	//return pointer to up
 	return up;
-}
+}//end insert_vertex()
 
 //inserts a new edge across an existing face
 //requires leftedge and rightedge, coherently oriented around the existing face, and whose origin vertices will be endpoints of the new edge
@@ -411,7 +411,7 @@ void Mesh::insert_edge(Halfedge* leftedge, Halfedge* rightedge, LCM* lcm)
 		finger->set_face(newface);
 		finger = finger->get_next();
 	}while(finger != fromright);
-}
+}//end insert_edge()
 
 //determines whether LCM (time, dist) is already represented in the mesh
 bool Mesh::contains(double time, double dist)
@@ -426,7 +426,21 @@ bool Mesh::contains(double time, double dist)
 	/*else*/
 	delete test;
 	return true;
-}
+}//end contains()
+
+//associates a persistence diagram to each face (IN PROGRESS)
+void Mesh::build_persistence_data()
+{
+	for(int i=0; i<faces.size(); i++)
+	{
+		std::pair<double,double> p = faces[i]->get_interior_point();
+		
+		std::cout << "  In face " << i << ": (" << p.first << ", " << p.second << ")\n";
+		
+	}
+	
+	
+}//end build_persistence_data()
 
 
 //print all the data from the mesh
