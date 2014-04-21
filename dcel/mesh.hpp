@@ -55,7 +55,7 @@ Mesh::~Mesh()
 
 //adds a curve representing LCM to the mesh
 // TODO: make this better (I think it works now, but it is messy, and I am concerned about round-off error.)
-// IDEA: store the intersections not as a set of LCMs, but as a binary search tree of vectors of LCMs, where the LCMs in each vector share a common angle with the reference LCM
+// IDEA: use a modified version of the Bentley-Ottmann algorithm
 void Mesh::add_curve(double time, double dist)
 {
 	//create LCM object 
@@ -120,10 +120,12 @@ void Mesh::add_curve(double time, double dist)
 	}
 	else	//then create new vertex
 	{
+		if(verbosity >= 8) { std::cout << "    --inserting vertex (0," << dist << ") using reference halfedge " << HID((**itleft).get_curve()->get_prev()) << "\n"; }
+		
 		leftedge = insert_vertex( (**itleft).get_curve()->get_prev(), 0, dist);
 	}
 	
-	if(verbosity >= 8) { std::cout << "    ----leftedge: " << HID(leftedge) << "\n"; }
+	if(verbosity >= 8) { std::cout << "    ----leftedge: " << HID(leftedge) << " (origin: " << *(leftedge->get_origin()) << ", twin: " << HID(leftedge->get_twin()) << ", next: " << HID(leftedge->get_next()) << ", prev: " << HID(leftedge->get_prev()) << "\n"; }
 	
 	//loop through all existing curves that this new curve crosses
 	std::set<LCM*>::iterator itint;
@@ -338,6 +340,8 @@ Halfedge* Mesh::insert_vertex(Halfedge* edge, double t, double r)
 	up->set_twin(twin);
 	up->set_face(edge->get_face());
 	
+	up->get_next()->set_prev(up);
+	
 	edge->set_next(up);
 	edge->set_twin(dn);
 	
@@ -346,8 +350,11 @@ Halfedge* Mesh::insert_vertex(Halfedge* edge, double t, double r)
 	dn->set_twin(edge);
 	dn->set_face(twin->get_face());
 	
+	dn->get_next()->set_prev(dn);
+	
 	twin->set_next(dn);
 	twin->set_twin(up);
+	
 	
 	new_vertex->set_incident_edge(up);
 	

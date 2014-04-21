@@ -164,10 +164,9 @@ int main(int argc, char* argv[])
 				}
 				else
 				{
-					if(verbosity >=4) { std::cout << "  LCM (" << t << "," << d << ") already inserted.\n"; }
+					if(verbosity >= 4) { std::cout << "  LCM (" << t << "," << d << ") already inserted.\n"; }
 				}
 			}
-			
 		}
 	}
 	
