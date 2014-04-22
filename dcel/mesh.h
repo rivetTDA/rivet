@@ -33,7 +33,8 @@ class Mesh
 		
 		bool contains(double time, double dist);	//determines whether LCM (time, dist) is already represented in the mesh
 		
-		void build_persistence_data();			//associates a persistence diagram to each face (IN PROGRESS)
+		void build_persistence_data(std::vector<std::pair<int, int> > & xi, SimplexTree* bifiltration);
+			//associates a persistence diagram to each face, requires all support points of xi_0 and xi_1, and the bifiltration
 		
 		//need ability to return persistence diagram associated with the face containing a specified point...
 		

@@ -177,7 +177,9 @@ int main(int argc, char* argv[])
 		dcel.print();
 	}
 	
-	
+	//do the persistence computations in each cell
+	if(verbosity >= 2) { std::cout << "COMPUTING PERSISTENCE DATA FOR EACH CELL:\n"; }
+	dcel.build_persistence_data(xi_support, bifiltration);
 	
 	
 	

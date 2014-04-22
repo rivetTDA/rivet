@@ -31,7 +31,7 @@ Mesh::Mesh(int v) :
 	}
 	
 	//create face
-	faces.push_back( new Face( halfedges[0] ) );
+	faces.push_back( new Face( halfedges[0], verbosity ) );
 	
 	//set the remaining pointers on the halfedges
 	for(int i=0; i<4; i++)
@@ -398,7 +398,7 @@ void Mesh::insert_edge(Halfedge* leftedge, Halfedge* rightedge, LCM* lcm)
 	rightedge->set_prev(fromleft);
 	
 	//insert new face
-	Face* newface = new Face(fromright);
+	Face* newface = new Face(fromright, verbosity);
 	faces.push_back(newface);
 	
 	//update face pointers
@@ -429,13 +429,16 @@ bool Mesh::contains(double time, double dist)
 }//end contains()
 
 //associates a persistence diagram to each face (IN PROGRESS)
-void Mesh::build_persistence_data()
+void Mesh::build_persistence_data(std::vector<std::pair<int, int> > & xi, SimplexTree* bifiltration)
 {
+	//loop through all faces (NOTE: this can probably be optimized to take into account adjacency relationships among faces)
 	for(int i=0; i<faces.size(); i++)
 	{
-		std::pair<double,double> p = faces[i]->get_interior_point();
+		if(verbosity >= 4) { std::cout << "    Computing persistence data for face " << i << "\n"; }
 		
-		std::cout << "  In face " << i << ": (" << p.first << ", " << p.second << ")\n";
+		faces[i]->store_interior_point();
+		
+		faces[i]->get_data()->compute_data(xi, bifiltration);
 		
 	}
 	
