@@ -429,16 +429,16 @@ bool Mesh::contains(double time, double dist)
 }//end contains()
 
 //associates a persistence diagram to each face (IN PROGRESS)
-void Mesh::build_persistence_data(std::vector<std::pair<int, int> > & xi, SimplexTree* bifiltration)
+void Mesh::build_persistence_data(std::vector<std::pair<int, int> > & xi, SimplexTree* bifiltration, int dim)
 {
 	//loop through all faces (NOTE: this can probably be optimized to take into account adjacency relationships among faces)
 	for(int i=0; i<faces.size(); i++)
 	{
-		if(verbosity >= 4) { std::cout << "    Computing persistence data for face " << i << "\n"; }
+		if(verbosity >= 4) { std::cout << "  Computing persistence data for face " << i << ":\n"; }
 		
 		faces[i]->store_interior_point();
 		
-		faces[i]->get_data()->compute_data(xi, bifiltration);
+		faces[i]->get_data()->compute_data(xi, bifiltration, dim);
 		
 	}
 	

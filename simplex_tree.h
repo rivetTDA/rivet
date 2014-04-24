@@ -14,9 +14,12 @@
 #ifndef __SimplexTree_H__
 #define __SimplexTree_H__
 
+#include <utility>	// std::pair
 #include "point.h"
 #include "st_node.h"
 #include "map_matrix.h"
+
+struct SimplexData;	//used for return type of SimplexTree::get_simplex_data()
 
 class SimplexTree {
 	public:
@@ -41,9 +44,12 @@ class SimplexTree {
 		std::vector<int> find_vertices(int);		//given a global index, return (a vector containing) the vertices of the simplex
 		int find_index(std::vector<int>&);		//given a sorted vector of vertex indexes, return the global index of the corresponding simplex (or -1 if it doesn't exist)
 		
+		SimplexData get_simplex_data(int index);	//returns the (time, dist) multi-index of the simplex with given global simplex index, as well as the dimension of the simplex
+		
 		int get_num_dists();		//returns the number of unique distance indexes
 		int get_num_times();		//returns the number of unique time indexes
 		int get_num_simplices();		//returns the total number of simplices represented in the simplex tree
+			//TODO: would it be more efficient to store the total number of simplices???
 		
 		void print();				//prints a representation of the simplex tree
 		

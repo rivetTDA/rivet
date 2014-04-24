@@ -137,7 +137,7 @@ void Face::store_interior_point()
 	pdata.set_theta(mid_theta);
 	pdata.set_r(mid_r);
 	
-}//end get_interior_point()
+}//end store_interior_point()
 
 
 

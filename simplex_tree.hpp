@@ -521,7 +521,6 @@ void SimplexTree::find_vertices_recursively(std::vector<int> &vertices, STNode &
 	//search children of current node for greatest index less than or equal to key
 	std::vector<STNode*> kids = node.get_children();
 	
-	
 	int min = 0;
 	int max = kids.size() -1;
 	while (max >= min)
@@ -558,7 +557,7 @@ int SimplexTree::find_index(std::vector<int>& vertices)
 		//binary search for vertices[i]
 		int key = vertices[i];
 		int min = 0;
-		int max = kids.size();
+		int max = kids.size(); //TODO: should there be a -1 here?????
 		int mid;
 		while(max >= min)
 		{
@@ -572,7 +571,7 @@ int SimplexTree::find_index(std::vector<int>& vertices)
 				max = mid -1;
 		}
 		
-		if(max < mid)	//didn't find it
+		if(max < min)	//didn't find it
 			return -1;
 		else			//found it, so update node and kids
 		{
@@ -585,6 +584,58 @@ int SimplexTree::find_index(std::vector<int>& vertices)
 	return (*node).get_global_index();
 }//end find_index()
 
+
+//struct to be returned by the following function, SimplexTree::get_multi_index(int index)
+struct SimplexData
+{
+	double time;
+	double dist;
+	int dim;
+};
+
+//returns the (time, dist) multi-index of the simplex with given global simplex index
+//also returns the dimension of the simplex
+SimplexData SimplexTree::get_simplex_data(int index)
+{
+	STNode* target = NULL;
+	std::vector<STNode*> kids = root.get_children();
+	int dim = 0;
+	
+	while(target == NULL)
+	{
+		if(kids.size() == 0)
+		{
+			std::cerr << "ERROR: vector of size zero in SimplexTree::get_multi_index()\n";
+			throw std::exception();
+		}
+		
+		//binary search for index
+		int min = 0;
+		int max = kids.size() - 1;
+		int mid;
+		while(max >= min)
+		{
+			mid = (min+max)/2;
+			if( kids[mid]->get_global_index() == index)	//found it at kids[mid]
+			{
+				target = kids[mid];
+				break;
+			}
+			else if( kids[mid]->get_global_index() < index)
+				min = mid + 1;
+			else
+				max = mid - 1;
+		}
+		if(max < min)	//didn't find it yet
+		{
+			kids = kids[max]->get_children();
+			dim++;
+		}
+	}
+	
+	SimplexData sd = { target->get_birth(), target->get_dist(), dim };
+	return sd;	//TODO: is this good design?
+}
 
 //returns the number of unique distance indexes
 int SimplexTree::get_num_dists()
