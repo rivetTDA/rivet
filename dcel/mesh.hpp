@@ -439,10 +439,7 @@ void Mesh::build_persistence_data(std::vector<std::pair<int, int> > & xi, Simple
 		faces[i]->store_interior_point();
 		
 		faces[i]->get_data()->compute_data(xi, bifiltration, dim);
-		
 	}
-	
-	
 }//end build_persistence_data()
 
 

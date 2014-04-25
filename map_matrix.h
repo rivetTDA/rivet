@@ -26,7 +26,7 @@ class MapMatrix
 {
 	public:
 	//	MapMatrix();				//constructor
-		MapMatrix(int i, int j);		//constructor to create matrix of specified size
+		MapMatrix(int i, int j);		//constructor to create matrix of specified size (i = num rows, j = num columns)
 		
 		int width();				//returns the number of columns in the matrix
 		int height();				//returns the number of rows in the matrix
@@ -44,7 +44,9 @@ class MapMatrix
 		
 		void add_column(int j, int k);		//adds column j to column k; RESULT: column j is not changed, column k contains sum of columns j and k (with mod-2 arithmetic)
 		
-		void remove_column(int j);			//removes column j from the matrix (decreasing width by 1)
+		void remove_column(int j);		//removes column j from the matrix (decreasing width by 1)
+		
+		void find_pairs(std::vector< std::pair<int,int> > & pairs);	//finds all persistence pairs in the (reduced) matrix, stores them in the supplied vector
 		
 		void print();				//prints the matrix to standard output (useful for testing)
 		

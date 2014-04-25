@@ -183,6 +183,13 @@ int main(int argc, char* argv[])
 	
 	
 	
+	//now we should be able to do queries and create persistence diagrams!
+	
+	//PLAN: user chooses a line, we send line parameters to dcel (along with xi_support and bifiltration), dcel returns list of persistence pairs
+	
+	
+	
+	
 	//done
 	std::cout << "Done.\n\n";
 }//end main()
