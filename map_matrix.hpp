@@ -355,11 +355,9 @@ void MapMatrix::find_pairs(std::vector< std::pair<int,int> > & pairs)
 	for(int j=1; j<=columns.size(); j++)
 	{
 		//consider low(j)
-		if(low(j) > 0)
+		int i = low(j);
+		if(i > 0)
 			pairs.push_back( std::pair<int,int>(i,j) );
-		//else
-		////////// TODO: FINISH THIS! WHAT DO WE DO IF low(j) == 0? WE NEED TO STORE THE ESSENTIAL CYCLES
-		
 	}
 }//end find_pairs()
 

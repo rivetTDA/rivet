@@ -46,7 +46,7 @@ class MapMatrix
 		
 		void remove_column(int j);		//removes column j from the matrix (decreasing width by 1)
 		
-		void find_pairs(std::vector< std::pair<int,int> > & pairs);	//finds all persistence pairs in the (reduced) matrix, stores them in the supplied vector
+		void find_pairs(std::vector< std::pair<int,int> > & pairs);	//finds all persistence pairs in the (reduced) matrix, stores them in the supplied vectors
 		
 		void print();				//prints the matrix to standard output (useful for testing)
 		

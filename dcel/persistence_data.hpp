@@ -29,19 +29,23 @@ class PersistenceData
 		double theta;		//theta-coordinate of line along which this persistence data is computed
 		double r;		//r-coordinate of line along which this persistence data is computed
 		
-		std::vector<int> xi_global;	//stores global indexes of xi support points, ordered by projection onto the line determined by theta and r
-			//this is a map: order_xi_support_point_index -> global_xi_support_point_index
-			//IDEA: a redesign could eliminate this, storing global (instead of local) xi support point indices in the following structure
+		const int verbosity;			//controls display of output, for debugging
+		static const double HALF_PI = 1.570796327;
 		
 		std::vector< std::pair<int,int> > persistence_pairs;	//stores persistence pairs (each pair will be mapped to a point in the persistence diagram)
 			//entry (i,j) means that a bar is born at projection of xi support point with order index i and dies at projection of xi support point with order index j
 		
+		std::vector<int> essential_cycles;	//stores essential cycles (i.e. persistence "pairs" that never die)
+			//entry i means that an essential cycle is born at the projection of xi support point with order index i
+		
+		
+		std::vector<int> xi_global;	//stores global indexes of xi support points, ordered by projection onto the line determined by theta and r
+			//this is a map: order_xi_support_point_index -> global_xi_support_point_index
+			//IDEA: a redesign could eliminate this, storing global (instead of local) xi support point indices in the following structure
+		
 		std::pair<bool, double> project(double x, double y);	//computes the 1-D coordinate of the projection of a point (x,y) onto the line
 			//returns a pair: first value is true if there is a projection, false otherwise; second value contains projection coordinate
 
-		const int verbosity;			//controls display of output, for debugging
-		
-		static const double HALF_PI = 1.570796327;
 };
 
 
@@ -202,7 +206,7 @@ void PersistenceData::compute_data(std::vector<std::pair<int, int> > & xi, Simpl
 	//identify and store persistence pairs
 		// for (d+1)-simplices, requires a map: order_simplex_index -> order_xi_support_point_index
 		// for d-simplices, requires map: order_simplex_index -> order_xi_support_point_index
-	boundary.find_pairs(persistence_pairs);
+	boundary.find_pairs(persistence_pairs, essential cycles);	//TODO: FIX THIS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	
 	if(verbosity >= 6) { std::cout << "    --Found persistence pairs\n"; }
 	if(verbosity >= 8)
@@ -217,7 +221,7 @@ void PersistenceData::compute_data(std::vector<std::pair<int, int> > & xi, Simpl
 	//each essential cycle is represented by an un-paired xi support-point index (corresponding to a d-simplex)
 	
 	/////// TODO: HANDLE THE ESSENTIAL CYCLES!!!!!
-	
+	//idea: use i-coords from persistence pairs to build lower-dimensional boundary matrix, then read off the essential cycles
 	
 	
 	//clean up
