@@ -21,9 +21,9 @@ II. Bifiltration
 	
 
 	First line:	the word "bifiltration"
-	Other lines:	one line per simplex, each line contains number separated by white space:
+	Other lines:	one line per simplex, each line contains numbers separated by white space:
 				first number (integer) gives the dimension of the simplex (here we will call it n)
-				next n numbers (integers) give the vertices of the simplex
+				next n+1 numbers (integers) give the vertices of the simplex
 				next number (decimal) gives the time at which the simplex appears
 				final number (decimal) gives the distance at which the simplex appears
 	

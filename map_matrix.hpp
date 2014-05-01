@@ -348,19 +348,6 @@ void MapMatrix::remove_column(int j)
 	columns.erase( columns.begin() + j-1);			//this is probably inefficient---HOW TO IMPROVE???
 }//end remove_column()
 
-//finds all persistence pairs in the (reduced) matrix, stores them in the supplied vector
-void MapMatrix::find_pairs(std::vector< std::pair<int,int> > & pairs)
-{
-	//loop through columns
-	for(int j=1; j<=columns.size(); j++)
-	{
-		//consider low(j)
-		int i = low(j);
-		if(i > 0)
-			pairs.push_back( std::pair<int,int>(i,j) );
-	}
-}//end find_pairs()
-
 //function to print the matrix to standard output, mainly for testing purposes
 void MapMatrix::print()
 {

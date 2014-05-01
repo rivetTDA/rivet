@@ -637,48 +637,45 @@ SimplexData SimplexTree::get_simplex_data(int index)
 	return sd;	//TODO: is this good design?
 }
 
-//computes a boundary matrix for d-simplices, using given orders on simplices of dimensions d (cofaces) and d-1 (faces)
+//computes a boundary matrix, using given orders on simplices of dimensions d (cofaces) and d-1 (faces)
 	// coface_global is a map: order_simplex_index -> global_simplex_index
 	// face_order is a map: global_simplex_index -> order_simplex_index
 MapMatrix* SimplexTree::get_boundary_mx(std::vector<int> coface_global, std::map<int,int> face_order)
 {
 	//create the matrix
 	int num_cols = coface_global.size();
-	int num_rows = face_order.size()
+	int num_rows = face_order.size();
 	MapMatrix* mat = new MapMatrix(num_rows, num_cols);			//DELETE this object later???
-	
-	//ASSUMPTION: cofaces always have dimension at least 1
 	
 	//loop through columns
 	for(int j=0; j<num_cols; j++)
 	{
-//		std::cout << "      finding boundary of simplex " << cols[j] << "\n";
-		
 		//find all vertices of the simplex corresponding to this column
 		std::vector<int> verts = find_vertices(coface_global[j]);
 		
-		//find all boundary simplices of this simplex
-		for(int k=0; k<verts.size(); k++)
+		//if the simplex has a nontrivial boundary, then consider its facets
+		if(verts.size() > 1)
 		{
-//			std::cout << "        finding boundary simplex " << k << "\n";
+			//find all boundary simplices of this simplex
+			for(int k=0; k<verts.size(); k++)
+			{
+				//make a list of all vertices in verts[] except verts[k]
+				std::vector<int> facet;
+				for(int l=0; l<verts.size(); l++)
+					if(l != k)
+						facet.push_back(verts[l]);
 			
-			//make a list of all vertices in verts[] except verts[k]
-			std::vector<int> facet;
-			for(int l=0; l<verts.size(); l++)
-				if(l != k)
-					facet.push_back(verts[l]);
+				//look up global index of the boundary simplex
+				int gi = find_index(facet);
 			
-			//look up global index of the boundary simplex
-			int gi = find_index(facet);
-//			std::cout << "        found boundary simplex with global index " << gi << "\n";
+				//look up order index of the simplex
+				int oi = face_order.at(gi);
 			
-			//look up order index of the simplex
-			int oi = face_order.at(gi);
-			
-			//for this boundary simplex, enter "1" in the appropriate cell in the matrix
-//			std::cout << "     enter 1 in column " << j << ", row " << mid << "\n";
-			(*mat).set(oi+1,j+1);
-		}//end for(k=0;...)
+				//for this boundary simplex, enter "1" in the appropriate cell in the matrix (row oi, column j)
+				(*mat).set(oi+1,j+1);
+				
+			}//end for(k=0;...)
+		}//end if(verts.size() > 1)
 	}//end for(j=0;...)
 	
 	//return the MapMatrix

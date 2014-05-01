@@ -149,7 +149,7 @@ int main(int argc, char* argv[])
 			int ax = xi_support[i].first, ay = xi_support[i].second;
 			int bx = xi_support[j].first, by = xi_support[j].second; 
 			
-			if((ax - bx)*(ay - by) < 0)	//then the support points are incomparable, so we have found an LCM
+			if((ax - bx)*(ay - by) <= 0)	//then the support points are incomparable, so we have found an LCM
 			{
 				double t = bifiltration->get_time(std::max(ax,bx));
 				double d = bifiltration->get_dist(std::max(ay,by));

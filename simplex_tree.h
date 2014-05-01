@@ -15,6 +15,7 @@
 #define __SimplexTree_H__
 
 #include <utility>	// std::pair
+#include <map>
 #include "point.h"
 #include "st_node.h"
 #include "map_matrix.h"
@@ -41,7 +42,7 @@ class SimplexTree {
 		MapMatrix* get_merge_mx(int time, int dist, int dim);		//computes a matrix representing the map [B+C,D], for inclusion maps into the dim-skeleton at the specified multi-index
 		MapMatrix* get_split_mx(int time, int dist, int dim);		//computes a matrix representing the map [A,B+C], for the dim-skeleton at the specified multi-index
 		
-		MapMatrix* get_boundary_mx(std::vector<int> coface_global, std::map<int,int> face_order);	//computes a boundary matrix for d-simplices, using given orders on simplices of dimensions d (cofaces) and d-1 (faces)
+		MapMatrix* get_boundary_mx(std::vector<int> coface_global, std::map<int,int> face_order);	//computes a boundary matrix, using given orders on simplices of dimensions d (cofaces) and d-1 (faces)
 		
 		std::vector<int> find_vertices(int);		//given a global index, return (a vector containing) the vertices of the simplex
 		int find_index(std::vector<int>&);		//given a sorted vector of vertex indexes, return the global index of the corresponding simplex (or -1 if it doesn't exist)
