@@ -12,6 +12,7 @@
 #include "simplex_tree.h"
 #include "multi_betti.h"
 #include "dcel/mesh.h"
+#include "dcel/persistence_data.h"
 
 
 
@@ -181,13 +182,31 @@ int main(int argc, char* argv[])
 	if(verbosity >= 2) { std::cout << "COMPUTING PERSISTENCE DATA FOR EACH CELL:\n"; }
 	dcel.build_persistence_data(xi_support, bifiltration, dim);
 	
-	
-	
 	//now we should be able to do queries and create persistence diagrams!
-	
 	//PLAN: user chooses a line, we send line parameters to dcel (along with xi_support and bifiltration), dcel returns list of persistence pairs
-	
-	
+	std::cout << "NOW WE CAN RETRIEVE PERSISTENCE DATA ALONG LINES\n";
+	int again = 1;
+	while(again == 1)
+	{
+		//input
+		double angle;
+		std::cout << "  Enter an angle (0 to 1.570796...): ";
+		std::cin >> angle;
+		double offset;
+		std::cout << "  Enter an offset: ";
+		std::cin >> offset;
+		
+		if(verbosity >= 8) { std::cout << "you entered " << angle << " and " << offset << "\n"; }
+		
+		//get persistence diagram
+		PersistenceDiagram* pdgm = dcel.get_persistence_data(angle, offset);
+
+		//TODO: output....WORKING HERE!!!!!
+		
+		
+		std::cout << "  Again? Enter 1 to continue, anything else to quit: ";
+		std::cin >> again;
+	}
 	
 	
 	//done

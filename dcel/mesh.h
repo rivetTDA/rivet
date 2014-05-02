@@ -36,8 +36,8 @@ class Mesh
 		void build_persistence_data(std::vector<std::pair<int, int> > & xi, SimplexTree* bifiltration, int dim);
 			//associates a persistence diagram to each face, requires all support points of xi_0 and xi_1, the bifiltration, and the dimension of homology
 		
-		//need ability to return persistence diagram associated with the face containing a specified point...
-		
+		PersistenceDiagram* get_persistence_diagram(double angle, double offset);
+			//returns a persistence diagram associated with the specified point
 		
 		void print();	//prints all the data from the mesh
 		

@@ -23,7 +23,7 @@ class PersistenceData
 		double get_r();		//get the theta coordinate
 		
 		void compute_data(std::vector<std::pair<int, int> > & xi, SimplexTree* bifiltration, int dim);
-			//computes the persistence data (IN PROGRESS), requires all support points of xi_0 and xi_1, the bifiltration, and the dimension of homology
+			//computes the persistence data, requires all support points of xi_0 and xi_1, the bifiltration, and the dimension of homology
 		
 	private:
 		double theta;		//theta-coordinate of line along which this persistence data is computed
@@ -45,10 +45,6 @@ class PersistenceData
 		
 		std::pair<bool, double> project(double x, double y);	//computes the 1-D coordinate of the projection of a point (x,y) onto the line
 			//returns a pair: first value is true if there is a projection, false otherwise; second value contains projection coordinate
-		
-//REMOVED		void find_pairs(MapMatrix* mat);	//finds all persistence pairs in the (reduced) matrix, stores them in the vector persistence_pairs
-		
-		
 };
 
 

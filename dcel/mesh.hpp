@@ -443,6 +443,75 @@ void Mesh::build_persistence_data(std::vector<std::pair<int, int> > & xi, Simple
 }//end build_persistence_data()
 
 
+//returns a persistence diagram associated with the specified point
+PersistenceDiagram* Mesh::get_persistence_diagram(double angle, double offset)
+{
+	//find the cell that contains the point
+	//first, find starting point on left edge of strip
+	LCM* current(0, offset);
+	std::set<LCM*>::iterator itleft;
+	itleft = inserted_lcms.upper_bound(current);	//returns an iterator to the first LCM that is greater than "current"
+	
+	Halfedge* finger = NULL;
+	
+	if(itleft == inserted_lcms.end())	//then point is above all LCMS on the left edge of the strip
+	{
+		finger = topleft->get_twin();
+	}
+	else
+	{
+		finger = (**itleft).get_curve();
+	}
+	
+		
+	//////// TODO: WORKING HERE!!!!!!!!
+	
+	
+	
+	Face* cell = .....
+	
+	
+	
+	//get persistence data associated with the cell
+	PersistenceData pdata = cell->get_data();
+	
+	//TODO: get global xi support points...
+	
+	//compute projections of the xi support points relevant to this cell
+	std::map<int,double> xi_coords;
+	
+	for( each xi support point... )
+	{
+		project onto line...
+		
+		store pair (global index, projection coord)
+	}
+	
+	
+	//build persistence diagram
+	PersistenceDiagram* pdgm = new PersistenceDiagram();			//DELETE this item later!
+	
+	for( each persistence pair)
+	{
+		translate indexes to projection coordinates
+		
+		add pair to persistence diagram
+	}
+	
+	for( each essential cycle )
+	{
+		translate index to projection coordinate
+		
+		add pair to persistence diagram
+	}
+	
+	//return persistence diagram
+	return pdgm;
+	
+}//end get_persistence_diagram
+			
+
+
 //print all the data from the mesh
 void Mesh::print()
 {

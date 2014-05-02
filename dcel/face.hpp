@@ -22,7 +22,6 @@ class Face
 		void set_boundary(Halfedge* e);	//set the pointer to a halfedge on the boundary of this face
 		Halfedge* get_boundary();	//get the (pointer to the) boundary halfedge
 		
-	//UNNECESSARY:	void set_data(PersistenceData* pd);	//set the persistence data associated with this face
 		PersistenceData* get_data();		//returns the persistence data associated with this face
 		
 		void store_interior_point();		//computes coordinates of a point inside this face and stores it in the persistence data object
@@ -50,11 +49,6 @@ Halfedge* Face::get_boundary()
 {
 	return boundary;
 }
-
-//void Face::set_data(PersistenceData* pd)
-//{
-//	pdata = pd;
-//}
 
 PersistenceData* Face::get_data()
 {
