@@ -26,10 +26,10 @@ int main(int argc, char* argv[])
 	dcel.print();
 	
 	//add curves
-//	int x_vals[] = {2,2,4};
-//	int y_vals[] = {1,3,5};
-	int x_vals[] = {2,4,1,8,1};
-	int y_vals[] = {3,5,2,9,5};
+	int x_vals[] = {1,2,4};
+	int y_vals[] = {2,3,5};
+//	int x_vals[] = {2,4,1,8,1};
+//	int y_vals[] = {3,5,2,9,5};
 	std::vector<int> vx (x_vals, x_vals + sizeof(x_vals) / sizeof(int) );
 	std::vector<int> vy (y_vals, y_vals + sizeof(y_vals) / sizeof(int) );
 	
@@ -41,9 +41,15 @@ int main(int argc, char* argv[])
 	}
 	
 	//test interior point routine
-	std::cout << "FINDING A POINT INSIDE EACH CELL:\n";
-	dcel.build_persistence_data();
+//	std::cout << "FINDING A POINT INSIDE EACH CELL:\n";
+//	dcel.build_persistence_data();
 	
+	//test point lookup
+	std::cout << "POINT LOOKUP TEST:\n";
+//	dcel.get_persistence_diagram(1.570796327,-2);
+//	dcel.get_persistence_diagram(1.5,-1);
+	dcel.get_persistence_diagram(.05,4);
+	dcel.get_persistence_diagram(0.78, 0.735);
 
 	std::cout << "Done.\n\n";
 }

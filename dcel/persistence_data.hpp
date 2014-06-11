@@ -10,6 +10,7 @@
 
 //includes????  namespace????
 #include <map>
+#include "../simplex_tree.h"
 
 class PersistenceData
 {
@@ -24,6 +25,8 @@ class PersistenceData
 		
 		void compute_data(std::vector<std::pair<int, int> > & xi, SimplexTree* bifiltration, int dim);
 			//computes the persistence data, requires all support points of xi_0 and xi_1, the bifiltration, and the dimension of homology
+		
+		std::vector<int>* get_xi_global();	//returns vector of global indexes of xi support points
 		
 	private:
 		double theta;		//theta-coordinate of line along which this persistence data is computed
@@ -179,7 +182,7 @@ void PersistenceData::compute_data(std::vector<std::pair<int, int> > & xi, Simpl
 	std::vector<int> coface_order_xi;	// index: order_simplex_index; value: order_xi_support_point_index
 	for(std::multimap<int,int>::iterator it=coface_p_order.begin(); it!=coface_p_order.end(); ++it)
 	{
-		std::cout << "CHECK: coface, order xi support pt ind " << it->first << ", global simp ind " << it->second << "\n";
+		if(verbosity >= 7) { std::cout << "CHECK: coface, order xi support pt ind " << it->first << ", global simp ind " << it->second << "\n"; }
 		coface_global.push_back(it->second);
 		coface_order_xi.push_back(it->first);
 	}	
@@ -308,6 +311,12 @@ void PersistenceData::compute_data(std::vector<std::pair<int, int> > & xi, Simpl
 	delete bdry_simplex;
 }//end compute_data()
 
+//returns vector of global indexes of xi support points
+std::vector<int>* PersistenceData::get_xi_global()
+{
+	return &xi_global;
+}
+
 //computes the 1-D coordinate of the projection of a point (x,y) onto the line
 //returns a pair: first value is true if there is a projection, false otherwise; second value contains projection coordinate
 //TODO: possible optimization: when computing projections initially, the horizontal and vertical cases should not occur (since an interior point in each cell cannot be on the boundary)
@@ -333,7 +342,7 @@ std::pair<bool, double> PersistenceData::project(double x, double y)
 	}
 	else	//vertical line
 	{
-		if(x <= r)
+		if(x <= -1*r)
 			p = y;
 		else	//no projection
 			b = false;

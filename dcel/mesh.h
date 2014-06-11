@@ -20,6 +20,7 @@
 #include "vertex.hpp"
 #include "halfedge.hpp"
 #include "face.hpp"
+#include "../persistence_diagram.hpp"
 
 class Mesh
 {
@@ -34,9 +35,9 @@ class Mesh
 		bool contains(double time, double dist);	//determines whether LCM (time, dist) is already represented in the mesh
 		
 		void build_persistence_data(std::vector<std::pair<int, int> > & xi, SimplexTree* bifiltration, int dim);
-			//associates a persistence diagram to each face, requires all support points of xi_0 and xi_1, the bifiltration, and the dimension of homology
+			//associates persistence data to each face, requires all support points of xi_0 and xi_1, the bifiltration, and the dimension of homology
 		
-		PersistenceDiagram* get_persistence_diagram(double angle, double offset);
+		PersistenceDiagram* get_persistence_diagram(double angle, double offset, std::vector<std::pair<int, int> > & xi, SimplexTree* bifiltration);
 			//returns a persistence diagram associated with the specified point
 		
 		void print();	//prints all the data from the mesh
@@ -58,6 +59,8 @@ class Mesh
 		
 		Halfedge* insert_vertex(Halfedge* edge, double t, double r);	//inserts a new vertex on the specified edge, with the specified coordinates, and updates all relevant pointers
 		void insert_edge(Halfedge* leftedge, Halfedge* rightedge, LCM* lcm);	//inserts a new edge across an existing face; requires leftedge and rightedge, coherently oriented around the existing face, and whose origin vertices will be endpoints of the new edge; also requires the LCM to be associated with the new edge
+		
+		std::pair<bool, double> project(double angle, double offset, double x, double y);	//projects (x,y) onto the line determined by angle and offset
 		
 		int HID(Halfedge* h);		//halfedge ID, for printing and debugging
 		int FID(Face* f);		//face ID, for printing and debugging

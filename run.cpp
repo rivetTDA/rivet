@@ -12,7 +12,7 @@
 #include "simplex_tree.h"
 #include "multi_betti.h"
 #include "dcel/mesh.h"
-#include "dcel/persistence_data.h"
+#include "dcel/persistence_data.hpp"
 
 
 
@@ -199,7 +199,7 @@ int main(int argc, char* argv[])
 		if(verbosity >= 8) { std::cout << "you entered " << angle << " and " << offset << "\n"; }
 		
 		//get persistence diagram
-		PersistenceDiagram* pdgm = dcel.get_persistence_data(angle, offset);
+		PersistenceDiagram* pdgm = dcel.get_persistence_diagram(angle, offset, xi_support, bifiltration);
 
 		//TODO: output....WORKING HERE!!!!!
 		

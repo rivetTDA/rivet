@@ -33,8 +33,8 @@ class Halfedge
 		//void set_origin(Vertex* v); -- I don't think we will ever change the origin vertex
 		Vertex* get_origin() const;		//get the origin vertex
 		
-		void set_face(Face* f);		//get the face that this halfedge borders
-		Face* get_face() const;		//set the face that this halfedge borders
+		void set_face(Face* f);		//set the face that this halfedge borders
+		Face* get_face() const;		//get the face that this halfedge borders
 		
 		LCM* get_LCM() const;			//get the LCM coordinates
 		
