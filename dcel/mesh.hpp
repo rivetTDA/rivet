@@ -567,30 +567,47 @@ PersistenceDiagram* Mesh::get_persistence_diagram(double angle, double offset, s
 	
 	//build persistence diagram
 	PersistenceDiagram* pdgm = new PersistenceDiagram();			//DELETE this item later!
-/*	
-	TODO: WORKING HERE!!!		
-	now we simply have to translate and store the bars
 	
-	for( each persistence pair)
+	//now we simply have to translate and store the persistence pairs and essential cycles
+	std::vector< std::pair<int,int> > pairs;
+	pairs = *(pdata->get_pairs());
+	
+	for(int i=0; i<pairs.size(); i++)
 	{
-		translate indexes to projection coordinates
+		std::pair<bool,double> birth_proj = xi_proj[pairs[i].first];
+		std::pair<bool,double> death_proj = xi_proj[pairs[i].second];
 		
-		add pair to persistence diagram
+		if(birth_proj.first && death_proj.first)	//both projections exist, so store pair
+		{
+			pdgm->add_pair(birth_proj.second, death_proj.second);
+			if(verbosity >= 3) { std::cout << "    persistence pair: (" << birth_proj.second << ", " << death_proj.second << ")\n"; }
+		}
+		else if(birth_proj.first)	//only the birth projection exists, so store cycle
+		{
+			pdgm->add_cycle(birth_proj.second);
+			if(verbosity >= 3) { std::cout << "    cycle: " << birth_proj.second << " (death projected to infinity)\n"; }
+		}
 	}
 	
-	for( each essential cycle )
+	std::vector<int> cycles;
+	cycles = *(pdata->get_cycles());
+	
+	for(int i=0; i<cycles.size(); i++)
 	{
-		translate index to projection coordinate
+		std::pair<bool,double> birth_proj = xi_proj[cycles[i]];
 		
-		add pair to persistence diagram
+		if(birth_proj.first)	//projection exists, so store cycle
+		{
+			pdgm->add_cycle(birth_proj.second);
+			if(verbosity >= 3) { std::cout << "    cycle: " << birth_proj.second << "\n"; }
+		}
 	}
-*/	
+		
 	//clean up
 	delete current;
 	
 	//return persistence diagram
 	return pdgm;
-	
 }//end get_persistence_diagram
 
 //projects (x,y) onto the line determined by angle and offset

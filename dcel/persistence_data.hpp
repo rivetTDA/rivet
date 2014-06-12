@@ -26,7 +26,9 @@ class PersistenceData
 		void compute_data(std::vector<std::pair<int, int> > & xi, SimplexTree* bifiltration, int dim);
 			//computes the persistence data, requires all support points of xi_0 and xi_1, the bifiltration, and the dimension of homology
 		
-		std::vector<int>* get_xi_global();	//returns vector of global indexes of xi support points
+		std::vector<int>* get_xi_global();		//returns vector of global indexes of xi support points
+		std::vector< std::pair<int,int> >* get_pairs();	//returns a vector of persistence pairs (with respect to order xi indexes)
+		std::vector<int>* get_cycles();			//returns a vector of essential cycles (with respect to order xi indexes)
 		
 	private:
 		double theta;		//theta-coordinate of line along which this persistence data is computed
@@ -316,6 +318,18 @@ std::vector<int>* PersistenceData::get_xi_global()
 {
 	return &xi_global;
 }
+//returns a vector of persistence pairs (with respect to order xi indexes)
+std::vector< std::pair<int,int> >* PersistenceData::get_pairs()
+{
+	return &persistence_pairs;
+}
+
+//returns a vector of essential cycles (with respect to order xi indexes)
+std::vector<int>* PersistenceData::get_cycles()
+{
+	return &essential_cycles;
+}
+
 
 //computes the 1-D coordinate of the projection of a point (x,y) onto the line
 //returns a pair: first value is true if there is a projection, false otherwise; second value contains projection coordinate
