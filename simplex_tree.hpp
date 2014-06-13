@@ -4,6 +4,7 @@
 
 #include <set>
 #include <vector>
+#include <math.h>
 
 //constructor
 SimplexTree::SimplexTree(int v) : 
@@ -233,7 +234,7 @@ int SimplexTree::dist_index(double key)
 //returns a distance value, given an index
 double SimplexTree::get_dist(int i)
 {
-	return dist_list[i];
+       return dist_list[i];
 }
 
 //searches for a time value
@@ -259,7 +260,7 @@ int SimplexTree::time_index(double key)
 //returns a time value, given an index
 double SimplexTree::get_time(int i)
 {
-	return time_list[i];
+    return time_list[i];
 }
 
 //computes a boundary matrix for simplices of a given dimension at the specified multi-index
@@ -737,4 +738,15 @@ int SimplexTree::get_num_simplices()
 	return (*node).get_global_index() + 1;
 }
 
+void SimplexTree::test_lists()
+{
+    std::cout << "TIME LIST:\n";
+    for(int i=0; i<time_list.size(); i++)
+        std::cout << time_list[i] << ", ";
+    std::cout << "\n";
 
+    std::cout << "DIST LIST:\n";
+    for(int i=0; i<dist_list.size(); i++)
+        std::cout << dist_list[i] << ", ";
+    std::cout << "\n";
+}

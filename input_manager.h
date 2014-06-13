@@ -27,7 +27,7 @@ class InputManager
 {
 	public:
 		InputManager(int v);		//constructor
-		void start(char* arg);	//function to run the input manager, requires a filename
+		void start(const char* arg);	//function to run the input manager, requires a filename
 		
 		SimplexTree* get_bifiltration();	//returns a pointer to the simplex tree representing the bifiltration
 		

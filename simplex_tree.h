@@ -56,6 +56,7 @@ class SimplexTree {
 		
 		void print();				//prints a representation of the simplex tree
 		
+        void test_lists();  //TESTING ONLY
 		
 	private:
 		std::vector<double> dist_list;	//sorted list of unique distances (not greater than max_distance), used for creating integer indexes

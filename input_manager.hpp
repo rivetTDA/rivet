@@ -8,7 +8,7 @@ InputManager::InputManager(int v) :
 { }
 
 //function to run the input manager, requires a filename
-void InputManager::start(char* arg)
+void InputManager::start(const char* arg)
 {
 	//read the file
 	if(verbosity >= 2) { std::cout << "READING FILE:\n"; }

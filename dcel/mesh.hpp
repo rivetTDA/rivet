@@ -543,12 +543,18 @@ PersistenceDiagram* Mesh::get_persistence_diagram(double angle, double offset, s
 	
 	//compute projections of the xi support points relevant to this cell
 	std::vector<std::pair<bool,double> > xi_proj;	//index is order_xi_support_point_index; first entry indicates whether the projection exists; second entry is projection coordinate
-	
+
 	for(int i=0; i<xi_global.size(); i++)
 	{
-		double x = xi[xi_global[i]].first;
-		double y = xi[xi_global[i]].second;
-		
+		//get absolute coordinates of this xi support point
+//        double x = xi[xi_global[i]].first;
+//        double y = xi[xi_global[i]].second;
+//        std::cout << "XI: xi_global[" << i << "] = " << xi_global[i] << "; xi.size() = " << xi.size() << "\n";
+//        std::cout << "    xi[xi_global[i]].first = " << xi[xi_global[i]].first << "\n";// maps to " << bifiltration->get_time(xi[xi_global[i]].first) << "\n";
+        double x = bifiltration->get_time(xi[xi_global[i]].first);
+        double y = bifiltration->get_dist(xi[xi_global[i]].second);
+
+
 		//project onto line
 		std::pair<bool,double> proj = project(angle, offset, x, y);
 		
@@ -563,13 +569,13 @@ PersistenceDiagram* Mesh::get_persistence_diagram(double angle, double offset, s
 		
 		//store projection
 		xi_proj.push_back(proj);
-	}
-	
+    }
+
 	//build persistence diagram
 	PersistenceDiagram* pdgm = new PersistenceDiagram();			//DELETE this item later!
 	
 	//now we simply have to translate and store the persistence pairs and essential cycles
-	std::vector< std::pair<int,int> > pairs;
+    std::vector< std::pair<int,int> > pairs;
 	pairs = *(pdata->get_pairs());
 	
 	for(int i=0; i<pairs.size(); i++)
@@ -602,7 +608,7 @@ PersistenceDiagram* Mesh::get_persistence_diagram(double angle, double offset, s
 			if(verbosity >= 3) { std::cout << "    cycle: " << birth_proj.second << "\n"; }
 		}
 	}
-		
+
 	//clean up
 	delete current;
 	
