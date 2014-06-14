@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>900</width>
-    <height>650</height>
+    <height>682</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,15 +17,21 @@
    <widget class="QLabel" name="sliceLabel">
     <property name="geometry">
      <rect>
-      <x>120</x>
-      <y>30</y>
-      <width>141</width>
-      <height>17</height>
+      <x>22</x>
+      <y>40</y>
+      <width>401</width>
+      <height>30</height>
      </rect>
+    </property>
+    <property name="minimumSize">
+     <size>
+      <width>0</width>
+      <height>0</height>
+     </size>
     </property>
     <property name="font">
      <font>
-      <pointsize>12</pointsize>
+      <pointsize>14</pointsize>
       <weight>75</weight>
       <bold>true</bold>
      </font>
@@ -40,15 +46,21 @@
    <widget class="QLabel" name="pdLabel">
     <property name="geometry">
      <rect>
-      <x>520</x>
-      <y>30</y>
-      <width>281</width>
-      <height>17</height>
+      <x>474</x>
+      <y>40</y>
+      <width>401</width>
+      <height>30</height>
      </rect>
+    </property>
+    <property name="minimumSize">
+     <size>
+      <width>0</width>
+      <height>0</height>
+     </size>
     </property>
     <property name="font">
      <font>
-      <pointsize>12</pointsize>
+      <pointsize>14</pointsize>
       <weight>75</weight>
       <bold>true</bold>
      </font>
@@ -60,74 +72,25 @@
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QPushButton" name="fileButton">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>0</y>
-      <width>121</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Open Data File</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="homDimLabel">
-    <property name="geometry">
-     <rect>
-      <x>190</x>
-      <y>0</y>
-      <width>151</width>
-      <height>17</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Homology Dimension:</string>
-    </property>
-   </widget>
-   <widget class="QSpinBox" name="homDimSpinBox">
-    <property name="geometry">
-     <rect>
-      <x>350</x>
-      <y>0</y>
-      <width>60</width>
-      <height>27</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="computeButton">
-    <property name="geometry">
-     <rect>
-      <x>450</x>
-      <y>0</y>
-      <width>98</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Compute</string>
-    </property>
-   </widget>
    <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
-      <x>50</x>
+      <x>30</x>
       <y>490</y>
-      <width>331</width>
+      <width>391</width>
       <height>71</height>
      </rect>
     </property>
     <layout class="QGridLayout" name="gridLayout">
-     <item row="1" column="0">
-      <widget class="QLabel" name="offsetLabel">
-       <property name="text">
-        <string>&amp;Offset:</string>
-       </property>
-       <property name="buddy">
-        <cstring>offsetSpinBox</cstring>
+     <item row="0" column="2">
+      <widget class="QSpinBox" name="angleSpinBox">
+       <property name="maximum">
+        <number>90</number>
        </property>
       </widget>
+     </item>
+     <item row="1" column="2">
+      <widget class="QSpinBox" name="offsetSpinBox"/>
      </item>
      <item row="0" column="0">
       <widget class="QLabel" name="angleLabel">
@@ -136,6 +99,23 @@
        </property>
        <property name="buddy">
         <cstring>angleSpinBox</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QSlider" name="offsetSlider">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="offsetLabel">
+       <property name="text">
+        <string>&amp;Offset:</string>
+       </property>
+       <property name="buddy">
+        <cstring>offsetSpinBox</cstring>
        </property>
       </widget>
      </item>
@@ -152,33 +132,22 @@
        </property>
       </widget>
      </item>
-     <item row="1" column="2">
-      <widget class="QSpinBox" name="offsetSpinBox"/>
-     </item>
-     <item row="0" column="2">
-      <widget class="QSpinBox" name="angleSpinBox">
-       <property name="maximum">
-        <number>90</number>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1">
-      <widget class="QSlider" name="offsetSlider">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
-     </item>
     </layout>
    </widget>
    <widget class="SliceArea" name="sliceArea" native="true">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>60</y>
+      <x>25</x>
+      <y>80</y>
       <width>400</width>
       <height>400</height>
      </rect>
+    </property>
+    <property name="minimumSize">
+     <size>
+      <width>400</width>
+      <height>400</height>
+     </size>
     </property>
     <property name="autoFillBackground">
      <bool>true</bool>
@@ -187,100 +156,201 @@
    <widget class="PDArea" name="pdArea" native="true">
     <property name="geometry">
      <rect>
-      <x>480</x>
-      <y>60</y>
+      <x>475</x>
+      <y>80</y>
       <width>400</width>
       <height>400</height>
      </rect>
     </property>
+    <property name="minimumSize">
+     <size>
+      <width>400</width>
+      <height>400</height>
+     </size>
+    </property>
     <property name="autoFillBackground">
      <bool>true</bool>
     </property>
+    <zorder></zorder>
    </widget>
-   <widget class="QCheckBox" name="normCoordCheckBox">
+   <widget class="QWidget" name="">
     <property name="geometry">
      <rect>
-      <x>570</x>
-      <y>470</y>
-      <width>221</width>
-      <height>22</height>
+      <x>180</x>
+      <y>0</y>
+      <width>511</width>
+      <height>29</height>
      </rect>
     </property>
-    <property name="text">
-     <string>Normalize Coordinates</string>
-    </property>
+    <layout class="QHBoxLayout" name="horizontalLayout_4">
+     <item>
+      <widget class="QPushButton" name="fileButton">
+       <property name="text">
+        <string>Open Data File</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_6">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QLabel" name="homDimLabel">
+       <property name="text">
+        <string>Homology Dimension:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSpinBox" name="homDimSpinBox"/>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_7">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="computeButton">
+       <property name="text">
+        <string>Compute</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </widget>
-   <widget class="QDoubleSpinBox" name="doubleSpinBox">
+   <widget class="QWidget" name="">
     <property name="geometry">
      <rect>
-      <x>500</x>
-      <y>500</y>
-      <width>62</width>
-      <height>27</height>
+      <x>494</x>
+      <y>484</y>
+      <width>361</width>
+      <height>129</height>
      </rect>
     </property>
-   </widget>
-   <widget class="QDoubleSpinBox" name="doubleSpinBox_2">
-    <property name="geometry">
-     <rect>
-      <x>500</x>
-      <y>530</y>
-      <width>62</width>
-      <height>27</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QLabel" name="cleanDiagLabel">
-    <property name="geometry">
-     <rect>
-      <x>580</x>
-      <y>500</y>
-      <width>141</width>
-      <height>17</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Clean Diagonal</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="scaleLabel">
-    <property name="geometry">
-     <rect>
-      <x>570</x>
-      <y>530</y>
-      <width>161</width>
-      <height>17</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Current/Default Scale</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="fitScalePushButton">
-    <property name="geometry">
-     <rect>
-      <x>520</x>
-      <y>560</y>
-      <width>98</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Fit Scale</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="resetScalePushButton">
-    <property name="geometry">
-     <rect>
-      <x>650</x>
-      <y>560</y>
-      <width>98</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>PushButton</string>
-    </property>
+    <layout class="QVBoxLayout" name="verticalLayout">
+     <item>
+      <widget class="QCheckBox" name="normCoordCheckBox">
+       <property name="text">
+        <string>Normalize Coordinates</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QDoubleSpinBox" name="doubleSpinBox"/>
+       </item>
+       <item>
+        <widget class="QLabel" name="cleanDiagLabel">
+         <property name="text">
+          <string>Clean Diagonal</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <item>
+        <widget class="QDoubleSpinBox" name="doubleSpinBox_2"/>
+       </item>
+       <item>
+        <widget class="QLabel" name="scaleLabel">
+         <property name="text">
+          <string>Current/Default Scale</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <item>
+        <spacer name="horizontalSpacer_3">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QPushButton" name="fitScalePushButton">
+         <property name="text">
+          <string>Fit Scale</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="resetScalePushButton">
+         <property name="text">
+          <string>Reset Scale</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer_4">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </item>
+    </layout>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
