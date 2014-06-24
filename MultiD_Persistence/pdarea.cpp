@@ -13,7 +13,7 @@
 
 PDArea::PDArea(QWidget *parent)
     : QWidget(parent), has_data(false),
-      min(0), max(100)
+      min(0), max(10)
 {
     setBackgroundRole(QPalette::Light);
 }

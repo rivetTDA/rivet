@@ -15,7 +15,7 @@ SliceArea::SliceArea(QWidget *parent)
 {
     setBackgroundRole(QPalette::Light);
 
-    angle = 0;  //TESTING
+    angle = 45;  //TESTING
     offset = 0;
 }
 
@@ -33,7 +33,7 @@ void SliceArea::addPoint(double x_coord, double y_coord, int xi0m, int xi1m)
 }
 
 
-void SliceArea::setLine(int angle, int offset)
+void SliceArea::setLine(int angle, double offset)
 {
     this->angle = angle;
     this->offset = offset;

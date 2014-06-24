@@ -87,10 +87,10 @@
        <property name="maximum">
         <number>90</number>
        </property>
+       <property name="value">
+        <number>45</number>
+       </property>
       </widget>
-     </item>
-     <item row="1" column="2">
-      <widget class="QSpinBox" name="offsetSpinBox"/>
      </item>
      <item row="0" column="0">
       <widget class="QLabel" name="angleLabel">
@@ -124,11 +124,21 @@
        <property name="maximum">
         <number>90</number>
        </property>
+       <property name="sliderPosition">
+        <number>45</number>
+       </property>
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
        <property name="tickPosition">
         <enum>QSlider::NoTicks</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="2">
+      <widget class="QDoubleSpinBox" name="offsetSpinBox">
+       <property name="singleStep">
+        <double>0.100000000000000</double>
        </property>
       </widget>
      </item>
@@ -171,9 +181,8 @@
     <property name="autoFillBackground">
      <bool>true</bool>
     </property>
-    <zorder></zorder>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>180</x>
@@ -235,7 +244,7 @@
      </item>
     </layout>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>494</x>

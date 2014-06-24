@@ -35,7 +35,7 @@ public:
     void addPoint(double x_coord, double y_coord, int xi0m, int xi1m);
 
 public slots:
-    void setLine(int angle, int offset);
+    void setLine(int angle, double offset);
 
 protected:
     void paintEvent(QPaintEvent *event);
@@ -50,7 +50,8 @@ private:
 
     std::vector<xiPoint> points;    //point data to be drawn in the slice area
 
-    int angle, offset;  //parameters for the slice (line)
+    int angle;
+    double offset;  //parameters for the slice (line)
 
     int trans_x(double x);   //translates from logical to screen coordinates (horizontal)
     int trans_y(double y);   //translates from logical to screen coordinates (vertical)

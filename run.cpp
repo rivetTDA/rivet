@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
 	mb.compute_all_xi();
 	
 	//print xi_0 and xi_1
-	if(verbosity >= 4)
+	if(verbosity >= 2)
 	{ 
 		std::cout << "COMPUTATION FINISHED:\n";
 	
@@ -172,7 +172,7 @@ int main(int argc, char* argv[])
 	}
 	
 	//print the dcel arrangement
-	if(verbosity >= 2)
+	if(verbosity >= 4)
 	{
 		std::cout << "DCEL ARRANGEMENT:\n";
 		dcel.print();

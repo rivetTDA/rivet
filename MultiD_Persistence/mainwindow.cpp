@@ -45,9 +45,9 @@ void MainWindow::on_offsetSlider_valueChanged(int offset)
     ui->offsetSpinBox->setValue(offset);
 }
 
-void MainWindow::on_offsetSpinBox_valueChanged(int offset)
+void MainWindow::on_offsetSpinBox_valueChanged(double offset)
 {
-    ui->offsetSlider->setValue(offset);
+//    ui->offsetSlider->setValue(offset);
     ui->sliceArea->setLine(ui->angleSpinBox->value(), offset);
     draw_persistence_diagram();
 }

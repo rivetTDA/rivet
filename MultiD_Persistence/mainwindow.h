@@ -30,7 +30,7 @@ private slots:
 
     void on_offsetSlider_valueChanged(int value);
 
-    void on_offsetSpinBox_valueChanged(int arg1);
+    void on_offsetSpinBox_valueChanged(double arg1);
 
 private:
     Ui::MainWindow *ui;
