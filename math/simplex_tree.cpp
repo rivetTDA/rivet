@@ -6,6 +6,8 @@
 #include <vector>
 #include <math.h>
 
+#include "simplex_tree.h"
+
 //constructor
 SimplexTree::SimplexTree(int v) : 
 	verbosity(v)

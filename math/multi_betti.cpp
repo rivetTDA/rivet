@@ -2,6 +2,7 @@
  * takes a bifiltration and computes the multi-graded Betti numbers
  */
 
+#include "multi_betti.h"
 
 //constructor, which does the work of computing all the multi-graded Betti numbers
 MultiBetti::MultiBetti(SimplexTree* st, int dim, int v) :

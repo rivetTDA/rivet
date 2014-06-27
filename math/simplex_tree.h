@@ -78,6 +78,6 @@ class SimplexTree {
 		void print_subtree(STNode&, int);	//recursive function that prints the simplex tree
 };
 
-#include "simplex_tree.hpp"
+#include "simplex_tree.cpp"
 
 #endif // __SimplexTree_H__

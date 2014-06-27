@@ -1,10 +1,10 @@
 #include <QtGui/QApplication>
-#include "mainwindow.h"
+#include "dragdroptest.h"
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    MainWindow w;
+    DragDropTest w;
     w.show();
     
     return a.exec();

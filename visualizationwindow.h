@@ -1,24 +1,24 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#ifndef VISUALIZATIONWINDOW_H
+#define VISUALIZATIONWINDOW_H
 
 #include <QMainWindow>
 
 namespace Ui {
-class MainWindow;
+class VisualizationWindow;
 }
 
 class InputManager;
 class Mesh;
 class SimplexTree;
 
-class MainWindow : public QMainWindow
+class VisualizationWindow : public QMainWindow
 {
     Q_OBJECT
     
 public:
-    explicit MainWindow(QWidget *parent = 0);
-    ~MainWindow();
-
+    explicit VisualizationWindow(QWidget *parent = 0);
+    ~VisualizationWindow();
+    
 private slots:
     void on_angleSlider_valueChanged(int angle);
 
@@ -32,8 +32,14 @@ private slots:
 
     void on_offsetSpinBox_valueChanged(double arg1);
 
+    void on_scaleSpinBox_valueChanged(double arg1);
+
+    void on_fitScalePushButton_clicked();
+
+    void on_resetScalePushButton_clicked();
+
 private:
-    Ui::MainWindow *ui;
+    Ui::VisualizationWindow *ui;
 
     const int verbosity;
 
@@ -51,4 +57,4 @@ private:
 
 };
 
-#endif // MAINWINDOW_H
+#endif // VISUALIZATIONWINDOW_H

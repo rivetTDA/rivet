@@ -2,6 +2,7 @@
  * stores a matrix representing a simplicial map
  */
 
+#include "map_matrix.h"
 
 //constructor that sets initial size of matrix
 MapMatrix::MapMatrix(int i, int j)

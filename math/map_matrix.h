@@ -58,7 +58,7 @@ class MapMatrix
 		int num_rows;				//number of rows in the matrix
 };
 
-#include "map_matrix.hpp"
+#include "map_matrix.cpp"
 
 #endif // __MapMatrix_H__
 

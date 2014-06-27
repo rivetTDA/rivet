@@ -20,7 +20,7 @@
 #include "vertex.hpp"
 #include "halfedge.hpp"
 #include "face.hpp"
-#include "../persistence_diagram.hpp"
+#include "../math/persistence_diagram.hpp"
 
 class Mesh
 {
@@ -66,7 +66,7 @@ class Mesh
 		int FID(Face* f);		//face ID, for printing and debugging
 };//end class Mesh
 
-#include "mesh.hpp"
+#include "mesh.cpp"
 
 #endif // __DCEL_Mesh_H__
 

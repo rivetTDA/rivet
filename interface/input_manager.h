@@ -19,9 +19,9 @@
 #include <math.h>
 #include <algorithm>
 
-#include "point.h"
-#include "simplex_tree.h"
-#include "map_matrix.h"
+#include "../math/point.h"
+#include "../math/simplex_tree.h"
+#include "../math/map_matrix.h"
 
 class InputManager
 {
@@ -46,6 +46,6 @@ class InputManager
 		
 };
 
-#include "input_manager.hpp"
+#include "input_manager.cpp"
 
 #endif // __InputManager_H__

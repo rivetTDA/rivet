@@ -10,7 +10,7 @@
 
 //includes????  namespace????
 #include <map>
-#include "../simplex_tree.h"
+#include "../math/simplex_tree.h"
 
 class PersistenceData
 {

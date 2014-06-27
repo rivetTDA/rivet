@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>MainWindow</class>
- <widget class="QMainWindow" name="MainWindow">
+ <class>VisualizationWindow</class>
+ <widget class="QMainWindow" name="VisualizationWindow">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>mainwindow</string>
+   <string>RIVET</string>
   </property>
   <widget class="QWidget" name="centralWidget">
    <widget class="QLabel" name="sliceLabel">
@@ -256,6 +256,9 @@
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
       <widget class="QCheckBox" name="normCoordCheckBox">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="text">
         <string>Normalize Coordinates</string>
        </property>
@@ -264,7 +267,11 @@
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout">
        <item>
-        <widget class="QDoubleSpinBox" name="doubleSpinBox"/>
+        <widget class="QDoubleSpinBox" name="doubleSpinBox">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+        </widget>
        </item>
        <item>
         <widget class="QLabel" name="cleanDiagLabel">
@@ -291,7 +298,14 @@
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_2">
        <item>
-        <widget class="QDoubleSpinBox" name="doubleSpinBox_2"/>
+        <widget class="QDoubleSpinBox" name="scaleSpinBox">
+         <property name="singleStep">
+          <double>0.100000000000000</double>
+         </property>
+         <property name="value">
+          <double>1.000000000000000</double>
+         </property>
+        </widget>
        </item>
        <item>
         <widget class="QLabel" name="scaleLabel">
@@ -339,6 +353,9 @@
        </item>
        <item>
         <widget class="QPushButton" name="resetScalePushButton">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
          <property name="text">
           <string>Reset Scale</string>
          </property>
@@ -424,13 +441,13 @@
   <customwidget>
    <class>SliceArea</class>
    <extends>QWidget</extends>
-   <header>slicearea.h</header>
+   <header>interface/slicearea.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>PDArea</class>
    <extends>QWidget</extends>
-   <header>pdarea.h</header>
+   <header>interface/pdarea.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

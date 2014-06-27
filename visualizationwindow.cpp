@@ -1,64 +1,64 @@
-#include "mainwindow.h"
-#include "ui_mainwindow.h"
+#include "visualizationwindow.h"
+#include "ui_visualizationwindow.h"
 
 #include <QFileDialog>
 #include <QMessageBox>
 
-#include "slicearea.h"
-#include "pdarea.h"
+#include "interface/slicearea.h"
+#include "interface/pdarea.h"
 
-#include "../input_manager.h"
-#include "../simplex_tree.h"
-#include "../multi_betti.h"
-#include "../dcel/mesh.h"
-#include "../dcel/persistence_data.hpp"
+#include "interface/input_manager.h"
+#include "math/simplex_tree.h"
+#include "math/multi_betti.h"
+#include "dcel/mesh.h"
+#include "dcel/persistence_data.hpp"
 
 
-MainWindow::MainWindow(QWidget *parent) :
+VisualizationWindow::VisualizationWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow),
+    ui(new Ui::VisualizationWindow),
     verbosity(6)
 {
     ui->setupUi(this);
 
 }
 
-MainWindow::~MainWindow()
+VisualizationWindow::~VisualizationWindow()
 {
     delete ui;
 }
 
-void MainWindow::on_angleSlider_valueChanged(int angle)
+void VisualizationWindow::on_angleSlider_valueChanged(int angle)
 {
     ui->angleSpinBox->setValue(angle);
 }
 
-void MainWindow::on_angleSpinBox_valueChanged(int angle)
+void VisualizationWindow::on_angleSpinBox_valueChanged(int angle)
 {
     ui->angleSlider->setValue(angle);
     ui->sliceArea->setLine(angle, ui->offsetSpinBox->value());
     draw_persistence_diagram();
 }
 
-void MainWindow::on_offsetSlider_valueChanged(int offset)
+void VisualizationWindow::on_offsetSlider_valueChanged(int offset)
 {
     ui->offsetSpinBox->setValue(offset);
 }
 
-void MainWindow::on_offsetSpinBox_valueChanged(double offset)
+void VisualizationWindow::on_offsetSpinBox_valueChanged(double offset)
 {
 //    ui->offsetSlider->setValue(offset);
     ui->sliceArea->setLine(ui->angleSpinBox->value(), offset);
     draw_persistence_diagram();
 }
 
-void MainWindow::on_fileButton_clicked()    //let the user choose an input file
+void VisualizationWindow::on_fileButton_clicked()    //let the user choose an input file
 {
     fileName = QFileDialog::getOpenFileName(this, tr("Open Data File"), "/ima/home/mlwright/Repos","All files (*.*);;Text files (*.txt)");
     ui->statusBar->showMessage("file: "+fileName);
 }
 
-void MainWindow::on_computeButton_clicked() //read the file and do the persistent homology computation
+void VisualizationWindow::on_computeButton_clicked() //read the file and do the persistent homology computation
 {
     //start the input manager
     im = new InputManager(verbosity);
@@ -128,7 +128,6 @@ void MainWindow::on_computeButton_clicked() //read the file and do the persisten
     }
 
     //find all support points of xi_0 and xi_1
-//    std::vector<std::pair<int, int> > xi_support;  //integer (relative) coordinates of xi support points
     int min_time = bifiltration->get_num_times();  //min (relative) time coordinate
     int max_time = 0;                              //max (relative) time coordinate
     int min_dist = bifiltration->get_num_dists();  //min (relative) distance coordinate
@@ -155,6 +154,9 @@ void MainWindow::on_computeButton_clicked() //read the file and do the persisten
         }
     }
 
+    //find default maximum coordinate for persistence diagram
+    double pd_max = sqrt( pow(bifiltration->get_time(max_time) - bifiltration->get_time(min_time), 2) + pow(bifiltration->get_dist(max_dist) - bifiltration->get_dist(min_dist), 2) );
+
     //print support points of xi_0 and xi_1
     if(verbosity >= 2)
     {
@@ -170,6 +172,7 @@ void MainWindow::on_computeButton_clicked() //read the file and do the persisten
     //draw support points of xi_0 and xi_1
     ui->sliceArea->setExtents(bifiltration->get_time(min_time), bifiltration->get_time(max_time), bifiltration->get_dist(min_dist), bifiltration->get_dist(max_dist));
     ui->sliceArea->update();
+    ui->pdArea->setMax(pd_max);
     ui->statusBar->showMessage("computed xi support points");
 
 
@@ -226,10 +229,12 @@ void MainWindow::on_computeButton_clicked() //read the file and do the persisten
 
     std::cout << "TEST1: bifiltration: " <<  bifiltration << "\n";
 
+    //draw persistence diagram
+    draw_persistence_diagram();
 
 }//end on_computeButton_clicked()
 
-void MainWindow::draw_persistence_diagram()
+void VisualizationWindow::draw_persistence_diagram()
 {
     double radians = (ui->angleSpinBox->value())*3.14159265359/180;   //convert to radians
 
@@ -238,4 +243,25 @@ void MainWindow::draw_persistence_diagram()
     ui->pdArea->setData(pdgm->get_pairs(), pdgm->get_cycles());
     ui->pdArea->drawDiagram();
     ui->statusBar->showMessage("persistence diagram drawn");
+}
+
+void VisualizationWindow::on_scaleSpinBox_valueChanged(double arg1)
+{
+    ui->pdArea->setScale(arg1);
+    ui->pdArea->drawDiagram();
+    ui->statusBar->showMessage("persistence diagram scale changed");
+}
+
+void VisualizationWindow::on_fitScalePushButton_clicked()
+{
+    double curmax = ui->pdArea->fitScale();
+    ui->scaleSpinBox->setValue(curmax);
+    ui->pdArea->drawDiagram();
+    ui->statusBar->showMessage("persistence diagram scale changed to fit");
+}
+
+void VisualizationWindow::on_resetScalePushButton_clicked()
+{
+    ui->scaleSpinBox->setValue(1);
+    ui->statusBar->showMessage("persistence diagram scale reset");
 }

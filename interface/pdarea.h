@@ -19,18 +19,32 @@ class PDArea : public QWidget
 public:
     PDArea(QWidget *parent = 0);
 
-    QSize minimumSizeHint() const;
-    QSize sizeHint() const;
+    void setData(std::vector< std::pair<double,double> >* p, std::vector<double>* c);
 
 public slots:
-    //void setPen(const QPen &pen);
+    void drawDiagram();
+
+    void setMax(double m);
+
+    void setScale(double s);
+
+    double fitScale();
 
 protected:
     void paintEvent(QPaintEvent *event);
 
 private:
-    //QPen pen;
+    bool has_data;
 
+    std::vector< std::pair<double,double> >* pairs;
+    std::vector<double>* cycles;
+
+    double current_max;    //current max values for persistence diagram (min value is always zero)
+    double default_max;     //default max value for persistence diagram, determined by slice of xi support points
+    double scale_multiplier;     //factor by which the default scale is multiplied
+
+    int trans_x(double x);   //translates from logical to screen coordinates (horizontal)
+    int trans_y(double y);   //translates from logical to screen coordinates (vertical)
 };
 
 #endif

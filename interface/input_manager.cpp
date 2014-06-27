@@ -1,6 +1,8 @@
 /* InputManager class
  */
 
+#include "input_manager.h"
+
 //constructor
 InputManager::InputManager(int v) :
 	verbosity(v),

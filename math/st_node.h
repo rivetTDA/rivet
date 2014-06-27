@@ -41,7 +41,7 @@ class STNode {
 		
 };
 
-#include "st_node.hpp"
+#include "st_node.cpp"
 
 #endif // __STNode_H__
 

@@ -2,6 +2,7 @@
  * stores a node that is used to build a simplex tree
  */
 
+#include "st_node.h"
 
 //constructor for empty node
 STNode::STNode()
