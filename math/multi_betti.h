@@ -20,24 +20,36 @@ class MultiBetti
 	public:
 		MultiBetti(SimplexTree* st, int dim, int v);		//constructor sets up the data structure but doesn't compute the multi-graded Betti numbers xi_0 and xi_1
 		
-		void compute_all_xi();			//computes xi_0 and xi_1 at ALL multi-indexes
+        void compute_fast();		//computes xi_0 and xi_1 at all multi-indexes in a fast way
+		
+		
+        int xi0(int time, int dist);		//returns xi_0 at the specified multi-index
+        int xi1(int time, int dist);		//returns xi_1 at the specified multi-index
+
+        //DEPRECATED METHODS
+        void compute_all_xi();			//computes xi_0 and xi_1 at ALL multi-indexes
 		void compute_xi(int time, int dist);	//computes xi_0 and xi_1 at a specified multi-index
 		
-		
-		int xi0(int time, int dist);		//returns xi_0 at the specified multi-index
-		int xi1(int time, int dist);		//returns xi_1 at the specified multi-index		
 		
 		
 	private:
 		SimplexTree* bifiltration;		//pointer to the bifiltration
 		
 		int dimension;		//dimension of homology to compute
-		int num_times;		//number of time indexes
-		int num_dists;		//number of distance indexes
 		
+        int num_x_indexes;  //number of indexes in primary direction
+        int num_y_indexes;  //number of indexes in secondary direction
+
+
 		boost::multi_array<int, 3> xi;		//matrix to hold xi values; indices: xi[time][dist][subscript]
 		
 		const int verbosity;	//controls display of output, for debugging
+
+
+        //DEPRECATED OBJECTS
+        int num_times;		//number of time indexes
+        int num_dists;		//number of distance indexes
+
 		
 };
 

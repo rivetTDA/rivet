@@ -4,17 +4,98 @@
 
 #include "multi_betti.h"
 
-//constructor, which does the work of computing all the multi-graded Betti numbers
+//constructor
 MultiBetti::MultiBetti(SimplexTree* st, int dim, int v) :
 	bifiltration(st),		//remember location of the simplex tree
 	dimension(dim),			//remember the dimension
 	verbosity(v)			//controls the amount of output
 {
 	//ensure that xi matrix is the correct size
-	num_times = (*bifiltration).get_num_times();
-	num_dists = (*bifiltration).get_num_dists();
-	xi.resize(boost::extents[num_times][num_dists][2]);
+    num_x_indexes = (*bifiltration).get_num_times();
+    num_y_indexes = (*bifiltration).get_num_dists();
+    xi.resize(boost::extents[num_x_indexes][num_y_indexes][2]);
+
+    //SUPPORT FOR DEPRECATED METHODS
+    num_times = num_x_indexes;
+    num_dists = num_y_indexes;
+
 }//end constructor
+
+//computes xi_0 and xi_1 at all multi-indexes in a fast way
+void compute_fast()
+{
+    ///// STEP 1: compute nullity
+
+    //get data
+    //TODO: get boundary matrix and multi-index matrix
+    MapMatrix* boundary_1;
+    std::vector< std::vector<int> >* boundary_1_indexes;
+
+    bifiltration.get_boundary_1(dim, boundary_1, boundary_1_indexes);    //TODO: fix this!!!
+
+    //set up data structures
+    std::vector<int> current_low_array;     //TODO: initialize to the appropriate size!!!
+    std::vector<int> first_row_low_array;
+
+    std::vector<int> current_col_counts;
+    std::vector<int> previous_col_counts;
+
+    //loop through multi-indexes in reverse lexicographic order (that is, loop through columns, then rows)
+
+    //handle first column separately?
+
+
+    //loop through columns after first column
+    for(int x=0; x<num_times; x++)
+    {
+        //handle bottom row case
+
+
+
+        //now loop through rows after first row
+        for(int y=1; y<num_dists; y++)
+        {
+
+
+
+
+
+
+        }
+
+
+
+    }
+
+
+
+
+
+
+
+    ///// STEP 2: compute rank
+
+
+
+
+    ///// STEP 3: compute xi_0
+
+
+
+
+    ///// STEP 4: compute xi_1
+
+
+
+
+
+}
+
+
+
+
+
+
 
 
 //computes xi_0 and xi_1 at ALL multi-indexes
