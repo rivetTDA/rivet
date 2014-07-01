@@ -29,7 +29,7 @@ void SliceArea::setExtents(double minx, double maxx, double miny, double maxy)
 
 void SliceArea::addPoint(double x_coord, double y_coord, int xi0m, int xi1m)
 {
-    points.push_back(xiPoint(x_coord, y_coord, xi0m, xi1m));
+    points.push_back(xiPointSD(x_coord, y_coord, xi0m, xi1m));
 }
 
 

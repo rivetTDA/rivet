@@ -12,9 +12,11 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         dragdroptest.cpp \
-    mydot.cpp
+    mydot.cpp \
+    myline.cpp
 
 HEADERS  += dragdroptest.h \
-    mydot.h
+    mydot.h \
+    myline.h
 
 FORMS    += dragdroptest.ui

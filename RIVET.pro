@@ -19,7 +19,9 @@ SOURCES += main.cpp\
     math/st_node.cpp \
     math/simplex_tree.cpp \
     dcel/mesh.cpp \
-    interface/input_manager.cpp
+    interface/input_manager.cpp \
+    interface/slice_diagram.cpp \
+    interface/control_dot.cpp
 
 HEADERS  += visualizationwindow.h \
     interface/slicearea.h \
@@ -40,6 +42,8 @@ HEADERS  += visualizationwindow.h \
     math/persistence_diagram.hpp \
     math/multi_betti.h \
     math/map_matrix_node.h \
-    math/map_matrix.h
+    math/map_matrix.h \
+    interface/slice_diagram.h \
+    interface/control_dot.h
 
 FORMS    += visualizationwindow.ui

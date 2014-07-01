@@ -1,5 +1,6 @@
 #include "mydot.h"
 
+#include <QtGui>
 #include <QDebug>
 #include <sstream>
 
@@ -25,10 +26,6 @@ void MyDot::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWi
         brush.setColor(Qt::darkCyan);
 
     }
-//    else
-//    {
-//        brush.setColor(Qt::blue);
-//    }
 
     painter->setRenderHint(QPainter::Antialiasing);
     painter->setPen(Qt::NoPen);
@@ -43,17 +40,25 @@ QVariant MyDot::itemChange(GraphicsItemChange change, const QVariant &value)
         QPointF mouse = value.toPointF();
         QPointF newpos(mouse);
 
-        if(mouse.y() > 0 && mouse.y() >= mouse.x())   //then lock dot to y-axis
+        if(mouse.y() > 0 && mouse.y() >= mouse.x())   //then project dot to y-axis
         {
             newpos.setX(0);
-            if(mouse.y() > 200)
+
+            if(mouse.y() > 200)     //don't let dot go off top of box
                 newpos.setY(200);
+            else if(mouse.y() < 2*mouse.x())    //smooth transition in region around y=x
+                newpos.setY(2*(mouse.y()-mouse.x()));
+            //otherwise, orthogonal projection onto y-axis
         }
-        else if(mouse.x() > 0)   //then lock dot to x-axis
+        else if(mouse.x() > 0)   //then project dot to x-axis
         {
             newpos.setY(0);
-            if(mouse.x() > 100)
-                newpos.setX(100);
+
+            if(mouse.x() > 180) //don't let dot go off right side of box
+                newpos.setX(180);
+            else if(mouse.x() < 2*mouse.y())    //smooth transition in region around y=x
+                newpos.setX(2*(mouse.x()-mouse.y()));
+            //otherwise, orthongonal projection onto x-axis
         }
         else    //then place dot at origin
         {

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>900</width>
-    <height>682</height>
+    <width>1350</width>
+    <height>694</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -77,12 +77,29 @@
      <rect>
       <x>30</x>
       <y>490</y>
-      <width>391</width>
+      <width>291</width>
       <height>71</height>
      </rect>
     </property>
     <layout class="QGridLayout" name="gridLayout">
-     <item row="0" column="2">
+     <item row="1" column="1">
+      <widget class="QDoubleSpinBox" name="offsetSpinBox">
+       <property name="singleStep">
+        <double>0.100000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="offsetLabel">
+       <property name="text">
+        <string>&amp;Offset:</string>
+       </property>
+       <property name="buddy">
+        <cstring>offsetSpinBox</cstring>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
       <widget class="QSpinBox" name="angleSpinBox">
        <property name="maximum">
         <number>90</number>
@@ -102,52 +119,12 @@
        </property>
       </widget>
      </item>
-     <item row="1" column="1">
-      <widget class="QSlider" name="offsetSlider">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="offsetLabel">
-       <property name="text">
-        <string>&amp;Offset:</string>
-       </property>
-       <property name="buddy">
-        <cstring>offsetSpinBox</cstring>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1">
-      <widget class="QSlider" name="angleSlider">
-       <property name="maximum">
-        <number>90</number>
-       </property>
-       <property name="sliderPosition">
-        <number>45</number>
-       </property>
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="tickPosition">
-        <enum>QSlider::NoTicks</enum>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="2">
-      <widget class="QDoubleSpinBox" name="offsetSpinBox">
-       <property name="singleStep">
-        <double>0.100000000000000</double>
-       </property>
-      </widget>
-     </item>
     </layout>
    </widget>
    <widget class="SliceArea" name="sliceArea" native="true">
     <property name="geometry">
      <rect>
-      <x>25</x>
+      <x>920</x>
       <y>80</y>
       <width>400</width>
       <height>400</height>
@@ -378,13 +355,23 @@
      </item>
     </layout>
    </widget>
+   <widget class="QGraphicsView" name="sliceView">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>80</y>
+      <width>400</width>
+      <height>400</height>
+     </rect>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>900</width>
+     <width>1350</width>
      <height>25</height>
     </rect>
    </property>

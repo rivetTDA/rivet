@@ -13,12 +13,12 @@
 #include <QWidget>
 
 //first, a little struct to organize the data used to draw the points in the SliceArea
-struct xiPoint
+struct xiPointSD
 {
     double x, y;    //coordinates
     int zero, one;  //multiplicity of xi_0 and xi_1 at this point
 
-    xiPoint(double xc, double yc, double m0, double m1) : x(xc), y(yc), zero(m0), one(m1)
+    xiPointSD(double xc, double yc, double m0, double m1) : x(xc), y(yc), zero(m0), one(m1)
     { }
 };
 
@@ -48,7 +48,7 @@ private:
     double gx, gy;  //coordinates of the GCD
     double lx, ly;  //coordinates of the LCM
 
-    std::vector<xiPoint> points;    //point data to be drawn in the slice area
+    std::vector<xiPointSD> points;    //point data to be drawn in the slice area
 
     int angle;
     double offset;  //parameters for the slice (line)

@@ -4,7 +4,7 @@
 #include <QFileDialog>
 #include <QMessageBox>
 
-#include "interface/slicearea.h"
+#include "interface/slicearea.h"    //DEPRECATED
 #include "interface/pdarea.h"
 
 #include "interface/input_manager.h"
@@ -21,6 +21,18 @@ VisualizationWindow::VisualizationWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    sliceScene = new QGraphicsScene(this);
+    ui->sliceView->setScene(sliceScene);
+//    ui->sliceView->setDragMode(QGraphicsView::ScrollHandDrag);
+    ui->sliceView->scale(1,-1);
+    ui->sliceView->setRenderHint(QPainter::Antialiasing);
+
+//    bigFont = new QFont();
+//    bigFont->setPixelSize(70);
+
+
+    slice_diagram = new SliceDiagram(sliceScene);
+
 }
 
 VisualizationWindow::~VisualizationWindow()
@@ -28,28 +40,16 @@ VisualizationWindow::~VisualizationWindow()
     delete ui;
 }
 
-void VisualizationWindow::on_angleSlider_valueChanged(int angle)
-{
-    ui->angleSpinBox->setValue(angle);
-}
-
 void VisualizationWindow::on_angleSpinBox_valueChanged(int angle)
 {
-    ui->angleSlider->setValue(angle);
     ui->sliceArea->setLine(angle, ui->offsetSpinBox->value());
-    draw_persistence_diagram();
-}
-
-void VisualizationWindow::on_offsetSlider_valueChanged(int offset)
-{
-    ui->offsetSpinBox->setValue(offset);
+//    draw_persistence_diagram();
 }
 
 void VisualizationWindow::on_offsetSpinBox_valueChanged(double offset)
 {
-//    ui->offsetSlider->setValue(offset);
     ui->sliceArea->setLine(ui->angleSpinBox->value(), offset);
-    draw_persistence_diagram();
+//    draw_persistence_diagram();
 }
 
 void VisualizationWindow::on_fileButton_clicked()    //let the user choose an input file
@@ -142,6 +142,8 @@ void VisualizationWindow::on_computeButton_clicked() //read the file and do the 
                 xi_support.push_back(std::pair<int,int>(i,j));
                 ui->sliceArea->addPoint(bifiltration->get_time(i), bifiltration->get_dist(j), mb.xi0(i,j), mb.xi1(i,j));
 
+                slice_diagram->add_point(bifiltration->get_time(i), bifiltration->get_dist(j), mb.xi0(i,j), mb.xi1(i,j));
+
                 if(i < min_time)
                     min_time = i;
                 if(i > max_time)
@@ -173,10 +175,18 @@ void VisualizationWindow::on_computeButton_clicked() //read the file and do the 
     ui->sliceArea->setExtents(bifiltration->get_time(min_time), bifiltration->get_time(max_time), bifiltration->get_dist(min_dist), bifiltration->get_dist(max_dist));
     ui->sliceArea->update();
     ui->pdArea->setMax(pd_max);
+
+    //draw slice diagram
+    ui->sliceView->scale(1000,1000);
+    slice_diagram->create_diagram();
+  //  ui->sliceView->centerOn(0,0);
+  //  ui->sliceView->ensureVisible(0,0,5,5,1,1);
+    ui->sliceView->fitInView(sliceScene->sceneRect(),Qt::KeepAspectRatio);
+
     ui->statusBar->showMessage("computed xi support points");
 
 
-    //find LCMs, build decomposition of the affine Grassmannian
+/*    //find LCMs, build decomposition of the affine Grassmannian
     if(verbosity >= 2) { std::cout << "CALCULATING LCMs AND DECOMPOSING THE STRIP:\n"; }
     dcel = new Mesh(verbosity);
 
@@ -231,7 +241,7 @@ void VisualizationWindow::on_computeButton_clicked() //read the file and do the 
 
     //draw persistence diagram
     draw_persistence_diagram();
-
+*/
 }//end on_computeButton_clicked()
 
 void VisualizationWindow::draw_persistence_diagram()

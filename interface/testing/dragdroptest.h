@@ -6,6 +6,7 @@
 #include <QtGui>
 
 #include "mydot.h"
+#include "myline.h"
 
 
 namespace Ui {
@@ -27,7 +28,10 @@ private:
     MyDot* dot;
     QGraphicsLineItem* lineLeft;
     QGraphicsLineItem* lineBottom;
+    QGraphicsLineItem* lineDiag;
     QGraphicsTextItem* coords;
+
+    MyLine* myline;
 };
 
 #endif // DRAGDROPTEST_H

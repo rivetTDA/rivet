@@ -2,6 +2,9 @@
 #define VISUALIZATIONWINDOW_H
 
 #include <QMainWindow>
+#include <QtGui>
+
+#include "interface/slice_diagram.h"
 
 namespace Ui {
 class VisualizationWindow;
@@ -20,17 +23,13 @@ public:
     ~VisualizationWindow();
     
 private slots:
-    void on_angleSlider_valueChanged(int angle);
-
     void on_angleSpinBox_valueChanged(int angle);
+
+    void on_offsetSpinBox_valueChanged(double arg1);
 
     void on_fileButton_clicked();
 
     void on_computeButton_clicked();
-
-    void on_offsetSlider_valueChanged(int value);
-
-    void on_offsetSpinBox_valueChanged(double arg1);
 
     void on_scaleSpinBox_valueChanged(double arg1);
 
@@ -41,6 +40,7 @@ private slots:
 private:
     Ui::VisualizationWindow *ui;
 
+    //computational items
     const int verbosity;
 
     InputManager* im;
@@ -52,6 +52,17 @@ private:
     std::vector<std::pair<int, int> > xi_support;  //integer (relative) coordinates of xi support points
 
     Mesh* dcel; //pointer to the DCEL arrangement
+
+    //display items
+ //   QFont* bigFont;
+
+
+    //items for slice diagram
+    QGraphicsScene* sliceScene;
+
+    SliceDiagram* slice_diagram;
+
+    //items for persistence diagram
 
     void draw_persistence_diagram();
 
