@@ -5,26 +5,15 @@
 #include "st_node.h"
 
 //constructor for empty node
-STNode::STNode()
-{
-	vertex = -1;
-	parent = NULL;
-	birth = -1;
-	dist = -1;
-	g_index = -1;
-}
+STNode::STNode() :
+    vertex(-1), parent(NULL), mg_x(-1), mg_y(-1), d_index(-1), g_index(-1)
+{ }
 
 //constructor for non-empty node
 //NOTE: node must still be added as a child of its parent after this constructor is called
-STNode::STNode(int v, STNode* p, int b, int d, int g)
-{
-	//set private values
-	vertex = v;
-	parent = p;
-	birth = b;
-	dist = d;
-	g_index = g;
-}
+STNode::STNode(int v, STNode* p, int x, int y, int g) :
+    vertex(v), parent(p), mg_x(x), mg_y(y), d_index(-1), g_index(g)
+{ }
 
 //returns the vertex index
 int STNode::get_vertex()
@@ -38,16 +27,26 @@ STNode STNode::get_parent()
 	return *parent;
 }
 
-//returns the minimum time at which this simplex exits
-int STNode::get_birth()
+//returns the first component of the multi-grade for this simplex
+int STNode::grade_x()
 {
-	return birth;
+    return mg_x;
+}
+
+int STNode::get_birth() //DEPRECATED
+{
+    return mg_x;
 }	
 
-//returns the minimum distance at which this simplex exists
-int STNode::get_dist()
+//returns the second component of the multi-grade for this simplex
+int STNode::grade_y()
 {
-	return dist;
+    return mg_y;
+}
+
+int STNode::get_dist()  //DEPRECATED
+{
+    return mg_y;
 }
 
 //sets the global index for the simplex represented by this node
@@ -62,6 +61,17 @@ int STNode::get_global_index()
 	return g_index;
 }
 
+//sets the dimension index for the simplex represented by this node
+void STNode::set_dim_index(int i)
+{
+    d_index = i;
+}
+
+//returns the dimension index for the simplex represented by this node
+int STNode::dim_index()
+{
+    return d_index;
+}
 
 //appends a new child to this node
 //WARNING: this should only be used if vertex index of child is greater than vertex indexes of all other children (to preserve order of children vector)
@@ -74,9 +84,9 @@ void STNode::append_child(STNode* child)
 //creates a new child node with given parameters and returns a pointer to the new node
 // NOTE: if child with given vertex index already exists, then returns pointer to this node
 // NOTE: global indexes must be re-computed after calling this function
-STNode* STNode::add_child(int v, int t, int d)
+STNode* STNode::add_child(int v, int x, int y)
 {
-	//otherwise, node has children, so binary search to see if a child node with given vertex index already exists
+    //if node has children, binary search to see if a child node with given vertex index already exists
 	int min = 0;
 	int max = children.size()-1;
 	int found = -1;
@@ -102,7 +112,7 @@ STNode* STNode::add_child(int v, int t, int d)
 	
 	//if not found, create a new node
 //	std::cout << " ---- creating new node with vertex index " << v << " as child of node with vertex index " << vertex << "\n";
-	STNode* newnode = new STNode(v, this, t, d, -1);
+    STNode* newnode = new STNode(v, this, x, y, -1);
 	children.insert(children.begin() + max + 1, newnode);
 	return newnode;
 }//end add_child()
@@ -115,11 +125,10 @@ std::vector<STNode*> STNode::get_children()
 }
 
 
-
 //print a text representation of this node
 void STNode::print()
 {
-	std::cout << "NODE: vertex " << vertex <<  "; global index: " << g_index << "; multi-index: (" << birth << ", " << dist << "); parent: ";
+    std::cout << "NODE: vertex " << vertex <<  "; global index: " << g_index << "; multi-index: (" << mg_x << ", " << mg_y << "); parent: ";
 	if(parent)
 		std::cout << (*parent).get_vertex() << "; ";
 	else
@@ -134,5 +143,7 @@ void STNode::print()
 			std::cout << ", ";
 		std::cout << (*children[i]).get_vertex();
 	}
-	std::cout << "\n";
+    std::cout << "\n";
 }
+
+

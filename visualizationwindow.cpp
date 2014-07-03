@@ -60,13 +60,15 @@ void VisualizationWindow::on_fileButton_clicked()    //let the user choose an in
 
 void VisualizationWindow::on_computeButton_clicked() //read the file and do the persistent homology computation
 {
+    //get dimension of homology to compute
+    int dim = ui->homDimSpinBox->value();
+
     //start the input manager
-    im = new InputManager(verbosity);
+    im = new InputManager(dim, verbosity);
     const char* filestr = fileName.toStdString().data();
     im->start(filestr);
 
     //get the bifiltration
-//    SimplexTree* bifiltration = im.get_bifiltration();
     bifiltration = im->get_bifiltration();
 
     //print simplex tree
@@ -77,7 +79,6 @@ void VisualizationWindow::on_computeButton_clicked() //read the file and do the 
     }
 
     //compute xi_0 and xi_1 at ALL multi-indexes
-    int dim = ui->homDimSpinBox->value();
     if(verbosity >= 2) { std::cout << "COMPUTING xi_0 AND xi_1 FOR HOMOLOGY DIMENSION " << dim << ":\n"; }
     MultiBetti mb(bifiltration, dim, verbosity);
     mb.compute_all_xi();

@@ -26,7 +26,7 @@
 class InputManager
 {
 	public:
-		InputManager(int v);		//constructor
+        InputManager(int d, int v);		//constructor; requires dimension of homology to be computed and verbosity parameter
 		void start(const char* arg);	//function to run the input manager, requires a filename
 		
 		SimplexTree* get_bifiltration();	//returns a pointer to the simplex tree representing the bifiltration
@@ -35,6 +35,8 @@ class InputManager
 		
 	private:
 		const int verbosity;			//controls display of output, for debugging
+
+        int hom_dim;                    //dimension of homology to be computed
 		
 		std::ifstream infile;			//file stream for the file containing the input
 		SimplexTree simplex_tree;		//simplex tree constructed from the input

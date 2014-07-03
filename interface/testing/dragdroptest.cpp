@@ -36,8 +36,10 @@ DragDropTest::DragDropTest(QWidget *parent) :
     scene->addItem(myline);
 
 
-    dot = new MyDot(coords);
+    dot = new MyDot(coords, myline);
     scene->addItem(dot);
+
+    myline->setDots(dot);
 
 }
 

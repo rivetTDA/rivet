@@ -4,8 +4,8 @@
 #include <QDebug>
 #include <sstream>
 
-MyDot::MyDot(QGraphicsTextItem* coords) :
-    pressed(false), coords(coords)
+MyDot::MyDot(QGraphicsTextItem* coords, MyLine* line) :
+    pressed(false), coords(coords), line(line), update_lock(false)
 {
     setFlag(ItemIsMovable);
     setFlag(ItemSendsGeometryChanges);
@@ -35,7 +35,7 @@ void MyDot::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWi
 
 QVariant MyDot::itemChange(GraphicsItemChange change, const QVariant &value)
 {
-    if(change == QGraphicsItem::ItemPositionChange)
+    if(change == QGraphicsItem::ItemPositionChange && !update_lock)
     {
         QPointF mouse = value.toPointF();
         QPointF newpos(mouse);
@@ -66,14 +66,30 @@ QVariant MyDot::itemChange(GraphicsItemChange change, const QVariant &value)
             newpos.setY(0);
         }
 
-       std::ostringstream oss;
-       oss << "(" << newpos.x() << "," << newpos.y() << ")";
-       coords->setPlainText(QString::fromStdString(oss.str()));
-       //coords->setPlainText(QString(oss.str().c_str()));
+        //coordinates, for testing
+        std::ostringstream oss;
+        oss << "(" << newpos.x() << "," << newpos.y() << ")";
+        coords->setPlainText(QString::fromStdString(oss.str()));
+        //coords->setPlainText(QString(oss.str().c_str()));
 
+        //update line position
+        qDebug() << "  moving line: (" << newpos.x() << ", " << newpos.y() << ")";
+        QPointF delta = newpos - pos();
+        line->update_lb_endpoint(delta);
+
+        //return
         return newpos;
     }
     return QGraphicsItem::itemChange(change, value);
+}
+
+void MyDot::set_position(const QPointF &newpos)
+{
+    update_lock = true;
+
+    setPos(newpos);
+
+    update_lock = false;
 }
 
 void MyDot::mousePressEvent(QGraphicsSceneMouseEvent *event)

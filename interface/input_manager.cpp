@@ -4,9 +4,8 @@
 #include "input_manager.h"
 
 //constructor
-InputManager::InputManager(int v) :
-	verbosity(v),
-	simplex_tree(v)
+InputManager::InputManager(int d, int v) :
+    hom_dim(d), verbosity(v), simplex_tree(d, v)
 { }
 
 //function to run the input manager, requires a filename
@@ -62,21 +61,16 @@ void InputManager::read_point_cloud()
 	if(verbosity >= 2) { std::cout << "  Found a point cloud file.\n"; }
 	
 	//prepare (temporary) data structures
-	int dimension;			//integer dimension of data
-	int max_dim;			//maximum dimension of simplices in Vietoris-Rips complex
-	double max_dist;		//maximum distance for edges in Vietoris-Rips complex
+    int dimension;              //integer dimension of data
+    int max_dim = hom_dim + 1;	//maximum dimension of simplices in Vietoris-Rips complex
+    double max_dist;            //maximum distance for edges in Vietoris-Rips complex
 	std::vector<Point> points;	//create for points
 	std::string line;		//string to hold one line of input
 		
 	//read dimension of the points from the first line of the file
 	std::getline(infile,line);
 	std::stringstream(line) >> dimension;
-	if(verbosity >= 4) { std::cout << "  dimension of data: " << dimension << "\n"; }
-	
-	//read maximum dimension of simplices in Vietoris-Rips complex
-	std::getline(infile,line);
-	std::stringstream(line) >> max_dim;
-	if(verbosity >= 4) { std::cout << "  maximum dimension of simplices: " << max_dim << "\n"; }
+    if(verbosity >= 4) { std::cout << "  dimension of data: " << dimension << "; max dimension of simplices: " << hom_dim << "\n"; }
 	
 	//read maximum distance for edges in Vietoris-Rips complex
 	std::getline(infile,line);
@@ -129,7 +123,7 @@ void InputManager::read_point_cloud()
 	
 	//build the filtration
 	if(verbosity >= 2) { std::cout << "BUILDING VIETORIS-RIPS BIFILTRATION\n"; }
-	simplex_tree.build_VR_complex(points, dimension, max_dim+1, max_dist);
+    simplex_tree.build_VR_complex(points, dimension, max_dim, max_dist);
 	
 	//clean up
 	for(int i=0; i<points.size(); i++)

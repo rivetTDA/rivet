@@ -4,8 +4,7 @@ I. Point Cloud (for constructing a Vietoris-Rips complex)
 
 	First line:	the word "points"
 	Second line:	dimension of data (integer)
-	Third line:	maximum dimension of simplices to construct (integer)
-	Fourth line:	maximum length of edges to be constructed (decimal)
+	Third line:	maximum length of edges to be constructed (decimal)
 	Other lines:	one line per point; each line contains decimal numbers, separated by white space, giving the point's coordinates and birth time
 	
 	NO EMPTY LINES IN THE FILE!
@@ -26,6 +25,8 @@ II. Bifiltration
 				next n+1 numbers (integers) give the vertices of the simplex
 				next number (decimal) gives the time at which the simplex appears
 				final number (decimal) gives the distance at which the simplex appears
+	
+	CAUTION: THE PROGRAM MIGHT NOT HANDLE NON-INTEGER MULTI-INDEXES YET!
 	
 	NO EMPTY LINES IN THE FILE!
 

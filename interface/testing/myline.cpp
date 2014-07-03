@@ -6,7 +6,7 @@
 
 MyLine::MyLine(double xmin, double xmax, double ymin, double ymax) :
     xmin(xmin), xmax(xmax), ymin(ymin), ymax(ymax),
-    pressed(false), rotating(false),
+    pressed(false), rotating(false), update_lock(false),
     left_point(xmin,ymin), right_point(xmax,ymax)
 {
     setFlag(ItemIsMovable);
@@ -15,6 +15,11 @@ MyLine::MyLine(double xmin, double xmax, double ymin, double ymax) :
 
     slope = (ymax-ymin)/(xmax-xmin);
 
+}
+
+void MyLine::setDots(MyDot *left)
+{
+    left_dot = left;
 }
 
 QRectF MyLine::boundingRect() const
@@ -53,15 +58,12 @@ void MyLine::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QW
 
 QVariant MyLine::itemChange(GraphicsItemChange change, const QVariant &value)
 {
-    if(change == QGraphicsItem::ItemPositionChange)
+    if(change == QGraphicsItem::ItemPositionChange && !update_lock)
     {
         QPointF mouse = value.toPointF();
         QPointF newpos(mouse);
 
         qDebug() << "mouse: (" << mouse.x() << ", " << mouse.y() << "); pos: (" << pos().x() << ", " << pos().y() << ")";
-
-//        if(pos().x() < 0)
-//            left_point.setX(-1*pos().x());
 
 
         //TODO: handle horizontal and vertical lines!!!
@@ -90,11 +92,28 @@ QVariant MyLine::itemChange(GraphicsItemChange change, const QVariant &value)
             right_point.setY( slope*(xmax-mouse.x()) + mouse.y() - newpos.y() );
         }
 
-
+        //update left dot
+        left_dot->set_position(mapToScene(0, 0));
 
         return newpos;
     }
     return QGraphicsItem::itemChange(change, value);
+}
+
+void MyLine::update_lb_endpoint(QPointF &delta)
+{
+    update_lock = true;
+
+    //move the line so that the left endpoint is correct
+    moveBy(delta.x(), delta.y());
+
+    //reposition the right endpoint where it should be
+    right_point = right_point - delta;
+
+    //calculate new slope
+    slope = right_point.y()/right_point.x();
+
+    update_lock = false;
 }
 
 void MyLine::mousePressEvent(QGraphicsSceneMouseEvent *event)
