@@ -19,6 +19,9 @@ public:
     void set(unsigned row, unsigned col, int value);
     int get(unsigned row, unsigned col) const;
 
+    int width();    //returns number of columns
+    int height();   //returns number of rows
+
     void print();   //for testing
 
 private:
@@ -50,6 +53,16 @@ int IndexMatrix::get(unsigned row, unsigned col) const
     if(row >= num_rows || col >= num_cols)
         throw std::runtime_error("matrix subscript out of bounds");
     return data[num_cols*row + col];
+}
+
+int IndexMatrix::width()
+{
+    return num_cols;
+}
+
+int IndexMatrix::height()
+{
+    return num_rows;
 }
 
 //function to print the matrix to standard output, mainly for testing purposes

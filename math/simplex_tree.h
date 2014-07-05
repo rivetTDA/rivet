@@ -68,6 +68,8 @@ class SimplexTree {
         std::vector<int> find_vertices(int gi);	//given a global index, return (a vector containing) the vertices of the simplex
         STNode* find_simplex(std::vector<int>& vertices);   //given a sorted vector of vertex indexes, return a pointer to the node representing the corresponding simplex
 
+        int num_x_grades();                     //returns the number of unique x-coordinates of the multi-grades
+        int num_y_grades();                     //returns the number of unique y-coordinates of the multi-grades
 
         ///// THESE FUNCTIONS MIGHT NEED TO BE UPDATED
             MapMatrix* get_boundary_mx(std::vector<int> coface_global, std::map<int,int> face_order);
@@ -76,8 +78,6 @@ class SimplexTree {
 
             SimplexData get_simplex_data(int index);	//returns the multi-grade of the simplex with given global simplex index, as well as the dimension of the simplex
 
-            int get_num_dists();		//returns the number of unique distance indexes
-            int get_num_times();		//returns the number of unique time indexes
             int get_num_simplices();		//returns the total number of simplices represented in the simplex tree
                 //TODO: would it be more efficient to store the total number of simplices???
 		
@@ -91,6 +91,9 @@ class SimplexTree {
 
             int dist_index(double);				//returns the index of a distance value, or -1 if not found
             double get_dist(int);				//returns a distance value, given an index
+
+            int get_num_dists();		//returns the number of unique distance indexes
+            int get_num_times();		//returns the number of unique time indexes
 
 		
 	private:

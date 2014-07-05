@@ -446,7 +446,7 @@ IndexMatrix* SimplexTree::get_index_mx(int dim)
     else
         throw std::runtime_error("attempting to compute index matrix for improper dimension");
 
-    //create the MapMatrix
+    //create the IndexMatrix
     int x_size = grade_x_values.size();
     int y_size = grade_y_values.size();
     IndexMatrix* mat = new IndexMatrix(y_size, x_size);			//DELETE this object later???
@@ -688,18 +688,31 @@ MapMatrix* SimplexTree::get_boundary_mx(std::vector<int> coface_global, std::map
 	
 }//end get_boundary_mx
 
+//returns the number of unique x-coordinates of the multi-grades
+int SimplexTree::num_x_grades()
+{
+    return grade_x_values.size();
+}
 
-//returns the number of unique distance indexes
-int SimplexTree::get_num_dists()
+//returns the number of unique y-coordinates of the multi-grades
+int SimplexTree::num_y_grades()
 {
     return grade_y_values.size();
 }
 
-//returns the number of unique time indexes
-int SimplexTree::get_num_times()
-{
-    return grade_x_values.size();
-}	
+
+
+////// DEPRECATED!!!!!
+    int SimplexTree::get_num_dists()
+    {
+        return grade_y_values.size();
+    }
+
+////// DEPRECATED!!!!!
+    int SimplexTree::get_num_times()
+    {
+        return grade_x_values.size();
+    }
 		
 
 

@@ -12,6 +12,7 @@
 #include "math/st_node.h"
 #include "math/simplex_tree.h"
 #include "math/map_matrix.h"
+#include "math/multi_betti.h"
 
 
 // RECURSIVELY PRINT TREE
@@ -80,19 +81,66 @@ int main(int argc, char* argv[])
     std::cout << "BOUNDARY MATRIX FOR DIMENSION " << dim << ":\n";
     boundary1->print();
 
-    MapMatrix* boundary2 = bifiltration->get_boundary_mx(dim+1);
-    std::cout << "BOUNDARY MATRIX FOR DIMENSION " << (dim+1) << ":\n";
-    boundary2->print();
+//    MapMatrix* boundary2 = bifiltration->get_boundary_mx(dim+1);
+//    std::cout << "BOUNDARY MATRIX FOR DIMENSION " << (dim+1) << ":\n";
+//    boundary2->print();
 
-    //get merge matrix
-    MapMatrix* merge = bifiltration->get_merge_mx();
-    std::cout << "MERGE MATRIX:\n";
-    merge->print();
+//    //get merge matrix
+//    MapMatrix* merge = bifiltration->get_merge_mx();
+//    std::cout << "MERGE MATRIX:\n";
+//    merge->print();
 
-    //get split matrix
-    MapMatrix* split = bifiltration->get_split_mx();
-    std::cout << "SPLIT MATRIX:\n";
-    split->print();
+//    //get split matrix
+//    MapMatrix* split = bifiltration->get_split_mx();
+//    std::cout << "SPLIT MATRIX:\n";
+//    split->print();
+
+
+    //do column reduction
+    MultiBetti mb(bifiltration, dim, verbosity);
+    mb.compute_fast();
+
+
+    //print
+    std::cout << "COMPUTATION FINISHED:\n";
+
+    //build column labels for output
+    std::string col_labels = "         x = ";
+    std::string hline = "    --------";
+    for(int j=0; j<bifiltration->num_x_grades(); j++)
+    {
+        std::ostringstream oss;
+        oss << j;
+        col_labels += oss.str() + "  ";
+        hline += "---";
+    }
+    col_labels = hline + "\n" + col_labels + "\n";
+
+    //output xi_0
+    std::cout << "  VALUES OF xi_0 for dimension " << dim << ":\n";
+    for(int i=bifiltration->num_y_grades()-1; i>=0; i--)
+    {
+        std::cout << "     y = " << i << " | ";
+        for(int j=0; j<bifiltration->num_x_grades(); j++)
+        {
+            std::cout << mb.xi0(j,i) << "  ";
+        }
+        std::cout << "\n";
+    }
+    std::cout << col_labels;
+
+    //output xi_1
+    std::cout << "\n  VALUES OF xi_1 for dimension " << dim << ":\n";
+    for(int i=bifiltration->num_y_grades()-1; i>=0; i--)
+    {
+        std::cout << "     y = " << i << " | ";
+        for(int j=0; j<bifiltration->num_x_grades(); j++)
+        {
+            std::cout << mb.xi1(j,i) << "  ";
+        }
+        std::cout << "\n";
+    }
+    std::cout << col_labels << "\n";
 
 
 }
