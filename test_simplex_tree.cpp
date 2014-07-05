@@ -1,10 +1,17 @@
 #include <iostream>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string>
 #include <vector>
+#include <math.h>
+#include <algorithm>
+#include <set>
 
-#include "st_node.h"
-
-
-using namespace std;
+#include "interface/input_manager.h"
+#include "math/st_node.h"
+#include "math/simplex_tree.h"
+#include "math/map_matrix.h"
 
 
 // RECURSIVELY PRINT TREE
@@ -16,7 +23,7 @@ void print_subtree(STNode &node, int indent)
 	node.print();
 	
 	//print children nodes
-	vector<STNode*> kids = node.get_children();
+    std::vector<STNode*> kids = node.get_children();
 	for(int i=0; i<kids.size(); i++)
 		print_subtree(*kids[i], indent+1);
 }
@@ -25,52 +32,108 @@ void print_subtree(STNode &node, int indent)
 
 
 // TESTING SIMPLEX TREE
-int main()
+int main(int argc, char* argv[])
 {	
-	cout << "Testing simplex tree:\n";
-	
-	//create root
-	STNode root;	//calls empty constructor
-	
-	//create level 1 children
-	STNode n1(1, &root, 2.2, 3.3);
-	STNode n2(2, &root, 2.5, 4.78);
-	STNode n3(3, &root, 3.6, 2.0);
-	
-	//create level 2 children
-	STNode n11(11, &n1, 2.22, 3.33);
-	STNode n12(12, &n1, 5.2, 9.0);
-	STNode n21(21, &n2, 4.4, 9.2);
-	STNode n211(211, &n21, 5.4, 2.6);
-	
-	
-	//print entire tree
-	print_subtree(root,0);	
-	
-	
-	//print node data
-	/*cout << "Root node stored at " << &root << ": ";
-	root.print();
-	
-	cout << "Child 1 stored at " << &n1 << ": ";
-	n1.print();
-	
-	cout << "Child 2 stored at " << &n2 << ": ";
-	n2.print();
-	
-	cout << "Child 11 stored at " << &n11 << ": ";
-	n11.print();
-	
-	
-	//test traversal
-	cout << "\nTESTING TRAVERSAL\n";
-	//STNode p = n11.get_parent();
-	cout << "  Parent of " << n11.get_vertex() << " has vertex " << n11.get_parent().get_vertex() << ".\n";
-	cout << "  Grandparent of " << n11.get_vertex() << " has vertex " << n11.get_parent().get_parent().get_vertex() << ".\n";
-	*/
-	
-	//done
-	cout << "\n";
+    //check for name of data file
+    if(argc == 1)
+    {
+        std::cout << "USAGE: run <filename> [dimension of homology]\n";
+        return 1;
+    }
+
+    //set dimension of homology
+    int dim = 1;		//default
+    if(argc >= 3)
+        dim = std::atoi(argv[2]);
+    std::cout << "Homology dimension set to" << dim << ".\n";
+
+    //start the input manager
+    int verbosity = 8;
+    InputManager im(dim, verbosity);
+    im.start(argv[1]);
+
+    //get the bifiltration from the input manager
+    SimplexTree* bifiltration = im.get_bifiltration();
+
+    //test dimension indexes
+    bifiltration->update_dim_indexes();
+
+    //print simplex tree
+    if(verbosity >= 2)
+    {
+        std::cout << "SIMPLEX TREE:\n";
+        bifiltration->print();
+    }
+
+
+    //get index matrices
+    IndexMatrix* index_dim = bifiltration->get_index_mx(dim);
+    std::cout << "INDEX MATRIX FOR DIMENSION " << dim << ":\n";
+    index_dim->print();
+
+    IndexMatrix* index_high = bifiltration->get_index_mx(dim+1);
+    std::cout << "INDEX MATRIX FOR DIMENSION " << (dim+1) << ":\n";
+    index_high->print();
+
+    //get boundary matrices
+    MapMatrix* boundary1 = bifiltration->get_boundary_mx(dim);
+    std::cout << "BOUNDARY MATRIX FOR DIMENSION " << dim << ":\n";
+    boundary1->print();
+
+    MapMatrix* boundary2 = bifiltration->get_boundary_mx(dim+1);
+    std::cout << "BOUNDARY MATRIX FOR DIMENSION " << (dim+1) << ":\n";
+    boundary2->print();
+
+    //get merge matrix
+    MapMatrix* merge = bifiltration->get_merge_mx();
+    std::cout << "MERGE MATRIX:\n";
+    merge->print();
+
+    //get split matrix
+    MapMatrix* split = bifiltration->get_split_mx();
+    std::cout << "SPLIT MATRIX:\n";
+    split->print();
+
+
 }
 
+/* OLD TEST CODE
+//create root
+STNode root;	//calls empty constructor
 
+//create level 1 children
+STNode n1(1, &root, 2, 3, -1);
+root.append_child(&n1);
+STNode n2(2, &root, 2, 4, -1);
+root.append_child(&n2);
+STNode n3(3, &root, 3, 2, -1);
+root.append_child(&n3);
+
+//create level 2 children
+STNode n11(11, &n1, 2, 3, -1);
+n1.append_child(&n11);
+STNode n12(12, &n1, 5, 9, -1);
+n1.append_child(&n12);
+STNode n21(21, &n2, 4, 9, -1);
+n2.append_child(&n21);
+n21.add_child(211, 5, 2);
+//    STNode n211(211, &n21, 5, 2, -1);
+
+
+//print entire tree
+print_subtree(root,0);
+
+
+//print node data
+
+
+//test traversal
+std::cout << "\nTESTING TRAVERSAL\n";
+//STNode p = n11.get_parent();
+std::cout << "  Parent of " << n11.get_vertex() << " has vertex " << n11.get_parent().get_vertex() << ".\n";
+std::cout << "  Grandparent of " << n11.get_vertex() << " has vertex " << n11.get_parent().get_parent().get_vertex() << ".\n";
+
+
+//done
+std::cout << "\n";
+*/

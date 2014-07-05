@@ -19,19 +19,15 @@ class MapMatrixNode {
 		void set_next(MapMatrixNode*);	//sets the pointer to the next node in the column
 		MapMatrixNode* get_next();	//returns a pointer to the next node in the column
 
-
 	private:
 		int row_index;			//index of matrix row corresponding to this node
 		MapMatrixNode * next;		//pointer to the next entry in the column containing this node
-
 };
 
 //constructor
-MapMatrixNode::MapMatrixNode(int i)
-{
-	row_index = i;
-	next = NULL;
-}
+MapMatrixNode::MapMatrixNode(int i) :
+    row_index(i), next(NULL)
+{ }
 
 //returns the row index
 int MapMatrixNode::get_row()

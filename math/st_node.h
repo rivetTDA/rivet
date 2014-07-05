@@ -20,8 +20,8 @@ class STNode {
 		int get_vertex();			//returns the vertex index
 		STNode get_parent();			//returns a pointer to the parent node
 
-        int grade_x();      //returns the first component of the multi-grade for this simplex
-        int grade_y();      //returns the second component of the multi-grade for this simplex
+        int grade_x() const;      //returns the first component of the multi-grade for this simplex
+        int grade_y() const;      //returns the second component of the multi-grade for this simplex
 
         int get_birth();	// DEPRECATED		//returns the minimum time index at which this simplex exits
         int get_dist();		// DEPRECATED	//returns the minimum distance index at which this simplex exists

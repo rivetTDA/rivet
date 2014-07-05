@@ -16,12 +16,13 @@
 
 #include <utility>	// std::pair
 #include <map>
+#include <stdexcept>
 #include "point.h"
 #include "st_node.h"
 #include "map_matrix.h"
+#include "index_matrix.h"
 
-struct SimplexData;	//used for return type of SimplexTree::get_simplex_data()
-
+struct SimplexData;     //used for return type of SimplexTree::get_simplex_data()
 
 //comparison functor for sorting std::set<STNode*> by REVERSE-LEXICOGRAPHIC multi-grade order
 struct NodeComparator
@@ -36,9 +37,10 @@ struct NodeComparator
     }
 };
 
+//typedef
+typedef std::multiset<STNode*, NodeComparator> SimplexSet;
 
-
-
+//now the SimplexTree class
 class SimplexTree {
 	public:
         SimplexTree(int dim, int v);	//constructor; requires dimension of homology to be computed and verbosity parameter
@@ -61,19 +63,16 @@ class SimplexTree {
         MapMatrix* get_merge_mx();              //returns a matrix representing the map [B+C,D], for inclusion maps into the hom_dim-skeleton (with multi-grade info)
         MapMatrix* get_split_mx();              //returns a matrix representing the map [A,B+C], for the hom_dim-skeleton (with multi-grade info)
 
+        IndexMatrix* get_index_mx(int dim);     //returns a matrix of column indexes to accompany MapMatrices
 
-        ///// THESE FUNCTIONS ARE PROBABLY UNNECESSARY NOW
-            MapMatrix* get_boundary_mx(int time, int dist, int dim);	//computes a boundary matrix for simplices of a given dimension at the specified multi-index
-            MapMatrix* get_merge_mx(int time, int dist, int dim);		//computes a matrix representing the map [B+C,D], for inclusion maps into the dim-skeleton at the specified multi-index
-            MapMatrix* get_split_mx(int time, int dist, int dim);		//computes a matrix representing the map [A,B+C], for the dim-skeleton at the specified multi-index
+        std::vector<int> find_vertices(int gi);	//given a global index, return (a vector containing) the vertices of the simplex
+        STNode* find_simplex(std::vector<int>& vertices);   //given a sorted vector of vertex indexes, return a pointer to the node representing the corresponding simplex
+
 
         ///// THESE FUNCTIONS MIGHT NEED TO BE UPDATED
             MapMatrix* get_boundary_mx(std::vector<int> coface_global, std::map<int,int> face_order);
                 //computes a boundary matrix, using given orders on simplices of dimensions d (cofaces) and d-1 (faces)
                 //used in persistence_data.cpp
-
-            std::vector<int> find_vertices(int);		//given a global index, return (a vector containing) the vertices of the simplex
-            int find_index(std::vector<int>&);		//given a sorted vector of vertex indexes, return the global index of the corresponding simplex (or -1 if it doesn't exist)
 
             SimplexData get_simplex_data(int index);	//returns the multi-grade of the simplex with given global simplex index, as well as the dimension of the simplex
 
@@ -102,14 +101,14 @@ class SimplexTree {
         std::vector<double> grade_x_values;     //sorted list of unique birth times, used for creating integer indexes
         std::vector<double> grade_y_values;     //sorted list of unique distances (not greater than max_distance), used for creating integer indexes
 
-        std::set<STNode*, NodeComparator> ordered_high_simplices;   //pointers to simplices of dimension (hom_dim + 1) in reverse-lexicographical multi-grade order
-        std::set<STNode*, NodeComparator> ordered_simplices;        //pointers to simplices of dimension hom_dim in reverse-lexicographical multi-grade order
-        std::set<STNode*, NodeComparator> ordered_low_simplices;    //pointers to simplices of dimension (hom_dim - 1) in reverse-lexicographical multi-grade order
+        SimplexSet ordered_high_simplices;   //pointers to simplices of dimension (hom_dim + 1) in reverse-lexicographical multi-grade order
+        SimplexSet ordered_simplices;        //pointers to simplices of dimension hom_dim in reverse-lexicographical multi-grade order
+        SimplexSet ordered_low_simplices;    //pointers to simplices of dimension (hom_dim - 1) in reverse-lexicographical multi-grade order
 
 		
 		const int verbosity;	//controls display of output, for debugging
 		
-        void build_VR_subtree(std::vector<Point> &points, double* distances, STNode &parent, std::vector<int> &parent_indexes, double prev_time, double prev_dist, int current_depth, int max_dim, int& gic);	//recursive function used in build_VR_complex()
+        void build_VR_subtree(std::vector<Point> &points, double* distances, STNode &parent, std::vector<int> &parent_indexes, double prev_time, double prev_dist, int cur_dim, int max_dim, int& gic);	//recursive function used in build_VR_complex()
 		
         void add_faces(std::vector<int> & vertices, int x, int y);	//recursively adds faces of a simplex to the SimplexTree; WARNING: doesn't update global data structures (time_list, dist_list, or global indexes), so should only be called from add_simplex()
 		

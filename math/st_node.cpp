@@ -28,7 +28,7 @@ STNode STNode::get_parent()
 }
 
 //returns the first component of the multi-grade for this simplex
-int STNode::grade_x()
+int STNode::grade_x() const
 {
     return mg_x;
 }
@@ -39,7 +39,7 @@ int STNode::get_birth() //DEPRECATED
 }	
 
 //returns the second component of the multi-grade for this simplex
-int STNode::grade_y()
+int STNode::grade_y() const
 {
     return mg_y;
 }
@@ -56,7 +56,7 @@ void STNode::set_global_index(int i)
 }
 
 //returns the global index for the simplex represented by this node
-int STNode::get_global_index()
+int STNode::global_index()
 {
 	return g_index;
 }
@@ -128,7 +128,7 @@ std::vector<STNode*> STNode::get_children()
 //print a text representation of this node
 void STNode::print()
 {
-    std::cout << "NODE: vertex " << vertex <<  "; global index: " << g_index << "; multi-index: (" << mg_x << ", " << mg_y << "); parent: ";
+    std::cout << "NODE: vertex " << vertex <<  "; global index: " << g_index << "; dim index: " << d_index << "; multi-index: (" << mg_x << ", " << mg_y << "); parent: ";
 	if(parent)
 		std::cout << (*parent).get_vertex() << "; ";
 	else
