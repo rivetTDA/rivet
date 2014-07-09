@@ -267,6 +267,106 @@ void MapMatrix::add_column(int j, int k)
 
 }//end add_column(int, int)
 
+//adds column j from MapMatrix* other to column k of this matrix
+void MapMatrix::add_column(MapMatrix* other, int j, int k)
+{
+    //make sure this operation is valid
+    if(other->columns.size() <= j || columns.size() <= k)
+        throw std::runtime_error("attempting to access column past end of matrix");
+
+    //pointers
+    MapMatrixNode* jnode = other->columns[j]; //points to next node from column j that we will add to column k
+    MapMatrixNode* khandle = NULL; //points to node in column k that was most recently added; will be non-null after first node is added
+
+    //loop through all entries in column j
+    while(jnode != NULL)
+    {
+        //now it is save to dereference jnode
+        int row = jnode->get_row();
+
+        //so we want to add row to column k
+//		std::cout << "  --we want to add row " << row << " to column " << k << "\n";
+
+        //loop through entries in column k, starting at the current position
+        bool added = false;
+
+        if(columns[k] == NULL) //then column k is empty, so insert initial node
+        {
+//			std::cout << "    -inserting new node in initial position into column " << k << "\n";
+            MapMatrixNode* newnode = new MapMatrixNode(row);
+            columns[k] = newnode;
+            khandle = newnode;
+
+            added = true; //proceed with next element from column j
+        }
+
+        if(!added && khandle == NULL) //then we haven't yet added anything to column k (but if we get here, column k is nonempty)
+        {
+            if((*columns[k]).get_row() == row) //then remove this node (since 1+1=0)
+            {
+//				std::cout << "    -removing node " << row << " from initial position (since 1+1=0)\n";
+                MapMatrixNode* next = (*columns[k]).get_next();
+                delete columns[k];
+                columns[k] = next;
+                added = true; //proceed with next element from column j
+            }
+            else if((*columns[k]).get_row() < row) //then insert new initial node into column k
+            {
+//				std::cout << "    -inserting new node " << row << " into initial position\n";
+                MapMatrixNode* newnode = new MapMatrixNode(row);
+                (*newnode).set_next(columns[k]);
+                columns[k] = newnode;
+                khandle = columns[k];
+                added = true; //proceed with next element from column j
+            }
+            else //then move to next node in column k
+            {
+                khandle = columns[k];
+                //now we want to enter the following while loop
+            }
+        }//end if
+
+        while(!added && ( (*khandle).get_next() != NULL )) //if we get here, both columns[k] and khandle are NOT NULL
+        {
+            //consider the next node
+            MapMatrixNode* next = (*khandle).get_next();
+
+            if((*next).get_row() == row) //then remove the next node (since 1+1=0)
+            {
+//				std::cout << "    -removing node " << row << " (since 1+1=0)\n";
+                (*khandle).set_next( (*next).get_next() );
+                delete next;
+                added = true; //proceed with next element from column j
+            }
+            else if((*next).get_row() < row) //then insert new initial node into column k
+            {
+//				std::cout << "    -inserting new node " << row << "\n";
+                MapMatrixNode* newnode = new MapMatrixNode(row);
+                (*newnode).set_next(next);
+                (*khandle).set_next(newnode);
+                added = true; //proceed with next element from column j
+            }
+            else //then (*next).get_row() > row, so move to next node in column k
+            {
+                khandle = next;
+            }
+        }//end while
+
+        if(!added && ( (*khandle).get_next() == NULL )) //then we have reached the end of the list, and we should append a new node
+        {
+//			std::cout << "    -appending a new node " << row << " to the end of column\n";
+            MapMatrixNode* newnode = new MapMatrixNode(row);
+            (*khandle).set_next(newnode);
+            khandle = newnode;
+        }
+
+        //move to the next entry in column j
+        jnode = jnode->get_next();
+    }//end while(jnode != NULL)
+
+}//end add_column(MapMatrix*, int, int)
+
+
 
 
 

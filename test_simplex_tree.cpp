@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
     int dim = 1;		//default
     if(argc >= 3)
         dim = std::atoi(argv[2]);
-    std::cout << "Homology dimension set to" << dim << ".\n";
+    std::cout << "Homology dimension set to " << dim << ".\n";
 
     //start the input manager
     int verbosity = 8;
@@ -68,41 +68,41 @@ int main(int argc, char* argv[])
 
 
     //get index matrices
-    IndexMatrix* index_dim = bifiltration->get_index_mx(dim);
-    std::cout << "INDEX MATRIX FOR DIMENSION " << dim << ":\n";
-    index_dim->print();
+//    IndexMatrix* index_dim = bifiltration->get_index_mx(dim);
+//    std::cout << "INDEX MATRIX FOR DIMENSION " << dim << ":\n";
+//    index_dim->print();
 
-    IndexMatrix* index_high = bifiltration->get_index_mx(dim+1);
-    std::cout << "INDEX MATRIX FOR DIMENSION " << (dim+1) << ":\n";
-    index_high->print();
+//    IndexMatrix* index_high = bifiltration->get_index_mx(dim+1);
+//    std::cout << "INDEX MATRIX FOR DIMENSION " << (dim+1) << ":\n";
+//    index_high->print();
 
-    //get boundary matrices
-    MapMatrix* boundary1 = bifiltration->get_boundary_mx(dim);
-    std::cout << "BOUNDARY MATRIX FOR DIMENSION " << dim << ":\n";
-    boundary1->print();
+//    //get boundary matrices
+//    MapMatrix* boundary1 = bifiltration->get_boundary_mx(dim);
+//    std::cout << "BOUNDARY MATRIX FOR DIMENSION " << dim << ":\n";
+//    boundary1->print();
 
-//    MapMatrix* boundary2 = bifiltration->get_boundary_mx(dim+1);
-//    std::cout << "BOUNDARY MATRIX FOR DIMENSION " << (dim+1) << ":\n";
-//    boundary2->print();
+//    DirectSumMatrices dsm = bifiltration->get_merge_mxs();
 
-//    //get merge matrix
-//    MapMatrix* merge = bifiltration->get_merge_mx();
+//    MapMatrix* boundary_bc = dsm.boundary_matrix;
+//    std::cout << "BOUNDARY MATRIX FOR SUM B+C, DIMENSION " << dim << ":\n";
+//    boundary_bc->print();
+
+//    MapMatrix* merge = dsm.map_matrix;
 //    std::cout << "MERGE MATRIX:\n";
 //    merge->print();
 
-//    //get split matrix
-//    MapMatrix* split = bifiltration->get_split_mx();
-//    std::cout << "SPLIT MATRIX:\n";
-//    split->print();
-
+//    IndexMatrix* index_bc = dsm.column_indexes;
+//    std::cout << "INDEX MATRIX FOR B+C:\n";
+//    index_bc->print();
 
     //do column reduction
+    std::cout << "COMPUTING XI_0:"; // AND XI_1:";
     MultiBetti mb(bifiltration, dim, verbosity);
-    mb.compute_fast();
+//    mb.compute_fast();
 
 
-    //print
-    std::cout << "COMPUTATION FINISHED:\n";
+//    //print
+//    std::cout << "COMPUTATION FINISHED:\n";
 
     //build column labels for output
     std::string col_labels = "         x = ";
@@ -115,6 +115,25 @@ int main(int argc, char* argv[])
         hline += "---";
     }
     col_labels = hline + "\n" + col_labels + "\n";
+
+    //compute nullities
+    mb.compute_nullities();
+
+    //output xi_0
+    std::cout << "  NULLITIES for dimension " << dim << ":\n";
+    for(int i=bifiltration->num_y_grades()-1; i>=0; i--)
+    {
+        std::cout << "     y = " << i << " | ";
+        for(int j=0; j<bifiltration->num_x_grades(); j++)
+        {
+            std::cout << mb.xi0(j,i) << "  ";
+        }
+        std::cout << "\n";
+    }
+    std::cout << col_labels;
+
+    //compute alpha
+    mb.compute_alpha();
 
     //output xi_0
     std::cout << "  VALUES OF xi_0 for dimension " << dim << ":\n";
@@ -129,18 +148,22 @@ int main(int argc, char* argv[])
     }
     std::cout << col_labels;
 
+
+
+
+
     //output xi_1
-    std::cout << "\n  VALUES OF xi_1 for dimension " << dim << ":\n";
-    for(int i=bifiltration->num_y_grades()-1; i>=0; i--)
-    {
-        std::cout << "     y = " << i << " | ";
-        for(int j=0; j<bifiltration->num_x_grades(); j++)
-        {
-            std::cout << mb.xi1(j,i) << "  ";
-        }
-        std::cout << "\n";
-    }
-    std::cout << col_labels << "\n";
+//    std::cout << "\n  VALUES OF xi_1 for dimension " << dim << ":\n";
+//    for(int i=bifiltration->num_y_grades()-1; i>=0; i--)
+//    {
+//        std::cout << "     y = " << i << " | ";
+//        for(int j=0; j<bifiltration->num_x_grades(); j++)
+//        {
+//            std::cout << mb.xi1(j,i) << "  ";
+//        }
+//        std::cout << "\n";
+//    }
+//    std::cout << col_labels << "\n";
 
 
 }

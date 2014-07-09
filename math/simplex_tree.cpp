@@ -362,34 +362,14 @@ MapMatrix* SimplexTree::get_boundary_mx(int dim)
         throw std::runtime_error("attempting to compute boundary matrix for improper dimension");
 
     //create the MapMatrix
-    MapMatrix* mat = new MapMatrix(num_rows, simplices->size());			//DELETE this object later???
+    MapMatrix* mat = new MapMatrix(num_rows, simplices->size());			//DELETE this object later!
 
-    //loop through simplices
+    //loop through simplices, writing columns to the matrix
     int col = 0;    //column counter
     for(SimplexSet::iterator it=simplices->begin(); it!=simplices->end(); ++it)
     {
-        //get vertex list for this simplex
-        std::vector<int> verts = find_vertices((*it)->global_index());
+        write_boundary_column(mat, *it, col, 0);
 
-        //find all facets of this simplex
-        for(int k=0; k<verts.size(); k++)
-        {
-           //facet vertices are all vertices in verts[] except verts[k]
-            std::vector<int> facet;
-            for(int l=0; l<verts.size(); l++)
-                if(l != k)
-                    facet.push_back(verts[l]);
-
-            //look up dimension index of the facet
-            STNode* facet_node = find_simplex(facet);
-            if(facet_node == NULL)
-                throw std::runtime_error("facet simplex not found");
-            int facet_di = facet_node->dim_index();
-
-            //for this boundary simplex, enter "1" in the appropriate cell in the matrix
-            mat->set(facet_di, col);
-        }
-        //increment column counter
         col++;
     }
 
@@ -397,41 +377,97 @@ MapMatrix* SimplexTree::get_boundary_mx(int dim)
     return mat;
 }//end get_boundary_mx()
 
-//returns a matrix representing the map [B+C,D], for inclusion maps into the hom_dim-skeleton (with multi-grade info)
-MapMatrix* SimplexTree::get_merge_mx()
+//struct to be returned by the following function
+struct DirectSumMatrices
 {
-    //create a matrix
-    int num_simplices = ordered_simplices.size();
-    MapMatrix* mat = new MapMatrix(num_simplices, 2*num_simplices);
+    MapMatrix* boundary_matrix;     //points to a boundary matrix for B+C
+    MapMatrix* map_matrix;          //points to a matrix for a merge or split map
+    IndexMatrix* column_indexes;    //points to a matrix of column indexes, one for each multi-grade
+};
 
-    //fill the matrix
-    for(int i=0; i<num_simplices; i++)
+//returns matrices for the merge map [B+C,D], the boundary map B+C, and the multi-grade information
+DirectSumMatrices SimplexTree::get_merge_mxs()
+{
+    //data structures
+    int num_rows = ordered_low_simplices.size();
+    int num_cols = ordered_simplices.size();
+    MapMatrix* boundary = new MapMatrix(2*num_rows, 2*num_cols);			//DELETE this object later!
+    MapMatrix* merge = new MapMatrix(num_cols, 2*num_cols);       //DELETE this object later!
+    IndexMatrix* end_cols = new IndexMatrix(grade_y_values.size()+1, grade_x_values.size() + 1);     //DELETE later; is this the correct size?
+    int col = - 1;  //column counter for boundary and merge matrices
+    int b = 0;      //counter for simplices in B component
+    int c = 0;      //counter for simplices in C component
+    SimplexSet::iterator it_b = ordered_simplices.begin(); //iterator for simplices in B component
+    SimplexSet::iterator it_c = ordered_simplices.begin(); //iterator for simplices in C component
+
+    //loop through multi-grades, writing columns into the matrix
+    for(int y=0; y<=grade_y_values.size(); y++)  //rows                 <--- CHECK! DO WE WANT <= HERE?
     {
-        mat->set(i, i);
-        mat->set(i, num_simplices + i);
+        for(int x=0; x<=grade_x_values.size(); x++)  //columns          <--- CHECK! DO WE WANT <= HERE?
+        {
+            //process simplices for the current multi-grade (x,y)
+//            std::cout << "grade (" << x << "," << y << "): ";
+
+            //first, insert columns for simplices that appear in B at the multi-grade (x-1,y)
+            while( (it_b != ordered_simplices.end()) && ((*it_b)->grade_x() == x - 1) && ((*it_b)->grade_y() == y) )
+            {
+//                std::cout << "adding column from B, ";
+                col++;
+                write_boundary_column(boundary, *it_b, col, 0);
+                merge->set(b, col);
+                b++;
+                ++it_b;
+            }
+
+            //second, insert columns for simplices that appear in C at the multi-grade (x,y-1)
+            while( (it_c != ordered_simplices.end()) && ((*it_c)->grade_x() == x) && ((*it_c)->grade_y() == y - 1) )
+            {
+//                std::cout << "adding column from C, ";
+                col++;
+                write_boundary_column(boundary, *it_c, col, num_rows);
+                merge->set(c, col);
+                c++;
+                ++it_c;
+            }
+
+            //finished a multi-grade; record column index
+            end_cols->set(y, x, col);
+
+//            std::cout << std::endl;
+        }
     }
 
-    //return the matrix
-    return mat;
-}
+    //return data
+    DirectSumMatrices dsm = { boundary, merge, end_cols };
+    return dsm;
+}//end get_sum_boundary_mx()
 
-//returns a matrix representing the map [A,B+C], for the hom_dim-skeleton (with multi-grade info)
-MapMatrix* SimplexTree::get_split_mx()
+//writes boundary information for simplex represented by sim in column col of matrix mat; offset allows for block matrices such as B+C
+void SimplexTree::write_boundary_column(MapMatrix* mat, STNode* sim, int col, int offset)
 {
-    //create a matrix
-    int num_simplices = ordered_simplices.size();
-    MapMatrix* mat = new MapMatrix(2*num_simplices, num_simplices);
+    //get vertex list for this simplex
+    std::vector<int> verts = find_vertices(sim->global_index());
 
-    //fill the matrix
-    for(int i=0; i<num_simplices; i++)
+    //find all facets of this simplex
+    for(int k=0; k<verts.size(); k++)
     {
-        mat->set(i, i);
-        mat->set(num_simplices + i, i);
-    }
+       //facet vertices are all vertices in verts[] except verts[k]
+        std::vector<int> facet;
+        for(int l=0; l<verts.size(); l++)
+            if(l != k)
+                facet.push_back(verts[l]);
 
-    //return the matrix
-    return mat;
-}
+        //look up dimension index of the facet
+        STNode* facet_node = find_simplex(facet);
+        if(facet_node == NULL)
+            throw std::runtime_error("facet simplex not found");
+        int facet_di = facet_node->dim_index();
+
+        //for this boundary simplex, enter "1" in the appropriate cell in the matrix
+        mat->set(facet_di + offset, col);
+    }
+}//end write_col();
+
 
 //returns a matrix of column indexes to accompany MapMatrices
 IndexMatrix* SimplexTree::get_index_mx(int dim)
@@ -650,11 +686,11 @@ MapMatrix* SimplexTree::get_boundary_mx(std::vector<int> coface_global, std::map
 	//create the matrix
 	int num_cols = coface_global.size();
 	int num_rows = face_order.size();
-	MapMatrix* mat = new MapMatrix(num_rows, num_cols);			//DELETE this object later???
+    MapMatrix* mat = new MapMatrix(num_rows, num_cols);			//DELETE this object later???
 	
 	//loop through columns
 	for(int j=0; j<num_cols; j++)
-	{
+    {
 		//find all vertices of the simplex corresponding to this column
 		std::vector<int> verts = find_vertices(coface_global[j]);
 		

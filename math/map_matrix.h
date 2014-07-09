@@ -40,6 +40,7 @@ class MapMatrix
 		void col_reduce(MapMatrix* other);	//applies the column reduction algorithm to this matrix, and also performs the same column operations on the other matrix
 		
 		void add_column(int j, int k);		//adds column j to column k; RESULT: column j is not changed, column k contains sum of columns j and k (with mod-2 arithmetic)
+        void add_column(MapMatrix* other, int j, int k);    //adds column j from MapMatrix* other to column k of this matrix
 
         ///// TESTING
             void print();				//prints the matrix to standard output (useful for testing)

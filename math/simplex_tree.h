@@ -23,6 +23,7 @@
 #include "index_matrix.h"
 
 struct SimplexData;     //used for return type of SimplexTree::get_simplex_data()
+struct DirectSumMatrices;   //used for return type of SimplexTree::get_merge_mxs()
 
 //comparison functor for sorting std::set<STNode*> by REVERSE-LEXICOGRAPHIC multi-grade order
 struct NodeComparator
@@ -59,9 +60,9 @@ class SimplexTree {
         int grade_y_position(double value);     //returns the position of "value" in the ordered list of multi-grade second-components, or -1 if not found
         double grade_y_value(int i);            //returns the value at the i^th position in the ordered list of multi-grade second-components
 
-        MapMatrix* get_boundary_mx(int dim);    //returns a matrix of boundary information for simplices of the given dimension (with multi-grade info)
-        MapMatrix* get_merge_mx();              //returns a matrix representing the map [B+C,D], for inclusion maps into the hom_dim-skeleton (with multi-grade info)
-        MapMatrix* get_split_mx();              //returns a matrix representing the map [A,B+C], for the hom_dim-skeleton (with multi-grade info)
+        MapMatrix* get_boundary_mx(int dim);    //returns a matrix of boundary information for simplices
+
+        DirectSumMatrices get_merge_mxs();      //returns matrices for the merge map [B+C,D], the boundary map B+C, and the multi-grade information
 
         IndexMatrix* get_index_mx(int dim);     //returns a matrix of column indexes to accompany MapMatrices
 
@@ -123,7 +124,9 @@ class SimplexTree {
 		
 		void find_vertices_recursively(std::vector<int> &vertices, STNode &node, int key);	//recursively search for a global index and keep track of vertices
 
-		void print_subtree(STNode&, int);	//recursive function that prints the simplex tree
+        void write_boundary_column(MapMatrix* mat, STNode* sim, int col, int offset);   //writes boundary information for simplex represented by sim in column col of matrix mat; offset allows for block matrices such as B+C
+
+        void print_subtree(STNode&, int);	//recursive function that prints the simplex tree
 };
 
 #include "simplex_tree.cpp"

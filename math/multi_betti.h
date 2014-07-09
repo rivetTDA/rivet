@@ -17,6 +17,8 @@
 
 typedef std::vector<int> Vector;
 
+struct ColumnList;  //necessary for column reduction in MultiBetti::reduce(...)
+
 class MultiBetti
 {
 	public:
@@ -24,7 +26,13 @@ class MultiBetti
 		
         void compute_fast();		//computes xi_0 and xi_1 at all multi-grades in a fast way
 		
-		
+        //functions to compute xi_0 and xi_1    ----later, make these private and access them via compute_fast();
+        void compute_nullities();
+        void compute_ranks();
+        void compute_alpha();
+        void compute_eta();
+
+
         int xi0(int x, int y);		//returns xi_0 at the specified multi-grade
         int xi1(int x, int y);		//returns xi_1 at the specified multi-grade
 
@@ -32,6 +40,7 @@ class MultiBetti
 //        void compute_all_xi();			//computes xi_0 and xi_1 at ALL multi-indexes
 //		void compute_xi(int time, int dist);	//computes xi_0 and xi_1 at a specified multi-index
 		
+        void print_lows(Vector &lows);  //TESTING ONLY
 		
 		
 	private:
@@ -47,8 +56,15 @@ class MultiBetti
 		
 		const int verbosity;	//controls display of output, for debugging
 
-        //function to do column reduction for Edelsbrunner algorithm
+
         void reduce(MapMatrix* mm, int first_col, int last_col, Vector& lows, int& zeroed_cols);
+            //column reduction for Edelsbrunner algorithm
+
+        void reduce_also(MapMatrix* mm, MapMatrix* m2, int first_col, int last_col, Vector& lows, int y_grade, ColumnList &zero_list, int &zeroed_cols);
+            //column reduction for Edelsbrunner algorithm, also performs column additions on a second matrix
+
+        void reduce_spliced(MapMatrix* m_left, MapMatrix* m_right, IndexMatrix* ind_left, IndexMatrix* ind_right, ColumnList& right_cols, int grade_x, int grade_y, Vector& lows, int& zeroed_cols);
+            //column reduction for Edelsbrunner algorithm on a two-part matrix (two matrices spliced together, treated as one matrix for the column reduction)
 
         //DEPRECATED OBJECTS
         int num_times;		//number of time indexes
