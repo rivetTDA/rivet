@@ -64,6 +64,8 @@ class SimplexTree {
 
         DirectSumMatrices get_merge_mxs();      //returns matrices for the merge map [B+C,D], the boundary map B+C, and the multi-grade information
 
+        DirectSumMatrices get_split_mxs();      //returns matrices for the split map [A,B+C], the boundary map B+C, and the multi-grade information
+
         IndexMatrix* get_index_mx(int dim);     //returns a matrix of column indexes to accompany MapMatrices
 
         std::vector<int> find_vertices(int gi);	//given a global index, return (a vector containing) the vertices of the simplex

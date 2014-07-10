@@ -57,13 +57,13 @@ class MultiBetti
 		const int verbosity;	//controls display of output, for debugging
 
 
-        void reduce(MapMatrix* mm, int first_col, int last_col, Vector& lows, int& zeroed_cols);
+        void reduce(MapMatrix* mm, int first_col, int last_col, Vector& lows, int& zero_cols);
             //column reduction for Edelsbrunner algorithm
 
-        void reduce_also(MapMatrix* mm, MapMatrix* m2, int first_col, int last_col, Vector& lows, int y_grade, ColumnList &zero_list, int &zeroed_cols);
+        void reduce_also(MapMatrix* mm, MapMatrix* m2, int first_col, int last_col, Vector& lows, int y_grade, ColumnList &zero_list, int &zero_cols);
             //column reduction for Edelsbrunner algorithm, also performs column additions on a second matrix
 
-        void reduce_spliced(MapMatrix* m_left, MapMatrix* m_right, IndexMatrix* ind_left, IndexMatrix* ind_right, ColumnList& right_cols, int grade_x, int grade_y, Vector& lows, int& zeroed_cols);
+        void reduce_spliced(MapMatrix* m_left, MapMatrix* m_right, IndexMatrix* ind_left, IndexMatrix* ind_right, ColumnList& right_cols, int grade_x, int grade_y, Vector& lows, int& zero_cols);
             //column reduction for Edelsbrunner algorithm on a two-part matrix (two matrices spliced together, treated as one matrix for the column reduction)
 
         //DEPRECATED OBJECTS

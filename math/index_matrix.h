@@ -44,14 +44,14 @@ IndexMatrix::~IndexMatrix()
 void IndexMatrix::set(unsigned row, unsigned col, int value)
 {
     if(row >= num_rows || col >= num_cols)
-        throw std::runtime_error("matrix subscript out of bounds");
+        throw std::runtime_error("IndexMatrix.set(): matrix subscript out of bounds");
     data[num_cols*row + col] = value;
 }
 
 int IndexMatrix::get(unsigned row, unsigned col) const
 {
     if(row >= num_rows || col >= num_cols)
-        throw std::runtime_error("matrix subscript out of bounds");
+        throw std::runtime_error("IndexMatrix.get(): matrix subscript out of bounds");
     return data[num_cols*row + col];
 }
 

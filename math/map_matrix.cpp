@@ -274,6 +274,8 @@ void MapMatrix::add_column(MapMatrix* other, int j, int k)
     if(other->columns.size() <= j || columns.size() <= k)
         throw std::runtime_error("attempting to access column past end of matrix");
 
+//    std::cout << "      add_column(other, " << j << ", " << k << ")\n";
+
     //pointers
     MapMatrixNode* jnode = other->columns[j]; //points to next node from column j that we will add to column k
     MapMatrixNode* khandle = NULL; //points to node in column k that was most recently added; will be non-null after first node is added
@@ -285,7 +287,7 @@ void MapMatrix::add_column(MapMatrix* other, int j, int k)
         int row = jnode->get_row();
 
         //so we want to add row to column k
-//		std::cout << "  --we want to add row " << row << " to column " << k << "\n";
+//        std::cout << "  --we want to add row " << row << " to column " << k << "\n";
 
         //loop through entries in column k, starting at the current position
         bool added = false;
@@ -376,7 +378,7 @@ void MapMatrix::print()
     //handle empty matrix
 	if(num_rows == 0 || columns.size() == 0)
 	{
-		std::cout << "        (empty matrix)\n";
+        std::cout << "        (empty matrix: " << num_rows << " rows by " << columns.size() << " columns)\n";
 		return;
 	}
 	

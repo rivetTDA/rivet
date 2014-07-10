@@ -400,10 +400,10 @@ DirectSumMatrices SimplexTree::get_merge_mxs()
     SimplexSet::iterator it_b = ordered_simplices.begin(); //iterator for simplices in B component
     SimplexSet::iterator it_c = ordered_simplices.begin(); //iterator for simplices in C component
 
-    //loop through multi-grades, writing columns into the matrix
-    for(int y=0; y<=grade_y_values.size(); y++)  //rows                 <--- CHECK! DO WE WANT <= HERE?
+    //loop through multi-grades, writing columns into the matrices
+    for(int y=0; y<=grade_y_values.size(); y++)  //rows                 <--- CHECK! DO WE WANT <= HERE? FOR NOW, YES.
     {
-        for(int x=0; x<=grade_x_values.size(); x++)  //columns          <--- CHECK! DO WE WANT <= HERE?
+        for(int x=0; x<=grade_x_values.size(); x++)  //columns          <--- CHECK! DO WE WANT <= HERE? FOR NOW, YES.
         {
             //process simplices for the current multi-grade (x,y)
 //            std::cout << "grade (" << x << "," << y << "): ";
@@ -440,7 +440,85 @@ DirectSumMatrices SimplexTree::get_merge_mxs()
     //return data
     DirectSumMatrices dsm = { boundary, merge, end_cols };
     return dsm;
-}//end get_sum_boundary_mx()
+}//end get_merge_mxs()
+
+//returns matrices for the split map [A,B+C], the boundary map B+C, and the multi-grade information
+DirectSumMatrices SimplexTree::get_split_mxs()
+{
+    //sizes
+    int num_rows = ordered_simplices.size();
+    int num_cols = ordered_high_simplices.size();
+
+    //first, produce the boundary matrix and its index matrix (for B+C "high" simplices)
+    MapMatrix* boundary = new MapMatrix(2*num_rows, 2*num_cols);			//DELETE this object later!
+    IndexMatrix* end_cols = new IndexMatrix(grade_y_values.size()+1, grade_x_values.size() + 1);     //DELETE later; <<<==== OPTIMIZE TO GET RID OF THE +1
+    SimplexSet::iterator it_b = ordered_high_simplices.begin(); //iterator for "high" simplices in B component
+    SimplexSet::iterator it_c = ordered_high_simplices.begin(); //iterator for "high" simplices in C component
+    int col = - 1;  //column counter for boundary matrix
+
+    //  loop through multi-grades, writing columns into the matrices
+    for(int y=0; y<=grade_y_values.size(); y++)  //rows                 <--- CHECK! DO WE WANT <= HERE? FOR NOW, YES.
+    {
+        for(int x=0; x<=grade_x_values.size(); x++)  //columns          <--- CHECK! DO WE WANT <= HERE? FOR NOW, YES.
+        {
+            //first, insert columns for simplices that appear in B at the multi-grade (x-1,y)
+            while( (it_b != ordered_high_simplices.end()) && ((*it_b)->grade_x() == x - 1) && ((*it_b)->grade_y() == y) )
+            {
+                col++;
+                write_boundary_column(boundary, *it_b, col, 0);
+                ++it_b;
+            }
+
+            //second, insert columns for simplices that appear in C at the multi-grade (x,y-1)
+            while( (it_c != ordered_high_simplices.end()) && ((*it_c)->grade_x() == x) && ((*it_c)->grade_y() == y - 1) )
+            {
+                col++;
+                write_boundary_column(boundary, *it_c, col, num_rows);
+                ++it_c;
+            }
+
+            //finished a multi-grade; record column index
+            end_cols->set(y, x, col);
+        }
+    }
+
+    //now, produce the split matrix [A,B+C]
+    MapMatrix* split = new MapMatrix(2*num_rows, num_rows);       //DELETE this object later!
+    it_b = ordered_simplices.begin();   //iterator for simplices in B component
+    it_c = ordered_simplices.begin();   //iterator for simplices in C component
+    int row = -1;   //row counter for split matrix
+    int b = 0;      //counter for simplices in B component
+    int c = 0;      //counter for simplices in C component
+
+    //  loop through multi-grades, writing columns into the matrices
+    for(int y=0; y<=grade_y_values.size(); y++)  //rows                 <--- CHECK! DO WE WANT <= HERE? FOR NOW, YES.
+    {
+        for(int x=0; x<=grade_x_values.size(); x++)  //columns          <--- CHECK! DO WE WANT <= HERE? FOR NOW, YES.
+        {
+            //first, insert rows for simplices that appear in B at the multi-grade (x-1,y)
+            while( (it_b != ordered_simplices.end()) && ((*it_b)->grade_x() == x - 1) && ((*it_b)->grade_y() == y) )
+            {
+                row++;
+                split->set(row, b);
+                b++;
+                ++it_b;
+            }
+
+            //second, insert columns for simplices that appear in C at the multi-grade (x,y-1)
+            while( (it_c != ordered_simplices.end()) && ((*it_c)->grade_x() == x) && ((*it_c)->grade_y() == y - 1) )
+            {
+                row++;
+                split->set(row, c);
+                c++;
+                ++it_c;
+            }
+        }
+    }
+
+    //return data
+    DirectSumMatrices dsm = { boundary, split, end_cols };
+    return dsm;
+}//end get_split_mxs()
 
 //writes boundary information for simplex represented by sim in column col of matrix mat; offset allows for block matrices such as B+C
 void SimplexTree::write_boundary_column(MapMatrix* mat, STNode* sim, int col, int offset)

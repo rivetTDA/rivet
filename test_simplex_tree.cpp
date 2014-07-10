@@ -8,6 +8,9 @@
 #include <algorithm>
 #include <set>
 
+#include "boost/date_time/posix_time/posix_time.hpp"
+using namespace boost::posix_time;
+
 #include "interface/input_manager.h"
 #include "math/st_node.h"
 #include "math/simplex_tree.h"
@@ -49,7 +52,7 @@ int main(int argc, char* argv[])
     std::cout << "Homology dimension set to " << dim << ".\n";
 
     //start the input manager
-    int verbosity = 8;
+    int verbosity = 1;
     InputManager im(dim, verbosity);
     im.start(argv[1]);
 
@@ -67,42 +70,23 @@ int main(int argc, char* argv[])
     }
 
 
-    //get index matrices
-//    IndexMatrix* index_dim = bifiltration->get_index_mx(dim);
-//    std::cout << "INDEX MATRIX FOR DIMENSION " << dim << ":\n";
-//    index_dim->print();
 
-//    IndexMatrix* index_high = bifiltration->get_index_mx(dim+1);
-//    std::cout << "INDEX MATRIX FOR DIMENSION " << (dim+1) << ":\n";
-//    index_high->print();
-
-//    //get boundary matrices
-//    MapMatrix* boundary1 = bifiltration->get_boundary_mx(dim);
-//    std::cout << "BOUNDARY MATRIX FOR DIMENSION " << dim << ":\n";
-//    boundary1->print();
-
-//    DirectSumMatrices dsm = bifiltration->get_merge_mxs();
+//    DirectSumMatrices dsm = bifiltration->get_split_mxs();
 
 //    MapMatrix* boundary_bc = dsm.boundary_matrix;
-//    std::cout << "BOUNDARY MATRIX FOR SUM B+C, DIMENSION " << dim << ":\n";
+//    std::cout << "BOUNDARY MATRIX FOR SUM B+C, DIMENSION " << (dim+1) << ":\n";
 //    boundary_bc->print();
 
-//    MapMatrix* merge = dsm.map_matrix;
-//    std::cout << "MERGE MATRIX:\n";
-//    merge->print();
+//    MapMatrix* split = dsm.map_matrix;
+//    std::cout << "SPLIT MATRIX:\n";
+//    split->print();
 
 //    IndexMatrix* index_bc = dsm.column_indexes;
 //    std::cout << "INDEX MATRIX FOR B+C:\n";
 //    index_bc->print();
 
-    //do column reduction
-    std::cout << "COMPUTING XI_0:"; // AND XI_1:";
+    //initialize the MultiBetti object
     MultiBetti mb(bifiltration, dim, verbosity);
-//    mb.compute_fast();
-
-
-//    //print
-//    std::cout << "COMPUTATION FINISHED:\n";
 
     //build column labels for output
     std::string col_labels = "         x = ";
@@ -116,24 +100,37 @@ int main(int argc, char* argv[])
     }
     col_labels = hline + "\n" + col_labels + "\n";
 
-    //compute nullities
-    mb.compute_nullities();
-
-    //output xi_0
-    std::cout << "  NULLITIES for dimension " << dim << ":\n";
+    //make sure all xi_1 values are initially zero!!!!!
+    //output xi_1
+    std::cout << "\n  INITIAL VALUES OF IN xi_1 MATRIX:\n";
     for(int i=bifiltration->num_y_grades()-1; i>=0; i--)
     {
         std::cout << "     y = " << i << " | ";
         for(int j=0; j<bifiltration->num_x_grades(); j++)
-        {
-            std::cout << mb.xi0(j,i) << "  ";
-        }
+            std::cout << mb.xi1(j,i) << "  ";
         std::cout << "\n";
     }
-    std::cout << col_labels;
+    std::cout << col_labels << "\n";
 
-    //compute alpha
-    mb.compute_alpha();
+
+
+
+    //start timer
+    ptime time_start(microsec_clock::local_time());
+
+    //compute xi_0 and xi_1
+    std::cout << "COMPUTING XI_0 AND XI_1:\n";
+    mb.compute_fast();
+
+    //stop timer
+    ptime time_end(microsec_clock::local_time());
+    time_duration duration(time_end - time_start);
+
+
+
+
+    //print
+    std::cout << "\nCOMPUTATION FINISHED:\n";
 
     //output xi_0
     std::cout << "  VALUES OF xi_0 for dimension " << dim << ":\n";
@@ -149,62 +146,19 @@ int main(int argc, char* argv[])
     std::cout << col_labels;
 
 
-
-
-
     //output xi_1
-//    std::cout << "\n  VALUES OF xi_1 for dimension " << dim << ":\n";
-//    for(int i=bifiltration->num_y_grades()-1; i>=0; i--)
-//    {
-//        std::cout << "     y = " << i << " | ";
-//        for(int j=0; j<bifiltration->num_x_grades(); j++)
-//        {
-//            std::cout << mb.xi1(j,i) << "  ";
-//        }
-//        std::cout << "\n";
-//    }
-//    std::cout << col_labels << "\n";
+    std::cout << "\n  VALUES OF xi_1 for dimension " << dim << ":\n";
+    for(int i=bifiltration->num_y_grades()-1; i>=0; i--)
+    {
+        std::cout << "     y = " << i << " | ";
+        for(int j=0; j<bifiltration->num_x_grades(); j++)
+        {
+            std::cout << mb.xi1(j,i) << "  ";
+        }
+        std::cout << "\n";
+    }
+    std::cout << col_labels << "\n";
 
+    std::cout << "\nComputation took " << duration << ".\n";
 
 }
-
-/* OLD TEST CODE
-//create root
-STNode root;	//calls empty constructor
-
-//create level 1 children
-STNode n1(1, &root, 2, 3, -1);
-root.append_child(&n1);
-STNode n2(2, &root, 2, 4, -1);
-root.append_child(&n2);
-STNode n3(3, &root, 3, 2, -1);
-root.append_child(&n3);
-
-//create level 2 children
-STNode n11(11, &n1, 2, 3, -1);
-n1.append_child(&n11);
-STNode n12(12, &n1, 5, 9, -1);
-n1.append_child(&n12);
-STNode n21(21, &n2, 4, 9, -1);
-n2.append_child(&n21);
-n21.add_child(211, 5, 2);
-//    STNode n211(211, &n21, 5, 2, -1);
-
-
-//print entire tree
-print_subtree(root,0);
-
-
-//print node data
-
-
-//test traversal
-std::cout << "\nTESTING TRAVERSAL\n";
-//STNode p = n11.get_parent();
-std::cout << "  Parent of " << n11.get_vertex() << " has vertex " << n11.get_parent().get_vertex() << ".\n";
-std::cout << "  Grandparent of " << n11.get_vertex() << " has vertex " << n11.get_parent().get_parent().get_vertex() << ".\n";
-
-
-//done
-std::cout << "\n";
-*/
