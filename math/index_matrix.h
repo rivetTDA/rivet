@@ -68,7 +68,7 @@ int IndexMatrix::height()
 //function to print the matrix to standard output, mainly for testing purposes
 void IndexMatrix::print()
 {
-    std::cout << "    multi-grade data stored in end_cols:\n";
+//    std::cout << "    multi-grade data stored in end_cols:\n";
     for(int i=num_rows-1; i>=0; i--)
     {
         std::cout << "        |";

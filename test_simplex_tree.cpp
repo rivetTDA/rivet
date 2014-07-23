@@ -102,15 +102,15 @@ int main(int argc, char* argv[])
 
     //make sure all xi_1 values are initially zero!!!!!
     //output xi_1
-    std::cout << "\n  INITIAL VALUES OF IN xi_1 MATRIX:\n";
-    for(int i=bifiltration->num_y_grades()-1; i>=0; i--)
-    {
-        std::cout << "     y = " << i << " | ";
-        for(int j=0; j<bifiltration->num_x_grades(); j++)
-            std::cout << mb.xi1(j,i) << "  ";
-        std::cout << "\n";
-    }
-    std::cout << col_labels << "\n";
+//    std::cout << "\n  INITIAL VALUES OF IN xi_1 MATRIX:\n";
+//    for(int i=bifiltration->num_y_grades()-1; i>=0; i--)
+//    {
+//        std::cout << "     y = " << i << " | ";
+//        for(int j=0; j<bifiltration->num_x_grades(); j++)
+//            std::cout << mb.xi1(j,i) << "  ";
+//        std::cout << "\n";
+//    }
+//    std::cout << col_labels << "\n";
 
 
 

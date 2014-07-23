@@ -484,35 +484,40 @@ DirectSumMatrices SimplexTree::get_split_mxs()
 
     //now, produce the split matrix [A,B+C]
     MapMatrix* split = new MapMatrix(2*num_rows, num_rows);       //DELETE this object later!
-    it_b = ordered_simplices.begin();   //iterator for simplices in B component
-    it_c = ordered_simplices.begin();   //iterator for simplices in C component
-    int row = -1;   //row counter for split matrix
-    int b = 0;      //counter for simplices in B component
-    int c = 0;      //counter for simplices in C component
+//    it_b = ordered_simplices.begin();   //iterator for simplices in B component
+//    it_c = ordered_simplices.begin();   //iterator for simplices in C component
+//    int row = -1;   //row counter for split matrix
+//    int b = 0;      //counter for simplices in B component
+//    int c = 0;      //counter for simplices in C component
 
-    //  loop through multi-grades, writing columns into the matrices
-    for(int y=0; y<=grade_y_values.size(); y++)  //rows                 <--- CHECK! DO WE WANT <= HERE? FOR NOW, YES.
+//    //  loop through multi-grades, writing columns into the matrices
+//    for(int y=0; y<=grade_y_values.size(); y++)  //rows                 <--- CHECK! DO WE WANT <= HERE? FOR NOW, YES.
+//    {
+//        for(int x=0; x<=grade_x_values.size(); x++)  //columns          <--- CHECK! DO WE WANT <= HERE? FOR NOW, YES.
+//        {
+//            //first, insert rows for simplices that appear in B at the multi-grade (x-1,y)
+//            while( (it_b != ordered_simplices.end()) && ((*it_b)->grade_x() == x - 1) && ((*it_b)->grade_y() == y) )
+//            {
+//                row++;
+//                split->set(row, b);
+//                b++;
+//                ++it_b;
+//            }
+
+//            //second, insert columns for simplices that appear in C at the multi-grade (x,y-1)
+//            while( (it_c != ordered_simplices.end()) && ((*it_c)->grade_x() == x) && ((*it_c)->grade_y() == y - 1) )
+//            {
+//                row++;
+//                split->set(row, c);
+//                c++;
+//                ++it_c;
+//            }
+//        }
+//    }
+    for(int i=0; i<num_rows; i++)   //IS IT THIS SIMPLE???
     {
-        for(int x=0; x<=grade_x_values.size(); x++)  //columns          <--- CHECK! DO WE WANT <= HERE? FOR NOW, YES.
-        {
-            //first, insert rows for simplices that appear in B at the multi-grade (x-1,y)
-            while( (it_b != ordered_simplices.end()) && ((*it_b)->grade_x() == x - 1) && ((*it_b)->grade_y() == y) )
-            {
-                row++;
-                split->set(row, b);
-                b++;
-                ++it_b;
-            }
-
-            //second, insert columns for simplices that appear in C at the multi-grade (x,y-1)
-            while( (it_c != ordered_simplices.end()) && ((*it_c)->grade_x() == x) && ((*it_c)->grade_y() == y - 1) )
-            {
-                row++;
-                split->set(row, c);
-                c++;
-                ++it_c;
-            }
-        }
+        split->set(i, i);
+        split->set(i+num_rows, i);
     }
 
     //return data
@@ -565,44 +570,109 @@ IndexMatrix* SimplexTree::get_index_mx(int dim)
     int y_size = grade_y_values.size();
     IndexMatrix* mat = new IndexMatrix(y_size, x_size);			//DELETE this object later???
 
-    //initialize to -1 the entries of end_col matrix before multigrade of the first simplex
-    int cur_entry = 0;   //tracks previously updated multigrade in end-cols
-
-    SimplexSet::iterator it = simplices->begin();
-    for( ; cur_entry < (*it)->grade_x() + (*it)->grade_y()*x_size; cur_entry++)
-        mat->set(cur_entry/x_size, cur_entry%x_size, -1);
-
-    //loop through simplices
-    int col = 0;    //column counter
-    for(SimplexSet::iterator it=simplices->begin(); it!=simplices->end(); ++it)
+    if(!simplices->empty()) //then there is at least one simplex
     {
-        //get simplex
-        STNode* simplex = *it;
-        int cur_x = simplex->grade_x();
-        int cur_y = simplex->grade_y();
+        //initialize to -1 the entries of end_col matrix before multigrade of the first simplex
+        int cur_entry = 0;   //tracks previously updated multigrade in end-cols
 
-        //if some multigrades were skipped, store previous column number in skipped cells of end_col matrix
-        for( ; cur_entry < cur_x + cur_y*x_size; cur_entry++)
+        SimplexSet::iterator it = simplices->begin();
+        for( ; cur_entry < (*it)->grade_x() + (*it)->grade_y()*x_size; cur_entry++)
+            mat->set(cur_entry/x_size, cur_entry%x_size, -1);
+
+        //loop through simplices
+        int col = 0;    //column counter
+        for( ; it!=simplices->end(); ++it)
+        {
+            //get simplex
+            STNode* simplex = *it;
+            int cur_x = simplex->grade_x();
+            int cur_y = simplex->grade_y();
+
+            //if some multigrades were skipped, store previous column number in skipped cells of end_col matrix
+            for( ; cur_entry < cur_x + cur_y*x_size; cur_entry++)
+                mat->set(cur_entry/x_size, cur_entry%x_size, col-1);
+
+            //store current column number in cell of end_col matrix for this multigrade
+            mat->set(cur_y, cur_x, col);
+
+            //increment column counter
+            col++;
+        }
+
+        //store final column number for any cells in end_cols not yet updated
+        for( ; cur_entry < x_size * y_size; cur_entry++)
             mat->set(cur_entry/x_size, cur_entry%x_size, col-1);
-
-        //store current column number in cell of end_col matrix for this multigrade
-        mat->set(cur_y, cur_x, col);
-
-        //increment column counter
-        col++;
     }
-
-    //store final column number for any cells in end_cols not yet updated
-    for( ; cur_entry < x_size * y_size; cur_entry++)
-        mat->set(cur_entry/x_size, cur_entry%x_size, col-1);
+    else    //then there are no simplices, so fill the IndexMatrix with -1 values
+    {
+        for(int i=0 ; i < x_size * y_size; i++)
+            mat->set(i/x_size, i%x_size, -1);
+    }
 
     //return the matrix
     return mat;
 }//end get_index_mx()
 
+//returns a matrix of column indexes offset in each direction, for the boundary_A matrix in compute_eta()
+IndexMatrix* SimplexTree::get_offset_index_mx(int dim)
+{
+    //select set of simplices of dimension dim
+    SimplexSet* simplices;
 
+    if(dim == hom_dim)
+        simplices = &ordered_simplices;
+    else if(dim == hom_dim + 1)
+        simplices = &ordered_high_simplices;
+    else
+        throw std::runtime_error("attempting to compute index matrix for improper dimension");
 
+    //create the IndexMatrix
+    int x_size = grade_x_values.size() + 1;     //    <<<==== OPTIMIZE TO GET RID OF THE +1
+    int y_size = grade_y_values.size() + 1;     //    <<<==== OPTIMIZE TO GET RID OF THE +1
+    IndexMatrix* mat = new IndexMatrix(y_size, x_size);			//DELETE later
 
+    if(!simplices->empty()) //then there is at least one simplex
+    {
+        //initialize to -1 the entries of end_col matrix before multigrade of the first simplex
+        int cur_entry = 0;   //tracks previously updated multigrade in end-cols
+        SimplexSet::iterator it = simplices->begin();
+        int first_entry = ((*it)->grade_x() + 1) + ((*it)->grade_y() + 1)*x_size; //note that grades are offset by 1
+        for( ; cur_entry < first_entry; cur_entry++)
+            mat->set(cur_entry/x_size, cur_entry%x_size, -1);
+
+        //loop through simplices
+        int col = 0;    //column counter
+        for( ; it!=simplices->end(); ++it)
+        {
+            //get simplex
+            STNode* simplex = *it;
+            int cur_x = simplex->grade_x() + 1; //note that grades are offset by 1
+            int cur_y = simplex->grade_y() + 1; //note that grades are offset by 1
+
+            //if some multigrades were skipped, store previous column number in skipped cells of end_col matrix
+            for( ; cur_entry < cur_x + cur_y*x_size; cur_entry++)
+                mat->set(cur_entry/x_size, cur_entry%x_size, col-1);
+
+            //store current column number in cell of end_col matrix for this multigrade
+            mat->set(cur_y, cur_x, col);
+
+            //increment column counter
+            col++;
+        }
+
+        //store final column number for any cells in end_cols not yet updated
+        for( ; cur_entry < x_size * y_size; cur_entry++)
+            mat->set(cur_entry/x_size, cur_entry%x_size, col-1);
+    }
+    else    //then there are no simplices, so fill the IndexMatrix with -1 values
+    {
+        for(int i=0 ; i < x_size * y_size; i++)
+            mat->set(i/x_size, i%x_size, -1);
+    }
+
+    //return the matrix
+    return mat;
+}//end get_offset_index_mx()
 
 //recursively search tree for simplices of specified dimension that exist at specified multi-index
 void SimplexTree::find_nodes(STNode &node, int level, std::vector<int> &vec, int time, int dist, int dim)
