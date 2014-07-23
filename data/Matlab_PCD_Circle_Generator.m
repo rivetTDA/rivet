@@ -1,8 +1,15 @@
-Num_Points=20;
+Num_Signal_Points=200;
+Num_Noise_Points=40;
 radius=1.5;
-std_dev=.85;
+std_dev_signal=.3;
+std_dev_noise=1.3;
 
-a=[2*pi*rand(Num_Points,1),std_dev*randn(Num_Points,1)+3];
+Num_Points=Num_Signal_Points+Num_Noise_Points;
+
+a=[2*pi*rand(Num_Points,1),randn(Num_Points,1)];
+a(1:Num_Signal_Points,2)=std_dev_signal*a(1:Num_Signal_Points,2)+3;
+a(Num_Signal_Points+1:Num_Points,2)=std_dev_noise*a(Num_Signal_Points+1:Num_Points,2)+3;
+
 points=zeros(Num_Points,2);
 for i=1:Num_Points
     points(i,:)=a(i,2)*[cos(a(i,1)),sin(a(i,1))];

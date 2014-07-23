@@ -59,8 +59,6 @@ int main(int argc, char* argv[])
     //get the bifiltration from the input manager
     SimplexTree* bifiltration = im.get_bifiltration();
 
-    //test dimension indexes
-    bifiltration->update_dim_indexes();
 
     //print simplex tree
     if(verbosity >= 2)
@@ -69,21 +67,12 @@ int main(int argc, char* argv[])
         bifiltration->print();
     }
 
-
-
-//    DirectSumMatrices dsm = bifiltration->get_split_mxs();
-
-//    MapMatrix* boundary_bc = dsm.boundary_matrix;
-//    std::cout << "BOUNDARY MATRIX FOR SUM B+C, DIMENSION " << (dim+1) << ":\n";
-//    boundary_bc->print();
-
-//    MapMatrix* split = dsm.map_matrix;
-//    std::cout << "SPLIT MATRIX:\n";
-//    split->print();
-
-//    IndexMatrix* index_bc = dsm.column_indexes;
-//    std::cout << "INDEX MATRIX FOR B+C:\n";
-//    index_bc->print();
+    std::cout << "\nBIFILTRATION:\n";
+    std::cout << "   Number of simplices of dimension " << dim << ": " << bifiltration->get_size(dim) << "\n";
+    std::cout << "   Number of simplices of dimension " << (dim+1) << ": " << bifiltration->get_size(dim+1) << "\n";
+    std::cout << "   Number of x-grades: " << bifiltration->num_x_grades() << "\n";
+    std::cout << "   Number of y-grades: " << bifiltration->num_y_grades() << "\n";
+    std::cout << "\n";
 
     //initialize the MultiBetti object
     MultiBetti mb(bifiltration, dim, verbosity);
@@ -114,12 +103,13 @@ int main(int argc, char* argv[])
 
 
 
+    //compute xi_0 and xi_1
+    std::cout << "COMPUTING XI_0 AND XI_1:\n";
 
     //start timer
     ptime time_start(microsec_clock::local_time());
 
-    //compute xi_0 and xi_1
-    std::cout << "COMPUTING XI_0 AND XI_1:\n";
+    //compute
     mb.compute_fast();
 
     //stop timer

@@ -17,6 +17,7 @@ SimplexTree::SimplexTree(int dim, int v) :
 
 //adds a simplex (including all of its faces) to the SimplexTree
 //if simplex or any of its faces already exist, they are not re-added
+//WARNING: doesn't update global indexes or dimension indexes!!!
 void SimplexTree::add_simplex(std::vector<int> & vertices, int x, int y)
 {
 	//add the simplex and all of its faces
@@ -30,8 +31,8 @@ void SimplexTree::add_simplex(std::vector<int> & vertices, int x, int y)
     for(int i = grade_y_values.size(); i <= y; i++)
         grade_y_values.push_back(i);
 	
-	//update global indexes
-	update_global_indexes();
+    //update global indexes  ---- IS THIS INEFFICIENT???
+//	update_global_indexes();
 }//end add_simplex()
 
 //recursively adds faces of a simplex to the SimplexTree
@@ -138,6 +139,7 @@ void SimplexTree::build_dim_lists_recursively(STNode &node, int cur_dim)
 
 
 //builds SimplexTree representing a Vietoris-Rips complex from a vector of points, with certain parameters
+//NOTE: automatically computes global indexes and dimension indexes
 void SimplexTree::build_VR_complex(std::vector<Point> &points, int pt_dim, int max_dim, double max_dist)
 {
 	//compute distances, stored in an array so that we can quickly look up the distance between any two points
@@ -213,6 +215,9 @@ void SimplexTree::build_VR_complex(std::vector<Point> &points, int pt_dim, int m
 		
         build_VR_subtree(points, distances, *node, parent_indexes, points[i].get_birth(), 0, 1, max_dim, gic);
 	}
+
+    //compute dimension indexes
+    update_dim_indexes();
 	
 	//clean up
 	delete[] distances;
@@ -882,6 +887,19 @@ int SimplexTree::num_x_grades()
 int SimplexTree::num_y_grades()
 {
     return grade_y_values.size();
+}
+
+//returns the number of simplices of dimension (hom_dim-1), hom_dim, or (hom_dim+1)
+int SimplexTree::get_size(int dim)
+{
+    if(dim == hom_dim - 1)
+        return ordered_low_simplices.size();
+    else if(dim == hom_dim)
+        return ordered_simplices.size();
+    else if(dim == hom_dim + 1)
+        return ordered_high_simplices.size();
+    else
+        return -1;
 }
 
 

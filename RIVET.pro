@@ -44,6 +44,7 @@ HEADERS  += visualizationwindow.h \
     math/map_matrix_node.h \
     math/map_matrix.h \
     interface/slice_diagram.h \
-    interface/control_dot.h
+    interface/control_dot.h \
+    math/index_matrix.h
 
 FORMS    += visualizationwindow.ui

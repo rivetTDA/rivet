@@ -174,8 +174,12 @@ void InputManager::read_bifiltration()
 		
 		//add the simplex to the simplex tree
 		simplex_tree.add_simplex(verts, time, dist);
-		
 	}
+
+    //compute indexes
+    simplex_tree.update_global_indexes();
+    simplex_tree.update_dim_indexes();
+
 }//end read_bifiltration()
 
 

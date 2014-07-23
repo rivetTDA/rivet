@@ -16,6 +16,7 @@
 
 #include <utility>	// std::pair
 #include <map>
+#include <set>
 #include <stdexcept>
 #include "point.h"
 #include "st_node.h"
@@ -75,6 +76,8 @@ class SimplexTree {
 
         int num_x_grades();                     //returns the number of unique x-coordinates of the multi-grades
         int num_y_grades();                     //returns the number of unique y-coordinates of the multi-grades
+
+        int get_size(int dim);                  //returns the number of simplices of dimension (hom_dim-1), hom_dim, or (hom_dim+1)
 
         ///// THESE FUNCTIONS MIGHT NEED TO BE UPDATED
             MapMatrix* get_boundary_mx(std::vector<int> coface_global, std::map<int,int> face_order);

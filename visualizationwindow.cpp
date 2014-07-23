@@ -14,10 +14,14 @@
 #include "dcel/persistence_data.hpp"
 
 
+//#include "boost/date_time/posix_time/posix_time.hpp"
+//using namespace boost::posix_time;
+
+
 VisualizationWindow::VisualizationWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::VisualizationWindow),
-    verbosity(6)
+    verbosity(2)
 {
     ui->setupUi(this);
 
@@ -78,10 +82,28 @@ void VisualizationWindow::on_computeButton_clicked() //read the file and do the 
         bifiltration->print();
     }
 
+    //print bifiltration statistics
+    std::cout << "\nBIFILTRATION:\n";
+    std::cout << "   Number of simplices of dimension " << dim << ": " << bifiltration->get_size(dim) << "\n";
+    std::cout << "   Number of simplices of dimension " << (dim+1) << ": " << bifiltration->get_size(dim+1) << "\n";
+    std::cout << "   Number of x-grades: " << bifiltration->num_x_grades() << "\n";
+    std::cout << "   Number of y-grades: " << bifiltration->num_y_grades() << "\n";
+    std::cout << "\n";
+
     //compute xi_0 and xi_1 at ALL multi-indexes
     if(verbosity >= 2) { std::cout << "COMPUTING xi_0 AND xi_1 FOR HOMOLOGY DIMENSION " << dim << ":\n"; }
     MultiBetti mb(bifiltration, dim, verbosity);
-    mb.compute_all_xi();
+
+    //start timer
+//    ptime time_start(microsec_clock::local_time());
+
+    //compute
+    mb.compute_fast();
+
+    //stop timer
+//    ptime time_end(microsec_clock::local_time());
+//    time_duration duration(time_end - time_start);
+
 
     //print xi_0 and xi_1
     if(verbosity >= 4)
@@ -89,44 +111,48 @@ void VisualizationWindow::on_computeButton_clicked() //read the file and do the 
         std::cout << "COMPUTATION FINISHED:\n";
 
         //build column labels for output
-        std::string col_labels = "        dist ";
+        std::string col_labels = "         x = ";
         std::string hline = "    --------";
-        for(int j=0; j<(*bifiltration).get_num_dists(); j++)
+        for(int j=0; j<bifiltration->num_x_grades(); j++)
         {
             std::ostringstream oss;
             oss << j;
             col_labels += oss.str() + "  ";
             hline += "---";
         }
-        col_labels += "\n" + hline + "\n";
+        col_labels = hline + "\n" + col_labels + "\n";
 
         //output xi_0
         std::cout << "  VALUES OF xi_0 for dimension " << dim << ":\n";
-        std::cout << col_labels;
-        for(int i=0; i<(*bifiltration).get_num_times(); i++)
+        for(int i=bifiltration->num_y_grades()-1; i>=0; i--)
         {
-            std::cout << "    time " << i << " | ";
-            for(int j=0; j<(*bifiltration).get_num_dists(); j++)
+            std::cout << "     y = " << i << " | ";
+            for(int j=0; j<bifiltration->num_x_grades(); j++)
             {
-                std::cout << mb.xi0(i,j) << "  ";
+                std::cout << mb.xi0(j,i) << "  ";
             }
             std::cout << "\n";
         }
+        std::cout << col_labels;
+
 
         //output xi_1
         std::cout << "\n  VALUES OF xi_1 for dimension " << dim << ":\n";
-        std::cout << col_labels;
-        for(int i=0; i<(*bifiltration).get_num_times(); i++)
+        for(int i=bifiltration->num_y_grades()-1; i>=0; i--)
         {
-            std::cout << "    time " << i << " | ";
-            for(int j=0; j<(*bifiltration).get_num_dists(); j++)
+            std::cout << "     y = " << i << " | ";
+            for(int j=0; j<bifiltration->num_x_grades(); j++)
             {
-                std::cout << mb.xi1(i,j) << "  ";
+                std::cout << mb.xi1(j,i) << "  ";
             }
             std::cout << "\n";
         }
-        std::cout << "\n";
+        std::cout << col_labels << "\n";
     }
+
+    //print computation time
+//    std::cout << "\nxi_i computation took " << duration << ".\n";
+
 
     //find all support points of xi_0 and xi_1
     int min_time = bifiltration->get_num_times();  //min (relative) time coordinate

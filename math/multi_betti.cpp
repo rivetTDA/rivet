@@ -269,8 +269,14 @@ void MultiBetti::compute_alpha()
     MapMatrix* bdry_bc = dsm.boundary_matrix;
     MapMatrix* merge = dsm.map_matrix;
     IndexMatrix* ind_bc = dsm.column_indexes;
+
     MapMatrix* bdry_d = bifiltration->get_boundary_mx(dimension + 1);
     IndexMatrix* ind_d = bifiltration->get_index_mx(dimension + 1);
+
+//    std::cout << "Index matrix BC:\n";
+//    ind_bc->print();
+//    std::cout << "Index matrix D:\n";
+//    ind_d->print();
 
     //set up data structures
     Vector current_lows_bc;                             //low arrays for matrix bdry_bc
@@ -328,6 +334,15 @@ void MultiBetti::compute_alpha()
         zero_cols_dm = 0;
 //        std::cout << "---multi-grade (" << x << ",0)\n";
 
+        //TESTING!!!
+//        std::cout <<"Matrix D:\n";
+//        bdry_d->print();
+//        std::cout <<"Merge Matrix:\n";
+//        merge->print();
+//        std::cout << "Low array:";
+//        print_lows(first_row_lows_dm);
+//        std::cout << "\n";
+
         //  do column reductions on columns for multi-grade (x,0) using first_row_lows (first on bdry_bc and on merge, and then on the spliced matrix bdry_d and merge)
         reduce_also(bdry_bc, merge, ind_bc->get(0,x-1) + 1, ind_bc->get(0,x), first_row_lows_bc, 0, zero_col_list, zero_cols_bc);
         reduce_spliced(bdry_d, merge, ind_d, ind_bc, zero_col_list, x, 0, first_row_lows_dm, zero_cols_dm);
@@ -348,6 +363,15 @@ void MultiBetti::compute_alpha()
             zero_cols_bc = 0;
             zero_cols_dm = 0;
 //            std::cout << "---multi-grade (" << x << "," << y << ")\n";
+
+            //TESTING!!!
+//            std::cout <<"Matrix D:\n";
+//            bdry_d->print();
+//            std::cout <<"Merge Matrix:\n";
+//            merge->print();
+//            std::cout << "Low array:";
+//            print_lows(current_lows_dm);
+//            std::cout << "\n";
 
             //  do column reductions on columns for multi-grades (0,y) through (x,y) using current_lows (first on bdry_bc and on merge, and then on the spliced matrix bdry_d and merge)
             reduce_also(bdry_bc, merge, ind_bc->get(y-1,num_x_grades) + 1, ind_bc->get(y,x), current_lows_bc, y, zero_col_list, zero_cols_bc);     // OFF BY 1 ????? NO, BUT FIX THIS AFTER OPTIMIZING THE MERGE MATRIX
@@ -519,7 +543,7 @@ void MultiBetti::reduce(MapMatrix* mm, int first_col, int last_col, Vector& lows
 void MultiBetti::reduce_also(MapMatrix* mm, MapMatrix* m2, int first_col, int last_col, Vector& lows, int y_grade, ColumnList& zero_list, int& zero_cols)
 {
     //testing
-//    if(last_col >= first_col)
+    if(last_col >= first_col)
 //        std::cout << "  reducing (2 matrices) columns " << first_col << " to " << last_col << "...";
 
     for(int i = first_col; i <= last_col; i++)
@@ -565,7 +589,10 @@ void MultiBetti::reduce_spliced(MapMatrix* m_left, MapMatrix* m_right, IndexMatr
     if(grade_y > 0)
         first_col_left = ind_left->get(grade_y - 1, ind_left->width() - 1) + 1;
     else if(grade_x > 0)
+    {
         first_col_left = ind_left->get(0, grade_x - 1) + 1;
+//        std::cout << "      first_col_left = " << first_col_left << "\n";
+    }
 
     //determine starting column for right matrix
     std::set<int>::iterator col_iterator = right_cols.get(grade_y);
@@ -588,9 +615,11 @@ void MultiBetti::reduce_spliced(MapMatrix* m_left, MapMatrix* m_right, IndexMatr
     }
 
     //loop through all x-grades at the current y-grade from 0 to grade_x
-    for(int x = 0; x <= grade_x; x++)
+    for(int x=0; x <= grade_x; x++)     //NOTE: THIS LOOP SHOULD BE UNNECESSARY IF grade_y == 0
     {
         int last_col_left = ind_left->get(grade_y, x);
+
+//        std::cout << "  --[left matrix] reducing columns " << first_col_left << " to " << last_col_left << "\n";
 
         //reduce these columns from the left matrix
         for(int i = first_col_left; i <= last_col_left; i++)
@@ -598,7 +627,7 @@ void MultiBetti::reduce_spliced(MapMatrix* m_left, MapMatrix* m_right, IndexMatr
             //while column i is nonempty and its low number is found in the low array, do column operations
             while(m_left->low(i) >= 0 && lows[m_left->low(i)] >= 0)
             {
-//                std::cout << "  --[left matrix] adding column " << lows[m_left->low(i)] << " to column " << i << "\n";
+//                std::cout << "  --[left matrix] adding column with absolute index " << lows[m_left->low(i)] << " to column " << i << " from the left matrix\n";
 
                 if( lows[m_left->low(i)] < m_left->width() )    //then column to add is in the left matrix
                     m_left->add_column(lows[m_left->low(i)], i);
@@ -619,7 +648,8 @@ void MultiBetti::reduce_spliced(MapMatrix* m_left, MapMatrix* m_right, IndexMatr
                 zero_cols++;
             }
         }
-        first_col_left = last_col_left + 1; //prep for next iteration of the outer loop
+        if(grade_y > 0)
+            first_col_left = last_col_left + 1; //prep for next iteration of the outer loop
 
         //determine end column from right matrix
         int last_col_right = ind_right->get(grade_y, x);
@@ -630,7 +660,7 @@ void MultiBetti::reduce_spliced(MapMatrix* m_left, MapMatrix* m_right, IndexMatr
             //while column is nonempty and its low number is found in the low array, do column operations
             while(m_right->low(cur_col) >= 0 && lows[m_right->low(cur_col)] >= 0)
             {
-//                std::cout << "  --[right matrix] adding column " << lows[m_right->low(cur_col)] << " to column " << cur_col << "\n";
+//                std::cout << "  --[right matrix] adding column with absolute index " << lows[m_right->low(cur_col)] << " to column " << cur_col << " in right matrix\n";
 
                 if( lows[m_right->low(cur_col)] >= m_left->width() )    //then column to add is in the right matrix
                     m_right->add_column(lows[m_right->low(cur_col)] - m_left->width(), cur_col);
