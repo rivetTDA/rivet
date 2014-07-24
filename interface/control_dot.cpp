@@ -1,21 +1,27 @@
 #include "control_dot.h"
 
-ControlDot::ControlDot(SliceDiagram* sd, double xmin, double xmax, double ymin, double ymax) :
-    diagram(sd), pressed(false), left_bottom(true),
-    xmin(xmin), xmax(xmax), ymin(ymin), ymax(ymax)
+#include <QtGui>
+#include <QDebug>
+#include <sstream>
+
+
+ControlDot::ControlDot(SliceLine* line, bool left_bottom) :
+    slice_line(line), pressed(false), left_bottom(left_bottom), update_lock(false)
 {
     setFlag(ItemIsMovable);
     setFlag(ItemSendsGeometryChanges);
-}
 
-void ControlDot::set_right_top()
-{
-    left_bottom = false;
+    if(!left_bottom)
+    {
+        update_lock = true;
+        setPos(slice_line->xmax, slice_line->ymax);
+        update_lock = false;
+    }
 }
 
 QRectF ControlDot::boundingRect() const
 {
-    return QRectF(-30,-30,60,60);
+    return QRectF(-10,-10,20,20);
 }
 
 void ControlDot::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
@@ -26,6 +32,7 @@ void ControlDot::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
     if(pressed)
     {
         brush.setColor(Qt::darkCyan);
+
     }
 
     painter->setRenderHint(QPainter::Antialiasing);
@@ -36,80 +43,85 @@ void ControlDot::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
 
 QVariant ControlDot::itemChange(GraphicsItemChange change, const QVariant &value)
 {
-    ControlDot* other = diagram->get_dot(!left_bottom); //gets a pointer to the other control dot
-
-    if(change == QGraphicsItem::ItemPositionChange && other != NULL)
+    if(change == QGraphicsItem::ItemPositionChange && !update_lock)
     {
         QPointF mouse = value.toPointF();
         QPointF newpos(mouse);
 
-        if(left_bottom) //then this is a left-bottom control dot
+        if(left_bottom) //then this dot moves along the left and bottom sides of the box
         {
-            if(mouse.y() > ymin && mouse.y()-ymin >= mouse.x()-xmin)   //then project dot to vertical line x=xmin
+            if(mouse.y() > 0 && mouse.y() >= mouse.x())   //then project dot onto left side of box (the y-axis)
             {
-                newpos.setX(xmin);
+                newpos.setX(0);     //default: orthogonal projection
 
-                if(mouse.y() > other->pos().y())     //don't let dot go above the other dot
-                    newpos.setY(other->pos().y());
-                else if(mouse.y()-ymin < 2*(mouse.x()-xmin))    //smooth transition in region around y-ymin=x-xmin
-                    newpos.setY(2*( mouse.y()-ymin - (mouse.x()-xmin) ) + ymin);
-                //otherwise, orthogonal projection onto line
+                if(mouse.y() < 2*mouse.x())    //smooth transition in region around y=x
+                    newpos.setY(2*(mouse.y() - mouse.x()));
+                if(newpos.y() > slice_line->get_right_pt_y())     //don't let left dot go above right endpoint of line
+                    newpos.setY(slice_line->get_right_pt_y());
             }
-            else if(mouse.x() > xmin)   //then project dot to horizontal line y=ymin
+            else if(mouse.x() > 0)   //then project dot onto bottom side of box (the x-axis)
             {
-                newpos.setY(ymin);
+                newpos.setY(0);     //default: orthongonal projection
 
-                if(mouse.x() > other->pos().x()) //don't let dot go to the right of the other dot
-                    newpos.setX(other->pos().x());
-                else if(mouse.x()-xmin < 2*(mouse.y()-ymin))    //smooth transition in region around y-ymin=x-xmin
-                    newpos.setX(2*( mouse.x()-xmin - (mouse.y()-ymin) ) + xmin);
-                //otherwise, orthongonal projection onto line
+                if(mouse.x() < 2*mouse.y())    //smooth transition in region around y=x
+                    newpos.setX(2*(mouse.x() - mouse.y()));
+                if(newpos.x() > slice_line->get_right_pt_x()) //don't let bottom dot go right of the top endpoint of line
+                    newpos.setX(slice_line->get_right_pt_x());
             }
-            else    //then place dot at (xmin,ymin)
+            else    //then place dot at origin
             {
-                newpos.setX(xmin);
-                newpos.setY(ymin);
+                newpos.setX(0);
+                newpos.setY(0);
             }
-        }//end if
-        else    //then this is a top-right control dot
+        }
+        else    //then this dot moves along the right and top sides of the box
         {
-            if(mouse.y() < ymax && mouse.y()-ymax <= mouse.x()-xmax)    //then project dot to vertical line x=xmax
+            if( mouse.y() < slice_line->ymax  &&  (slice_line->ymax - mouse.y()) >= (slice_line->xmax - mouse.x()) )   //then project dot onto right side of box
             {
-                newpos.setX(xmax);
+                newpos.setX(slice_line->xmax);     //default: orthogonal projection
 
-                if(mouse.y() < other->pos().y())    //don't let dot go below other dot
-                    newpos.setY(other->pos().y());
-                else if(mouse.y()-ymax > 2*(mouse.x()-xmax))    //smooth transition region around y-ymax=x-xmax
-                    newpos.setY(2*( mouse.y()-ymax - (mouse.x()-xmax) ) + ymax );
-                //otherwise, orthogonal projection onto line
+                if( (slice_line->ymax - mouse.y()) < 2*(slice_line->xmax - mouse.x()) )    //smooth transition in region around y-ymax=x-xmax
+                    newpos.setY(slice_line->ymax - 2*(slice_line->ymax - mouse.y() - slice_line->xmax + mouse.x()));
+                if(newpos.y() < slice_line->pos().y())     //don't let right dot go below left endpoint of line
+                    newpos.setY(slice_line->pos().y());
             }
-            else if(mouse.x() < xmax)   //then project dot onto horizontal line y=ymax
+            else if(mouse.x() < slice_line->xmax)   //then project dot onto top side of box
             {
-                newpos.setY(ymax);
+                newpos.setY(slice_line->ymax);     //default: orthongonal projection
 
-                if(mouse.x() < other->pos().x())   //don't let dot go to the left of the other dot
-                    newpos.setX(other->pos().x());
-                else if(mouse.x()-xmax > 2*(mouse.y()-ymax))    //smooth transition region around y-ymax=x-xmax
-                    newpos.setX(2*( mouse.x()-xmax - (mouse.y()-ymax) ) + xmax );
-                //otherwise, orthogonal projection onto line
+                if(slice_line->xmax - mouse.x() < 2*(slice_line->ymax - mouse.y()) )    //smooth transition in region around y=x
+                    newpos.setX(slice_line->xmax - 2*(slice_line->xmax - mouse.x() - slice_line->ymax + mouse.y()));
+                if(newpos.x() < slice_line->pos().x()) //don't let top dot go left of the bottom endpoint of line
+                    newpos.setX(slice_line->pos().x());
             }
-            else    //then place dot at (xmax,ymax)
+            else    //then place dot at top-right corner of box
             {
-                newpos.setX(xmax);
-                newpos.setY(ymax);
+                newpos.setX(slice_line->xmax);
+                newpos.setY(slice_line->ymax);
             }
-        }//end else
+        }
 
-//       std::ostringstream oss;
-//       oss << "(" << newpos.x() << "," << newpos.y() << ")";
-//       coords->setPlainText(QString::fromStdString(oss.str()));
+        //update line position
+//        qDebug() << "  mouse: (" << mouse.x() << ", " << mouse.y() << "); moving line: (" << newpos.x() << ", " << newpos.y() << ")";
+        QPointF delta = newpos - pos();
+        if(left_bottom)
+            slice_line->update_lb_endpoint(delta);
+        else
+            slice_line->update_rt_endpoint(delta);
 
-        //update the line
-        diagram->update_line(newpos, left_bottom);
-
+        //return
         return newpos;
     }
     return QGraphicsItem::itemChange(change, value);
+}
+
+void ControlDot::set_position(const QPointF &newpos)
+{
+    update_lock = true;
+
+    setPos(newpos);
+
+    update_lock = false;
 }
 
 void ControlDot::mousePressEvent(QGraphicsSceneMouseEvent *event)

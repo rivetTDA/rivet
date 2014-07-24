@@ -21,7 +21,8 @@ SOURCES += main.cpp\
     dcel/mesh.cpp \
     interface/input_manager.cpp \
     interface/slice_diagram.cpp \
-    interface/control_dot.cpp
+    interface/control_dot.cpp \
+    interface/slice_line.cpp
 
 HEADERS  += visualizationwindow.h \
     interface/slicearea.h \
@@ -45,6 +46,7 @@ HEADERS  += visualizationwindow.h \
     math/map_matrix.h \
     interface/slice_diagram.h \
     interface/control_dot.h \
-    math/index_matrix.h
+    math/index_matrix.h \
+    interface/slice_line.h
 
 FORMS    += visualizationwindow.ui

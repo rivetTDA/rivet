@@ -35,7 +35,7 @@ VisualizationWindow::VisualizationWindow(QWidget *parent) :
 //    bigFont->setPixelSize(70);
 
 
-    slice_diagram = new SliceDiagram(sliceScene);
+    slice_diagram = new SliceDiagram(sliceScene, this);
 
 }
 
@@ -46,13 +46,13 @@ VisualizationWindow::~VisualizationWindow()
 
 void VisualizationWindow::on_angleSpinBox_valueChanged(int angle)
 {
-    ui->sliceArea->setLine(angle, ui->offsetSpinBox->value());
+//    ui->sliceArea->setLine(angle, ui->offsetSpinBox->value());
 //    draw_persistence_diagram();
 }
 
 void VisualizationWindow::on_offsetSpinBox_valueChanged(double offset)
 {
-    ui->sliceArea->setLine(ui->angleSpinBox->value(), offset);
+//    ui->sliceArea->setLine(ui->angleSpinBox->value(), offset);
 //    draw_persistence_diagram();
 }
 
@@ -302,3 +302,15 @@ void VisualizationWindow::on_resetScalePushButton_clicked()
     ui->scaleSpinBox->setValue(1);
     ui->statusBar->showMessage("persistence diagram scale reset");
 }
+
+void VisualizationWindow::test(double n)
+{
+    ui->offsetSpinBox->setValue(n);
+}
+
+void VisualizationWindow::set_line_parameters(double angle, double offset)
+{
+    ui->angleSpinBox->setValue(angle);
+    ui->offsetSpinBox->setValue(offset);
+}
+

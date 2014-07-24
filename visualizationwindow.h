@@ -5,6 +5,7 @@
 #include <QtGui>
 
 #include "interface/slice_diagram.h"
+class SliceDiagram;
 
 namespace Ui {
 class VisualizationWindow;
@@ -21,6 +22,11 @@ class VisualizationWindow : public QMainWindow
 public:
     explicit VisualizationWindow(QWidget *parent = 0);
     ~VisualizationWindow();
+
+    void test(double n);    //TESTING ONLY!!!!
+
+    void set_line_parameters(double angle, double offset);
+
     
 private slots:
     void on_angleSpinBox_valueChanged(int angle);

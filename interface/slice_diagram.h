@@ -4,8 +4,12 @@
 #include <QGraphicsScene>
 #include <QtGui>
 
+#include "../visualizationwindow.h"
+class VisualizationWindow;
 #include "control_dot.h"
 class ControlDot;
+#include "slice_line.h"
+class SliceLine;
 
 //first, a little struct to organize the data used to draw the points in the SliceDiagram
 struct xiPoint
@@ -22,7 +26,7 @@ struct xiPoint
 class SliceDiagram
 {
 public:
-    SliceDiagram(QGraphicsScene* sc);
+    SliceDiagram(QGraphicsScene* sc, VisualizationWindow* vw);
 
     void add_point(double x_coord, double y_coord, int xi0m, int xi1m);
 
@@ -35,6 +39,7 @@ public:
 private:
     //graphics items
     QGraphicsScene* scene;
+    VisualizationWindow* window;
 
     QGraphicsRectItem* data_rect;
     QGraphicsSimpleTextItem* data_xmin_text;
@@ -45,7 +50,7 @@ private:
     ControlDot* dot_left;
     ControlDot* dot_right;
 
-    QGraphicsLineItem* slice_line;
+    SliceLine* slice_line;
 
     //data items
     std::vector<xiPoint> points;    //point data to be drawn in the slice area
