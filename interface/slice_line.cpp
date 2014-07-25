@@ -44,7 +44,7 @@ QPainterPath SliceLine::shape() const
 void SliceLine::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
     QRectF rect = boundingRect();
-    QPen pen(Qt::blue);
+    QPen pen(QColor(0, 0, 255, 150));   //semi-transparent blue
     pen.setWidth(4);
 
     if(pressed)
@@ -150,6 +150,9 @@ void SliceLine::update_lb_endpoint(QPointF &delta)
         slope = right_point.y()/right_point.x();
     }
 
+    //update ui control objects
+    update_window();
+
     update_lock = false;
 }
 
@@ -170,6 +173,9 @@ void SliceLine::update_rt_endpoint(QPointF &delta)
         vertical = false;
         slope = right_point.y()/right_point.x();
     }
+
+    //update ui control objects
+    update_window();
 
     update_lock = false;
 }
@@ -253,6 +259,9 @@ void SliceLine::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         //update the picture
         right_dot->set_position(mapToScene(right_point));
         update();
+
+        //update ui control objects
+        update_window();
     }
 
     QGraphicsItem::mouseMoveEvent(event);
@@ -261,11 +270,23 @@ void SliceLine::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 //sends angle and offset parameters to the VisualizationWindow
 void SliceLine::update_window()
 {
-    double angle = 90;
-    if(!vertical)
-        angle = round(atan(slope)*180/3.1415926);
+    double angle = 90;            //default, for vertical line
+    double offset = -1*pos().x();    //default, for vertical line
 
-    window->set_line_parameters(angle, right_point.x());
+    qDebug() << "updating window; position: (" << pos().x() << ", " << pos().y() << ")";
+
+    if(!vertical)
+    {
+        double radians = atan(slope);
+        angle = round(radians*180/3.1415926);
+
+        if(pos().y() > 0)
+            offset = pos().y()*cos(angle);          //TODO: SOMETHING WRONG HERE!!!
+        else
+            offset = -1*pos().x()*sin(angle);          //TODO: SOMETHING WRONG HERE!!!
+    }
+
+    window->set_line_parameters(angle, offset);
 }
 
 

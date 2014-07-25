@@ -12,7 +12,7 @@ InputManager::InputManager(int d, int v) :
 void InputManager::start(const char* arg)
 {
 	//read the file
-	if(verbosity >= 2) { std::cout << "READING FILE:\n"; }
+    if(verbosity >= 2) { std::cout << "READING FILE: " << arg << "\n"; }
 	std::string line;
 	infile.open(arg);
 	if(infile.is_open())

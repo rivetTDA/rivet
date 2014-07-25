@@ -27,7 +27,7 @@ QRectF ControlDot::boundingRect() const
 void ControlDot::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
     QRectF rect = boundingRect();
-    QBrush brush(Qt::blue);
+    QBrush brush(QColor(0, 0, 255, 150));   //semi-transparent blue
 
     if(pressed)
     {

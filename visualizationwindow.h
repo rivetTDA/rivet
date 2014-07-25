@@ -23,8 +23,6 @@ public:
     explicit VisualizationWindow(QWidget *parent = 0);
     ~VisualizationWindow();
 
-    void test(double n);    //TESTING ONLY!!!!
-
     void set_line_parameters(double angle, double offset);
 
     

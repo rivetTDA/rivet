@@ -26,7 +26,7 @@ struct xiPoint
 class SliceDiagram
 {
 public:
-    SliceDiagram(QGraphicsScene* sc, VisualizationWindow* vw);
+    SliceDiagram(QGraphicsScene* sc, VisualizationWindow* vw, double xmin, double xmax, double ymin, double ymax, int width, int height);
 
     void add_point(double x_coord, double y_coord, int xi0m, int xi1m);
 
@@ -41,12 +41,12 @@ private:
     QGraphicsScene* scene;
     VisualizationWindow* window;
 
-    QGraphicsRectItem* data_rect;
     QGraphicsSimpleTextItem* data_xmin_text;
     QGraphicsSimpleTextItem* data_xmax_text;
     QGraphicsSimpleTextItem* data_ymin_text;
     QGraphicsSimpleTextItem* data_ymax_text;
 
+    QGraphicsRectItem* control_rect;    //control dots live on this rectangle
     ControlDot* dot_left;
     ControlDot* dot_right;
 
@@ -54,9 +54,13 @@ private:
 
     //data items
     std::vector<xiPoint> points;    //point data to be drawn in the slice area
-    double xmin, xmax, ymin, ymax;  //min and max coordinates of the data
-    double scale;
+    double data_xmin, data_xmax, data_ymin, data_ymax;  //min and max coordinates of the data
 
+    //parameters
+    int box_width, box_height;
+    double default_scale, normalized_scale_x, normalized_scale_y;
+    const int unit_radius;  //radius for a dot representing a xi support point of multiplicity 1
+    const int padding;  //distance between xi support point area and control rectangle
 };
 
 #endif // SLICE_DIAGRAM_H

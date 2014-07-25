@@ -56,10 +56,10 @@ class SimplexTree {
         void update_dim_indexes();              //updates the dimension indexes (reverse-lexicographical multi-grade order) for simplices of dimension (hom_dim-1), hom_dim, and (hom_dim+1)
 
         int grade_x_position(double value);     //returns the position of "value" in the ordered list of multi-grade first-components, or -1 if not found
-        double grade_x_value(int i);            //returns the value at the i^th position in the ordered list of multi-grade first-components
+        double grade_x_value(int i);            //returns the value at the i^th position in the ordered list of multi-grade x-coordinates
 		
         int grade_y_position(double value);     //returns the position of "value" in the ordered list of multi-grade second-components, or -1 if not found
-        double grade_y_value(int i);            //returns the value at the i^th position in the ordered list of multi-grade second-components
+        double grade_y_value(int i);            //returns the value at the i^th position in the ordered list of multi-grade y-coordinates
 
         MapMatrix* get_boundary_mx(int dim);    //returns a matrix of boundary information for simplices
 

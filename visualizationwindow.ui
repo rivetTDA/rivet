@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1350</width>
+    <width>905</width>
     <height>694</height>
    </rect>
   </property>
@@ -123,25 +123,6 @@
       </widget>
      </item>
     </layout>
-   </widget>
-   <widget class="SliceArea" name="sliceArea" native="true">
-    <property name="geometry">
-     <rect>
-      <x>920</x>
-      <y>80</y>
-      <width>400</width>
-      <height>400</height>
-     </rect>
-    </property>
-    <property name="minimumSize">
-     <size>
-      <width>400</width>
-      <height>400</height>
-     </size>
-    </property>
-    <property name="autoFillBackground">
-     <bool>true</bool>
-    </property>
    </widget>
    <widget class="PDArea" name="pdArea" native="true">
     <property name="geometry">
@@ -374,7 +355,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1350</width>
+     <width>905</width>
      <height>25</height>
     </rect>
    </property>
@@ -428,12 +409,6 @@
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
-  <customwidget>
-   <class>SliceArea</class>
-   <extends>QWidget</extends>
-   <header>interface/slicearea.h</header>
-   <container>1</container>
-  </customwidget>
   <customwidget>
    <class>PDArea</class>
    <extends>QWidget</extends>

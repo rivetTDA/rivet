@@ -35,7 +35,6 @@ VisualizationWindow::VisualizationWindow(QWidget *parent) :
 //    bigFont->setPixelSize(70);
 
 
-    slice_diagram = new SliceDiagram(sliceScene, this);
 
 }
 
@@ -69,8 +68,9 @@ void VisualizationWindow::on_computeButton_clicked() //read the file and do the 
 
     //start the input manager
     im = new InputManager(dim, verbosity);
-    const char* filestr = fileName.toStdString().data();
-    im->start(filestr);
+//    const char* filestr = fileName.toStdString().data();
+//    im->start(filestr);
+    im->start("/ima/home/mlwright/Repos/RIVET/data/sample3.txt");
 
     //get the bifiltration
     bifiltration = im->get_bifiltration();
@@ -82,15 +82,21 @@ void VisualizationWindow::on_computeButton_clicked() //read the file and do the 
         bifiltration->print();
     }
 
+    //get data extents
+    double data_xmin = bifiltration->grade_x_value(0);
+    double data_xmax = bifiltration->grade_x_value(bifiltration->num_x_grades() - 1);
+    double data_ymin = bifiltration->grade_y_value(0);
+    double data_ymax = bifiltration->grade_y_value(bifiltration->num_y_grades() - 1);
+
     //print bifiltration statistics
     std::cout << "\nBIFILTRATION:\n";
     std::cout << "   Number of simplices of dimension " << dim << ": " << bifiltration->get_size(dim) << "\n";
     std::cout << "   Number of simplices of dimension " << (dim+1) << ": " << bifiltration->get_size(dim+1) << "\n";
-    std::cout << "   Number of x-grades: " << bifiltration->num_x_grades() << "\n";
-    std::cout << "   Number of y-grades: " << bifiltration->num_y_grades() << "\n";
+    std::cout << "   Number of x-grades: " << bifiltration->num_x_grades() << "; values " << data_xmin << " to " << data_xmax << "\n";
+    std::cout << "   Number of y-grades: " << bifiltration->num_y_grades() << "; values " << data_ymin << " to " << data_ymax << "\n";
     std::cout << "\n";
 
-    //compute xi_0 and xi_1 at ALL multi-indexes
+    //compute xi_0 and xi_1 at all multi-grades
     if(verbosity >= 2) { std::cout << "COMPUTING xi_0 AND xi_1 FOR HOMOLOGY DIMENSION " << dim << ":\n"; }
     MultiBetti mb(bifiltration, dim, verbosity);
 
@@ -104,87 +110,31 @@ void VisualizationWindow::on_computeButton_clicked() //read the file and do the 
 //    ptime time_end(microsec_clock::local_time());
 //    time_duration duration(time_end - time_start);
 
-
-    //print xi_0 and xi_1
-    if(verbosity >= 4)
-    {
-        std::cout << "COMPUTATION FINISHED:\n";
-
-        //build column labels for output
-        std::string col_labels = "         x = ";
-        std::string hline = "    --------";
-        for(int j=0; j<bifiltration->num_x_grades(); j++)
-        {
-            std::ostringstream oss;
-            oss << j;
-            col_labels += oss.str() + "  ";
-            hline += "---";
-        }
-        col_labels = hline + "\n" + col_labels + "\n";
-
-        //output xi_0
-        std::cout << "  VALUES OF xi_0 for dimension " << dim << ":\n";
-        for(int i=bifiltration->num_y_grades()-1; i>=0; i--)
-        {
-            std::cout << "     y = " << i << " | ";
-            for(int j=0; j<bifiltration->num_x_grades(); j++)
-            {
-                std::cout << mb.xi0(j,i) << "  ";
-            }
-            std::cout << "\n";
-        }
-        std::cout << col_labels;
-
-
-        //output xi_1
-        std::cout << "\n  VALUES OF xi_1 for dimension " << dim << ":\n";
-        for(int i=bifiltration->num_y_grades()-1; i>=0; i--)
-        {
-            std::cout << "     y = " << i << " | ";
-            for(int j=0; j<bifiltration->num_x_grades(); j++)
-            {
-                std::cout << mb.xi1(j,i) << "  ";
-            }
-            std::cout << "\n";
-        }
-        std::cout << col_labels << "\n";
-    }
-
     //print computation time
 //    std::cout << "\nxi_i computation took " << duration << ".\n";
 
+    //initialize the slice diagram
+    slice_diagram = new SliceDiagram(sliceScene, this, data_xmin, data_xmax, data_ymin, data_ymax, 360, 360);   //TODO: BOX SIZE SHOULD NOT BE HARD-CODED!!!!!
 
-    //find all support points of xi_0 and xi_1
-    int min_time = bifiltration->get_num_times();  //min (relative) time coordinate
-    int max_time = 0;                              //max (relative) time coordinate
-    int min_dist = bifiltration->get_num_dists();  //min (relative) distance coordinate
-    int max_dist = 0;                              //max (relative) distance coordinate
 
-    for(int i=0; i < bifiltration->get_num_times(); i++)
+    //find all support points of xi_0 and xi_1              //TODO: THIS PART WILL BE IMPROVED WITH NEW ALGORITHM FOR FINDING LCMs
+    for(int i=0; i < bifiltration->num_x_grades(); i++)
     {
-        for(int j=0; j < bifiltration->get_num_dists(); j++)
+        for(int j=0; j < bifiltration->num_y_grades(); j++)
         {
             if(mb.xi0(i,j) != 0 || mb.xi1(i,j) != 0)
             {
-                xi_support.push_back(std::pair<int,int>(i,j));
-                ui->sliceArea->addPoint(bifiltration->get_time(i), bifiltration->get_dist(j), mb.xi0(i,j), mb.xi1(i,j));
+                xi_support.push_back(std::pair<int,int>(i,j));  //TODO: WHY IS THIS NECESSARY???
+//                ui->sliceArea->addPoint(bifiltration->get_time(i), bifiltration->get_dist(j), mb.xi0(i,j), mb.xi1(i,j));
 
-                slice_diagram->add_point(bifiltration->get_time(i), bifiltration->get_dist(j), mb.xi0(i,j), mb.xi1(i,j));
+                slice_diagram->add_point(bifiltration->grade_x_value(i), bifiltration->grade_y_value(j), mb.xi0(i,j), mb.xi1(i,j));
 
-                if(i < min_time)
-                    min_time = i;
-                if(i > max_time)
-                    max_time = i;
-                if(j < min_dist)
-                    min_dist = j;
-                if(j > max_dist)
-                    max_dist = j;
             }
         }
     }
 
     //find default maximum coordinate for persistence diagram
-    double pd_max = sqrt( pow(bifiltration->get_time(max_time) - bifiltration->get_time(min_time), 2) + pow(bifiltration->get_dist(max_dist) - bifiltration->get_dist(min_dist), 2) );
+//    double pd_max = sqrt( pow(bifiltration->get_time(max_time) - bifiltration->get_time(min_time), 2) + pow(bifiltration->get_dist(max_dist) - bifiltration->get_dist(min_dist), 2) );
 
     //print support points of xi_0 and xi_1
     if(verbosity >= 2)
@@ -198,17 +148,11 @@ void VisualizationWindow::on_computeButton_clicked() //read the file and do the 
         std::cout << "\n";
     }
 
-    //draw support points of xi_0 and xi_1
-    ui->sliceArea->setExtents(bifiltration->get_time(min_time), bifiltration->get_time(max_time), bifiltration->get_dist(min_dist), bifiltration->get_dist(max_dist));
-    ui->sliceArea->update();
-    ui->pdArea->setMax(pd_max);
+
+//    ui->pdArea->setMax(pd_max);
 
     //draw slice diagram
-    ui->sliceView->scale(1000,1000);
     slice_diagram->create_diagram();
-  //  ui->sliceView->centerOn(0,0);
-  //  ui->sliceView->ensureVisible(0,0,5,5,1,1);
-    ui->sliceView->fitInView(sliceScene->sceneRect(),Qt::KeepAspectRatio);
 
     ui->statusBar->showMessage("computed xi support points");
 
@@ -301,11 +245,6 @@ void VisualizationWindow::on_resetScalePushButton_clicked()
 {
     ui->scaleSpinBox->setValue(1);
     ui->statusBar->showMessage("persistence diagram scale reset");
-}
-
-void VisualizationWindow::test(double n)
-{
-    ui->offsetSpinBox->setValue(n);
 }
 
 void VisualizationWindow::set_line_parameters(double angle, double offset)
