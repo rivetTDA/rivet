@@ -20,7 +20,7 @@
 #include "vertex.hpp"
 #include "halfedge.hpp"
 #include "face.hpp"
-#include "../math/persistence_diagram.hpp"
+#include "../math/persistence_data.hpp"
 
 class Mesh
 {
@@ -37,8 +37,8 @@ class Mesh
 		void build_persistence_data(std::vector<std::pair<int, int> > & xi, SimplexTree* bifiltration, int dim);
 			//associates persistence data to each face, requires all support points of xi_0 and xi_1, the bifiltration, and the dimension of homology
 		
-		PersistenceDiagram* get_persistence_diagram(double angle, double offset, std::vector<std::pair<int, int> > & xi, SimplexTree* bifiltration);
-			//returns a persistence diagram associated with the specified point
+        PersistenceData* get_persistence_data(double angle, double offset, std::vector<std::pair<int, int> > & xi, SimplexTree* bifiltration);
+            //returns persistence diagram data associated with the specified point (line); angle should be in RADIANS
 		
 		void print();	//prints all the data from the mesh
 		

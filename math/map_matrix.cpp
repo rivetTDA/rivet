@@ -126,6 +126,7 @@ int MapMatrix::low(int j)
 
 
 //applies the column reduction algorithm to this matrix
+//TODO: this could be improved with a "low array"
 void MapMatrix::col_reduce()
 {
     //loop through columns

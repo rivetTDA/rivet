@@ -7,6 +7,9 @@
 #include "interface/slice_diagram.h"
 class SliceDiagram;
 
+#include "interface/persistence_diagram.h"
+class PersistenceDiagram;
+
 namespace Ui {
 class VisualizationWindow;
 }
@@ -63,10 +66,12 @@ private:
 
     //items for slice diagram
     QGraphicsScene* sliceScene;
-
     SliceDiagram* slice_diagram;
+    bool slice_update_lock;
 
     //items for persistence diagram
+    QGraphicsScene* pdScene;
+    PersistenceDiagram* p_diagram;
 
     void draw_persistence_diagram();
 

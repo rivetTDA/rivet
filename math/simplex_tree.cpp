@@ -836,7 +836,8 @@ SimplexData SimplexTree::get_simplex_data(int index)
 	// face_order is a map: global_simplex_index -> order_simplex_index
 MapMatrix* SimplexTree::get_boundary_mx(std::vector<int> coface_global, std::map<int,int> face_order)
 {
-	//create the matrix
+
+    //create the matrix
 	int num_cols = coface_global.size();
 	int num_rows = face_order.size();
     MapMatrix* mat = new MapMatrix(num_rows, num_cols);			//DELETE this object later???
@@ -866,7 +867,7 @@ MapMatrix* SimplexTree::get_boundary_mx(std::vector<int> coface_global, std::map
 				int oi = face_order.at(gi);
 			
 				//for this boundary simplex, enter "1" in the appropriate cell in the matrix (row oi, column j)
-				(*mat).set(oi+1,j+1);
+                (*mat).set(oi,j);
 				
 			}//end for(k=0;...)
 		}//end if(verts.size() > 1)

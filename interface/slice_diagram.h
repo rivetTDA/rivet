@@ -22,7 +22,7 @@ struct xiPoint
 };
 
 
-//now for the SliceArea class
+//now for the SliceDiagram class
 class SliceDiagram
 {
 public:
@@ -32,9 +32,12 @@ public:
 
     void create_diagram();
 
-    ControlDot* get_dot(bool lb);
+    void update_line(double angle, double offset);  //updates the line, in response to a change in the controls in the VisualizationWindow
+    void update_window_controls();   //updates controls in the VisualizationWindow, in response to a change in the line
 
-    void update_line(QPointF& pos, bool lb);
+    double get_slice_length();  //gets the length of the slice, for scaling the persistence diagram
+    double get_pd_scale();      //gets the number of pixels per unit, for the persistence diagram
+    double get_zero();          //gets the coordinate on the slice line which we consider "zero" for the persistence diagram
 
 private:
     //graphics items

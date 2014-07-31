@@ -15,7 +15,6 @@ class SliceLine;
 class ControlDot : public QGraphicsItem
 {
 public:
-//    ControlDot(SliceDiagram* sd,...); //constructs a control dot that defaults to left-bottom
     ControlDot(SliceLine* line, bool left_bottom);
 
     QRectF boundingRect() const;

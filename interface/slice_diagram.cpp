@@ -23,12 +23,10 @@ SliceDiagram::SliceDiagram(QGraphicsScene* sc, VisualizationWindow* vw, double x
         default_scale = normalized_scale_y;
 }
 
-
 void SliceDiagram::add_point(double x_coord, double y_coord, int xi0m, int xi1m)
 {
     points.push_back(xiPoint(x_coord, y_coord, xi0m, xi1m));
 }
-
 
 void SliceDiagram::create_diagram()
 {
@@ -82,28 +80,27 @@ void SliceDiagram::create_diagram()
     {
         if(points[i].zero > 0 && points[i].one > 0) //then this is a support point of BOTH xi_0 and xi_1
         {
-            QBrush tempBrush(Qt::magenta);     //THIS ISN'"'T WHAT WE WANT! FIX THIS!!!
+            QBrush tempBrush(Qt::magenta);     //THIS ISN'T WHAT WE WANT! FIX THIS!!!
             double radius = round(unit_radius*sqrt(points[i].zero + points[i].one));
-//            QGraphicsEllipseItem* item = scene->addEllipse(points[i].x*default_scale - radius, points[i].y*default_scale - radius, 2*radius, 2*radius,Qt::NoPen,tempBrush);
+            QGraphicsEllipseItem* item = scene->addEllipse( (points[i].x - data_xmin)*default_scale - radius, (points[i].y - data_ymin)*default_scale - radius, 2*radius, 2*radius, Qt::NoPen, tempBrush);
         }
         else    //then draw a green or red disk
         {
             if(points[i].zero > 0)
             {
                 double radius = round(unit_radius*sqrt(points[i].zero));
-                QGraphicsEllipseItem* item = scene->addEllipse( (points[i].x - data_xmin)*default_scale - radius, (points[i].y - data_ymin)*default_scale - radius, 2*radius, 2*radius,Qt::NoPen,greenBrush);
+                QGraphicsEllipseItem* item = scene->addEllipse( (points[i].x - data_xmin)*default_scale - radius, (points[i].y - data_ymin)*default_scale - radius, 2*radius, 2*radius, Qt::NoPen, greenBrush);
             }
             else
             {
                 double radius = round(unit_radius*sqrt(points[i].one));
-                QGraphicsEllipseItem* item = scene->addEllipse( (points[i].x - data_xmin)*default_scale - radius, (points[i].y - data_ymin)*default_scale - radius, 2*radius, 2*radius,Qt::NoPen,redBrush);
+                QGraphicsEllipseItem* item = scene->addEllipse( (points[i].x - data_xmin)*default_scale - radius, (points[i].y - data_ymin)*default_scale - radius, 2*radius, 2*radius, Qt::NoPen, redBrush);
             }
          }
     }
 
-
     //add control objects
-    slice_line = new SliceLine(diagram_width + padding, diagram_height + padding, window);
+    slice_line = new SliceLine(diagram_width + padding, diagram_height + padding, this);
     scene->addItem(slice_line);
 
     dot_left = new ControlDot(slice_line, true);
@@ -114,38 +111,98 @@ void SliceDiagram::create_diagram()
 
     slice_line->setDots(dot_left, dot_right);
 
-
+    //update angle and offset boxes in VisualizationWindow
+    update_window_controls();
 }//end create_diagram()
 
-ControlDot* SliceDiagram::get_dot(bool lb)
+//updates the line, in response to a change in the controls in the VisualizationWindow
+//NOTE: angle is in DEGREES
+void SliceDiagram::update_line(double angle, double offset)
 {
-    if(lb)
-        return dot_left;
-    return dot_right;
+    if(angle == 90)     //handle vertical line
+    {
+        int xpos = (-1*offset - data_xmin)*default_scale;                     //TODO: NORMALIZED SCALE
+        slice_line->update_position(xpos, 0, true, 0);
+    }
+    else if(angle == 0) //handle horizontal line
+    {
+        int ypos = (offset - data_ymin)*default_scale;                     //TODO: NORMALIZED SCALE
+        slice_line->update_position(0, ypos, false, 0);
+    }
+    else    //handle non-vertical and non-horizontal line
+    {
+        double radians = angle*3.14159265/180;
+        double slope = tan(radians);
+        double y_coord = slope*data_xmin + offset/cos(radians); //y-coordinate of slice line at x=data_xmin
+
+        if(y_coord >= data_ymin)    //then slice line intersects left edge of box
+        {
+            slice_line->update_position(0, (y_coord - data_ymin)*default_scale, false, slope);              //TODO: NORMALIZED SCALE
+        }
+        else    //then slice line intersects bottom of box
+        {
+            double x_coord = (data_ymin - offset/cos(radians))/slope;   //x-coordinate of slice line at y=data_ymin
+
+            slice_line->update_position( (x_coord - data_xmin)*default_scale, 0, false, slope);              //TODO: NORMALIZED SCALE
+        }
+    }
 }
 
-void SliceDiagram::update_line(QPointF &pos, bool lb)
+//updates controls in the VisualizationWindow
+void SliceDiagram::update_window_controls()
 {
-    qDebug() << "inside update_line()";
-    if(slice_line != NULL && dot_right != NULL && dot_left != NULL) //make sure all of the essential objects have been initialized (non-null pointers)
-    {
-        qDebug() << "non-null objects";
-//        double angle = 90;
+    //defaults for vertical line
+    double angle = 90;
+    double offset = -1*(slice_line->pos().x()/default_scale + data_xmin);                      //TODO: NORMALIZED SCALE
 
-        if(lb)  //left-bottom dot has moved
-        {
-            QPointF rpos = dot_right->pos();
-          /* FIX:  slice_line->setLine(pos.x(), pos.y(), rpos.x(), rpos.y());*/
-//            if(pos.x() != rpos.x())
-//                angle = atan( (rpos.y()-pos.y())/(rpos.x()-pos.x()) );
-        }
-        else    //top-right dot has moved
-        {
-            QPointF lpos = dot_left->pos();
-          /* FIX:  slice_line->setLine(lpos.x(), lpos.y(), pos.x(), pos.y());*/
-//            if(pos.x() != lpos.x())
-//                angle = atan( (pos.y()-lpos.y())/(pos.x()-lpos.x()) );
-        }
-//       qDebug() << angle;
+    //handle non-vertical line
+    if(!slice_line->is_vertical())
+    {
+        angle = atan(slice_line->get_slope());
+
+        double y_intercept = (slice_line->pos().y()/default_scale + data_ymin - slice_line->get_slope() * (slice_line->pos().x()/default_scale + data_xmin) );       //TODO: NORMALIZED SCALE
+        offset = cos(angle) * y_intercept;
+
+        angle = angle*180/3.14159265;   //convert to degrees
+    }
+
+    window->set_line_parameters(angle, offset);
+}
+
+//gets the length of the slice, for scaling the persistence diagram
+double SliceDiagram::get_slice_length()
+{
+    double dx = slice_line->get_right_pt_x();
+    double dy = slice_line->get_right_pt_y();
+
+    return sqrt(dx*dx + dy*dy);
+}
+
+//gets the number of pixels per unit, for the persistence diagram
+double SliceDiagram::get_pd_scale()
+{
+    return default_scale;                                                            //TODO: NORMALIZED SCALE
+}
+
+//gets the coordinate on the slice line which we consider "zero" for the persistence diagram        //TODO: CHECK!! IMPROVE!!!
+double SliceDiagram::get_zero()
+{
+    if(slice_line->is_vertical())
+        return data_ymin;
+    else if(slice_line->get_slope() == 0)
+        return data_xmin;
+    else
+    {
+        double x0 = slice_line->pos().x()/default_scale + data_xmin;                         //TODO: NORMALIZED SCALE
+        double y0 = slice_line->pos().y()/default_scale + data_ymin;                         //TODO: NORMALIZED SCALE
+
+        double radians = atan(slice_line->get_slope());
+        double offset = cos(radians) * (y0 - tan(radians)*x0);
+        double x1 = -1*offset * sin(radians);
+        double y1 = offset * cos(radians);
+
+//        qDebug() << "radians: " << radians << "; offset: " << offset << "; x1: " << x1 << "; y1: " << y1;
+
+        return sqrt( (x0 - x1)*(x0 - x1) + (y0 - y1)*(y0 - y1) );
     }
 }

@@ -9,10 +9,10 @@
 #define __DCEL_Face_H__
 
 //includes????  namespace????
-#include "persistence_data.hpp"
+#include "cell_persistence_data.hpp"
 
 class Halfedge;
-class PersistenceData;
+class CellPersistenceData;
 
 class Face
 {
@@ -22,7 +22,7 @@ class Face
 		void set_boundary(Halfedge* e);	//set the pointer to a halfedge on the boundary of this face
 		Halfedge* get_boundary();	//get the (pointer to the) boundary halfedge
 		
-		PersistenceData* get_data();		//returns the persistence data associated with this face
+        CellPersistenceData* get_data();		//returns the persistence data associated with this face
 		
 		void store_interior_point();		//computes coordinates of a point inside this face and stores it in the persistence data object
 		
@@ -30,7 +30,7 @@ class Face
 		
 	private:
 		Halfedge* boundary;	//pointer to one halfedge in the boundary of this cell
-		PersistenceData pdata;	//pointer to the persistence data associated with this face
+        CellPersistenceData pdata;	//pointer to the persistence data associated with this face
 	
 };//end class Face
 
@@ -50,7 +50,7 @@ Halfedge* Face::get_boundary()
 	return boundary;
 }
 
-PersistenceData* Face::get_data()
+CellPersistenceData* Face::get_data()
 {
 	return &pdata;
 }

@@ -3,15 +3,13 @@
 
 #include <QFileDialog>
 #include <QMessageBox>
-
-#include "interface/slicearea.h"    //DEPRECATED
-#include "interface/pdarea.h"
+#include <QDebug>
 
 #include "interface/input_manager.h"
 #include "math/simplex_tree.h"
 #include "math/multi_betti.h"
 #include "dcel/mesh.h"
-#include "dcel/persistence_data.hpp"
+#include "dcel/cell_persistence_data.hpp"
 
 
 //#include "boost/date_time/posix_time/posix_time.hpp"
@@ -21,7 +19,8 @@
 VisualizationWindow::VisualizationWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::VisualizationWindow),
-    verbosity(2)
+    verbosity(3),
+    slice_update_lock(false)
 {
     ui->setupUi(this);
 
@@ -34,7 +33,10 @@ VisualizationWindow::VisualizationWindow(QWidget *parent) :
 //    bigFont = new QFont();
 //    bigFont->setPixelSize(70);
 
-
+    pdScene = new QGraphicsScene(this);
+    ui->pdView->setScene(pdScene);
+    ui->pdView->scale(1,-1);
+    ui->pdView->setRenderHint(QPainter::Antialiasing);
 
 }
 
@@ -45,13 +47,21 @@ VisualizationWindow::~VisualizationWindow()
 
 void VisualizationWindow::on_angleSpinBox_valueChanged(int angle)
 {
-//    ui->sliceArea->setLine(angle, ui->offsetSpinBox->value());
-//    draw_persistence_diagram();
+//    qDebug() << "angleSpinBox_valueChanged(); angle: " << angle << "; slice_update_lock: " << slice_update_lock;
+
+    if(!slice_update_lock)
+        slice_diagram->update_line(angle, ui->offsetSpinBox->value());
+
+   // draw_persistence_diagram();
 }
 
 void VisualizationWindow::on_offsetSpinBox_valueChanged(double offset)
 {
-//    ui->sliceArea->setLine(ui->angleSpinBox->value(), offset);
+//    qDebug() << "offsetSpinBox_valueChanged(); offset: " << offset << "; slice_update_lock: " << slice_update_lock;
+
+    if(!slice_update_lock)
+        slice_diagram->update_line(ui->angleSpinBox->value(), offset);
+
 //    draw_persistence_diagram();
 }
 
@@ -125,43 +135,36 @@ void VisualizationWindow::on_computeButton_clicked() //read the file and do the 
             if(mb.xi0(i,j) != 0 || mb.xi1(i,j) != 0)
             {
                 xi_support.push_back(std::pair<int,int>(i,j));  //TODO: WHY IS THIS NECESSARY???
-//                ui->sliceArea->addPoint(bifiltration->get_time(i), bifiltration->get_dist(j), mb.xi0(i,j), mb.xi1(i,j));
-
                 slice_diagram->add_point(bifiltration->grade_x_value(i), bifiltration->grade_y_value(j), mb.xi0(i,j), mb.xi1(i,j));
-
             }
         }
     }
-
-    //find default maximum coordinate for persistence diagram
-//    double pd_max = sqrt( pow(bifiltration->get_time(max_time) - bifiltration->get_time(min_time), 2) + pow(bifiltration->get_dist(max_dist) - bifiltration->get_dist(min_dist), 2) );
 
     //print support points of xi_0 and xi_1
     if(verbosity >= 2)
     {
         std::cout << "  SUPPORT POINTS OF xi_0 AND xi_1: ";
         for(int i=0; i<xi_support.size(); i++)
-        {
             std::cout << "(" << xi_support[i].first << "," << xi_support[i].second << "), ";
-
-        }
         std::cout << "\n";
     }
 
-
-//    ui->pdArea->setMax(pd_max);
+    ui->statusBar->showMessage("computed xi support points");
 
     //draw slice diagram
     slice_diagram->create_diagram();
+        //slice diagram automatically updates angle box and offset box to default values
 
-    ui->statusBar->showMessage("computed xi support points");
+    //update offset extents   //TODO: FIX THIS!!!
+    ui->offsetSpinBox->setMinimum(-1*data_xmax);
+    ui->offsetSpinBox->setMaximum(data_ymax);
 
 
-/*    //find LCMs, build decomposition of the affine Grassmannian
+    //find LCMs, build decomposition of the affine Grassmannian
     if(verbosity >= 2) { std::cout << "CALCULATING LCMs AND DECOMPOSING THE STRIP:\n"; }
     dcel = new Mesh(verbosity);
 
-    for(int i=0; i<xi_support.size(); i++)
+    for(int i=0; i<xi_support.size(); i++)  //TODO: THIS CAN BE IMPROVED
     {
         for(int j=i+1; j<xi_support.size(); j++)
         {
@@ -188,7 +191,7 @@ void VisualizationWindow::on_computeButton_clicked() //read the file and do the 
     }
 
     //print the dcel arrangement
-    if(verbosity >= 2)
+    if(verbosity >= 4)
     {
         std::cout << "DCEL ARRANGEMENT:\n";
         dcel->print();
@@ -200,44 +203,51 @@ void VisualizationWindow::on_computeButton_clicked() //read the file and do the 
 
     ui->statusBar->showMessage("computed persistence data");
 
-    //update the control objects
-    int min_offset = floor(-1*(bifiltration->get_time(max_time)));
-    int max_offset = ceil(bifiltration->get_dist(max_dist));
-    ui->offsetSlider->setMinimum(min_offset);
-    ui->offsetSlider->setMaximum(max_offset);
-    ui->offsetSpinBox->setMinimum(min_offset);
-    ui->offsetSpinBox->setMaximum(max_offset);
-
-    std::cout << "TEST1: bifiltration: " <<  bifiltration << "\n";
+    qDebug() << "zero: " << slice_diagram->get_zero();
 
     //draw persistence diagram
+    p_diagram = new PersistenceDiagram(pdScene, slice_diagram->get_slice_length(), slice_diagram->get_pd_scale(), slice_diagram->get_zero());
+
     draw_persistence_diagram();
-*/
+
+
+
 }//end on_computeButton_clicked()
 
 void VisualizationWindow::draw_persistence_diagram()
 {
     double radians = (ui->angleSpinBox->value())*3.14159265359/180;   //convert to radians
 
-    PersistenceDiagram* pdgm = dcel->get_persistence_diagram(radians, ui->offsetSpinBox->value(), xi_support, bifiltration);
+    PersistenceData* pdata = dcel->get_persistence_data(radians, ui->offsetSpinBox->value(), xi_support, bifiltration);
 
-    ui->pdArea->setData(pdgm->get_pairs(), pdgm->get_cycles());
-    ui->pdArea->drawDiagram();
+    //TESTING
+    std::vector< std::pair<double,double> >* pairs = pdata->get_pairs();
+    std::vector<double>* cycles = pdata->get_cycles();
+    std::cout << "PERSISTENCE DIAGRAM\n   PAIRS: ";
+    for(int i=0; i<pairs->size(); i++)
+        std::cout << "(" << (*pairs)[i].first << ", " << (*pairs)[i].second << ") ";
+    std::cout << "   CYCLES: ";
+    for(int i=0; i<cycles->size(); i++)
+        std::cout << (*cycles)[i] << ", ";
+    std::cout << "\n";
+
+    p_diagram->draw_points(pdata->get_pairs(), pdata->get_cycles());
+
     ui->statusBar->showMessage("persistence diagram drawn");
 }
 
 void VisualizationWindow::on_scaleSpinBox_valueChanged(double arg1)
 {
-    ui->pdArea->setScale(arg1);
-    ui->pdArea->drawDiagram();
+//    ui->pdArea->setScale(arg1);
+//    ui->pdArea->drawDiagram();
     ui->statusBar->showMessage("persistence diagram scale changed");
 }
 
 void VisualizationWindow::on_fitScalePushButton_clicked()
 {
-    double curmax = ui->pdArea->fitScale();
-    ui->scaleSpinBox->setValue(curmax);
-    ui->pdArea->drawDiagram();
+//    double curmax = ui->pdArea->fitScale();
+//    ui->scaleSpinBox->setValue(curmax);
+//    ui->pdArea->drawDiagram();
     ui->statusBar->showMessage("persistence diagram scale changed to fit");
 }
 
@@ -249,7 +259,13 @@ void VisualizationWindow::on_resetScalePushButton_clicked()
 
 void VisualizationWindow::set_line_parameters(double angle, double offset)
 {
+    slice_update_lock = true;
+
+//    qDebug() << "  set_line_parameters: angle = " << angle << "; offset = " << offset;
+
     ui->angleSpinBox->setValue(angle);
     ui->offsetSpinBox->setValue(offset);
+
+    slice_update_lock = false;
 }
 

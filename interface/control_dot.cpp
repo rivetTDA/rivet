@@ -31,8 +31,7 @@ void ControlDot::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
 
     if(pressed)
     {
-        brush.setColor(Qt::darkCyan);
-
+        brush.setColor(QColor(0, 200, 200, 150));      //semi-transparent cyan
     }
 
     painter->setRenderHint(QPainter::Antialiasing);

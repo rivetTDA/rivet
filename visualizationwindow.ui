@@ -84,6 +84,9 @@
     <layout class="QGridLayout" name="gridLayout">
      <item row="1" column="1">
       <widget class="QDoubleSpinBox" name="offsetSpinBox">
+       <property name="minimum">
+        <double>-1000.000000000000000</double>
+       </property>
        <property name="maximum">
         <double>1000.000000000000000</double>
        </property>
@@ -123,25 +126,6 @@
       </widget>
      </item>
     </layout>
-   </widget>
-   <widget class="PDArea" name="pdArea" native="true">
-    <property name="geometry">
-     <rect>
-      <x>475</x>
-      <y>80</y>
-      <width>400</width>
-      <height>400</height>
-     </rect>
-    </property>
-    <property name="minimumSize">
-     <size>
-      <width>400</width>
-      <height>400</height>
-     </size>
-    </property>
-    <property name="autoFillBackground">
-     <bool>true</bool>
-    </property>
    </widget>
    <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
@@ -215,16 +199,6 @@
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout">
-     <item>
-      <widget class="QCheckBox" name="normCoordCheckBox">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="text">
-        <string>Normalize Coordinates</string>
-       </property>
-      </widget>
-     </item>
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout">
        <item>
@@ -349,6 +323,32 @@
      </rect>
     </property>
    </widget>
+   <widget class="QGraphicsView" name="pdView">
+    <property name="geometry">
+     <rect>
+      <x>470</x>
+      <y>80</y>
+      <width>400</width>
+      <height>400</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="normCoordCheckBox">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>570</y>
+      <width>359</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Normalize Coordinates</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
@@ -408,14 +408,6 @@
   </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
- <customwidgets>
-  <customwidget>
-   <class>PDArea</class>
-   <extends>QWidget</extends>
-   <header>interface/pdarea.h</header>
-   <container>1</container>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections/>
 </ui>
