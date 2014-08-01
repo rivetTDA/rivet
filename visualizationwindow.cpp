@@ -12,6 +12,7 @@
 #include "dcel/cell_persistence_data.hpp"
 
 
+
 //#include "boost/date_time/posix_time/posix_time.hpp"
 //using namespace boost::posix_time;
 
@@ -20,7 +21,8 @@ VisualizationWindow::VisualizationWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::VisualizationWindow),
     verbosity(3),
-    slice_update_lock(false)
+    slice_update_lock(false),
+    persistence_diagram_drawn(false)
 {
     ui->setupUi(this);
 
@@ -52,7 +54,8 @@ void VisualizationWindow::on_angleSpinBox_valueChanged(int angle)
     if(!slice_update_lock)
         slice_diagram->update_line(angle, ui->offsetSpinBox->value());
 
-   // draw_persistence_diagram();
+    if(persistence_diagram_drawn)
+        update_persistence_diagram();
 }
 
 void VisualizationWindow::on_offsetSpinBox_valueChanged(double offset)
@@ -62,7 +65,8 @@ void VisualizationWindow::on_offsetSpinBox_valueChanged(double offset)
     if(!slice_update_lock)
         slice_diagram->update_line(ui->angleSpinBox->value(), offset);
 
-//    draw_persistence_diagram();
+    if(persistence_diagram_drawn)
+        update_persistence_diagram();
 }
 
 void VisualizationWindow::on_fileButton_clicked()    //let the user choose an input file
@@ -134,7 +138,7 @@ void VisualizationWindow::on_computeButton_clicked() //read the file and do the 
         {
             if(mb.xi0(i,j) != 0 || mb.xi1(i,j) != 0)
             {
-                xi_support.push_back(std::pair<int,int>(i,j));  //TODO: WHY IS THIS NECESSARY???
+                xi_support.push_back(std::pair<int,int>(i,j));
                 slice_diagram->add_point(bifiltration->grade_x_value(i), bifiltration->grade_y_value(j), mb.xi0(i,j), mb.xi1(i,j));
             }
         }
@@ -203,38 +207,46 @@ void VisualizationWindow::on_computeButton_clicked() //read the file and do the 
 
     ui->statusBar->showMessage("computed persistence data");
 
-    qDebug() << "zero: " << slice_diagram->get_zero();
+//    qDebug() << "zero: " << slice_diagram->get_zero();
 
     //draw persistence diagram
     p_diagram = new PersistenceDiagram(pdScene, slice_diagram->get_slice_length(), slice_diagram->get_pd_scale(), slice_diagram->get_zero());
 
-    draw_persistence_diagram();
+    double radians = (ui->angleSpinBox->value())*3.14159265359/180;   //convert to radians
+    PersistenceData* pdata = dcel->get_persistence_data(radians, ui->offsetSpinBox->value(), xi_support, bifiltration);
+    p_diagram->draw_points(pdata->get_pairs(), pdata->get_cycles());        //I should be able to send pdata to draw_points, but I can't resolve the "multiple definition errors" that occur
+    delete pdata;
+
+    persistence_diagram_drawn = true;
+    ui->statusBar->showMessage("persistence diagram drawn");
 
 
 
 }//end on_computeButton_clicked()
 
-void VisualizationWindow::draw_persistence_diagram()
+void VisualizationWindow::update_persistence_diagram()
 {
     double radians = (ui->angleSpinBox->value())*3.14159265359/180;   //convert to radians
-
     PersistenceData* pdata = dcel->get_persistence_data(radians, ui->offsetSpinBox->value(), xi_support, bifiltration);
-
-    //TESTING
-    std::vector< std::pair<double,double> >* pairs = pdata->get_pairs();
-    std::vector<double>* cycles = pdata->get_cycles();
-    std::cout << "PERSISTENCE DIAGRAM\n   PAIRS: ";
-    for(int i=0; i<pairs->size(); i++)
-        std::cout << "(" << (*pairs)[i].first << ", " << (*pairs)[i].second << ") ";
-    std::cout << "   CYCLES: ";
-    for(int i=0; i<cycles->size(); i++)
-        std::cout << (*cycles)[i] << ", ";
-    std::cout << "\n";
-
-    p_diagram->draw_points(pdata->get_pairs(), pdata->get_cycles());
-
-    ui->statusBar->showMessage("persistence diagram drawn");
+    p_diagram->update_diagram(slice_diagram->get_slice_length(), slice_diagram->get_zero(), pdata->get_pairs(), pdata->get_cycles());
+    delete pdata;
 }
+
+//void VisualizationWindow::draw_persistence_diagram()
+//{
+
+//    //TESTING
+//    std::vector< std::pair<double,double> >* pairs = pdata->get_pairs();
+//    std::vector<double>* cycles = pdata->get_cycles();
+//    std::cout << "PERSISTENCE DIAGRAM\n   PAIRS: ";
+//    for(int i=0; i<pairs->size(); i++)
+//        std::cout << "(" << (*pairs)[i].first << ", " << (*pairs)[i].second << ") ";
+//    std::cout << "   CYCLES: ";
+//    for(int i=0; i<cycles->size(); i++)
+//        std::cout << (*cycles)[i] << ", ";
+//    std::cout << "\n";
+
+//}
 
 void VisualizationWindow::on_scaleSpinBox_valueChanged(double arg1)
 {

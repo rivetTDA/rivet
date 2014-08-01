@@ -72,8 +72,11 @@ private:
     //items for persistence diagram
     QGraphicsScene* pdScene;
     PersistenceDiagram* p_diagram;
+    bool persistence_diagram_drawn;
 
-    void draw_persistence_diagram();
+    void update_persistence_diagram();
+
+//    void draw_persistence_diagram();
 
 };
 

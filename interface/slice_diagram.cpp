@@ -21,6 +21,9 @@ SliceDiagram::SliceDiagram(QGraphicsScene* sc, VisualizationWindow* vw, double x
     default_scale = normalized_scale_x;
     if(normalized_scale_y < normalized_scale_x)
         default_scale = normalized_scale_y;
+
+    //set scene rectangle (necessary to prevent auto-scrolling)
+    scene->setSceneRect(-padding, -padding, default_scale*(data_xmax - data_xmin) + 2*padding, default_scale*(data_ymax - data_ymin) + 2*padding);  //TODO: IMPROVE!!!
 }
 
 void SliceDiagram::add_point(double x_coord, double y_coord, int xi0m, int xi1m)
@@ -172,8 +175,8 @@ void SliceDiagram::update_window_controls()
 //gets the length of the slice, for scaling the persistence diagram
 double SliceDiagram::get_slice_length()
 {
-    double dx = slice_line->get_right_pt_x();
-    double dy = slice_line->get_right_pt_y();
+    double dx = slice_line->get_right_pt_x() - slice_line->pos().x();
+    double dy = slice_line->get_right_pt_y() - slice_line->pos().y();
 
     return sqrt(dx*dx + dy*dy);
 }
