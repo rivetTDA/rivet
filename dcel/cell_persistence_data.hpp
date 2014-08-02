@@ -91,7 +91,7 @@ void CellPersistenceData::compute_data(std::vector<std::pair<int, int> > & xi, S
 	//loop through all support points, compute projections and store the unique ones
 	for(int i=0; i<xi.size(); i++)
 	{
-		std::pair<bool,double> projection = project(xi[i].first, xi[i].second);
+        std::pair<bool,double> projection = project( bifiltration->grade_x_value(xi[i].first), bifiltration->grade_y_value(xi[i].second) );
 		
 		if(projection.first == true)	//then the projection exists
 		{
