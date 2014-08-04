@@ -20,7 +20,7 @@
 VisualizationWindow::VisualizationWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::VisualizationWindow),
-    verbosity(3),
+    verbosity(9),
     slice_update_lock(false),
     persistence_diagram_drawn(false)
 {
@@ -206,6 +206,7 @@ void VisualizationWindow::on_computeButton_clicked() //read the file and do the 
     dcel->build_persistence_data(xi_support, bifiltration, dim);
 
     ui->statusBar->showMessage("computed persistence data");
+    if(verbosity >= 2) { std::cout << "DATA COMPUTED; READY FOR INTERACTIVITY.\n"; }
 
 //    qDebug() << "zero: " << slice_diagram->get_zero();
 

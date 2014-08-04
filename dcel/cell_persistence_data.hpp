@@ -142,7 +142,7 @@ void CellPersistenceData::compute_data(std::vector<std::pair<int, int> > & xi, S
 			if(verbosity >= 8) { std::cout << "    --Simplex " << i << " has multi-index (" << sdata.time << ", " << sdata.dist << "), dimension " << sdata.dim; }
 		
 			//project multi-index onto the line
-			std::pair<bool, double> p_pair = project(sdata.time, sdata.dist);
+            std::pair<bool, double> p_pair = project(bifiltration->grade_x_value(sdata.time), bifiltration->grade_y_value(sdata.dist));
 		
 			if(p_pair.first == true)	//then projection exists
 			{
@@ -239,9 +239,14 @@ void CellPersistenceData::compute_data(std::vector<std::pair<int, int> > & xi, S
         if(i >= 0)
 		{
             if(verbosity >= 7) { std::cout << "    ----pair (" << i << "," << j << ") ==>> (" << simplex_order_xi[i] << "," << coface_order_xi[j] << ")\n"; }
-            persistence_pairs.push_back( std::pair<int,int>( simplex_order_xi[i], coface_order_xi[j] ) );	//TODO: check this!
+
+            //mark that this simplex is paired
             paired_order_indexes.insert(i);
-		}
+
+            //store this pair if it is nontrivial (i.e. not on the diagonal of the persistence diagram)
+            if(simplex_order_xi[i] != coface_order_xi[j])
+                persistence_pairs.push_back( std::pair<int,int>( simplex_order_xi[i], coface_order_xi[j] ) );
+        }
 	}
 	
 	if(verbosity >= 6) { std::cout << "    --Found persistence pairs\n"; }
