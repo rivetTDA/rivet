@@ -18,13 +18,28 @@
 #include <map>
 #include <set>
 #include <stdexcept>
+
 #include "point.h"
 #include "st_node.h"
 #include "map_matrix.h"
 #include "index_matrix.h"
 
-struct SimplexData;     //used for return type of SimplexTree::get_simplex_data()
-struct DirectSumMatrices;   //used for return type of SimplexTree::get_merge_mxs()
+
+//struct SimplexData used for return type of SimplexTree::get_simplex_data()
+struct SimplexData
+{
+    int x;  //integer (relative) x-coordinate of multi-grade
+    int y;  //integer (relative) x-coordinate of multi-grade
+    int dim;
+};
+
+//struct DirectSumMatrices used for return type of SimplexTree::get_merge_mxs()
+struct DirectSumMatrices
+{
+    MapMatrix* boundary_matrix;     //points to a boundary matrix for B+C
+    MapMatrix* map_matrix;          //points to a matrix for a merge or split map
+    IndexMatrix* column_indexes;    //points to a matrix of column indexes, one for each multi-grade
+};
 
 //comparison functor for sorting std::set<STNode*> by REVERSE-LEXICOGRAPHIC multi-grade order
 struct NodeComparator
@@ -47,7 +62,7 @@ class SimplexTree {
 	public:
         SimplexTree(int dim, int v);	//constructor; requires dimension of homology to be computed and verbosity parameter
 		
-        void build_VR_complex(std::vector<Point> &points, int pt_dim, int max_dim, double max_dist);
+        void build_VR_complex(std::vector<Point> &points, int pt_dim, int max_dim, double max_dist, unsigned x_bins, unsigned y_bins);
                     //builds SimplexTree representing a Vietoris-Rips complex from a vector of points, with certain parameters
 		
         void add_simplex(std::vector<int> & vertices, int x, int y);	//adds a simplex (and its faces) to the SimplexTree; multi-grade is (x,y)
@@ -93,16 +108,6 @@ class SimplexTree {
             void print();				//prints a representation of the simplex tree
             void test_lists();  //TESTING ONLY
 
-        ///// DEPRECATED FUNCTIONS
-            int time_index(double);				//returns the index of a time value, or -1 if not found
-            double get_time(int);				//returns a time value, given an index
-
-            int dist_index(double);				//returns the index of a distance value, or -1 if not found
-            double get_dist(int);				//returns a distance value, given an index
-
-            int get_num_dists();		//returns the number of unique distance indexes
-            int get_num_times();		//returns the number of unique time indexes
-
 		
 	private:
         STNode root;		//root node of the simplex tree
@@ -119,7 +124,7 @@ class SimplexTree {
 		
 		const int verbosity;	//controls display of output, for debugging
 		
-        void build_VR_subtree(std::vector<Point> &points, double* distances, STNode &parent, std::vector<int> &parent_indexes, double prev_time, double prev_dist, int cur_dim, int max_dim, int& gic);	//recursive function used in build_VR_complex()
+        void build_VR_subtree(std::vector<Point> &points, double* distances, STNode &parent, std::vector<int> &parent_indexes, double prev_time, double prev_dist, double max_dist, int cur_dim, int max_dim, int& gic);	//recursive function used in build_VR_complex()
 		
         void add_faces(std::vector<int> & vertices, int x, int y);	//recursively adds faces of a simplex to the SimplexTree; WARNING: doesn't update global data structures (time_list, dist_list, or global indexes), so should only be called from add_simplex()
 		
@@ -135,7 +140,5 @@ class SimplexTree {
 
         void print_subtree(STNode&, int);	//recursive function that prints the simplex tree
 };
-
-#include "simplex_tree.cpp"
 
 #endif // __SimplexTree_H__

@@ -10,6 +10,8 @@ class SliceDiagram;
 #include "interface/persistence_diagram.h"
 class PersistenceDiagram;
 
+
+
 namespace Ui {
 class VisualizationWindow;
 }
@@ -26,23 +28,31 @@ public:
     explicit VisualizationWindow(QWidget *parent = 0);
     ~VisualizationWindow();
 
+    void setFile(QString name); //sets the name of the data file
+    void setComputationParameters(int hom_dim, unsigned num_x_bins, unsigned num_y_bins, QString x_text, QString y_text);    //sets parameters for the computation
+    void compute(); //begins the computation pipeline
+
     void set_line_parameters(double angle, double offset);
 
+    void select_bar(unsigned index);
+    void deselect_bar();
+    void select_dot(unsigned index);
+    void deselect_dot();
+
+    void resizeEvent(QResizeEvent* event);
     
 private slots:
-    void on_angleSpinBox_valueChanged(int angle);
+    void on_angleDoubleSpinBox_valueChanged(double angle);
 
     void on_offsetSpinBox_valueChanged(double arg1);
 
-    void on_fileButton_clicked();
+    void on_xi0CheckBox_toggled(bool checked);
 
-    void on_computeButton_clicked();
+    void on_xi1CheckBox_toggled(bool checked);
 
-    void on_scaleSpinBox_valueChanged(double arg1);
+    void on_normCoordCheckBox_clicked(bool checked);
 
-    void on_fitScalePushButton_clicked();
-
-    void on_resetScalePushButton_clicked();
+    void on_barcodeCheckBox_clicked(bool checked);
 
 private:
     Ui::VisualizationWindow *ui;
@@ -53,16 +63,17 @@ private:
     InputManager* im;
 
     QString fileName;   //name of data file
+    int dim;            //dimension of homology to compute
+    unsigned x_bins;    //number of bins for x-coordinate (if 0, then bins are not used for x)
+    unsigned y_bins;    //number of bins for y-coordinate (if 0, then bins are not used for y)
+    QString x_label;    //label for x-axis of slice diagram
+    QString y_label;    //label for y-axis of slice_diagram
 
     SimplexTree* bifiltration;  //bifiltration constructed from the data
 
     std::vector<std::pair<int, int> > xi_support;  //integer (relative) coordinates of xi support points
 
     Mesh* dcel; //pointer to the DCEL arrangement
-
-    //display items
- //   QFont* bigFont;
-
 
     //items for slice diagram
     QGraphicsScene* sliceScene;
@@ -75,8 +86,6 @@ private:
     bool persistence_diagram_drawn;
 
     void update_persistence_diagram();
-
-//    void draw_persistence_diagram();
 
 };
 

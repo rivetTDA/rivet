@@ -20,7 +20,9 @@
 #include <vector>
 #include <stdexcept>
 
-#include "map_matrix_node.h"
+class MapMatrixNode;
+
+
 
 class MapMatrix
 {
@@ -33,13 +35,13 @@ class MapMatrix
         void set(int i, int j);			//sets (to 1) the entry in row i, column j
 		bool entry(int i, int j);		//returns true if entry (i,j) is 1, false otherwise
 		
-        int low(int j);				//returns the "low" index in the specified column, or -1 if the column is empty or does not exist
+        int low(unsigned j);				//returns the "low" index in the specified column, or -1 if the column is empty or does not exist
             //NOTE CHANGE: now an empty column has "low" index -1, not 0
 
 		void col_reduce();			//applies the column reduction algorithm to this matrix
-		void col_reduce(MapMatrix* other);	//applies the column reduction algorithm to this matrix, and also performs the same column operations on the other matrix
+//		void col_reduce(MapMatrix* other);	//applies the column reduction algorithm to this matrix, and also performs the same column operations on the other matrix
 		
-		void add_column(int j, int k);		//adds column j to column k; RESULT: column j is not changed, column k contains sum of columns j and k (with mod-2 arithmetic)
+        void add_column(unsigned j, unsigned k);		//adds column j to column k; RESULT: column j is not changed, column k contains sum of columns j and k (with mod-2 arithmetic)
         void add_column(MapMatrix* other, int j, int k);    //adds column j from MapMatrix* other to column k of this matrix
 
         ///// TESTING
@@ -51,7 +53,20 @@ class MapMatrix
 		int num_rows;				//number of rows in the matrix
 };
 
-#include "map_matrix.cpp"
+
+class MapMatrixNode {
+    public:
+        MapMatrixNode(int);		//constructor
+
+        int get_row();			//returns the row index
+        void set_next(MapMatrixNode*);	//sets the pointer to the next node in the column
+        MapMatrixNode* get_next();	//returns a pointer to the next node in the column
+
+    private:
+        int row_index;			//index of matrix row corresponding to this node
+        MapMatrixNode * next;		//pointer to the next entry in the column containing this node
+};
+
 
 #endif // __MapMatrix_H__
 

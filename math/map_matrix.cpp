@@ -4,9 +4,40 @@
 
 #include "map_matrix.h"
 
+#include <iostream> //for testing only
+
+/*** implementation of class MapMatrixNode ***/
+
+//constructor
+MapMatrixNode::MapMatrixNode(int i) :
+    row_index(i), next(NULL)
+{ }
+
+//returns the row index
+int MapMatrixNode::get_row()
+{
+    return row_index;
+}
+
+//sets the pointer to the next node in the column
+void MapMatrixNode::set_next(MapMatrixNode* n)
+{
+    next = n;
+}
+
+//returns a pointer to the next node in the column
+MapMatrixNode* MapMatrixNode::get_next()
+{
+    return next;
+}
+
+
+
+/*** implementation of class MapMatrix ***/
+
 //constructor that sets initial size of matrix
 MapMatrix::MapMatrix(int rows, int cols) :
-    num_rows(rows), columns(cols)
+    columns(cols), num_rows(rows)
 { }
 
 //returns the number of columns in the matrix
@@ -108,7 +139,7 @@ bool MapMatrix::entry(int i, int j)
 }//end entry()
 
 //returns the "low" index in the specified column, or 0 if the column is empty or does not exist
-int MapMatrix::low(int j)
+int MapMatrix::low(unsigned j)
 {
     //if there aren't enough columns, then return -1
     if(columns.size() <= j)
@@ -129,48 +160,46 @@ int MapMatrix::low(int j)
 //TODO: this could be improved with a "low array"
 void MapMatrix::col_reduce()
 {
+    //create low array
+    std::vector<int> lows(num_rows, -1);
+
     //loop through columns
-    for(int j=0; j<columns.size(); j++)
+    for(unsigned j=0; j<columns.size(); j++)
     {
-        int k=0;	//we loop as long as there exists k<j such that low(k) == low(j) != -1
-        while(low(j) >= 0 && k<j)
-        {
-            if(low(k) == low(j))	//then add column k to column j, and reset k to 0
-            {
-                add_column(k,j);
-                k=0;
-            }
-            else	//then increment k
-                k++;
-        }
+        //while column j is nonempty and its low number is found in the low array, do column operations
+        while(low(j) >= 0 && lows[low(j)] >= 0)
+            add_column(lows[low(j)], j);
+
+        if(low(j) >= 0)    //then column is still nonempty, so update lows
+            lows[low(j)] = j;
     }
 }//end col_reduce()
 
-//applies the column reduction algorithm to this matrix, and also performs the same column operations on the other matrix
-void MapMatrix::col_reduce(MapMatrix* other)
-{
-    //loop through columns
-    for(int j=0; j<columns.size(); j++)
-    {
-        int k=0;	//we loop as long as there exists k<j such that low(k) == low(j) != -1
-        while(low(j) >= 0 && k<j)
-        {
-            if(low(k) == low(j))	//then add column k to column j, and reset k to 0
-            {
-                add_column(k,j);
-                (*other).add_column(k,j);
-                k=0;
-            }
-            else	//then increment k
-                k++;
-        }
-    }
-}//end col_reduce(MapMatrix* other)
+////applies the column reduction algorithm to this matrix, and also performs the same column operations on the other matrix
+//void MapMatrix::col_reduce(MapMatrix* other)
+//{
+//    //loop through columns
+//    for(int j=0; j<columns.size(); j++)
+//    {
+//        int k=0;	//we loop as long as there exists k<j such that low(k) == low(j) != -1
+//        while(low(j) >= 0 && k<j)
+//        {
+//            if(low(k) == low(j))	//then add column k to column j, and reset k to 0
+//            {
+//                add_column(k,j);
+//                (*other).add_column(k,j);
+//                k=0;
+//            }
+//            else	//then increment k
+//                k++;
+//        }
+//    }
+//}//end col_reduce(MapMatrix* other)
 
 
 //adds column j to column k
 //  RESULT: column j is not changed, column k contains sum of columns j and k (with mod-2 arithmetic)
-void MapMatrix::add_column(int j, int k)
+void MapMatrix::add_column(unsigned j, unsigned k)
 {
     //make sure this operation is valid
     if(columns.size() <= j || columns.size() <= k)

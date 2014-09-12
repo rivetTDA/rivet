@@ -12,6 +12,10 @@
 #ifndef __STNode_H__
 #define __STNode_H__
 
+#include <vector>
+
+
+
 class STNode {
 	public:
 		STNode();					//constructor for empty node
@@ -23,8 +27,8 @@ class STNode {
         int grade_x() const;      //returns the first component of the multi-grade for this simplex
         int grade_y() const;      //returns the second component of the multi-grade for this simplex
 
-        int get_birth();	// DEPRECATED		//returns the minimum time index at which this simplex exits
-        int get_dist();		// DEPRECATED	//returns the minimum distance index at which this simplex exists
+//        int get_birth();	// DEPRECATED		//returns the minimum time index at which this simplex exits
+//        int get_dist();		// DEPRECATED	//returns the minimum distance index at which this simplex exists
 		
         void set_global_index(int i);	//sets the global index for the simplex represented by this node
         int global_index();			//returns the global index for the simplex represented by this node
@@ -50,8 +54,6 @@ private:
 		int g_index;		//global index of this simplex (global indexes provide a total ordering of simplices in the tree)
 		
 };
-
-#include "st_node.cpp"
 
 #endif // __STNode_H__
 

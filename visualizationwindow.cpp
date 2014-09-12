@@ -8,38 +8,37 @@
 #include "interface/input_manager.h"
 #include "math/simplex_tree.h"
 #include "math/multi_betti.h"
+#include "dcel/lcm.h"
+#include "dcel/dcel.h"
 #include "dcel/mesh.h"
-#include "dcel/cell_persistence_data.hpp"
+#include "dcel/cell_persistence_data.h"
+#include "math/persistence_data.h"
 
-
-
-//#include "boost/date_time/posix_time/posix_time.hpp"
-//using namespace boost::posix_time;
+#include "boost/date_time/posix_time/posix_time.hpp"
+using namespace boost::posix_time;
 
 
 VisualizationWindow::VisualizationWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::VisualizationWindow),
-    verbosity(9),
-    slice_update_lock(false),
-    persistence_diagram_drawn(false)
+    verbosity(5),
+    slice_diagram(NULL), slice_update_lock(false),
+    p_diagram(NULL), persistence_diagram_drawn(false)
 {
     ui->setupUi(this);
 
+    //set up the slice diagram scene
     sliceScene = new QGraphicsScene(this);
     ui->sliceView->setScene(sliceScene);
 //    ui->sliceView->setDragMode(QGraphicsView::ScrollHandDrag);
     ui->sliceView->scale(1,-1);
     ui->sliceView->setRenderHint(QPainter::Antialiasing);
 
-//    bigFont = new QFont();
-//    bigFont->setPixelSize(70);
-
+    //set up the persistence diagram scene
     pdScene = new QGraphicsScene(this);
     ui->pdView->setScene(pdScene);
     ui->pdView->scale(1,-1);
     ui->pdView->setRenderHint(QPainter::Antialiasing);
-
 }
 
 VisualizationWindow::~VisualizationWindow()
@@ -47,9 +46,26 @@ VisualizationWindow::~VisualizationWindow()
     delete ui;
 }
 
-void VisualizationWindow::on_angleSpinBox_valueChanged(int angle)
+//sets the name of the data file
+void VisualizationWindow::setFile(QString name)
 {
-//    qDebug() << "angleSpinBox_valueChanged(); angle: " << angle << "; slice_update_lock: " << slice_update_lock;
+    fileName = name;
+    ui->statusBar->showMessage("file: "+fileName);
+}
+
+//sets parameters for the computation
+void VisualizationWindow::setComputationParameters(int hom_dim, unsigned num_x_bins, unsigned num_y_bins, QString x_text, QString y_text)
+{
+    dim = hom_dim;
+    x_bins = num_x_bins;
+    y_bins = num_y_bins;
+    x_label = x_text;
+    y_label = y_text;
+}
+
+void VisualizationWindow::on_angleDoubleSpinBox_valueChanged(double angle)
+{
+//    qDebug() << "angleDoubleSpinBox_valueChanged(); angle: " << angle << "; slice_update_lock: " << slice_update_lock;
 
     if(!slice_update_lock)
         slice_diagram->update_line(angle, ui->offsetSpinBox->value());
@@ -63,38 +79,42 @@ void VisualizationWindow::on_offsetSpinBox_valueChanged(double offset)
 //    qDebug() << "offsetSpinBox_valueChanged(); offset: " << offset << "; slice_update_lock: " << slice_update_lock;
 
     if(!slice_update_lock)
-        slice_diagram->update_line(ui->angleSpinBox->value(), offset);
+        slice_diagram->update_line(ui->angleDoubleSpinBox->value(), offset);
 
     if(persistence_diagram_drawn)
         update_persistence_diagram();
 }
 
-void VisualizationWindow::on_fileButton_clicked()    //let the user choose an input file
+void VisualizationWindow::on_normCoordCheckBox_clicked(bool checked)
 {
-    fileName = QFileDialog::getOpenFileName(this, tr("Open Data File"), "/ima/home/mlwright/Repos","All files (*.*);;Text files (*.txt)");
-    ui->statusBar->showMessage("file: "+fileName);
+    if(slice_diagram != NULL)
+    {
+        slice_diagram->set_normalized_coords(checked);
+        slice_diagram->resize_diagram();
+        if(p_diagram != NULL)
+            p_diagram->resize_diagram(slice_diagram->get_slice_length(), slice_diagram->get_pd_scale());
+    }
 }
 
-void VisualizationWindow::on_computeButton_clicked() //read the file and do the persistent homology computation
+void VisualizationWindow::on_barcodeCheckBox_clicked(bool checked)
 {
-    //get dimension of homology to compute
-    int dim = ui->homDimSpinBox->value();
+    if(slice_diagram != NULL)
+    {
+        slice_diagram->toggle_barcode(checked);
+    }
+}
 
+
+//void VisualizationWindow::on_computeButton_clicked() //read the file and do the persistent homology computation
+void VisualizationWindow::compute()
+{
     //start the input manager
     im = new InputManager(dim, verbosity);
-//    const char* filestr = fileName.toStdString().data();
-//    im->start(filestr);
-    im->start("/ima/home/mlwright/Repos/RIVET/data/sample3.txt");
+    const char* filestr = fileName.toStdString().data();
+    im->start(filestr, x_bins, y_bins);
 
     //get the bifiltration
     bifiltration = im->get_bifiltration();
-
-    //print simplex tree
-    if(verbosity >= 4)
-    {
-        std::cout << "SIMPLEX TREE:\n";
-        bifiltration->print();
-    }
 
     //get data extents
     double data_xmin = bifiltration->grade_x_value(0);
@@ -115,23 +135,23 @@ void VisualizationWindow::on_computeButton_clicked() //read the file and do the 
     MultiBetti mb(bifiltration, dim, verbosity);
 
     //start timer
-//    ptime time_start(microsec_clock::local_time());
+    ptime time_xi_start(microsec_clock::local_time());
 
     //compute
     mb.compute_fast();
 
     //stop timer
-//    ptime time_end(microsec_clock::local_time());
-//    time_duration duration(time_end - time_start);
+    ptime time_xi_end(microsec_clock::local_time());
+    time_duration duration_xi(time_xi_end - time_xi_start);
 
     //print computation time
-//    std::cout << "\nxi_i computation took " << duration << ".\n";
+    std::cout << "   xi_i computation took " << duration_xi << "\n";
 
     //initialize the slice diagram
-    slice_diagram = new SliceDiagram(sliceScene, this, data_xmin, data_xmax, data_ymin, data_ymax, 360, 360);   //TODO: BOX SIZE SHOULD NOT BE HARD-CODED!!!!!
+    slice_diagram = new SliceDiagram(sliceScene, this, data_xmin, data_xmax, data_ymin, data_ymax, ui->normCoordCheckBox->isChecked());
 
 
-    //find all support points of xi_0 and xi_1              //TODO: THIS PART WILL BE IMPROVED WITH NEW ALGORITHM FOR FINDING LCMs
+    //find all support points of xi_0 and xi_1
     for(int i=0; i < bifiltration->num_x_grades(); i++)
     {
         for(int j=0; j < bifiltration->num_y_grades(); j++)
@@ -148,7 +168,7 @@ void VisualizationWindow::on_computeButton_clicked() //read the file and do the 
     if(verbosity >= 2)
     {
         std::cout << "  SUPPORT POINTS OF xi_0 AND xi_1: ";
-        for(int i=0; i<xi_support.size(); i++)
+        for(unsigned i=0; i<xi_support.size(); i++)
             std::cout << "(" << xi_support[i].first << "," << xi_support[i].second << "), ";
         std::cout << "\n";
     }
@@ -156,119 +176,139 @@ void VisualizationWindow::on_computeButton_clicked() //read the file and do the 
     ui->statusBar->showMessage("computed xi support points");
 
     //draw slice diagram
-    slice_diagram->create_diagram();
+    slice_diagram->create_diagram(x_label, y_label);
         //slice diagram automatically updates angle box and offset box to default values
 
     //update offset extents   //TODO: FIX THIS!!!
     ui->offsetSpinBox->setMinimum(-1*data_xmax);
     ui->offsetSpinBox->setMaximum(data_ymax);
 
-
-    //find LCMs, build decomposition of the affine Grassmannian
+    //find LCMs, build decomposition of the affine Grassmannian                             TODO: THIS CAN BE IMPROVED
     if(verbosity >= 2) { std::cout << "CALCULATING LCMs AND DECOMPOSING THE STRIP:\n"; }
     dcel = new Mesh(verbosity);
 
-    for(int i=0; i<xi_support.size(); i++)  //TODO: THIS CAN BE IMPROVED
+    for(unsigned i=0; i<xi_support.size(); i++)
     {
-        for(int j=i+1; j<xi_support.size(); j++)
+        for(unsigned j=i+1; j<xi_support.size(); j++)
         {
             int ax = xi_support[i].first, ay = xi_support[i].second;
             int bx = xi_support[j].first, by = xi_support[j].second;
 
-            if((ax - bx)*(ay - by) <= 0)	//then the support points are incomparable, so we have found an LCM
+            if((ax - bx)*(ay - by) <= 0)	//then the support points are (at least weakly) incomparable, so we have found an LCM
             {
-                double t = bifiltration->get_time(std::max(ax,bx));
-                double d = bifiltration->get_dist(std::max(ay,by));
+                double t = bifiltration->grade_x_value(std::max(ax,bx));
+                double d = bifiltration->grade_y_value(std::max(ay,by));
 
-                if(!dcel->contains(t,d))	//then this LCM has not been inserted yet
-                {
-                    if(verbosity >= 6) { std::cout << "  LCM at (" << std::max(ax,bx) << "," << std::max(ay,by) << ") => (" << t << "," << d << ") determined by (" << ax << "," << ay << ") and (" << bx << "," << by << ")\n"; }
+                if(verbosity >= 6) { std::cout << "  LCM at (" << std::max(ax,bx) << "," << std::max(ay,by) << ") => (" << t << "," << d << ") determined by (" << ax << "," << ay << ") and (" << bx << "," << by << ")\n"; }
 
-                    dcel->add_curve(t,d);
-                }
-                else
-                {
-                    if(verbosity >= 6) { std::cout << "  LCM (" << t << "," << d << ") already inserted.\n"; }
-                }
+                dcel->add_lcm(t, d);
             }
         }
     }
 
-    //print the dcel arrangement
-    if(verbosity >= 4)
-    {
-        std::cout << "DCEL ARRANGEMENT:\n";
-        dcel->print();
-    }
+    //start timer
+    ptime time_dcel_start(microsec_clock::local_time());
 
-    //do the persistence computations in each cell
+    //build the DCEL arrangement
+    dcel->build_arrangement();
+
+    //stop timer
+    ptime time_dcel_end(microsec_clock::local_time());
+    time_duration duration_dcel(time_dcel_end - time_dcel_start);
+
+    //print DCEL info
+    std::cout << "   building the arrangement took " << duration_dcel << "\n";
+    dcel->print_stats();
+
+//    //print the DCEL arrangement
+//    if(verbosity >= 4)
+//    {
+//        std::cout << "DCEL ARRANGEMENT:\n";
+//        dcel->print();
+//    }
+
+   //do the persistence computations in each cell
     if(verbosity >= 2) { std::cout << "COMPUTING PERSISTENCE DATA FOR EACH CELL:\n"; }
+
+    //start timer
+    ptime time_pdata_start(microsec_clock::local_time());
+
+    //do computations
     dcel->build_persistence_data(xi_support, bifiltration, dim);
 
-    ui->statusBar->showMessage("computed persistence data");
+    //stop timer
+    ptime time_pdata_end(microsec_clock::local_time());
+    time_duration duration_pdata(time_pdata_end - time_pdata_start);
+
+//*    ui->statusBar->showMessage("computed persistence data");
+    std::cout << "   computing persistence data took " << duration_pdata << "\n";
     if(verbosity >= 2) { std::cout << "DATA COMPUTED; READY FOR INTERACTIVITY.\n"; }
 
 //    qDebug() << "zero: " << slice_diagram->get_zero();
 
     //draw persistence diagram
-    p_diagram = new PersistenceDiagram(pdScene, slice_diagram->get_slice_length(), slice_diagram->get_pd_scale(), slice_diagram->get_zero());
+    p_diagram = new PersistenceDiagram(pdScene, this, &fileName, dim);
+    p_diagram->resize_diagram(slice_diagram->get_slice_length(), slice_diagram->get_pd_scale());
 
-    double radians = (ui->angleSpinBox->value())*3.14159265359/180;   //convert to radians
+    double radians = (ui->angleDoubleSpinBox->value())*3.14159265359/180;   //convert to radians
     PersistenceData* pdata = dcel->get_persistence_data(radians, ui->offsetSpinBox->value(), xi_support, bifiltration);
-    p_diagram->draw_points(pdata->get_pairs(), pdata->get_cycles());        //I should be able to send pdata to draw_points, but I can't resolve the "multiple definition errors" that occur
+
+    //TESTING
+    std::cout<< "PERSISTENCE CYCLES: ";
+    for(std::set< double >::iterator it = pdata->get_cycles()->begin(); it != pdata->get_cycles()->end(); ++it)
+        std::cout << *it << ", ";
+    std::cout << "\n";
+    std::cout<< "PERSISTENCE PAIRS: ";
+    for(std::set< std::pair<double,double> >::iterator it = pdata->get_pairs()->begin(); it != pdata->get_pairs()->end(); ++it)
+        std::cout << "(" << it->first << ", " << it->second << ") ";
+    std::cout << "\n";
+
+    p_diagram->draw_points(slice_diagram->get_zero(), pdata);
+    slice_diagram->draw_barcode(pdata, ui->barcodeCheckBox->isChecked());
+
+//    p_diagram->draw_points(slice_diagram->get_zero(), pdata->get_pairs(), pdata->get_cycles());        //I should be able to send pdata to draw_points, but I can't resolve the "multiple definition errors" that occur
+//    slice_diagram->draw_bars(pdata->get_pairs(), pdata->get_cycles());  //again, I would rather send pdata here...
+
     delete pdata;
 
     persistence_diagram_drawn = true;
     ui->statusBar->showMessage("persistence diagram drawn");
-
+//*/
 
 
 }//end on_computeButton_clicked()
 
+void VisualizationWindow::on_xi0CheckBox_toggled(bool checked)
+{
+    slice_diagram->toggle_xi0_points(checked);
+}
+
+void VisualizationWindow::on_xi1CheckBox_toggled(bool checked)
+{
+    slice_diagram->toggle_xi1_points(checked);
+}
+
 void VisualizationWindow::update_persistence_diagram()
 {
-    double radians = (ui->angleSpinBox->value())*3.14159265359/180;   //convert to radians
+    double radians = (ui->angleDoubleSpinBox->value())*3.14159265359/180;   //convert to radians
     PersistenceData* pdata = dcel->get_persistence_data(radians, ui->offsetSpinBox->value(), xi_support, bifiltration);
-    p_diagram->update_diagram(slice_diagram->get_slice_length(), slice_diagram->get_zero(), pdata->get_pairs(), pdata->get_cycles());
+
+    //TESTING
+    std::cout<< "PERSISTENCE CYCLES: ";
+    for(std::set< double >::iterator it = pdata->get_cycles()->begin(); it != pdata->get_cycles()->end(); ++it)
+        std::cout << *it << ", ";
+    std::cout << "\n";
+    std::cout<< "PERSISTENCE PAIRS: ";
+    for(std::set< std::pair<double,double> >::iterator it = pdata->get_pairs()->begin(); it != pdata->get_pairs()->end(); ++it)
+        std::cout << "(" << it->first << ", " << it->second << ") ";
+    std::cout << "\n";
+
+    p_diagram->update_diagram(slice_diagram->get_slice_length(), slice_diagram->get_pd_scale(), slice_diagram->get_zero(), pdata);
+    slice_diagram->update_barcode(pdata, ui->barcodeCheckBox->isChecked());
+
     delete pdata;
 }
 
-//void VisualizationWindow::draw_persistence_diagram()
-//{
-
-//    //TESTING
-//    std::vector< std::pair<double,double> >* pairs = pdata->get_pairs();
-//    std::vector<double>* cycles = pdata->get_cycles();
-//    std::cout << "PERSISTENCE DIAGRAM\n   PAIRS: ";
-//    for(int i=0; i<pairs->size(); i++)
-//        std::cout << "(" << (*pairs)[i].first << ", " << (*pairs)[i].second << ") ";
-//    std::cout << "   CYCLES: ";
-//    for(int i=0; i<cycles->size(); i++)
-//        std::cout << (*cycles)[i] << ", ";
-//    std::cout << "\n";
-
-//}
-
-void VisualizationWindow::on_scaleSpinBox_valueChanged(double arg1)
-{
-//    ui->pdArea->setScale(arg1);
-//    ui->pdArea->drawDiagram();
-    ui->statusBar->showMessage("persistence diagram scale changed");
-}
-
-void VisualizationWindow::on_fitScalePushButton_clicked()
-{
-//    double curmax = ui->pdArea->fitScale();
-//    ui->scaleSpinBox->setValue(curmax);
-//    ui->pdArea->drawDiagram();
-    ui->statusBar->showMessage("persistence diagram scale changed to fit");
-}
-
-void VisualizationWindow::on_resetScalePushButton_clicked()
-{
-    ui->scaleSpinBox->setValue(1);
-    ui->statusBar->showMessage("persistence diagram scale reset");
-}
 
 void VisualizationWindow::set_line_parameters(double angle, double offset)
 {
@@ -276,9 +316,40 @@ void VisualizationWindow::set_line_parameters(double angle, double offset)
 
 //    qDebug() << "  set_line_parameters: angle = " << angle << "; offset = " << offset;
 
-    ui->angleSpinBox->setValue(angle);
+    ui->angleDoubleSpinBox->setValue(angle);
     ui->offsetSpinBox->setValue(offset);
 
     slice_update_lock = false;
 }
 
+void VisualizationWindow::select_bar(unsigned index)
+{
+    slice_diagram->select_bar(index);
+}
+
+void VisualizationWindow::deselect_bar()
+{
+    slice_diagram->deselect_bar(false);
+}
+
+void VisualizationWindow::select_dot(unsigned index)
+{
+    p_diagram->select_dot(index);
+}
+
+void VisualizationWindow::deselect_dot()
+{
+    p_diagram->deselect_dot(false);
+}
+
+void VisualizationWindow::resizeEvent(QResizeEvent* event)
+{
+//    qDebug() << "resize event! slice_diagrma = " << slice_diagram;
+    if(slice_diagram != NULL)
+    {
+        slice_diagram->resize_diagram();
+
+        if(p_diagram != NULL)
+            p_diagram->resize_diagram(slice_diagram->get_slice_length(), slice_diagram->get_pd_scale());
+    }
+}

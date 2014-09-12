@@ -1,0 +1,9 @@
+import data from file:
+
+	D = importdata('circle_data2_matlab.txt');
+
+print scatterplot in color:
+
+	scatter(D(:,1),D(:,2),80,D(:,3),'fill');
+	
+	for details, see http://www.mathworks.com/help/matlab/ref/scatter.html

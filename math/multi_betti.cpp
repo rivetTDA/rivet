@@ -250,7 +250,7 @@ struct ColumnList {
         for(std::set<int>::iterator it=columns.begin(); it!=columns.end(); ++it)
             std::cout << *it << ", ";
         std::cout << "grades: ";
-        for(int i=0; i<grades.size(); i++)
+        for(unsigned i=0; i<grades.size(); i++)
             std::cout << grades[i] << ", ";
         std::cout << "\n";
     }
@@ -572,7 +572,7 @@ void MultiBetti::reduce_also(MapMatrix* mm, MapMatrix* m2, int first_col, int la
 void MultiBetti::print_lows(Vector &lows)
 {
     std::cout << "      low array: ";
-    for(int i=0; i<lows.size(); i++)
+    for(unsigned i=0; i<lows.size(); i++)
         std::cout << lows[i] << ", ";
     std::cout << "\n";
 }

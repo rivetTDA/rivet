@@ -4,6 +4,9 @@
 
 #include "st_node.h"
 
+#include <cstddef>  //for NULL keyword
+#include <iostream> //for testing only
+
 //constructor for empty node
 STNode::STNode() :
     vertex(-1), parent(NULL), mg_x(-1), mg_y(-1), d_index(-1), g_index(-1)
@@ -33,10 +36,10 @@ int STNode::grade_x() const
     return mg_x;
 }
 
-int STNode::get_birth() //DEPRECATED
-{
-    return mg_x;
-}	
+//int STNode::get_birth() //DEPRECATED
+//{
+//    return mg_x;
+//}
 
 //returns the second component of the multi-grade for this simplex
 int STNode::grade_y() const
@@ -44,10 +47,10 @@ int STNode::grade_y() const
     return mg_y;
 }
 
-int STNode::get_dist()  //DEPRECATED
-{
-    return mg_y;
-}
+//int STNode::get_dist()  //DEPRECATED
+//{
+//    return mg_y;
+//}
 
 //sets the global index for the simplex represented by this node
 void STNode::set_global_index(int i)
@@ -137,7 +140,7 @@ void STNode::print()
 	if(children.size() == 0)
 	
 		std::cout << "NONE";
-	for(int i=0; i<children.size(); i++)
+    for(unsigned i=0; i<children.size(); i++)
 	{
 		if(i>0)
 			std::cout << ", ";

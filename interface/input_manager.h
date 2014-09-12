@@ -27,7 +27,7 @@ class InputManager
 {
 	public:
         InputManager(int d, int v);		//constructor; requires dimension of homology to be computed and verbosity parameter
-		void start(const char* arg);	//function to run the input manager, requires a filename
+        void start(const char* filename, unsigned x_bins, unsigned y_bins);	//function to run the input manager, requires a filename
 		
 		SimplexTree* get_bifiltration();	//returns a pointer to the simplex tree representing the bifiltration
 		
@@ -41,7 +41,7 @@ class InputManager
 		std::ifstream infile;			//file stream for the file containing the input
 		SimplexTree simplex_tree;		//simplex tree constructed from the input
 		
-		void read_point_cloud();		//reads a point cloud and constructs a simplex tree representing the bifiltered Vietoris-Rips complex
+        void read_point_cloud(unsigned x_bins, unsigned y_bins);		//reads a point cloud and constructs a simplex tree representing the bifiltered Vietoris-Rips complex
 		void read_bifiltration();		//reads a bifiltration and constructs a simplex tree
 		
 		

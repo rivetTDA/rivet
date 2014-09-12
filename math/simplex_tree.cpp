@@ -2,11 +2,14 @@
  * works together with STNode class
  */
 
+#include "simplex_tree.h"
+
+
 #include <set>
 #include <vector>
 #include <math.h>
+#include <iostream>
 
-#include "simplex_tree.h"
 
 //SimplexTree constructor; requires dimension of homology to be computed and verbosity parameter
 SimplexTree::SimplexTree(int dim, int v) :
@@ -41,17 +44,17 @@ void SimplexTree::add_faces(std::vector<int> & vertices, int x, int y)
 {
 	//loop through vertices, adding them if necessary to the SimplexTree
 	STNode* node = &root;
-	for(int i=0; i<vertices.size(); i++)
+    for(unsigned i=0; i<vertices.size(); i++)
 	{
         node = (*node).add_child(vertices[i], x, y);	//if a child with specified vertex index already exists, then nothing is added, but that child is returned
 	}
 	
 	//ensure that the other faces of this simplex are in the tree
-	for(int i=0; i<vertices.size()-1; i++) // -1 is because we already know that the face consisting of all the vertices except for the last one is in the SimplexTree
+    for(unsigned i=0; i<vertices.size()-1; i++) // -1 is because we already know that the face consisting of all the vertices except for the last one is in the SimplexTree
 	{
 		//form vector consisting of all the vertices except for vertices[i]
 		std::vector<int> facet;
-		for(int k=0; k<vertices.size(); k++)
+        for(unsigned k=0; k<vertices.size(); k++)
 		{
 			if(k != i)
 				facet.push_back(vertices[k]);
@@ -76,7 +79,7 @@ void SimplexTree::update_gi_recursively(STNode &node, int &gic)
 {
 	//loop through children of current node
 	std::vector<STNode*> kids = node.get_children();
-	for(int i=0; i<kids.size(); i++)
+    for(unsigned i=0; i<kids.size(); i++)
 	{
 		//update global index of this child
 		(*kids[i]).set_global_index(gic);
@@ -131,7 +134,7 @@ void SimplexTree::build_dim_lists_recursively(STNode &node, int cur_dim)
         ordered_high_simplices.insert(kids.begin(), kids.end());
 
     //recurse through children
-    for(int i=0; i<kids.size(); i++)
+    for(unsigned i=0; i<kids.size(); i++)
     {
         build_dim_lists_recursively(*kids[i], cur_dim+1);
     }
@@ -140,13 +143,14 @@ void SimplexTree::build_dim_lists_recursively(STNode &node, int cur_dim)
 
 //builds SimplexTree representing a Vietoris-Rips complex from a vector of points, with certain parameters
 //NOTE: automatically computes global indexes and dimension indexes
-void SimplexTree::build_VR_complex(std::vector<Point> &points, int pt_dim, int max_dim, double max_dist)
+//CONVENTION: the x-coordinate is "birth time" and the y-coordinate is "distance"
+void SimplexTree::build_VR_complex(std::vector<Point> &points, int pt_dim, int max_dim, double max_dist, unsigned x_bins, unsigned y_bins)
 {
 	//compute distances, stored in an array so that we can quickly look up the distance between any two points
 	//also create sets of all the unique times and distances less than max_dist
 	if(verbosity >= 2) { std::cout << "COMPUTING DISTANCES:\n"; }
 	int num_points = points.size();
-	double* distances = new double[(num_points*(num_points-1))/2];
+    double* distances = new double[(num_points*(num_points-1))/2];      //distance matrix (more like a triangle)
 	int c=0;	//counter to track position in array of distances
 	std::set<double> time_set;
 	std::set<double> dist_set;
@@ -161,22 +165,51 @@ void SimplexTree::build_VR_complex(std::vector<Point> &points, int pt_dim, int m
 			double s=0;
 			for(int k=0; k < pt_dim; k++)
 				s += (pc[k] - qc[k])*(pc[k] - qc[k]);
-			distances[c] = sqrt(s);
-			if(distances[c] <= max_dist)
+            distances[c] = sqrt(s);
+            if(distances[c] <= max_dist)
 				dist_set.insert(distances[c]);
 			c++;
 		}
 	}
 	
-    //convert distance and time sets to lists of multi-grade values
-	for(std::set<double>::iterator it=dist_set.begin(); it!=dist_set.end(); ++it)
-            grade_y_values.push_back(*it);		//is this inefficient, since it might involve resizing grade_y_values many times?
-	
-	for(std::set<double>::iterator it=time_set.begin(); it!=time_set.end(); ++it)
-            grade_x_values.push_back(*it);		//is this also inefficient?
+    //convert time sets to list, for fast lookup
+    if(x_bins == 0 || x_bins >= time_set.size())    //then don't use bins
+    {
+        grade_x_values.reserve(time_set.size());
+        for(std::set<double>::iterator it=time_set.begin(); it!=time_set.end(); ++it)
+                grade_x_values.push_back(*it);
+    }
+    else    //then use bins: then the list size will equal the number of bins, and x-values will be equally spaced
+    {
+        double x_min = (*time_set.begin());
+        double x_max = (*time_set.rbegin());
+        double x_bin_size = (x_max - x_min)/x_bins;
+
+        grade_x_values.reserve(x_bins);
+        for(unsigned i=0; i<x_bins; i++)
+            grade_x_values.push_back(x_min + i*x_bin_size);
+    }
+
+    //convert distance set to list, for fast lookup
+    if(y_bins == 0 || y_bins >= dist_set.size())    //then don't use bins
+    {
+        grade_y_values.reserve(dist_set.size());
+        for(std::set<double>::iterator it=dist_set.begin(); it!=dist_set.end(); ++it)
+                grade_y_values.push_back(*it);
+    }
+    else    //then use bins: then the list size will equal the number of bins, and y-values will be equally spaced
+    {
+        double y_min = (*dist_set.begin());
+        double y_max = (*dist_set.rbegin());
+        double y_bin_size = (y_max - y_min)/y_bins;
+
+        grade_y_values.reserve(y_bins);
+        for(unsigned i=0; i<y_bins; i++)
+            grade_y_values.push_back(y_min + i*y_bin_size);
+    }
 	
 	//testing
-	if(verbosity >= 4)
+    if(verbosity >= 10)
 	{	
 		for(int i=0; i<num_points; i++)
 			for(int j=i+1; j<num_points; j++)
@@ -185,27 +218,30 @@ void SimplexTree::build_VR_complex(std::vector<Point> &points, int pt_dim, int m
 				std::cout << "  distance from point " << i << " to point " << j << ": " << distances[k] << "\n";
 			}
 		
-		std::cout << "  unique distances less than " << max_dist << ": ";
-        for(int i=0; i<grade_y_values.size(); i++)
-            std::cout << grade_y_values[i] << ", ";
+        std::cout << "  x-bins: " << x_bins << "; y-bins: " << y_bins << "\n";
+
+        std::cout << "  time-grades for bifiltration: ";
+        for(std::vector<double>::iterator it = grade_x_values.begin(); it != grade_x_values.end(); ++it)
+            std::cout << (*it) << ", ";
+        std::cout << "\n";
+
+        std::cout << "  distance-grades for bifiltration (max distance set to " << max_dist << "): ";
+        for(std::vector<double>::iterator it = grade_y_values.begin(); it != grade_y_values.end(); ++it)
+            std::cout << (*it) << ", ";
 		std::cout << "\n";
 		
-		std::cout << "  unique times: ";
-        for(int i=0; i<grade_x_values.size(); i++)
-            std::cout << grade_x_values[i] << ", ";
-		std::cout << "\n";
 	}
 	
 	//build simplex tree recursively
 	//this also assigns global indexes to each simplex
 	if(verbosity >= 2) { std::cout << "BUILDING SIMPLEX TREE:\n"; }
 	int gic=0;	//global index counter
-	for(int i=0; i<points.size(); i++)
+    for(unsigned i=0; i<points.size(); i++)
 	{
 		//create the node and add it as a child of root
-		if(verbosity >= 6) { std::cout << "  adding node " << i << " as child of root \n"; }
+        if(verbosity >= 10) { std::cout << "  adding node " << i << " as child of root \n"; }
 		
-		STNode * node = new STNode(i, &root, time_index(points[i].get_birth()), 0, gic);			//DO I HAVE TO delete THIS OBJECT LATER???
+        STNode * node = new STNode(i, &root, grade_x_position(points[i].get_birth()), 0, gic);			//delete THIS OBJECT LATER!
 		root.append_child(node);
 		gic++;	//increment the global index counter
 		
@@ -213,7 +249,7 @@ void SimplexTree::build_VR_complex(std::vector<Point> &points, int pt_dim, int m
 		std::vector<int> parent_indexes; //knowledge of ALL parent nodes is necessary for computing distance index of each simplex
 		parent_indexes.push_back(i);
 		
-        build_VR_subtree(points, distances, *node, parent_indexes, points[i].get_birth(), 0, 1, max_dim, gic);
+        build_VR_subtree(points, distances, *node, parent_indexes, points[i].get_birth(), 0, max_dist, 1, max_dim, gic);
 	}
 
     //compute dimension indexes
@@ -226,15 +262,15 @@ void SimplexTree::build_VR_complex(std::vector<Point> &points, int pt_dim, int m
 
 //function to build (recursively) a subtree of the simplex tree
 // IMPROVEMENT: this function could be rewritten to use INTEGER time and distance INDEXES, rather than DOUBLE time and distance VALUES
-void SimplexTree::build_VR_subtree(std::vector<Point> &points, double* distances, STNode &parent, std::vector<int> &parent_indexes, double prev_time, double prev_dist, int cur_dim, int max_dim, int& gic)
+void SimplexTree::build_VR_subtree(std::vector<Point> &points, double* distances, STNode &parent, std::vector<int> &parent_indexes, double prev_time, double prev_dist, double max_dist, int cur_dim, int max_dim, int& gic)
 {
 	//loop through all points that could be children of this node
-	for(int j=parent_indexes.back()+1; j<points.size(); j++)
+    for(unsigned j=parent_indexes.back()+1; j<points.size(); j++)
 	{
 		//look up distances from point j to each of its parents
 		//distance index is maximum of prev_distance and each of these distances
 		double current_dist = prev_dist;
-		for(int k=0; k<parent_indexes.size(); k++)
+        for(unsigned k=0; k<parent_indexes.size(); k++)
 		{
 				int par = parent_indexes[k];
 				double d = distances[points.size()*par - par*(3+par)/2 + j -1];
@@ -243,7 +279,7 @@ void SimplexTree::build_VR_subtree(std::vector<Point> &points, double* distances
 		}
 		
 		//compare distance to the largest distance permitted in the complex
-        if(current_dist <= grade_y_values.back())	//then we will add another node to the simplex tree
+        if(current_dist <= max_dist)	//then we will add another node to the simplex tree
 		{
 			//compute time index of this new node
 			double current_time = points[j].get_birth();
@@ -251,9 +287,9 @@ void SimplexTree::build_VR_subtree(std::vector<Point> &points, double* distances
 				current_time = prev_time;
 			
 			//create the node and add it as a child of its parent
-			if(verbosity >= 6) { std::cout << "  adding node " << j << " as child of " << parent_indexes.back() << "; current_dist = " << current_dist << "\n"; }
+            if(verbosity >= 10) { std::cout << "  adding node " << j << " as child of " << parent_indexes.back() << "; current_dist = " << current_dist << "\n"; }
 			
-			STNode * node = new STNode(j, &parent, time_index(current_time), dist_index(current_dist), gic);				//DO I HAVE TO "delete" THIS LATER???
+            STNode * node = new STNode(j, &parent, grade_x_position(current_time), grade_y_position(current_dist), gic);				//delete THIS OBJECT LATER!
 			parent.append_child(node);
 			gic++;	//increment the global index counter
 			
@@ -261,7 +297,7 @@ void SimplexTree::build_VR_subtree(std::vector<Point> &points, double* distances
             if(cur_dim < max_dim)
 			{
 				parent_indexes.push_back(j); //next we will look for children of node j
-                build_VR_subtree(points, distances, *node, parent_indexes, current_time, current_dist, cur_dim+1, max_dim, gic);
+                build_VR_subtree(points, distances, *node, parent_indexes, current_time, current_dist, max_dist, cur_dim+1, max_dim, gic);
 				parent_indexes.pop_back(); //finished adding children of node j
 			}
 		}
@@ -270,12 +306,14 @@ void SimplexTree::build_VR_subtree(std::vector<Point> &points, double* distances
 
 
 
-//returns the position of "value" in the ordered list of multi-grade first-components, or -1 if not found
+//returns the position of "value" in the ordered list of multi-grade first-components
+//if not found, returns the position of the largest entry not greater than "value" (i.e. returns left edge of bin containing "value")
 int SimplexTree::grade_x_position(double value)
 {
     int min = 0;
     int max = grade_x_values.size() - 1;
 
+    //binary search
     while(max >= min)
     {
         int mid = (min+max)/2;
@@ -286,7 +324,14 @@ int SimplexTree::grade_x_position(double value)
         else
             max = mid - 1;
     }
-    return -1;
+
+    //if we get here, then we didn't find it, so we return max, which now is the index of the left edge of the bin
+    if(max < 0)
+    {
+        std::cerr << "WARNING: In SimplexTree::grade_x_position(), value " << value << " is less than all entries in the vector, so returning index 0.";
+        return 0;
+    }
+    return max;
 }
 
 //returns the value at the i^th position in the ordered list of multi-grade first-components
@@ -295,12 +340,14 @@ double SimplexTree::grade_x_value(int i)
     return grade_x_values[i];
 }
 
-//returns the position of "value" in the ordered list of multi-grade second-components, or -1 if not found
+//returns the position of "value" in the ordered list of multi-grade second-components
+//if not found, returns the position of the largest entry not greater than "value" (i.e. returns left edge of bin containing "value")
 int SimplexTree::grade_y_position(double value)
 {
     int min = 0;
     int max = grade_y_values.size() - 1;
 
+    //binary search
     while(max >= min)
     {
         int mid = (min+max)/2;
@@ -311,7 +358,14 @@ int SimplexTree::grade_y_position(double value)
         else
             max = mid - 1;
     }
-    return -1;
+
+    //if we get here, then we didn't find it, so we return max, which now is the index of the left edge of the bin
+    if(max < 0)
+    {
+        std::cerr << "WARNING: In SimplexTree::grade_y_position(), value " << value << " is less than all entries in the vector, so returning index 0.";
+        return 0;
+    }
+    return max;
 }
 
 //returns the value at the i^th position in the ordered list of multi-grade second-components
@@ -319,31 +373,6 @@ double SimplexTree::grade_y_value(int i)
 {
     return grade_y_values[i];
 }
-
-////// DEPRECATED!!!!!
-    int SimplexTree::dist_index(double key)
-    {
-        return grade_y_position(key);
-    }
-
-////// DEPRECATED!!!!!
-    double SimplexTree::get_dist(int i)
-    {
-           return grade_y_value(i);
-    }
-
-////// DEPRECATED!!!!!
-    int SimplexTree::time_index(double key)
-    {
-        return grade_x_position(key);
-    }
-
-////// DEPRECATED!!!!!
-    double SimplexTree::get_time(int i)
-    {
-        return grade_x_value(i);
-    }
-
 
 //returns a matrix of boundary information for simplices of the given dimension (with multi-grade info)
 //columns ordered according to dimension index (reverse-lexicographic order with respect to multi-grades)
@@ -383,12 +412,12 @@ MapMatrix* SimplexTree::get_boundary_mx(int dim)
 }//end get_boundary_mx()
 
 //struct to be returned by the following function
-struct DirectSumMatrices
-{
-    MapMatrix* boundary_matrix;     //points to a boundary matrix for B+C
-    MapMatrix* map_matrix;          //points to a matrix for a merge or split map
-    IndexMatrix* column_indexes;    //points to a matrix of column indexes, one for each multi-grade
-};
+//struct DirectSumMatrices -- now in simplex_tree.h
+//{
+//    MapMatrix* boundary_matrix;     //points to a boundary matrix for B+C
+//    MapMatrix* map_matrix;          //points to a matrix for a merge or split map
+//    IndexMatrix* column_indexes;    //points to a matrix of column indexes, one for each multi-grade
+//};
 
 //returns matrices for the merge map [B+C,D], the boundary map B+C, and the multi-grade information
 DirectSumMatrices SimplexTree::get_merge_mxs()
@@ -489,36 +518,6 @@ DirectSumMatrices SimplexTree::get_split_mxs()
 
     //now, produce the split matrix [A,B+C]
     MapMatrix* split = new MapMatrix(2*num_rows, num_rows);       //DELETE this object later!
-//    it_b = ordered_simplices.begin();   //iterator for simplices in B component
-//    it_c = ordered_simplices.begin();   //iterator for simplices in C component
-//    int row = -1;   //row counter for split matrix
-//    int b = 0;      //counter for simplices in B component
-//    int c = 0;      //counter for simplices in C component
-
-//    //  loop through multi-grades, writing columns into the matrices
-//    for(int y=0; y<=grade_y_values.size(); y++)  //rows                 <--- CHECK! DO WE WANT <= HERE? FOR NOW, YES.
-//    {
-//        for(int x=0; x<=grade_x_values.size(); x++)  //columns          <--- CHECK! DO WE WANT <= HERE? FOR NOW, YES.
-//        {
-//            //first, insert rows for simplices that appear in B at the multi-grade (x-1,y)
-//            while( (it_b != ordered_simplices.end()) && ((*it_b)->grade_x() == x - 1) && ((*it_b)->grade_y() == y) )
-//            {
-//                row++;
-//                split->set(row, b);
-//                b++;
-//                ++it_b;
-//            }
-
-//            //second, insert columns for simplices that appear in C at the multi-grade (x,y-1)
-//            while( (it_c != ordered_simplices.end()) && ((*it_c)->grade_x() == x) && ((*it_c)->grade_y() == y - 1) )
-//            {
-//                row++;
-//                split->set(row, c);
-//                c++;
-//                ++it_c;
-//            }
-//        }
-//    }
     for(int i=0; i<num_rows; i++)   //IS IT THIS SIMPLE???
     {
         split->set(i, i);
@@ -537,11 +536,11 @@ void SimplexTree::write_boundary_column(MapMatrix* mat, STNode* sim, int col, in
     std::vector<int> verts = find_vertices(sim->global_index());
 
     //find all facets of this simplex
-    for(int k=0; k<verts.size(); k++)
+    for(unsigned k=0; k<verts.size(); k++)
     {
        //facet vertices are all vertices in verts[] except verts[k]
         std::vector<int> facet;
-        for(int l=0; l<verts.size(); l++)
+        for(unsigned l=0; l<verts.size(); l++)
             if(l != k)
                 facet.push_back(verts[l]);
 
@@ -689,7 +688,7 @@ void SimplexTree::find_nodes(STNode &node, int level, std::vector<int> &vec, int
 	}
 	
 	//consider current node
-	if( (level == dim+1) && (node.get_birth() <= time) && (node.get_dist() <= dist) )
+    if( (level == dim+1) && (node.grade_x() <= time) && (node.grade_y() <= dist) )
 	{
         vec.push_back(node.global_index());
 	}
@@ -698,7 +697,7 @@ void SimplexTree::find_nodes(STNode &node, int level, std::vector<int> &vec, int
 	if(level <= dim)
 	{
 		std::vector<STNode*> kids = node.get_children();
-		for(int i=0; i<kids.size(); i++)
+        for(unsigned i=0; i<kids.size(); i++)
 			find_nodes(*kids[i], level+1, vec, time, dist, dim);
 	}
 }
@@ -748,7 +747,7 @@ STNode* SimplexTree::find_simplex(std::vector<int>& vertices)
     std::vector<STNode*> kids = node->get_children();
 
     //search the vector of children nodes for each vertex
-    for(int i=0; i<vertices.size(); i++)
+    for(unsigned i=0; i<vertices.size(); i++)
     {
         //binary search for vertices[i]
         int key = vertices[i];
@@ -779,13 +778,13 @@ STNode* SimplexTree::find_simplex(std::vector<int>& vertices)
     return node;
 }
 
-//struct to be returned by the following function, SimplexTree::get_multi_index(int index)
-struct SimplexData
-{
-	double time;
-	double dist;
-	int dim;
-};
+//struct to be returned by the following function, SimplexTree::get_simplex_data(int index)
+//struct SimplexData -- now in simplex_tree.h
+//{
+//    int x;  //integer (relative) x-coordinate of multi-grade
+//    int y;  //integer (relative) x-coordinate of multi-grade
+//	int dim;
+//};
 
 //returns the (time, dist) multi-index of the simplex with given global simplex index
 //also returns the dimension of the simplex
@@ -827,7 +826,7 @@ SimplexData SimplexTree::get_simplex_data(int index)
 		}
 	}
 	
-	SimplexData sd = { target->get_birth(), target->get_dist(), dim };
+    SimplexData sd = { target->grade_x(), target->grade_y(), dim };
 	return sd;	//TODO: is this good design?
 }
 
@@ -852,11 +851,11 @@ MapMatrix* SimplexTree::get_boundary_mx(std::vector<int> coface_global, std::map
 		if(verts.size() > 1)
 		{
 			//find all boundary simplices of this simplex
-			for(int k=0; k<verts.size(); k++)
+            for(unsigned k=0; k<verts.size(); k++)
 			{
 				//make a list of all vertices in verts[] except verts[k]
 				std::vector<int> facet;
-				for(int l=0; l<verts.size(); l++)
+                for(unsigned l=0; l<verts.size(); l++)
 					if(l != k)
 						facet.push_back(verts[l]);
 			
@@ -904,22 +903,6 @@ int SimplexTree::get_size(int dim)
 }
 
 
-
-////// DEPRECATED!!!!!
-    int SimplexTree::get_num_dists()
-    {
-        return grade_y_values.size();
-    }
-
-////// DEPRECATED!!!!!
-    int SimplexTree::get_num_times()
-    {
-        return grade_x_values.size();
-    }
-		
-
-
-
 // RECURSIVELY PRINT TREE
 void SimplexTree::print()
 {
@@ -936,7 +919,7 @@ void SimplexTree::print_subtree(STNode &node, int indent)
 	
 	//print children nodes
 	std::vector<STNode*> kids = node.get_children();
-	for(int i=0; i<kids.size(); i++)
+    for(unsigned i=0; i<kids.size(); i++)
 		print_subtree(*kids[i], indent+1);
 }
 
@@ -963,12 +946,12 @@ int SimplexTree::get_num_simplices()
 void SimplexTree::test_lists()
 {
     std::cout << "GRADE X LIST:\n";
-    for(int i=0; i<grade_x_values.size(); i++)
+    for(unsigned i=0; i<grade_x_values.size(); i++)
         std::cout << grade_x_values[i] << ", ";
     std::cout << "\n";
 
     std::cout << "GRADE Y LIST:\n";
-    for(int i=0; i<grade_y_values.size(); i++)
+    for(unsigned i=0; i<grade_y_values.size(); i++)
         std::cout << grade_y_values[i] << ", ";
     std::cout << "\n";
 }

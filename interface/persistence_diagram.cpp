@@ -1,155 +1,126 @@
-#include <sstream>
-#include <QDebug>
-
 #include "persistence_diagram.h"
 
-PersistenceDiagram::PersistenceDiagram(QGraphicsScene* sc, double length, double scale, double zero) :
-    scene(sc),
-    size(length/sqrt(2)),  //TODO: IMPROVE!!!
-    line_size(length/sqrt(2)), scale(scale/sqrt(2)),  //divide by sqrt(2) because input gives measurements for the diagonal of the diagram
-    zero_coord(zero)
+PersistenceDiagram::PersistenceDiagram(QGraphicsScene* sc, VisualizationWindow* vw, QString *filename, int dim) : //, double length, double scale, double zero) :
+    scene(sc),  window(vw),
+    selected(NULL),
+    radius(5),
+    filename(filename), dim(dim)
 {
-    draw_frame();
+    create_diagram();
 }
 
-
-void PersistenceDiagram::draw_frame()
+//simply creates all objects; resize_diagram() handles positioning of objects
+void PersistenceDiagram::create_diagram()
 {
-    //define pens
+    //define pens and brushes
     QPen grayPen(QBrush(Qt::darkGray),2,Qt::DotLine, Qt::RoundCap, Qt::RoundJoin);
     QPen thinPen(QBrush(Qt::darkGray),1,Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
     QPen bluePen(QBrush(Qt::blue),3,Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+    QBrush purpleBrush(QColor(160, 0, 200));
 
-    //draw persistence diagram structure
-    bounding_rect = scene->addRect(0, 0, size, size, grayPen);
-    diag_line = scene->addLine(0, 0, size, size, thinPen);
-    blue_line = scene->addLine(0, 0, line_size, line_size, bluePen);
+    //create persistence diagram structure
+    bounding_rect = scene->addRect(QRectF(), grayPen);
+    diag_line = scene->addLine(QLineF(), thinPen);
+    blue_line = scene->addLine(QLineF(), bluePen);
 
-    h_line = scene->addLine(0, size + 25, size + 30, size + 25, grayPen);
-    v_line = scene->addLine(size, size + 5, size, size + 45, grayPen);
+    h_line = scene->addLine(QLineF(), grayPen);
+    v_line = scene->addLine(QLineF(), grayPen);
 
-    //draw text
+    //create text objects
     inf_text = scene->addSimpleText("inf");
     inf_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-    inf_text->setPos(-inf_text->boundingRect().width() - 10, size + 45);
 
     lt_inf_text = scene->addSimpleText("<inf");
     lt_inf_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-    lt_inf_text->setPos(-lt_inf_text->boundingRect().width() - 10, size + 20);
-}
 
-void PersistenceDiagram::draw_points(std::vector< std::pair<double,double> >* pairs, std::vector<double>* cycles)
-{
-    QBrush blackBrush(Qt::black);
-
-    int radius = 4;                     //TODO: IMPROVE!!!
-
-    qDebug() << "ZERO: " << zero_coord;
-
-    //draw cycles
-    int num_big_cycles = 0;
-    for(int i=0; i<cycles->size(); i++)
-    {
-        double x = ((*cycles)[i] - zero_coord)*scale;
-
-        if(x > size)
-            num_big_cycles++;
-        else
-        {
-            QGraphicsEllipseItem* dot = scene->addEllipse(x - radius, size + 35 - radius, 2*radius, 2*radius, Qt::NoPen, blackBrush);
-            dots.push_back(dot);
-        }
-    }
-
-    //draw pairs
-    int num_big_points = 0;
-    for(int i=0; i<pairs->size(); i++)
-    {
-        double x = ((*pairs)[i].first - zero_coord)*scale;
-        double y = ((*pairs)[i].second - zero_coord)*scale;
-
-        if(x > size)
-            num_big_points++;
-        else
-        {
-            QGraphicsEllipseItem* dot;
-            if(y > size)
-                dot = scene->addEllipse(x - radius, size + 15 - radius, 2*radius, 2*radius, Qt::NoPen, blackBrush);
-            else
-                dot = scene->addEllipse(x - radius, y - radius, 2*radius, 2*radius, Qt::NoPen, blackBrush);
-            dots.push_back(dot);
-        }
-    }
-
-    //draw counts
-    std::ostringstream scyc;
-    scyc << num_big_cycles;
-    inf_count_text = scene->addSimpleText(QString(scyc.str().data()));
+    inf_count_text = scene->addSimpleText("0");
     inf_count_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-    inf_count_text->setPos(size + 5, size + 45);
+    inf_count_text->setBrush(purpleBrush);
 
-    std::ostringstream spts;
-    spts << num_big_points;
-    lt_inf_count_text = scene->addSimpleText(QString(spts.str().data()));
+    lt_inf_count_text = scene->addSimpleText("0");
     lt_inf_count_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-    lt_inf_count_text->setPos(size + 5, size + 20);
-}
+    lt_inf_count_text->setBrush(purpleBrush);
 
-void PersistenceDiagram::update_diagram(double length, double zero, std::vector< std::pair<double,double> >* pairs, std::vector<double>* cycles)
+    file_text = scene->addSimpleText(*filename);
+    file_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+
+    std::ostringstream sdim;
+    sdim << "homology dimension: " << dim;
+    dim_text = scene->addSimpleText(QString(sdim.str().data()));
+    dim_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+}//end create_diagram()
+
+//resizes diagram to fill the QGraphicsView; called after every window resize
+void PersistenceDiagram::resize_diagram(double slice_length, double diagram_scale)
 {
-    //update parameters
-    line_size = length/sqrt(2);
-    zero_coord = zero;
+    //parameters
+    int scene_padding = 10; //pixels (minimum white space between diagram objects and edge of viewing window)
+    int text_padding = 4;   //pixels (white space on each side of text items)
+    int number_space = 30;  //pixels (horizontal space reserved for counts of points above diagram)
 
-    //modify frame
+    line_size = slice_length/sqrt(2);   //divide by sqrt(2) because the line is drawn at a 45-degree angle
+    scale = diagram_scale/sqrt(2);      //similarly, divide by sqrt(2)
+
+    //get dimensions of the QGraphicsView
+    QList<QGraphicsView*> view_list = scene->views();
+    int view_width = view_list[0]->width();
+    int view_height = view_list[0]->height();
+
+    //compute diagram size
+    int available_width = view_width - (lt_inf_text->boundingRect().width() + text_padding + number_space + 2*scene_padding);
+    int available_height = view_height - (2*lt_inf_text->boundingRect().height() + 4*text_padding + 2*scene_padding);
+    diagram_size = std::min(available_height, available_width);
+
+    //resize frame
+    bounding_rect->setRect(0, 0, diagram_size, diagram_size);
+    diag_line->setLine(0, 0, diagram_size, diagram_size);
     blue_line->setLine(0, 0, line_size, line_size);
 
-    //remove old dots
-    while(!dots.empty())
-    {
-        scene->removeItem(dots.back());
-        dots.pop_back();
-    }
+    int v_space = lt_inf_text->boundingRect().height() + 2*text_padding;
+    h_line->setLine(-lt_inf_text->boundingRect().width(), diagram_size + v_space, diagram_size + number_space, diagram_size + v_space);
+    v_line->setLine(diagram_size, diagram_size + text_padding, diagram_size, diagram_size + 2*v_space - text_padding);
 
-    //draw new dots
-    QBrush blackBrush(Qt::black);
+    //move dots
+    lt_inf_dot_vpos = diagram_size + v_space/2;
+    inf_dot_vpos = lt_inf_dot_vpos + v_space;
 
-    int radius = 4;                     //TODO: IMPROVE!!!
-
-    qDebug() << "ZERO: " << zero_coord;
-
-    //draw cycles
     int num_big_cycles = 0;
-    for(int i=0; i<cycles->size(); i++)
-    {
-        double x = ((*cycles)[i] - zero_coord)*scale;
-
-        if(x > size)
-            num_big_cycles++;
-        else
-        {
-            QGraphicsEllipseItem* dot = scene->addEllipse(x - radius, size + 35 - radius, 2*radius, 2*radius, Qt::NoPen, blackBrush);
-            dots.push_back(dot);
-        }
-    }
-
-    //draw pairs
     int num_big_points = 0;
-    for(int i=0; i<pairs->size(); i++)
-    {
-        double x = ((*pairs)[i].first - zero_coord)*scale;
-        double y = ((*pairs)[i].second - zero_coord)*scale;
 
-        if(x > size)
-            num_big_points++;
-        else
+    for(std::vector<PersistenceDot*>::iterator it = dots.begin(); it != dots.end(); ++it)
+    {
+        PersistenceDot* dot = *it;
+        double x = dot->get_x();
+        double y = dot->get_y();
+
+        if(y == std::numeric_limits<double>::infinity()) //then this dot represents a cycle
         {
-            QGraphicsEllipseItem* dot;
-            if(y > size)
-                dot = scene->addEllipse(x - radius, size + 15 - radius, 2*radius, 2*radius, Qt::NoPen, blackBrush);
+            if(x*scale > diagram_size)
+            {
+                num_big_cycles++;
+                dot->setVisible(false);
+            }
             else
-                dot = scene->addEllipse(x - radius, y - radius, 2*radius, 2*radius, Qt::NoPen, blackBrush);
-            dots.push_back(dot);
+            {
+                dot->setPos(x*scale, inf_dot_vpos);
+                dot->setVisible(true);
+            }
+        }
+        else    //then this dot represents a pair
+        {
+            if(x*scale > diagram_size)
+            {
+                num_big_points++;
+                dot->setVisible(false);
+            }
+            else
+            {
+                if(y*scale > diagram_size)
+                    dot->setPos(x*scale, lt_inf_dot_vpos);
+                else
+                    dot->setPos(x*scale, y*scale);
+                dot->setVisible(true);
+            }
         }
     }
 
@@ -161,4 +132,158 @@ void PersistenceDiagram::update_diagram(double length, double zero, std::vector<
     std::ostringstream spts;
     spts << num_big_points;
     lt_inf_count_text->setText(QString(spts.str().data()));
+
+    //move text items
+    double inf_text_vpos = diagram_size + v_space + text_padding + inf_text->boundingRect().height();
+    double lt_inf_text_vpos = diagram_size + text_padding + lt_inf_text->boundingRect().height();
+
+    inf_text->setPos(-inf_text->boundingRect().width() - text_padding, inf_text_vpos);
+    lt_inf_text->setPos(-lt_inf_text->boundingRect().width() - text_padding, lt_inf_text_vpos);
+
+    inf_count_text->setPos(diagram_size + text_padding, inf_text_vpos);
+    lt_inf_count_text->setPos(diagram_size + text_padding, lt_inf_text_vpos);
+
+    file_text->setPos(diagram_size - file_text->boundingRect().width() - text_padding, file_text->boundingRect().height() + text_padding);
+    dim_text->setPos(diagram_size - dim_text->boundingRect().width() - text_padding, file_text->pos().y() + dim_text->boundingRect().height() + text_padding);
+
+    //set scene rectangle (necessary to prevent auto-scrolling)
+    double scene_rect_x = -lt_inf_text->boundingRect().width() - text_padding;
+    double scene_rect_y = 0;
+    double scene_rect_w = diagram_size + number_space - scene_rect_x;
+    double scene_rect_h = diagram_size + 2*v_space - scene_rect_y;
+    scene->setSceneRect(scene_rect_x, scene_rect_y, scene_rect_w, scene_rect_h);
+}//end resize_diagram()
+
+//creates and draws persistence dots at the correct locations
+void PersistenceDiagram::draw_points(double zero, PersistenceData* pdata)
+{
+    zero_coord = zero;
+    qDebug() << "ZERO: " << zero_coord;
+
+    //draw cycles
+    unsigned num_big_cycles = 0;
+    unsigned num_dots = 0;
+    for(std::multiset< double >::iterator it = pdata->get_cycles()->begin(); it != pdata->get_cycles()->end(); ++it)
+    {
+        double x = *it - zero_coord;
+        double y = std::numeric_limits<double>::infinity();
+
+        //create dot object
+        PersistenceDot* dot = new PersistenceDot(this, x, y, radius, num_dots);
+        scene->addItem(dot);
+        dots.push_back(dot);
+        num_dots++;
+
+        //position dot properly
+        if(x*scale > diagram_size)
+        {
+            num_big_cycles++;
+            dot->setVisible(false);
+        }
+        else
+        {
+            dot->setPos(x*scale, inf_dot_vpos);
+        }
+    }
+
+    //draw pairs
+    unsigned num_big_points = 0;
+    for(std::multiset< std::pair<double,double> >::iterator it = pdata->get_pairs()->begin(); it != pdata->get_pairs()->end(); ++it)
+    {
+        double x = it->first - zero_coord;
+        double y = it->second - zero_coord;
+
+        //create dot object
+        PersistenceDot* dot = new PersistenceDot(this, x, y, radius, num_dots);
+        scene->addItem(dot);
+        dots.push_back(dot);
+        num_dots++;
+
+        //position dot properly
+        if(x*scale > diagram_size)
+        {
+            num_big_points++;
+            dot->setVisible(false);
+        }
+        else
+        {
+            if(y*scale > diagram_size)
+                dot->setPos(x*scale, lt_inf_dot_vpos);
+            else
+                dot->setPos(x*scale, y*scale);
+        }
+    }
+
+    //draw counts
+    std::ostringstream scyc;
+    scyc << num_big_cycles;
+    inf_count_text->setText(QString(scyc.str().data()));
+
+    std::ostringstream spts;
+    spts << num_big_points;
+    lt_inf_count_text->setText(QString(spts.str().data()));
+}//end draw_points()
+
+//updates the diagram after a change in the slice line
+void PersistenceDiagram::update_diagram(double slice_length, double diagram_scale, double zero, PersistenceData* pdata)
+{
+    //update parameters
+    line_size = slice_length/sqrt(2);   //divide by sqrt(2) because the line is drawn at a 45-degree angle
+    scale = diagram_scale/sqrt(2);      //similarly, divide by sqrt(2)
+
+    //modify frame
+    blue_line->setLine(0, 0, line_size, line_size);
+
+    //remove old dots
+    selected = NULL;    //remove any current selection
+    while(!dots.empty())
+    {
+        scene->removeItem(dots.back());
+        dots.pop_back();
+    }
+
+    //draw new dots
+    draw_points(zero, pdata);
+
+}//end update_diagram()
+
+//highlight the specified dot, selected in the persistence diagram, and propagate to the slice diagram
+void PersistenceDiagram::select_dot(PersistenceDot* clicked)
+{
+    //remove old selection
+    if(selected != NULL && clicked != selected)
+        selected->deselect();
+
+    //remember current selection
+    selected = clicked;
+
+    //highlight part of the persistence diagram
+    window->select_bar(clicked->get_index());
+}
+
+//highlight the specified dot, which has been selected in the slice diagram
+void PersistenceDiagram::select_dot(unsigned index)
+{
+    //remove old selection
+    if(selected != NULL && dots[index] != selected)
+        selected->deselect();
+
+    //remember current selection
+    selected = dots[index];
+    selected->select();
+}
+
+//remove selection; if propagate, then deselect bar in the slice diagram
+void PersistenceDiagram::deselect_dot(bool propagate)
+{
+    //remove selection
+    if(selected != NULL)
+    {
+        selected->deselect();
+        selected = NULL;
+    }
+
+    //remove highlighting from slice diagram
+    if(propagate)
+        window->deselect_bar();
 }

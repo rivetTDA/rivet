@@ -5,19 +5,14 @@
 #include <algorithm>
 
 
-SliceLine::SliceLine(int width, int height, SliceDiagram* sd) :
-    xmax(width), ymax(height), sdgm(sd),
+SliceLine::SliceLine(SliceDiagram* sd) :
+    sdgm(sd),
     vertical(false), pressed(false), rotating(false), update_lock(false),
-    left_point(0,0), right_point(xmax,ymax)
+    right_point(0,0)
 {
     setFlag(ItemIsMovable);
     setFlag(ItemSendsGeometryChanges);
     setPos(0,0);
-
-    if(xmax == 0)
-        vertical = true;
-    else
-        slope = ymax/xmax;
 }
 
 void SliceLine::setDots(ControlDot* left, ControlDot* right)
@@ -35,7 +30,7 @@ QPainterPath SliceLine::shape() const
 {
     QPainterPath path;
     QPainterPathStroker stroker;
-    path.moveTo(left_point);
+    path.moveTo(0,0);
     path.lineTo(right_point);
     stroker.setWidth(20);
     return stroker.createStroke(path);
@@ -43,7 +38,6 @@ QPainterPath SliceLine::shape() const
 
 void SliceLine::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
-    QRectF rect = boundingRect();
     QPen pen(QColor(0, 0, 255, 150));   //semi-transparent blue
     pen.setWidth(4);
 
@@ -54,7 +48,7 @@ void SliceLine::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
 
     painter->setRenderHint(QPainter::Antialiasing);
     painter->setPen(pen);
-    painter->drawLine(left_point, right_point);
+    painter->drawLine(0, 0, right_point.x(), right_point.y());
 }
 
 //left-click and drag to move line, maintaining the same slope
@@ -75,8 +69,8 @@ QVariant SliceLine::itemChange(GraphicsItemChange change, const QVariant &value)
             //set newpos to keep left endpoint on bottom edge of box
             if(mouse.x() < 0)
                 newpos.setX(0);
-            else if(mouse.x() > xmax)
-                newpos.setX(xmax);
+            else if(mouse.x() > data_xmax)
+                newpos.setX(data_xmax);
             else
                 newpos.setX(mouse.x());
 
@@ -84,7 +78,7 @@ QVariant SliceLine::itemChange(GraphicsItemChange change, const QVariant &value)
 
             //adjust right endpoint to stay on top edge of box
             right_point.setX(0);
-            right_point.setY(ymax);
+            right_point.setY(box_ymax);
         }
         else        //handle non-vertical lines:
         {
@@ -92,30 +86,30 @@ QVariant SliceLine::itemChange(GraphicsItemChange change, const QVariant &value)
             if( mouse.y() >= slope*mouse.x() )    //then left endpoint of line is along left edge of box
             {
                 newpos.setX(0);
-                newpos.setY( std::min( mouse.y() - slope*mouse.x(), ymax ) );
+                newpos.setY( std::min( mouse.y() - slope*mouse.x(), data_ymax ) );
             }
             else    //then left endpoint of line is along bottom edge of box
             {
                 newpos.setY(0);
                 if(slope > 0)
-                    newpos.setX( std::min( mouse.x() - mouse.y()/slope, xmax ) );
+                    newpos.setX( std::min( mouse.x() - mouse.y()/slope, data_xmax ) );
                 else
                     newpos.setX(0);
             }
 
             //adjust right endpoint of line to stay on right/top edge of box
-            if( slope*(xmax-mouse.x()) + mouse.y() >= ymax) //then right endpoint of line is along top of box
+            if( slope*(box_xmax-mouse.x()) + mouse.y() >= box_ymax) //then right endpoint of line is along top of box
             {
-                right_point.setY(ymax - newpos.y());
+                right_point.setY(box_ymax - newpos.y());
                 if(slope > 0)
-                    right_point.setX( std::max( (ymax - mouse.y())/slope + mouse.x() - newpos.x(), 0.0 ) );
+                    right_point.setX( std::max( (box_ymax - mouse.y())/slope + mouse.x() - newpos.x(), 0.0 ) );
                 else
-                    right_point.setX(xmax);
+                    right_point.setX(box_xmax);
             }
             else    //then right endpoint of line is along right edge of box
             {
-                right_point.setX( xmax - newpos.x() );
-                right_point.setY( std::max(slope*(xmax-mouse.x()) + mouse.y() - newpos.y(), 0.0 ) );
+                right_point.setX( box_xmax - newpos.x() );
+                right_point.setY( std::max(slope*(box_xmax-mouse.x()) + mouse.y() - newpos.y(), 0.0 ) );
             }
         }
 
@@ -207,8 +201,22 @@ bool SliceLine::is_vertical()
     return vertical;
 }
 
+//udpates the dimensions of the on-screen box in which this line is allowed to move
+void SliceLine::update_bounds(double data_width, double data_height, int padding)
+{
+    update_lock = true;
+
+    data_xmax = data_width;
+    data_ymax = data_height;
+    box_xmax = data_width + padding;
+    box_ymax = data_height + padding;
+
+    update_lock = false;
+}
+
+
 //updates position of line; called by SliceDiagram in response to change in VisualizationWindow controls
-void SliceLine::update_position(double xpos, double ypos, bool vert, double m)
+void SliceLine::update_position(double xpos, double ypos, bool vert, double pixel_slope)
 {
     update_lock = true;
 
@@ -218,7 +226,7 @@ void SliceLine::update_position(double xpos, double ypos, bool vert, double m)
     else
     {
         vertical = false;
-        slope = m;
+        slope = pixel_slope;
     }
 
     //update left endpoint
@@ -230,6 +238,9 @@ void SliceLine::update_position(double xpos, double ypos, bool vert, double m)
 
     //update the picture
     right_dot->set_position(mapToScene(right_point));
+
+    //redraw the line
+    update();
 
     update_lock = false;
 }
@@ -274,9 +285,7 @@ void SliceLine::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         else
         {
             vertical = false;
-            if(event->pos().y() <= 0)
-                slope = 0;
-            else
+            if(event->pos().y() > 0)
                 slope = event->pos().y() / event->pos().x();
         }
 
@@ -300,18 +309,38 @@ void SliceLine::compute_right_point()
 {
     if(vertical)    //then line is vertical, so right endpoint of line is along top of box
     {
-        right_point.setY(ymax - pos().y());
+        right_point.setY(box_ymax - pos().y());
         right_point.setX(0);
     }
-    else if( slope*(xmax-pos().x()) + pos().y() >= ymax) //then line is not vertical, but right endpoint of line is along top of box
+    else if( slope*(box_xmax-pos().x()) + pos().y() >= box_ymax) //then line is not vertical, but right endpoint of line is along top of box
     {
-        right_point.setY(ymax - pos().y());
-        right_point.setX( (ymax - pos().y())/slope );
+        right_point.setY(box_ymax - pos().y());
+        right_point.setX( (box_ymax - pos().y())/slope );
     }
     else    //then right endpoint of line is along right edge of box
     {
-        right_point.setX(xmax - pos().x());
-        right_point.setY( slope*(xmax-pos().x()) );
+        right_point.setX(box_xmax - pos().x());
+        right_point.setY( slope*(box_xmax-pos().x()) );
     }
 }
 
+
+double SliceLine::get_data_xmax()
+{
+    return data_xmax;
+}
+
+double SliceLine::get_data_ymax()
+{
+    return data_ymax;
+}
+
+double SliceLine::get_box_xmax()
+{
+    return box_xmax;
+}
+
+double SliceLine::get_box_ymax()
+{
+    return box_ymax;
+}

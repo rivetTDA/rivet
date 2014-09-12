@@ -5,16 +5,16 @@
 
 //constructor
 InputManager::InputManager(int d, int v) :
-    hom_dim(d), verbosity(v), simplex_tree(d, v)
+    verbosity(v), hom_dim(d), simplex_tree(d, v)
 { }
 
 //function to run the input manager, requires a filename
-void InputManager::start(const char* arg)
+void InputManager::start(const char* filename, unsigned x_bins, unsigned y_bins)
 {
 	//read the file
-    if(verbosity >= 2) { std::cout << "READING FILE: " << arg << "\n"; }
+    if(verbosity >= 2) { std::cout << "READING FILE: " << filename << "\n"; }
 	std::string line;
-	infile.open(arg);
+    infile.open(filename);
 	if(infile.is_open())
 	{
 		//determine what type of file it is
@@ -26,7 +26,7 @@ void InputManager::start(const char* arg)
 		//call appropriate handler function
 		if(filetype == "points")
 		{
-			read_point_cloud();
+            read_point_cloud(x_bins, y_bins);
 		}
 		else if(filetype == "bifiltration")
 		{
@@ -40,7 +40,7 @@ void InputManager::start(const char* arg)
 	}
 	else
 	{
-		std::cout << "Error: Unable to open file " << arg << ".\n";
+        std::cout << "Error: Unable to open file " << filename << ".\n";
 		throw std::exception();
 	}
 	
@@ -56,7 +56,7 @@ SimplexTree* InputManager::get_bifiltration()
 
 
 //reads a point cloud and constructs a simplex tree representing the bifiltered Vietoris-Rips complex
-void InputManager::read_point_cloud()
+void InputManager::read_point_cloud(unsigned x_bins, unsigned y_bins)
 {
 	if(verbosity >= 2) { std::cout << "  Found a point cloud file.\n"; }
 	
@@ -106,7 +106,7 @@ void InputManager::read_point_cloud()
 	if(verbosity >= 6) 
 	{
 		std::cout << "TESTING VECTOR:\n";
-		for(int i=0; i<points.size(); i++)
+        for(unsigned i=0; i<points.size(); i++)
 		{
 			Point p = points.at(i);
 			double *m = p.get_coords();
@@ -123,10 +123,10 @@ void InputManager::read_point_cloud()
 	
 	//build the filtration
 	if(verbosity >= 2) { std::cout << "BUILDING VIETORIS-RIPS BIFILTRATION\n"; }
-    simplex_tree.build_VR_complex(points, dimension, max_dim, max_dist);
+    simplex_tree.build_VR_complex(points, dimension, max_dim, max_dist, x_bins, y_bins);
 	
 	//clean up
-	for(int i=0; i<points.size(); i++)
+    for(unsigned i=0; i<points.size(); i++)
 	{
 		double* n = points[i].get_coords();
 		delete[] n;

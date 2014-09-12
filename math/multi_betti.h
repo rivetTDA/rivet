@@ -73,6 +73,5 @@ class MultiBetti
 		
 };
 
-#include "multi_betti.cpp"
 
 #endif // __MultiBetti_H__
