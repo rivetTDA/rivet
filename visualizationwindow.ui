@@ -20,19 +20,6 @@
       <item row="1" column="1">
        <widget class="QGraphicsView" name="pdView"/>
       </item>
-      <item row="4" column="0">
-       <widget class="QCheckBox" name="barcodeCheckBox">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string>Show barcode</string>
-        </property>
-       </widget>
-      </item>
       <item row="0" column="1">
        <widget class="QLabel" name="pdLabel">
         <property name="minimumSize">
@@ -57,14 +44,61 @@
        </widget>
       </item>
       <item row="3" column="0">
-       <widget class="QCheckBox" name="normCoordCheckBox">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="text">
-         <string>Fit diagram to window</string>
-        </property>
-       </widget>
+       <layout class="QHBoxLayout" name="horizontalLayout_checkboxes">
+        <item>
+         <spacer name="horizontalSpacer_6">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="normCoordCheckBox">
+          <property name="text">
+           <string>&amp;Fit diagram to window</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_8">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="barcodeCheckBox">
+          <property name="text">
+           <string>Show &amp;barcode</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_7">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
       </item>
       <item row="0" column="0">
        <widget class="QLabel" name="sliceLabel">
@@ -188,7 +222,7 @@
           <item>
            <widget class="QCheckBox" name="xi0CheckBox">
             <property name="text">
-             <string>Show &amp;green points</string>
+             <string>Show ξ₀ (&amp;green)</string>
             </property>
             <property name="checked">
              <bool>true</bool>
@@ -198,7 +232,7 @@
           <item>
            <widget class="QCheckBox" name="xi1CheckBox">
             <property name="text">
-             <string>Show &amp;red points</string>
+             <string>Show ξ₁ (&amp;red)</string>
             </property>
             <property name="checked">
              <bool>true</bool>

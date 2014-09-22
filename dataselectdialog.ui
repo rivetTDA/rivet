@@ -61,7 +61,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>You can start from a point cloud of a bifiltration file.</string>
+    <string>You can start from a point cloud or a bifiltration file.</string>
    </property>
   </widget>
   <widget class="QPushButton" name="persistenceFileButton">
