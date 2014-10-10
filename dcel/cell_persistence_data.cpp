@@ -31,7 +31,7 @@ double CellPersistenceData::get_r()
 }
 
 //computes the persistence data, requires all support points of xi_0 and xi_1, and the bifiltration
-void CellPersistenceData::compute_data(std::vector<std::pair<int, int> > & xi, SimplexTree* bifiltration, int dim)
+void CellPersistenceData::compute_data(std::vector<std::pair<int, int> > & xi, SimplexTree* bifiltration, int dim, const std::vector<double>& x_grades, const std::vector<double>& y_grades)
 {
     if(verbosity >= 6) { std::cout << "    ---in this cell, theta = " << theta << " and r = " << r << "\n"; }
 
@@ -41,7 +41,7 @@ void CellPersistenceData::compute_data(std::vector<std::pair<int, int> > & xi, S
     //loop through all support points, compute projections and store the unique ones
     for(unsigned i=0; i<xi.size(); i++)
     {
-        std::pair<bool,double> projection = project( bifiltration->grade_x_value(xi[i].first), bifiltration->grade_y_value(xi[i].second) );
+        std::pair<bool,double> projection = project( x_grades[xi[i].first], y_grades[xi[i].second] );
 
         if(projection.first == true)	//then the projection exists
         {
@@ -92,7 +92,7 @@ void CellPersistenceData::compute_data(std::vector<std::pair<int, int> > & xi, S
             if(verbosity >= 8) { std::cout << "    --Simplex " << i << " has multi-index (" << sdata.x << ", " << sdata.y << "), dimension " << sdata.dim; }
 
             //project multi-index onto the line
-            std::pair<bool, double> p_pair = project(bifiltration->grade_x_value(sdata.x), bifiltration->grade_y_value(sdata.y));
+            std::pair<bool, double> p_pair = project(x_grades[sdata.x], y_grades[sdata.y]);
 
             if(p_pair.first == true)	//then projection exists
             {

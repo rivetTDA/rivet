@@ -1,25 +1,25 @@
 #include <iostream>
-#include <iostream>
 #include <fstream>
 #include <sstream>
 #include <string>
 #include <vector>
-#include <math.h>
-#include <algorithm>
-#include <set>
+#include <stdlib.h>	//atoi
+//#include <math.h>
+//#include <algorithm>
+//#include <set>
 
-#include "boost/date_time/posix_time/posix_time.hpp"
-using namespace boost::posix_time;
+//#include "boost/date_time/posix_time/posix_time.hpp"
+//using namespace boost::posix_time;
 
 #include "interface/input_manager.h"
 #include "math/st_node.h"
 #include "math/simplex_tree.h"
-#include "math/map_matrix.h"
-#include "math/multi_betti.h"
+//#include "math/map_matrix.h"
+//#include "math/multi_betti.h"
 
 
 // RECURSIVELY PRINT TREE
-void print_subtree(STNode &node, int indent)
+/*void print_subtree(STNode &node, int indent)
 {
 	//print current node
 	for(int i=0; i<indent; i++)
@@ -30,7 +30,7 @@ void print_subtree(STNode &node, int indent)
     std::vector<STNode*> kids = node.get_children();
 	for(int i=0; i<kids.size(); i++)
 		print_subtree(*kids[i], indent+1);
-}
+}*/
 
 
 
@@ -52,12 +52,12 @@ int main(int argc, char* argv[])
     std::cout << "Homology dimension set to " << dim << ".\n";
 
     //start the input manager
-    int verbosity = 1;
+    int verbosity = 10;
     InputManager im(dim, verbosity);
-    im.start(argv[1]);
+    im.start(argv[1], 2, 3);	//last two arguments are bins
 
     //get the bifiltration from the input manager
-    SimplexTree* bifiltration = im.get_bifiltration();
+/*    SimplexTree* bifiltration = im.get_bifiltration();
 
 
     //print simplex tree
@@ -150,5 +150,5 @@ int main(int argc, char* argv[])
     std::cout << col_labels << "\n";
 
     std::cout << "\nComputation took " << duration << ".\n";
-
+*/
 }

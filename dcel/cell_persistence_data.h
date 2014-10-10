@@ -24,7 +24,7 @@ class CellPersistenceData
         void set_r(double x);	//set the theta coordinate
         double get_r();		//get the theta coordinate
 		
-		void compute_data(std::vector<std::pair<int, int> > & xi, SimplexTree* bifiltration, int dim);
+        void compute_data(std::vector<std::pair<int, int> > & xi, SimplexTree* bifiltration, int dim, const std::vector<double>& x_grades, const std::vector<double>& y_grades);
 			//computes the persistence data, requires all support points of xi_0 and xi_1, the bifiltration, and the dimension of homology
 		
 		std::vector<int>* get_xi_global();		//returns vector of global indexes of xi support points

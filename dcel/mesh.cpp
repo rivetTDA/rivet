@@ -5,8 +5,9 @@
 #include "mesh.h"
 
 //constructor; sets up bounding box (with empty interior) for the affine Grassmannian
-Mesh::Mesh(int v) : 
-	INFTY(std::numeric_limits<double>::infinity()),
+Mesh::Mesh(int v, const std::vector<double> &xg, const std::vector<exact> &xe, const std::vector<double> &yg, const std::vector<exact> &ye) :
+    x_grades(xg), x_exact(xe), y_grades(yg), y_exact(ye),
+    INFTY(std::numeric_limits<double>::infinity()),
     HALF_PI(boost::math::constants::pi<double>()/2),
     EPSILON(1/pow(double(10), 10)),
 	verbosity(v)
@@ -533,7 +534,7 @@ void Mesh::build_persistence_data(std::vector<std::pair<int, int> > & xi, Simple
 		
 		faces[i]->store_interior_point();
 		
-        faces[i]->get_data()->compute_data(xi, bifiltration, dim);
+        faces[i]->get_data()->compute_data(xi, bifiltration, dim, x_grades, y_grades);
 	}
 }//end build_persistence_data()
 
@@ -646,8 +647,8 @@ PersistenceData* Mesh::get_persistence_data(double angle, double offset, std::ve
 //        double y = xi[xi_global[i]].second;
 //        std::cout << "XI: xi_global[" << i << "] = " << xi_global[i] << "; xi.size() = " << xi.size() << "\n";
 //        std::cout << "    xi[xi_global[i]].first = " << xi[xi_global[i]].first << "\n";// maps to " << bifiltration->get_time(xi[xi_global[i]].first) << "\n";
-        double x = bifiltration->grade_x_value(xi[xi_global[i]].first);
-        double y = bifiltration->grade_y_value(xi[xi_global[i]].second);
+        double x = x_grades[xi[xi_global[i]].first];
+        double y = y_grades[xi[xi_global[i]].second];
 
 
 		//project onto line

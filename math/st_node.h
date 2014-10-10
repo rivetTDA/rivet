@@ -21,6 +21,8 @@ class STNode {
 		STNode();					//constructor for empty node
         STNode(int v, STNode* p, int x, int y, int g);		//constructor for non-empty node; parameters are: (vertex, parent, multi-grade x, multi-grade y, global index)
 		
+        ~STNode();  //destructor
+
 		int get_vertex();			//returns the vertex index
 		STNode get_parent();			//returns a pointer to the parent node
 

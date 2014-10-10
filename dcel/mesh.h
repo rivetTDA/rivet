@@ -21,12 +21,17 @@
 #include "cell_persistence_data.h"
 #include "../math/persistence_data.h"
 
+#include <boost/multiprecision/cpp_int.hpp>
+typedef boost::multiprecision::cpp_rational exact;
+
 #include <boost/math/constants/constants.hpp>
 
 class Mesh
 {
 	public:
-		Mesh(int v);		//constructor; sets up bounding box (with empty interior) for the affine Grassmannian
+        Mesh(int v, const std::vector<double>& xg, const std::vector<exact>& xe, const std::vector<double>& yg, const std::vector<exact>& ye);
+            //constructor; sets up bounding box (with empty interior) for the affine Grassmannian
+            //  requires references to vectors of all multi-grade values (both double and exact values)
 		
 		~Mesh();	//destructor: IMPLEMENT THIS, MAKE SURE ALL MEMORY IS RELEASED!!!!
 		
@@ -45,7 +50,12 @@ class Mesh
         void test_consistency();    //attempts to find inconsistencies in the DCEL arrangement
 		
 	private:
-		std::vector<Vertex*> vertices;		//all vertices in the mesh
+        const std::vector<double>& x_grades;   //floating-point values for x-grades
+        const std::vector<exact>& x_exact;     //exact values for all x-grades
+        const std::vector<double>& y_grades;   //floating-point values for y-grades
+        const std::vector<exact>& y_exact;     //exact values for all y-grades
+
+        std::vector<Vertex*> vertices;		//all vertices in the mesh
 		std::vector<Halfedge*> halfedges;	//all halfedges in the mesh
 		std::vector<Face*> faces;		//all faces in the mesh
 		
@@ -62,12 +72,15 @@ class Mesh
 		
 		const int verbosity;			//controls display of output, for debugging
 		
+
+
         Halfedge* insert_vertex(Halfedge* edge, double t, double r);	//inserts a new vertex on the specified edge, with the specified coordinates, and updates all relevant pointers
         Halfedge* create_edge_left(Halfedge*edge, LCM*lcm);    //creates the first pair of Halfedges in an LCM curve, anchored on the left edge of the strip
 
         double find_intersection(LCM* a, LCM* b);   //returns the theta-coordinate of intersection of two LCM curves, or -1 if no intersection exists
         double find_r(LCM* a, double t);      //returns the r-coordinate corresponding to theta = t on the curve for LCM a
 		
+
 		std::pair<bool, double> project(double angle, double offset, double x, double y);	//projects (x,y) onto the line determined by angle and offset
 		
         unsigned HID(Halfedge* h);		//halfedge ID, for printing and debugging

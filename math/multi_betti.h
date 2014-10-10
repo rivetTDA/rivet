@@ -32,13 +32,8 @@ class MultiBetti
         void compute_alpha();
         void compute_eta();
 
-
         int xi0(int x, int y);		//returns xi_0 at the specified multi-grade
         int xi1(int x, int y);		//returns xi_1 at the specified multi-grade
-
-        //DEPRECATED METHODS
-//        void compute_all_xi();			//computes xi_0 and xi_1 at ALL multi-indexes
-//		void compute_xi(int time, int dist);	//computes xi_0 and xi_1 at a specified multi-index
 		
         void print_lows(Vector &lows);  //TESTING ONLY
 		
@@ -46,10 +41,10 @@ class MultiBetti
 	private:
 		SimplexTree* bifiltration;		//pointer to the bifiltration
 		
-		int dimension;		//dimension of homology to compute
+        int dimension;		//dimension of homology to compute
 		
-        int num_x_grades;  //number of grades in primary direction
-        int num_y_grades;  //number of grades in secondary direction
+        unsigned num_x_grades;  //number of grades in primary direction
+        unsigned num_y_grades;  //number of grades in secondary direction
 
 
         boost::multi_array<int, 3> xi;		//matrix to hold xi values; indices: xi[x][y][subscript]
@@ -65,10 +60,6 @@ class MultiBetti
 
         void reduce_spliced(MapMatrix* m_left, MapMatrix* m_right, IndexMatrix* ind_left, IndexMatrix* ind_right, ColumnList& right_cols, int grade_x, int grade_y, Vector& lows, int& zero_cols);
             //column reduction for Edelsbrunner algorithm on a two-part matrix (two matrices spliced together, treated as one matrix for the column reduction)
-
-        //DEPRECATED OBJECTS
-        int num_times;		//number of time indexes
-        int num_dists;		//number of distance indexes
 
 		
 };

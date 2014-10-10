@@ -4,12 +4,14 @@
 #include <QMainWindow>
 #include <QtGui>
 
+#include <boost/multiprecision/cpp_int.hpp>
+typedef boost::multiprecision::cpp_rational exact;
+
 #include "interface/slice_diagram.h"
 class SliceDiagram;
 
 #include "interface/persistence_diagram.h"
 class PersistenceDiagram;
-
 
 
 namespace Ui {
@@ -69,7 +71,9 @@ private:
     QString x_label;    //label for x-axis of slice diagram
     QString y_label;    //label for y-axis of slice_diagram
 
-    SimplexTree* bifiltration;  //bifiltration constructed from the data
+    std::vector<double> x_grades;
+    std::vector<double> y_grades;
+    SimplexTree* bifiltration;  //discrete bifiltration
 
     std::vector<std::pair<int, int> > xi_support;  //integer (relative) coordinates of xi support points
 

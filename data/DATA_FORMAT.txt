@@ -9,7 +9,12 @@ I. Point Cloud (for constructing a Vietoris-Rips complex)
 	
 	NO EMPTY LINES IN THE FILE!
 
-II. Bifiltration 
+II. Distance Matrix (or two?)
+
+	NOT IMPLEMENTED YET!
+
+
+III. Bifiltration 
 
 	(Here we consider a bifiltration to be abstract, without geometric coordinates.)
 	REQUIREMENTS:

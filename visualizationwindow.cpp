@@ -18,10 +18,11 @@
 using namespace boost::posix_time;
 
 
+
 VisualizationWindow::VisualizationWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::VisualizationWindow),
-    verbosity(5),
+    verbosity(7),
     slice_diagram(NULL), slice_update_lock(false),
     p_diagram(NULL), persistence_diagram_drawn(false)
 {
@@ -110,25 +111,42 @@ void VisualizationWindow::compute()
 {
     //start the input manager
     im = new InputManager(dim, verbosity);
-    const char* filestr = fileName.toStdString().data();
+    //const char* filestr = fileName.toStdString().data();
+    std::string filestr = fileName.toStdString();
     im->start(filestr, x_bins, y_bins);
 
-    //get the bifiltration
+    //get the data
+    x_grades = im->get_x_grades();
+    y_grades = im->get_y_grades();
+    std::vector<exact> x_exact = im->get_x_exact();
+    std::vector<exact> y_exact = im->get_y_exact();
     bifiltration = im->get_bifiltration();
 
     //get data extents
-    double data_xmin = bifiltration->grade_x_value(0);
-    double data_xmax = bifiltration->grade_x_value(bifiltration->num_x_grades() - 1);
-    double data_ymin = bifiltration->grade_y_value(0);
-    double data_ymax = bifiltration->grade_y_value(bifiltration->num_y_grades() - 1);
+    double data_xmin = x_grades.front();
+    double data_xmax = x_grades.back();
+    double data_ymin = y_grades.front();
+    double data_ymax = y_grades.back();
 
     //print bifiltration statistics
     std::cout << "\nBIFILTRATION:\n";
     std::cout << "   Number of simplices of dimension " << dim << ": " << bifiltration->get_size(dim) << "\n";
     std::cout << "   Number of simplices of dimension " << (dim+1) << ": " << bifiltration->get_size(dim+1) << "\n";
-    std::cout << "   Number of x-grades: " << bifiltration->num_x_grades() << "; values " << data_xmin << " to " << data_xmax << "\n";
-    std::cout << "   Number of y-grades: " << bifiltration->num_y_grades() << "; values " << data_ymin << " to " << data_ymax << "\n";
+    std::cout << "   Number of x-grades: " << x_grades.size() << "; values " << data_xmin << " to " << data_xmax << "\n";
+    std::cout << "   Number of y-grades: " << y_grades.size() << "; values " << data_ymin << " to " << data_ymax << "\n";
     std::cout << "\n";
+
+    if(verbosity >= 6)
+    {
+        std::cout << "x-grades:\n";
+        for(int i=0; i<x_grades.size(); i++)
+            std::cout << "  " << x_grades[i] << " = " << x_exact[i] << "\n";
+        std::cout << "y-grades:\n";
+        for(int i=0; i<y_grades.size(); i++)
+            std::cout << "  " << y_grades[i] << " = " << y_exact[i] << "\n";
+        std::cout << "bifiltration simplex tree:\n";
+            bifiltration->print();
+    }
 
     //compute xi_0 and xi_1 at all multi-grades
     if(verbosity >= 2) { std::cout << "COMPUTING xi_0 AND xi_1 FOR HOMOLOGY DIMENSION " << dim << ":\n"; }
@@ -152,14 +170,14 @@ void VisualizationWindow::compute()
 
 
     //find all support points of xi_0 and xi_1
-    for(int i=0; i < bifiltration->num_x_grades(); i++)
+    for(int i=0; i < x_grades.size(); i++)
     {
-        for(int j=0; j < bifiltration->num_y_grades(); j++)
+        for(int j=0; j < y_grades.size(); j++)
         {
             if(mb.xi0(i,j) != 0 || mb.xi1(i,j) != 0)
             {
                 xi_support.push_back(std::pair<int,int>(i,j));
-                slice_diagram->add_point(bifiltration->grade_x_value(i), bifiltration->grade_y_value(j), mb.xi0(i,j), mb.xi1(i,j));
+                slice_diagram->add_point(x_grades[i], y_grades[j], mb.xi0(i,j), mb.xi1(i,j));   //TODO: MIGHT NEED SQUARE ROOTS OF Y-VALUES!!!
             }
         }
     }
@@ -167,7 +185,7 @@ void VisualizationWindow::compute()
     //print support points of xi_0 and xi_1
     if(verbosity >= 2)
     {
-        std::cout << "  SUPPORT POINTS OF xi_0 AND xi_1: ";
+        std::cout << "  SUPPORT POINTS OF xi_0 AND xi_1 (INTEGER VALUES): ";
         for(unsigned i=0; i<xi_support.size(); i++)
             std::cout << "(" << xi_support[i].first << "," << xi_support[i].second << "), ";
         std::cout << "\n";
@@ -179,7 +197,7 @@ void VisualizationWindow::compute()
     slice_diagram->create_diagram(x_label, y_label);
         //slice diagram automatically updates angle box and offset box to default values
 
-    //update offset extents   //TODO: FIX THIS!!!
+/*    //update offset extents   //TODO: FIX THIS!!!
     ui->offsetSpinBox->setMinimum(-1*data_xmax);
     ui->offsetSpinBox->setMaximum(data_ymax);
 

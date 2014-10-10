@@ -29,15 +29,13 @@ SOURCES += main.cpp\
     dcel/cell_persistence_data.cpp \
     dcel/lcm.cpp \
     dcel/dcel.cpp \
-    math/index_matrix.cpp \
-    math/point.cpp
+    math/index_matrix.cpp
 
 HEADERS  += visualizationwindow.h \
     dcel/mesh.h \
     interface/input_manager.h \
     math/st_node.h \
     math/simplex_tree.h \
-    math/point.h \
     math/multi_betti.h \
     math/map_matrix.h \
     interface/slice_diagram.h \

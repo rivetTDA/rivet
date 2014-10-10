@@ -18,6 +18,13 @@ STNode::STNode(int v, STNode* p, int x, int y, int g) :
     vertex(v), parent(p), mg_x(x), mg_y(y), d_index(-1), g_index(g)
 { }
 
+//destructor -- IS THIS ADEQUATE???
+STNode::~STNode()
+{
+    for(std::vector<STNode*>::iterator it = children.begin(); it != children.end(); ++it)
+        delete *it;
+}
+
 //returns the vertex index
 int STNode::get_vertex()
 {

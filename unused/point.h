@@ -14,6 +14,7 @@
 #ifndef __Point_H__
 #define __Point_H__
 
+//THIS CLASS IS NO LONGER USED!!!
 
 class Point {
 	public:
