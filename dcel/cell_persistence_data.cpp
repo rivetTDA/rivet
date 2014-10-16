@@ -6,34 +6,34 @@
 CellPersistenceData::CellPersistenceData(int v) : verbosity(v)
 { }
 
-void CellPersistenceData::set_theta(double t)
+void CellPersistenceData::set_x(double t)
 {
-    theta = t;
+    x = t;
 
-    if(verbosity >= 6) { std::cout << "    --theta set to " << theta << "\n"; }
+    if(verbosity >= 6) { std::cout << "    --x set to " << x << "\n"; }
 }
 
-double CellPersistenceData::get_theta()
+double CellPersistenceData::get_x()
 {
-    return theta;
+    return x;
 }
 
-void CellPersistenceData::set_r(double x)
+void CellPersistenceData::set_y(double t)
 {
-    r = x;
+    y = t;
 
-    if(verbosity >= 6) { std::cout << "    --r set to " << r << "\n"; }
+    if(verbosity >= 6) { std::cout << "    --y set to " << y << "\n"; }
 }
 
-double CellPersistenceData::get_r()
+double CellPersistenceData::get_y()
 {
-    return r;
+    return y;
 }
 
 //computes the persistence data, requires all support points of xi_0 and xi_1, and the bifiltration
-void CellPersistenceData::compute_data(std::vector<std::pair<int, int> > & xi, SimplexTree* bifiltration, int dim, const std::vector<double>& x_grades, const std::vector<double>& y_grades)
+void CellPersistenceData::compute_data(std::vector<std::pair<unsigned, unsigned> > & xi, SimplexTree* bifiltration, int dim, const std::vector<double>& x_grades, const std::vector<double>& y_grades)
 {
-    if(verbosity >= 6) { std::cout << "    ---in this cell, theta = " << theta << " and r = " << r << "\n"; }
+    if(verbosity >= 6) { std::cout << "    ---in this cell, x = " << x << " and y = " << y << "\n"; }
 
     //map to hold ordered list of projections (key = projection_coordinate, value = global_xi_support_point_index; i.e. map: projection_coord -> global_xi_support_point_index)
     std::map<double,int> xi_proj;
@@ -294,7 +294,7 @@ std::pair<bool, double> CellPersistenceData::project(double x, double y)
     double p = 0;	//if there is a projection, then this will be set to its coordinate
     bool b = true;	//if there is no projection, then this will be set to false
 
-    if(theta == 0)	//horizontal line
+ /*   if(theta == 0)	//horizontal line
     {
         if(y <= r)	//then point is below line
             p = x;
@@ -320,6 +320,6 @@ std::pair<bool, double> CellPersistenceData::project(double x, double y)
         else	//no projection
             b = false;
     }
-
+*/
     return std::pair<bool, double>(b,p);
 }//end project()

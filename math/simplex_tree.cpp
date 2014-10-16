@@ -216,76 +216,6 @@ void SimplexTree::build_VR_subtree(std::vector<unsigned>& times, std::vector<uns
 	}
 }//end build_subtree()
 
-/* OLD STUFF
-//returns the position of "value" in the ordered list of multi-grade first-components
-//if not found, returns the position of the largest entry not greater than "value" (i.e. returns left edge of bin containing "value")
-int SimplexTree::grade_x_position(double value)
-{
-    int min = 0;
-    int max = grade_x_values.size() - 1;
-
-    //binary search
-    while(max >= min)
-    {
-        int mid = (min+max)/2;
-        if(grade_x_values[mid] == value)
-            return mid;
-        if(grade_x_values[mid] < value)
-            min = mid + 1;
-        else
-            max = mid - 1;
-    }
-
-    //if we get here, then we didn't find it, so we return max, which now is the index of the left edge of the bin
-    if(max < 0)
-    {
-        std::cerr << "WARNING: In SimplexTree::grade_x_position(), value " << value << " is less than all entries in the vector, so returning index 0.";
-        return 0;
-    }
-    return max;
-}
-
-//returns the value at the i^th position in the ordered list of multi-grade first-components
-double SimplexTree::grade_x_value(int i)
-{
-    return grade_x_values[i];
-}
-
-//returns the position of "value" in the ordered list of multi-grade second-components
-//if not found, returns the position of the largest entry not greater than "value" (i.e. returns left edge of bin containing "value")
-int SimplexTree::grade_y_position(double value)
-{
-    int min = 0;
-    int max = grade_y_values.size() - 1;
-
-    //binary search
-    while(max >= min)
-    {
-        int mid = (min+max)/2;
-        if(grade_y_values[mid] == value)
-            return mid;
-        if(grade_y_values[mid] < value)
-            min = mid + 1;
-        else
-            max = mid - 1;
-    }
-
-    //if we get here, then we didn't find it, so we return max, which now is the index of the left edge of the bin
-    if(max < 0)
-    {
-        std::cerr << "WARNING: In SimplexTree::grade_y_position(), value " << value << " is less than all entries in the vector, so returning index 0.";
-        return 0;
-    }
-    return max;
-}
-
-//returns the value at the i^th position in the ordered list of multi-grade second-components
-double SimplexTree::grade_y_value(int i)
-{
-    return grade_y_values[i];
-}
-*/
-
 //returns a matrix of boundary information for simplices of the given dimension (with multi-grade info)
 //columns ordered according to dimension index (reverse-lexicographic order with respect to multi-grades)
 MapMatrix* SimplexTree::get_boundary_mx(int dim)
@@ -322,14 +252,6 @@ MapMatrix* SimplexTree::get_boundary_mx(int dim)
     //return the matrix
     return mat;
 }//end get_boundary_mx()
-
-//struct to be returned by the following function
-//struct DirectSumMatrices -- now in simplex_tree.h
-//{
-//    MapMatrix* boundary_matrix;     //points to a boundary matrix for B+C
-//    MapMatrix* map_matrix;          //points to a matrix for a merge or split map
-//    IndexMatrix* column_indexes;    //points to a matrix of column indexes, one for each multi-grade
-//};
 
 //returns matrices for the merge map [B+C,D], the boundary map B+C, and the multi-grade information
 DirectSumMatrices SimplexTree::get_merge_mxs()

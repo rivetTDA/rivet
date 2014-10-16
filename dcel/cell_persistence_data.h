@@ -18,13 +18,13 @@ class CellPersistenceData
 	public:
         CellPersistenceData(int v);	//constructor
 		
-        void set_theta(double t);	//set the theta coordinate
-        double get_theta();		//get the theta coordinate
+        void set_x(double t);	//set the theta coordinate
+        double get_x();		//get the theta coordinate
 		
-        void set_r(double x);	//set the theta coordinate
-        double get_r();		//get the theta coordinate
+        void set_y(double y);	//set the theta coordinate
+        double get_y();		//get the theta coordinate
 		
-        void compute_data(std::vector<std::pair<int, int> > & xi, SimplexTree* bifiltration, int dim, const std::vector<double>& x_grades, const std::vector<double>& y_grades);
+        void compute_data(std::vector<std::pair<unsigned, unsigned> > & xi, SimplexTree* bifiltration, int dim, const std::vector<double>& x_grades, const std::vector<double>& y_grades);
 			//computes the persistence data, requires all support points of xi_0 and xi_1, the bifiltration, and the dimension of homology
 		
 		std::vector<int>* get_xi_global();		//returns vector of global indexes of xi support points
@@ -32,8 +32,8 @@ class CellPersistenceData
 		std::vector<int>* get_cycles();			//returns a vector of essential cycles (with respect to order xi indexes)
 		
 	private:
-        double theta;		//theta-coordinate of line along which this persistence data is computed
-        double r;		//r-coordinate of line along which this persistence data is computed
+        double x;		//x-coordinate of line along which this persistence data is computed
+        double y;		//y-coordinate of line along which this persistence data is computed
 		
 		const int verbosity;			//controls display of output, for debugging
 		static const double HALF_PI = 1.570796327;

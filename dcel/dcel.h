@@ -18,21 +18,20 @@ class Face;
 class Vertex
 {
     public:
-        Vertex(double theta_coord, double r_coord);	//constructor, sets (theta, r)-coordinates of the vertex
+        Vertex(double x_coord, double y_coord);	//constructor, sets (x, y)-coordinates of the vertex
 
         void set_incident_edge(Halfedge* edge);		//set the incident edge
         Halfedge* get_incident_edge();			//get the incident edge
 
-        double get_theta();		//get the theta-coordinate
-        double get_r();			//get the r-coordinate
+        double get_x();		//get the x-coordinate
+        double get_y();		//get the y-coordinate
 
         friend std::ostream& operator<<(std::ostream& os, const Vertex& v);	//for printing the vertex
 
     private:
         Halfedge* incident_edge;	//pointer to one edge incident to this vertex
-        double theta;			//theta-coordinate of this vertex in the affine Grassmannian
-        double r;			//r-coordinate of this vertex in the affine Grassmannian
-
+        double x;			//x-coordinate of this vertex
+        double y;			//y-coordinate of this vertex
 };//end class Vertex
 
 
@@ -82,7 +81,8 @@ class Face
 
         CellPersistenceData* get_data();		//returns the persistence data associated with this face
 
-        void store_interior_point();		//computes coordinates of a point inside this face and stores it in the persistence data object
+        //THE FOLLOWING FUNCTION WILL BE UNNECESSARY WHEN VINYARDS ARE IMPLEMENTED
+        void store_interior_point(const std::vector<double>& x_grades, const std::vector<double>& y_grades);		//computes coordinates of a point inside this face and stores it in the persistence data object
 
         friend std::ostream& operator<<(std::ostream& os, const Face& f);	//for printing the face
 

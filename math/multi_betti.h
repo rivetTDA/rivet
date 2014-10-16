@@ -32,8 +32,8 @@ class MultiBetti
         void compute_alpha();
         void compute_eta();
 
-        int xi0(int x, int y);		//returns xi_0 at the specified multi-grade
-        int xi1(int x, int y);		//returns xi_1 at the specified multi-grade
+        int xi0(unsigned x, unsigned y);		//returns xi_0 at the specified (discrete) multi-grade
+        int xi1(unsigned x, unsigned y);		//returns xi_1 at the specified (discrete) multi-grade
 		
         void print_lows(Vector &lows);  //TESTING ONLY
 		

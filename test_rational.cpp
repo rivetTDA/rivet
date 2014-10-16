@@ -12,6 +12,21 @@
 
 typedef boost::multiprecision::cpp_rational rational;
 
+//finding a rational approximation of a floating-point
+// precondition: x > 0
+rational approx(double x)
+{
+    int d = 3;	//desired significant digits
+    int log = (int) floor( log10(x) ) + 1;
+    
+    if(log >= d)
+    	return rational( floor(x) );
+    
+    int denom = pow(10, d-log);
+    return rational( (int) floor(x*denom), denom);
+}
+
+
 int main(int argc, char* argv[])
 {	
     rational a = 1;
@@ -34,6 +49,8 @@ int main(int argc, char* argv[])
 */
     rational b(1, 3);
     std::cout << "1/3: " << b << "\n";
+    bool nonzero = b > 0;
+    std::cout << "1/3 greater than zero: " << nonzero << "\n";
 
     rational c("2/4");
     std::cout << "2/4: " << c << "\n";
@@ -61,6 +78,22 @@ int main(int argc, char* argv[])
     	int denom = pow(10,exp);
     	r = rational(num, denom);
     	std::cout << "r = " << r << "\n";
+    }
+    
+    //finding a rational approximation of a floating-point
+    std::vector<double> nums;
+    nums.push_back(12345.8);
+    nums.push_back(2233.1234);
+    nums.push_back(.12345678);
+    nums.push_back(12.345678);
+    nums.push_back(12345.678);
+    nums.push_back(12);
+    nums.push_back(0.000047);
+    nums.push_back(0.0003355224);
+    
+    for(unsigned i=0; i<nums.size(); i++)
+    {
+    	std::cout << "approximation of " << nums[i] << ": " << approx(nums[i]) << "\n";
     }
     
     

@@ -690,13 +690,13 @@ void MultiBetti::reduce_spliced(MapMatrix* m_left, MapMatrix* m_right, IndexMatr
 ///// FUNCTIONS TO ACCESS THE MULTI-GRADED BETTI NUMBERS
 
 //returns xi_0 at the specified multi-index
-int MultiBetti::xi0(int x, int y)
+int MultiBetti::xi0(unsigned x, unsigned y)
 {
     return xi[x][y][0];
 }
 
 //returns xi_1 at the specified multi-index
-int MultiBetti::xi1(int x, int y)
+int MultiBetti::xi1(unsigned x, unsigned y)
 {
     return xi[x][y][1];
 }

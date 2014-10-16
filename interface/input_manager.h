@@ -44,9 +44,7 @@ struct ExactValue
     {
         //if the two double values are nearly equal, then compare exact values
         if(almost_equal(double_value, other.double_value))
-        {
             return exact_value <= other.exact_value;
-        }
 
         //otherwise, compare double values
         return double_value <= other.double_value;
@@ -54,11 +52,11 @@ struct ExactValue
 
     static bool almost_equal(const double a, const double b)
     {
-        double diff = abs(a - b);
+        double diff = std::abs(a - b);
         if(diff <= epsilon)
             return true;
 
-        if(diff <= (abs(a) + abs(b))*epsilon)
+        if(diff <= (std::abs(a) + std::abs(b))*epsilon)
             return true;
         return false;
     }
@@ -71,9 +69,7 @@ struct ExactValueComparator
     {
         //if the two double values are nearly equal, then compare exact values
         if(ExactValue::almost_equal(lhs->double_value, rhs->double_value))
-        {
             return lhs->exact_value < rhs->exact_value;
-        }
 
         //otherwise, compare double values
         return lhs->double_value < rhs->double_value;
@@ -94,7 +90,6 @@ class InputManager
 
         std::vector<double> get_y_grades();   //floating-point values of all y-grades, sorted exactly
         std::vector<exact> get_y_exact();     //exact (e.g. rational) values of all y-grades, sorted
-        bool y_values_squared();              //returns true iff stored y-grades are the SQUARES of their actual values
 
         SimplexTree* get_bifiltration();	//returns a pointer to the simplex tree representing the bifiltration
 		
@@ -111,14 +106,13 @@ class InputManager
 
         std::vector<double> y_grades;   //floating-point values of all y-grades, sorted exactly
         std::vector<exact> y_exact;     //exact (e.g. rational) values of all y-grades, sorted
-        bool y_squared;                 //true iff the stored y-grades are the SQUARE of their actual values (for speed and exactness, we only take square roots when necessary)
 
         SimplexTree simplex_tree;		//simplex tree constructed from the input; contains only discrete data (i.e. integer multi-grades)
 
         void read_point_cloud(unsigned x_bins, unsigned y_bins);		//reads a point cloud and constructs a simplex tree representing the bifiltered Vietoris-Rips complex
 		void read_bifiltration();		//reads a bifiltration and constructs a simplex tree
 		
-		
+        exact approx(double x);         //finds a rational approximation of a floating-point value; precondition: x > 0
 		
 };
 

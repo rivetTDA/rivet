@@ -69,25 +69,15 @@ class SimplexTree {
                     //NOTE: automatically computes global indexes and dimension indexes
                     //CONVENTION: the x-coordinate is "birth time" for points and the y-coordinate is "distance" between points
 
-        void add_simplex(std::vector<int> & vertices, int x, int y);	//adds a simplex (and its faces) to the SimplexTree; multi-grade is (x,y)
+ //UPDATE THIS:       void add_simplex(std::vector<int> & vertices, int x, int y);	//adds a simplex (and its faces) to the SimplexTree; multi-grade is (x,y)
 		
         void update_global_indexes();			//updates the global indexes of all simplices in this simplex tree
         void update_dim_indexes();              //updates the dimension indexes (reverse-lexicographical multi-grade order) for simplices of dimension (hom_dim-1), hom_dim, and (hom_dim+1)
 
-//    /* DEPRECATED */    int grade_x_position(double value);     //returns the position of "value" in the ordered list of multi-grade first-components, or -1 if not found
-//    /* MOVE! */    double grade_x_value(int i);            //returns the value at the i^th position in the ordered list of multi-grade x-coordinates
-		
-//    /* DEPRECATED */    int grade_y_position(double value);     //returns the position of "value" in the ordered list of multi-grade second-components, or -1 if not found
-//    /* MOVE! */    double grade_y_value(int i);            //returns the value at the i^th position in the ordered list of multi-grade y-coordinates
-
         MapMatrix* get_boundary_mx(int dim);    //returns a matrix of boundary information for simplices
-
         DirectSumMatrices get_merge_mxs();      //returns matrices for the merge map [B+C,D], the boundary map B+C, and the multi-grade information
-
         DirectSumMatrices get_split_mxs();      //returns matrices for the split map [A,B+C], the boundary map B+C, and the multi-grade information
-
         IndexMatrix* get_index_mx(int dim);     //returns a matrix of column indexes to accompany MapMatrices
-
         IndexMatrix* get_offset_index_mx(int dim);  //returns a matrix of column indexes offset in each direction, for the boundary_A matrix in compute_eta()
 
         std::vector<int> find_vertices(int gi);	//given a global index, return (a vector containing) the vertices of the simplex
@@ -114,9 +104,6 @@ class SimplexTree {
 		
 	private:
         STNode* root;		//root node of the simplex tree
-
-//     /* MOVE! */   std::vector<double> grade_x_values;     //sorted list of unique birth times, used for creating integer indexes
-//     /* MOVE! */   std::vector<double> grade_y_values;     //sorted list of unique distances (not greater than max_distance), used for creating integer indexes
 
         unsigned x_grades;  //the number of x-grades that exist in this bifiltration
         unsigned y_grades;  //the number of y-grades that exist in this bifiltration

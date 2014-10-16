@@ -139,13 +139,13 @@ void VisualizationWindow::compute()
     if(verbosity >= 6)
     {
         std::cout << "x-grades:\n";
-        for(int i=0; i<x_grades.size(); i++)
+        for(unsigned i=0; i<x_grades.size(); i++)
             std::cout << "  " << x_grades[i] << " = " << x_exact[i] << "\n";
         std::cout << "y-grades:\n";
-        for(int i=0; i<y_grades.size(); i++)
+        for(unsigned i=0; i<y_grades.size(); i++)
             std::cout << "  " << y_grades[i] << " = " << y_exact[i] << "\n";
-        std::cout << "bifiltration simplex tree:\n";
-            bifiltration->print();
+//        std::cout << "bifiltration simplex tree:\n";
+//            bifiltration->print();
     }
 
     //compute xi_0 and xi_1 at all multi-grades
@@ -170,14 +170,14 @@ void VisualizationWindow::compute()
 
 
     //find all support points of xi_0 and xi_1
-    for(int i=0; i < x_grades.size(); i++)
+    for(unsigned i=0; i < x_grades.size(); i++)
     {
-        for(int j=0; j < y_grades.size(); j++)
+        for(unsigned j=0; j < y_grades.size(); j++)
         {
             if(mb.xi0(i,j) != 0 || mb.xi1(i,j) != 0)
             {
-                xi_support.push_back(std::pair<int,int>(i,j));
-                slice_diagram->add_point(x_grades[i], y_grades[j], mb.xi0(i,j), mb.xi1(i,j));   //TODO: MIGHT NEED SQUARE ROOTS OF Y-VALUES!!!
+                xi_support.push_back(std::pair<unsigned,unsigned>(i,j));
+                slice_diagram->add_point(x_grades[i], y_grades[j], mb.xi0(i,j), mb.xi1(i,j));
             }
         }
     }
@@ -197,29 +197,29 @@ void VisualizationWindow::compute()
     slice_diagram->create_diagram(x_label, y_label);
         //slice diagram automatically updates angle box and offset box to default values
 
-/*    //update offset extents   //TODO: FIX THIS!!!
+    //update offset extents   //TODO: FIX THIS!!!
     ui->offsetSpinBox->setMinimum(-1*data_xmax);
     ui->offsetSpinBox->setMaximum(data_ymax);
 
-    //find LCMs, build decomposition of the affine Grassmannian                             TODO: THIS CAN BE IMPROVED
+    //find LCMs, build decomposition of the affine Grassmannian                             TODO: we know a faster way to find LCMs
     if(verbosity >= 2) { std::cout << "CALCULATING LCMs AND DECOMPOSING THE STRIP:\n"; }
-    dcel = new Mesh(verbosity);
+    arrangement = new Mesh(verbosity, x_grades, x_exact, y_grades, y_exact);
 
     for(unsigned i=0; i<xi_support.size(); i++)
     {
         for(unsigned j=i+1; j<xi_support.size(); j++)
         {
-            int ax = xi_support[i].first, ay = xi_support[i].second;
-            int bx = xi_support[j].first, by = xi_support[j].second;
+            unsigned ax = xi_support[i].first, ay = xi_support[i].second;
+            unsigned bx = xi_support[j].first, by = xi_support[j].second;
 
             if((ax - bx)*(ay - by) <= 0)	//then the support points are (at least weakly) incomparable, so we have found an LCM
             {
-                double t = bifiltration->grade_x_value(std::max(ax,bx));
-                double d = bifiltration->grade_y_value(std::max(ay,by));
+                unsigned lcm_x = std::max(ax,bx);
+                unsigned lcm_y = std::max(ay,by);
 
-                if(verbosity >= 6) { std::cout << "  LCM at (" << std::max(ax,bx) << "," << std::max(ay,by) << ") => (" << t << "," << d << ") determined by (" << ax << "," << ay << ") and (" << bx << "," << by << ")\n"; }
+                if(verbosity >= 6) { std::cout << "  LCM at (" << lcm_x << "," << lcm_y << ") => (" << x_grades[lcm_x] << "," << y_grades[lcm_y] << ") determined by (" << ax << "," << ay << ") and (" << bx << "," << by << ")\n"; }
 
-                dcel->add_lcm(t, d);
+                arrangement->add_lcm(lcm_x, lcm_y);
             }
         }
     }
@@ -228,7 +228,7 @@ void VisualizationWindow::compute()
     ptime time_dcel_start(microsec_clock::local_time());
 
     //build the DCEL arrangement
-    dcel->build_arrangement();
+    arrangement->build_arrangement();
 
     //stop timer
     ptime time_dcel_end(microsec_clock::local_time());
@@ -236,29 +236,32 @@ void VisualizationWindow::compute()
 
     //print DCEL info
     std::cout << "   building the arrangement took " << duration_dcel << "\n";
-    dcel->print_stats();
+    arrangement->print_stats();
 
 //    //print the DCEL arrangement
 //    if(verbosity >= 4)
 //    {
 //        std::cout << "DCEL ARRANGEMENT:\n";
-//        dcel->print();
+//        arrangement->print();
 //    }
 
+    //verify consistency of the arrangement
+    arrangement->test_consistency();
+
    //do the persistence computations in each cell
-    if(verbosity >= 2) { std::cout << "COMPUTING PERSISTENCE DATA FOR EACH CELL:\n"; }
+/*    if(verbosity >= 2) { std::cout << "COMPUTING PERSISTENCE DATA FOR EACH CELL:\n"; }
 
     //start timer
     ptime time_pdata_start(microsec_clock::local_time());
 
     //do computations
-    dcel->build_persistence_data(xi_support, bifiltration, dim);
+    arrangement->build_persistence_data(xi_support, bifiltration, dim);
 
     //stop timer
     ptime time_pdata_end(microsec_clock::local_time());
     time_duration duration_pdata(time_pdata_end - time_pdata_start);
 
-//*    ui->statusBar->showMessage("computed persistence data");
+//    ui->statusBar->showMessage("computed persistence data");
     std::cout << "   computing persistence data took " << duration_pdata << "\n";
     if(verbosity >= 2) { std::cout << "DATA COMPUTED; READY FOR INTERACTIVITY.\n"; }
 
@@ -269,7 +272,7 @@ void VisualizationWindow::compute()
     p_diagram->resize_diagram(slice_diagram->get_slice_length(), slice_diagram->get_pd_scale());
 
     double radians = (ui->angleDoubleSpinBox->value())*3.14159265359/180;   //convert to radians
-    PersistenceData* pdata = dcel->get_persistence_data(radians, ui->offsetSpinBox->value(), xi_support, bifiltration);
+    PersistenceData* pdata = arrangement->get_persistence_data(radians, ui->offsetSpinBox->value(), xi_support, bifiltration);
 
     //TESTING
     std::cout<< "PERSISTENCE CYCLES: ";
@@ -309,7 +312,7 @@ void VisualizationWindow::on_xi1CheckBox_toggled(bool checked)
 void VisualizationWindow::update_persistence_diagram()
 {
     double radians = (ui->angleDoubleSpinBox->value())*3.14159265359/180;   //convert to radians
-    PersistenceData* pdata = dcel->get_persistence_data(radians, ui->offsetSpinBox->value(), xi_support, bifiltration);
+   PersistenceData* pdata = arrangement->get_persistence_data(radians, ui->offsetSpinBox->value(), xi_support);
 
     //TESTING
     std::cout<< "PERSISTENCE CYCLES: ";

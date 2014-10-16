@@ -20,7 +20,7 @@ exact str_to_exact(std::string& str)
     exact r;
 
     //find decimal point, if it exists
-    int dec = str.find(".");
+    int dec = str.find(".");    //I thought this should be unsigned, but then the following if statement doesn't work.
 
     if(dec == std::string::npos)	//then decimal point not found
     {
@@ -28,30 +28,45 @@ exact str_to_exact(std::string& str)
     }
     else	//then decimal point found
     {
+        //get whole part and fractional part
         std::string whole = str.substr(0,dec);
         std::string frac = str.substr(dec+1);
         unsigned exp = frac.length();
 
-        std::istringstream s(whole + frac);
+        //test for negative, and remove minus sign character
+        bool neg = false;
+        if(whole.length() > 0 && whole[0] == '-')
+        {
+            neg = true;
+            whole.erase(0, 1);
+        }
+
+        //remove leading zeros (otherwise, c++ thinks we are using octal numbers)
+        std::string num_str = whole + frac;
+        boost::algorithm::trim_left_if(num_str, boost::is_any_of("0"));
+
+        //now it is safe to convert to rational
+        std::istringstream s(num_str);
         boost::multiprecision::cpp_int num;
         s >> num;
         boost::multiprecision::cpp_int ten = 10;
         boost::multiprecision::cpp_int denom = boost::multiprecision::pow(ten,exp);
-        r = exact(num, denom);
-    }
 
+        r = exact(num, denom);
+        if(neg)
+            r = -1*r;
+    }
     return r;
 }
 
 
 
-//===============================================================================================//
+//==================== InputManager class ====================
 
 
 //constructor
 InputManager::InputManager(int d, int v) :
     verbosity(v), hom_dim(d),
-    y_squared(false),
     simplex_tree(d, v)
 { }
 
@@ -116,11 +131,6 @@ std::vector<exact> InputManager::get_y_exact()
     return y_exact;
 }
 
-bool InputManager::y_values_squared()
-{
-    return y_squared;
-}
-
 //returns a pointer to the simplex tree representing the bifiltration
 SimplexTree* InputManager::get_bifiltration()
 {
@@ -134,31 +144,29 @@ SimplexTree* InputManager::get_bifiltration()
 void InputManager::read_point_cloud(unsigned x_bins, unsigned y_bins)
 {
 	if(verbosity >= 2) { std::cout << "  Found a point cloud file.\n"; }
-
-    y_squared = true;   //we will store the SQUARES of the distance values
 	
   /* step 1: read data file and store exact (rational) values */
 
 	//prepare (temporary) data structures
     int dimension;              //integer dimension of data
-    double max_dist;            //maximum distance for edges in Vietoris-Rips complex
     std::vector<ExactPoint> points;	//create for points
 	std::string line;		//string to hold one line of input
 		
 	//read dimension of the points from the first line of the file
 	std::getline(infile,line);
 	std::stringstream(line) >> dimension;
-    if(verbosity >= 4) { std::cout << "  dimension of data: " << dimension << "; max dimension of simplices: " << hom_dim << "\n"; }
+    if(verbosity >= 4) { std::cout << "  dimension of data: " << dimension << "; max dimension of simplices: " << (hom_dim + 1) << "\n"; }
 	
 	//read maximum distance for edges in Vietoris-Rips complex
-	std::getline(infile,line);
-	std::stringstream(line) >> max_dist;
+    std::getline(infile,line);
+    boost::algorithm::trim(line);
+    exact max_dist = str_to_exact(line);
 	if(verbosity >= 4) { std::cout << "  maximum distance: " << max_dist << "\n"; }
 		
 	//read points
-	while( std::getline(infile,line) )
+    while( std::getline(infile,line) )
 	{
-		//parse current point from string
+        //parse current point from string
         std::vector<std::string> coords;
         coords.reserve(dimension + 1);
 
@@ -184,10 +192,10 @@ void InputManager::read_point_cloud(unsigned x_bins, unsigned y_bins)
 		{
             ExactPoint p = points[i];
 			std::cout << "  point " << i << ": (";
-            for(int i=0; i<p.coords.size(); i++)
+            for(unsigned j=0; j<p.coords.size(); j++)
 			{
-                std::cout << p.coords[i];
-                if(i<p.coords.size()-1) { std::cout << ", "; }
+                std::cout << p.coords[j];
+                if(j<p.coords.size()-1) { std::cout << ", "; }
 			}
             std::cout << ") born at time " << p.birth << "\n";
 		}
@@ -207,8 +215,6 @@ void InputManager::read_point_cloud(unsigned x_bins, unsigned y_bins)
 
     dist_set.insert(new ExactValue(exact(0)));
 
-    double max_dist_squared = max_dist*max_dist;
-
     //consider all points
     for(unsigned i=0; i<num_points; i++)
     {
@@ -219,18 +225,23 @@ void InputManager::read_point_cloud(unsigned x_bins, unsigned y_bins)
         (*(ret.first))->indexes.push_back(i);
 
         //compute distances from this point to all following points
-        for(int j=i+1; j<num_points; j++)
+        for(unsigned j=i+1; j<num_points; j++)
         {
             //compute distance squared between points[i] and points[j]
             exact dist_squared(0);
             for(int k=0; k < dimension; k++)
                 dist_squared += (points[i].coords[k] - points[j].coords[k])*(points[i].coords[k] - points[j].coords[k]);
 
-            double cur_dist_squared = numerator(dist_squared).convert_to<double>() / denominator(dist_squared).convert_to<double>();
-            if( cur_dist_squared <= max_dist_squared ) //then this distance is allowed  --  TODO: MAKE THIS EXACT???
+            //find an approximate square root of the exact dist_squared, and store it as an exact value
+            double fp_dist_squared = numerator(dist_squared).convert_to<double>() / denominator(dist_squared).convert_to<double>();
+            exact cur_dist(0);
+            if(fp_dist_squared > 0)
+                cur_dist = approx( sqrt(fp_dist_squared) ); //OK for now...
+
+            if( cur_dist <= max_dist ) //then this distance is allowed
             {
                 //store distance value, if it doesn't exist already
-                ret = dist_set.insert(new ExactValue(dist_squared));
+                ret = dist_set.insert(new ExactValue(cur_dist));
 
                 //remember that the pair of points (i,j) has this distance value, which will go in entry j(j-1)/2 + i
                 (*(ret.first))->indexes.push_back( (j*(j-1))/2 + i );
@@ -277,7 +288,7 @@ void InputManager::read_point_cloud(unsigned x_bins, unsigned y_bins)
         ExactSet::iterator it = time_set.begin();
         for(unsigned c = 0; c < x_bins; c++)    //loop through all bins
         {
-            ExactValue cur_bin(x_min + (c+1)*x_bin_size);    //store the bin value (i.e. the right endpoint of the bin interval)
+            ExactValue cur_bin( x_min + (c+1)*x_bin_size );    //store the bin value (i.e. the right endpoint of the bin interval)
             x_grades.push_back(cur_bin.double_value);
             x_exact.push_back(cur_bin.exact_value);
 
@@ -310,8 +321,8 @@ void InputManager::read_point_cloud(unsigned x_bins, unsigned y_bins)
     }
     else    //then use bins: then the list size will equal the number of bins, and y-values will be equally spaced
     {
-        //compute bin size: min distance is 0, so bin size is sqrt(max distance)/y_bins
-        exact y_max = (*dist_set.rbegin())->exact_value;
+        //compute bin size: min distance is 0, so bin size is (max distance)/y_bins
+        exact y_bin_size = ((*dist_set.rbegin())->exact_value)/y_bins;
 
         //store bin values
         y_grades.reserve(y_bins);
@@ -320,8 +331,7 @@ void InputManager::read_point_cloud(unsigned x_bins, unsigned y_bins)
         ExactSet::iterator it = dist_set.begin();
         for(unsigned c = 0; c < y_bins; c++)    //loop through all bins
         {
-            //FIXED THE FOLLOWING LINE -- VERIFY!!!
-            ExactValue cur_bin( (c+1)*(c+1)*y_max/(y_bins*y_bins) );    //store the bin value (i.e. this is the SQUARE of the right endpoint of the bin interval)
+            ExactValue cur_bin( (c+1)*y_bin_size );    //store the bin value (i.e. the right endpoint of the bin interval)
             y_grades.push_back(cur_bin.double_value);
             y_exact.push_back(cur_bin.exact_value);
 
@@ -387,7 +397,7 @@ void InputManager::read_point_cloud(unsigned x_bins, unsigned y_bins)
 //reads a bifiltration and constructs a simplex tree
 void InputManager::read_bifiltration()
 {
-	if(verbosity >= 2) { std::cout << "  Found a bifiltration file.\n"; }
+    if(verbosity >= 2) { std::cout << "  Found a bifiltration file. CANNOT CURRENTLY READ BIFILTRATION FILES!\n"; }
 /* THIS MUST BE UPDATED!!!
 	//prepare (temporary) data structures
 	std::string line;		//string to hold one line of input
@@ -432,5 +442,19 @@ void InputManager::read_bifiltration()
     simplex_tree.update_dim_indexes();
 */
 }//end read_bifiltration()
+
+//finds a rational approximation of a floating-point value
+// precondition: x > 0
+exact InputManager::approx(double x)
+{
+    int d = 5;	//desired number of significant digits
+    int log = (int) floor( log10(x) ) + 1;
+
+    if(log >= d)
+        return exact( (int) floor(x) );
+
+    int denom = pow(10, d-log);
+    return exact( (int) floor(x*denom), denom);
+}
 
 

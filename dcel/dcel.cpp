@@ -7,10 +7,10 @@
 
 /*** implementation of class Vertex **/
 
-Vertex::Vertex(double theta_coord, double r_coord) :
+Vertex::Vertex(double x_coord, double y_coord) :
     incident_edge(NULL),
-    theta(theta_coord),
-    r(r_coord)
+    x(x_coord),
+    y(y_coord)
 { }
 
 void Vertex::set_incident_edge(Halfedge* edge)
@@ -23,19 +23,19 @@ Halfedge* Vertex::get_incident_edge()
     return incident_edge;
 }
 
-double Vertex::get_theta()
+double Vertex::get_x()
 {
-    return theta;
+    return x;
 }
 
-double Vertex::get_r()
+double Vertex::get_y()
 {
-    return r;
+    return y;
 }
 
 std::ostream& operator<<(std::ostream& os, const Vertex& v)
 {
-    os << "(" << v.theta << ", " << v.r << ")";
+    os << "(" << v.x << ", " << v.y << ")";
     return os;
 }
 
@@ -149,81 +149,88 @@ CellPersistenceData* Face::get_data()
     return &pdata;
 }
 
-void Face::store_interior_point()
+//THIS WILL BE UNNECESSARY ONCE VINEYARDS ARE IMPLEMENTED
+//THIS DOESN'T HANDLE THE CASE WHERE A CELL EXTENDS TO x = infinity
+void Face::store_interior_point(const std::vector<double> &x_grades, const std::vector<double> &y_grades)
 {
-    //find min and max theta coordinates of vertices adjacent to this face
-    double min_theta = boundary->get_origin()->get_theta();
-    double max_theta = min_theta;
+    //find min and max x-coordinates of vertices adjacent to this face
+    double min_x = boundary->get_origin()->get_x();
+    double max_x = min_x;
 
     Halfedge* current = boundary->get_next();
 
     while(current != boundary)
     {
-        double current_theta = current->get_origin()->get_theta();
+        double current_x = current->get_origin()->get_x();
 
-        if(current_theta < min_theta)
-            min_theta = current_theta;
+        if(current_x < min_x)
+            min_x = current_x;
 
-        if(current_theta > max_theta)
-            max_theta = current_theta;
+        if(current_x > max_x)
+            max_x = current_x;
 
         current = current->get_next();
     }
 
-    //find theta coordinate between min and max theta
-    double mid_theta = (min_theta + max_theta)/2;
+    //find theta coordinate between min and max x
+    double mid_x = (min_x + max_x)/2;
 
-    //find top and bottom edges that cross the vertical line theta=mid_theta
+    //find top and bottom edges that cross the vertical line x = mid_x
     Halfedge* top_edge;
     Halfedge* bottom_edge;
 
     current = boundary;
     do{
-        double origin = current->get_origin()->get_theta();
-        double end = current->get_next()->get_origin()->get_theta();
+        double origin = current->get_origin()->get_x();
+        double end = current->get_next()->get_origin()->get_x();
 
-        if(origin <= mid_theta && end > mid_theta)
+        if(origin <= mid_x && end > mid_x)
             top_edge = current;
 
-        if(origin >= mid_theta && end < mid_theta)
+        if(origin >= mid_x && end < mid_x)
             bottom_edge = current;
 
         current = current->get_next();
     }while(current != boundary);
 
-    //find midpoint along vertical line theta=mid_theta
-    double mid_r = 0;
+    //find midpoint along vertical line x = mid_x
+    double mid_y = 0;
 
     //handle boundary cases
-    if(top_edge->get_LCM() == NULL)	//then top edge is at r=infinity
+    if(top_edge->get_LCM() == NULL)	//then top edge is at y = infinity
     {
-        if(bottom_edge->get_LCM() == NULL)	//then bottom edge is also at r=infinity
+        if(bottom_edge->get_LCM() == NULL)	//then bottom edge is at y = -infinity
         {
-            mid_r = 0;
+            mid_y = 0;
         }
         else
         {
-            mid_r = bottom_edge->get_LCM()->get_r_coord(mid_theta) + 1;
+            LCM* temp = bottom_edge->get_LCM();
+            mid_y = (x_grades[temp->get_x()]*mid_x - y_grades[temp->get_y()]) + 1;
         }
     }
-    else	//then top edge is not at r=infinity
+    else	//then top edge is not at y = infinity
     {
-        if(bottom_edge->get_LCM() == NULL)	//then bottom edge is at r=infinity
+        if(bottom_edge->get_LCM() == NULL)	//then bottom edge is at y = -infinity
         {
-            mid_r = top_edge->get_LCM()->get_r_coord(mid_theta) - 1;
+            LCM* temp = top_edge->get_LCM();
+            mid_y = (x_grades[temp->get_x()]*mid_x - y_grades[temp->get_y()]) - 1;
         }
-        else
+        else //then neither top nor bottom edge is at infinity
         {
-            double top = top_edge->get_LCM()->get_r_coord(mid_theta);
-            double bottom = bottom_edge->get_LCM()->get_r_coord(mid_theta);
-            mid_r = (top + bottom)/2;
+            LCM* lcm_top = top_edge->get_LCM();
+            LCM* lcm_bot = bottom_edge->get_LCM();
+
+            double top = (x_grades[lcm_top->get_x()]*mid_x - y_grades[lcm_top->get_y()]);
+            double bottom = (x_grades[lcm_bot->get_x()]*mid_x - y_grades[lcm_bot->get_y()]);
+            mid_y = (top + bottom)/2;
         }
 
     }
 
     //store the coordinates
-    pdata.set_theta(mid_theta);
-    pdata.set_r(mid_r);
+    pdata.set_x(mid_x);
+    pdata.set_y(mid_y);
 
 }//end store_interior_point()
 

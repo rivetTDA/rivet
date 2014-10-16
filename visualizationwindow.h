@@ -4,6 +4,8 @@
 #include <QMainWindow>
 #include <QtGui>
 
+#include "dcel/mesh.h"
+
 #include <boost/multiprecision/cpp_int.hpp>
 typedef boost::multiprecision::cpp_rational exact;
 
@@ -75,9 +77,9 @@ private:
     std::vector<double> y_grades;
     SimplexTree* bifiltration;  //discrete bifiltration
 
-    std::vector<std::pair<int, int> > xi_support;  //integer (relative) coordinates of xi support points
+    std::vector<std::pair<unsigned, unsigned> > xi_support;  //integer (relative) coordinates of xi support points
 
-    Mesh* dcel; //pointer to the DCEL arrangement
+    Mesh* arrangement; //pointer to the DCEL arrangement
 
     //items for slice diagram
     QGraphicsScene* sliceScene;

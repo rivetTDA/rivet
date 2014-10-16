@@ -4,18 +4,17 @@
 
 #include "mesh.h"
 
-//constructor; sets up bounding box (with empty interior) for the affine Grassmannian
+
+// Mesh constructor; sets up bounding box (with empty interior) for the affine Grassmannian
 Mesh::Mesh(int v, const std::vector<double> &xg, const std::vector<exact> &xe, const std::vector<double> &yg, const std::vector<exact> &ye) :
     x_grades(xg), x_exact(xe), y_grades(yg), y_exact(ye),
     INFTY(std::numeric_limits<double>::infinity()),
-    HALF_PI(boost::math::constants::pi<double>()/2),
-    EPSILON(1/pow(double(10), 10)),
 	verbosity(v)
 {
 	//create vertices
 	vertices.push_back( new Vertex(0, INFTY) );		//index 0
-	vertices.push_back( new Vertex(HALF_PI, INFTY) );	//index 1
-	vertices.push_back( new Vertex(HALF_PI, -INFTY) );	//index 2
+    vertices.push_back( new Vertex(INFTY, INFTY) );	//index 1
+    vertices.push_back( new Vertex(INFTY, -INFTY) );	//index 2
 	vertices.push_back( new Vertex(0, -INFTY) );		//index 3
 	
 	//create halfedges
@@ -61,71 +60,9 @@ Mesh::~Mesh()
 }//end destructor
 
 //adds an LCM; curve will be created when build_arrangement() is called
-void Mesh::add_lcm(double x, double y)
+void Mesh::add_lcm(unsigned x, unsigned y)
 {
     all_lcms.insert(new LCM(x, y));
-}
-
-
-///// DATA STRUCTURES FOR BENTLEY-OTTMANN ALGORITHM /////
-//struct to hold a future intersection event
-struct Crossing {
-    LCM* a;     //pointer to one curve
-    LCM* b;     //pointer to the other curve -- must ensure that curve for LCM a is below curve for LCM b just before the crossing point!!!!!
-    double t;    //theta-coordinate of intersection point
-    double r;    //r-coordinate of the intersection point
-
-    Crossing(LCM* a, LCM* b, double t, double r) : a(a), b(b), t(t), r(r) { }
-};
-
-//comparator class for ordering crossings: first by theta (left to right); then for a given theta, by r (low to high)
-struct CrossingComparator {
-    bool operator()(const Crossing* c1, const Crossing* c2) const	//returns true if c1 comes after c2
-    {
-        //TESTING
-        if(c1->a->get_position() >= c1->b->get_position() || c2->a->get_position() >= c2->b->get_position())
-        {
-            std::cerr << "INVERTED CROSSING ERROR\n";
-            std::cerr << "crossing 1 involves LCMS " << c1->a << " (pos " << c1->a->get_position() << ") and " << c1->b << " (pos " << c1->b->get_position() << "),";
-            std::cerr << "crossing 2 involves LCMS " << c2->a << " (pos " << c2->a->get_position() << ") and " << c2->b << " (pos " << c2->b->get_position() << "),";
-            throw std::exception();
-        }
-
-        double epsilon = pow(2,-30);
-
-        if(c1->t - c2->t > epsilon) //then c1 > c2      <<<------------ THIS ISN'T SO GOOD....IMPROVE!!!
-            return true;
-        if(c1->t - c2->t < -1*epsilon) //then c1 < c2     <<<------------ THIS ISN'T SO GOOD....IMPROVE!!!
-            return false;
-
-        //else, then c1->t == c2->t, so consider r-coordinate
-
-        //TESTING
-        if(c1->a->get_position() == c2->a->get_position())
-        {
-            std::cerr << "ILLEGAL CROSSING ERROR\n";
-            std::cerr << "crossing 1 involves LCMS " << c1->a << " (pos " << c1->a->get_position() << ") and " << c1->b << " (pos " << c1->b->get_position() << "),";
-            std::cerr << "crossing 2 involves LCMS " << c2->a << " (pos " << c2->a->get_position() << ") and " << c2->b << " (pos " << c2->b->get_position() << "),";
-            throw std::exception();
-        }
-
-        //
-//        return (c1->r - c2->r > epsilon);   //true if c1->r > c2->r; false if c1->r < c2->r or they are too close to tell
-
-        if(c1->r - c2->r > epsilon) //then c1 > c2
-            return true;
-        if(c1->r - c2->r < -1*epsilon) //then c1 < c2
-            return false;
-
-        //else, theta and r coordinates are both equal, then sort by relative position of curves
-        return c1->a->get_position() > c2->a->get_position();   //IS THERE A BETTER WAY???
-    }
-};
-
-//tests whether x and y are with epsilon -- TO BE REPLACED LATER BY EXACT COMPARISON
-bool Mesh::equal(double x, double y)
-{
-    return abs(x-y) < EPSILON;
 }
 
 //function to build the arrangement using a version of the Bentley-Ottmann algorithm, given all LCMs
@@ -144,9 +81,9 @@ void Mesh::build_arrangement()
 
     // DATA STRUCTURES
 
-    //data structure for ordered list of curves
-    std::vector<Halfedge*> curves;
-    curves.reserve(all_lcms.size());
+    //data structure for ordered list of lines
+    std::vector<Halfedge*> lines;
+    lines.reserve(all_lcms.size());
 
     //data structure for queue of future intersections
     std::priority_queue< Crossing*, std::vector<Crossing*>, CrossingComparator > crossings;
@@ -155,57 +92,70 @@ void Mesh::build_arrangement()
     typedef std::pair<LCM*,LCM*> LCM_pair;
     std::set< LCM_pair > considered_pairs;
 
-    //current position of sweep line
-    double sweep = 0;
-
   // PART 1: INSERT VERTICES AND EDGES ALONG LEFT EDGE OF THE STRIP
     if(verbosity >= 5) { std::cout << "PART 1: LEFT EDGE OF STRIP\n"; }
 
     //for each LCM, create vertex and associated halfedges, anchored on the left edge of the strip
     Halfedge* leftedge = bottomleft;
+    unsigned prev_y = std::numeric_limits<unsigned>::max();
     for(std::set<LCM*, LCM_LeftComparator>::iterator it = all_lcms.begin(); it != all_lcms.end(); ++it)
     {
         LCM* cur_lcm = *it;
 
-        if(verbosity >= 6) { std::cout << "  Processing LCM(" << cur_lcm->get_x() << "," << cur_lcm->get_y() << "):"; }
+        if(verbosity >= 6) { std::cout << "  Processing LCM " << cur_lcm << " at (" << cur_lcm->get_x() << "," << cur_lcm->get_y() << "), "; }
 
-        if(cur_lcm->get_y() != leftedge->get_origin()->get_r())	//then create new vertex and set leftedge to edge that will follow the new edge
-            leftedge = insert_vertex(leftedge, 0, cur_lcm->get_y());
+        if(cur_lcm->get_y() != prev_y)	//then create new vertex
+        {
+            leftedge = insert_vertex(leftedge, 0, y_grades[cur_lcm->get_y()]);    //set leftedge to edge that will follow the new edge
+            prev_y = cur_lcm->get_y();  //remember the discrete y-index
+        }
 
         //now insert new edge at origin vertex of leftedge
         Halfedge* new_edge = create_edge_left(leftedge, cur_lcm);
 
         //remember Halfedge corresponding to this LCM
-        curves.push_back(new_edge);
+        lines.push_back(new_edge);
 
         //remember relative position of this LCM
-        cur_lcm->set_position(curves.size() - 1);
+        cur_lcm->set_position(lines.size() - 1);
 
         //remember curve associated with this LCM --- THIS MIGHT BE UNNECESSARY AFTER TESTING IS COMPLETE!!!
-        cur_lcm->set_curve(new_edge);
+        cur_lcm->set_line(new_edge);
     }
+    if(verbosity >= 6) { std::cout << "\n"; }
 
-    //for each pair of consecutive curves, if they intersect, store the intersection
-    for(unsigned i = 0; i < curves.size() - 1; i++)
+    //for each pair of consecutive lines, if they intersect, store the intersection
+    for(unsigned i = 0; i < lines.size() - 1; i++)
     {
-        LCM* a = curves[i]->get_LCM();
-        LCM* b = curves[i+1]->get_LCM();
+        LCM* a = lines[i]->get_LCM();
+        LCM* b = lines[i+1]->get_LCM();
+        if( a->comparable(b) )    //then the LCMs are (strongly) comparable, so we must store an intersection
+            crossings.push(new Crossing(a, b, this));
 
+        //remember that we have now considered this intersection
         considered_pairs.insert(LCM_pair(a,b));
-
-        double t = find_intersection(a, b);
-        if(verbosity >= 6) { std::cout << "  curves " << i << " (LCM  " << a << ") and " << i+1 << " (LCM " << b << ") intersect at theta = " << t << "\n"; }
-
-        if(t > 0)
-            crossings.push(new Crossing(a, b, t, find_r(a, t)));
     }
+
+    //TESTING
+//    std::cout << "THE PRIORITY QUEUE CONTAINS:\n";
+//    while(!crossings.empty())
+//    {
+//        //get the next intersection from the queue
+//        Crossing* cur = crossings.top();
+//        crossings.pop();
+//        std::cout << " intersection: LCM " << cur->a << " (" << cur->a->get_position() << "), LCM " << cur->b << " (" << cur->b->get_position() << ") intersect at x = " << cur->x << "\n";
+//    }
+
 
   // PART 2: PROCESS INTERIOR INTERSECTIONS
-    //    order: theta left to right; for a given theta, r low to high
+    //    order: x left to right; for a given x, then y low to high
     if(verbosity >= 5) { std::cout << "PART 2: PROCESSING INTERIOR INTERSECTIONS\n"; }
 
     int status_counter = 0;
     int status_interval = 10000;
+
+    //current position of sweep line
+    Crossing* sweep = NULL;
 
     while(!crossings.empty())
     {
@@ -214,20 +164,20 @@ void Mesh::build_arrangement()
         crossings.pop();
 
         //process the intersection
-        sweep = cur->t;
+        sweep = cur;
         unsigned first_pos = cur->a->get_position();   //most recent edge in the curve corresponding to LCM a
         unsigned last_pos = cur->b->get_position();   //most recent edge in the curve corresponding to LCM b
 
-        if(verbosity >= 6) { std::cout << " next intersection: LCM " << cur->a << " (" << first_pos << "), LCM " << cur->b << " (" << last_pos << ")\n"; }
+        if(verbosity >= 6) { std::cout << " next intersection: LCM " << cur->a << " (pos " << first_pos << "), LCM " << cur->b << " (pos " << last_pos << ")\n"; }
 
         if(last_pos != first_pos + 1)
         {
-            std::cerr << "ERROR: intersection between non-consecutive curves [1]: theta = " << sweep << ", r = " << find_r( curves[first_pos]->get_LCM(), sweep ) << "\n";
+            std::cerr << "ERROR: intersection between non-consecutive curves [1]: x = " << sweep->x << "\n";
             throw std::exception();
         }
 
         //find out if more than two curves intersect at this point
-        while(!crossings.empty() && equal(sweep, crossings.top()->t) && (cur->b == crossings.top()->a) )
+        while( !crossings.empty() && sweep->x_equal(crossings.top()) && (cur->b == crossings.top()->a) )
         {
             cur = crossings.top();
             crossings.pop();
@@ -248,23 +198,23 @@ void Mesh::build_arrangement()
 //        Crossing* next = crossings.top();
 //        std::cout << "      [looking ahead: " << next->a << " (" << next->a->get_position() << "), " << next->b << " (" << next->b->get_position() << ") at theta = " << next->t << "]\n";
 
-        //find r-coordinate of intersection
-//        double r = find_r( curves[first_pos]->get_LCM(), sweep ); ---NO LONGER NECESSARY!!!
+        //compute y-coordinate of intersection
+        double intersect_y = x_grades[sweep->a->get_x()]*(sweep->x) - y_grades[sweep->a->get_y()];
 
-        if(verbosity >= 6) { std::cout << "  found intersection between " << (last_pos - first_pos + 1) << " edges at theta = " << sweep << ", r = " << cur->r << "\n"; }
+        if(verbosity >= 6) { std::cout << "  found intersection between " << (last_pos - first_pos + 1) << " edges at x = " << sweep->x << ", y = " << intersect_y << "\n"; }
 
         //create new vertex
-        Vertex* new_vertex = new Vertex(sweep, cur->r);
+        Vertex* new_vertex = new Vertex(sweep->x, intersect_y);
         vertices.push_back(new_vertex);
 
         //anchor edges to vertex and create new face(s) and edges	//TODO: check this!!!
         Halfedge* prev_new_edge = NULL;                 //necessary to remember the previous new edge at each interation of the loop
-        Halfedge* first_incoming = curves[first_pos];   //necessary to remember the first incoming edge
+        Halfedge* first_incoming = lines[first_pos];   //necessary to remember the first incoming edge
         Halfedge* prev_incoming = NULL;                 //necessary to remember the previous incoming edge at each iteration of the loop
         for(unsigned cur_pos = first_pos; cur_pos <= last_pos; cur_pos++)
         {
             //anchor edge to vertex
-            Halfedge* incoming = curves[cur_pos];
+            Halfedge* incoming = lines[cur_pos];
             incoming->get_twin()->set_origin(new_vertex);
 
             //create next pair of twin halfedges along the current curve (i.e. curves[incident_edges[i]] )
@@ -279,10 +229,10 @@ void Mesh::build_arrangement()
 
             if(cur_pos == first_pos)    //then this is the first iteration of the loop
             {
-                new_twin->set_next( curves[last_pos]->get_twin() );
-                curves[last_pos]->get_twin()->set_prev(new_twin);
+                new_twin->set_next( lines[last_pos]->get_twin() );
+                lines[last_pos]->get_twin()->set_prev(new_twin);
 
-                new_twin->set_face( curves[last_pos]->get_twin()->get_face() );
+                new_twin->set_face( lines[last_pos]->get_twin()->get_face() );
             }
             else    //then this is not the first iteration of the loop, so close up a face and create a new face
             {
@@ -311,21 +261,21 @@ void Mesh::build_arrangement()
                 new_edge->set_face( first_incoming->get_face() );
             }
 
-            //update curves vector
-            curves[cur_pos] = new_edge; //the portion of this vector [first_pos, last_pos] must be reversed after this loop is finished!
+            //update lines vector
+            lines[cur_pos] = new_edge; //the portion of this vector [first_pos, last_pos] must be reversed after this loop is finished!
 
             //remember position of this LCM
             new_edge->get_LCM()->set_position(last_pos - (cur_pos - first_pos));
 //            if(verbosity >= 6) { std::cout << "    - set LCM " << new_edge->get_LCM() << " to position " << (last_pos - (cur_pos - first_pos)) << "\n"; }
         }
 
-        //update curves vector: flip portion of vector [first_pos, last_pos]
+        //update lines vector: flip portion of vector [first_pos, last_pos]
         for(unsigned i = 0; i < (last_pos - first_pos + 1)/2; i++)
         {
             //swap curves[first_pos + i] and curves[last_pos - i]
-            Halfedge* temp = curves[first_pos + i];
-            curves[first_pos + i] = curves[last_pos - i];
-            curves[last_pos - i] = temp;
+            Halfedge* temp = lines[first_pos + i];
+            lines[first_pos + i] = lines[last_pos - i];
+            lines[last_pos - i] = temp;
         }
 
         //TESTING
@@ -337,31 +287,29 @@ void Mesh::build_arrangement()
         //find new intersections and add them to intersections queue
         if(first_pos > 0)   //then consider lower intersection
         {
-            LCM* a = curves[first_pos-1]->get_LCM();
-            LCM* b = curves[first_pos]->get_LCM();
-            if(considered_pairs.find(LCM_pair(a,b)) == considered_pairs.end())	//then this pair has not yet been considered
+            LCM* a = lines[first_pos-1]->get_LCM();
+            LCM* b = lines[first_pos]->get_LCM();
+
+            if(considered_pairs.find(LCM_pair(a,b)) == considered_pairs.end()
+                    && considered_pairs.find(LCM_pair(b,a)) == considered_pairs.end() )	//then this pair has not yet been considered
             {
                 considered_pairs.insert(LCM_pair(a,b));
-                double t = find_intersection(a, b);
-                if(verbosity >= 6) { std::cout << "  curves " << a << " (" << a->get_position() << ") and " << b << " (" << b->get_position() << ") intersect at theta = " << t << "\n"; }
-
-                if(t > sweep)
-                    crossings.push(new Crossing(a, b, t, find_r(a, t)));
+                if( a->comparable(b) )    //then the LCMs are (strongly) comparable, so we have found an intersection to store
+                    crossings.push(new Crossing(a, b, this));
             }
         }
 
-        if(last_pos + 1 < curves.size())    //then consider upper intersection
+        if(last_pos + 1 < lines.size())    //then consider upper intersection
         {
-            LCM* a = curves[last_pos]->get_LCM();
-            LCM* b = curves[last_pos+1]->get_LCM();
-            if(considered_pairs.find(LCM_pair(a,b)) == considered_pairs.end())	//then this pair has not yet been considered
+            LCM* a = lines[last_pos]->get_LCM();
+            LCM* b = lines[last_pos+1]->get_LCM();
+
+            if( considered_pairs.find(LCM_pair(a,b)) == considered_pairs.end()
+                    && considered_pairs.find(LCM_pair(b,a)) == considered_pairs.end() )	//then this pair has not yet been considered
             {
                 considered_pairs.insert(LCM_pair(a,b));
-                double t = find_intersection(a, b);
-                if(verbosity >= 6) { std::cout << "  curves " << a << " (" << a->get_position() << ") and " << b << " (" << b->get_position() << ") intersect at theta = " << t << "\n"; }
-
-                if(t > sweep)
-                    crossings.push(new Crossing(a, b, t, find_r(a, t)));
+                if( a->comparable(b) )    //then the LCMs are (strongly) comparable, so we have found an intersection to store
+                    crossings.push(new Crossing(a, b, this));
             }
         }
 
@@ -374,28 +322,30 @@ void Mesh::build_arrangement()
         }
     }//end while
 
-  // PART 3: INSERT VERTICES ON RIGHT EDGE OF STRIP AND CONNECT EDGES
+  // PART 3: INSERT VERTICES ON RIGHT EDGE OF STRIP AND CONNECT EDGES           TODO: FIX THIS PART!!!!!!!!!!!!!!!!!!!!!!!!!!
     if(verbosity >= 5) { std::cout << "PART 3: RIGHT EDGE OF THE STRIP\n"; }
 
     Halfedge* rightedge = bottomright; //need a reference halfedge along the right side of the strip
-    double last_x = INFTY;      //keep track of x-coordinate of last LCM whose curve was connected to right side of strip; this will decrease from infinity
+    unsigned cur_x = 0;      //keep track of x-coordinate of last LCM whose line was connected to right edge
 
-    //connect each curve to the right edge of the strip
-    for(unsigned cur_pos = 0; cur_pos < curves.size(); cur_pos++)
+    //connect each line to the right edge of the arrangement (at x = INFTY)
+    //    requires creating a vertex for each unique slope (i.e. LCM x-coordinate)
+    //    lines that have the same slope m are "tied together" at the same vertex, with coordinates (INFTY, m)
+    for(unsigned cur_pos = 0; cur_pos < lines.size(); cur_pos++)
     {
-        LCM* cur_lcm = curves[cur_pos]->get_LCM();
+        LCM* cur_lcm = lines[cur_pos]->get_LCM();
 
-        if(cur_lcm->get_x() < last_x)    //then insert a new vertex
+        if(cur_lcm->get_x() > cur_x || cur_pos == 0)    //then insert a new vertex
         {
-            last_x = cur_lcm->get_x();
-            rightedge = insert_vertex( rightedge, HALF_PI, -1*last_x );
+            cur_x = cur_lcm->get_x();
+            rightedge = insert_vertex( rightedge, INFTY, x_grades[cur_x] );
         }
-        //otherwise, connect current curve to previously-inserted vertex
+        //otherwise, connect current line to the previously-inserted vertex
 
         Vertex* cur_vertex = rightedge->get_origin();
 
         //anchor halfedge to vertex
-        Halfedge* incoming = curves[cur_pos];
+        Halfedge* incoming = lines[cur_pos];
         incoming->get_twin()->set_origin(cur_vertex);
 
         //update halfedge pointers
@@ -415,10 +365,10 @@ void Mesh::build_arrangement()
 //inserts a new vertex on the specified edge, with the specified coordinates, and updates all relevant pointers
 //  i.e. new vertex is between initial and termainal points of the specified edge
 //returns pointer to a new halfedge, whose initial point is the new vertex, and that follows the specified edge around its face
-Halfedge* Mesh::insert_vertex(Halfedge* edge, double t, double r)
+Halfedge* Mesh::insert_vertex(Halfedge* edge, double x, double y)
 {
 	//create new vertex
-	Vertex* new_vertex = new Vertex(t, r);
+    Vertex* new_vertex = new Vertex(x, y);
 	vertices.push_back(new_vertex);
 	
 	//get twin and LCM of this edge
@@ -493,46 +443,16 @@ Halfedge* Mesh::create_edge_left(Halfedge* edge, LCM* lcm)
     return new_edge;
 }//end create_edge_left()
 
-//returns the theta-coordinate of intersection of two LCM curves if intersection occurs for 0 < theta < pi/2
-//  otherwise, returns -1
-double Mesh::find_intersection(LCM* a, LCM* b)
-{
-    double ax = a->get_x();
-    double ay = a->get_y();
-    double bx = b->get_x();
-    double by = b->get_y();
-
-    if( (ax - bx)*(ay - by) < 0 )   //then the LCMS are incomparable, so no intersection exists
-        return -1;
-
-    if(ax == bx || ay == by)    //then the intersection is at theta = pi/2 or theta = 0
-        return -1;
-
-    //otherwise, the intersection is at 0 <= theta < pi/2
-    return atan( (ay - by)/(ax - bx) );
-}
-
-//returns the r-coordinate corresponding to theta = t on the curve for LCM a
-double Mesh::find_r(LCM* a, double t)
-{
-    double x = a->get_x();
-    double y = a->get_y();
-
-    if(x != 0)
-        return sqrt( x*x + y*y ) * sin( atan(y/x) - t );
-
-    return sqrt(x*x + y*y) * cos(t);
-}
 
 //associates a persistence diagram to each face (IN PROGRESS)
-void Mesh::build_persistence_data(std::vector<std::pair<int, int> > & xi, SimplexTree* bifiltration, int dim)
+void Mesh::build_persistence_data(std::vector<std::pair<unsigned, unsigned> > & xi, SimplexTree* bifiltration, int dim)
 {
 	//loop through all faces (NOTE: this can probably be optimized to take into account adjacency relationships among faces)
     for(unsigned i=0; i<faces.size(); i++)
 	{
         if(verbosity >= 4) { std::cout << "  Computing persistence data for face " << i << ":\n"; }
 		
-		faces[i]->store_interior_point();
+        faces[i]->store_interior_point(x_grades, y_grades);
 		
         faces[i]->get_data()->compute_data(xi, bifiltration, dim, x_grades, y_grades);
 	}
@@ -541,9 +461,9 @@ void Mesh::build_persistence_data(std::vector<std::pair<int, int> > & xi, Simple
 
 //returns a persistence diagram associated with the specified point
 //uses a naive point-location algorithm to find the cell containing the point
-PersistenceData* Mesh::get_persistence_data(double angle, double offset, std::vector<std::pair<int, int> > & xi, SimplexTree* bifiltration)
+PersistenceData* Mesh::get_persistence_data(double angle, double offset, std::vector<std::pair<unsigned, unsigned> > &xi)
 {
-	//find the cell that contains the point
+/*	//find the cell that contains the point
 	//first, find starting point on left edge of strip
 	LCM* current = new LCM(0, offset);
 	std::set<LCM*>::iterator itleft;
@@ -710,6 +630,7 @@ PersistenceData* Mesh::get_persistence_data(double angle, double offset, std::ve
 	
     //return persistence data
     return pdata;
+    */
 }//end get_persistence_data
 
 //projects (x,y) onto the line determined by angle and offset
@@ -718,14 +639,14 @@ std::pair<bool, double> Mesh::project(double angle, double offset, double x, dou
 	double p = 0;	//if there is a projection, then this will be set to its coordinate
 	bool b = true;	//if there is no projection, then this will be set to false
 	
-	if(angle == 0)	//horizontal line
+/*	if(angle == 0)	//horizontal line
 	{
 		if(y <= offset)	//then point is below line
 			p = x;
 		else	//no projection
 			b = false;
 	}
-	else if(angle < HALF_PI)	//line is neither horizontal nor vertical
+    else if(angle < HALF_PI)	//line is neither horizontal nor vertical       ----- FIX THIS!!!!!
 	{
 		if(y > x*tan(angle) + offset/cos(angle))	//then point is above line
 			p = y/sin(angle) - offset/tan(angle); //project right
@@ -739,7 +660,7 @@ std::pair<bool, double> Mesh::project(double angle, double offset, double x, dou
 		else	//no projection
 			b = false;
 	}
-	
+    */
 	return std::pair<bool, double>(b,p);
 }//end project()
 
@@ -797,7 +718,7 @@ void Mesh::print()
     for(it = all_lcms.begin(); it != all_lcms.end(); ++it)
 	{
 		LCM cur = **it;
-        std::cout << "(" << cur.get_x() << ", " << cur.get_y() << ") halfedge " << HID(cur.get_curve()) << "; ";
+        std::cout << "(" << cur.get_x() << ", " << cur.get_y() << ") halfedge " << HID(cur.get_line()) << "; ";
 	}
 	std::cout << "\n";
 	
@@ -944,7 +865,7 @@ void Mesh::test_consistency()
         LCM* lcm = *it;
         std::cout << "  Checking curve for LCM (" << lcm->get_x() <<", " << lcm->get_y() << ")\n";
 
-        Halfedge* edge = lcm->get_curve();
+        Halfedge* edge = lcm->get_line();
         do{
             edges_found_in_curves.insert(HID(edge));
             edges_found_in_curves.insert(HID(edge->get_twin()));
@@ -972,7 +893,7 @@ void Mesh::test_consistency()
             while(edge->get_LCM() != lcm)
                 edge = edge->get_twin()->get_next();
 
-        }while(edge->get_origin()->get_theta() < HALF_PI);
+        }while(edge->get_origin()->get_x() < INFTY);
     }//end curve loop
 
     //ignore halfedges on both sides of boundary
@@ -1015,7 +936,7 @@ void Mesh::test_consistency()
     Halfedge* redge = halfedges[3];
     while(redge != halfedges[1])
     {
-        std::cout << " r = " << redge->get_origin()->get_r() << "\n";
+        std::cout << " y = " << redge->get_origin()->get_y() << "\n";
         redge = redge->get_next();
     }
 
@@ -1023,4 +944,109 @@ void Mesh::test_consistency()
 
 }//end test_consistency()
 
+
+
+/********** the following objects and functions are for exact comparisons **********/
+
+//Crossing constructor
+//precondition: LCMs a and b must be comparable
+Mesh::Crossing::Crossing(LCM* a, LCM* b, Mesh* m) : a(a), b(b), m(m)
+{
+    //store the x-coordinate of the crossing for fast (inexact) comparisons
+    x = (m->y_grades[a->get_y()] - m->y_grades[b->get_y()])/(m->x_grades[a->get_x()] - m->x_grades[b->get_x()]);
+
+    //TESTING ONLY
+    std::cout << "  Crossing created for curves " << a->get_position() << " (LCM  " << a << ") and " << b->get_position() << " (LCM " << b << "), which intersect at x = " << x << "\n";
+}
+
+//returns true iff this Crossing has (exactly) the same x-coordinate as other Crossing
+bool Mesh::Crossing::x_equal(const Crossing *other) const
+{
+    if(Mesh::almost_equal(x, other->x)) //then compare exact values
+    {
+        //find exact x-values
+        exact x1 = (m->y_exact[a->get_y()] - m->y_exact[b->get_y()])/(m->x_exact[a->get_x()] - m->x_exact[b->get_x()]);
+        exact x2 = (m->y_exact[other->a->get_y()] - m->y_exact[other->b->get_y()])/(m->x_exact[other->a->get_x()] - m->x_exact[other->b->get_x()]);
+
+        return x1 == x2;
+    }
+    //otherwise, x-coordinates are not equal
+    return false;
+}
+
+//CrossingComparator for ordering crossings: first by x (left to right); for a given x, then by y (low to high)
+bool Mesh::CrossingComparator::operator()(const Crossing* c1, const Crossing* c2) const	//returns true if c1 comes after c2
+{
+    //TESTING
+    if(c1->a->get_position() >= c1->b->get_position() || c2->a->get_position() >= c2->b->get_position())
+    {
+        std::cerr << "INVERTED CROSSING ERROR\n";
+        std::cerr << "crossing 1 involves LCMS " << c1->a << " (pos " << c1->a->get_position() << ") and " << c1->b << " (pos " << c1->b->get_position() << "),";
+        std::cerr << "crossing 2 involves LCMS " << c2->a << " (pos " << c2->a->get_position() << ") and " << c2->b << " (pos " << c2->b->get_position() << "),";
+        throw std::exception();
+    }
+//    if(c1->a->get_position() == c2->a->get_position())
+//    {
+//        std::cerr << "ILLEGAL CROSSING ERROR\n";
+//        std::cerr << "crossing 1 involves LCMS " << c1->a << " (pos " << c1->a->get_position() << ") and " << c1->b << " (pos " << c1->b->get_position() << "),";
+//        std::cerr << "crossing 2 involves LCMS " << c2->a << " (pos " << c2->a->get_position() << ") and " << c2->b << " (pos " << c2->b->get_position() << "),";
+//        throw std::exception();
+//    }
+
+
+    Mesh* m = c1->m;    //makes it easier to reference arrays in the mesh
+
+    //now do the comparison
+    //if the x-coordinates are nearly equal as double values, then compare exact values
+    if(Mesh::almost_equal(c1->x, c2->x))
+    {
+        //find exact x-values
+        exact x1 = (m->y_exact[c1->a->get_y()] - m->y_exact[c1->b->get_y()])/(m->x_exact[c1->a->get_x()] - m->x_exact[c1->b->get_x()]);
+        exact x2 = (m->y_exact[c2->a->get_y()] - m->y_exact[c2->b->get_y()])/(m->x_exact[c2->a->get_x()] - m->x_exact[c2->b->get_x()]);
+
+        //if the x-values are exactly equal, then consider the y-values
+        if(x1 == x2)
+        {
+            //find the y-values
+            double c1y = m->x_grades[c1->a->get_x()]*(c1->x) - m->y_grades[c1->a->get_y()];
+            double c2y = m->x_grades[c2->a->get_x()]*(c2->x) - m->y_grades[c2->a->get_y()];
+
+            //if the y-values are nearly equal as double values, then compare exact values
+            if(Mesh::almost_equal(c1y, c2y))
+            {
+                //find exact y-values
+                exact y1 = m->x_exact[c1->a->get_x()]*x1 - m->y_exact[c1->a->get_y()];
+                exact y2 = m->x_exact[c2->a->get_x()]*x2 - m->y_exact[c2->a->get_y()];
+
+                //if the y-values are exactly equal, then sort by relative position of the lines
+                if(y1 == y2)
+                    return c1->a->get_position() > c2->a->get_position();   //Is there a better way???
+
+                //otherwise, the y-values are not equal
+                return y1 > y2;
+            }
+            //otherwise, the y-values are not almost equal
+            return c1y > c2y;
+        }
+        //otherwise, the x-values are not equal
+        return x1 > x2;
+    }
+    //otherwise, the x-values are not almost equal
+    return c1->x > c2->x;
+}
+
+//epsilon value for use in comparisons
+double Mesh::epsilon = pow(2,-30);
+
+//test whether two double values are almost equal (indicating that we should do exact comparison)
+bool Mesh::almost_equal(const double a, const double b)
+{
+    double diff = std::abs(a - b);
+    if(diff <= epsilon)
+        return true;
+
+    if(diff <= (std::abs(a) + std::abs(b))*epsilon)
+        return true;
+    return false;
+}
 
