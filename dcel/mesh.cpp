@@ -7,6 +7,7 @@
 #include <boost/graph/graph_traits.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/kruskal_min_spanning_tree.hpp>
+#include <boost/graph/metric_tsp_approx.hpp>
 
 
 // Mesh constructor; sets up bounding box (with empty interior) for the affine Grassmannian
@@ -499,8 +500,19 @@ void Mesh::build_persistence_data(std::vector<std::pair<unsigned, unsigned> > & 
     std::vector<Edge> spanning_tree_edges;
     boost::kruskal_minimum_spanning_tree(dual_graph, std::back_inserter(spanning_tree_edges));
 
-    std::cout << "num MST edges " << spanning_tree_edges.size() << "\n";
+    std::cout << "num MST edges: " << spanning_tree_edges.size() << "\n";
+    for(unsigned i=0; i<spanning_tree_edges.size(); i++)
+        std::cout << "  (" << boost::source(spanning_tree_edges[i], dual_graph) << ", " << boost::target(spanning_tree_edges[i], dual_graph) << ")\n";
 
+
+  // PART 3: FIND A HAMILTONIAN TOUR
+    typedef boost::graph_traits<Graph>::vertex_descriptor Vertex;
+    std::vector<Vertex> tsp_vertices;
+    boost::metric_tsp_approx_tour(dual_graph, std::back_inserter(tsp_vertices));
+
+    std::cout << "num TSP vertices: " << tsp_vertices.size() << "\n";
+    for(unsigned i=0; i<tsp_vertices.size(); i++)
+        std::cout << "  " << tsp_vertices[i] << "\n";
 
 }//end build_persistence_data()
 
