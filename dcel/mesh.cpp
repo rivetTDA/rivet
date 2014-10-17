@@ -4,6 +4,10 @@
 
 #include "mesh.h"
 
+#include <boost/graph/graph_traits.hpp>
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/kruskal_min_spanning_tree.hpp>
+
 
 // Mesh constructor; sets up bounding box (with empty interior) for the affine Grassmannian
 Mesh::Mesh(int v, const std::vector<double> &xg, const std::vector<exact> &xe, const std::vector<double> &yg, const std::vector<exact> &ye) :
@@ -447,15 +451,57 @@ Halfedge* Mesh::create_edge_left(Halfedge* edge, LCM* lcm)
 //associates a persistence diagram to each face (IN PROGRESS)
 void Mesh::build_persistence_data(std::vector<std::pair<unsigned, unsigned> > & xi, SimplexTree* bifiltration, int dim)
 {
-	//loop through all faces (NOTE: this can probably be optimized to take into account adjacency relationships among faces)
+  // PART 1: CONSTRUCT THE DUAL GRAPH OF THE ARRANGEMENT
+    typedef boost::property<boost::edge_weight_t, int> EdgeWeightProperty;
+    typedef boost::adjacency_list< boost::vecS, boost::vecS, boost::undirectedS,
+                                   boost::no_property, EdgeWeightProperty > Graph;  //TODO: probably listS is a better choice than vecS, but I don't know how to make the adjacency_list work with listS
+    Graph dual_graph;
+
+    //make a map for reverse-lookup of face indexes by face pointers -- Is this really necessary? How can I avoid doing this?
+    std::map<Face*, unsigned> face_indexes;
     for(unsigned i=0; i<faces.size(); i++)
-	{
-        if(verbosity >= 4) { std::cout << "  Computing persistence data for face " << i << ":\n"; }
-		
-        faces[i]->store_interior_point(x_grades, y_grades);
-		
-        faces[i]->get_data()->compute_data(xi, bifiltration, dim, x_grades, y_grades);
-	}
+        face_indexes.insert( std::pair<Face*, unsigned>(faces[i], i));
+
+    //loop over all faces
+    for(unsigned i=0; i<faces.size(); i++)
+    {
+        //consider all neighbors of this faces
+        Halfedge* boundary = (faces[i])->get_boundary();
+        Halfedge* current = boundary;
+        do
+        {
+            //find index of neighbor
+            Face* neighbor = current->get_twin()->get_face();
+            if(neighbor != NULL)
+            {
+                std::map<Face*, unsigned>::iterator it = face_indexes.find(neighbor);
+                unsigned j = it->second;
+
+                //if i < j, then create an (undirected) edge between these faces
+                if(i < j)
+                    boost::add_edge(i, j, 1, dual_graph);   //for now, all edges have unit weight
+            }
+            //move to the next neighbor
+            current = current->get_next();
+        }while(current != boundary);
+    }
+
+    //TESTING -- print the edges in the dual graph
+    std::cout << "EDGES IN THE DUAL GRAPH OF THE ARRANGEMENT: \n";
+    typedef boost::graph_traits<Graph>::edge_iterator edge_iterator;
+    std::pair<edge_iterator, edge_iterator> ei = boost::edges(dual_graph);
+    for(edge_iterator it = ei.first; it != ei.second; ++it)
+        std::cout << "  (" << boost::source(*it, dual_graph) << ", " << boost::target(*it, dual_graph) << ")\n";
+
+
+  // PART 2: FIND A MINIMAL SPANNING TREE
+    typedef boost::graph_traits<Graph>::edge_descriptor Edge;
+    std::vector<Edge> spanning_tree_edges;
+    boost::kruskal_minimum_spanning_tree(dual_graph, std::back_inserter(spanning_tree_edges));
+
+    std::cout << "num MST edges " << spanning_tree_edges.size() << "\n";
+
+
 }//end build_persistence_data()
 
 

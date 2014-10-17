@@ -249,7 +249,7 @@ void VisualizationWindow::compute()
     arrangement->test_consistency();
 
    //do the persistence computations in each cell
-/*    if(verbosity >= 2) { std::cout << "COMPUTING PERSISTENCE DATA FOR EACH CELL:\n"; }
+    if(verbosity >= 2) { std::cout << "COMPUTING PERSISTENCE DATA FOR EACH CELL:\n"; }
 
     //start timer
     ptime time_pdata_start(microsec_clock::local_time());
@@ -263,7 +263,7 @@ void VisualizationWindow::compute()
 
 //    ui->statusBar->showMessage("computed persistence data");
     std::cout << "   computing persistence data took " << duration_pdata << "\n";
-    if(verbosity >= 2) { std::cout << "DATA COMPUTED; READY FOR INTERACTIVITY.\n"; }
+/*    if(verbosity >= 2) { std::cout << "DATA COMPUTED; READY FOR INTERACTIVITY.\n"; }
 
 //    qDebug() << "zero: " << slice_diagram->get_zero();
 
