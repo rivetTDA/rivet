@@ -4,6 +4,9 @@
 
 #include "mesh.h"
 
+#include <list>
+#include <qdebug.h>
+
 #include <boost/graph/graph_traits.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/kruskal_min_spanning_tree.hpp>
@@ -11,10 +14,11 @@
 
 
 // Mesh constructor; sets up bounding box (with empty interior) for the affine Grassmannian
-Mesh::Mesh(int v, const std::vector<double> &xg, const std::vector<exact> &xe, const std::vector<double> &yg, const std::vector<exact> &ye) :
+Mesh::Mesh(const std::vector<double> &xg, const std::vector<exact> &xe, const std::vector<double> &yg, const std::vector<exact> &ye, int v) :
     x_grades(xg), x_exact(xe), y_grades(yg), y_exact(ye),
     INFTY(std::numeric_limits<double>::infinity()),
-	verbosity(v)
+    verbosity(v),
+    xi_matrix(x_grades.size(), y_grades.size())
 {
 	//create vertices
 	vertices.push_back( new Vertex(0, INFTY) );		//index 0
@@ -64,11 +68,70 @@ Mesh::~Mesh()
 	
 }//end destructor
 
-//adds an LCM; curve will be created when build_arrangement() is called
-void Mesh::add_lcm(unsigned x, unsigned y)
+//stores xi support points from MultiBetti in Mesh (in a sparse array) and in the supplied vector
+//    also computes and stores LCMs in Mesh; LCM curves will be created when build_arrangment() is called
+void Mesh::store_xi_points(MultiBetti& mb, std::vector<xiPoint>& xi_pts)
 {
-    all_lcms.insert(new LCM(x, y));
-}
+    if(verbosity >= 2) { std::cout << "Storing xi support points in sparse matrix and computing LCMs\n"; }
+
+    //store xi points in the sparse matrix and the vector
+    xi_matrix.fill(mb, xi_pts);
+
+    //get pointers to top entries in nonempty columns
+    std::list<xiMatrixEntry*> nonempty_cols;
+    for(unsigned i = 0; i < x_grades.size(); i++)
+    {
+        xiMatrixEntry* col_entry = xi_matrix.get_col(i); //top entry in row j, possibly NULL
+        if(col_entry != NULL)
+            nonempty_cols.push_front(col_entry);
+    }
+
+    //compute and store LCMs
+    for(int j = y_grades.size() - 1; j >= 0; j--)  //loop through all rows, top to bottom
+    {
+        xiMatrixEntry* row_entry = xi_matrix.get_row(j); //rightmost entry in row j, possibly NULL
+
+        std::list<xiMatrixEntry*>::iterator it = nonempty_cols.begin();
+        while( it != nonempty_cols.end() )  //loop through all nonempty columns, right to left
+        {
+            if(row_entry == NULL)   //then there is nothing else in this row
+                break;
+
+            //check if there is a LCM in position (i,j)
+            xiMatrixEntry* col_entry = *it;
+            if(col_entry == NULL)
+                 qDebug() << "ERROR: NULL col_entry";
+            if(row_entry != col_entry)  //then there is a (non-weak) LCM at (col_entry->x, row_entry->y)
+            {
+                all_lcms.insert(new LCM(col_entry, row_entry));
+                if(verbosity >= 4) { std::cout << "  LCM found at (" << col_entry->x << ", " << row_entry->y << ")\n"; }
+            }
+            else    //then row_entry == col_entry, so there might be a weak LCM at (col_entry->x, row_entry->y)
+            {
+                if(col_entry->down != NULL || row_entry->left != NULL)  //then there is a weak LCM
+                {
+                    all_lcms.insert(new LCM(col_entry));  //second argument NULL indicates this LCM is weak
+                    if(verbosity >= 4) { std::cout << "  LCM (possibly weak) found at (" << col_entry->x << ", " << col_entry->y << ")\n"; }
+                }
+            }
+
+            //update cur_row_entry, if necessary
+            if( row_entry->x == col_entry->x )  //then set row_entry to the next non-null entry in this row, if such entry exists
+                row_entry = row_entry->left;
+
+            //update nonempty_cols, if necessary
+            if( col_entry->y == j )  //then replace this column entry with the next non-null entry in this column, if such entry exists
+            {
+                it = nonempty_cols.erase(it);   //NOTE: this advances the column iterator!
+
+                if(col_entry->down != NULL)
+                    nonempty_cols.insert(it, col_entry->down);   ///TODO: CHECK THIS!!!
+            }
+            else    //then advance the column iterator
+                ++it;
+        }//end column loop
+    }//end row loop
+}//end store_xi_points()
 
 //function to build the arrangement using a version of the Bentley-Ottmann algorithm, given all LCMs
 //preconditions:
@@ -495,7 +558,7 @@ void Mesh::build_persistence_data(std::vector<std::pair<unsigned, unsigned> > & 
         std::cout << "  (" << boost::source(*it, dual_graph) << ", " << boost::target(*it, dual_graph) << ")\n";
 
 
-  // PART 2: FIND A MINIMAL SPANNING TREE
+  // PART 2a: FIND A MINIMAL SPANNING TREE
     typedef boost::graph_traits<Graph>::edge_descriptor Edge;
     std::vector<Edge> spanning_tree_edges;
     boost::kruskal_minimum_spanning_tree(dual_graph, std::back_inserter(spanning_tree_edges));
@@ -505,7 +568,7 @@ void Mesh::build_persistence_data(std::vector<std::pair<unsigned, unsigned> > & 
         std::cout << "  (" << boost::source(spanning_tree_edges[i], dual_graph) << ", " << boost::target(spanning_tree_edges[i], dual_graph) << ")\n";
 
 
-  // PART 3: FIND A HAMILTONIAN TOUR
+  // PART 2b: FIND A HAMILTONIAN TOUR
     typedef boost::graph_traits<Graph>::vertex_descriptor Vertex;
     std::vector<Vertex> tsp_vertices;
     boost::metric_tsp_approx_tour(dual_graph, std::back_inserter(tsp_vertices));
@@ -513,6 +576,22 @@ void Mesh::build_persistence_data(std::vector<std::pair<unsigned, unsigned> > & 
     std::cout << "num TSP vertices: " << tsp_vertices.size() << "\n";
     for(unsigned i=0; i<tsp_vertices.size(); i++)
         std::cout << "  " << tsp_vertices[i] << "\n";
+
+  // PART 3: INITIAL PERSISTENCE COMPUTATION
+
+
+
+
+  // PART 4: TRAVERSE THE TOUR AND DO VINEYARD UPDATES
+
+
+
+
+
+
+
+
+
 
 }//end build_persistence_data()
 
@@ -781,6 +860,8 @@ void Mesh::print()
 	std::cout << "\n";
 	
 }//end print()
+
+/********** functions for testing **********/
 
 //look up halfedge ID, used in print() for debugging
 // HID = halfedge ID

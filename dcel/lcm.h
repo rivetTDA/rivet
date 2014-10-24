@@ -8,11 +8,17 @@
 #ifndef __DCEL_LCM_H__
 #define __DCEL_LCM_H__
 
+struct xiMatrixEntry;
+
 class Halfedge;
 
 class LCM   //updated to store only discrete indexes
 {
     public:
+        LCM(xiMatrixEntry* down, xiMatrixEntry* left);  //constructor for a NON-WEAK LCM, requires pointers to the "generators" of the LCM
+        LCM(xiMatrixEntry* point);  //constructor for a WEAK LCM, requires pointer to the xi support at the LCM
+
+      ///TODO: these other constructors might be unnecessary now:
         LCM(unsigned x, unsigned y);		//constructor, requires only time and distance values
         LCM(unsigned x, unsigned y, Halfedge* e);	//constructor, requires all three parameters
         LCM(const LCM& other);			//copy constructor
@@ -34,6 +40,10 @@ class LCM   //updated to store only discrete indexes
     private:
         unsigned x_coord;	//discrete x-coordinate (e.g. time) of multi-index
         unsigned y_coord;	//discrete y-coordinate (e.g. distance) of multi-inded
+
+        xiMatrixEntry* down;    //"down generator" of this LCM; if this is a weak LCM, then this generator is at the LCM position
+        xiMatrixEntry* left;    //"left generator" of this LCM; this pointer is NULL if and only if this is a weak LCM
+
         Halfedge* curve;	//pointer to left-most halfedge corresponding to this LCM in the arrangement --- IS THIS USED FOR ANYTHING BESIDES TESTING???
         unsigned position;  //relative position of LCM curve at sweep line, used for Bentley-Ottmann DCEL construction algorithm
 };

@@ -15,18 +15,7 @@ class SliceLine;
 class PersistenceBar;
 
 
-//first, a little struct to organize the data used to draw the points in the SliceDiagram
-struct xiPoint
-{
-    double x, y;    //coordinates
-    int zero, one;  //multiplicity of xi_0 and xi_1 at this point
 
-    xiPoint(double xc, double yc, double m0, double m1) : x(xc), y(yc), zero(m0), one(m1)
-    { }
-};
-
-
-//now for the SliceDiagram class
 class SliceDiagram
 {
 public:
@@ -61,7 +50,7 @@ public:
     double get_zero();          //gets the coordinate on the slice line which we consider "zero" for the persistence diagram
 
 private:
-    //graphics items
+  //graphics items
     QGraphicsScene* scene;
     VisualizationWindow* window;
 
@@ -87,8 +76,18 @@ private:
 
     PersistenceBar* selected;
 
-    //data items
-    std::vector<xiPoint> points;    //point data to be drawn in the slice area
+  //data items
+    struct xiFloatingPoint  ///TODO: is this a good design? consider how to most efficiently store the points
+    {
+        double x, y;    //floating-point coordinates
+        int zero, one;  //multiplicity of xi_0 and xi_1 at this point
+
+        xiFloatingPoint(double xc, double yc, int m0, int m1) : x(xc), y(yc), zero(m0), one(m1)
+        { }
+    };
+    std::vector<xiFloatingPoint> points;    //point data to be drawn in the slice area
+
+
     double data_xmin, data_xmax, data_ymin, data_ymax;  //min and max coordinates of the data
     double data_infty;      //data position that is outside of the window, used for drawing bars that extend to infinity
 

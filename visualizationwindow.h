@@ -77,7 +77,7 @@ private:
     std::vector<double> y_grades;
     SimplexTree* bifiltration;  //discrete bifiltration
 
-    std::vector<std::pair<unsigned, unsigned> > xi_support;  //integer (relative) coordinates of xi support points
+    std::vector<xiPoint> xi_support;  //stores discrete coordinates of xi support points, with multiplicities
 
     Mesh* arrangement; //pointer to the DCEL arrangement
 

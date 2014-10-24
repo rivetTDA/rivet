@@ -18,7 +18,7 @@ SliceDiagram::SliceDiagram(QGraphicsScene* sc, VisualizationWindow* vw, double x
 
 void SliceDiagram::add_point(double x_coord, double y_coord, int xi0m, int xi1m)
 {
-    points.push_back(xiPoint(x_coord, y_coord, xi0m, xi1m));
+    points.push_back(xiFloatingPoint(x_coord, y_coord, xi0m, xi1m));
 }
 
 //NOTE: create_diagram() simply creates all objects; resize_diagram() handles positioning of objects
@@ -166,6 +166,7 @@ void SliceDiagram::resize_diagram()
     y_label->setPos(-1*text_padding - y_label->boundingRect().height(), (diagram_height - y_label->boundingRect().width())/2);
 
     //reposition points
+    //TODO: IS THIS GOOD DESIGN???
     //NOTE: if this is too slow, we could store the radius of each dot so that we don't have to compute it on each resize
     std::vector<QGraphicsEllipseItem*>::iterator it0 = xi0_dots.begin();
     std::vector<QGraphicsEllipseItem*>::iterator it1 = xi1_dots.begin();

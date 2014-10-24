@@ -3,9 +3,18 @@
 #include <cstddef>  //for NULL
 #include <math.h>
 
+#include "xi_support_matrix.h"
 
-/*** IMPLEMENTATION OF LCM CLASS ***/
+//constructor for a NON-WEAK LCM, requires pointers to the "generators" of the LCM
+LCM::LCM(xiMatrixEntry* down, xiMatrixEntry* left) : x_coord(down->x), y_coord(left->y), down(down), left(left)
+{ }
 
+//constructor for a WEAK LCM, requires pointer to the xi support at the LCM
+LCM::LCM(xiMatrixEntry* point) : x_coord(point->x), y_coord(point->y), down(point), left(NULL)
+{ }
+
+
+///TODO: these other constructors might be unnecessary now
 LCM::LCM(unsigned x, unsigned y) : x_coord(x), y_coord(y), curve(NULL)
 { }
 
