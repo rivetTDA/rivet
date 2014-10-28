@@ -19,6 +19,7 @@
 #include "lcm.h"
 #include "dcel.h"
 #include "xi_point.h"
+//#include "multigrade.h"   do I need this???
 #include "cell_persistence_data.h"
 #include "../math/persistence_data.h"
 #include "../math/multi_betti.h"
@@ -51,17 +52,10 @@ class Mesh
 		
 		~Mesh();	//destructor: IMPLEMENT THIS, MAKE SURE ALL MEMORY IS RELEASED!!!!
 		
-        void store_xi_points(MultiBetti& mb, std::vector<xiPoint>& xi_pts);
-            //stores xi support points from MultiBetti in Mesh (in a sparse array) and in the supplied vector
-            //also computes and stores LCMs in Mesh; LCM curves will be created when build_arrangment() is called
+        void build_arrangement(MultiBetti& mb, std::vector<xiPoint>& xi_pts);
+            //builds the DCEL arrangement, computes and stores persistence data
+            //also stores ordered list of xi support points in the supplied vector
 
-        void build_arrangement();
-            //function to build the arrangement using a version of the Bentley-Ottmann algorithm
-            //precondition: all LCMs have been stored via store_xi_points()
-		
-        void build_persistence_data(std::vector<std::pair<unsigned, unsigned> > &xi, SimplexTree* bifiltration, int dim);
-			//associates persistence data to each face, requires all support points of xi_0 and xi_1, the bifiltration, and the dimension of homology
-		
         PersistenceData* get_persistence_data(double angle, double offset, std::vector<std::pair<unsigned, unsigned> > & xi);
             //returns persistence diagram data associated with the specified point (line); angle should be in RADIANS
 		
@@ -95,15 +89,32 @@ class Mesh
 		
 		const int verbosity;			//controls display of output, for debugging
 
+        xiSupportMatrix xi_matrix;  //sparse matrix to hold xi support points
+
+
+
+      //functions for creating the arrangement
+        void store_xi_points(MultiBetti& mb, std::vector<xiPoint>& xi_pts);
+            //stores xi support points from MultiBetti in Mesh (in a sparse array) and in the supplied vector
+            //also computes and stores LCMs in Mesh; LCM curves will be created when build_arrangment() is called
+
+        void build_interior();
+            //builds the interior of DCEL arrangement using a version of the Bentley-Ottmann algorithm
+            //precondition: all LCMs have been stored via store_xi_points()
+
         Halfedge* insert_vertex(Halfedge* edge, double x, double y);	//inserts a new vertex on the specified edge, with the specified coordinates, and updates all relevant pointers
         Halfedge* create_edge_left(Halfedge* edge, LCM* lcm);    //creates the first pair of Halfedges in an LCM curve, anchored on the left edge of the strip
 
-		std::pair<bool, double> project(double angle, double offset, double x, double y);	//projects (x,y) onto the line determined by angle and offset
+        void store_multigrades(IndexMatrix* ind, bool low);     //stores multigrade info for the persistence computations; low is true for simplices of dimension hom_dim, false for simplices of dimension hom_dim+1
+
+        void store_persistence_data(SimplexTree* bifiltration, int dim); 	//associates a discrete barcode to each 2-cell of the arrangement
+
+
+        std::pair<bool, double> project(double angle, double offset, double x, double y);	//projects (x,y) onto the line determined by angle and offset
 		
         unsigned HID(Halfedge* h);		//halfedge ID, for printing and debugging
         unsigned FID(Face* f);		//face ID, for printing and debugging
 
-        xiSupportMatrix xi_matrix;  //sparse matrix to hold xi support points
 
 
       //struct to hold a future intersection event

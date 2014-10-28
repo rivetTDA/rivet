@@ -134,7 +134,7 @@ void VisualizationWindow::compute()
     ptime time_dcel_start(microsec_clock::local_time());    //start timer
 
     arrangement = new Mesh(x_grades, x_exact, y_grades, y_exact, verbosity);
-    arrangement->store_xi_points(mb, xi_support); //stores xi support points in the last argument; also computes and stores LCMs in the arrangement
+    arrangement->build_arrangement(mb, xi_support);     //also stores list of xi support points in the last argument
 
     ptime time_dcel_end(microsec_clock::local_time());      //stop timer
     time_duration duration_dcel(time_dcel_end - time_dcel_start);
@@ -147,12 +147,6 @@ void VisualizationWindow::compute()
             std::cout << "(" << xi_support[i].x << "," << xi_support[i].y << "), ";
         std::cout << "\n";
     }
-
-
-    ///TODO: build the arrangement here!
-
-
-
 
     //print arrangement info
     std::cout << "   building the arrangement took " << duration_dcel << "\n";

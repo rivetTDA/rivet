@@ -17,14 +17,14 @@ public:
     void set(unsigned row, unsigned col, int value);
     int get(unsigned row, unsigned col) const;
 
-    int width();    //returns number of columns
-    int height();   //returns number of rows
+    unsigned width();    //returns number of columns
+    unsigned height();   //returns number of rows
 
     void print();   //for testing
 
 private:
-    int num_rows;
-    int num_cols;
+    unsigned num_rows;
+    unsigned num_cols;
     int* data;
 };
 

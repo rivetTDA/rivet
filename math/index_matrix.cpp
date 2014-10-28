@@ -28,12 +28,12 @@ int IndexMatrix::get(unsigned row, unsigned col) const
     return data[num_cols*row + col];
 }
 
-int IndexMatrix::width()
+unsigned IndexMatrix::width()
 {
     return num_cols;
 }
 
-int IndexMatrix::height()
+unsigned IndexMatrix::height()
 {
     return num_rows;
 }

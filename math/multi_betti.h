@@ -37,12 +37,12 @@ class MultiBetti
 		
         void print_lows(Vector &lows);  //TESTING ONLY
 		
-		
+        SimplexTree* bifiltration;		//pointer to the bifiltration
+
+        const int dimension;		//dimension of homology to compute
+
 	private:
-		SimplexTree* bifiltration;		//pointer to the bifiltration
-		
-        int dimension;		//dimension of homology to compute
-		
+
         unsigned num_x_grades;  //number of grades in primary direction
         unsigned num_y_grades;  //number of grades in secondary direction
 

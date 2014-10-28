@@ -391,6 +391,7 @@ void SimplexTree::write_boundary_column(MapMatrix* mat, STNode* sim, int col, in
 
 
 //returns a matrix of column indexes to accompany MapMatrices
+//  entry (i,j) gives the last column of the MapMatrix that corresponds to multigrade (i,j)
 IndexMatrix* SimplexTree::get_index_mx(int dim)
 {
     //select set of simplices of dimension dim
@@ -406,7 +407,7 @@ IndexMatrix* SimplexTree::get_index_mx(int dim)
     //create the IndexMatrix
     int x_size = x_grades;
     int y_size = y_grades;
-    IndexMatrix* mat = new IndexMatrix(y_size, x_size);			//DELETE this object later???
+    IndexMatrix* mat = new IndexMatrix(y_size, x_size);			//DELETE this object later!
 
     if(!simplices->empty()) //then there is at least one simplex
     {

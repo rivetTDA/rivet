@@ -1,15 +1,34 @@
 #include "xi_support_matrix.h"
 
-//constructor for xiMatrixEntry
+/********** xiMatrixEntry **********/
+
+//empty constructor, e.g. for the entry representing infinity
+xiMatrixEntry::xiMatrixEntry() :
+    x(-1), y(-1), index(-1),    //sets these items to MAX_UNSIGNED, right?
+    down(NULL), left(NULL)
+{ }
+
+//regular constructor
 xiMatrixEntry::xiMatrixEntry(unsigned x, unsigned y, unsigned i, xiMatrixEntry* d, xiMatrixEntry* l) :
     x(x), y(y), index(i), down(d), left(l)
 { }
 
+//associates a multigrades to this xi entry
+//the "low" argument is true if this multigrade is for low_simplices, and false if it is for high_simplices
+void xiMatrixEntry::add_multigrade(unsigned x, unsigned y, unsigned first_col, unsigned last_col, bool low)
+{
+    if(low)
+        low_simplices.push_back(new Multigrade(x, y, first_col, last_col, this));
+    else
+        high_simplices.push_back(new Multigrade(x, y, first_col, last_col, this));
+}
 
+
+/********** xiSupportMatrix **********/
 
 //constructor for xiSupportMatrix
 xiSupportMatrix::xiSupportMatrix(unsigned width, unsigned height) :
-    columns(width), rows(height)
+    columns(width), rows(height), infinity()
 { }
 
 xiSupportMatrix::~xiSupportMatrix()
@@ -62,4 +81,10 @@ xiMatrixEntry* xiSupportMatrix::get_row(unsigned r)
 xiMatrixEntry* xiSupportMatrix::get_col(unsigned c)
 {
     return columns[c];
+}
+
+//gets a pointer to the infinity entry
+xiMatrixEntry* xiSupportMatrix::get_infinity()
+{
+    return &infinity;
 }

@@ -68,6 +68,24 @@ Mesh::~Mesh()
 	
 }//end destructor
 
+//builds the DCEL arrangement, computes and stores persistence data
+//also stores ordered list of xi support points in the supplied vector
+void Mesh::build_arrangement(MultiBetti& mb, std::vector<xiPoint>& xi_pts)
+{
+    //step 0: the constructor has already created the boundary of the arrangement
+
+    //step 1: store xi support points, and compute and store LCMs
+    store_xi_points(mb, xi_pts);
+
+    //step 2: build the interior of the arrangement
+    build_interior();
+
+    //step 3: store persistence data in each 2-cell
+    store_persistence_data(mb.bifiltration, mb.dimension);
+
+}//end build_arrangement()
+
+
 //stores xi support points from MultiBetti in Mesh (in a sparse array) and in the supplied vector
 //    also computes and stores LCMs in Mesh; LCM curves will be created when build_arrangment() is called
 void Mesh::store_xi_points(MultiBetti& mb, std::vector<xiPoint>& xi_pts)
@@ -137,7 +155,7 @@ void Mesh::store_xi_points(MultiBetti& mb, std::vector<xiPoint>& xi_pts)
 //preconditions:
 //		all LCMs are in a list, ordered by lcm_left_comparator
 //		boundary of the mesh is created (as in the mesh constructor)
-void Mesh::build_arrangement()
+void Mesh::build_interior()
 {
     if(verbosity >= 5)
     {
@@ -427,7 +445,7 @@ void Mesh::build_arrangement()
 
         rightedge->get_twin()->set_face(incoming->get_twin()->get_face());
     }
-}//end build_arrangement()
+}//end build_interior()
 
 
 //inserts a new vertex on the specified edge, with the specified coordinates, and updates all relevant pointers
@@ -512,10 +530,11 @@ Halfedge* Mesh::create_edge_left(Halfedge* edge, LCM* lcm)
 }//end create_edge_left()
 
 
-//associates a persistence diagram to each face (IN PROGRESS)
-void Mesh::build_persistence_data(std::vector<std::pair<unsigned, unsigned> > & xi, SimplexTree* bifiltration, int dim)
+//associates a discrete barcode to each 2-cell of the arrangement (IN PROGRESS)
+void Mesh::store_persistence_data(SimplexTree* bifiltration, int dim)
 {
   // PART 1: CONSTRUCT THE DUAL GRAPH OF THE ARRANGEMENT
+
     typedef boost::property<boost::edge_weight_t, int> EdgeWeightProperty;
     typedef boost::adjacency_list< boost::vecS, boost::vecS, boost::undirectedS,
                                    boost::no_property, EdgeWeightProperty > Graph;  //TODO: probably listS is a better choice than vecS, but I don't know how to make the adjacency_list work with listS
@@ -559,6 +578,7 @@ void Mesh::build_persistence_data(std::vector<std::pair<unsigned, unsigned> > & 
 
 
   // PART 2a: FIND A MINIMAL SPANNING TREE
+
     typedef boost::graph_traits<Graph>::edge_descriptor Edge;
     std::vector<Edge> spanning_tree_edges;
     boost::kruskal_minimum_spanning_tree(dual_graph, std::back_inserter(spanning_tree_edges));
@@ -569,6 +589,7 @@ void Mesh::build_persistence_data(std::vector<std::pair<unsigned, unsigned> > & 
 
 
   // PART 2b: FIND A HAMILTONIAN TOUR
+
     typedef boost::graph_traits<Graph>::vertex_descriptor Vertex;
     std::vector<Vertex> tsp_vertices;
     boost::metric_tsp_approx_tour(dual_graph, std::back_inserter(tsp_vertices));
@@ -578,6 +599,27 @@ void Mesh::build_persistence_data(std::vector<std::pair<unsigned, unsigned> > & 
         std::cout << "  " << tsp_vertices[i] << "\n";
 
   // PART 3: INITIAL PERSISTENCE COMPUTATION
+
+    //get multi-grade data in each dimension
+    if(verbosity >= 4) { std::cout << "Mapping low simplices:\n"; }
+    IndexMatrix* ind_low = bifiltration->get_index_mx(dim);    //this could be improved a bit, since the index matrix is not the most efficient way to pass the data
+    store_multigrades(ind_low, true);
+    delete ind_low;
+
+    if(verbosity >= 4) { std::cout << "Mapping high simplices:\n"; }
+    IndexMatrix* ind_high = bifiltration->get_index_mx(dim + 1);    //again, could be improved
+    store_multigrades(ind_high, false);
+    delete ind_high;
+
+
+
+
+
+    //maybe we want a different matrix structure???
+//    MapMatrix* bdry1 = bifiltration->get_boundary_mx(dim);
+//    MapMatrix* bdry2 = bifiltration->get_boundary_mx(dim + 1);
+
+
 
 
 
@@ -594,6 +636,83 @@ void Mesh::build_persistence_data(std::vector<std::pair<unsigned, unsigned> > & 
 
 
 }//end build_persistence_data()
+
+//stores multigrade info for the persistence computations
+//  low is true for simplices of dimension hom_dim, false for simplices of dimension hom_dim+1
+void Mesh::store_multigrades(IndexMatrix* ind, bool low)
+{
+    //initialize linked list to track the "frontier"
+    typedef std::list<xiMatrixEntry*> Frontier;
+    Frontier frontier;
+
+    //loop through rows of xiSupportMatrix, from top to bottom
+    for(int y = ind->height() - 1; y >= 0; y--)
+    {
+        //update the frontier
+        xiMatrixEntry* cur = xi_matrix.get_row(y);
+        if(cur != NULL)
+        {
+            //advance an iterator to the position of the right-most non-null entry in this row
+            Frontier::iterator it = frontier.begin();
+            while( it != frontier.end() && (*it)->x > cur->x )
+                ++it;
+
+            //remove any entries after this position from the frontier
+            frontier.erase(it, frontier.end());
+
+            //insert cur at the end of the frontier
+            frontier.push_back(cur);
+
+            //now add all other non-null entries in this row to the frontier
+            cur = cur->left;
+            while(cur != NULL)
+            {
+                frontier.push_back(cur);
+                cur = cur->left;
+            }
+        }
+
+        //store all multigrades and simplices whose y-grade is y
+        Frontier::iterator it = frontier.begin();
+        for(int x = ind->width() - 1; x >= 0; x--)
+        {
+            //get range of column indexes for simplices at multigrade (x,y)
+            int last_col = ind->get(y, x);  //arguments are row, then column
+            int first_col = 0;
+            if(x > 0)
+                first_col = ind->get(y, x-1) + 1;
+            else if(y > 0)
+                first_col = ind->get(y-1, ind->width()-1) + 1;
+
+            //if there are any simplices at (x,y), then add multigrade (x,y)
+            if(last_col >= first_col)
+            {
+                //if the frontier is empty or if x is to the right of the first element, then map multigrade (x,y) to infinity
+                if( it == frontier.end() || (*it)->x < x )    //NOTE: if iterator has advanced from frontier.begin(), then it MUST be the case that x < (*it)->x
+                {
+//                    qDebug() << "      processing columns" << first_col << "to" << last_col << ": map to infinity";
+                    xi_matrix.get_infinity()->add_multigrade(x, y, first_col, last_col, low);
+                    if(verbosity >= 4) { std::cout << "    simplices at (" << x << ", " << y << "), in columns " << first_col << " to " << last_col << ", mapped to infinity\n"; }
+                }
+                else    //then map multigrade (x,y) to the last element of the frontier such that (*it)->x >= x
+                {
+//                    qDebug() << "      processing columns" << first_col << "to" << last_col << ": map to finite point";
+                    //advance the iterator to the first element of the frontier such that (*it)->x < x
+                    while( it != frontier.end() && (*it)->x >= x )
+                        ++it;
+
+                    //back up one position, to the last element of the frontier such that (*it)->x >= x
+                    --it;
+
+                    //now map the multigrade to the element given by the iterator
+                    (*it)->add_multigrade(x, y, first_col, last_col, low);
+                    if(verbosity >= 4) { std::cout << "    simplices at (" << x << ", " << y << "), in columns " << first_col << " to " << last_col << ", mapped to xi support point (" << (*it)->x << ", " << (*it)->y << ")\n"; }
+                }
+            }
+        }//end x loop
+    }//end y loop
+
+}//end store_multigrades()
 
 
 //returns a persistence diagram associated with the specified point

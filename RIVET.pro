@@ -31,7 +31,8 @@ SOURCES += main.cpp                         \
 		math/persistence_data.cpp           \
 		math/simplex_tree.cpp               \
 		math/st_node.cpp \
-    dcel/xi_point.cpp
+    dcel/xi_point.cpp \
+    dcel/multigrade.cpp
     
 
 HEADERS  += visualizationwindow.h \
@@ -54,7 +55,8 @@ HEADERS  += visualizationwindow.h \
 		math/persistence_data.h           \
 		math/simplex_tree.h               \
 		math/st_node.h \
-    dcel/xi_point.h
+    dcel/xi_point.h \
+    dcel/multigrade.h
     
 
 FORMS   += visualizationwindow.ui         \
