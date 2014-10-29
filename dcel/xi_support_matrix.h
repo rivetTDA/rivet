@@ -3,6 +3,7 @@
 
 
 #include <vector>
+#include <list>
 
 #include "../math/multi_betti.h"
 
@@ -19,8 +20,8 @@ struct xiMatrixEntry
     xiMatrixEntry* down;     //pointer to the next support point below this one
     xiMatrixEntry* left;     //pointer to the next support point left of this one
 
-    std::vector<Multigrade*> low_simplices;     //associated multigrades for simplices of lower dimension
-    std::vector<Multigrade*> high_simplices;    //associated multigrades for simplices of higher dimension
+    std::list<Multigrade*> low_simplices;     //associated multigrades for simplices of lower dimension --- MAYBE SHOULD BE forward_list
+    std::list<Multigrade*> high_simplices;    //associated multigrades for simplices of higher dimension --- MAYBE SHOULD BE forward_list
 
     xiMatrixEntry();    //empty constructor, e.g. for the entry representing infinity
     xiMatrixEntry(unsigned x, unsigned y, unsigned i, xiMatrixEntry* d, xiMatrixEntry* l);  //regular constructor
@@ -47,6 +48,9 @@ class xiSupportMatrix
         std::vector<xiMatrixEntry*> columns;
         std::vector<xiMatrixEntry*> rows;
         xiMatrixEntry infinity;
+
+        ///TODO: also need lists of multigrades at each row and column, to support lazy updates
+
 };
 
 #endif // XI_SUPPORT_MATRIX_H

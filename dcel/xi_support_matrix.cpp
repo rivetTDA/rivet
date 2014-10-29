@@ -18,9 +18,9 @@ xiMatrixEntry::xiMatrixEntry(unsigned x, unsigned y, unsigned i, xiMatrixEntry* 
 void xiMatrixEntry::add_multigrade(unsigned x, unsigned y, unsigned first_col, unsigned last_col, bool low)
 {
     if(low)
-        low_simplices.push_back(new Multigrade(x, y, first_col, last_col, this));
+        low_simplices.push_front(new Multigrade(x, y, first_col, last_col, this));
     else
-        high_simplices.push_back(new Multigrade(x, y, first_col, last_col, this));
+        high_simplices.push_front(new Multigrade(x, y, first_col, last_col, this));
 }
 
 

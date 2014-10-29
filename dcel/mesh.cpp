@@ -620,14 +620,19 @@ void Mesh::store_persistence_data(SimplexTree* bifiltration, int dim)
 //    MapMatrix* bdry2 = bifiltration->get_boundary_mx(dim + 1);
 
 
+    //reduce matrices and store discrete barcode in initial cell
 
 
 
-
-  // PART 4: TRAVERSE THE TOUR AND DO VINEYARD UPDATES
-
+  // PART 4: TRAVERSE THE HAMILTONIAN PATH AND DO VINEYARD UPDATES
 
 
+    //for each edge:
+        //LCM determines equivalences classes, which determine which blocks of columns must swap
+        //find any updates to the map F:S -> U
+        //obtain permutation of matrix columns, which we decompose into transpositions
+        //for each transposition, update the matrices
+        //store discrete barcode
 
 
 
