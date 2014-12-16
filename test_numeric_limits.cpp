@@ -13,5 +13,15 @@ int main () {
   unsigned minus = -1;
   std::cout << "unsigned -1 is " << minus << "\n";
   
+  minus++;
+    std::cout << "  0: " << minus << "\n";
+  minus++;
+    std::cout << "  1: " << minus << "\n";
+  minus -= 3;
+    std::cout << "  -2: " << minus << "\n";
+
+   
+    
+    
   return 0;
 }
