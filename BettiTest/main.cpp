@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
     //start the input manager
     InputManager* im = new InputManager(dim, verbosity);
     std::string filestr = argv[1];
-    im->start(filestr, 0, 0);   //NOTE: last two arguments are bins
+    im->start(filestr, 10, 10);   //NOTE: last two arguments are bins
 
     //get the data
     std::vector<double> x_grades = im->get_x_grades();
@@ -123,30 +123,29 @@ int main(int argc, char* argv[])
 
     std::cout << "   NEW ALGORITHM: xi_i computation took " << duration2 << "\n";
 
+    bool agree = true;
+
     //output xi_0
     std::cout << "  VALUES OF xi_0 for dimension " << dim << ":\n";
     for(unsigned i=y_grades.size(); i>0; i--)
     {
         std::cout << "     y = " << (i-1) << " | ";
         for(unsigned j=0; j<x_grades.size(); j++)
+        {
             std::cout << mb_new.xi0(j,i-1) << "  ";
+            if(mb_new.xi0(j,i-1) != mb_new.xi0(j,i-1))
+                agree = false;
+        }
         std::cout << "\n";
     }
     std::cout << col_labels;
 
 
-    //output xi_1
-/*    std::cout << "\n  VALUES OF xi_1 for dimension " << dim << ":\n";
-    for(int i=bifiltration->num_y_grades()-1; i>=0; i--)
-    {
-        std::cout << "     y = " << i << " | ";
-        for(int j=0; j<bifiltration->num_x_grades(); j++)
-        {
-            std::cout << mb_new.xi1(j,i) << "  ";
-        }
-        std::cout << "\n";
-    }
-    std::cout << col_labels << "\n";
-*/
+    std::cout << "\n";
+    if(agree)
+        std::cout << "The new algorithm agrees with the old!\n";
+    else
+        std::cout << "ERROR: The new algorithm DOES NOT agree with the old.\n";
+    std::cout << "\nComputation times: " << duration1 << " vs. " << duration2 << "\n\n";
 
 }//end main()
