@@ -15,7 +15,7 @@
 #include "index_matrix.h"
 #include <boost/multi_array.hpp>
 
-typedef std::vector<unsigned> Vector;
+typedef std::vector<int> Vector;
 
 struct ColumnList;  //necessary for column reduction in MultiBetti::reduce(...)
 
@@ -24,9 +24,9 @@ class MultiBetti
 	public:
 		MultiBetti(SimplexTree* st, int dim, int v);		//constructor sets up the data structure but doesn't compute the multi-graded Betti numbers xi_0 and xi_1
 		
-		
+
         //OLD functions to compute xi_0 and xi_1
-        void compute_fast();		//computes xi_0 and xi_1 at all multi-grades in a fast way
+        void compute_fast();		//computes xi_0 and xi_1 at all multi-grades in a fast (but not optimal) way
         void compute_nullities();
         void compute_ranks();
         void compute_alpha();
@@ -59,16 +59,17 @@ class MultiBetti
 		const int verbosity;	//controls display of output, for debugging
 
 
-        void reduce(MapMatrix* mm, int first_col, int last_col, Vector& lows, int& zero_cols);
+        void reduce(MapMatrix* mm, int first_col, int last_col, Vector& lows, unsigned& zero_cols);
             //column reduction for Edelsbrunner algorithm
 
-        void reduce_also(MapMatrix* mm, MapMatrix* m2, int first_col, int last_col, Vector& lows, int y_grade, ColumnList &zero_list, int &zero_cols);
+        void reduce_also(MapMatrix* mm, MapMatrix* m2, int first_col, int last_col, Vector& lows, int y_grade, ColumnList &zero_list, unsigned &zero_cols);
             //column reduction for Edelsbrunner algorithm, also performs column additions on a second matrix
 
         void reduce_spliced(MapMatrix* m_left, MapMatrix* m_right, IndexMatrix* ind_left, IndexMatrix* ind_right, ColumnList& right_cols, int grade_x, int grade_y, Vector& lows, int& zero_cols);
             //column reduction for Edelsbrunner algorithm on a two-part matrix (two matrices spliced together, treated as one matrix for the column reduction)
 
-		
+        void reduce_spliced_new(MapMatrix* m_left, MapMatrix* m_right, IndexMatrix* ind_left, IndexMatrix* ind_right, ColumnList& right_cols, unsigned grade_x, unsigned grade_y, Vector& lows, unsigned& zero_cols, unsigned& zero_cols_left);
+
 };
 
 

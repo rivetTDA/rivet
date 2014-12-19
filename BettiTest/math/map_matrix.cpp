@@ -4,7 +4,6 @@
 
 #include "map_matrix.h"
 
-#include <limits>   //for max_unsigned_int
 #include <iostream> //for testing only
 
 /*** implementation of class MapMatrixNode ***/
@@ -139,17 +138,17 @@ bool MapMatrix::entry(unsigned i, unsigned j)
 	return false;
 }//end entry()
 
-//returns the "low" index in the specified column, or max_unsigned_int if the column is empty (i.e. low does not exist)
-unsigned MapMatrix::low(unsigned j)
+//returns the "low" index in the specified column, or -1 if the column is empty (i.e. low does not exist)
+int MapMatrix::low(int j)
 {
     //make sure there is actually a column j
     if(columns.size() <= j)
         throw std::runtime_error("attempting to find 'low' index of column past end of matrix");
 
-    //if the column is empty, then return max_unsigned_int
+    //if the column is empty, then return -1
     if(columns[j] == NULL)
 	{
-        return std::numeric_limits<unsigned int>::max();
+        return -1;
 	}
 	
 	//otherwise, we have a non-empty column, so return first index (because row indexes are sorted in descending order)

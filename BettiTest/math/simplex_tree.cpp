@@ -368,6 +368,10 @@ void SimplexTree::write_boundary_column(MapMatrix* mat, STNode* sim, int col, in
     //get vertex list for this simplex
     std::vector<int> verts = find_vertices(sim->global_index());
 
+    //if this is a 0-simplex, then there is nothing to do
+    if(verts.size() == 1)
+        return;
+
     //find all facets of this simplex
     for(unsigned k=0; k<verts.size(); k++)
     {

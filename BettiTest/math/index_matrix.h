@@ -25,7 +25,7 @@ public:
 private:
     unsigned num_rows;
     unsigned num_cols;
-    int* data;
+    int* data;          //TODO: I would rather this be unsigned, but I need a -1.
 };
 
 

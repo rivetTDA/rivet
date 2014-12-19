@@ -9,37 +9,44 @@
 
 //ordered list used to record which columns of the merge/split matrix correspond to zero columns of the boundary matrix
 struct ColumnList {
-    std::set<unsigned> columns;  //stores indexes of columns
+    std::set<int> columns;  //stores indexes of columns
     std::vector<unsigned> grades;    //stores lowest column index associated with each y-grade
+    std::vector<unsigned> counts;    //stores count of columns for each y-grade
 
-    ColumnList(unsigned num_y_grades): grades( num_y_grades, std::numeric_limits<unsigned>::max() )
+    ColumnList(unsigned num_y_grades): grades( num_y_grades, std::numeric_limits<unsigned>::max() ), counts( num_y_grades, 0 )
     { }
 
-    void insert(unsigned col_index, unsigned y_grade)
+    void insert(int col_index, unsigned y_grade)
     {
         if(y_grade >= grades.size())
             throw std::runtime_error("attempting to insert column pointer with inproper y-grade");
 
-        columns.insert(col_index);  //insert column
+        columns.insert(col_index);  //insert column index
+        counts[y_grade]++;          //increment counter
 
-        if(grades[y_grade] == std::numeric_limits<unsigned>::max() || col_index < grades[y_grade])   //then update info for this y-grade
+        if(grades[y_grade] == std::numeric_limits<unsigned>::max() || col_index < grades[y_grade])   //then update column index for this y-grade
             grades[y_grade] = col_index;
     }
 
-    std::set<unsigned>::iterator get(unsigned y_grade)    //gets lowest column index for this y-grade
+    std::set<int>::iterator get(unsigned y_grade)    //gets lowest column index for this y-grade
     {
         return columns.find(grades[y_grade]);
     }
 
-    std::set<unsigned>::iterator end()
+    std::set<int>::iterator end()
     {
         return columns.end();
+    }
+
+    unsigned count(unsigned y)
+    {
+        return counts[y];
     }
 
     void print()    //TESTING ONLY
     {
         std::cout << "columns: ";
-        for(std::set<unsigned>::iterator it=columns.begin(); it!=columns.end(); ++it)
+        for(std::set<int>::iterator it=columns.begin(); it!=columns.end(); ++it)
             std::cout << *it << ", ";
         std::cout << "grades: ";
         for(unsigned i=0; i<grades.size(); i++)
@@ -85,6 +92,17 @@ void MultiBetti::compute_parallel()
     for(unsigned i=0; i<merge->width(); i++)
         merge->set(i,i);
 
+    //TESTING
+    std::cout << "INDEX MATRIX for bdry1:\n";
+    ind1->print();
+    std::cout << "MAP MATRIX bdry1:\n";
+    bdry1->print();
+    std::cout << "MAP MATRIX merge:\n";
+    merge->print();
+    std::cout << "INDEX MATRIX for bdry2:\n";
+    ind2->print();
+    std::cout << "MAP MATRIX bdry2:\n";
+    bdry2->print();
 
     //set up data structures for computation of nullities
     Vector current_lows_bdry1;                  //low arrays for matrix bdry1
@@ -94,98 +112,169 @@ void MultiBetti::compute_parallel()
 
     //set up data structures for computation of merge dimension
     ColumnList zero_col_list(num_y_grades);     //tracks which columns in bdry1 are zero
-    Vector current_lows_merge;                  //low arrays for matrices bdry2 and merge
-    Vector first_row_lows_merge(bdry_d->height(), -1);
-    unsigned zero_cols_merge = 0;               //stores number of zeroed columns in matrices bdry2 and merge for the current multigrade
-    Vector dim_merge(num_y_grades);                //stores dimenson of the sum Im(bdry_d) + Im(merge(ker(bdry_bc))), by multigrade
-
+    Vector current_lows_b2merge(bdry2->height(), -1);                  //low arrays for matrices bdry2 and merge
+//RECONSIDER, but this seems to add too much complexity:    Vector first_row_lows_b2merge(bdry2->height(), -1);
+    unsigned zero_cols_bdry2 = 0;               //stores number of zeroed columsn in matrix bdry2 for the current multigrade (used only for y=0 grades)
+    unsigned zero_cols_b2y0 = 0;                //stores cumulative number of zeroed columns in matrix bdry2 at y=0 grades
+    unsigned zero_cols_b2merge = 0;             //stores number of zeroed columns in matrices bdry2 and merge for the current multigrade
+    Vector dim_b2merge(num_y_grades);           //stores dimenson of the sum Im(bdry_d) + Im(merge(ker(bdry_bc))), by multigrade
 
   // FIRST, HANDLE MULTIGRADE (0,0)
     //reduce bdry2 at (0,0)
-    reduce(bdry2, 0, ind2->get(0,0), first_row_lows_merge, zero_cols_merge);
+    reduce(bdry2, 0, ind2->get(0,0), current_lows_b2merge, zero_cols_b2y0);
 
     //record merge dimension
-    dim_merge[0] = (ind2->get(0,0) + 1) - zero_cols_merge;       //really: (ind2->get(0,0) - (-1)) - zeroed_cols_merge
-    xi[0][0][0] -= dim_merge[0];
-    xi[0][0][1] -= dim_merge[0];
+    dim_b2merge[0] = (ind2->get(0,0) + 1) - zero_cols_b2y0;       //really: (ind2->get(0,0) - (-1)) - zeroed_cols_bdry2
+    xi[0][0][0] -= dim_b2merge[0];
+    xi[0][0][1] -= dim_b2merge[0];
 
     //reduce bdry1, and apply same col op's to merge, at (0,0)
     reduce_also(bdry1, merge, 0, ind1->get(0,0), first_row_lows_bdry1, 0, zero_col_list, zero_cols_bdry1);
 
     //record nullity
     nullity[0] = zero_cols_bdry1;
-    xi[0][0][0] = zero_cols_bdry1;
+    xi[0][0][0] += zero_cols_bdry1;
     if(1 < num_x_grades)
         xi[1][0][1] += zero_cols_bdry1;   //adding nullity(boundary B)
     if(1 < num_y_grades)
         xi[0][1][1] += zero_cols_bdry1;   //adding nullity(boundary C)
 
     //copy first_row_lows to current_lows
-    current_lows_merge = first_row_lows_merge;
+//    current_lows_b2merge = first_row_lows_b2merge;
     current_lows_bdry1 = first_row_lows_bdry1;
+
+    //TESTING
+    std::cout << "Current_lows_b2merge: ";
+    print_lows(current_lows_b2merge);
 
   // HANDLE THE REST OF THE FIRST MULTIGRADE COLUMN (x = 0)
     for(unsigned y=1; y<num_y_grades; y++)
     {
-        //reset...
-        zero_cols_merge = 0;
-        zero_cols_bdry1 = 0;
-
         //reduce bdry2 and merge at (0,y)
-        reduce_spliced(bdry2, merge, ind2, ind1, zero_col_list, 0, y, current_lows_merge, zero_cols_merge); //NEED AN UPDATED reduce_spliced METHOD!!!
+        zero_cols_b2merge = 0;  //reset counter
+        reduce_spliced_new(bdry2, merge, ind2, ind1, zero_col_list, 0, y, current_lows_b2merge, zero_cols_b2merge, zero_cols_bdry2);
 
         //record merge dimension
-        dim_merge[y] = dim_merge[y-1] + (ind2->get(y,0) - ind2->get(y-1,num_x_grades-1)) + zero_cols_bdry1 - zero_cols_merge;   //UM....FIX THIS!!!
-        xi[0][y][0] -= dim_dm[y];
-        xi[0][y][1] -= dim_dm[y];
+        dim_b2merge[y] = dim_b2merge[y-1] + (ind2->get(y,0) - ind2->get(y-1,num_x_grades-1)) + zero_cols_bdry1 - zero_cols_b2merge;
+            //really: dim_merge[y-1] + (#cols in bdry2 at (0,y)) + (#zero cols in bdry1 at (0,y-1)) - zeroed_cols_b2merge
+        xi[0][y][0] -= dim_b2merge[y];
+        xi[0][y][1] -= dim_b2merge[y];
 
-        //reduce bdry1 at (0,y)
-        reduce_also(bdry1, merge, 0, ind1->get(0,0), first_row_lows_bdry1, 0, zero_col_list, zero_cols_bdry1);
+        //reduce bdry1, and apply same col op's to merge, at (0,y)
+        zero_cols_bdry1 = 0;
+        reduce_also(bdry1, merge, ind1->get(y-1,num_x_grades-1) + 1, ind1->get(y,0), first_row_lows_bdry1, y, zero_col_list, zero_cols_bdry1);
 
         //record nullity
         nullity[y] = nullity[y-1] + zero_cols_bdry1;
-        xi[0][y][0] = nullity[y];
+        xi[0][y][0] += nullity[y];
         if(1 < num_x_grades)
             xi[1][y][1] += nullity[y];   //adding nullity(boundary B)
         if(y+1 < num_y_grades)
             xi[0][y+1][1] += nullity[y];   //adding nullity(boundary C)
+
+        //TESTING
+        std::cout << "Current_lows_b2merge: ";
+        print_lows(current_lows_b2merge);
     }
 
   // LOOP THROUGH MULTIGRADE COLUMNS AFTER THE FIRST (x > 0)
     for(unsigned x=1; x<num_x_grades; x++)
     {
+        //reset variables
+        zero_cols_b2merge = 0;
+        zero_cols_bdry2 = 0;
+        zero_cols_bdry1 = 0;
+        current_lows_b2merge.assign(bdry2->height(), -1);
+        std::cout << "        reset current_lows_b2merge: ";
+        print_lows(current_lows_b2merge);
+
       // HANDLE THE FIRST MULTIGRADE IN THIS COLUMN (x,0)
-        //reset...
+        //reduce bdry2 and merge at (x,0)
+        reduce_spliced_new(bdry2, merge, ind2, ind1, zero_col_list, x, 0, current_lows_b2merge, zero_cols_b2merge, zero_cols_bdry2);
+
+        //record merge dimension
+        dim_b2merge[0] = (ind2->get(0,x) + 1) + zero_col_list.count(0) - zero_cols_b2y0 - zero_cols_b2merge;
+            //really: (#cols in bdry2 for y=0) + (#cols in merge for y=0) - (#zero cols in bdry2 for y=0 and prev x) - (#zero cols counted at this step)
+        xi[x][0][0] -= dim_b2merge[0];
+        xi[x][0][1] -= dim_b2merge[0];
+        zero_cols_b2y0 += zero_cols_bdry2;  //update cumulative counter for y=0 grades
+
+        //reduce bdry1, and apply same col op's to merge, at (x,0)
+        reduce_also(bdry1, merge, ind1->get(0,x-1) + 1, ind1->get(0,x), first_row_lows_bdry1, 0, zero_col_list, zero_cols_bdry1);
+
+        //record nullity
+        nullity[0] += zero_cols_bdry1;
+        xi[x][0][0] += nullity[0];
+        if(x+1 < num_x_grades)
+            xi[x+1][0][1] += nullity[0];   //adding nullity(boundary B)
+        if(1 < num_y_grades)
+            xi[x][1][1] += nullity[0];   //adding nullity(boundary C)
+
+        //copy first_row_lows to current_lows
+//        current_lows_b2merge = first_row_lows_b2merge;
+        current_lows_bdry1 = first_row_lows_bdry1;
+
+        //TESTING
+        std::cout << "Current_lows_b2merge: ";
+        print_lows(current_lows_b2merge);
 
       // LOOP THROUGH MULTIGRADE ROWS AFTER THE FIRST
         for(unsigned y=1; y<num_y_grades; y++)
         {
+            //reduce bdry2 and merge at (x,y)
+            zero_cols_b2merge = 0;
+            reduce_spliced_new(bdry2, merge, ind2, ind1, zero_col_list, x, y, current_lows_b2merge, zero_cols_b2merge, zero_cols_bdry2);
 
+            //record merge dimension
+            dim_b2merge[y] = dim_b2merge[y-1] + (ind2->get(y,x) - ind2->get(y-1,num_x_grades-1)) + zero_cols_bdry1 + zero_col_list.count(y) - zero_cols_b2merge;
+                //really: dim_merge[y-1] + (#cols in bdry2 for this y) + (#zero cols in bdry1 at (x,y-1)) + (#zero cols in bdry1 for this y) - zeroed_cols_b2merge
+            xi[x][y][0] -= dim_b2merge[y];
+            xi[x][y][1] -= dim_b2merge[y];
 
+            //reduce bdry1, and apply same col op's to merge, at multigrades (0,y) through (x,y)
+            zero_cols_bdry1 = 0;
+            reduce_also(bdry1, merge, ind1->get(y-1,num_x_grades-1) + 1, ind1->get(y,x), current_lows_bdry1, y, zero_col_list, zero_cols_bdry1);
 
+            //record nullity
+            nullity[y] = nullity[y-1] + zero_cols_bdry1;
+            xi[x][y][0] += nullity[y];     //adding nullity(boundary D)
+            if(x+1 < num_x_grades)
+                xi[x+1][y][1] += nullity[y];   //adding nullity(boundary B)
+            if(y+1 < num_y_grades)
+                xi[x][y+1][1] += nullity[y];   //adding nullity(boundary C)
+
+            //TESTING
+            std::cout << "Current_lows_b2merge: ";
+            print_lows(current_lows_b2merge);
         }
     }
 
+    //clean up
+    delete bdry1;
+    delete ind1;
+    delete bdry2;
+    delete ind2;
+    delete merge;
 }//end compute_parallel()
 
 
-
-// OLD: computes xi_0 and xi_1 at all multi-indexes in a fast way
+//computes xi_0 and xi_1 at all multi-indexes in a fast way
 void MultiBetti::compute_fast()
 {
     // STEP 1: compute nullity
     compute_nullities();
 
     // STEP 2: compute rank
-    compute_ranks();
+//    compute_ranks();
 
     // STEP 3: compute alpha (concludes computation of xi_0)
     compute_alpha();
 
     // STEP 4: compute eta (concludes computation of xi_1)
-    compute_eta();
+//    compute_eta();
 
 }//end compute_fast();
+
 
 //compute nullities, add to xi matrices
 //TODO: when testing finished, remove print statements
@@ -204,7 +293,7 @@ void MultiBetti::compute_nullities()
     Vector first_row_lows(bdry1->height(), -1);
 
     Vector nullities(num_y_grades);
-    int zero_cols = 0;
+    unsigned zero_cols = 0;
 
     //first, handle multi-grade (0,0)
     //  do column reduction on columns for multi-grade (0,0) using first_row_lows
@@ -285,8 +374,7 @@ void MultiBetti::compute_nullities()
     delete ind1;
 }//end compute_nullities()
 
-//compute nullities, add to xi matrices
-//TODO: add to xi_1 matrix
+//compute ranks, add to xi matrices
 //TODO: when testing finished, remove print statements
 void MultiBetti::compute_ranks()
 {
@@ -301,7 +389,7 @@ void MultiBetti::compute_ranks()
     Vector first_row_lows(bdry2->height(), -1);
 
     Vector ranks(num_y_grades);
-    int zero_cols = 0;
+    unsigned zero_cols = 0;
 
     //first, handle multi-grade (0,0)
     //  do column reduction on columns for multi-grade (0,0) using first_row_lows
@@ -364,8 +452,7 @@ void MultiBetti::compute_ranks()
     delete ind2;
 }//end compute_ranks()
 
-
-//compute alpha, add to xi matrices ------- THIS IS MERGE
+//compute alpha, add to xi matrices
 //TODO: add to xi_1 matrix
 //TODO: when testing finished, remove print statements
 void MultiBetti::compute_alpha()
@@ -390,7 +477,7 @@ void MultiBetti::compute_alpha()
     Vector current_lows_bc;                             //low arrays for matrix bdry_bc
     Vector first_row_lows_bc(bdry_bc->height(), -1);
 
-    int zero_cols_bc = 0;                             //counts number of zeroed columns in bdry_bc for the current multi-grade
+    unsigned zero_cols_bc = 0;                             //counts number of zeroed columns in bdry_bc for the current multi-grade
     ColumnList zero_col_list(num_y_grades + 1);     // OFF BY 1 ????? NO, BUT FIX THIS AFTER OPTIMIZING THE MERGE MATRIX
 
     Vector current_lows_dm;                             //low arrays for matrices bdry_d and merge
@@ -503,7 +590,6 @@ void MultiBetti::compute_alpha()
 }//end compute_alpha()
 
 //compute eta, add to xi matrices ------- THIS IS SPLIT
-//TODO: add to xi_1 matrix
 //TODO: when testing finished, remove print statements
 void MultiBetti::compute_eta()
 {
@@ -532,7 +618,7 @@ void MultiBetti::compute_eta()
     Vector current_lows_a;                             //low arrays for matrix bdry_a
     Vector first_row_lows_a(bdry_bc->height(), -1);
 
-    int zero_cols_a = 0;                             //counts number of zeroed columns in bdry_a for the current multi-grade
+    unsigned zero_cols_a = 0;                             //counts number of zeroed columns in bdry_a for the current multi-grade
     ColumnList zero_col_list(num_y_grades);
 
     Vector current_lows_bcs;                             //low arrays for matrices bdry_bc and split
@@ -625,7 +711,7 @@ void MultiBetti::compute_eta()
 //reduce matrix: perform column operations from first_col to last_col, inclusive
 //  counts the number of zero-columns in [first_col, last_col], regardless of whether they were zeroed out in this reduction or zero to begin with
 //TODO: when testing finished, remove print statements
-void MultiBetti::reduce(MapMatrix* mm, int first_col, int last_col, Vector& lows, int& zero_cols)
+void MultiBetti::reduce(MapMatrix* mm, int first_col, int last_col, Vector& lows, unsigned &zero_cols)
 {
 //    std::cout << "  reducing columns " << first_col << " to " << last_col << "...";
     for(int i = first_col; i <= last_col; i++)
@@ -648,11 +734,11 @@ void MultiBetti::reduce(MapMatrix* mm, int first_col, int last_col, Vector& lows
 //  this version also performs the same column operations on a second matrix
 //  counts the number of zero-columns in [first_col, last_col], regardless of whether they were zeroed out in this reduction or zero to begin with
 //TODO: when testing finished, remove print statements
-void MultiBetti::reduce_also(MapMatrix* mm, MapMatrix* m2, int first_col, int last_col, Vector& lows, int y_grade, ColumnList& zero_list, int& zero_cols)
+void MultiBetti::reduce_also(MapMatrix* mm, MapMatrix* m2, int first_col, int last_col, Vector& lows, int y_grade, ColumnList& zero_list, unsigned &zero_cols)
 {
     //testing
     if(last_col >= first_col)
-//        std::cout << "  reducing (2 matrices) columns " << first_col << " to " << last_col << "...";
+        std::cout << "-->>reduce_also: columns " << first_col << " to " << last_col << "\n";
 
     for(int i = first_col; i <= last_col; i++)
     {
@@ -660,7 +746,7 @@ void MultiBetti::reduce_also(MapMatrix* mm, MapMatrix* m2, int first_col, int la
         while(mm->low(i) >= 0 && lows[mm->low(i)] >= 0)
         {
             int col_to_add = lows[mm->low(i)];
-//            std::cout << "  --adding column " << col_to_add << " to column " << i << "\n";
+            std::cout << "  --adding column " << col_to_add << " to column " << i << "\n";
             mm->add_column(col_to_add, i);
             m2->add_column(col_to_add, i);
         }
@@ -671,7 +757,7 @@ void MultiBetti::reduce_also(MapMatrix* mm, MapMatrix* m2, int first_col, int la
         {
             zero_cols++;
             zero_list.insert(i, y_grade);
-//            std::cout << "  --column " << i << " is zero";
+            std::cout << "  --column " << i << " is zero at y-grade " << y_grade << "\n";
         }
     }
 }//end reduce_also()
@@ -679,12 +765,12 @@ void MultiBetti::reduce_also(MapMatrix* mm, MapMatrix* m2, int first_col, int la
 //TESTING ONLY
 void MultiBetti::print_lows(Vector &lows)
 {
-    std::cout << "      low array: ";
     for(unsigned i=0; i<lows.size(); i++)
         std::cout << lows[i] << ", ";
     std::cout << "\n";
 }
 
+//OLD FUNCTION!!!
 //reduce matrix: perform column operations on TWO MATRICES, regarded as one matrix spliced to preserve multi-grade order of columns
 //  requires the matrices of multi-grade indexes, the list of in-play columns in the right matrix, and the current multi-grade
 //TODO: when testing finished, remove print statements
@@ -796,6 +882,145 @@ void MultiBetti::reduce_spliced(MapMatrix* m_left, MapMatrix* m_right, IndexMatr
     }//end for(x=0..grade_x)
 }//end reduce_spliced()
 
+
+
+//NEW FUNCTION!!!
+//reduce matrix: perform column operations on TWO MATRICES, regarded as one matrix spliced (by y-grade) to preserve multigrade order of columns
+//  requires the matrices of multigrade indexes, the list of in-play columns in the right matrix, and the current multigrade
+//TODO: when testing finished, remove print statements
+void MultiBetti::reduce_spliced_new(MapMatrix* m_left, MapMatrix* m_right, IndexMatrix* ind_left, IndexMatrix* ind_right, ColumnList& right_cols, unsigned grade_x, unsigned grade_y, Vector& lows, unsigned& zero_cols, unsigned& zero_cols_left)
+{
+    std::cout << "==>>reduce_spliced_new at grade (" << grade_x << ", " << grade_y << ")\n";
+  // STEP 1: if grade_y > 0, then reduce right matrix at (grade_x, grade_y - 1)
+    if(grade_y > 0)
+    {
+        //determine ending column
+        int last_col = ind_right->get(grade_y - 1, grade_x);
+
+        //determine starting column
+        std::set<int>::iterator col_iterator = right_cols.get(grade_y - 1);
+        int cur_col = last_col + 1; //default, indicating that there are no more columns in play for the right matrix
+        if(col_iterator != right_cols.end())   //then there are columns in play for the right matrix
+            cur_col = *col_iterator;
+
+        if(grade_x > 0)    //then skip columns from previous x-grades, since they are already reduced ------------ THIS IS INEFFICIENT!!!
+            while(cur_col <= ind_right->get(grade_y - 1, grade_x - 1))
+            {
+                ++col_iterator;
+                if(col_iterator == right_cols.end())   //then there are no more columns in play for the right matrix
+                    cur_col = last_col + 1;
+                else
+                    cur_col = *col_iterator;
+            }
+
+        //reduce columns from the right matrix
+        std::cout << "  -- reducing columns " << cur_col << " to " << last_col << " from the right matrix (which has " << m_right->width() << " cols)\n";
+        while(cur_col <= last_col)
+        {
+            //while column is nonempty and its low number is found in the low array, do column additions
+            while(m_right->low(cur_col) >= 0 && lows[m_right->low(cur_col)] >= 0)
+            {
+                std::cout << "    --[right matrix] adding column with absolute index " << lows[m_right->low(cur_col)] << " to column " << cur_col << " in right matrix\n";
+                if( lows[m_right->low(cur_col)] >= m_left->width() )    //then column to add is in the right matrix
+                    m_right->add_column(lows[m_right->low(cur_col)] - m_left->width(), cur_col);
+                else    //then column to add is in the left matrix
+                    m_right->add_column(m_left, lows[m_right->low(cur_col)], cur_col);
+            }
+
+            if(m_right->low(cur_col) >= 0) //column is still nonempty, so update lows
+                lows[m_right->low(cur_col)] = m_left->width() + cur_col;
+            else //column is zero
+                zero_cols++;
+
+            //move to next column
+            ++col_iterator;
+            if(col_iterator == right_cols.end())   //then there are no columns in play for the right matrix
+                cur_col = last_col + 1;
+            else
+                cur_col = *col_iterator;
+        }
+    }//end if(grade_y > 0)
+
+  // STEP 2: reduce left matrix at (0...grade_x, grade_y)
+    //determine ending column
+    int last_col_left = ind_left->get(grade_y, grade_x);
+
+    //determine starting column
+    int first_col_left = 0;
+    if(grade_y > 0)
+        first_col_left = ind_left->get(grade_y - 1, ind_left->width() - 1) + 1;
+//UNCOMMENT if using first_row_lows_b2merge    else if(grade_x > 0)
+//        first_col_left = ind_left->get(0, grade_x - 1) + 1;
+
+    //reduce columns from the left matrix
+    std::cout << "  -- reducing columns " << first_col_left << " to " << last_col_left << " from the left matrix (which has " << m_left->width() << " cols)\n";
+    for(int i = first_col_left; i <= last_col_left; i++)
+    {
+        //while column i is nonempty and its low number is found in the low array, do column additions
+        while(m_left->low(i) >= 0 && lows[m_left->low(i)] >= 0)
+        {
+            std::cout << "    --[left matrix] adding column with absolute index " << lows[m_left->low(i)] << " to column " << i << " from the left matrix (with low number " << m_left->low(i) << ") \n";
+            if( lows[m_left->low(i)] < m_left->width() )    //then column to add is in the left matrix
+                m_left->add_column(lows[m_left->low(i)], i);
+            else    //then column to add is in the right matrix
+            {
+                std::cout << "    column " << lows[m_left->low(i)] - m_left->width() << " in right matrix has low number " << m_right->low( lows[m_left->low(i)] - m_left->width() ) << "\n";
+                if(m_right->low( lows[m_left->low(i)] - m_left->width() ) != m_left->low(i))  //TESTING ONLY
+                    throw std::runtime_error("!!!!!column addition error: low numbers don't match!!!!!");
+
+                m_left->add_column(m_right, lows[m_left->low(i)] - m_left->width(), i);
+            }
+        }
+
+        if(m_left->low(i) >= 0)     //column is still nonempty, so update lows
+            lows[m_left->low(i)] = i;
+        else //column is zero
+            zero_cols++;
+    }//end for()
+
+    //store the current count of zeroed columns, for use only in y=0 grades
+    zero_cols_left = zero_cols;
+
+  // STEP 3: if grade_x > 0, then reduce right matrix at (grade_x - 1, grade_y)
+    if(grade_x > 0)
+    {
+        //determine ending column
+        int last_col = ind_right->get(grade_y, grade_x - 1);
+
+        //determine starting column
+        std::set<int>::iterator col_iterator = right_cols.get(grade_y);
+        int cur_col = last_col + 1; //default, indicating that there are no more columns in play for the right matrix
+        if(col_iterator != right_cols.end())   //then there are columns in play for the right matrix
+            cur_col = *col_iterator;
+
+        //reduce columns from the right matrix
+        std::cout << "  -- reducing columns " << cur_col << " to " << last_col << " from the right matrix (which has " << m_right->width() << " cols)\n";
+        while(cur_col <= last_col)
+        {
+            //while column is nonempty and its low number is found in the low array, do column additions
+            while(m_right->low(cur_col) >= 0 && lows[m_right->low(cur_col)] >= 0)
+            {
+                std::cout << "    --[right matrix] adding column with absolute index " << lows[m_right->low(cur_col)] << " to column " << cur_col << " in right matrix\n";
+                if( lows[m_right->low(cur_col)] >= m_left->width() )    //then column to add is in the right matrix
+                    m_right->add_column(lows[m_right->low(cur_col)] - m_left->width(), cur_col);
+                else    //then column to add is in the left matrix
+                    m_right->add_column(m_left, lows[m_right->low(cur_col)], cur_col);
+            }
+
+            if(m_right->low(cur_col) >= 0) //column is still nonempty, so update lows
+                lows[m_right->low(cur_col)] = m_left->width() + cur_col;
+            else //column is zero
+                zero_cols++;
+
+            //move to next column
+            ++col_iterator;
+            if(col_iterator == right_cols.end())   //then there are no columns in play for the right matrix
+                cur_col = last_col + 1;
+            else
+                cur_col = *col_iterator;
+        }
+    }//end if(grade_x > 0)
+}//end reduce_spliced_new()
 
 
 

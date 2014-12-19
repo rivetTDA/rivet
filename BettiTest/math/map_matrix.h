@@ -35,8 +35,7 @@ class MapMatrix
         void set(unsigned i, unsigned j);			//sets (to 1) the entry in row i, column j
         bool entry(unsigned i, unsigned j);		//returns true if entry (i,j) is 1, false otherwise
 		
-        //UPDATED!!! now an empty column has "low" index max_unsigned_int
-        unsigned low(unsigned j);				//returns the "low" index in the specified column, or max_unsigned_int if the column is empty (i.e. low does not exist)
+        int low(int j);				//returns the "low" index in the specified column, or -1 if the column is empty (i.e. low does not exist)
 
 		void col_reduce();			//applies the column reduction algorithm to this matrix
 		

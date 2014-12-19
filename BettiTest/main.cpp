@@ -70,9 +70,21 @@ int main(int argc, char* argv[])
 
   // STEP 3: COMPUTE SUPPORT POINTS OF MULTI-GRADED BETTI NUMBERS
 
-    std::cout << "COMPUTING xi_0 AND xi_1 FOR HOMOLOGY DIMENSION " << dim << ":\n";
 
-    //old algorithm
+    //build column labels for output
+    std::string col_labels = "         x = ";
+    std::string hline = "    --------";
+    for(int j=0; j<x_grades.size(); j++)
+    {
+        std::ostringstream oss;
+        oss << j;
+        col_labels += oss.str() + "  ";
+        hline += "---";
+    }
+    col_labels = hline + "\n" + col_labels + "\n";
+
+    // ===== OLD ALGORITHM =====
+    std::cout << "COMPUTING xi_0 AND xi_1 FOR HOMOLOGY DIMENSION " << dim << " -- OLD ALGORITHM:\n";
     MultiBetti mb_old(bifiltration, dim, verbosity);
 
     ptime time1_start(microsec_clock::local_time());  //start timer
@@ -84,18 +96,57 @@ int main(int argc, char* argv[])
 
     std::cout << "   OLD ALGORITHM: xi_i computation took " << duration1 << "\n";
 
+    //output xi_0
+    std::cout << "  VALUES OF xi_0 for dimension " << dim << ":\n";
+    for(unsigned i=y_grades.size(); i>0; i--)
+    {
+        std::cout << "     y = " << (i-1) << " | ";
+        for(unsigned j=0; j<x_grades.size(); j++)
+            std::cout << mb_old.xi0(j,i-1) << "  ";
+        std::cout << "\n";
+    }
+    std::cout << col_labels << "\n";
 
-    //new algorithm
+
+
+
+    // ===== NEW ALGORITHM =====
+    std::cout << "COMPUTING xi_0 AND xi_1 FOR HOMOLOGY DIMENSION " << dim << " -- NEW ALGORITHM:\n";
     MultiBetti mb_new(bifiltration, dim, verbosity);
 
     ptime time2_start(microsec_clock::local_time());  //start timer
 
-    mb_new.???
+    mb_new.compute_parallel();
 
     ptime time2_end(microsec_clock::local_time());    //stop timer
     time_duration duration2(time2_end - time2_start);
 
-    std::cout << "   OLD ALGORITHM: xi_i computation took " << duration2 << "\n";
+    std::cout << "   NEW ALGORITHM: xi_i computation took " << duration2 << "\n";
 
+    //output xi_0
+    std::cout << "  VALUES OF xi_0 for dimension " << dim << ":\n";
+    for(unsigned i=y_grades.size(); i>0; i--)
+    {
+        std::cout << "     y = " << (i-1) << " | ";
+        for(unsigned j=0; j<x_grades.size(); j++)
+            std::cout << mb_new.xi0(j,i-1) << "  ";
+        std::cout << "\n";
+    }
+    std::cout << col_labels;
+
+
+    //output xi_1
+/*    std::cout << "\n  VALUES OF xi_1 for dimension " << dim << ":\n";
+    for(int i=bifiltration->num_y_grades()-1; i>=0; i--)
+    {
+        std::cout << "     y = " << i << " | ";
+        for(int j=0; j<bifiltration->num_x_grades(); j++)
+        {
+            std::cout << mb_new.xi1(j,i) << "  ";
+        }
+        std::cout << "\n";
+    }
+    std::cout << col_labels << "\n";
+*/
 
 }//end main()
