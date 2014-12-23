@@ -39,7 +39,7 @@ class xiSupportMatrix
 
         void fill(MultiBetti& mb, std::vector<xiPoint>& xi_pts); //stores xi support points from MultiBetti in the xiSupportMatrix and in the supplied vector
 
-        xiMatrixEntry* get_row(unsigned r); //gets a pointer to the leftmost entry in row r; returns NULL if row r is empty
+        xiMatrixEntry* get_row(unsigned r); //gets a pointer to the rightmost entry in row r; returns NULL if row r is empty
         xiMatrixEntry* get_col(unsigned c); //gets a pointer to the top entry in column c; returns NULL if column c is empty
         xiMatrixEntry* get_infinity();      //gets a pointer to the infinity entry
 

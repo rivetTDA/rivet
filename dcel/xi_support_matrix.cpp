@@ -71,7 +71,7 @@ void xiSupportMatrix::fill(MultiBetti& mb, std::vector<xiPoint>& xi_pts)
     }
 }//end fill()
 
-//gets a pointer to the leftmost entry in row r; returns NULL if row r is empty
+//gets a pointer to the rightmost entry in row r; returns NULL if row r is empty
 xiMatrixEntry* xiSupportMatrix::get_row(unsigned r)
 {
     return rows[r];

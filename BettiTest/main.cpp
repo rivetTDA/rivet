@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
     //start the input manager
     InputManager* im = new InputManager(dim, verbosity);
     std::string filestr = argv[1];
-    im->start(filestr, 10, 10);   //NOTE: last two arguments are bins
+    im->start(filestr, 100, 400);   //NOTE: last two arguments are bins
 
     //get the data
     std::vector<double> x_grades = im->get_x_grades();
@@ -90,6 +90,7 @@ int main(int argc, char* argv[])
     ptime time1_start(microsec_clock::local_time());  //start timer
 
     mb_old.compute_fast();
+//    bifiltration->get_boundary_mx(dim);
 
     ptime time1_end(microsec_clock::local_time());    //stop timer
     time_duration duration1(time1_end - time1_start);
@@ -117,6 +118,7 @@ int main(int argc, char* argv[])
     ptime time2_start(microsec_clock::local_time());  //start timer
 
     mb_new.compute_parallel();
+//    bifiltration->get_boundary_mx(dim+1);
 
     ptime time2_end(microsec_clock::local_time());    //stop timer
     time_duration duration2(time2_end - time2_start);
@@ -133,7 +135,7 @@ int main(int argc, char* argv[])
         for(unsigned j=0; j<x_grades.size(); j++)
         {
             std::cout << mb_new.xi0(j,i-1) << "  ";
-            if(mb_new.xi0(j,i-1) != mb_new.xi0(j,i-1))
+            if(mb_new.xi0(j,i-1) != mb_old.xi0(j,i-1))
                 agree = false;
         }
         std::cout << "\n";

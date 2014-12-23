@@ -974,7 +974,7 @@ void MultiBetti::reduce_spliced_new(MapMatrix* m_left, MapMatrix* m_right, Index
             while( m_right->low(cur_col) >= 0 && lows[m_right->low(cur_col)] >= 0 && lows[m_right->low(cur_col)] < (m_left->width() + cur_col) )
                 //NOTE: the last condition is necessary because the current column MIGHT ALREADY BE IN THE LOW ARRAY from Step 3 at the previous y-grade
             {
-//                std::cout << "    --[right matrix] adding column with absolute index " << lows[m_right->low(cur_col)] << " to column " << cur_col << " in right matrix\n";
+//                std::cout << "    --[1-right matrix] adding column with absolute index " << lows[m_right->low(cur_col)] << " to column " << cur_col << " in right matrix\n";
                 if( lows[m_right->low(cur_col)] >= m_left->width() )    //then column to add is in the right matrix
                     m_right->add_column(lows[m_right->low(cur_col)] - m_left->width(), cur_col);
                 else    //then column to add is in the left matrix
@@ -1016,12 +1016,13 @@ void MultiBetti::reduce_spliced_new(MapMatrix* m_left, MapMatrix* m_right, Index
         //while column i is nonempty and its low number is found in the low array, do column additions
         while(m_left->low(i) >= 0 && lows[m_left->low(i)] >= 0)
         {
-//            std::cout << "    --[left matrix] adding column with absolute index " << lows[m_left->low(i)] << " to column " << i << " from the left matrix (with low number " << m_left->low(i) << ") \n";
+//            std::cout << "    --[2-left matrix] adding column with absolute index " << lows[m_left->low(i)] << " to column " << i << " from the left matrix (with low number " << m_left->low(i) << ") \n";
             if( lows[m_left->low(i)] < m_left->width() )    //then column to add is in the left matrix
                 m_left->add_column(lows[m_left->low(i)], i);
             else    //then column to add is in the right matrix
             {
 //                std::cout << "    column " << lows[m_left->low(i)] - m_left->width() << " in right matrix has low number " << m_right->low( lows[m_left->low(i)] - m_left->width() ) << "\n";
+//                std::cout << "    ---- adding column from right matrix to left matrix\n";
                 if(m_right->low( lows[m_left->low(i)] - m_left->width() ) != m_left->low(i))  //TESTING ONLY
                     throw std::runtime_error("!!!!!column addition error: low numbers don't match!!!!!");
 
@@ -1060,7 +1061,7 @@ void MultiBetti::reduce_spliced_new(MapMatrix* m_left, MapMatrix* m_right, Index
             //while column is nonempty and its low number is found in the low array, do column additions
             while(m_right->low(cur_col) >= 0 && lows[m_right->low(cur_col)] >= 0)
             {
-//                std::cout << "    --[right matrix] adding column with absolute index " << lows[m_right->low(cur_col)] << " to column " << cur_col << " in right matrix\n";
+//                std::cout << "    --[3-right matrix] adding column with absolute index " << lows[m_right->low(cur_col)] << " to column " << cur_col << " in right matrix\n";
                 if( lows[m_right->low(cur_col)] >= m_left->width() )    //then column to add is in the right matrix
                     m_right->add_column(lows[m_right->low(cur_col)] - m_left->width(), cur_col);
                 else    //then column to add is in the left matrix

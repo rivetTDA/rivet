@@ -1,5 +1,5 @@
-Num_Signal_Points=200;
-Num_Noise_Points=40;
+Num_Signal_Points=300;
+Num_Noise_Points=50;
 radius=1.5;
 std_dev_signal=.3;
 std_dev_noise=1.3;

@@ -135,6 +135,7 @@ void VisualizationWindow::compute()
 
     arrangement = new Mesh(x_grades, x_exact, y_grades, y_exact, verbosity);
     arrangement->build_arrangement(mb, xi_support);     //also stores list of xi support points in the last argument
+        //NOTE: the following function also completes STEP 4: COMPUTE PERSISTENCE DATA AND STORE DISCRETE BARCODES IN THE ARRANGEMENT
 
     ptime time_dcel_end(microsec_clock::local_time());      //stop timer
     time_duration duration_dcel(time_dcel_end - time_dcel_start);
@@ -167,7 +168,7 @@ void VisualizationWindow::compute()
     ui->offsetSpinBox->setMaximum(data_ymax);
 
 
-  //STEP 4: COMPUTE PERSISTENCE DATA AND STORE DISCRETE BARCODES IN THE ARRANGEMENT
+  //OLD STUFF -- NEEDS TO BE UPDATED!!!
 
     //do the persistence computations in each cell
 /*    if(verbosity >= 2) { std::cout << "COMPUTING PERSISTENCE DATA FOR EACH CELL:\n"; }
