@@ -653,16 +653,16 @@ void Mesh::store_multigrades(IndexMatrix* ind, bool low)
     //loop through rows of xiSupportMatrix, from top to bottom
     for(int y = ind->height() - 1; y >= 0; y--)
     {
-        //update the frontier
+        //update the frontier for row y
         xiMatrixEntry* cur = xi_matrix.get_row(y);
         if(cur != NULL)
         {
-            //advance an iterator to the position of the right-most non-null entry in this row
+            //advance an iterator to the first entry that is not right of cur
             Frontier::iterator it = frontier.begin();
             while( it != frontier.end() && (*it)->x > cur->x )
                 ++it;
 
-            //remove any entries after this position from the frontier
+            //erase any entries from this position to the end of the frontier
             frontier.erase(it, frontier.end());
 
             //insert cur at the end of the frontier
