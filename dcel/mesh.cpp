@@ -534,6 +534,7 @@ Halfedge* Mesh::create_edge_left(Halfedge* edge, LCM* lcm)
 void Mesh::store_persistence_data(SimplexTree* bifiltration, int dim)
 {
   // PART 1: CONSTRUCT THE DUAL GRAPH OF THE ARRANGEMENT
+    ///TODO: maybe put this in its own function???
 
     typedef boost::property<boost::edge_weight_t, int> EdgeWeightProperty;
     typedef boost::adjacency_list< boost::vecS, boost::vecS, boost::undirectedS,
@@ -577,18 +578,19 @@ void Mesh::store_persistence_data(SimplexTree* bifiltration, int dim)
         std::cout << "  (" << boost::source(*it, dual_graph) << ", " << boost::target(*it, dual_graph) << ")\n";
 
 
-  // PART 2a: FIND A MINIMAL SPANNING TREE
+//  // PART 2a: FIND A MINIMAL SPANNING TREE
 
-    typedef boost::graph_traits<Graph>::edge_descriptor Edge;
-    std::vector<Edge> spanning_tree_edges;
-    boost::kruskal_minimum_spanning_tree(dual_graph, std::back_inserter(spanning_tree_edges));
+//    typedef boost::graph_traits<Graph>::edge_descriptor Edge;
+//    std::vector<Edge> spanning_tree_edges;
+//    boost::kruskal_minimum_spanning_tree(dual_graph, std::back_inserter(spanning_tree_edges));
 
-    std::cout << "num MST edges: " << spanning_tree_edges.size() << "\n";
-    for(unsigned i=0; i<spanning_tree_edges.size(); i++)
-        std::cout << "  (" << boost::source(spanning_tree_edges[i], dual_graph) << ", " << boost::target(spanning_tree_edges[i], dual_graph) << ")\n";
+//    std::cout << "num MST edges: " << spanning_tree_edges.size() << "\n";
+//    for(unsigned i=0; i<spanning_tree_edges.size(); i++)
+//        std::cout << "  (" << boost::source(spanning_tree_edges[i], dual_graph) << ", " << boost::target(spanning_tree_edges[i], dual_graph) << ")\n";
 
 
-  // PART 2b: FIND A HAMILTONIAN TOUR
+  // PART 2: FIND A HAMILTONIAN TOUR
+    ///TODO: MAKE THIS START AT CELL REPRESENTING VERTICAL LINE!!!
 
     typedef boost::graph_traits<Graph>::vertex_descriptor Vertex;
     std::vector<Vertex> tsp_vertices;
@@ -602,20 +604,17 @@ void Mesh::store_persistence_data(SimplexTree* bifiltration, int dim)
 
     //get multi-grade data in each dimension
     if(verbosity >= 4) { std::cout << "Mapping low simplices:\n"; }
-    IndexMatrix* ind_low = bifiltration->get_index_mx(dim);    //this could be improved a bit, since the index matrix is not the most efficient way to pass the data
+    IndexMatrix* ind_low = bifiltration->get_index_mx(dim);    //can we improve this with something more efficient than IndexMatrix?
     store_multigrades(ind_low, true);
     delete ind_low;
 
     if(verbosity >= 4) { std::cout << "Mapping high simplices:\n"; }
-    IndexMatrix* ind_high = bifiltration->get_index_mx(dim + 1);    //again, could be improved
+    IndexMatrix* ind_high = bifiltration->get_index_mx(dim + 1);    //again, could be improved?
     store_multigrades(ind_high, false);
     delete ind_high;
 
 
-
-
-
-    //maybe we want a different matrix structure???
+    //get boundary matrices --- need extra structure to support vineyard updates???
 //    MapMatrix* bdry1 = bifiltration->get_boundary_mx(dim);
 //    MapMatrix* bdry2 = bifiltration->get_boundary_mx(dim + 1);
 
@@ -626,24 +625,50 @@ void Mesh::store_persistence_data(SimplexTree* bifiltration, int dim)
 
   // PART 4: TRAVERSE THE HAMILTONIAN PATH AND DO VINEYARD UPDATES
 
+    //note: tsp_vertices[0] represents a near-vertical line to the right of all multigrades
 
-    //for each edge:
-        //LCM determines equivalences classes, which determine which blocks of columns must swap
-        //find any updates to the map F:S -> U
-        //obtain permutation of matrix columns, which we decompose into transpositions
-        //for each transposition, update the matrices
-        //store discrete barcode
+    //traverse the path
+    for(unsigned i=1; i<tsp_vertices.size(); i++)
+    {
+        //determine which LCM is represented by this edge
+        LCM cur_lcm = ......;
+
+        //find xiMatrixEntrys representing equivalence classes
 
 
+        //if this is a weak LCM, determine whether equivalence classes split or merge
 
 
+        //if this is a strong LCM, select "first" equivalence class
 
+
+        //iterate over all xiMatrixEntrys in this equivalence class
+        {
+
+
+            //iterate over all Multigrades for this xiMatrixEntry
+            {
+                //determine where columns for this multigrade must move to
+
+
+                //call a function to move block of columns to its new position
+
+
+            }//end Multigrade loop
+        }//end xiMatrixEntry loop
+
+        //if this cell does not yet have a discrete barcode, then store the discrete barcode here
+
+
+    }//end path traversal
 
 
 }//end build_persistence_data()
 
 //stores multigrade info for the persistence computations
 //  low is true for simplices of dimension hom_dim, false for simplices of dimension hom_dim+1
+///TODO: ALSO NEED TO BUILD A BOUNDARY MATRIX WITH THE PROPER ORDER OF SIMPLICES
+/// e.g. this method sends a list of xiMatrixEntries to SimplexTree, which builds a boundary matrix based on the list
 void Mesh::store_multigrades(IndexMatrix* ind, bool low)
 {
     //initialize linked list to track the "frontier"

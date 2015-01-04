@@ -23,10 +23,16 @@ struct xiMatrixEntry
     std::list<Multigrade*> low_simplices;     //associated multigrades for simplices of lower dimension --- MAYBE SHOULD BE forward_list
     std::list<Multigrade*> high_simplices;    //associated multigrades for simplices of higher dimension --- MAYBE SHOULD BE forward_list
 
+    ///TODO: THINK ABOUT THE FOLLOWING VARIABLES -- IS THERE A BETTER WAY TO STORE THIS INFO?
+    unsigned low_first_col;     //first column in matrix of simplices of lower dimension that is mapped to this xiMatrixEntry
+    unsigned low_last_col;      //last column in matrix of simplices of lower dimension that is mapped to this xiMatrixEntry
+    unsigned high_first_col;    //first column in matrix of simplices of higher dimension that is mapped to this xiMatrixEntry
+    unsigned high_last_col;     //last column in matrix of simplices of highwer dimension that is mapped to this xiMatrixEntry
+
     xiMatrixEntry();    //empty constructor, e.g. for the entry representing infinity
     xiMatrixEntry(unsigned x, unsigned y, unsigned i, xiMatrixEntry* d, xiMatrixEntry* l);  //regular constructor
 
-    void add_multigrade(unsigned x, unsigned y, unsigned first_col, unsigned last_col, bool low);  //associates a multigrades to this xi entry
+    void add_multigrade(unsigned x, unsigned y, unsigned num_cols, bool low);  //associates a multigrades to this xi entry
         //the "low" argument is true if this multigrade is for low_simplices, and false if it is for high_simplices
 };
 

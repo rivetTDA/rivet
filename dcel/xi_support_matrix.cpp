@@ -15,12 +15,12 @@ xiMatrixEntry::xiMatrixEntry(unsigned x, unsigned y, unsigned i, xiMatrixEntry* 
 
 //associates a multigrades to this xi entry
 //the "low" argument is true if this multigrade is for low_simplices, and false if it is for high_simplices
-void xiMatrixEntry::add_multigrade(unsigned x, unsigned y, unsigned first_col, unsigned last_col, bool low)
+void xiMatrixEntry::add_multigrade(unsigned x, unsigned y, unsigned num_cols, bool low)
 {
     if(low)
-        low_simplices.push_front(new Multigrade(x, y, first_col, last_col, this));
+        low_simplices.push_front(new Multigrade(x, y, num_cols, this));
     else
-        high_simplices.push_front(new Multigrade(x, y, first_col, last_col, this));
+        high_simplices.push_front(new Multigrade(x, y, num_cols, this));
 }
 
 
