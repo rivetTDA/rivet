@@ -24,16 +24,18 @@ struct xiMatrixEntry
     std::list<Multigrade*> high_simplices;    //associated multigrades for simplices of higher dimension --- MAYBE SHOULD BE forward_list
 
     ///TODO: THINK ABOUT THE FOLLOWING VARIABLES -- IS THERE A BETTER WAY TO STORE THIS INFO?
-    unsigned low_first_col;     //first column in matrix of simplices of lower dimension that is mapped to this xiMatrixEntry
-    unsigned low_last_col;      //last column in matrix of simplices of lower dimension that is mapped to this xiMatrixEntry
-    unsigned high_first_col;    //first column in matrix of simplices of higher dimension that is mapped to this xiMatrixEntry
-    unsigned high_last_col;     //last column in matrix of simplices of highwer dimension that is mapped to this xiMatrixEntry
+    unsigned low_index;     //index of rightmost column in matrix of simplices of lower dimension that is mapped to this xiMatrixEntry, or max_int if this entry is not at the head of an equivalence class
+    unsigned low_count;     //number of columns in matrix of simplices of lower dimension that are mapped to this xiMatrixEntry -- ALWAYS RELIABLE, regardless of whether this entry is at the head of an equivalence class
+    unsigned high_index;    //index of rightmost column in matrix of simplices of higher dimension that is mapped to this xiMatrixEntry, or max_int if this entry is not at the head of an equivalence class
+    unsigned high_count;    //number of columns in matrix of simplices of highwer dimension that are mapped to this xiMatrixEntry -- ALWAYS RELIABLE, regardless of whether this entry is at the head of an equivalence class
 
     xiMatrixEntry();    //empty constructor, e.g. for the entry representing infinity
     xiMatrixEntry(unsigned x, unsigned y, unsigned i, xiMatrixEntry* d, xiMatrixEntry* l);  //regular constructor
 
     void add_multigrade(unsigned x, unsigned y, unsigned num_cols, bool low);  //associates a multigrades to this xi entry
         //the "low" argument is true if this multigrade is for low_simplices, and false if it is for high_simplices
+
+    void insert_multigrade(Multigrade* mg, bool low);  //inserts a Multigrade at the beginning of the list for the given dimension
 };
 
 //// sparse matrix to store the set U of support points of the multi-graded Betti numbers

@@ -15,16 +15,18 @@ LCM::LCM(xiMatrixEntry* point) : x_coord(point->x), y_coord(point->y), down(poin
 
 
 ///TODO: these other constructors might be unnecessary now
-LCM::LCM(unsigned x, unsigned y) : x_coord(x), y_coord(y), curve(NULL)
-{ }
+//LCM::LCM(unsigned x, unsigned y) : x_coord(x), y_coord(y), curve(NULL)
+//{ }
 
-LCM::LCM(unsigned x, unsigned y, Halfedge* e) : x_coord(x), y_coord(y), curve(e)
-{ }
+//LCM::LCM(unsigned x, unsigned y, Halfedge* e) : x_coord(x), y_coord(y), curve(e)
+//{ }
 
 LCM::LCM(const LCM& other)
 {
     x_coord = other.x_coord;
     y_coord = other.y_coord;
+    down = other.down;
+    left = other.left;
     curve = other.curve;
     position = other.position;
 }
@@ -84,3 +86,14 @@ unsigned LCM::get_position() const
 {
     return position;
 }
+
+xiMatrixEntry* LCM::get_down()
+{
+    return down;
+}
+
+xiMatrixEntry* LCM::get_left()
+{
+    return left;
+}
+

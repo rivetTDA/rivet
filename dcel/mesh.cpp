@@ -118,19 +118,25 @@ void Mesh::store_xi_points(MultiBetti& mb, std::vector<xiPoint>& xi_pts)
             //check if there is a LCM in position (i,j)
             xiMatrixEntry* col_entry = *it;
             if(col_entry == NULL)
-                 qDebug() << "ERROR: NULL col_entry";
-            if(row_entry != col_entry)  //then there is a (non-weak) LCM at (col_entry->x, row_entry->y)
+                 qDebug() << "ERROR in Mesh::store_xi_points() : NULL col_entry";
+            if(row_entry != col_entry)  //then there is a non-weak LCM at (col_entry->x, row_entry->y)
             {
                 all_lcms.insert(new LCM(col_entry, row_entry));
-                if(verbosity >= 4) { std::cout << "  LCM found at (" << col_entry->x << ", " << row_entry->y << ")\n"; }
+                if(verbosity >= 4) { std::cout << "  LCM (non-weak) found at (" << col_entry->x << ", " << row_entry->y << ")\n"; }
             }
-            else    //then row_entry == col_entry, so there might be a weak LCM at (col_entry->x, row_entry->y)
+            else    //then row_entry == col_entry, so there might be a weak LCM at (col_entry->x, row_entry->y), or there might be no LCM here
             {
-                if(col_entry->down != NULL || row_entry->left != NULL)  //then there is a weak LCM
+                if(col_entry->down != NULL && row_entry->left != NULL)  //then there is a strong-AND-weak LCM
                 {
-                    all_lcms.insert(new LCM(col_entry));  //second argument NULL indicates this LCM is weak
-                    if(verbosity >= 4) { std::cout << "  LCM (possibly weak) found at (" << col_entry->x << ", " << col_entry->y << ")\n"; }
+                    all_lcms.insert(new LCM(NULL, col_entry));  //first argument NULL indicates this LCM is strong-and-weak
+                    if(verbosity >= 4) { std::cout << "  LCM (strong-and-weak) found at (" << col_entry->x << ", " << col_entry->y << ")\n"; }
                 }
+                else if(col_entry->down != NULL || row_entry->left != NULL)  //then there is a weak, non-strong LCM
+                {
+                    all_lcms.insert(new LCM(col_entry));  //second argument NULL indicates this LCM is weak, not strong
+                    if(verbosity >= 4) { std::cout << "  LCM (weak, non-strong) found at (" << col_entry->x << ", " << col_entry->y << ")\n"; }
+                }
+
             }
 
             //update cur_row_entry, if necessary
@@ -631,31 +637,95 @@ void Mesh::store_persistence_data(SimplexTree* bifiltration, int dim)
     for(unsigned i=1; i<tsp_vertices.size(); i++)
     {
         //determine which LCM is represented by this edge
-        LCM cur_lcm = ......;
+        LCM* cur_lcm = ......;
 
-        //find xiMatrixEntrys representing equivalence classes
+        //get equivalence classes for this LCM
+        xiMatrixEntry* down = cur_lcm->get_down();
+        xiMatrixEntry* left = cur_lcm->get_left();
 
-
-        //if this is a weak LCM, determine whether equivalence classes split or merge
-
-
-        //if this is a strong LCM, select "first" equivalence class
-
-
-        //iterate over all xiMatrixEntrys in this equivalence class
+        //if this is a strong LCM, then swap simplices
+        if(left != NULL) //then this is a strong LCM and some simplices swap
         {
-
-
-            //iterate over all Multigrades for this xiMatrixEntry
+            if(down == NULL)    //then this is also a weak LCM
             {
-                //determine where columns for this multigrade must move to
+                down = left->down;
+                left = left->left;
+            }//now down and left are correct (and should not be NULL)
+
+            if(down->high_index <= left->high_index && down->low_index <= left->low_index) //then LCM is crossed from below to above
+            {
+                //get column indexes
+                unsigned low_col = down->low_index;   //rightmost column index of low simplices for this equivalence class
+                unsigned high_col = down->high_index; //rightmost column index of high simplices for this equivalence class
+
+                //loop over all xiMatrixEntrys in the "down" equivalence class
+                while(down != NULL)
+                {
+                    //move all "low" simplices for this xiMatrixEntry
+                    std::list<Multigrade*>::iterator it = down->low_simplices.begin();
+                    while(it != down->low_simplices.end())
+                    {
+                        Multigrade* cur_grade = *it;
+
+                        if(cur_grade->x > left->x)  //then move columns at cur_grade past columns at xiMatrixEntry left; map F does not change
+                        {
+                            move_columns(low_col, cur_grade->num_cols, left->low_index);   ///TODO: CHECK THIS!!!  IMPLEMENT move_columns()
+                            ++it;
+                        }
+                        else    //then determine where these columns map to under F
+                        {
+                            xiMatrixEntry* target = left;
+                            unsigned target_col = left->low_index - left->low_count;
+                            while( (target->left() != NULL) && (cur_grade->x <= target->left()->x) )
+                            {
+                                target = target->left();
+                                target_col -= target->low_count;
+                            }
+
+                            //associate cur_grade with target
+                            cur_grade->xi_entry = target;
+                            target->insert_multigrade(cur_grade, true);
+                            low_simplices.erase(it);    //NOTE: advances the iterator!!!
+
+                            //if target is not the leftmost entry in its equivalence class, then move columns at cur_grade to the block of columns for target
+                            if(target->left() != NULL)
+                                move_columns(low_col, cur_grade->num_cols, target_col);  ///TODO: CHECK THIS!!!  IMPLEMENT move_columns()
+                        }
+
+                        //update column index
+                        low_col -= cur_grade->num_cols;
+                    }//end low simplex loop
+
+                    //move all "high" simplices for this xiMatrixEntry
+                    ///TODO: FINISH!!! this is almost identical to the above loop for "low" simplices
+                    for(std::list<Multigrade*>::iterator it = first->high_simplices.begin(); it != first->high_simplices.end(); ++it)
+                    {
+                        //determine where columns for this multigrade must move to
 
 
-                //call a function to move block of columns to its new position
+                        //call a function to move block of columns to its new position
 
 
-            }//end Multigrade loop
-        }//end xiMatrixEntry loop
+                    }//end low simplex loop
+
+                    //advance to the next xiMatrixEntry in the "down" equivalence class
+                    down = down->down();
+                }//end loop over "down" class
+
+
+
+
+            }
+            else    //then LCM is crossed form above to below
+            {
+
+            }
+
+
+        }//end if
+
+        //if this is a weak LCM, then we still have to split or merge equivalence classes
+
 
         //if this cell does not yet have a discrete barcode, then store the discrete barcode here
 

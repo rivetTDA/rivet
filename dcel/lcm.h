@@ -19,8 +19,8 @@ class LCM   //updated to store only discrete indexes
         LCM(xiMatrixEntry* point);  //constructor for a WEAK LCM, requires pointer to the xi support at the LCM
 
       ///TODO: these other constructors might be unnecessary now:
-        LCM(unsigned x, unsigned y);		//constructor, requires only time and distance values
-        LCM(unsigned x, unsigned y, Halfedge* e);	//constructor, requires all three parameters
+//        LCM(unsigned x, unsigned y);		//constructor, requires only time and distance values
+//        LCM(unsigned x, unsigned y, Halfedge* e);	//constructor, requires all three parameters
         LCM(const LCM& other);			//copy constructor
 
         LCM& operator= (const LCM& other);	//assignment operator
@@ -36,6 +36,9 @@ class LCM   //updated to store only discrete indexes
 
         void set_position(unsigned p);  //sets the relative position of the LCM curve at the sweep line, used for Bentley-Ottmann DCEL construction algorithm
         unsigned get_position() const;  //gets the relative position of the LCM curve at the sweep line, used for Bentley-Ottmann DCEL construction algorithm
+
+        xiMatrixEntry* get_down();  //accessor
+        xiMatrixEntry* get_left();  //accessor
 
     private:
         unsigned x_coord;	//discrete x-coordinate (e.g. time) of multi-index

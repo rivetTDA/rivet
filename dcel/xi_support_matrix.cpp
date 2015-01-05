@@ -18,9 +18,18 @@ xiMatrixEntry::xiMatrixEntry(unsigned x, unsigned y, unsigned i, xiMatrixEntry* 
 void xiMatrixEntry::add_multigrade(unsigned x, unsigned y, unsigned num_cols, bool low)
 {
     if(low)
-        low_simplices.push_front(new Multigrade(x, y, num_cols, this));
+        low_simplices.push_back(new Multigrade(x, y, num_cols, this));
     else
-        high_simplices.push_front(new Multigrade(x, y, num_cols, this));
+        high_simplices.push_back(new Multigrade(x, y, num_cols, this));
+}
+
+//inserts a Multigrade at the beginning of the list for the given dimension
+void insert_multigrade(Multigrade* mg, bool low)
+{
+    if(low)
+        low_simplices.push_back(mg);
+    else
+        high_simplices.push_back(mg);
 }
 
 
