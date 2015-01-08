@@ -108,7 +108,13 @@ class Mesh
         void store_multigrades(IndexMatrix* ind, bool low);     //stores multigrade info for the persistence computations; low is true for simplices of dimension hom_dim, false for simplices of dimension hom_dim+1
 
         void store_persistence_data(SimplexTree* bifiltration, int dim); 	//associates a discrete barcode to each 2-cell of the arrangement
+            ///TODO: the above is only partially implemented
 
+        void find_path(std::vector<Halfedge *> &pathvec);   //finds a pseudo-optimal path through all 2-cells of the arrangement
+            ///TODO: the above is only partially implemented
+
+        void move_low_columns(unsigned s, unsigned n, unsigned t);    //moves a block of n columns, the rightmost of which is column s, to a new position following column t (NOTE: assumes s <= t)
+            ///TODO: the above is only partially implemented
 
         std::pair<bool, double> project(double angle, double offset, double x, double y);	//projects (x,y) onto the line determined by angle and offset
 		

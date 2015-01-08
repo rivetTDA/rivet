@@ -128,15 +128,14 @@ void Mesh::store_xi_points(MultiBetti& mb, std::vector<xiPoint>& xi_pts)
             {
                 if(col_entry->down != NULL && row_entry->left != NULL)  //then there is a strong-AND-weak LCM
                 {
-                    all_lcms.insert(new LCM(NULL, col_entry));  //first argument NULL indicates this LCM is strong-and-weak
+                    all_lcms.insert(new LCM(col_entry, true));
                     if(verbosity >= 4) { std::cout << "  LCM (strong-and-weak) found at (" << col_entry->x << ", " << col_entry->y << ")\n"; }
                 }
                 else if(col_entry->down != NULL || row_entry->left != NULL)  //then there is a weak, non-strong LCM
                 {
-                    all_lcms.insert(new LCM(col_entry));  //second argument NULL indicates this LCM is weak, not strong
+                    all_lcms.insert(new LCM(col_entry, false));
                     if(verbosity >= 4) { std::cout << "  LCM (weak, non-strong) found at (" << col_entry->x << ", " << col_entry->y << ")\n"; }
                 }
-
             }
 
             //update cur_row_entry, if necessary
@@ -539,15 +538,161 @@ Halfedge* Mesh::create_edge_left(Halfedge* edge, LCM* lcm)
 //associates a discrete barcode to each 2-cell of the arrangement (IN PROGRESS)
 void Mesh::store_persistence_data(SimplexTree* bifiltration, int dim)
 {
-  // PART 1: CONSTRUCT THE DUAL GRAPH OF THE ARRANGEMENT
-    ///TODO: maybe put this in its own function???
+  // PARTS 1 and 2: FIND A PATH THROUGH ALL 2-CELLS OF THE ARRANGEMENT
+    std::vector<Halfedge*> path;    ///TODO: is this what we want?
+    find_path(path);
+
+
+  // PART 3: INITIAL PERSISTENCE COMPUTATION
+
+    //get multi-grade data in each dimension
+    if(verbosity >= 4) { std::cout << "Mapping low simplices:\n"; }
+    IndexMatrix* ind_low = bifiltration->get_index_mx(dim);    //can we improve this with something more efficient than IndexMatrix?
+    store_multigrades(ind_low, true);
+    delete ind_low;
+
+    if(verbosity >= 4) { std::cout << "Mapping high simplices:\n"; }
+    IndexMatrix* ind_high = bifiltration->get_index_mx(dim + 1);    //again, could be improved?
+    store_multigrades(ind_high, false);
+    delete ind_high;
+
+
+    //get boundary matrices --- need extra structure to support vineyard updates???
+//    MapMatrix* bdry1 = bifiltration->get_boundary_mx(dim);
+//    MapMatrix* bdry2 = bifiltration->get_boundary_mx(dim + 1);
+
+
+    ///TODO: reduce matrices and store discrete barcode in initial cell
+
+
+
+  // PART 4: TRAVERSE THE HAMILTONIAN PATH AND DO VINEYARD UPDATES
+
+    //note: tsp_vertices[0] represents a near-vertical line to the right of all multigrades
+
+    //traverse the path
+    for(unsigned i=1; i<tsp_vertices.size(); i++)
+    {
+        //determine which LCM is represented by this edge
+        LCM* cur_lcm = ......;  ///TODO: FINISH THIS!
+
+        //get equivalence classes for this LCM
+        xiMatrixEntry* down = cur_lcm->get_down();
+        xiMatrixEntry* left = cur_lcm->get_left();
+
+        //if this is a strong LCM, then swap simplices
+        ///TODO: IMPLEMENT LAZY SWAPPING!
+        if(left != NULL) //then this is a strong LCM and some simplices swap
+        {
+            if(down == NULL)    //then this is also a weak LCM
+            {
+                down = left->down;
+                left = left->left;
+            }//now down and left are correct (and should not be NULL)
+
+            if(down->high_index <= left->high_index && down->low_index <= left->low_index) //then LCM is crossed from below to above
+            {
+                //get column indexes (so we know which columns to move)
+                unsigned low_col = down->low_index;   //rightmost column index of low simplices for this equivalence class
+                unsigned high_col = down->high_index; //rightmost column index of high simplices for this equivalence class
+
+                //set column indexes for the "down" class to their final position
+                down->low_index = left->low_index;
+                down->high_index = left->high_index;
+
+                //loop over all xiMatrixEntrys in the "down" equivalence class
+                while(down != NULL)
+                {
+                    //move all "low" simplices for this xiMatrixEntry
+                    std::list<Multigrade*>::iterator it = down->low_simplices.begin();
+                    while(it != down->low_simplices.end())
+                    {
+                        Multigrade* cur_grade = *it;
+
+                        if(cur_grade->x > left->x)  //then move columns at cur_grade past columns at xiMatrixEntry left; map F does not change
+                        {
+                            move_low_columns(low_col, cur_grade->num_cols, left->low_index);
+                            left->low_index -= cur_grade->num_cols;
+                            ++it;
+                        }
+                        else    //then determine where these columns map to under F
+                        {
+                            xiMatrixEntry* target = left;
+                            unsigned target_col = left->low_index - left->low_count;
+                            while( (target->left() != NULL) && (cur_grade->x <= target->left()->x) )
+                            {
+                                target = target->left();
+                                target_col -= target->low_count;
+                            }
+
+                            //associate cur_grade with target
+                            cur_grade->xi_entry = target;
+                            target->insert_multigrade(cur_grade, true);
+                            low_simplices.erase(it);    //NOTE: advances the iterator!!!
+
+                            //if target is not the leftmost entry in its equivalence class, then move columns at cur_grade to the block of columns for target
+                            if(target->left() != NULL)
+                                move_low_columns(low_col, cur_grade->num_cols, target_col);
+
+                            //update column counts
+                            down->low_count -= cur_grade->num_cols;
+                            target->low_count += cur_grade->num_cols;
+                        }
+
+                        //update column index
+                        low_col -= cur_grade->num_cols;
+                    }//end low simplex loop
+
+                    //move all "high" simplices for this xiMatrixEntry
+                    ///TODO: FINISH!!! this is almost identical to the above loop for "low" simplices
+                    for(std::list<Multigrade*>::iterator it = first->high_simplices.begin(); it != first->high_simplices.end(); ++it)
+                    {
+                        //determine where columns for this multigrade must move to
+
+
+                        //call a function to move block of columns to its new position
+
+
+                    }//end low simplex loop
+
+                    //advance to the next xiMatrixEntry in the "down" equivalence class
+                    down = down->down();
+                }//end loop over "down" class
+
+
+
+
+            }
+            else    //then LCM is crossed form above to below
+            {
+                ///TODO: FINISH!!! this is dual to the above case!!!
+            }
+
+
+        }//end if
+
+        //if this is a weak LCM, then we still have to split or merge equivalence classes
+
+
+        //if this cell does not yet have a discrete barcode, then store the discrete barcode here
+
+
+    }//end path traversal
+
+
+}//end build_persistence_data()
+
+//finds a pseudo-optimal path through all 2-cells of the arrangement
+void Mesh::find_path(std::vector<Halfedge*>& pathvec)
+{
+  // PART 1: BUILD THE DUAL GRAPH OF THE ARRANGEMENT
 
     typedef boost::property<boost::edge_weight_t, int> EdgeWeightProperty;
     typedef boost::adjacency_list< boost::vecS, boost::vecS, boost::undirectedS,
                                    boost::no_property, EdgeWeightProperty > Graph;  //TODO: probably listS is a better choice than vecS, but I don't know how to make the adjacency_list work with listS
     Graph dual_graph;
 
-    //make a map for reverse-lookup of face indexes by face pointers -- Is this really necessary? How can I avoid doing this?
+    //make a map for reverse-lookup of face indexes by face pointers -- Is this really necessary? Can I avoid doing this?
     std::map<Face*, unsigned> face_indexes;
     for(unsigned i=0; i<faces.size(); i++)
         face_indexes.insert( std::pair<Face*, unsigned>(faces[i], i));
@@ -584,156 +729,58 @@ void Mesh::store_persistence_data(SimplexTree* bifiltration, int dim)
         std::cout << "  (" << boost::source(*it, dual_graph) << ", " << boost::target(*it, dual_graph) << ")\n";
 
 
-//  // PART 2a: FIND A MINIMAL SPANNING TREE
+  // PART 2a: FIND A MINIMAL SPANNING TREE
 
-//    typedef boost::graph_traits<Graph>::edge_descriptor Edge;
-//    std::vector<Edge> spanning_tree_edges;
-//    boost::kruskal_minimum_spanning_tree(dual_graph, std::back_inserter(spanning_tree_edges));
+    typedef boost::graph_traits<Graph>::edge_descriptor Edge;
+    std::vector<Edge> spanning_tree_edges;
+    boost::kruskal_minimum_spanning_tree(dual_graph, std::back_inserter(spanning_tree_edges));
 
-//    std::cout << "num MST edges: " << spanning_tree_edges.size() << "\n";
-//    for(unsigned i=0; i<spanning_tree_edges.size(); i++)
-//        std::cout << "  (" << boost::source(spanning_tree_edges[i], dual_graph) << ", " << boost::target(spanning_tree_edges[i], dual_graph) << ")\n";
-
-
-  // PART 2: FIND A HAMILTONIAN TOUR
-    ///TODO: MAKE THIS START AT CELL REPRESENTING VERTICAL LINE!!!
-
-    typedef boost::graph_traits<Graph>::vertex_descriptor Vertex;
-    std::vector<Vertex> tsp_vertices;
-    boost::metric_tsp_approx_tour(dual_graph, std::back_inserter(tsp_vertices));
-
-    std::cout << "num TSP vertices: " << tsp_vertices.size() << "\n";
-    for(unsigned i=0; i<tsp_vertices.size(); i++)
-        std::cout << "  " << tsp_vertices[i] << "\n";
-
-  // PART 3: INITIAL PERSISTENCE COMPUTATION
-
-    //get multi-grade data in each dimension
-    if(verbosity >= 4) { std::cout << "Mapping low simplices:\n"; }
-    IndexMatrix* ind_low = bifiltration->get_index_mx(dim);    //can we improve this with something more efficient than IndexMatrix?
-    store_multigrades(ind_low, true);
-    delete ind_low;
-
-    if(verbosity >= 4) { std::cout << "Mapping high simplices:\n"; }
-    IndexMatrix* ind_high = bifiltration->get_index_mx(dim + 1);    //again, could be improved?
-    store_multigrades(ind_high, false);
-    delete ind_high;
+    std::cout << "num MST edges: " << spanning_tree_edges.size() << "\n";
+    for(unsigned i=0; i<spanning_tree_edges.size(); i++)
+        std::cout << "  (" << boost::source(spanning_tree_edges[i], dual_graph) << ", " << boost::target(spanning_tree_edges[i], dual_graph) << ")\n";
 
 
-    //get boundary matrices --- need extra structure to support vineyard updates???
-//    MapMatrix* bdry1 = bifiltration->get_boundary_mx(dim);
-//    MapMatrix* bdry2 = bifiltration->get_boundary_mx(dim + 1);
+//  // PART 2b: FIND A HAMILTONIAN TOUR
+//    ///This doesn't serve our purposes.
+//    ///  It doesn't start at the cell representing a vertical line, but that could be fixed by using metric_tsp_approx_from_vertex(...).
+//    ///  Worse, it always produces a cycle and doesn't give the intermediate nodes between non-adjacent nodes that appear consecutively in the tour.
 
+//    typedef boost::graph_traits<Graph>::vertex_descriptor Vertex;
+//    std::vector<Vertex> tsp_vertices;
+//    boost::metric_tsp_approx_tour(dual_graph, std::back_inserter(tsp_vertices));
 
-    //reduce matrices and store discrete barcode in initial cell
+//    std::cout << "num TSP vertices: " << tsp_vertices.size() << "\n";
+//    for(unsigned i=0; i<tsp_vertices.size(); i++)
+//        std::cout << "  " << tsp_vertices[i] << "\n";
+
+  // PART 3: CONVERT THE OUTPUT OF PART 2 TO A PATH
+
+    //organize the edges of the minimal spanning tree so that we can traverse the tree
+
+    //traverse the tree
+    //at each step in the traversal, append the corresponding Halfedge* to pathvec
+    //make sure to start at the proper node (2-cell)
 
 
 
-  // PART 4: TRAVERSE THE HAMILTONIAN PATH AND DO VINEYARD UPDATES
+}//end find_path()
 
-    //note: tsp_vertices[0] represents a near-vertical line to the right of all multigrades
-
-    //traverse the path
-    for(unsigned i=1; i<tsp_vertices.size(); i++)
+//moves a block of n columns, the rightmost of which is column s, to a new position following column t (NOTE: assumes s <= t)
+///TODO: FINISH THIS!!! for now, it just prints transpositions to std::cout
+void Mesh::move_low_columns(unsigned s, unsigned n, unsigned t)
+{
+    std::cout << "Transpositions for low simplices: ";
+    for(unsigned c=0; c<n; c++) //move column that starts at s-c
     {
-        //determine which LCM is represented by this edge
-        LCM* cur_lcm = ......;
-
-        //get equivalence classes for this LCM
-        xiMatrixEntry* down = cur_lcm->get_down();
-        xiMatrixEntry* left = cur_lcm->get_left();
-
-        //if this is a strong LCM, then swap simplices
-        if(left != NULL) //then this is a strong LCM and some simplices swap
+        for(unsigned i=s; i<t;i++)
         {
-            if(down == NULL)    //then this is also a weak LCM
-            {
-                down = left->down;
-                left = left->left;
-            }//now down and left are correct (and should not be NULL)
+            unsigned a = i-c;
+            std::cout << "(" << a << "," << (a+1) << ")";
+        }
+    }
+    std::cout << "\n";
+}//end move_low_columns()
 
-            if(down->high_index <= left->high_index && down->low_index <= left->low_index) //then LCM is crossed from below to above
-            {
-                //get column indexes
-                unsigned low_col = down->low_index;   //rightmost column index of low simplices for this equivalence class
-                unsigned high_col = down->high_index; //rightmost column index of high simplices for this equivalence class
-
-                //loop over all xiMatrixEntrys in the "down" equivalence class
-                while(down != NULL)
-                {
-                    //move all "low" simplices for this xiMatrixEntry
-                    std::list<Multigrade*>::iterator it = down->low_simplices.begin();
-                    while(it != down->low_simplices.end())
-                    {
-                        Multigrade* cur_grade = *it;
-
-                        if(cur_grade->x > left->x)  //then move columns at cur_grade past columns at xiMatrixEntry left; map F does not change
-                        {
-                            move_columns(low_col, cur_grade->num_cols, left->low_index);   ///TODO: CHECK THIS!!!  IMPLEMENT move_columns()
-                            ++it;
-                        }
-                        else    //then determine where these columns map to under F
-                        {
-                            xiMatrixEntry* target = left;
-                            unsigned target_col = left->low_index - left->low_count;
-                            while( (target->left() != NULL) && (cur_grade->x <= target->left()->x) )
-                            {
-                                target = target->left();
-                                target_col -= target->low_count;
-                            }
-
-                            //associate cur_grade with target
-                            cur_grade->xi_entry = target;
-                            target->insert_multigrade(cur_grade, true);
-                            low_simplices.erase(it);    //NOTE: advances the iterator!!!
-
-                            //if target is not the leftmost entry in its equivalence class, then move columns at cur_grade to the block of columns for target
-                            if(target->left() != NULL)
-                                move_columns(low_col, cur_grade->num_cols, target_col);  ///TODO: CHECK THIS!!!  IMPLEMENT move_columns()
-                        }
-
-                        //update column index
-                        low_col -= cur_grade->num_cols;
-                    }//end low simplex loop
-
-                    //move all "high" simplices for this xiMatrixEntry
-                    ///TODO: FINISH!!! this is almost identical to the above loop for "low" simplices
-                    for(std::list<Multigrade*>::iterator it = first->high_simplices.begin(); it != first->high_simplices.end(); ++it)
-                    {
-                        //determine where columns for this multigrade must move to
-
-
-                        //call a function to move block of columns to its new position
-
-
-                    }//end low simplex loop
-
-                    //advance to the next xiMatrixEntry in the "down" equivalence class
-                    down = down->down();
-                }//end loop over "down" class
-
-
-
-
-            }
-            else    //then LCM is crossed form above to below
-            {
-
-            }
-
-
-        }//end if
-
-        //if this is a weak LCM, then we still have to split or merge equivalence classes
-
-
-        //if this cell does not yet have a discrete barcode, then store the discrete barcode here
-
-
-    }//end path traversal
-
-
-}//end build_persistence_data()
 
 //stores multigrade info for the persistence computations
 //  low is true for simplices of dimension hom_dim, false for simplices of dimension hom_dim+1
@@ -778,21 +825,21 @@ void Mesh::store_multigrades(IndexMatrix* ind, bool low)
         {
             //get range of column indexes for simplices at multigrade (x,y)
             int last_col = ind->get(y, x);  //arguments are row, then column
-            int first_col = 0;
+            int first_col = -1;
             if(x > 0)
-                first_col = ind->get(y, x-1) + 1;
+                first_col = ind->get(y, x-1);
             else if(y > 0)
-                first_col = ind->get(y-1, ind->width()-1) + 1;
+                first_col = ind->get(y-1, ind->width()-1);
 
             //if there are any simplices at (x,y), then add multigrade (x,y)
-            if(last_col >= first_col)
+            if(last_col > first_col)
             {
                 //if the frontier is empty or if x is to the right of the first element, then map multigrade (x,y) to infinity
                 if( it == frontier.end() || (*it)->x < x )    //NOTE: if iterator has advanced from frontier.begin(), then it MUST be the case that x < (*it)->x
                 {
 //                    qDebug() << "      processing columns" << first_col << "to" << last_col << ": map to infinity";
-                    xi_matrix.get_infinity()->add_multigrade(x, y, first_col, last_col, low);
-                    if(verbosity >= 4) { std::cout << "    simplices at (" << x << ", " << y << "), in columns " << first_col << " to " << last_col << ", mapped to infinity\n"; }
+                    xi_matrix.get_infinity()->add_multigrade(x, y, last_col - first_col, low);
+                    if(verbosity >= 4) { std::cout << "    simplices at (" << x << ", " << y << "), in columns " << (first_col + 1) << " to " << last_col << ", mapped to infinity\n"; }
                 }
                 else    //then map multigrade (x,y) to the last element of the frontier such that (*it)->x >= x
                 {
@@ -805,8 +852,8 @@ void Mesh::store_multigrades(IndexMatrix* ind, bool low)
                     --it;
 
                     //now map the multigrade to the element given by the iterator
-                    (*it)->add_multigrade(x, y, first_col, last_col, low);
-                    if(verbosity >= 4) { std::cout << "    simplices at (" << x << ", " << y << "), in columns " << first_col << " to " << last_col << ", mapped to xi support point (" << (*it)->x << ", " << (*it)->y << ")\n"; }
+                    (*it)->add_multigrade(x, y, last_col - first_col, low);
+                    if(verbosity >= 4) { std::cout << "    simplices at (" << x << ", " << y << "), in columns " << (first_col + 1) << " to " << last_col << ", mapped to xi support point (" << (*it)->x << ", " << (*it)->y << ")\n"; }
                 }
             }
         }//end x loop

@@ -24,7 +24,7 @@ void xiMatrixEntry::add_multigrade(unsigned x, unsigned y, unsigned num_cols, bo
 }
 
 //inserts a Multigrade at the beginning of the list for the given dimension
-void insert_multigrade(Multigrade* mg, bool low)
+void xiMatrixEntry::insert_multigrade(Multigrade* mg, bool low)
 {
     if(low)
         low_simplices.push_back(mg);

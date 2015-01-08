@@ -10,8 +10,13 @@ LCM::LCM(xiMatrixEntry* down, xiMatrixEntry* left) : x_coord(down->x), y_coord(l
 { }
 
 //constructor for a WEAK LCM, requires pointer to the xi support at the LCM
-LCM::LCM(xiMatrixEntry* point) : x_coord(point->x), y_coord(point->y), down(point), left(NULL)
-{ }
+LCM::LCM(xiMatrixEntry* point, bool strong) : x_coord(point->x), y_coord(point->y), down(NULL), left(NULL)
+{
+    if(strong)
+        left = point;
+    else
+        down = point;
+}
 
 
 ///TODO: these other constructors might be unnecessary now

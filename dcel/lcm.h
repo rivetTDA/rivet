@@ -16,7 +16,7 @@ class LCM   //updated to store only discrete indexes
 {
     public:
         LCM(xiMatrixEntry* down, xiMatrixEntry* left);  //constructor for a NON-WEAK LCM, requires pointers to the "generators" of the LCM
-        LCM(xiMatrixEntry* point);  //constructor for a WEAK LCM, requires pointer to the xi support at the LCM
+        LCM(xiMatrixEntry* point, bool strong);  //constructor for a WEAK LCM, requires pointer to the xi support at the LCM and a bool indicating whether this LCM is strong (i.e. whether xi support points exist both left and down)
 
       ///TODO: these other constructors might be unnecessary now:
 //        LCM(unsigned x, unsigned y);		//constructor, requires only time and distance values
