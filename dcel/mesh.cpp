@@ -539,9 +539,9 @@ Halfedge* Mesh::create_edge_left(Halfedge* edge, LCM* lcm)
 void Mesh::store_persistence_data(SimplexTree* bifiltration, int dim)
 {
   // PARTS 1 and 2: FIND A PATH THROUGH ALL 2-CELLS OF THE ARRANGEMENT
-    std::vector<Halfedge*> path;    ///TODO: is this what we want?
+    std::vector<Halfedge*> path;
     find_path(path);
-
+/*
 
   // PART 3: INITIAL PERSISTENCE COMPUTATION
 
@@ -678,11 +678,13 @@ void Mesh::store_persistence_data(SimplexTree* bifiltration, int dim)
 
 
     }//end path traversal
-
+*/
 
 }//end build_persistence_data()
 
 //finds a pseudo-optimal path through all 2-cells of the arrangement
+// path consists of a vector of Halfedges
+// at each step of the path, the Halfedge points to the LCM being crossed and the 2-cell (Face) being entered
 void Mesh::find_path(std::vector<Halfedge*>& pathvec)
 {
   // PART 1: BUILD THE DUAL GRAPH OF THE ARRANGEMENT
@@ -722,25 +724,30 @@ void Mesh::find_path(std::vector<Halfedge*>& pathvec)
     }
 
     //TESTING -- print the edges in the dual graph
-    std::cout << "EDGES IN THE DUAL GRAPH OF THE ARRANGEMENT: \n";
-    typedef boost::graph_traits<Graph>::edge_iterator edge_iterator;
-    std::pair<edge_iterator, edge_iterator> ei = boost::edges(dual_graph);
-    for(edge_iterator it = ei.first; it != ei.second; ++it)
-        std::cout << "  (" << boost::source(*it, dual_graph) << ", " << boost::target(*it, dual_graph) << ")\n";
+    if(verbosity >= 2)
+    {
+        std::cout << "EDGES IN THE DUAL GRAPH OF THE ARRANGEMENT: \n";
+        typedef boost::graph_traits<Graph>::edge_iterator edge_iterator;
+        std::pair<edge_iterator, edge_iterator> ei = boost::edges(dual_graph);
+        for(edge_iterator it = ei.first; it != ei.second; ++it)
+            std::cout << "  (" << boost::source(*it, dual_graph) << ", " << boost::target(*it, dual_graph) << ")\n";
+    }
 
 
-  // PART 2a: FIND A MINIMAL SPANNING TREE
+  // PART 2: FIND A MINIMAL SPANNING TREE
 
     typedef boost::graph_traits<Graph>::edge_descriptor Edge;
     std::vector<Edge> spanning_tree_edges;
     boost::kruskal_minimum_spanning_tree(dual_graph, std::back_inserter(spanning_tree_edges));
 
-    std::cout << "num MST edges: " << spanning_tree_edges.size() << "\n";
-    for(unsigned i=0; i<spanning_tree_edges.size(); i++)
-        std::cout << "  (" << boost::source(spanning_tree_edges[i], dual_graph) << ", " << boost::target(spanning_tree_edges[i], dual_graph) << ")\n";
+    if(verbosity >= 2)
+    {
+        std::cout << "num MST edges: " << spanning_tree_edges.size() << "\n";
+        for(unsigned i=0; i<spanning_tree_edges.size(); i++)
+            std::cout << "  (" << boost::source(spanning_tree_edges[i], dual_graph) << ", " << boost::target(spanning_tree_edges[i], dual_graph) << ")\n";
+    }
 
-
-//  // PART 2b: FIND A HAMILTONIAN TOUR
+//  // PART 2-ALTERNATE: FIND A HAMILTONIAN TOUR
 //    ///This doesn't serve our purposes.
 //    ///  It doesn't start at the cell representing a vertical line, but that could be fixed by using metric_tsp_approx_from_vertex(...).
 //    ///  Worse, it always produces a cycle and doesn't give the intermediate nodes between non-adjacent nodes that appear consecutively in the tour.
@@ -756,14 +763,73 @@ void Mesh::find_path(std::vector<Halfedge*>& pathvec)
   // PART 3: CONVERT THE OUTPUT OF PART 2 TO A PATH
 
     //organize the edges of the minimal spanning tree so that we can traverse the tree
+    std::vector< std::set<unsigned> > adjacencies(faces.size(), std::set<unsigned>());  //this will store all adjacency relationships in the spanning tree
+    for(unsigned i=0; i<spanning_tree_edges.size(); i++)
+    {
+        unsigned a = boost::source(spanning_tree_edges[i], dual_graph);
+        unsigned b = boost::target(spanning_tree_edges[i], dual_graph);
+
+        (adjacencies[a]).insert(b);
+        (adjacencies[b]).insert(a);
+    }
 
     //traverse the tree
     //at each step in the traversal, append the corresponding Halfedge* to pathvec
     //make sure to start at the proper node (2-cell)
+    Face* initial_cell = topleft->get_twin()->get_face();
+    unsigned start = (face_indexes.find(initial_cell))->second;
+
+    find_subpath(start, adjacencies, pathvec);
+
+    //TESTING -- PRINT PATH
+    if(verbosity >= 2)
+    {
+        std::cout << "PATH: " << start << ", ";
+        for(int i=0; i<pathvec.size(); i++)
+            std::cout << (face_indexes.find((pathvec[i])->get_face()))->second << ", ";
+    }
 
 
 
 }//end find_path()
+
+//recursive method to build part of the path
+void Mesh::find_subpath(unsigned& cur_node, std::vector< std::set<unsigned> >& adj, std::vector<Halfedge*>& pathvec)
+{
+
+    while(!adj[cur_node].empty())   //cur_node still has children to traverse
+    {
+        std::set<unsigned>::iterator it = adj[cur_node].begin();
+        unsigned next_node = *it;
+
+        //find the next Halfedge and append it to pathvec
+        Halfedge* cur_edge = (faces[cur_node])->get_boundary();
+        while(cur_edge->get_twin()->get_face() != faces[next_node])     //do we really have to search for the correct edge???
+        {
+            cur_edge = cur_edge->get_next();
+
+            if(cur_edge == (faces[cur_node])->get_boundary())   //THIS SHOULD NEVER HAPPEN
+            {
+                std::cerr << "ERROR: cannot find edge between 2-cells " << cur_node << " and " << next_node << "\n";
+                throw std::exception();
+            }
+        }
+        pathvec.push_back(cur_edge->get_twin());
+
+        //remove adjacencies that have been already processed
+        adj[cur_node].erase(it);        //removes (cur_node, next_node)
+        adj[next_node].erase(cur_node); //removes (next_node, cur_node)
+
+        //recurse through the next node
+        find_subpath(next_node, adj, pathvec);
+
+        //add reverse Halfedge to pathvec
+        pathvec.push_back(cur_edge);
+
+    }//end while
+
+}//end find_subpath()
+
 
 //moves a block of n columns, the rightmost of which is column s, to a new position following column t (NOTE: assumes s <= t)
 ///TODO: FINISH THIS!!! for now, it just prints transpositions to std::cout
