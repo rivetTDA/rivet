@@ -111,7 +111,7 @@ class Mesh
             ///TODO: the above is only partially implemented
 
         void find_path(std::vector<Halfedge *> &pathvec);   //finds a pseudo-optimal path through all 2-cells of the arrangement
-        void find_subpath(unsigned& cur_node, std::vector< std::set<unsigned> >& adj, std::vector<Halfedge*>& pathvec); //builds the path recursively
+        void find_subpath(unsigned& cur_node, std::vector< std::set<unsigned> >& adj, std::vector<Halfedge*>& pathvec, bool return_path); //builds the path recursively
 
         void move_low_columns(unsigned s, unsigned n, unsigned t);    //moves a block of n columns, the rightmost of which is column s, to a new position following column t (NOTE: assumes s <= t)
             ///TODO: the above is only partially implemented

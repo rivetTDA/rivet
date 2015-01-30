@@ -717,6 +717,7 @@ void Mesh::find_path(std::vector<Halfedge*>& pathvec)
                 //if i < j, then create an (undirected) edge between these faces
                 if(i < j)
                     boost::add_edge(i, j, 1, dual_graph);   //for now, all edges have unit weight
+                ///TODO: WEIGHT EDGES BY NUMBER OF SIMPLICES THAT SWAP FOR EACH LCM
             }
             //move to the next neighbor
             current = current->get_next();
@@ -779,7 +780,7 @@ void Mesh::find_path(std::vector<Halfedge*>& pathvec)
     Face* initial_cell = topleft->get_twin()->get_face();
     unsigned start = (face_indexes.find(initial_cell))->second;
 
-    find_subpath(start, adjacencies, pathvec);
+    find_subpath(start, adjacencies, pathvec, false);
 
     //TESTING -- PRINT PATH
     if(verbosity >= 2)
@@ -794,7 +795,8 @@ void Mesh::find_path(std::vector<Halfedge*>& pathvec)
 }//end find_path()
 
 //recursive method to build part of the path
-void Mesh::find_subpath(unsigned& cur_node, std::vector< std::set<unsigned> >& adj, std::vector<Halfedge*>& pathvec)
+//return_path == TRUE iff we want the path to return to the current node after traversing all of its children
+void Mesh::find_subpath(unsigned& cur_node, std::vector< std::set<unsigned> >& adj, std::vector<Halfedge*>& pathvec, bool return_path)
 {
 
     while(!adj[cur_node].empty())   //cur_node still has children to traverse
@@ -821,10 +823,11 @@ void Mesh::find_subpath(unsigned& cur_node, std::vector< std::set<unsigned> >& a
         adj[next_node].erase(cur_node); //removes (next_node, cur_node)
 
         //recurse through the next node
-        find_subpath(next_node, adj, pathvec);
+        find_subpath(next_node, adj, pathvec, (return_path || !adj[cur_node].empty()) );
 
         //add reverse Halfedge to pathvec
-        pathvec.push_back(cur_edge);
+        if(return_path)
+            pathvec.push_back(cur_edge);
 
     }//end while
 
