@@ -541,11 +541,13 @@ void Mesh::store_persistence_data(SimplexTree* bifiltration, int dim)
   // PARTS 1 and 2: FIND A PATH THROUGH ALL 2-CELLS OF THE ARRANGEMENT
     std::vector<Halfedge*> path;
     find_path(path);
-/*
+
 
   // PART 3: INITIAL PERSISTENCE COMPUTATION
 
-    //get multi-grade data in each dimension
+    std::cout << "Initial persistence computation in cell 0\n";
+
+/*    //get multi-grade data in each dimension
     if(verbosity >= 4) { std::cout << "Mapping low simplices:\n"; }
     IndexMatrix* ind_low = bifiltration->get_index_mx(dim);    //can we improve this with something more efficient than IndexMatrix?
     store_multigrades(ind_low, true);
@@ -563,18 +565,18 @@ void Mesh::store_persistence_data(SimplexTree* bifiltration, int dim)
 
 
     ///TODO: reduce matrices and store discrete barcode in initial cell
-
+*/
 
 
   // PART 4: TRAVERSE THE HAMILTONIAN PATH AND DO VINEYARD UPDATES
 
-    //note: tsp_vertices[0] represents a near-vertical line to the right of all multigrades
+    //note: path starts with a near-vertical line to the right of all multigrades
 
     //traverse the path
-    for(unsigned i=1; i<tsp_vertices.size(); i++)
+    for(unsigned i=1; i<path.size(); i++)
     {
         //determine which LCM is represented by this edge
-        LCM* cur_lcm = ......;  ///TODO: FINISH THIS!
+        LCM* cur_lcm = (path[i])->get_LCM();
 
         //get equivalence classes for this LCM
         xiMatrixEntry* down = cur_lcm->get_down();
@@ -678,7 +680,7 @@ void Mesh::store_persistence_data(SimplexTree* bifiltration, int dim)
 
 
     }//end path traversal
-*/
+
 
 }//end build_persistence_data()
 
@@ -788,6 +790,7 @@ void Mesh::find_path(std::vector<Halfedge*>& pathvec)
         std::cout << "PATH: " << start << ", ";
         for(int i=0; i<pathvec.size(); i++)
             std::cout << (face_indexes.find((pathvec[i])->get_face()))->second << ", ";
+        std::cout << "\n";
     }
 
 
@@ -822,11 +825,14 @@ void Mesh::find_subpath(unsigned& cur_node, std::vector< std::set<unsigned> >& a
         adj[cur_node].erase(it);        //removes (cur_node, next_node)
         adj[next_node].erase(cur_node); //removes (next_node, cur_node)
 
-        //recurse through the next node
-        find_subpath(next_node, adj, pathvec, (return_path || !adj[cur_node].empty()) );
+        //do we need to return to this node?
+        bool return_here = return_path || !adj[cur_node].empty();
 
-        //add reverse Halfedge to pathvec
-        if(return_path)
+        //recurse through the next node
+        find_subpath(next_node, adj, pathvec, return_here);
+
+        //if we will return to this node, then add reverse Halfedge to pathvec
+        if(return_here)
             pathvec.push_back(cur_edge);
 
     }//end while
