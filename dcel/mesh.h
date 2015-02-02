@@ -113,6 +113,9 @@ class Mesh
         void find_path(std::vector<Halfedge *> &pathvec);   //finds a pseudo-optimal path through all 2-cells of the arrangement
         void find_subpath(unsigned& cur_node, std::vector< std::set<unsigned> >& adj, std::vector<Halfedge*>& pathvec, bool return_path); //builds the path recursively
 
+        void move_columns(xiMatrixEntry* first, xiMatrixEntry* second, bool from_below); //moves columns from an equivalence class given by xiMatrixEntry* first to their new positions after or among the columns in the equivalence class given by xiMatrixEntry* second
+            ///TODO: IMPLEMENT LAZY SWAPPING!
+
         void move_low_columns(unsigned s, unsigned n, unsigned t);    //moves a block of n columns, the rightmost of which is column s, to a new position following column t (NOTE: assumes s <= t)
             ///TODO: the above is only partially implemented
 

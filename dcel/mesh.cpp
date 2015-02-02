@@ -583,98 +583,46 @@ void Mesh::store_persistence_data(SimplexTree* bifiltration, int dim)
         xiMatrixEntry* left = cur_lcm->get_left();
 
         //if this is a strong LCM, then swap simplices
-        ///TODO: IMPLEMENT LAZY SWAPPING!
         if(left != NULL) //then this is a strong LCM and some simplices swap
         {
+            xiMatrixEntry* at_LCM = NULL;   //remains NULL iff this LCM is not weak
+
             if(down == NULL)    //then this is also a weak LCM
             {
+                at_LCM = left;
                 down = left->down;
                 left = left->left;
             }//now down and left are correct (and should not be NULL)
 
             if(down->high_index <= left->high_index && down->low_index <= left->low_index) //then LCM is crossed from below to above
             {
-                //get column indexes (so we know which columns to move)
-                unsigned low_col = down->low_index;   //rightmost column index of low simplices for this equivalence class
-                unsigned high_col = down->high_index; //rightmost column index of high simplices for this equivalence class
-
-                //set column indexes for the "down" class to their final position
-                down->low_index = left->low_index;
-                down->high_index = left->high_index;
-
-                //loop over all xiMatrixEntrys in the "down" equivalence class
-                while(down != NULL)
-                {
-                    //move all "low" simplices for this xiMatrixEntry
-                    std::list<Multigrade*>::iterator it = down->low_simplices.begin();
-                    while(it != down->low_simplices.end())
-                    {
-                        Multigrade* cur_grade = *it;
-
-                        if(cur_grade->x > left->x)  //then move columns at cur_grade past columns at xiMatrixEntry left; map F does not change
-                        {
-                            move_low_columns(low_col, cur_grade->num_cols, left->low_index);
-                            left->low_index -= cur_grade->num_cols;
-                            ++it;
-                        }
-                        else    //then determine where these columns map to under F
-                        {
-                            xiMatrixEntry* target = left;
-                            unsigned target_col = left->low_index - left->low_count;
-                            while( (target->left() != NULL) && (cur_grade->x <= target->left()->x) )
-                            {
-                                target = target->left();
-                                target_col -= target->low_count;
-                            }
-
-                            //associate cur_grade with target
-                            cur_grade->xi_entry = target;
-                            target->insert_multigrade(cur_grade, true);
-                            low_simplices.erase(it);    //NOTE: advances the iterator!!!
-
-                            //if target is not the leftmost entry in its equivalence class, then move columns at cur_grade to the block of columns for target
-                            if(target->left() != NULL)
-                                move_low_columns(low_col, cur_grade->num_cols, target_col);
-
-                            //update column counts
-                            down->low_count -= cur_grade->num_cols;
-                            target->low_count += cur_grade->num_cols;
-                        }
-
-                        //update column index
-                        low_col -= cur_grade->num_cols;
-                    }//end low simplex loop
-
-                    //move all "high" simplices for this xiMatrixEntry
-                    ///TODO: FINISH!!! this is almost identical to the above loop for "low" simplices
-                    for(std::list<Multigrade*>::iterator it = first->high_simplices.begin(); it != first->high_simplices.end(); ++it)
-                    {
-                        //determine where columns for this multigrade must move to
-
-
-                        //call a function to move block of columns to its new position
-
-
-                    }//end low simplex loop
-
-                    //advance to the next xiMatrixEntry in the "down" equivalence class
-                    down = down->down();
-                }//end loop over "down" class
-
-
-
-
+                move_columns(down, left, true);
             }
             else    //then LCM is crossed form above to below
             {
-                ///TODO: FINISH!!! this is dual to the above case!!!
+                move_columns(left, down, false);
+            }
+        }
+        else    //then this is a weak, not-strong LCM, and we just have to split or merge equivalence classes
+        {
+            xiMatrixEntry* at_LCM = down;
+            xiMatrixEntry* generator = at_LCM->down;
+            if(generator == NULL)
+                generator = at_LCM->left;
+
+            if(at_LCM->head_of_class && generator->head_of_class)    //then merge classes
+            {
+                generator->head_of_class = false;
+            }
+            else    //then split classes
+            {
+                generator->head_of_class = true;
+                generator->low_index = at_LCM->low_index - at_LCM->low_count;
+                generator->high_index = at_LCM->high_index - at_LCM->high_count;
             }
 
 
-        }//end if
-
-        //if this is a weak LCM, then we still have to split or merge equivalence classes
-
+        }
 
         //if this cell does not yet have a discrete barcode, then store the discrete barcode here
 
@@ -838,6 +786,138 @@ void Mesh::find_subpath(unsigned& cur_node, std::vector< std::set<unsigned> >& a
     }//end while
 
 }//end find_subpath()
+
+//moves columns from an equivalence class given by xiMatrixEntry* first to their new positions after or among the columns in the equivalence class given by xiMatrixEntry* second
+// the boolean argument indicates whether an LCM is being crossed from below (or from above)
+///TODO: IMPLEMENT LAZY SWAPPING!
+void Mesh::move_columns(xiMatrixEntry* first, xiMatrixEntry* second, bool from_below)
+{
+    //get column indexes (so we know which columns to move)
+    unsigned low_col = first->low_index;   //rightmost column index of low simplices for the equivalence class to move
+    unsigned high_col = first->high_index; //rightmost column index of high simplices for the equivalence class to move
+
+    //set column indexes for the first class to their final position
+    first->low_index = second->low_index;
+    first->high_index = second->high_index;
+
+    //loop over all xiMatrixEntrys in the first equivalence class
+    while(first != NULL)
+    {
+        //move all "low" simplices for this xiMatrixEntry
+        std::list<Multigrade*>::iterator it = first->low_simplices.begin();
+        while(it != first->low_simplices.end())
+        {
+            Multigrade* cur_grade = *it;
+
+            if( (from_below && cur_grade->x > second->x) || (!from_below && cur_grade->y > second->y) )
+                //then move columns at cur_grade past columns at xiMatrixEntry second; map F does not change
+            {
+                move_low_columns(low_col, cur_grade->num_cols, second->low_index);
+                second->low_index -= cur_grade->num_cols;
+                ++it;
+            }
+            else    //then move columns at cur_grade to some position in the equivalence class given by xiMatrixEntry second; map F changes
+            {
+                //determine where these columns map to under F
+                xiMatrixEntry* target = second;
+                unsigned target_col = second->low_index - second->low_count;
+                if(from_below)
+                {
+                    while( (target->left() != NULL) && (cur_grade->x <= target->left()->x) )
+                    {
+                        target = target->left();
+                        target_col -= target->low_count;
+                    }
+                }
+                else
+                {
+                    while( (target->down() != NULL) && (cur_grade->y <= target->down()->y) )
+                    {
+                        target = target->down();
+                        target_col -= target->low_count;
+                    }
+                }
+
+                //associate cur_grade with target
+                cur_grade->xi_entry = target;
+                target->insert_multigrade(cur_grade, true);
+                low_simplices.erase(it);    //NOTE: advances the iterator!!!
+
+                //if target is not the leftmost entry in its equivalence class, then move columns at cur_grade to the block of columns for target
+                if( (from_below && target->left() != NULL) || (!from_below && target->down != NULL) )
+                    move_low_columns(low_col, cur_grade->num_cols, target_col);
+                //else, then the columns don't actually have to move
+
+                //update column counts
+                first->low_count -= cur_grade->num_cols;
+                target->low_count += cur_grade->num_cols;
+            }
+
+            //update column index
+            low_col -= cur_grade->num_cols;
+        }//end "low" simplex loop
+
+        //move all "high" simplices for this xiMatrixEntry
+        std::list<Multigrade*>::iterator it = first->high_simplices.begin();
+        while(it != first->high_simplices.end())
+        {
+            Multigrade* cur_grade = *it;
+
+            if( (from_below && cur_grade->x > second->x) || (!from_below && cur_grade->y > second->y) )
+                //then move columns at cur_grade past columns at xiMatrixEntry second; map F does not change
+            {
+                move_high_columns(high_col, cur_grade->num_cols, second->high_index);
+                second->high_index -= cur_grade->num_cols;
+                ++it;
+            }
+            else    //then move columns at cur_grade to some position in the equivalence class given by xiMatrixEntry second; map F changes
+            {
+                //determine where these columns map to under F
+                xiMatrixEntry* target = second;
+                unsigned target_col = second->high_index - second->high_count;
+                if(from_below)
+                {
+                    while( (target->left() != NULL) && (cur_grade->x <= target->left()->x) )
+                    {
+                        target = target->left();
+                        target_col -= target->low_count;
+                    }
+                }
+                else
+                {
+                    while( (target->down() != NULL) && (cur_grade->y <= target->down()->y) )
+                    {
+                        target = target->down();
+                        target_col -= target->low_count;
+                    }
+                }
+
+                //associate cur_grade with target
+                cur_grade->xi_entry = target;
+                target->insert_multigrade(cur_grade, true);
+                high_simplices.erase(it);    //NOTE: advances the iterator!!!
+
+                //if target is not the leftmost entry in its equivalence class, then move columns at cur_grade to the block of columns for target
+                if( (from_below && target->left() != NULL) || (!from_below && target->down != NULL) )
+                    move_high_columns(high_col, cur_grade->num_cols, target_col);
+                //else, then the columns don't actually have to move
+
+                //update column counts
+                first->high_count -= cur_grade->num_cols;
+                target->high_count += cur_grade->num_cols;
+            }
+
+            //update column index
+            high_col -= cur_grade->num_cols;
+        }//end "high" simplex loop
+
+        //advance to the next xiMatrixEntry in the first equivalence class
+        if(from_below)
+            first = first->down();
+        else
+            first = first->left();
+
+}//end move_columns()
 
 
 //moves a block of n columns, the rightmost of which is column s, to a new position following column t (NOTE: assumes s <= t)

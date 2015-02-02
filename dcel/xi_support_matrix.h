@@ -24,10 +24,14 @@ struct xiMatrixEntry
     std::list<Multigrade*> high_simplices;    //associated multigrades for simplices of higher dimension --- MAYBE SHOULD BE forward_list
 
     ///TODO: THINK ABOUT THE FOLLOWING VARIABLES -- IS THERE A BETTER WAY TO STORE THIS INFO?
-    unsigned low_index;     //index of rightmost column in matrix of simplices of lower dimension that is mapped to this xiMatrixEntry, or max_int if this entry is not at the head of an equivalence class
-    unsigned low_count;     //number of columns in matrix of simplices of lower dimension that are mapped to this xiMatrixEntry -- ALWAYS RELIABLE, regardless of whether this entry is at the head of an equivalence class
-    unsigned high_index;    //index of rightmost column in matrix of simplices of higher dimension that is mapped to this xiMatrixEntry, or max_int if this entry is not at the head of an equivalence class
-    unsigned high_count;    //number of columns in matrix of simplices of highwer dimension that are mapped to this xiMatrixEntry -- ALWAYS RELIABLE, regardless of whether this entry is at the head of an equivalence class
+    unsigned low_count;     //number of columns in matrix of simplices of lower dimension that are mapped to this xiMatrixEntry (does not depend on whether this entry is the head of an equivalence class)
+    unsigned high_count;    //number of columns in matrix of simplices of higher dimension that are mapped to this xiMatrixEntry (does not depend on whether this entry is the head of an equivalence class)
+
+    bool head_of_class;     //true iff this xiMatrixEntry is the head of its equivalence class (head is rightmost entry of a horizontal class, or topmost entry of a vertical class)
+    unsigned low_index;     //if(head_of_class && low_count > 0) then low_index is the index of rightmost column in matrix of simplices of lower dimension that is mapped to this equivalence class; otherwise, low_index is arbitrary and UNRELIABLE
+    unsigned high_index;    //if(head_of_class && high_count > 0) then high_index is the index of rightmost column in matrix of simplices of higher dimension that is mapped to this equivalence class; otherwise, low_index is arbitrary and UNRELIABLE
+
+
 
     xiMatrixEntry();    //empty constructor, e.g. for the entry representing infinity
     xiMatrixEntry(unsigned x, unsigned y, unsigned i, xiMatrixEntry* d, xiMatrixEntry* l);  //regular constructor
