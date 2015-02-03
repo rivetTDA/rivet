@@ -117,6 +117,7 @@ class Mesh
             ///TODO: IMPLEMENT LAZY SWAPPING!
 
         void move_low_columns(unsigned s, unsigned n, unsigned t);    //moves a block of n columns, the rightmost of which is column s, to a new position following column t (NOTE: assumes s <= t)
+        void move_high_columns(unsigned s, unsigned n, unsigned t);    //moves a block of n columns, the rightmost of which is column s, to a new position following column t (NOTE: assumes s <= t)
             ///TODO: the above is only partially implemented
 
         std::pair<bool, double> project(double angle, double offset, double x, double y);	//projects (x,y) onto the line determined by angle and offset

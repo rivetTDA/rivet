@@ -28,9 +28,9 @@ struct xiMatrixEntry
     unsigned high_count;    //number of columns in matrix of simplices of higher dimension that are mapped to this xiMatrixEntry (does not depend on whether this entry is the head of an equivalence class)
 
     bool head_of_class;     //true iff this xiMatrixEntry is the head of its equivalence class (head is rightmost entry of a horizontal class, or topmost entry of a vertical class)
-    unsigned low_index;     //if(head_of_class && low_count > 0) then low_index is the index of rightmost column in matrix of simplices of lower dimension that is mapped to this equivalence class; otherwise, low_index is arbitrary and UNRELIABLE
-    unsigned high_index;    //if(head_of_class && high_count > 0) then high_index is the index of rightmost column in matrix of simplices of higher dimension that is mapped to this equivalence class; otherwise, low_index is arbitrary and UNRELIABLE
-
+    int low_index;     //if(head_of_class) then low_index is the index of rightmost column in matrix of simplices of lower dimension that is mapped to this equivalence class; otherwise, low_index is arbitrary and UNRELIABLE
+    int high_index;    //if(head_of_class) then high_index is the index of rightmost column in matrix of simplices of higher dimension that is mapped to this equivalence class; otherwise, low_index is arbitrary and UNRELIABLE
+        //NOTE: if there are no low (resp. high) columns mapped to this xiMatrixEntry, then low_index (resp. high_index) is the index of the column just left of where such columns would appear (could be -1)
 
 
     xiMatrixEntry();    //empty constructor, e.g. for the entry representing infinity

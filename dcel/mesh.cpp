@@ -538,34 +538,39 @@ Halfedge* Mesh::create_edge_left(Halfedge* edge, LCM* lcm)
 //associates a discrete barcode to each 2-cell of the arrangement (IN PROGRESS)
 void Mesh::store_persistence_data(SimplexTree* bifiltration, int dim)
 {
-  // PARTS 1 and 2: FIND A PATH THROUGH ALL 2-CELLS OF THE ARRANGEMENT
+  // PART 1: FIND A PATH THROUGH ALL 2-CELLS OF THE ARRANGEMENT
     std::vector<Halfedge*> path;
     find_path(path);
+
+
+  // PART 2: GET THE BOUNDARY MATRICES WITH PROPER SIMPLEX ORDERING
+
+    ///TODO: DO THIS!!!
+    /*    //get multi-grade data in each dimension
+        if(verbosity >= 4) { std::cout << "Mapping low simplices:\n"; }
+        IndexMatrix* ind_low = bifiltration->get_index_mx(dim);    //can we improve this with something more efficient than IndexMatrix?
+        store_multigrades(ind_low, true);
+        delete ind_low;
+
+        if(verbosity >= 4) { std::cout << "Mapping high simplices:\n"; }
+        IndexMatrix* ind_high = bifiltration->get_index_mx(dim + 1);    //again, could be improved?
+        store_multigrades(ind_high, false);
+        delete ind_high;
+
+
+        //get boundary matrices --- need extra structure to support vineyard updates???
+    //    MapMatrix* bdry1 = bifiltration->get_boundary_mx(dim);
+    //    MapMatrix* bdry2 = bifiltration->get_boundary_mx(dim + 1);
+    */
 
 
   // PART 3: INITIAL PERSISTENCE COMPUTATION
 
     std::cout << "Initial persistence computation in cell 0\n";
 
-/*    //get multi-grade data in each dimension
-    if(verbosity >= 4) { std::cout << "Mapping low simplices:\n"; }
-    IndexMatrix* ind_low = bifiltration->get_index_mx(dim);    //can we improve this with something more efficient than IndexMatrix?
-    store_multigrades(ind_low, true);
-    delete ind_low;
-
-    if(verbosity >= 4) { std::cout << "Mapping high simplices:\n"; }
-    IndexMatrix* ind_high = bifiltration->get_index_mx(dim + 1);    //again, could be improved?
-    store_multigrades(ind_high, false);
-    delete ind_high;
-
-
-    //get boundary matrices --- need extra structure to support vineyard updates???
-//    MapMatrix* bdry1 = bifiltration->get_boundary_mx(dim);
-//    MapMatrix* bdry2 = bifiltration->get_boundary_mx(dim + 1);
-
 
     ///TODO: reduce matrices and store discrete barcode in initial cell
-*/
+
 
 
   // PART 4: TRAVERSE THE HAMILTONIAN PATH AND DO VINEYARD UPDATES
@@ -596,11 +601,35 @@ void Mesh::store_persistence_data(SimplexTree* bifiltration, int dim)
 
             if(down->high_index <= left->high_index && down->low_index <= left->low_index) //then LCM is crossed from below to above
             {
+                if(at_LCM != NULL)
+                {
+                    left->low_index = at_LCM->low_index - at_LCM->low_count;        //necessary since low_count and high_count
+                    left->high_index = at_LCM->high_index - at_LCM->high_count;     //  are only reliable for the head of each equivalence class
+                }
+
                 move_columns(down, left, true);
+
+                if(at_LCM != NULL)  //update equivalence classes
+                {
+                    left->head_of_class = true;
+                    down->head_of_class = false;
+                }
             }
             else    //then LCM is crossed form above to below
             {
+                if(at_LCM != NULL)
+                {
+                    down->low_index = at_LCM->low_index - at_LCM->low_count;        //necessary since low_count and high_count
+                    down->high_index = at_LCM->high_index - at_LCM->high_count;     //  are only reliable for the head of each equivalence class
+                }
+
                 move_columns(left, down, false);
+
+                if(at_LCM != NULL)  //update equivalence classes
+                {
+                    down->head_of_class = true;
+                    left->head_of_class = false;
+                }
             }
         }
         else    //then this is a weak, not-strong LCM, and we just have to split or merge equivalence classes
@@ -620,11 +649,11 @@ void Mesh::store_persistence_data(SimplexTree* bifiltration, int dim)
                 generator->low_index = at_LCM->low_index - at_LCM->low_count;
                 generator->high_index = at_LCM->high_index - at_LCM->high_count;
             }
-
-
         }
 
         //if this cell does not yet have a discrete barcode, then store the discrete barcode here
+
+        ///TODO: FINISH THIS!!!
 
 
     }//end path traversal
@@ -916,7 +945,7 @@ void Mesh::move_columns(xiMatrixEntry* first, xiMatrixEntry* second, bool from_b
             first = first->down();
         else
             first = first->left();
-
+    }//end while
 }//end move_columns()
 
 
@@ -925,6 +954,22 @@ void Mesh::move_columns(xiMatrixEntry* first, xiMatrixEntry* second, bool from_b
 void Mesh::move_low_columns(unsigned s, unsigned n, unsigned t)
 {
     std::cout << "Transpositions for low simplices: ";
+    for(unsigned c=0; c<n; c++) //move column that starts at s-c
+    {
+        for(unsigned i=s; i<t;i++)
+        {
+            unsigned a = i-c;
+            std::cout << "(" << a << "," << (a+1) << ")";
+        }
+    }
+    std::cout << "\n";
+}//end move_low_columns()
+
+//moves a block of n columns, the rightmost of which is column s, to a new position following column t (NOTE: assumes s <= t)
+///TODO: FINISH THIS!!! for now, it just prints transpositions to std::cout
+void Mesh::move_high_columns(unsigned s, unsigned n, unsigned t)
+{
+    std::cout << "Transpositions for high simplices: ";
     for(unsigned c=0; c<n; c++) //move column that starts at s-c
     {
         for(unsigned i=s; i<t;i++)
