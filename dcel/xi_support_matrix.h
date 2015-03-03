@@ -55,6 +55,7 @@ class xiSupportMatrix
         xiMatrixEntry* get_col(unsigned c); //gets a pointer to the top entry in column c; returns NULL if column c is empty
         xiMatrixEntry* get_infinity();      //gets a pointer to the infinity entry
 
+        unsigned height();  //retuns the number of rows;
 
     private:
         std::vector<xiMatrixEntry*> columns;

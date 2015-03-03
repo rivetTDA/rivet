@@ -545,8 +545,8 @@ void Mesh::store_persistence_data(SimplexTree* bifiltration, int dim)
 
   // PART 2: GET THE BOUNDARY MATRICES WITH PROPER SIMPLEX ORDERING
 
-    ///TODO: DO THIS!!!
-    /*    //get multi-grade data in each dimension
+    ///TODO: WORKING HERE!!!
+        //get multi-grade data in each dimension
         if(verbosity >= 4) { std::cout << "Mapping low simplices:\n"; }
         IndexMatrix* ind_low = bifiltration->get_index_mx(dim);    //can we improve this with something more efficient than IndexMatrix?
         store_multigrades(ind_low, true);
@@ -556,6 +556,11 @@ void Mesh::store_persistence_data(SimplexTree* bifiltration, int dim)
         IndexMatrix* ind_high = bifiltration->get_index_mx(dim + 1);    //again, could be improved?
         store_multigrades(ind_high, false);
         delete ind_high;
+
+        //get boundary matrices
+        if(verbosity >= 4) { std::cout << "Building boundary matrix for low simplices:\n"; }
+        ... = get_boundary_matrix(bifiltration, dim, true);
+
 
 
         //get boundary matrices --- need extra structure to support vineyard updates???
@@ -1038,7 +1043,7 @@ void Mesh::store_multigrades(IndexMatrix* ind, bool low)
                 if( it == frontier.end() || (*it)->x < x )    //NOTE: if iterator has advanced from frontier.begin(), then it MUST be the case that x < (*it)->x
                 {
 //                    qDebug() << "      processing columns" << first_col << "to" << last_col << ": map to infinity";
-                    xi_matrix.get_infinity()->add_multigrade(x, y, last_col - first_col, low);
+                    xi_matrix.get_infinity()->add_multigrade(x, y, last_col - first_col, last_col, low);
                     if(verbosity >= 4) { std::cout << "    simplices at (" << x << ", " << y << "), in columns " << (first_col + 1) << " to " << last_col << ", mapped to infinity\n"; }
                 }
                 else    //then map multigrade (x,y) to the last element of the frontier such that (*it)->x >= x
@@ -1052,7 +1057,7 @@ void Mesh::store_multigrades(IndexMatrix* ind, bool low)
                     --it;
 
                     //now map the multigrade to the element given by the iterator
-                    (*it)->add_multigrade(x, y, last_col - first_col, low);
+                    (*it)->add_multigrade(x, y, last_col - first_col, last_col, low);
                     if(verbosity >= 4) { std::cout << "    simplices at (" << x << ", " << y << "), in columns " << (first_col + 1) << " to " << last_col << ", mapped to xi support point (" << (*it)->x << ", " << (*it)->y << ")\n"; }
                 }
             }
@@ -1060,6 +1065,53 @@ void Mesh::store_multigrades(IndexMatrix* ind, bool low)
     }//end y loop
 
 }//end store_multigrades()
+
+//builds a boundary matrix for the initial persistence computation
+// first, must determine the total order on simplices with respect to the starting line
+void Mesh::get_boundary_matrix(SimplexTree* bifiltration, int dim, bool low)
+{
+  // STEP 1: determine total order on simplices
+
+    //total order will be given in block form; within each block, the order is arbitrary  (NOTE: THE ORDER IS STORED BACKWARDS!)
+    std::vector<unsigned> block_counts;    //stores the number of simplices in each block of the total order
+    std::vector<int> block_indexes;        //stores the dim_index for the last simplex in each block of the total order
+
+    //other variables
+    xiMatrixEntry* cur = xi_matrix.get_infinity();
+    unsigned row = xi_matrix.height();  //start at 1 more than max row index
+
+    //loop over all xiMatrixEntries in backwards reverse lexicographical order
+    while(cur != NULL)
+    {
+        //store counts and indexes for all multigrades at this xiMatrixEntry
+        std::list<Multigrade*> mgrades = cur->high_simplices;
+        if(low)
+            mgrades = cur->low_simplices;
+
+        for(std::list<Multigrade*>::iterator it = mgrades.begin(); it != mgrades.end(); ++it)
+        {
+            Multigrade* mg = *it;
+            block_counts.push_back(mg->num_cols);
+            block_indexes.push_back(mg->simplex_index);
+            std::cout << "  multigrade (" << mg->x << "," << mg->y << ") has " << mg->num_cols << " simplices with last index " << mg->simplex_index << "\n";
+        }
+
+        //move to the next xiMatrixEntry
+        cur = cur->left;
+        while(cur == NULL && row > 0)
+            cur = xi_matrix.get_row(--row);
+    }
+
+  // STEP 2: build boundary matrix
+    MapMatrix* boundary = bifiltration->get_boundary_mx(dim, block_counts, block_indexes);
+
+
+  // STEP 3: update the counters at each xiMatrixEntry
+
+
+
+
+}//end get_boundary_matrix()
 
 
 //returns a persistence diagram associated with the specified point

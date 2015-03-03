@@ -107,6 +107,9 @@ class Mesh
 
         void store_multigrades(IndexMatrix* ind, bool low);     //stores multigrade info for the persistence computations; low is true for simplices of dimension hom_dim, false for simplices of dimension hom_dim+1
 
+        void get_boundary_matrix(SimplexTree* bifiltration, int dim, bool low);
+            ///TODO: FIGURE OUT RETURN TYPE! FINISH!
+
         void store_persistence_data(SimplexTree* bifiltration, int dim); 	//associates a discrete barcode to each 2-cell of the arrangement
             ///TODO: the above is only partially implemented
 

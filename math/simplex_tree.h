@@ -80,6 +80,9 @@ class SimplexTree {
         IndexMatrix* get_index_mx(int dim);     //returns a matrix of column indexes to accompany MapMatrices
         IndexMatrix* get_offset_index_mx(int dim);  //returns a matrix of column indexes offset in each direction, for the boundary_A matrix in compute_eta()
 
+        MapMatrix* get_boundary_mx(int dim, std::vector<unsigned>& block_counts, std::vector<int>& block_indexes);  //returns a boundary matrix with respect to a total order on simplices, as necessary for the "vineyard-update" algorithm
+
+
         std::vector<int> find_vertices(int gi);	//given a global index, return (a vector containing) the vertices of the simplex
         STNode* find_simplex(std::vector<int>& vertices);   //given a sorted vector of vertex indexes, return a pointer to the node representing the corresponding simplex
 

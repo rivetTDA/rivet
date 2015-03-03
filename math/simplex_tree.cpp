@@ -251,7 +251,52 @@ MapMatrix* SimplexTree::get_boundary_mx(int dim)
 
     //return the matrix
     return mat;
-}//end get_boundary_mx()
+}//end get_boundary_mx(int)
+
+//returns a boundary matrix with respect to a total order on simplices, as necessary for the "vineyard-update" algorithm
+// block_counts gives the number of simplices in each block -- BLOCKS ARE ORDERED BACKWARDS!
+// block_indexes gives the greatest dim_index of any simplex in each block -- AGAIN, BLOCKS ARE ORDERED BACKWARDS!
+// precondition: block_counts.size() == block_indexes.size()
+MapMatrix* SimplexTree::get_boundary_mx(int dim, std::vector<unsigned>& block_counts, std::vector<int>& block_indexes)
+{
+    //select set of simplices of dimension dim
+    SimplexSet* simplices;
+    int num_rows;
+
+    if(dim == hom_dim)
+    {
+        simplices = &ordered_simplices;
+        num_rows = ordered_low_simplices.size();
+    }
+    else if(dim == hom_dim + 1)
+    {
+        simplices = &ordered_high_simplices;
+        num_rows = ordered_simplices.size();
+    }
+    else
+        throw std::runtime_error("attempting to compute boundary matrix for improper dimension");
+
+    //create the MapMatrix
+    MapMatrix* mat = new MapMatrix(num_rows, simplices->size());			//DELETE this object later!
+    int col = simplices->size() - 1;    //column counter; we will fill columns of mat from right to left
+
+    //loop over all blocks of simplices
+    unsigned num_blocks = block_counts.size();
+    for(unsigned b = 0; b < num_blocks; b++)
+    {
+        //write a boundary column for each simplex in this block -- FILL THE BOUNDARY MATRIX FROM RIGHT TO LEFT!
+        for(unsigned i=0; i < block_counts[b]; i++)
+        {
+            //find the simplex with dim_index (block_indexes[b] - i)
+            STNode* sim = ?????
+            write_boundary_column(mat, sim, col, 0);
+        }
+
+    }
+
+
+
+}//end get_boundary_mx(int, vector, vector)
 
 //returns matrices for the merge map [B+C,D], the boundary map B+C, and the multi-grade information
 DirectSumMatrices SimplexTree::get_merge_mxs()

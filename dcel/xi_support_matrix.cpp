@@ -97,3 +97,9 @@ xiMatrixEntry* xiSupportMatrix::get_infinity()
 {
     return &infinity;
 }
+
+//retuns the number of rows
+unsigned xiSupportMatrix::height()
+{
+    return rows.size();
+}
