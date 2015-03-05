@@ -10,17 +10,18 @@ xiMatrixEntry::xiMatrixEntry() :
 
 //regular constructor
 xiMatrixEntry::xiMatrixEntry(unsigned x, unsigned y, unsigned i, xiMatrixEntry* d, xiMatrixEntry* l) :
-    x(x), y(y), index(i), down(d), left(l)
+    x(x), y(y), index(i), down(d), left(l),
+    low_count(0), high_count(0), head_of_class(false), low_index(0), high_index(0)
 { }
 
 //associates a multigrades to this xi entry
 //the "low" argument is true if this multigrade is for low_simplices, and false if it is for high_simplices
-void xiMatrixEntry::add_multigrade(unsigned x, unsigned y, unsigned num_cols, bool low)
+void xiMatrixEntry::add_multigrade(unsigned x, unsigned y, unsigned num_cols, int index, bool low)
 {
     if(low)
-        low_simplices.push_back(new Multigrade(x, y, num_cols, this));
+        low_simplices.push_back(new Multigrade(x, y, num_cols, index, this));
     else
-        high_simplices.push_back(new Multigrade(x, y, num_cols, this));
+        high_simplices.push_back(new Multigrade(x, y, num_cols, index, this));
 }
 
 //inserts a Multigrade at the beginning of the list for the given dimension

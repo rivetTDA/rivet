@@ -36,7 +36,7 @@ struct xiMatrixEntry
     xiMatrixEntry();    //empty constructor, e.g. for the entry representing infinity
     xiMatrixEntry(unsigned x, unsigned y, unsigned i, xiMatrixEntry* d, xiMatrixEntry* l);  //regular constructor
 
-    void add_multigrade(unsigned x, unsigned y, unsigned num_cols, bool low);  //associates a multigrades to this xi entry
+    void add_multigrade(unsigned x, unsigned y, unsigned num_cols, int index, bool low);  //associates a multigrades to this xi entry
         //the "low" argument is true if this multigrade is for low_simplices, and false if it is for high_simplices
 
     void insert_multigrade(Multigrade* mg, bool low);  //inserts a Multigrade at the beginning of the list for the given dimension

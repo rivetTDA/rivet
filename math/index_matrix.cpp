@@ -28,6 +28,11 @@ int IndexMatrix::get(unsigned row, unsigned col) const
     return data[num_cols*row + col];
 }
 
+int IndexMatrix::last() const
+{
+    return data[num_cols*num_rows - 1];
+}
+
 unsigned IndexMatrix::width()
 {
     return num_cols;

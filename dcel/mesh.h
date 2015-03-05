@@ -105,10 +105,10 @@ class Mesh
         Halfedge* insert_vertex(Halfedge* edge, double x, double y);	//inserts a new vertex on the specified edge, with the specified coordinates, and updates all relevant pointers
         Halfedge* create_edge_left(Halfedge* edge, LCM* lcm);    //creates the first pair of Halfedges in an LCM curve, anchored on the left edge of the strip
 
-        void store_multigrades(IndexMatrix* ind, bool low);     //stores multigrade info for the persistence computations; low is true for simplices of dimension hom_dim, false for simplices of dimension hom_dim+1
-
-        void get_boundary_matrix(SimplexTree* bifiltration, int dim, bool low);
-            ///TODO: FIGURE OUT RETURN TYPE! FINISH!
+        void store_multigrades(IndexMatrix* ind, bool low, std::vector<int>& simplex_order);
+            //stores multigrade info for the persistence computations; low is true for simplices of dimension hom_dim, false for simplices of dimension hom_dim+1
+            //vector simplex_order is filled with a map : dim_index --> order_index for all simplieces of the specified dimension
+            //result: xiSupportMatrix and simplex_order are consistent with a near-vertical line positioned to the right of all \xi support points
 
         void store_persistence_data(SimplexTree* bifiltration, int dim); 	//associates a discrete barcode to each 2-cell of the arrangement
             ///TODO: the above is only partially implemented

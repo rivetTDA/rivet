@@ -549,25 +549,37 @@ void Mesh::store_persistence_data(SimplexTree* bifiltration, int dim)
         //get multi-grade data in each dimension
         if(verbosity >= 4) { std::cout << "Mapping low simplices:\n"; }
         IndexMatrix* ind_low = bifiltration->get_index_mx(dim);    //can we improve this with something more efficient than IndexMatrix?
-        store_multigrades(ind_low, true);
+        std::vector<int> low_simplex_order;     //this will be a map : dim_index --> order_index for dim-simplices
+        store_multigrades(ind_low, true, low_simplex_order);
         delete ind_low;
 
         if(verbosity >= 4) { std::cout << "Mapping high simplices:\n"; }
         IndexMatrix* ind_high = bifiltration->get_index_mx(dim + 1);    //again, could be improved?
-        store_multigrades(ind_high, false);
+        std::vector<int> high_simplex_order;     //this will be a map : dim_index --> order_index for (dim+1)-simplices
+        store_multigrades(ind_high, false, high_simplex_order);
         delete ind_high;
+
+        //testing only
+        std::cout << "== low_simplex_order: ";
+        for(int i=0; i<low_simplex_order.size(); i++)
+            std::cout << low_simplex_order[i] << ", ";
+        std::cout << "\n== high_simplex_order: ";
+        for(int i=0; i<high_simplex_order.size(); i++)
+            std::cout << high_simplex_order[i] << ", ";
+        std::cout << "\n";
 
         //get boundary matrices
         if(verbosity >= 4) { std::cout << "Building boundary matrix for low simplices:\n"; }
-        ... = get_boundary_matrix(bifiltration, dim, true);
+        MapMatrix* bdry_low = bifiltration->get_boundary_mx(low_simplex_order);
+        if(verbosity >= 4) { bdry_low->print(); }
 
+        if(verbosity >= 4) { std::cout << "Building boundary matrix for high simplices:\n"; }
+        MapMatrix* bdry_high = bifiltration->get_boundary_mx(low_simplex_order, high_simplex_order);
+        if(verbosity >= 4) { bdry_high->print(); }
 
+        //boundary matrices need extra structure to support vineyard updates!!!
 
-        //get boundary matrices --- need extra structure to support vineyard updates???
-    //    MapMatrix* bdry1 = bifiltration->get_boundary_mx(dim);
-    //    MapMatrix* bdry2 = bifiltration->get_boundary_mx(dim + 1);
-    */
-
+/*
 
   // PART 3: INITIAL PERSISTENCE COMPUTATION
 
@@ -587,6 +599,8 @@ void Mesh::store_persistence_data(SimplexTree* bifiltration, int dim)
     {
         //determine which LCM is represented by this edge
         LCM* cur_lcm = (path[i])->get_LCM();
+
+        std::cout << "Step " << i << " of the path: crossing LCM at (" << cur_lcm->get_x() << "," << cur_lcm->get_y() << ")\n";
 
         //get equivalence classes for this LCM
         xiMatrixEntry* down = cur_lcm->get_down();
@@ -662,7 +676,7 @@ void Mesh::store_persistence_data(SimplexTree* bifiltration, int dim)
 
 
     }//end path traversal
-
+*/
 
 }//end build_persistence_data()
 
@@ -857,17 +871,17 @@ void Mesh::move_columns(xiMatrixEntry* first, xiMatrixEntry* second, bool from_b
                 unsigned target_col = second->low_index - second->low_count;
                 if(from_below)
                 {
-                    while( (target->left() != NULL) && (cur_grade->x <= target->left()->x) )
+                    while( (target->left != NULL) && (cur_grade->x <= target->left->x) )
                     {
-                        target = target->left();
+                        target = target->left;
                         target_col -= target->low_count;
                     }
                 }
                 else
                 {
-                    while( (target->down() != NULL) && (cur_grade->y <= target->down()->y) )
+                    while( (target->down != NULL) && (cur_grade->y <= target->down->y) )
                     {
-                        target = target->down();
+                        target = target->down;
                         target_col -= target->low_count;
                     }
                 }
@@ -875,10 +889,10 @@ void Mesh::move_columns(xiMatrixEntry* first, xiMatrixEntry* second, bool from_b
                 //associate cur_grade with target
                 cur_grade->xi_entry = target;
                 target->insert_multigrade(cur_grade, true);
-                low_simplices.erase(it);    //NOTE: advances the iterator!!!
+                first->low_simplices.erase(it);    //NOTE: advances the iterator!!!
 
                 //if target is not the leftmost entry in its equivalence class, then move columns at cur_grade to the block of columns for target
-                if( (from_below && target->left() != NULL) || (!from_below && target->down != NULL) )
+                if( (from_below && target->left != NULL) || (!from_below && target->down != NULL) )
                     move_low_columns(low_col, cur_grade->num_cols, target_col);
                 //else, then the columns don't actually have to move
 
@@ -892,7 +906,7 @@ void Mesh::move_columns(xiMatrixEntry* first, xiMatrixEntry* second, bool from_b
         }//end "low" simplex loop
 
         //move all "high" simplices for this xiMatrixEntry
-        std::list<Multigrade*>::iterator it = first->high_simplices.begin();
+        it = first->high_simplices.begin();
         while(it != first->high_simplices.end())
         {
             Multigrade* cur_grade = *it;
@@ -911,17 +925,17 @@ void Mesh::move_columns(xiMatrixEntry* first, xiMatrixEntry* second, bool from_b
                 unsigned target_col = second->high_index - second->high_count;
                 if(from_below)
                 {
-                    while( (target->left() != NULL) && (cur_grade->x <= target->left()->x) )
+                    while( (target->left != NULL) && (cur_grade->x <= target->left->x) )
                     {
-                        target = target->left();
+                        target = target->left;
                         target_col -= target->low_count;
                     }
                 }
                 else
                 {
-                    while( (target->down() != NULL) && (cur_grade->y <= target->down()->y) )
+                    while( (target->down != NULL) && (cur_grade->y <= target->down->y) )
                     {
-                        target = target->down();
+                        target = target->down;
                         target_col -= target->low_count;
                     }
                 }
@@ -929,10 +943,10 @@ void Mesh::move_columns(xiMatrixEntry* first, xiMatrixEntry* second, bool from_b
                 //associate cur_grade with target
                 cur_grade->xi_entry = target;
                 target->insert_multigrade(cur_grade, true);
-                high_simplices.erase(it);    //NOTE: advances the iterator!!!
+                first->high_simplices.erase(it);    //NOTE: advances the iterator!!!
 
                 //if target is not the leftmost entry in its equivalence class, then move columns at cur_grade to the block of columns for target
-                if( (from_below && target->left() != NULL) || (!from_below && target->down != NULL) )
+                if( (from_below && target->left != NULL) || (!from_below && target->down != NULL) )
                     move_high_columns(high_col, cur_grade->num_cols, target_col);
                 //else, then the columns don't actually have to move
 
@@ -947,9 +961,9 @@ void Mesh::move_columns(xiMatrixEntry* first, xiMatrixEntry* second, bool from_b
 
         //advance to the next xiMatrixEntry in the first equivalence class
         if(from_below)
-            first = first->down();
+            first = first->down;
         else
-            first = first->left();
+            first = first->left;
     }//end while
 }//end move_columns()
 
@@ -958,7 +972,7 @@ void Mesh::move_columns(xiMatrixEntry* first, xiMatrixEntry* second, bool from_b
 ///TODO: FINISH THIS!!! for now, it just prints transpositions to std::cout
 void Mesh::move_low_columns(unsigned s, unsigned n, unsigned t)
 {
-    std::cout << "Transpositions for low simplices: ";
+    std::cout << "Transpositions for low simplices: [" << s << ", " << n << ", " << t << "] ";
     for(unsigned c=0; c<n; c++) //move column that starts at s-c
     {
         for(unsigned i=s; i<t;i++)
@@ -974,7 +988,7 @@ void Mesh::move_low_columns(unsigned s, unsigned n, unsigned t)
 ///TODO: FINISH THIS!!! for now, it just prints transpositions to std::cout
 void Mesh::move_high_columns(unsigned s, unsigned n, unsigned t)
 {
-    std::cout << "Transpositions for high simplices: ";
+    std::cout << "Transpositions for high simplices: [" << s << ", " << n << ", " << t << "] ";
     for(unsigned c=0; c<n; c++) //move column that starts at s-c
     {
         for(unsigned i=s; i<t;i++)
@@ -987,12 +1001,13 @@ void Mesh::move_high_columns(unsigned s, unsigned n, unsigned t)
 }//end move_low_columns()
 
 
-//stores multigrade info for the persistence computations
+//stores multigrade info for the persistence computations (data structures prepared with respect to a near-vertical line positioned to the right of all \xi support points)
 //  low is true for simplices of dimension hom_dim, false for simplices of dimension hom_dim+1
-///TODO: ALSO NEED TO BUILD A BOUNDARY MATRIX WITH THE PROPER ORDER OF SIMPLICES
-/// e.g. this method sends a list of xiMatrixEntries to SimplexTree, which builds a boundary matrix based on the list
-void Mesh::store_multigrades(IndexMatrix* ind, bool low)
+//  simplex_order will be filled with a map : dim_index --> order_index for simplices of the given dimension
+void Mesh::store_multigrades(IndexMatrix* ind, bool low, std::vector<int>& simplex_order)
 {
+  //STEP 1: store multigrade data in the xiSupportMatrix
+
     //initialize linked list to track the "frontier"
     typedef std::list<xiMatrixEntry*> Frontier;
     Frontier frontier;
@@ -1064,54 +1079,64 @@ void Mesh::store_multigrades(IndexMatrix* ind, bool low)
         }//end x loop
     }//end y loop
 
-}//end store_multigrades()
+  //STEP 2: update index data for each row in the xiSupportMatrix AND create a map : dim_index --> order_index for all simplices
 
-//builds a boundary matrix for the initial persistence computation
-// first, must determine the total order on simplices with respect to the starting line
-void Mesh::get_boundary_matrix(SimplexTree* bifiltration, int dim, bool low)
-{
-  // STEP 1: determine total order on simplices
+    //we will create the map starting by identifying the order index of each simplex, starting with the last simplex
+    int o_index = ind->last();
+    simplex_order.resize(o_index + 1);
 
-    //total order will be given in block form; within each block, the order is arbitrary  (NOTE: THE ORDER IS STORED BACKWARDS!)
-    std::vector<unsigned> block_counts;    //stores the number of simplices in each block of the total order
-    std::vector<int> block_indexes;        //stores the dim_index for the last simplex in each block of the total order
-
-    //other variables
+    //first consider all simplices that map to the xiMatrixEntry infinity
     xiMatrixEntry* cur = xi_matrix.get_infinity();
-    unsigned row = xi_matrix.height();  //start at 1 more than max row index
-
-    //loop over all xiMatrixEntries in backwards reverse lexicographical order
-    while(cur != NULL)
+    std::list<Multigrade*>* mgrades = (low) ? &(cur->low_simplices) : &(cur->high_simplices);
+    for(std::list<Multigrade*>::iterator it = mgrades->begin(); it != mgrades->end(); ++it)
     {
-        //store counts and indexes for all multigrades at this xiMatrixEntry
-        std::list<Multigrade*> mgrades = cur->high_simplices;
-        if(low)
-            mgrades = cur->low_simplices;
+        Multigrade* mg = *it;
+        std::cout << "  multigrade (" << mg->x << "," << mg->y << ") at infinity has " << mg->num_cols << " simplices with last index " << mg->simplex_index << "\n";
 
-        for(std::list<Multigrade*>::iterator it = mgrades.begin(); it != mgrades.end(); ++it)
+        for(unsigned s=0; s < mg->num_cols; s++)  // simplex with dim_index (mg->simplex_inded - s) has order_index o_index
         {
-            Multigrade* mg = *it;
-            block_counts.push_back(mg->num_cols);
-            block_indexes.push_back(mg->simplex_index);
-            std::cout << "  multigrade (" << mg->x << "," << mg->y << ") has " << mg->num_cols << " simplices with last index " << mg->simplex_index << "\n";
+            std::cout << "   -- simplex with dim_index " << (mg->simplex_index - s) << " has order_index " << o_index << "\n";
+            simplex_order[mg->simplex_index - s] = o_index;
+            o_index--;
         }
-
-        //move to the next xiMatrixEntry
-        cur = cur->left;
-        while(cur == NULL && row > 0)
-            cur = xi_matrix.get_row(--row);
     }
 
-  // STEP 2: build boundary matrix
-    MapMatrix* boundary = bifiltration->get_boundary_mx(dim, block_counts, block_indexes);
+    //now loop over all xiMatrixEntries in backwards reverse lexicographical order
+    for(unsigned row = xi_matrix.height(); row > 0; )  //since row is unsigned, it will be one more than the current row, and the decrement operator appears inside the loop
+    {
+        cur = xi_matrix.get_row(--row);
+        if(cur == NULL)
+            continue;
 
+        //the row is nonempty, so store header data for this row
+        cur->head_of_class = true;
+        int* cur_ind = (low) ? &(cur->low_index) : &(cur->high_index);
+        *cur_ind = o_index;
 
-  // STEP 3: update the counters at each xiMatrixEntry
+        //consider all xiMatrixEntries in this row
+        while(cur != NULL)
+        {
+            //store map values for all simplices at all multigrades at this xiMatrixEntry
+            mgrades = (low) ? &(cur->low_simplices) : &(cur->high_simplices);
+            for(std::list<Multigrade*>::iterator it = mgrades->begin(); it != mgrades->end(); ++it)
+            {
+                Multigrade* mg = *it;
+                std::cout << "  multigrade (" << mg->x << "," << mg->y << ") has " << mg->num_cols << " simplices with last index " << mg->simplex_index << "\n";
 
+                for(unsigned s=0; s < mg->num_cols; s++)  // simplex with dim_index (mg->simplex_inded - s) has order_index o_index
+                {
+                    std::cout << "   -- simplex with dim_index " << (mg->simplex_index - s) << " has order_index " << o_index << "\n";
+                    simplex_order[mg->simplex_index - s] = o_index;
+                    o_index--;
+                }
+            }
 
+            //move to the next xiMatrixEntry in this row
+            cur = cur->left;
+        }
+    }//end for(row > 0)
 
-
-}//end get_boundary_matrix()
+}//end store_multigrades()
 
 
 //returns a persistence diagram associated with the specified point

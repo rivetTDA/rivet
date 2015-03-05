@@ -253,50 +253,66 @@ MapMatrix* SimplexTree::get_boundary_mx(int dim)
     return mat;
 }//end get_boundary_mx(int)
 
-//returns a boundary matrix with respect to a total order on simplices, as necessary for the "vineyard-update" algorithm
-// block_counts gives the number of simplices in each block -- BLOCKS ARE ORDERED BACKWARDS!
-// block_indexes gives the greatest dim_index of any simplex in each block -- AGAIN, BLOCKS ARE ORDERED BACKWARDS!
-// precondition: block_counts.size() == block_indexes.size()
-MapMatrix* SimplexTree::get_boundary_mx(int dim, std::vector<unsigned>& block_counts, std::vector<int>& block_indexes)
+//returns a boundary matrix for hom_dim-simplices with columns in a specified order -- for vineyard-update algorithm
+MapMatrix* SimplexTree::get_boundary_mx(std::vector<int>& coface_order)
 {
-    //select set of simplices of dimension dim
-    SimplexSet* simplices;
-    int num_rows;
+    //create the matrix
+    MapMatrix* mat = new MapMatrix(ordered_low_simplices.size(), ordered_simplices.size());
 
-    if(dim == hom_dim)
+    //loop through all simplices, writing columns to the matrix
+    int dim_index = 0;  //tracks our position in the list of hom_dim-simplices
+    for(SimplexSet::iterator it=ordered_simplices.begin(); it!=ordered_simplices.end(); ++it)
     {
-        simplices = &ordered_simplices;
-        num_rows = ordered_low_simplices.size();
+        int order_index = coface_order[dim_index];  //index of the matrix column which will store the boundary of this simplex
+        write_boundary_column(mat, *it, order_index, 0);
+
+        dim_index++; //increment the column counter
     }
-    else if(dim == hom_dim + 1)
-    {
-        simplices = &ordered_high_simplices;
-        num_rows = ordered_simplices.size();
-    }
-    else
-        throw std::runtime_error("attempting to compute boundary matrix for improper dimension");
 
-    //create the MapMatrix
-    MapMatrix* mat = new MapMatrix(num_rows, simplices->size());			//DELETE this object later!
-    int col = simplices->size() - 1;    //column counter; we will fill columns of mat from right to left
+    //return the matrix
+    return mat;
+}//end get_boundary_mx(int, vector<int>)
 
-    //loop over all blocks of simplices
-    unsigned num_blocks = block_counts.size();
-    for(unsigned b = 0; b < num_blocks; b++)
+//returns a boundary matrix for (hom_dim+1)-simplices with columns and rows a specified orders -- for vineyard-update algorithm
+MapMatrix* SimplexTree::get_boundary_mx(std::vector<int>& coface_order, std::vector<int>& face_order)
+{
+    //create the matrix
+    MapMatrix* mat = new MapMatrix(ordered_simplices.size(), ordered_high_simplices.size());
+
+    //loop through all simplices, writing columns to the matrix
+    int dim_index = 0;  //tracks our position in the list of (hom_dim+1)-simplices
+    for(SimplexSet::iterator it=ordered_high_simplices.begin(); it!=ordered_high_simplices.end(); ++it)
     {
-        //write a boundary column for each simplex in this block -- FILL THE BOUNDARY MATRIX FROM RIGHT TO LEFT!
-        for(unsigned i=0; i < block_counts[b]; i++)
+        int order_index = coface_order[dim_index];  //index of the matrix column which will store the boundary of this simplex
+
+        //get vertex list for this simplex
+        std::vector<int> verts = find_vertices((*it)->global_index());
+
+        //find all facets of this simplex
+        for(unsigned k=0; k<verts.size(); k++)       ///TODO: optimize! make this faster!
         {
-            //find the simplex with dim_index (block_indexes[b] - i)
-            STNode* sim = ?????
-            write_boundary_column(mat, sim, col, 0);
+            //facet vertices are all vertices in verts[] except verts[k]
+            std::vector<int> facet;
+            for(unsigned l=0; l<verts.size(); l++)
+                if(l != k)
+                    facet.push_back(verts[l]);
+
+            //look up order index of the facet
+            STNode* facet_node = find_simplex(facet);
+            if(facet_node == NULL)
+                throw std::runtime_error("facet simplex not found");
+            int facet_order_index = face_order[facet_node->dim_index()];
+
+            //for this boundary simplex, enter "1" in the appropriate cell in the matrix
+            mat->set(facet_order_index, order_index);
         }
 
+        dim_index++; //increment the column counter
     }
 
-
-
-}//end get_boundary_mx(int, vector, vector)
+    //return the matrix
+    return mat;
+}//end get_boundary_mx(int, vector<int>, vector<int>)
 
 //returns matrices for the merge map [B+C,D], the boundary map B+C, and the multi-grade information
 DirectSumMatrices SimplexTree::get_merge_mxs()
@@ -415,7 +431,7 @@ void SimplexTree::write_boundary_column(MapMatrix* mat, STNode* sim, int col, in
     std::vector<int> verts = find_vertices(sim->global_index());
 
     //find all facets of this simplex
-    for(unsigned k=0; k<verts.size(); k++)
+    for(unsigned k=0; k<verts.size(); k++)       ///TODO: optimize! make this faster!
     {
        //facet vertices are all vertices in verts[] except verts[k]
         std::vector<int> facet;
@@ -702,51 +718,52 @@ SimplexData SimplexTree::get_simplex_data(int index)
 	return sd;	//TODO: is this good design?
 }
 
+///THE FOLLOWING FUNCTION IS OBSOLETE!
 //computes a boundary matrix, using given orders on simplices of dimensions d (cofaces) and d-1 (faces)
-	// coface_global is a map: order_simplex_index -> global_simplex_index
-	// face_order is a map: global_simplex_index -> order_simplex_index
+    // coface_global is a map: order_simplex_index -> global_simplex_index
+    // face_order is a map: global_simplex_index -> order_simplex_index
 MapMatrix* SimplexTree::get_boundary_mx(std::vector<int> coface_global, std::map<int,int> face_order)
 {
 
     //create the matrix
-	int num_cols = coface_global.size();
-	int num_rows = face_order.size();
+    int num_cols = coface_global.size();
+    int num_rows = face_order.size();
     MapMatrix* mat = new MapMatrix(num_rows, num_cols);			//DELETE this object later???
-	
-	//loop through columns
-	for(int j=0; j<num_cols; j++)
+
+    //loop through columns
+    for(int j=0; j<num_cols; j++)
     {
-		//find all vertices of the simplex corresponding to this column
-		std::vector<int> verts = find_vertices(coface_global[j]);
-		
-		//if the simplex has a nontrivial boundary, then consider its facets
-		if(verts.size() > 1)
-		{
-			//find all boundary simplices of this simplex
+        //find all vertices of the simplex corresponding to this column
+        std::vector<int> verts = find_vertices(coface_global[j]);
+
+        //if the simplex has a nontrivial boundary, then consider its facets
+        if(verts.size() > 1)
+        {
+            //find all boundary simplices of this simplex
             for(unsigned k=0; k<verts.size(); k++)
-			{
-				//make a list of all vertices in verts[] except verts[k]
-				std::vector<int> facet;
+            {
+                //make a list of all vertices in verts[] except verts[k]
+                std::vector<int> facet;
                 for(unsigned l=0; l<verts.size(); l++)
-					if(l != k)
-						facet.push_back(verts[l]);
-			
-				//look up global index of the boundary simplex
+                    if(l != k)
+                        facet.push_back(verts[l]);
+
+                //look up global index of the boundary simplex
                 int gi = find_simplex(facet)->global_index();       //TODO: ought to check that find_simplex() returns a non-NULL value
-			
-				//look up order index of the simplex
-				int oi = face_order.at(gi);
-			
-				//for this boundary simplex, enter "1" in the appropriate cell in the matrix (row oi, column j)
+
+                //look up order index of the simplex
+                int oi = face_order.at(gi);
+
+                //for this boundary simplex, enter "1" in the appropriate cell in the matrix (row oi, column j)
                 (*mat).set(oi,j);
-				
-			}//end for(k=0;...)
-		}//end if(verts.size() > 1)
-	}//end for(j=0;...)
-	
-	//return the MapMatrix
-	return mat;
-	
+
+            }//end for(k=0;...)
+        }//end if(verts.size() > 1)
+    }//end for(j=0;...)
+
+    //return the MapMatrix
+    return mat;
+
 }//end get_boundary_mx
 
 
