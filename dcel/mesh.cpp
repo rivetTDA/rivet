@@ -579,7 +579,7 @@ void Mesh::store_persistence_data(SimplexTree* bifiltration, int dim)
 
         //boundary matrices need extra structure to support vineyard updates!!!
 
-/*
+
 
   // PART 3: INITIAL PERSISTENCE COMPUTATION
 
@@ -595,7 +595,7 @@ void Mesh::store_persistence_data(SimplexTree* bifiltration, int dim)
     //note: path starts with a near-vertical line to the right of all multigrades
 
     //traverse the path
-    for(unsigned i=1; i<path.size(); i++)
+    for(unsigned i=0; i<path.size(); i++)
     {
         //determine which LCM is represented by this edge
         LCM* cur_lcm = (path[i])->get_LCM();
@@ -618,11 +618,12 @@ void Mesh::store_persistence_data(SimplexTree* bifiltration, int dim)
                 left = left->left;
             }//now down and left are correct (and should not be NULL)
 
-            if(down->high_index <= left->high_index && down->low_index <= left->low_index) //then LCM is crossed from below to above
+            if(down->head_of_class) //then LCM is crossed from below to above
             {
+                std::cout << " == strong LCM crossed below to above ==\n";
                 if(at_LCM != NULL)
                 {
-                    left->low_index = at_LCM->low_index - at_LCM->low_count;        //necessary since low_count and high_count
+                    left->low_index = at_LCM->low_index - at_LCM->low_count;        //necessary since low_index and high_index
                     left->high_index = at_LCM->high_index - at_LCM->high_count;     //  are only reliable for the head of each equivalence class
                 }
 
@@ -634,11 +635,12 @@ void Mesh::store_persistence_data(SimplexTree* bifiltration, int dim)
                     down->head_of_class = false;
                 }
             }
-            else    //then LCM is crossed form above to below
+            else    //then LCM is crossed from above to below
             {
+                std::cout << " == strong LCM crossed above to below ==\n";
                 if(at_LCM != NULL)
                 {
-                    down->low_index = at_LCM->low_index - at_LCM->low_count;        //necessary since low_count and high_count
+                    down->low_index = at_LCM->low_index - at_LCM->low_count;        //necessary since low_index and high_index
                     down->high_index = at_LCM->high_index - at_LCM->high_count;     //  are only reliable for the head of each equivalence class
                 }
 
@@ -676,7 +678,7 @@ void Mesh::store_persistence_data(SimplexTree* bifiltration, int dim)
 
 
     }//end path traversal
-*/
+
 
 }//end build_persistence_data()
 
@@ -841,8 +843,8 @@ void Mesh::find_subpath(unsigned& cur_node, std::vector< std::set<unsigned> >& a
 void Mesh::move_columns(xiMatrixEntry* first, xiMatrixEntry* second, bool from_below)
 {
     //get column indexes (so we know which columns to move)
-    unsigned low_col = first->low_index;   //rightmost column index of low simplices for the equivalence class to move
-    unsigned high_col = first->high_index; //rightmost column index of high simplices for the equivalence class to move
+    int low_col = first->low_index;   //rightmost column index of low simplices for the equivalence class to move
+    int high_col = first->high_index; //rightmost column index of high simplices for the equivalence class to move
 
     //set column indexes for the first class to their final position
     first->low_index = second->low_index;
@@ -868,7 +870,7 @@ void Mesh::move_columns(xiMatrixEntry* first, xiMatrixEntry* second, bool from_b
             {
                 //determine where these columns map to under F
                 xiMatrixEntry* target = second;
-                unsigned target_col = second->low_index - second->low_count;
+                int target_col = second->low_index - second->low_count;
                 if(from_below)
                 {
                     while( (target->left != NULL) && (cur_grade->x <= target->left->x) )
@@ -922,7 +924,7 @@ void Mesh::move_columns(xiMatrixEntry* first, xiMatrixEntry* second, bool from_b
             {
                 //determine where these columns map to under F
                 xiMatrixEntry* target = second;
-                unsigned target_col = second->high_index - second->high_count;
+                int target_col = second->high_index - second->high_count;
                 if(from_below)
                 {
                     while( (target->left != NULL) && (cur_grade->x <= target->left->x) )
@@ -970,14 +972,14 @@ void Mesh::move_columns(xiMatrixEntry* first, xiMatrixEntry* second, bool from_b
 
 //moves a block of n columns, the rightmost of which is column s, to a new position following column t (NOTE: assumes s <= t)
 ///TODO: FINISH THIS!!! for now, it just prints transpositions to std::cout
-void Mesh::move_low_columns(unsigned s, unsigned n, unsigned t)
+void Mesh::move_low_columns(int s, unsigned n, int t)
 {
-    std::cout << "Transpositions for low simplices: [" << s << ", " << n << ", " << t << "] ";
+    std::cout << "   --Transpositions for low simplices: [" << s << ", " << n << ", " << t << "] ";
     for(unsigned c=0; c<n; c++) //move column that starts at s-c
     {
-        for(unsigned i=s; i<t;i++)
+        for(int i=s; i<t;i++)
         {
-            unsigned a = i-c;
+            int a = i-c;
             std::cout << "(" << a << "," << (a+1) << ")";
         }
     }
@@ -986,14 +988,14 @@ void Mesh::move_low_columns(unsigned s, unsigned n, unsigned t)
 
 //moves a block of n columns, the rightmost of which is column s, to a new position following column t (NOTE: assumes s <= t)
 ///TODO: FINISH THIS!!! for now, it just prints transpositions to std::cout
-void Mesh::move_high_columns(unsigned s, unsigned n, unsigned t)
+void Mesh::move_high_columns(int s, unsigned n, int t)
 {
-    std::cout << "Transpositions for high simplices: [" << s << ", " << n << ", " << t << "] ";
+    std::cout << "   --Transpositions for high simplices: [" << s << ", " << n << ", " << t << "] ";
     for(unsigned c=0; c<n; c++) //move column that starts at s-c
     {
-        for(unsigned i=s; i<t;i++)
+        for(int i=s; i<t;i++)
         {
-            unsigned a = i-c;
+            int a = i-c;
             std::cout << "(" << a << "," << (a+1) << ")";
         }
     }

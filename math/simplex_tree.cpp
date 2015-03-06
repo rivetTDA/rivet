@@ -274,7 +274,7 @@ MapMatrix* SimplexTree::get_boundary_mx(std::vector<int>& coface_order)
 }//end get_boundary_mx(int, vector<int>)
 
 //returns a boundary matrix for (hom_dim+1)-simplices with columns and rows a specified orders -- for vineyard-update algorithm
-MapMatrix* SimplexTree::get_boundary_mx(std::vector<int>& coface_order, std::vector<int>& face_order)
+MapMatrix* SimplexTree::get_boundary_mx(std::vector<int>& face_order, std::vector<int>& coface_order)
 {
     //create the matrix
     MapMatrix* mat = new MapMatrix(ordered_simplices.size(), ordered_high_simplices.size());

@@ -119,8 +119,8 @@ class Mesh
         void move_columns(xiMatrixEntry* first, xiMatrixEntry* second, bool from_below); //moves columns from an equivalence class given by xiMatrixEntry* first to their new positions after or among the columns in the equivalence class given by xiMatrixEntry* second
             ///TODO: IMPLEMENT LAZY SWAPPING!
 
-        void move_low_columns(unsigned s, unsigned n, unsigned t);    //moves a block of n columns, the rightmost of which is column s, to a new position following column t (NOTE: assumes s <= t)
-        void move_high_columns(unsigned s, unsigned n, unsigned t);    //moves a block of n columns, the rightmost of which is column s, to a new position following column t (NOTE: assumes s <= t)
+        void move_low_columns(int s, unsigned n, int t);    //moves a block of n columns, the rightmost of which is column s, to a new position following column t (NOTE: assumes s <= t)
+        void move_high_columns(int s, unsigned n, int t);    //moves a block of n columns, the rightmost of which is column s, to a new position following column t (NOTE: assumes s <= t)
             ///TODO: the above is only partially implemented
 
         std::pair<bool, double> project(double angle, double offset, double x, double y);	//projects (x,y) onto the line determined by angle and offset
