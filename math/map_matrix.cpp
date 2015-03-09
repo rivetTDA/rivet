@@ -40,6 +40,17 @@ MapMatrix::MapMatrix(int rows, int cols) :
     columns(cols), num_rows(rows)
 { }
 
+//constructor to create a (square) identity matrix
+MapMatrix::MapMatrix(int size) :
+    columns(size), num_rows(size)
+{
+    for(int i=0; i<size; i++)
+    {
+        MapMatrixNode* newnode = new MapMatrixNode(i);
+        columns[i] = newnode;
+    }
+}
+
 //returns the number of columns in the matrix
 int MapMatrix::width()
 {
@@ -157,7 +168,6 @@ int MapMatrix::low(unsigned j)
 
 
 //applies the column reduction algorithm to this matrix
-//TODO: this could be improved with a "low array"
 void MapMatrix::col_reduce()
 {
     //create low array
@@ -195,6 +205,34 @@ void MapMatrix::col_reduce()
 //        }
 //    }
 //}//end col_reduce(MapMatrix* other)
+
+//reduces this matrix and returns the TRANSPOSE of the corresponding upper-triangular matrix for the RU-decomposition
+MapMatrix* MapMatrix::decompose_RU()
+{
+    //create the matrix U (actually the TRANSPOSE of U)
+    MapMatrix* U = new MapMatrix(columns.size());       //NOTE: delete this later!
+
+    //create low array
+    std::vector<int> lows(num_rows, -1);
+
+    //loop through columns
+    for(unsigned j=0; j<columns.size(); j++)
+    {
+        //while column j is nonempty and its low number is found in the low array, do column operations
+        while(low(j) >= 0 && lows[low(j)] >= 0)
+        {
+            int c = lows[low(j)];
+            add_column(c, j);
+            U->add_column(j, c);  //perform the opposite operation on U-transpose
+        }
+
+        if(low(j) >= 0)    //then column is still nonempty, so update lows
+            lows[low(j)] = j;
+    }
+
+    //return the matrix U (actually the TRANSPOSE of U)
+    return U;
+}//end decompose_RU()
 
 
 //adds column j to column k
@@ -445,5 +483,49 @@ void MapMatrix::print()
 		std::cout << " |\n";
 	}
 }//end print()
+
+//prints the transpose of the matrix to stadard output
+void MapMatrix::print_transpose()
+{
+    //handle empty matrix
+    if(num_rows == 0 || columns.size() == 0)
+    {
+        std::cout << "        (empty matrix: " << columns.size() << " rows by " << num_rows << " columns)\n";
+        return;
+    }
+
+    //create a 2D array of booleans to temporarily store the matrix
+    bool mx[columns.size()][num_rows];
+    for(int i=0; i<columns.size(); i++)
+        for(int j=0; j<num_rows; j++)
+            mx[i][j] = false;
+
+    //traverse the linked lists in order to fill the 2D array
+    MapMatrixNode* current;
+    for(int j=0; j<columns.size(); j++)
+    {
+        current = columns[j];
+        while(current != NULL)
+        {
+            int row = (*current).get_row();
+            mx[j][row] = 1;
+            current = (*current).get_next();
+        }
+    }
+
+    //print the matrix
+    for(int i=0; i<num_rows; i++)
+    {
+        std::cout << "        |";
+        for(int j=0; j<columns.size(); j++)
+        {
+            if(mx[i][j])
+                std::cout << " 1";
+            else
+                std::cout << " 0";
+        }
+        std::cout << " |\n";
+    }
+}//end print_transpose()
 
 

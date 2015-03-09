@@ -27,7 +27,8 @@ class MapMatrixNode;
 class MapMatrix
 {
 	public:
-        MapMatrix(int rows, int cols);		//constructor to create matrix of specified size
+        MapMatrix(int rows, int cols);  //constructor to create matrix of specified size (all entries zero)
+        MapMatrix(int size);            //constructor to create a (square) identity matrix
 		
 		int width();				//returns the number of columns in the matrix
 		int height();				//returns the number of rows in the matrix
@@ -41,11 +42,14 @@ class MapMatrix
 		void col_reduce();			//applies the column reduction algorithm to this matrix
 //		void col_reduce(MapMatrix* other);	//applies the column reduction algorithm to this matrix, and also performs the same column operations on the other matrix
 		
+        MapMatrix* decompose_RU();  //reduces this matrix and returns the TRANSPOSE of the corresponding upper-triangular matrix for the RU-decomposition
+
         void add_column(unsigned j, unsigned k);		//adds column j to column k; RESULT: column j is not changed, column k contains sum of columns j and k (with mod-2 arithmetic)
         void add_column(MapMatrix* other, int j, int k);    //adds column j from MapMatrix* other to column k of this matrix
 
         ///// TESTING
             void print();				//prints the matrix to standard output (useful for testing)
+            void print_transpose();     //prints the transpose of the matrix to stadard output
 		
 	private:
 		std::vector<MapMatrixNode*> columns;	//vector of pointers to nodes representing columns of the matrix

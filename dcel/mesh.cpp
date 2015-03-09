@@ -545,48 +545,67 @@ void Mesh::store_persistence_data(SimplexTree* bifiltration, int dim)
 
   // PART 2: GET THE BOUNDARY MATRICES WITH PROPER SIMPLEX ORDERING
 
-    ///TODO: WORKING HERE!!!
-        //get multi-grade data in each dimension
-        if(verbosity >= 4) { std::cout << "Mapping low simplices:\n"; }
-        IndexMatrix* ind_low = bifiltration->get_index_mx(dim);    //can we improve this with something more efficient than IndexMatrix?
-        std::vector<int> low_simplex_order;     //this will be a map : dim_index --> order_index for dim-simplices
-        store_multigrades(ind_low, true, low_simplex_order);
-        delete ind_low;
+    //get multi-grade data in each dimension
+    if(verbosity >= 4) { std::cout << "Mapping low simplices:\n"; }
+    IndexMatrix* ind_low = bifiltration->get_index_mx(dim);    //can we improve this with something more efficient than IndexMatrix?
+    std::vector<int> low_simplex_order;     //this will be a map : dim_index --> order_index for dim-simplices
+    store_multigrades(ind_low, true, low_simplex_order);
+    delete ind_low;
 
-        if(verbosity >= 4) { std::cout << "Mapping high simplices:\n"; }
-        IndexMatrix* ind_high = bifiltration->get_index_mx(dim + 1);    //again, could be improved?
-        std::vector<int> high_simplex_order;     //this will be a map : dim_index --> order_index for (dim+1)-simplices
-        store_multigrades(ind_high, false, high_simplex_order);
-        delete ind_high;
+    if(verbosity >= 4) { std::cout << "Mapping high simplices:\n"; }
+    IndexMatrix* ind_high = bifiltration->get_index_mx(dim + 1);    //again, could be improved?
+    std::vector<int> high_simplex_order;     //this will be a map : dim_index --> order_index for (dim+1)-simplices
+    store_multigrades(ind_high, false, high_simplex_order);
+    delete ind_high;
 
-        //testing only
-        std::cout << "== low_simplex_order: ";
-        for(int i=0; i<low_simplex_order.size(); i++)
-            std::cout << low_simplex_order[i] << ", ";
-        std::cout << "\n== high_simplex_order: ";
-        for(int i=0; i<high_simplex_order.size(); i++)
-            std::cout << high_simplex_order[i] << ", ";
-        std::cout << "\n";
+    //testing only
+    std::cout << "== low_simplex_order: ";
+    for(int i=0; i<low_simplex_order.size(); i++)
+        std::cout << low_simplex_order[i] << ", ";
+    std::cout << "\n== high_simplex_order: ";
+    for(int i=0; i<high_simplex_order.size(); i++)
+        std::cout << high_simplex_order[i] << ", ";
+    std::cout << "\n";
 
-        //get boundary matrices
-        if(verbosity >= 4) { std::cout << "Building boundary matrix for low simplices:\n"; }
-        MapMatrix* bdry_low = bifiltration->get_boundary_mx(low_simplex_order);
-        if(verbosity >= 4) { bdry_low->print(); }
+    //get boundary matrices (R) and identity matrices (U) for RU-decomposition
+    MapMatrix* R_low = bifiltration->get_boundary_mx(low_simplex_order);
+    if(verbosity >= 4)
+    {
+        std::cout << "  Boundary matrix for low simplices:\n";
+        R_low->print();
+    }
 
-        if(verbosity >= 4) { std::cout << "Building boundary matrix for high simplices:\n"; }
-        MapMatrix* bdry_high = bifiltration->get_boundary_mx(low_simplex_order, high_simplex_order);
-        if(verbosity >= 4) { bdry_high->print(); }
+    MapMatrix* R_high = bifiltration->get_boundary_mx(low_simplex_order, high_simplex_order);
+    if(verbosity >= 4)
+    {
+        std::cout << "  Boundary matrix for high simplices:\n";
+        R_high->print();
+    }
 
-        //boundary matrices need extra structure to support vineyard updates!!!
 
-
-
-  // PART 3: INITIAL PERSISTENCE COMPUTATION
+  // PART 3: INITIAL PERSISTENCE COMPUTATION (RU-decomposition)
 
     std::cout << "Initial persistence computation in cell 0\n";
 
+    MapMatrix* U_low = R_low->decompose_RU();
+    if(verbosity >= 4)
+    {
+        std::cout << "  Reduced matrix for low simplices:\n";
+        R_low->print();
+        std::cout << "  Matrix U for low simplices:\n";
+        U_low->print_transpose();
+    }
 
-    ///TODO: reduce matrices and store discrete barcode in initial cell
+    MapMatrix* U_high = R_high->decompose_RU();
+    if(verbosity >= 4)
+    {
+        std::cout << "  Reduced matrix for high simplices:\n";
+        R_high->print();
+        std::cout << "  Matrix U for high simplices:\n";
+        U_high->print_transpose();
+    }
+
+    ///TODO: store discrete barcode in initial cell
 
 
 
@@ -618,7 +637,7 @@ void Mesh::store_persistence_data(SimplexTree* bifiltration, int dim)
                 left = left->left;
             }//now down and left are correct (and should not be NULL)
 
-            if(down->head_of_class) //then LCM is crossed from below to above
+            if(cur_lcm->is_above()) //then LCM is crossed from below to above
             {
                 std::cout << " == strong LCM crossed below to above ==\n";
                 if(at_LCM != NULL)
@@ -671,6 +690,9 @@ void Mesh::store_persistence_data(SimplexTree* bifiltration, int dim)
                 generator->high_index = at_LCM->high_index - at_LCM->high_count;
             }
         }
+
+        //remember that we have crossed this LCM
+        cur_lcm->toggle();
 
         //if this cell does not yet have a discrete barcode, then store the discrete barcode here
 

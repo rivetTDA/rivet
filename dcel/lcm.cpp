@@ -6,11 +6,11 @@
 #include "xi_support_matrix.h"
 
 //constructor for a NON-WEAK LCM, requires pointers to the "generators" of the LCM
-LCM::LCM(xiMatrixEntry* down, xiMatrixEntry* left) : x_coord(down->x), y_coord(left->y), down(down), left(left)
+LCM::LCM(xiMatrixEntry* down, xiMatrixEntry* left) : x_coord(down->x), y_coord(left->y), down(down), left(left), above_line(true)
 { }
 
 //constructor for a WEAK LCM, requires pointer to the xi support at the LCM
-LCM::LCM(xiMatrixEntry* point, bool strong) : x_coord(point->x), y_coord(point->y), down(NULL), left(NULL)
+LCM::LCM(xiMatrixEntry* point, bool strong) : x_coord(point->x), y_coord(point->y), down(NULL), left(NULL), above_line(true)
 {
     if(strong)
         left = point;
@@ -34,6 +34,7 @@ LCM::LCM(const LCM& other)
     left = other.left;
     curve = other.curve;
     position = other.position;
+    above_line = other.above_line;
 }
 
 LCM& LCM::operator= (const LCM& other)
@@ -47,6 +48,7 @@ LCM& LCM::operator= (const LCM& other)
     y_coord = other.y_coord;
     curve = other.curve;
     position = other.position;
+    above_line = other.above_line;
 
     return *this;
 }
@@ -90,6 +92,16 @@ void LCM::set_position(unsigned p)
 unsigned LCM::get_position() const
 {
     return position;
+}
+
+bool LCM::is_above()
+{
+    return above_line;
+}
+
+void LCM::toggle()
+{
+    above_line = !above_line;
 }
 
 xiMatrixEntry* LCM::get_down()

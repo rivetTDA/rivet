@@ -37,6 +37,9 @@ class LCM   //updated to store only discrete indexes
         void set_position(unsigned p);  //sets the relative position of the LCM curve at the sweep line, used for Bentley-Ottmann DCEL construction algorithm
         unsigned get_position() const;  //gets the relative position of the LCM curve at the sweep line, used for Bentley-Ottmann DCEL construction algorithm
 
+        bool is_above();       //returns true iff this LCM is above the current slice line, used for the vineyard-update process of storing persistence data in cells of the arrangement
+        void toggle();         //toggles above/below state of this LCM; called whever the slice line crosses this LCM in the vineyard-update process of storing persistence data
+
         xiMatrixEntry* get_down();  //accessor
         xiMatrixEntry* get_left();  //accessor
 
@@ -49,6 +52,7 @@ class LCM   //updated to store only discrete indexes
 
         Halfedge* curve;	//pointer to left-most halfedge corresponding to this LCM in the arrangement --- IS THIS USED FOR ANYTHING BESIDES TESTING???
         unsigned position;  //relative position of LCM curve at sweep line, used for Bentley-Ottmann DCEL construction algorithm
+        bool above_line;    //true iff this LCM is above the current slice line, used for the vineyard-update process of storing persistence data in cells of the arrangement
 };
 
 
