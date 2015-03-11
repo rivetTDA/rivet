@@ -1045,62 +1045,33 @@ void Mesh::move_low_columns(int s, unsigned n, int t, MapMatrix* RL, MapMatrix_R
                     }
                 }
             }
-            else    //simplex a is negative
+            else    //simplex a is negative (Vineyards paper - Cases 2 and 3)
             {
-                if(!b_pos)  //both simplices are negative (Vineyards paper - Case 2)
+                if(UL->entry(a, b)) //then do row/column additions before swapping rows and columns (Cases 2.1 and 3.1)
                 {
-                    if(UL->entry(a, b)) //then do row/column additions before swapping rows and columns (Case 2.1)
+                    //preliminary additions so that U will remain upper-triangular
+                    UL->add_row(b, a);
+                    RL->add_column(a, b);
+
+                    //transpose rows and columns
+                    RL->swap_columns(a);
+                    RH->swap_rows(a);
+                    UL->swap_columns(a);
+                    UL->swap_rows(a);
+
+                    //now it might be necessary to fix R
+                    if(b_pos || RL->low(a) == RL->low(b))
                     {
-                        //preliminary additions so that U will remain upper-triangular
-                        UL->add_row(b, a);
                         RL->add_column(a, b);
-
-                        //transpose rows and columns
-                        RL->swap_columns(a);
-                        RH->swap_rows(a);
-                        UL->swap_columns(a);
-                        UL->swap_rows(a);
-
-                        //now it might be necessary to fix R
-                        if(RL->low(a) == RL->low(b))
-                        {
-                            RL->add_column(a, b);
-                            UL->add_row(b, a);
-                        }
-                    }
-                    else    //then just transpose rows and columns (Case 2.2)
-                    {
-                        RL->swap_columns(a);
-                        RH->swap_rows(a);
-                        UL->swap_columns(a);
-                        UL->swap_rows(a);
+                        UL->add_row(b, a);
                     }
                 }
-                else    //simplex b is positive (Vineyards paper - Case 3)
+                else    //then just transpose rows and columns (Cases 2.2 and 3.2)
                 {
-                    if(UL->entry(a, b)) //then do row/column additions before swapping rows and columns (Case 3.1)
-                    {
-                        //preliminary additions so that U will remain upper-triangular
-                        UL->add_row(b, a);
-                        RL->add_column(a, b);
-
-                        //transpose rows and columns
-                        RL->swap_columns(a);
-                        RH->swap_rows(a);
-                        UL->swap_columns(a);
-                        UL->swap_rows(a);
-
-                        //now it is necessary to fix R
-                        RL->add_column(a, b);
-                        UL->add_row(b, a);
-                    }
-                    else    //then just transpose rows and columns (Case 3.2)
-                    {
-                        RL->swap_columns(a);
-                        RH->swap_rows(a);
-                        UL->swap_columns(a);
-                        UL->swap_rows(a);
-                    }
+                    RL->swap_columns(a);
+                    RH->swap_rows(a);
+                    UL->swap_columns(a);
+                    UL->swap_rows(a);
                 }
             }
         }//end for(i=...)
