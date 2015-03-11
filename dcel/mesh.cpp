@@ -539,6 +539,9 @@ Halfedge* Mesh::create_edge_left(Halfedge* edge, LCM* lcm)
 void Mesh::store_persistence_data(SimplexTree* bifiltration, int dim)
 {
   // PART 1: FIND A PATH THROUGH ALL 2-CELLS OF THE ARRANGEMENT
+
+    //note: path starts with a (near-vertical) line to the right of all multigrades
+
     std::vector<Halfedge*> path;
     find_path(path);
 
@@ -569,15 +572,12 @@ void Mesh::store_persistence_data(SimplexTree* bifiltration, int dim)
 
     //get boundary matrices (R) and identity matrices (U) for RU-decomposition
     MapMatrix* R_low = bifiltration->get_boundary_mx(low_simplex_order);
+    MapMatrix* R_high = bifiltration->get_boundary_mx(low_simplex_order, high_simplex_order);
+
     if(verbosity >= 4)
     {
         std::cout << "  Boundary matrix for low simplices:\n";
         R_low->print();
-    }
-
-    MapMatrix* R_high = bifiltration->get_boundary_mx(low_simplex_order, high_simplex_order);
-    if(verbosity >= 4)
-    {
         std::cout << "  Boundary matrix for high simplices:\n";
         R_high->print();
     }
@@ -588,17 +588,14 @@ void Mesh::store_persistence_data(SimplexTree* bifiltration, int dim)
     std::cout << "Initial persistence computation in cell 0\n";
 
     MapMatrix* U_low = R_low->decompose_RU();
+    MapMatrix* U_high = R_high->decompose_RU();
+
     if(verbosity >= 4)
     {
         std::cout << "  Reduced matrix for low simplices:\n";
         R_low->print();
         std::cout << "  Matrix U for low simplices:\n";
         U_low->print_transpose();
-    }
-
-    MapMatrix* U_high = R_high->decompose_RU();
-    if(verbosity >= 4)
-    {
         std::cout << "  Reduced matrix for high simplices:\n";
         R_high->print();
         std::cout << "  Matrix U for high simplices:\n";
@@ -609,9 +606,9 @@ void Mesh::store_persistence_data(SimplexTree* bifiltration, int dim)
 
 
 
-  // PART 4: TRAVERSE THE HAMILTONIAN PATH AND DO VINEYARD UPDATES
+  // PART 4: TRAVERSE THE PATH AND DO VINEYARD UPDATES
 
-    //note: path starts with a near-vertical line to the right of all multigrades
+    ///TODO: need permutation vectors...
 
     //traverse the path
     for(unsigned i=0; i<path.size(); i++)
@@ -702,7 +699,14 @@ void Mesh::store_persistence_data(SimplexTree* bifiltration, int dim)
     }//end path traversal
 
 
-}//end build_persistence_data()
+  // PART 5: CLEAN UP
+
+    delete R_low;
+    delete R_high;
+    delete U_low;
+    delete U_high;
+
+}//end store_persistence_data()
 
 //finds a pseudo-optimal path through all 2-cells of the arrangement
 // path consists of a vector of Halfedges
@@ -993,24 +997,121 @@ void Mesh::move_columns(xiMatrixEntry* first, xiMatrixEntry* second, bool from_b
 
 
 //moves a block of n columns, the rightmost of which is column s, to a new position following column t (NOTE: assumes s <= t)
-///TODO: FINISH THIS!!! for now, it just prints transpositions to std::cout
-void Mesh::move_low_columns(int s, unsigned n, int t)
+///TODO: FINISH THIS!!!
+void Mesh::move_low_columns(int s, unsigned n, int t, MapMatrix* RL, MapMatrix_RP* UL, MapMatrix_PL* RH, MapMatrix_RP* UH)
 {
     std::cout << "   --Transpositions for low simplices: [" << s << ", " << n << ", " << t << "] ";
     for(unsigned c=0; c<n; c++) //move column that starts at s-c
     {
-        for(int i=s; i<t;i++)
+        for(unsigned i=s; i<t; i++)
         {
-            int a = i-c;
-            std::cout << "(" << a << "," << (a+1) << ")";
-        }
-    }
+            unsigned a = i - c;
+            unsigned b = a + 1;
+
+            //we must swap the d-simplices currently corresponding to columns a and b=a+1
+            std::cout << "(" << a << "," << b << ")";
+
+            bool a_pos = (RL->low(a) == -1);    //true iff simplex corresponding to column a is positive
+            bool b_pos = (RL->low(b) == -1);    //true iff simplex corresponding to column b=a+1 is positive
+
+            if(a_pos)  //simplex a is positive (Vineyards paper - Cases 1 and 4)
+            {
+                //first, transpose rows and columns
+                RL->swap_columns(a);
+                RH->swap_rows(a);
+                UL->swap_columns(a);
+                UL->swap_rows(a);
+
+                //now, ensure that UL[b,a]=0    (concludes Case 4)
+                UL->clear(b, a);
+
+                if(b_pos)   //then we might have to fix the the reduced matrix (Vineyards paper - Case 1.1)
+                {
+                    //look for columns k and l in RH with low(k)=a, low(l)=b, and RH(a,l)=1 -- if these exist, then we must fix the reduced matrix
+                    int k = RH->find_low(a);
+                    int l = RH->find_low(b);
+                    if(k > -1 && l > -1 && RH->entry(a,l))
+                    {
+                        if(k < l)
+                        {
+                            RH->add_column(k, l);
+                            UH->add_row(l, k);
+                        }
+                        else
+                        {
+                            RH->add_column(l, k);
+                            UH->add_row(k, l);
+                        }
+                    }
+                }
+            }
+            else    //simplex a is negative
+            {
+                if(!b_pos)  //both simplices are negative (Vineyards paper - Case 2)
+                {
+                    if(UL->entry(a, b)) //then do row/column additions before swapping rows and columns (Case 2.1)
+                    {
+                        //preliminary additions so that U will remain upper-triangular
+                        UL->add_row(b, a);
+                        RL->add_column(a, b);
+
+                        //transpose rows and columns
+                        RL->swap_columns(a);
+                        RH->swap_rows(a);
+                        UL->swap_columns(a);
+                        UL->swap_rows(a);
+
+                        //now it might be necessary to fix R
+                        if(RL->low(a) == RL->low(b))
+                        {
+                            RL->add_column(a, b);
+                            UL->add_row(b, a);
+                        }
+                    }
+                    else    //then just transpose rows and columns (Case 2.2)
+                    {
+                        RL->swap_columns(a);
+                        RH->swap_rows(a);
+                        UL->swap_columns(a);
+                        UL->swap_rows(a);
+                    }
+                }
+                else    //simplex b is positive (Vineyards paper - Case 3)
+                {
+                    if(UL->entry(a, b)) //then do row/column additions before swapping rows and columns (Case 3.1)
+                    {
+                        //preliminary additions so that U will remain upper-triangular
+                        UL->add_row(b, a);
+                        RL->add_column(a, b);
+
+                        //transpose rows and columns
+                        RL->swap_columns(a);
+                        RH->swap_rows(a);
+                        UL->swap_columns(a);
+                        UL->swap_rows(a);
+
+                        //now it is necessary to fix R
+                        RL->add_column(a, b);
+                        UL->add_row(b, a);
+                    }
+                    else    //then just transpose rows and columns (Case 3.2)
+                    {
+                        RL->swap_columns(a);
+                        RH->swap_rows(a);
+                        UL->swap_columns(a);
+                        UL->swap_rows(a);
+                    }
+                }
+            }
+        }//end for(i=...)
+    }//end for(c=...)
+
     std::cout << "\n";
 }//end move_low_columns()
 
 //moves a block of n columns, the rightmost of which is column s, to a new position following column t (NOTE: assumes s <= t)
 ///TODO: FINISH THIS!!! for now, it just prints transpositions to std::cout
-void Mesh::move_high_columns(int s, unsigned n, int t)
+void Mesh::move_high_columns(int s, unsigned n, int t, MapMatrix* RH, MapMatrix* UH)
 {
     std::cout << "   --Transpositions for high simplices: [" << s << ", " << n << ", " << t << "] ";
     for(unsigned c=0; c<n; c++) //move column that starts at s-c
@@ -1018,9 +1119,47 @@ void Mesh::move_high_columns(int s, unsigned n, int t)
         for(int i=s; i<t;i++)
         {
             int a = i-c;
-            std::cout << "(" << a << "," << (a+1) << ")";
-        }
-    }
+            int b = a + 1;
+
+            //we must swap the 0(d+1)-simplices currently corresponding to columns a and b=a+1
+            std::cout << "(" << a << "," << b << ")";
+
+            //update permutation vectors
+            ///TODO: update permutation vectors!!!
+
+            //now update the matrices
+            bool a_pos = (RH->low(a) == -1);    //true iff simplex corresponding to column a is positive
+            bool b_pos = (RH->low(b) == -1);    //true iff simplex corresponding to column b is positive
+
+            //transpose columns of RH
+            //transpose rows and columns of UH
+
+            if(a_pos)   //simplex a is positive, so its column is zero, and the fix is easy  (Vineyards paper - Cases 1 and 4)
+            {
+                //set UH[a,b]=0
+            }
+            else    //simplex a is negative
+            {
+                if(!b_pos) //simplex b is negative (Vineyards paper - Case 2)
+                {
+                    //if UH[a,b] == 1
+                        //then fix UH by adding row b to row a
+                        //also add column a to column b in RH
+
+                        //if low(b) < low(a) in RH (before the transposition)
+                            //then do a column addition on RL and a row addition on UL
+                }
+                else    //simplex b is positive (Vineyards paper - Case 3)
+                {
+                    //if UH[a,b] == 1
+                        //then fix UH by adding row b to row a
+                        //also add column a to column b in RH
+                        //do another set of additions, as in the previous case
+                }
+
+            }
+        }//end for(i=...)
+    }//end for(c=...)
     std::cout << "\n";
 }//end move_low_columns()
 

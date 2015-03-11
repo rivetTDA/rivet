@@ -53,7 +53,7 @@ class Mesh
 		~Mesh();	//destructor: IMPLEMENT THIS, MAKE SURE ALL MEMORY IS RELEASED!!!!
 		
         void build_arrangement(MultiBetti& mb, std::vector<xiPoint>& xi_pts);
-            //builds the DCEL arrangement, computes and stores persistence data
+            //builds the DCEL arrangement, and computes and stores persistence data
             //also stores ordered list of xi support points in the supplied vector
 
         PersistenceData* get_persistence_data(double angle, double offset, std::vector<std::pair<unsigned, unsigned> > & xi);
@@ -89,8 +89,8 @@ class Mesh
 		
 		const int verbosity;			//controls display of output, for debugging
 
-        xiSupportMatrix xi_matrix;  //sparse matrix to hold xi support points
-
+        xiSupportMatrix xi_matrix;  //sparse matrix to hold xi support points -- used for finding LCMs (to build the arrangement) and tracking simplices during the vineyard updates (when computing barcodes to store in the arrangement)
+            //note: xi_matrix could be defined inside the function build_arrangement()
 
 
       //functions for creating the arrangement
@@ -120,8 +120,8 @@ class Mesh
         void move_columns(xiMatrixEntry* first, xiMatrixEntry* second, bool from_below); //moves columns from an equivalence class given by xiMatrixEntry* first to their new positions after or among the columns in the equivalence class given by xiMatrixEntry* second
             ///TODO: IMPLEMENT LAZY SWAPPING!
 
-        void move_low_columns(int s, unsigned n, int t);    //moves a block of n columns, the rightmost of which is column s, to a new position following column t (NOTE: assumes s <= t)
-        void move_high_columns(int s, unsigned n, int t);    //moves a block of n columns, the rightmost of which is column s, to a new position following column t (NOTE: assumes s <= t)
+        void move_low_columns(int s, unsigned n, int t, MapMatrix *RL, MapMatrix_RP *UL, MapMatrix_PL *RH, MapMatrix_RP *UH);    //moves a block of n columns, the rightmost of which is column s, to a new position following column t (NOTE: assumes s <= t)
+        void move_high_columns(int s, unsigned n, int t, MapMatrix *RH, MapMatrix *UH);    //moves a block of n columns, the rightmost of which is column s, to a new position following column t (NOTE: assumes s <= t)
             ///TODO: the above is only partially implemented
 
         std::pair<bool, double> project(double angle, double offset, double x, double y);	//projects (x,y) onto the line determined by angle and offset
