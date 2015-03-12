@@ -571,8 +571,8 @@ void Mesh::store_persistence_data(SimplexTree* bifiltration, int dim)
     std::cout << "\n";
 
     //get boundary matrices (R) and identity matrices (U) for RU-decomposition
-    MapMatrix_Perm* R_low = bifiltration->get_boundary_mx(low_simplex_order);   ///TODO: FIX TYPE
-    MapMatrix_Perm* R_high = bifiltration->get_boundary_mx(low_simplex_order, high_simplex_order);///TODO: FIX TYPE
+    MapMatrix_Perm* R_low = bifiltration->get_boundary_mx(low_simplex_order);
+    MapMatrix_Perm* R_high = bifiltration->get_boundary_mx(low_simplex_order, high_simplex_order);
 
     if(verbosity >= 4)
     {
@@ -693,6 +693,19 @@ void Mesh::store_persistence_data(SimplexTree* bifiltration, int dim)
 
         ///TODO: FINISH THIS!!!
 
+
+        //testing
+        if(verbosity >= 4)
+        {
+            std::cout << "  Reduced matrix for low simplices:\n";
+            R_low->print();
+            std::cout << "  Matrix U for low simplices:\n";
+            U_low->print();
+            std::cout << "  Reduced matrix for high simplices:\n";
+            R_high->print();
+            std::cout << "  Matrix U for high simplices:\n";
+            U_high->print();
+        }
 
     }//end path traversal
 

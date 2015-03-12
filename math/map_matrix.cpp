@@ -217,7 +217,7 @@ void MapMatrix_Base::add_column(unsigned j, unsigned k)
     //make sure this operation is valid
     if(columns.size() <= j || columns.size() <= k)
         throw std::runtime_error("attempting to access column past end of matrix");
-    if(j = k)
+    if(j == k)
         throw std::runtime_error("adding a column to itself");
 
     //pointers
@@ -228,7 +228,7 @@ void MapMatrix_Base::add_column(unsigned j, unsigned k)
     while(jnode != NULL)
     {
         //now it is save to dereference jnode (*jnode)...
-        int row = jnode->get_row();
+        unsigned row = jnode->get_row();
 
         //loop through entries in column k, starting at the current position
         bool added = false;
@@ -340,7 +340,7 @@ void MapMatrix::set(unsigned i, unsigned j)
 }
 
 //returns true if entry (i,j) is 1, false otherwise
-bool entry(unsigned i, unsigned j)
+bool MapMatrix::entry(unsigned i, unsigned j)
 {
     return MapMatrix_Base::entry(i, j);
 }
@@ -381,7 +381,7 @@ void MapMatrix::add_column(MapMatrix* other, unsigned j, unsigned k)
     while(jnode != NULL)
     {
         //now it is save to dereference jnode
-        int row = jnode->get_row();
+        unsigned row = jnode->get_row();
 
         //loop through entries in column k, starting at the current position
         bool added = false;
@@ -486,13 +486,13 @@ void MapMatrix::print()
 	
 	//create a 2D array of booleans to temporarily store the matrix
 	bool mx[num_rows][columns.size()];
-	for(int i=0; i<num_rows; i++)
-		for(int j=0; j<columns.size(); j++)
+    for(unsigned i=0; i<num_rows; i++)
+        for(unsigned j=0; j<columns.size(); j++)
 			mx[i][j] = false;
 	
 	//traverse the linked lists in order to fill the 2D array
 	MapMatrixNode* current;
-	for(int j=0; j<columns.size(); j++)
+    for(unsigned j=0; j<columns.size(); j++)
 	{
 		current = columns[j];
 		while(current != NULL)
@@ -504,10 +504,10 @@ void MapMatrix::print()
 	}
 	
 	//print the matrix
-	for(int i=0; i<num_rows; i++)
+    for(unsigned i=0; i<num_rows; i++)
 	{
 		std::cout << "        |";
-		for(int j=0; j<columns.size(); j++)
+        for(unsigned j=0; j<columns.size(); j++)
 		{
 			if(mx[i][j])
 				std::cout << " 1";
@@ -535,8 +535,8 @@ MapMatrix_Perm::MapMatrix_Perm(unsigned rows, unsigned cols) :
 }
 
 MapMatrix_Perm::MapMatrix_Perm(unsigned size) :
-    MapMatrix(rows),
-    perm(size), mrep(size), low_col(rows, -1)
+    MapMatrix(size),
+    perm(size), mrep(size), low_col(size, -1)
 {
     //initialize permutation vectors to the identity permutation
     for(unsigned i=0; i < size; i++)
@@ -618,7 +618,7 @@ void MapMatrix_Perm::swap_rows(unsigned i)
 
     //also swap entries in low array
     int t = low_col[i];
-    low_col[i] = lows[i+1];
+    low_col[i] = low_col[i+1];
     low_col[i+1] = t;
 }//end swap_rows()
 
@@ -656,6 +656,49 @@ MapMatrix_RowPriority_Perm* MapMatrix_Perm::decompose_RU()
     return U;
 }//end decompose_RU()
 
+//function to print the matrix to standard output, for testing purposes
+void MapMatrix_Perm::print()
+{
+    //handle empty matrix
+    if(num_rows == 0 || columns.size() == 0)
+    {
+        std::cout << "        (empty matrix: " << num_rows << " rows by " << columns.size() << " columns)\n";
+        return;
+    }
+
+    //create a 2D array of booleans to temporarily store the matrix
+    bool mx[num_rows][columns.size()];
+    for(unsigned i=0; i<num_rows; i++)
+        for(unsigned j=0; j<columns.size(); j++)
+            mx[i][j] = false;
+
+    //traverse the linked lists in order to fill the 2D array
+    MapMatrixNode* current;
+    for(unsigned j=0; j<columns.size(); j++)
+    {
+        current = columns[j];
+        while(current != NULL)
+        {
+            int row = current->get_row();
+            mx[perm[row]][j] = 1;
+            current = current->get_next();
+        }
+    }
+
+    //print the matrix
+    for(unsigned i=0; i<num_rows; i++)
+    {
+        std::cout << "        |";
+        for(unsigned j=0; j<columns.size(); j++)
+        {
+            if(mx[i][j])
+                std::cout << " 1";
+            else
+                std::cout << " 0";
+        }
+        std::cout << " |\n";
+    }
+}//end print()
 
 
 
@@ -710,9 +753,9 @@ void MapMatrix_RowPriority_Perm::add_row(unsigned j, unsigned k)
 //transposes rows i and i+1
 void MapMatrix_RowPriority_Perm::swap_rows(unsigned i)
 {
-    MapMatrixNode* temp = columns[j];
-    columns[j] = columns[j+1];
-    columns[j+1] = temp;
+    MapMatrixNode* temp = columns[i];
+    columns[i] = columns[i+1];
+    columns[i+1] = temp;
 }
 
 //transposes columns j and j+1
@@ -745,28 +788,28 @@ void MapMatrix_RowPriority_Perm::print()
 
     //create a 2D array of booleans to temporarily store the matrix
     bool mx[columns.size()][num_rows];
-    for(int i=0; i<columns.size(); i++)
-        for(int j=0; j<num_rows; j++)
+    for(unsigned i=0; i<columns.size(); i++)
+        for(unsigned j=0; j<num_rows; j++)
             mx[i][j] = false;
 
     //traverse the linked lists in order to fill the 2D array
     MapMatrixNode* current;
-    for(int j=0; j<columns.size(); j++)
+    for(unsigned j=0; j<columns.size(); j++)
     {
         current = columns[j];
         while(current != NULL)
         {
-            int row = current->get_row();
-            mx[j][row] = 1;
+            unsigned row = current->get_row();
+            mx[j][perm[row]] = 1;
             current = current->get_next();
         }
     }
 
     //print the matrix
-    for(int i=0; i<num_rows; i++)
+    for(unsigned i=0; i<num_rows; i++)
     {
         std::cout << "        |";
-        for(int j=0; j<columns.size(); j++)
+        for(unsigned j=0; j<columns.size(); j++)
         {
             if(mx[i][j])
                 std::cout << " 1";

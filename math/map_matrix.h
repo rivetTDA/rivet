@@ -67,24 +67,25 @@ class MapMatrix : public MapMatrix_Base
         MapMatrix(unsigned size);                 //constructor to create a (square) identity matrix
         virtual ~MapMatrix();                             //destructor
 		
-        unsigned width();				//returns the number of columns in the matrix
-        unsigned height();				//returns the number of rows in the matrix
+        unsigned width();               //returns the number of columns in the matrix
+        unsigned height();              //returns the number of rows in the matrix
 		
         virtual void set(unsigned i, unsigned j);       //sets (to 1) the entry in row i, column j
         virtual bool entry(unsigned i, unsigned j);     //returns true if entry (i,j) is 1, false otherwise
 		
-        virtual int low(unsigned j);				//returns the "low" index in the specified column, or -1 if the column is empty
+        virtual int low(unsigned j);                    //returns the "low" index in the specified column, or -1 if the column is empty
 
-        void add_column(unsigned j, unsigned k);		//adds column j to column k; RESULT: column j is not changed, column k contains sum of columns j and k (with mod-2 arithmetic)
+        void add_column(unsigned j, unsigned k);    //adds column j to column k; RESULT: column j is not changed, column k contains sum of columns j and k (with mod-2 arithmetic)
         void add_column(MapMatrix* other, unsigned j, unsigned k);    //adds column j from MapMatrix* other to column k of this matrix
 
-        void col_reduce();			//applies the column reduction algorithm to this matrix
+        void col_reduce();          //applies the column reduction algorithm to this matrix
 		
-        void print();				//prints the matrix to standard output (for testing)
+        virtual void print();       //prints the matrix to standard output (for testing)
 };
 
 
 //MapMatrix with row/column permutations and low array, designed for "vineyard updates"
+class MapMatrix_RowPriority_Perm;   //forward declaration
 class MapMatrix_Perm : public MapMatrix
 {
     public:
@@ -102,6 +103,8 @@ class MapMatrix_Perm : public MapMatrix
         void swap_columns(unsigned j); //transposes columns j and j+1
 
         MapMatrix_RowPriority_Perm* decompose_RU();  //reduces this matrix, fills the low array, and returns the corresponding upper-triangular matrix for the RU-decomposition
+
+        virtual void print();       //prints the matrix to standard output (for testing)
 
     protected:
         std::vector<unsigned> perm;     //permutation vector

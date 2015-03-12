@@ -240,6 +240,10 @@ MapMatrix* SimplexTree::get_boundary_mx(int dim)
     //create the MapMatrix
     MapMatrix* mat = new MapMatrix(num_rows, simplices->size());			//DELETE this object later!
 
+    //if we want a matrix for 0-simplices, then we are done
+    if(dim == 0)
+        return mat;
+
     //loop through simplices, writing columns to the matrix
     int col = 0;    //column counter
     for(SimplexSet::iterator it=simplices->begin(); it!=simplices->end(); ++it)
@@ -254,10 +258,10 @@ MapMatrix* SimplexTree::get_boundary_mx(int dim)
 }//end get_boundary_mx(int)
 
 //returns a boundary matrix for hom_dim-simplices with columns in a specified order -- for vineyard-update algorithm
-MapMatrix* SimplexTree::get_boundary_mx(std::vector<int>& coface_order)
+MapMatrix_Perm* SimplexTree::get_boundary_mx(std::vector<int>& coface_order)
 {
     //create the matrix
-    MapMatrix* mat = new MapMatrix(ordered_low_simplices.size(), ordered_simplices.size());
+    MapMatrix_Perm* mat = new MapMatrix_Perm(ordered_low_simplices.size(), ordered_simplices.size());
 
     //loop through all simplices, writing columns to the matrix
     int dim_index = 0;  //tracks our position in the list of hom_dim-simplices
@@ -274,10 +278,10 @@ MapMatrix* SimplexTree::get_boundary_mx(std::vector<int>& coface_order)
 }//end get_boundary_mx(int, vector<int>)
 
 //returns a boundary matrix for (hom_dim+1)-simplices with columns and rows a specified orders -- for vineyard-update algorithm
-MapMatrix* SimplexTree::get_boundary_mx(std::vector<int>& face_order, std::vector<int>& coface_order)
+MapMatrix_Perm *SimplexTree::get_boundary_mx(std::vector<int>& face_order, std::vector<int>& coface_order)
 {
     //create the matrix
-    MapMatrix* mat = new MapMatrix(ordered_simplices.size(), ordered_high_simplices.size());
+    MapMatrix_Perm* mat = new MapMatrix_Perm(ordered_simplices.size(), ordered_high_simplices.size());
 
     //loop through all simplices, writing columns to the matrix
     int dim_index = 0;  //tracks our position in the list of (hom_dim+1)-simplices
@@ -429,6 +433,10 @@ void SimplexTree::write_boundary_column(MapMatrix* mat, STNode* sim, int col, in
 {
     //get vertex list for this simplex
     std::vector<int> verts = find_vertices(sim->global_index());
+
+    //for a 0-simplex, there is nothing to do
+    if(verts.size() == 1)
+        return;
 
     //find all facets of this simplex
     for(unsigned k=0; k<verts.size(); k++)       ///TODO: optimize! make this faster!
