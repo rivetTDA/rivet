@@ -117,12 +117,12 @@ class Mesh
         void find_path(std::vector<Halfedge *> &pathvec);   //finds a pseudo-optimal path through all 2-cells of the arrangement
         void find_subpath(unsigned& cur_node, std::vector< std::set<unsigned> >& adj, std::vector<Halfedge*>& pathvec, bool return_path); //builds the path recursively
 
-        void move_columns(xiMatrixEntry* first, xiMatrixEntry* second, bool from_below); //moves columns from an equivalence class given by xiMatrixEntry* first to their new positions after or among the columns in the equivalence class given by xiMatrixEntry* second
+        void move_columns(xiMatrixEntry* first, xiMatrixEntry* second, bool from_below, MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH);
+            //moves columns from an equivalence class given by xiMatrixEntry* first to their new positions after or among the columns in the equivalence class given by xiMatrixEntry* second
             ///TODO: IMPLEMENT LAZY SWAPPING!
 
-        void move_low_columns(int s, unsigned n, int t, MapMatrix *RL, MapMatrix_RP *UL, MapMatrix_PL *RH, MapMatrix_RP *UH);    //moves a block of n columns, the rightmost of which is column s, to a new position following column t (NOTE: assumes s <= t)
-        void move_high_columns(int s, unsigned n, int t, MapMatrix *RH, MapMatrix *UH);    //moves a block of n columns, the rightmost of which is column s, to a new position following column t (NOTE: assumes s <= t)
-            ///TODO: the above is only partially implemented
+        void move_low_columns(int s, unsigned n, int t, MapMatrix_Perm *RL, MapMatrix_RowPriority_Perm *UL, MapMatrix_Perm *RH, MapMatrix_RowPriority_Perm *UH);    //moves a block of n columns, the rightmost of which is column s, to a new position following column t (NOTE: assumes s <= t)
+        void move_high_columns(int s, unsigned n, int t, MapMatrix_Perm *RH, MapMatrix_RowPriority_Perm *UH);    //moves a block of n columns, the rightmost of which is column s, to a new position following column t (NOTE: assumes s <= t)
 
         std::pair<bool, double> project(double angle, double offset, double x, double y);	//projects (x,y) onto the line determined by angle and offset
             ///THE ABOVE FUNCTION IS OBSOLETE!

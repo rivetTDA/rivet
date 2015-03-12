@@ -22,88 +22,119 @@
 #include <vector>
 #include <stdexcept>
 
-class MapMatrixNode {
-    public:
-        MapMatrixNode(unsigned row);		//constructor
 
-        unsigned get_row();			//returns the row index
-        void set_next(MapMatrixNode* n);	//sets the pointer to the next node in the column
-        MapMatrixNode* get_next();	//returns a pointer to the next node in the column
+//base class simply implements features common to all MapMatrices, whether column-priority or row-priority
+//written here using column-priority terminology, but this class is meant to be inherited, not instantiated directly
+class MapMatrix_Base {
+    protected:
+        MapMatrix_Base(unsigned rows, unsigned cols);  //constructor to create matrix of specified size (all entries zero)
+        MapMatrix_Base(unsigned size);                 //constructor to create a (square) identity matrix
+        virtual ~MapMatrix_Base();                             //destructor
 
-    private:
-        unsigned row_index;			//index of matrix row corresponding to this node
-        MapMatrixNode* next;		//pointer to the next entry in the column containing this node
+        virtual unsigned width();				//returns the number of columns in the matrix
+        virtual unsigned height();				//returns the number of rows in the matrix
+
+        virtual void set(unsigned i, unsigned j);       //sets (to 1) the entry in row i, column j
+        virtual void clear(unsigned i, unsigned j);     //clears (sets to 0) the entry in row i, column j
+        virtual bool entry(unsigned i, unsigned j);     //returns true if entry (i,j) is 1, false otherwise
+
+        virtual void add_column(unsigned j, unsigned k);		//adds column j to column k; RESULT: column j is not changed, column k contains sum of columns j and k (with mod-2 arithmetic)
+
+        class MapMatrixNode {       //subclass for the nodes in the MapMatrix
+            public:
+                MapMatrixNode(unsigned row);		//constructor
+
+                unsigned get_row();                 //returns the row index
+                void set_next(MapMatrixNode* n);	//sets the pointer to the next node in the column
+                MapMatrixNode* get_next();          //returns a pointer to the next node in the column
+
+            private:
+                unsigned row_index;			//index of matrix row corresponding to this node
+                MapMatrixNode* next;		//pointer to the next entry in the column containing this node
+        };
+
+        std::vector<MapMatrixNode*> columns;	//vector of pointers to nodes representing columns of the matrix
+
+        unsigned num_rows;                      //number of rows in the matrix
 };
 
 
-class MapMatrix
+//MapMatrix is a column-priority matrix designed for standard persistence calculations
+class MapMatrix : public MapMatrix_Base
 {
 	public:
         MapMatrix(unsigned rows, unsigned cols);  //constructor to create matrix of specified size (all entries zero)
         MapMatrix(unsigned size);                 //constructor to create a (square) identity matrix
-        ~MapMatrix();                             //destructor
+        virtual ~MapMatrix();                             //destructor
 		
         unsigned width();				//returns the number of columns in the matrix
         unsigned height();				//returns the number of rows in the matrix
 		
-        void set(unsigned i, unsigned j);       //sets (to 1) the entry in row i, column j
-        void clear(unsigned i, unsigned j);     //clears (sets to 0) the entry in row i, column j
-        bool entry(unsigned i, unsigned j);     //returns true if entry (i,j) is 1, false otherwise
+        virtual void set(unsigned i, unsigned j);       //sets (to 1) the entry in row i, column j
+        virtual bool entry(unsigned i, unsigned j);     //returns true if entry (i,j) is 1, false otherwise
 		
-        int low(unsigned j);				//returns the "low" index in the specified column, or -1 if the column is empty or does not exist
-            //NOTE CHANGE: now an empty column has "low" index -1, not 0
-
-		void col_reduce();			//applies the column reduction algorithm to this matrix
-		
-        MapMatrix* decompose_RU();  //reduces this matrix and returns the TRANSPOSE of the corresponding upper-triangular matrix for the RU-decomposition
+        virtual int low(unsigned j);				//returns the "low" index in the specified column, or -1 if the column is empty
 
         void add_column(unsigned j, unsigned k);		//adds column j to column k; RESULT: column j is not changed, column k contains sum of columns j and k (with mod-2 arithmetic)
         void add_column(MapMatrix* other, unsigned j, unsigned k);    //adds column j from MapMatrix* other to column k of this matrix
 
-        void swap_columns(unsigned j); //transposes columns j and j+1
-
-        ///// TESTING
-            void print();				//prints the matrix to standard output (useful for testing)
-            void print_transpose();     //prints the transpose of the matrix to stadard output
+        void col_reduce();			//applies the column reduction algorithm to this matrix
 		
-    protected:
-		std::vector<MapMatrixNode*> columns;	//vector of pointers to nodes representing columns of the matrix
-		
-        unsigned num_rows;				//number of rows in the matrix
+        void print();				//prints the matrix to standard output (for testing)
 };
 
-//MapMatrix with row permutations
-class MapMatrix_P : public MapMatrix
+
+//MapMatrix with row/column permutations and low array, designed for "vineyard updates"
+class MapMatrix_Perm : public MapMatrix
 {
     public:
-        MapMatrix_P(unsigned rows, unsigned cols);
-        MapMatrix_P(unsigned size);
-        ~MapMatrix_P();
+        MapMatrix_Perm(unsigned rows, unsigned cols);
+        MapMatrix_Perm(unsigned size);
+        ~MapMatrix_Perm();
 
-        int low(unsigned j);  ///TODO: THIS MUST BE DIFFERENT WITH A PERMUTATION ARRAY FOR ROWS
+        void set(unsigned i, unsigned j);       //sets (to 1) the entry in row i, column j
+        bool entry(unsigned i, unsigned j);     //returns true if entry (i,j) is 1, false otherwise
 
-        void clear(unsigned i, unsigned j); ///TODO: THIS MUST BE DIFFERENT WITH A PERMUTATION ARRAY FOR ROWS
+        int low(unsigned j);        //returns the "low" index in the specified column, or -1 if the column is empty
+        int find_low(unsigned l);   //returns the index of the column with low l, or -1 if there is no such column
 
         void swap_rows(unsigned i);  //transposes rows i and i+1
+        void swap_columns(unsigned j); //transposes columns j and j+1
 
-        ///TODO: ANYTHING ELSE???
+        MapMatrix_RowPriority_Perm* decompose_RU();  //reduces this matrix, fills the low array, and returns the corresponding upper-triangular matrix for the RU-decomposition
 
     protected:
         std::vector<unsigned> perm;     //permutation vector
-        std::vector<unsigned> perm_inv; //inverse permutation vector
+        std::vector<unsigned> mrep;     //inverse permutation vector
+        std::vector<int> low_col;       //stores index of column with each low number, or -1 if no such column exists -- NOTE: only accurate after decompose_RU() is called
 };
 
-//MapMatrix with row permutations and low array
-class MapMatrix_PL : public MapMatrix_P
-{
 
-};
-
-//MapMatrix stored in row-priority format, with column permutations (for the upper-triangular matrices in vineyard updates)
-class MapMatrix_RP : public MapMatrix_P
+//MapMatrix stored in row-priority format, with row/column permutations, designed for upper-triangular matrices in vineyard updates
+class MapMatrix_RowPriority_Perm: public MapMatrix_Base
 {
+    public:
+        MapMatrix_RowPriority_Perm(unsigned size);   //constructs the identity matrix of specified size
+        ~MapMatrix_RowPriority_Perm();
+
+        unsigned width();				//returns the number of columns in the matrix
+        unsigned height();				//returns the number of rows in the matrix
+
+        void set(unsigned i, unsigned j);       //sets (to 1) the entry in row i, column j
+        void clear(unsigned i, unsigned j);     //clears (sets to 0) the entry in row i, column j
+        bool entry(unsigned i, unsigned j);     //returns true if entry (i,j) is 1, false otherwise
+
+        void add_row(unsigned j, unsigned k);   //adds row j to row k; RESULT: row j is not changed, row k contains sum of rows j and k (with mod-2 arithmetic)
+
+        void swap_rows(unsigned i);    //transposes rows i and i+1
+        void swap_columns(unsigned j); //transposes columns j and j+1
+
+        void print();			//prints the matrix to standard output (for testing)
+
+    protected:
+        std::vector<unsigned> perm;     //permutation vector
+        std::vector<unsigned> mrep;     //inverse permutation vector
 
 };
 
 #endif // __MapMatrix_H__
-
