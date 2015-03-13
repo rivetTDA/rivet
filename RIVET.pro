@@ -32,7 +32,8 @@ SOURCES += main.cpp                         \
 		math/simplex_tree.cpp               \
 		math/st_node.cpp \
     dcel/xi_point.cpp \
-    dcel/multigrade.cpp
+    dcel/multigrade.cpp \
+    dcel/discrete_barcode.cpp
     
 
 HEADERS  += visualizationwindow.h \
@@ -56,7 +57,8 @@ HEADERS  += visualizationwindow.h \
 		math/simplex_tree.h               \
 		math/st_node.h \
     dcel/xi_point.h \
-    dcel/multigrade.h
+    dcel/multigrade.h \
+    dcel/discrete_barcode.h
     
 
 FORMS   += visualizationwindow.ui         \

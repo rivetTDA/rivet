@@ -602,8 +602,9 @@ void Mesh::store_persistence_data(SimplexTree* bifiltration, int dim)
         U_high->print();
     }
 
-    ///TODO: store discrete barcode in initial cell
-
+    //store the discrete barcode in the first cell
+    Face* first_cell = topleft->get_twin()->get_face();
+    store_discrete_barcode(first_cell, R_low, R_high);
 
 
   // PART 4: TRAVERSE THE PATH AND DO VINEYARD UPDATES
@@ -690,9 +691,9 @@ void Mesh::store_persistence_data(SimplexTree* bifiltration, int dim)
         cur_lcm->toggle();
 
         //if this cell does not yet have a discrete barcode, then store the discrete barcode here
-
-        ///TODO: FINISH THIS!!!
-
+        Face* cur_face = (path[i])->get_face();
+        if(cur_face->get_barcode() == NULL)
+            store_discrete_barcode(cur_face, R_low, R_high);
 
         //testing
         if(verbosity >= 4)
@@ -1163,8 +1164,40 @@ void Mesh::move_high_columns(int s, unsigned n, int t, MapMatrix_Perm* RH, MapMa
         }//end for(i=...)
     }//end for(c=...)
     std::cout << "\n";
-}//end move_low_columns()
+}//end move_high_columns()
 
+//stores a discrete barcode in a 2-cell of the arrangement
+void Mesh::store_discrete_barcode(Face* cell, MapMatrix_Perm* RL, MapMatrix_Perm* RH)
+{
+    //create the discrete barcode object
+    DiscreteBarcode* cur_dbc = new DiscreteBarcode();       //NOTE: delete later!
+
+
+    //loop over all zero-columns in matrix R_low
+    for(unsigned c=0; c < RL->width(); c++)
+    {
+        if(RL->col_is_empty(c))  //then simplex corresponding to column c is positive
+        {
+            //find index of xi support point corresponding to simplex c
+            unsigned a = ...(c);   ///TODO: WRITE THIS!
+
+            //is simplex s paired?
+            int s = RH->find_low(c);
+            if(s != -1)  //then simplex c is paired with negative simplex s
+            {
+                //find index of xi support point corresponding to simplex s
+                unsigned b = ...(s);   ///TODO: WRITE THIS!
+
+                if(a != b)  //then we have a bar of positive length
+                    cur_dbc->pairs.push_back(std::pair<unsigned, unsigned>(a,b));
+            }
+            else //then simplex c generates an essential cycle
+            {
+                cur_dbc->cycles.push_back(a);
+            }
+        }
+    }
+}//end store_discrete_barcode()
 
 //stores multigrade info for the persistence computations (data structures prepared with respect to a near-vertical line positioned to the right of all \xi support points)
 //  low is true for simplices of dimension hom_dim, false for simplices of dimension hom_dim+1

@@ -1,6 +1,6 @@
 /**
- * \class	MapMatrix
- * \brief	Stores a matrix representing a simplicial map and provides basic operations.
+ * \class	MapMatrix and related classes
+ * \brief	Stores a matrix representing a simplicial map and provides operations for persistence calculations.
  * \author	Matthew L. Wright
  * \date	February 2014
  * 
@@ -13,7 +13,10 @@
  * Linked lists connecting entries in each row are not implemented.
  * Each entry in the matrix is an instance of the MapMatrixNode class.
  *
- * Several classes inherit the MapMatrix class, adding extra functionality for the algebra of "vineyard updates."
+ * The MapMatrix_Base class provides the basic structures and functionality; it is the parent class and is not meant to be instantiated directly.
+ * The class MapMatrix inherits MapMatrix_Base and stores matrices in a column-sparse format, designed for basic persistence calcuations.
+ * The class MapMatrix_Perm inherits MapMatrix, adding functionality for row and column permutations; it is designed for the reduced matrices of vineyard updates.
+ * Lastly, the class MapMatrix_RowPriority_Perm inherits MapMatrix_Base and stores matrices in a row-sparse format with row and column permutations; it is designed for the upper-triangular matrices of vineyard updates.
  */
  
 #ifndef __MapMatrix_H__
@@ -74,6 +77,7 @@ class MapMatrix : public MapMatrix_Base
         virtual bool entry(unsigned i, unsigned j);     //returns true if entry (i,j) is 1, false otherwise
 		
         virtual int low(unsigned j);                    //returns the "low" index in the specified column, or -1 if the column is empty
+        bool col_is_empty(unsigned j);                  //returns true iff column j is empty (for columns that are not empty, this method is faster than low(j))
 
         void add_column(unsigned j, unsigned k);    //adds column j to column k; RESULT: column j is not changed, column k contains sum of columns j and k (with mod-2 arithmetic)
         void add_column(MapMatrix* other, unsigned j, unsigned k);    //adds column j from MapMatrix* other to column k of this matrix
@@ -85,7 +89,7 @@ class MapMatrix : public MapMatrix_Base
 
 
 //MapMatrix with row/column permutations and low array, designed for "vineyard updates"
-class MapMatrix_RowPriority_Perm;   //forward declaration
+    class MapMatrix_RowPriority_Perm;   //forward declaration
 class MapMatrix_Perm : public MapMatrix
 {
     public:
@@ -137,7 +141,6 @@ class MapMatrix_RowPriority_Perm: public MapMatrix_Base
     protected:
         std::vector<unsigned> perm;     //permutation vector
         std::vector<unsigned> mrep;     //inverse permutation vector
-
 };
 
 #endif // __MapMatrix_H__

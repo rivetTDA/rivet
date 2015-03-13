@@ -30,19 +30,6 @@ typedef boost::multiprecision::cpp_rational exact;
 class xiSupportMatrix;
 #include "xi_support_matrix.h"
 
-
-////struct to store xi points, to help send data to the VisualizationWindow
-//struct xiPoint
-//{
-//    unsigned x, y;  //coordinates (discrete)
-//    int zero, one;  //multiplicities of xi_0 and xi_1 at this point ---- TODO: maybe should be unsigned?
-
-//    xiPoint(unsigned xc, unsigned yc, int m0, int m1) : x(xc), y(yc), zero(m0), one(m1)
-//    { }
-//};
-
-
-//the Mesh class
 class Mesh
 {
 	public:
@@ -112,7 +99,7 @@ class Mesh
             //result: xiSupportMatrix and simplex_order are consistent with a near-vertical line positioned to the right of all \xi support points
 
         void store_persistence_data(SimplexTree* bifiltration, int dim); 	//associates a discrete barcode to each 2-cell of the arrangement
-            ///TODO: the above is only partially implemented
+            ///TODO: the above is almost done!!!
 
         void find_path(std::vector<Halfedge *> &pathvec);   //finds a pseudo-optimal path through all 2-cells of the arrangement
         void find_subpath(unsigned& cur_node, std::vector< std::set<unsigned> >& adj, std::vector<Halfedge*>& pathvec, bool return_path); //builds the path recursively
@@ -123,6 +110,9 @@ class Mesh
 
         void move_low_columns(int s, unsigned n, int t, MapMatrix_Perm *RL, MapMatrix_RowPriority_Perm *UL, MapMatrix_Perm *RH, MapMatrix_RowPriority_Perm *UH);    //moves a block of n columns, the rightmost of which is column s, to a new position following column t (NOTE: assumes s <= t)
         void move_high_columns(int s, unsigned n, int t, MapMatrix_Perm *RH, MapMatrix_RowPriority_Perm *UH);    //moves a block of n columns, the rightmost of which is column s, to a new position following column t (NOTE: assumes s <= t)
+
+        void store_discrete_barcode(Face* cell, MapMatrix_Perm* RL, MapMatrix_Perm* RH);  //stores a discrete barcode in a 2-cell of the arrangement
+            ///TODO: finish this!!!
 
         std::pair<bool, double> project(double angle, double offset, double x, double y);	//projects (x,y) onto the line determined by angle and offset
             ///THE ABOVE FUNCTION IS OBSOLETE!

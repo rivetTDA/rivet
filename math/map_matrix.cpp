@@ -360,6 +360,12 @@ int MapMatrix::low(unsigned j)
     return (*columns[j]).get_row();
 }
 
+//returns true iff column j is empty
+bool MapMatrix::col_is_empty(unsigned j)
+{
+    return (columns[j] == NULL);
+}
+
 //adds column j to column k; RESULT: column j is not changed, column k contains sum of columns j and k (with mod-2 arithmetic)
 void MapMatrix::add_column(unsigned j, unsigned k)
 {

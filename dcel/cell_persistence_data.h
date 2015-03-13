@@ -10,6 +10,8 @@
 
 //includes????  namespace????
 
+///THIS CLASS IS OBSOLETE!!! REPLACED BY DiscreteBarcode!!!
+
 #include <map>
 #include "../math/simplex_tree.h"
 

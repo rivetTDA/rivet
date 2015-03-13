@@ -131,7 +131,7 @@ std::ostream& operator<<(std::ostream& os, const Halfedge& e)
 
 /*** implementation of class Face ***/
 
-Face::Face(Halfedge* e, int v) : boundary(e), pdata(v)
+Face::Face(Halfedge* e) : boundary(e), dbc(NULL)
 { }
 
 void Face::set_boundary(Halfedge* e)
@@ -144,14 +144,24 @@ Halfedge* Face::get_boundary()
     return boundary;
 }
 
-CellPersistenceData* Face::get_data()
+void Face::set_barcode(DiscreteBarcode* b)
+{
+    dbc = b;
+}
+
+DiscreteBarcode* Face::get_barcode()
+{
+    return dbc;
+}
+
+/*CellPersistenceData* Face::get_data()
 {
     return &pdata;
-}
+}*/
 
 //THIS WILL BE UNNECESSARY ONCE VINEYARDS ARE IMPLEMENTED
 //THIS DOESN'T HANDLE THE CASE WHERE A CELL EXTENDS TO x = infinity
-void Face::store_interior_point(const std::vector<double> &x_grades, const std::vector<double> &y_grades)
+/*void Face::store_interior_point(const std::vector<double> &x_grades, const std::vector<double> &y_grades)
 {
     //find min and max x-coordinates of vertices adjacent to this face
     double min_x = boundary->get_origin()->get_x();
@@ -232,7 +242,7 @@ void Face::store_interior_point(const std::vector<double> &x_grades, const std::
     pdata.set_x(mid_x);
     pdata.set_y(mid_y);
 
-}//end store_interior_point()
+}//end store_interior_point()*/
 
 std::ostream& operator<<(std::ostream& os, const Face& f)
 {

@@ -13,7 +13,7 @@ class Face;
 
 #include "lcm.h"
 #include "cell_persistence_data.h"
-
+#include "discrete_barcode.h"
 
 class Vertex
 {
@@ -74,21 +74,23 @@ class Halfedge
 class Face
 {
     public:
-        Face(Halfedge* e, int v);	//constructor, requires pointer to a boundary halfedge and verbosity value
+        Face(Halfedge* e);           //constructor, requires pointer to a boundary halfedge
 
-        void set_boundary(Halfedge* e);	//set the pointer to a halfedge on the boundary of this face
-        Halfedge* get_boundary();	//get the (pointer to the) boundary halfedge
+        void set_boundary(Halfedge* e);     //set the pointer to a halfedge on the boundary of this face
+        Halfedge* get_boundary();           //get the (pointer to the) boundary halfedge
 
-        CellPersistenceData* get_data();		//returns the persistence data associated with this face
+        void set_barcode(DiscreteBarcode* b);   //stores a discrete barcode in this face
+        DiscreteBarcode* get_barcode();         //returns a pointer to the discrete barcode stored in this cell
 
-        //THE FOLLOWING FUNCTION WILL BE UNNECESSARY WHEN VINYARDS ARE IMPLEMENTED
-        void store_interior_point(const std::vector<double>& x_grades, const std::vector<double>& y_grades);		//computes coordinates of a point inside this face and stores it in the persistence data object
+//OBSOLETE:        CellPersistenceData* get_data();		//returns the persistence data associated with this face
+//OBSOLETE:        void store_interior_point(const std::vector<double>& x_grades, const std::vector<double>& y_grades);		//computes coordinates of a point inside this face and stores it in the persistence data object
 
         friend std::ostream& operator<<(std::ostream& os, const Face& f);	//for printing the face
 
     private:
-        Halfedge* boundary;	//pointer to one halfedge in the boundary of this cell
-        CellPersistenceData pdata;	//persistence data associated with this face -- TODO: should this be a pointer???
+        Halfedge* boundary;     //pointer to one halfedge in the boundary of this cell
+        DiscreteBarcode* dbc;    //discrete barcode stored in this cell
+//        CellPersistenceData pdata;	//persistence data associated with this face -- TODO: should this be a pointer???
 
 };//end class Face
 
