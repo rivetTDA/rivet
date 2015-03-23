@@ -47,6 +47,7 @@ xiSupportMatrix::xiSupportMatrix(unsigned width, unsigned height) :
     columns(width), rows(height), infinity()
 { }
 
+//destructor
 xiSupportMatrix::~xiSupportMatrix()
 {
     //suffices to clear all columns

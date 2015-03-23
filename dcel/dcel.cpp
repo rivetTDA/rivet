@@ -134,6 +134,11 @@ std::ostream& operator<<(std::ostream& os, const Halfedge& e)
 Face::Face(Halfedge* e) : boundary(e), dbc(NULL)
 { }
 
+Face::~Face()
+{
+    delete dbc;
+}
+
 void Face::set_boundary(Halfedge* e)
 {
     boundary = e;

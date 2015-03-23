@@ -74,7 +74,8 @@ class Halfedge
 class Face
 {
     public:
-        Face(Halfedge* e);           //constructor, requires pointer to a boundary halfedge
+        Face(Halfedge* e);      //constructor: requires pointer to a boundary halfedge
+        ~Face();                //destructor: destroys discrete barcode
 
         void set_boundary(Halfedge* e);     //set the pointer to a halfedge on the boundary of this face
         Halfedge* get_boundary();           //get the (pointer to the) boundary halfedge
