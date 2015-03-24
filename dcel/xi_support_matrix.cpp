@@ -11,7 +11,7 @@ xiMatrixEntry::xiMatrixEntry() :
 //regular constructor
 xiMatrixEntry::xiMatrixEntry(unsigned x, unsigned y, unsigned i, xiMatrixEntry* d, xiMatrixEntry* l) :
     x(x), y(y), index(i), down(d), left(l),
-    low_count(0), high_count(0), head_of_class(false), low_index(0), high_index(0)
+    low_count(0), high_count(0), low_class_size(-1), high_class_size(0), low_index(0), high_index(0)
 { }
 
 //associates a multigrades to this xi entry

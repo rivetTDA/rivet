@@ -131,13 +131,11 @@ std::ostream& operator<<(std::ostream& os, const Halfedge& e)
 
 /*** implementation of class Face ***/
 
-Face::Face(Halfedge* e) : boundary(e), dbc(NULL)
+Face::Face(Halfedge* e) : boundary(e), visited(false)
 { }
 
 Face::~Face()
-{
-    delete dbc;
-}
+{ }
 
 void Face::set_boundary(Halfedge* e)
 {
@@ -149,15 +147,21 @@ Halfedge* Face::get_boundary()
     return boundary;
 }
 
-void Face::set_barcode(DiscreteBarcode* b)
-{
-    dbc = b;
-}
-
-DiscreteBarcode* Face::get_barcode()
+DiscreteBarcode& Face::get_barcode()
 {
     return dbc;
 }
+
+bool Face::has_been_visited()
+{
+    return visited;
+}
+
+void Face::mark_as_visited()
+{
+    visited = true;
+}
+
 
 /*CellPersistenceData* Face::get_data()
 {

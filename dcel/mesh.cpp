@@ -45,7 +45,7 @@ Mesh::Mesh(const std::vector<double> &xg, const std::vector<exact> &xe, const st
 	}
 	
 	//create face
-	faces.push_back( new Face( halfedges[0], verbosity ) );
+    faces.push_back( new Face( halfedges[0] ) );
 	
 	//set the remaining pointers on the halfedges
 	for(int i=0; i<4; i++)
@@ -275,7 +275,7 @@ void Mesh::build_interior()
                 incoming->set_next( prev_incoming->get_twin() );
                 incoming->get_next()->set_prev(incoming);
 
-                Face* new_face = new Face(new_twin, verbosity);
+                Face* new_face = new Face(new_twin);
                 faces.push_back(new_face);
 
                 new_twin->set_face(new_face);
@@ -456,7 +456,7 @@ Halfedge* Mesh::create_edge_left(Halfedge* edge, LCM* lcm)
     halfedges.push_back(new_twin);
 
     //create new face
-    Face* new_face = new Face(new_edge, verbosity);
+    Face* new_face = new Face(new_edge);
     faces.push_back(new_face);
 
     //update Halfedge pointers

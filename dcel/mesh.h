@@ -23,11 +23,10 @@
 #include "cell_persistence_data.h"
 #include "../math/persistence_data.h"
 #include "../math/multi_betti.h"
+#include "../math/barcode_calculator.h"
 
 #include <boost/multiprecision/cpp_int.hpp>
 typedef boost::multiprecision::cpp_rational exact;
-
-class BarcodeCalculator;
 
 class Mesh
 {

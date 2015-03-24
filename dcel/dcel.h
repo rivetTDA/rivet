@@ -80,8 +80,10 @@ class Face
         void set_boundary(Halfedge* e);     //set the pointer to a halfedge on the boundary of this face
         Halfedge* get_boundary();           //get the (pointer to the) boundary halfedge
 
-        void set_barcode(DiscreteBarcode* b);   //stores a discrete barcode in this face
-        DiscreteBarcode* get_barcode();         //returns a pointer to the discrete barcode stored in this cell
+        DiscreteBarcode& get_barcode();     //returns a reference to the discrete barcode stored in this cell
+
+        bool has_been_visited();            //true iff cell has been visited in the vineyard-update process (so that we can distinguish a cell with an empty barcode from an unvisited cell)
+        void mark_as_visited();             //marks this cell as visited
 
 //OBSOLETE:        CellPersistenceData* get_data();		//returns the persistence data associated with this face
 //OBSOLETE:        void store_interior_point(const std::vector<double>& x_grades, const std::vector<double>& y_grades);		//computes coordinates of a point inside this face and stores it in the persistence data object
@@ -90,7 +92,8 @@ class Face
 
     private:
         Halfedge* boundary;     //pointer to one halfedge in the boundary of this cell
-        DiscreteBarcode* dbc;    //discrete barcode stored in this cell
+        DiscreteBarcode dbc;    //discrete barcode stored in this cell
+        bool visited;           //initially false, set to true after this cell has been visited in the vineyard-update process (so that we can distinguish a cell with an empty barcode from an unvisited cell)
 //        CellPersistenceData pdata;	//persistence data associated with this face -- TODO: should this be a pointer???
 
 };//end class Face

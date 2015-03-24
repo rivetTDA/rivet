@@ -11,13 +11,14 @@
 #include "../dcel/mesh.h"
 #include "map_matrix.h"
 #include "index_matrix.h"
-
-class xiSupportMatrix;
 #include "../dcel/xi_support_matrix.h"
+#include "../dcel/discrete_barcode.h"
+class Mesh;
 
 class BarcodeCalculator
 {
     public:
+
         BarcodeCalculator(Mesh* m, MultiBetti& mb, std::vector<xiPoint>& xi_pts);  //constructor -- also fills xi_matrix with the xi support points
 
         void find_anchors(); //computes anchors and stores them in mesh->all_lcms; anchor-lines will be created when mesh->build_interior() is called
@@ -33,8 +34,8 @@ class BarcodeCalculator
 
         xiSupportMatrix xi_matrix;   //sparse matrix to hold xi support points -- used for finding anchors (to build the arrangement) and tracking simplices during the vineyard updates (when computing barcodes to store in the arrangement)
 
-        std::map<int, xiMatrixEntry*> partition_low;   //map from "low" columns to equivalence-class representatives -- implicitly stores the partition of the set of \xi support points
-        std::map<int, xiMatrixEntry*> partition_high;  //map from "high" columns to equivalence-class representatives -- implicitly stores the partition of the set of \xi support points
+        std::map<unsigned, xiMatrixEntry*> partition_low;   //map from "low" columns to equivalence-class representatives -- implicitly stores the partition of the set of \xi support points
+        std::map<unsigned, xiMatrixEntry*> partition_high;  //map from "high" columns to equivalence-class representatives -- implicitly stores the partition of the set of \xi support points
 
       //functions
 
@@ -54,8 +55,14 @@ class BarcodeCalculator
         //moves a block of n columns, the rightmost of which is column s, to a new position following column t (NOTE: assumes s <= t)
         void move_high_columns(int s, unsigned n, int t, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH);
 
+        //removes entries corresponding to xiMatrixEntry head from partition_low and partition_high
+        void remove_partition_entries(xiMatrixEntry* head);
+
+        //if the equivalence class corresponding to xiMatrixEntry head has nonempty sets of "low" or "high" simplices, then this function creates the appropriate entries in partition_low and partition_high
+        void add_partition_entries(xiMatrixEntry* head);
+
         //stores a discrete barcode in a 2-cell of the arrangement
-        ///TODO: FINISH THIS!
+        ///TODO: IMPROVE THIS -- track most recent barcode at the simplicial level and re-examine only the necessary columns!!!
         void store_discrete_barcode(Face* cell, MapMatrix_Perm* RL, MapMatrix_Perm* RH);
 };
 

@@ -27,11 +27,13 @@ struct xiMatrixEntry
     unsigned low_count;     //number of columns in matrix of simplices of lower dimension that are mapped to this xiMatrixEntry (does not depend on whether this entry is the head of an equivalence class)
     unsigned high_count;    //number of columns in matrix of simplices of higher dimension that are mapped to this xiMatrixEntry (does not depend on whether this entry is the head of an equivalence class)
 
-    bool head_of_class;     //true iff this xiMatrixEntry is the head of its equivalence class (head is rightmost entry of a horizontal class, or topmost entry of a vertical class)
+    //DEFINITION: this entry is the "head" of its equivalence class if it is the rightmost entry in a horizontal equivalence class or the topmost entry in a vertical equivalence class
+    //  NOTE: this entry is the head of its class iff low_class_size is nonnegative
+    int low_class_size;     //if(head of class), then low_class_size stores the TOTAL number of simplices of lower dimension that are mapped to this equivalence class; otherwise low_class_size is -1
+    int high_class_size;    //if(head of class), then high_class_size stores the TOTAL number of simplices of higher dimension that are mapped to this equivalence class; otherwise high_class_size is arbitrary and UNRELIABLE
     int low_index;     //if(head_of_class) then low_index is the index of rightmost column in matrix of simplices of lower dimension that is mapped to this equivalence class; otherwise, low_index is arbitrary and UNRELIABLE
     int high_index;    //if(head_of_class) then high_index is the index of rightmost column in matrix of simplices of higher dimension that is mapped to this equivalence class; otherwise, low_index is arbitrary and UNRELIABLE
         //NOTE: if there are no low (resp. high) columns mapped to this xiMatrixEntry, then low_index (resp. high_index) is the index of the column just left of where such columns would appear (could be -1)
-
 
     xiMatrixEntry();    //empty constructor, e.g. for the entry representing infinity
     xiMatrixEntry(unsigned x, unsigned y, unsigned i, xiMatrixEntry* d, xiMatrixEntry* l);  //regular constructor

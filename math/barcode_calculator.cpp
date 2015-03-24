@@ -1,11 +1,20 @@
 #include "barcode_calculator.h"
 
+#include <qdebug.h>
+
+
 //constructor -- also fills xi_matrix with the xi support points
 BarcodeCalculator::BarcodeCalculator(Mesh *m, MultiBetti &mb, std::vector<xiPoint> &xi_pts) :
     mesh(m), bifiltration(mb.bifiltration), dim(mb.dimension),
     xi_matrix(m->x_grades.size(), m->y_grades.size())
 {
+    //fill the xiSupportMatrix with the xi support points
     xi_matrix.fill(mb, xi_pts);
+
+    //create partition entries for infinity (which never change)
+    unsigned infty = -1;    // = MAX_UNSIGNED, right?
+    partition_low.insert( std::pair<unsigned, xiMatrixEntry*>(infty, xi_matrix.get_infinity()) );
+    partition_high.insert( std::pair<unsigned, xiMatrixEntry*>(infty, xi_matrix.get_infinity()) );
 }
 
 
@@ -16,7 +25,7 @@ void BarcodeCalculator::find_anchors()
 
     //get pointers to top entries in nonempty columns
     std::list<xiMatrixEntry*> nonempty_cols;
-    for(unsigned i = 0; i < x_grades.size(); i++)
+    for(unsigned i = 0; i < mesh->x_grades.size(); i++)
     {
         xiMatrixEntry* col_entry = xi_matrix.get_col(i); //top entry in row j, possibly NULL
         if(col_entry != NULL)
@@ -82,13 +91,13 @@ void BarcodeCalculator::store_barcodes(std::vector<Halfedge*>& path)
   // PART 1: GET THE BOUNDARY MATRICES WITH PROPER SIMPLEX ORDERING
 
     //get multi-grade data in each dimension
-    if(verbosity >= 4) { std::cout << "Mapping low simplices:\n"; }
+    if(mesh->verbosity >= 4) { std::cout << "Mapping low simplices:\n"; }
     IndexMatrix* ind_low = bifiltration->get_index_mx(dim);    //can we improve this with something more efficient than IndexMatrix?
     std::vector<int> low_simplex_order;     //this will be a map : dim_index --> order_index for dim-simplices
     store_multigrades(ind_low, true, low_simplex_order);
     delete ind_low;
 
-    if(verbosity >= 4) { std::cout << "Mapping high simplices:\n"; }
+    if(mesh->verbosity >= 4) { std::cout << "Mapping high simplices:\n"; }
     IndexMatrix* ind_high = bifiltration->get_index_mx(dim + 1);    //again, could be improved?
     std::vector<int> high_simplex_order;     //this will be a map : dim_index --> order_index for (dim+1)-simplices
     store_multigrades(ind_high, false, high_simplex_order);
@@ -123,7 +132,11 @@ void BarcodeCalculator::store_barcodes(std::vector<Halfedge*>& path)
     MapMatrix_RowPriority_Perm* U_low = R_low->decompose_RU();
     MapMatrix_RowPriority_Perm* U_high = R_high->decompose_RU();
 
-    if(verbosity >= 4)
+    //store the discrete barcode in the first cell
+    Face* first_cell = mesh->topleft->get_twin()->get_face();
+    store_discrete_barcode(first_cell, R_low, R_high);
+
+    if(mesh->verbosity >= 4)
     {
         std::cout << "  Reduced matrix for low simplices:\n";
         R_low->print();
@@ -133,11 +146,9 @@ void BarcodeCalculator::store_barcodes(std::vector<Halfedge*>& path)
         R_high->print();
         std::cout << "  Matrix U for high simplices:\n";
         U_high->print();
+        std::cout << "  Discrete barcode:\n";
+        first_cell->get_barcode().print();
     }
-
-    //store the discrete barcode in the first cell
-    Face* first_cell = mesh->topleft->get_twin()->get_face();
-    store_discrete_barcode(first_cell, R_low, R_high);
 
 
   // PART 3: TRAVERSE THE PATH AND DO VINEYARD UPDATES
@@ -169,36 +180,70 @@ void BarcodeCalculator::store_barcodes(std::vector<Halfedge*>& path)
             if(cur_lcm->is_above()) //then anchor is crossed from below to above
             {
                 std::cout << " == strict anchor crossed below to above ==\n";
-                if(at_LCM != NULL)
-                {
-                    left->low_index = at_LCM->low_index - at_LCM->low_count;        //necessary since low_index and high_index
-                    left->high_index = at_LCM->high_index - at_LCM->high_count;     //  are only reliable for the head of each equivalence class
-                }
 
+                //pre-move updates to equivalence class info
+                if(at_LCM != NULL)  //this anchor is supported
+                {
+                    left->low_index = at_LCM->low_index - at_LCM->low_count;                //necessary since low_index, low_class_size,
+                    left->low_class_size = at_LCM->low_class_size - at_LCM->low_count;      //  high_index, and high_class_size
+                    left->high_index = at_LCM->high_index - at_LCM->high_count;             //  are only reliable for the head
+                    left->high_class_size = at_LCM->high_class_size - at_LCM->high_count;   //  of each equivalence class
+                    remove_partition_entries(at_LCM);   //this partition might become empty
+                }
+                else    //this anchor is not supported
+                    remove_partition_entries(left);     //this partition will move
+
+                remove_partition_entries(down);         //this partition will move
+
+                //now move the columns
                 move_columns(down, left, true, R_low, U_low, R_high, U_high);
 
-                if(at_LCM != NULL)  //update equivalence classes
+                //most-move updates to equivalance class info
+                if(at_LCM != NULL)  //this anchor is supported
                 {
-                    left->head_of_class = true;
-                    down->head_of_class = false;
+                    at_LCM->low_class_size = at_LCM->low_count + down->low_class_size;
+                    at_LCM->high_class_size = at_LCM->high_count + down->high_class_size;
+                    down->low_class_size = -1;  //this xiMatrixEntry is no longer the head of an equivalence class
+                    add_partition_entries(at_LCM);
                 }
+                else    //this anchor is not supported
+                    add_partition_entries(down);
+
+                add_partition_entries(left);
             }
             else    //then LCM is crossed from above to below
             {
                 std::cout << " == strict anchor crossed above to below ==\n";
+
+                //pre-move updates to equivalence class info
                 if(at_LCM != NULL)
                 {
-                    down->low_index = at_LCM->low_index - at_LCM->low_count;        //necessary since low_index and high_index
-                    down->high_index = at_LCM->high_index - at_LCM->high_count;     //  are only reliable for the head of each equivalence class
+                    down->low_index = at_LCM->low_index - at_LCM->low_count;                //necessary since low_index, low_class_size,
+                    down->low_class_size = at_LCM->low_class_size - at_LCM->low_count;      //  high_index, and high_class_size
+                    down->high_index = at_LCM->high_index - at_LCM->high_count;             //  are only reliable for the head
+                    down->high_class_size = at_LCM->high_class_size - at_LCM->high_count;   //  of each equivalence class
+                    remove_partition_entries(at_LCM);   //this partition might become empty
                 }
+                else    //this anchor is not supported
+                    remove_partition_entries(down);     //this partition will move
 
+                remove_partition_entries(left);         //this partition will move
+
+                //now move the columns
                 move_columns(left, down, false, R_low, U_low, R_high, U_high);
 
-                if(at_LCM != NULL)  //update equivalence classes
+                //post-move updates to equivalance class info
+                if(at_LCM != NULL)  //this anchor is supported
                 {
-                    down->head_of_class = true;
-                    left->head_of_class = false;
+                    at_LCM->low_class_size = at_LCM->low_count + left->low_class_size;
+                    at_LCM->high_class_size = at_LCM->high_count + left->high_class_size;
+                    left->low_class_size = -1;  //this xiMatrixEntry is no longer the head of an equivalence class
+                    add_partition_entries(at_LCM);
                 }
+                else    //this anchor is not supported
+                    add_partition_entries(left);
+
+                add_partition_entries(down);
             }
         }
         else    //then this is a supported, non-strict anchor, and we just have to split or merge equivalence classes
@@ -208,15 +253,27 @@ void BarcodeCalculator::store_barcodes(std::vector<Halfedge*>& path)
             if(generator == NULL)
                 generator = at_LCM->left;
 
-            if(at_LCM->head_of_class && generator->head_of_class)    //then merge classes
+            if(generator->low_class_size != -1)    //then merge classes
             {
-                generator->head_of_class = false;
+                at_LCM->low_class_size += generator->low_class_size;
+                at_LCM->high_class_size += generator->high_class_size;
+                generator->low_class_size = -1;    //indicates that this xiMatrixEntry is NOT the head of an equivalence class
+
+                remove_partition_entries(generator);
+                add_partition_entries(at_LCM);  //this is necessary in case the class was previously empty
             }
             else    //then split classes
             {
-                generator->head_of_class = true;
                 generator->low_index = at_LCM->low_index - at_LCM->low_count;
+                generator->low_class_size = at_LCM->low_class_size - at_LCM->low_count;
+                at_LCM->low_class_size = at_LCM->low_count;
                 generator->high_index = at_LCM->high_index - at_LCM->high_count;
+                generator->high_class_size = at_LCM->high_class_size - at_LCM->high_count;
+                at_LCM->high_class_size = at_LCM->high_count;
+
+                remove_partition_entries(at_LCM);   //this is necessary because the class corresponding
+                add_partition_entries(at_LCM);      //  to at_LCM might have become empty
+                add_partition_entries(generator);
             }
         }
 
@@ -225,11 +282,11 @@ void BarcodeCalculator::store_barcodes(std::vector<Halfedge*>& path)
 
         //if this cell does not yet have a discrete barcode, then store the discrete barcode here
         Face* cur_face = (path[i])->get_face();
-        if(cur_face->get_barcode() == NULL)
+        if(!cur_face->has_been_visited())
             store_discrete_barcode(cur_face, R_low, R_high);
 
         //testing
-        if(verbosity >= 4)
+        if(mesh->verbosity >= 4)
         {
             std::cout << "  Reduced matrix for low simplices:\n";
             R_low->print();
@@ -239,6 +296,8 @@ void BarcodeCalculator::store_barcodes(std::vector<Halfedge*>& path)
             R_high->print();
             std::cout << "  Matrix U for high simplices:\n";
             U_high->print();
+            std::cout << "  Discrete barcode:\n";
+            cur_face->get_barcode().print();
         }
 
     }//end path traversal
@@ -364,8 +423,7 @@ void BarcodeCalculator::store_multigrades(IndexMatrix* ind, bool low, std::vecto
 
         //if we get here, the current row is nonempty, so it forms an equivalence class in the partition
 
-        //store header data for this row
-        cur->head_of_class = true;
+        //store index of rightmost column that is mapped to this equivalence class
         int* cur_ind = (low) ? &(cur->low_index) : &(cur->high_index);
         *cur_ind = o_index;
 
@@ -391,13 +449,19 @@ void BarcodeCalculator::store_multigrades(IndexMatrix* ind, bool low, std::vecto
             cur = cur->left;
         }
 
-        //if there are any simplices of the specified dimension in this row, then store a pointer to this class in the partition
+        //if any simplices of the specified dimension were mapped to this equivalence class, then store information about this class
         if(*cur_ind != o_index)
         {
             if(low)
-                partition_low.insert( std::pair<int, xiMatrixEntry*>(*cur_ind, xi_matrix.get_row(row)) );
+            {
+                xi_matrix.get_row(row)->low_class_size = *cur_ind - o_index;
+                partition_low.insert( std::pair<unsigned, xiMatrixEntry*>(*cur_ind, xi_matrix.get_row(row)) );
+            }
             else
-                partition_high.insert( std::pair<int, xiMatrixEntry*>(*cur_ind, xi_matrix.get_row(row)) );
+            {
+                xi_matrix.get_row(row)->high_class_size = *cur_ind - o_index;
+                partition_high.insert( std::pair<unsigned, xiMatrixEntry*>(*cur_ind, xi_matrix.get_row(row)) );
+            }
         }
     }//end for(row > 0)
 
@@ -417,6 +481,9 @@ void BarcodeCalculator::move_columns(xiMatrixEntry* first, xiMatrixEntry* second
     first->low_index = second->low_index;
     first->high_index = second->high_index;
 
+    //remember the "head" of the first equivalence class, so that we can update its class size
+    xiMatrixEntry* first_head = first;
+
     //loop over all xiMatrixEntrys in the first equivalence class
     while(first != NULL)
     {
@@ -427,7 +494,7 @@ void BarcodeCalculator::move_columns(xiMatrixEntry* first, xiMatrixEntry* second
             Multigrade* cur_grade = *it;
 
             if( (from_below && cur_grade->x > second->x) || (!from_below && cur_grade->y > second->y) )
-                //then move columns at cur_grade past columns at xiMatrixEntry second; map F does not change
+                //then move columns at cur_grade past columns at xiMatrixEntry second; map F does not change ( F : multigrades --> xiSupportElements )
             {
                 move_low_columns(low_col, cur_grade->num_cols, second->low_index, RL, UL, RH, UH);
                 second->low_index -= cur_grade->num_cols;
@@ -468,6 +535,10 @@ void BarcodeCalculator::move_columns(xiMatrixEntry* first, xiMatrixEntry* second
                 //update column counts
                 first->low_count -= cur_grade->num_cols;
                 target->low_count += cur_grade->num_cols;
+
+                //update equivalence class sizes
+                first_head->low_class_size -= cur_grade->num_cols;
+                second->low_class_size += cur_grade->num_cols;
             }
 
             //update column index
@@ -497,7 +568,7 @@ void BarcodeCalculator::move_columns(xiMatrixEntry* first, xiMatrixEntry* second
                     while( (target->left != NULL) && (cur_grade->x <= target->left->x) )
                     {
                         target = target->left;
-                        target_col -= target->low_count;
+                        target_col -= target->high_count;
                     }
                 }
                 else
@@ -505,7 +576,7 @@ void BarcodeCalculator::move_columns(xiMatrixEntry* first, xiMatrixEntry* second
                     while( (target->down != NULL) && (cur_grade->y <= target->down->y) )
                     {
                         target = target->down;
-                        target_col -= target->low_count;
+                        target_col -= target->high_count;
                     }
                 }
 
@@ -522,6 +593,10 @@ void BarcodeCalculator::move_columns(xiMatrixEntry* first, xiMatrixEntry* second
                 //update column counts
                 first->high_count -= cur_grade->num_cols;
                 target->high_count += cur_grade->num_cols;
+
+                //update equivalence class sizes
+                first_head->high_class_size -= cur_grade->num_cols;
+                second->high_class_size += cur_grade->num_cols;
             }
 
             //update column index
@@ -696,13 +771,41 @@ void BarcodeCalculator::move_high_columns(int s, unsigned n, int t, MapMatrix_Pe
     std::cout << "\n";
 }//end move_high_columns()
 
+//removes entries corresponding to xiMatrixEntry head from partition_low and partition_high
+void BarcodeCalculator::remove_partition_entries(xiMatrixEntry* head)
+{
+    //low simplices
+    std::map<unsigned, xiMatrixEntry*>::iterator it1 = partition_low.find(head->low_index);
+    if(it1 != partition_low.end())
+        partition_low.erase(it1);
+
+    //high simplices
+    std::map<unsigned, xiMatrixEntry*>::iterator it2 = partition_high.find(head->high_index);
+    if(it2 != partition_high.end())
+        partition_high.erase(it2);
+}//end remove_partition_entries()
+
+//if the equivalence class corresponding to xiMatrixEntry head has nonempty sets of "low" or "high" simplices, then this function creates the appropriate entries in partition_low and partition_high
+void BarcodeCalculator::add_partition_entries(xiMatrixEntry* head)
+{
+    //low simplices
+    if(head->low_class_size > 0)
+        partition_low.insert( std::pair<unsigned, xiMatrixEntry*>(head->low_index, head) );
+
+    //high simplices
+    if(head->high_class_size > 0)
+        partition_high.insert( std::pair<unsigned, xiMatrixEntry*>(head->high_index, head) );
+}//end add_partition_entries()
 
 //stores a discrete barcode in a 2-cell of the arrangement
+///TODO: IMPROVE THIS!!!
 void BarcodeCalculator::store_discrete_barcode(Face* cell, MapMatrix_Perm* RL, MapMatrix_Perm* RH)
 {
-    //create the discrete barcode object
-    DiscreteBarcode* cur_dbc = new DiscreteBarcode();       //NOTE: delete later!
+    //mark this cell as visited
+    cell->mark_as_visited();
 
+    //get a reference to the discrete barcode object
+    DiscreteBarcode dbc = cell->get_barcode();
 
     //loop over all zero-columns in matrix R_low
     for(unsigned c=0; c < RL->width(); c++)
@@ -710,21 +813,21 @@ void BarcodeCalculator::store_discrete_barcode(Face* cell, MapMatrix_Perm* RL, M
         if(RL->col_is_empty(c))  //then simplex corresponding to column c is positive
         {
             //find index of xi support point corresponding to simplex c
-            unsigned a = ...(c);   ///TODO: WRITE THIS!
+            unsigned a = ( (partition_low.lower_bound(c))->second )->index;
 
             //is simplex s paired?
             int s = RH->find_low(c);
             if(s != -1)  //then simplex c is paired with negative simplex s
             {
                 //find index of xi support point corresponding to simplex s
-                unsigned b = ...(s);   ///TODO: WRITE THIS!
+                unsigned b = ( (partition_low.lower_bound(s) )->second)->index;
 
                 if(a != b)  //then we have a bar of positive length
-                    cur_dbc->pairs.push_back(std::pair<unsigned, unsigned>(a,b));
+                    dbc.add_bar(a, b);
             }
             else //then simplex c generates an essential cycle
             {
-                cur_dbc->cycles.push_back(a);
+                dbc.add_bar(a, -1);     //b = -1 = MAX_UNSIGNED indicates this is an essential cycle
             }
         }
     }
