@@ -127,7 +127,6 @@ void BarcodeCalculator::store_barcodes(std::vector<Halfedge*>& path)
 
   // PART 2: INITIAL PERSISTENCE COMPUTATION (RU-decomposition)
 
-    std::cout << "Initial persistence computation in cell 0\n";
 
     MapMatrix_RowPriority_Perm* U_low = R_low->decompose_RU();
     MapMatrix_RowPriority_Perm* U_high = R_high->decompose_RU();
@@ -135,6 +134,8 @@ void BarcodeCalculator::store_barcodes(std::vector<Halfedge*>& path)
     //store the discrete barcode in the first cell
     Face* first_cell = mesh->topleft->get_twin()->get_face();
     store_discrete_barcode(first_cell, R_low, R_high);
+
+    std::cout << "Initial persistence computation in cell " << mesh->FID(first_cell) << ".\n";
 
     if(mesh->verbosity >= 4)
     {
@@ -146,7 +147,7 @@ void BarcodeCalculator::store_barcodes(std::vector<Halfedge*>& path)
         R_high->print();
         std::cout << "  Matrix U for high simplices:\n";
         U_high->print();
-        std::cout << "  Discrete barcode:\n";
+        std::cout << "  Discrete barcode: ";
         first_cell->get_barcode().print();
     }
 
@@ -159,7 +160,7 @@ void BarcodeCalculator::store_barcodes(std::vector<Halfedge*>& path)
         //determine which anchor is represented by this edge
         LCM* cur_lcm = (path[i])->get_LCM();
 
-        std::cout << "Step " << i << " of the path: crossing LCM at (" << cur_lcm->get_x() << "," << cur_lcm->get_y() << ")\n";
+        std::cout << "Step " << i << " of the path: crossing LCM at (" << cur_lcm->get_x() << "," << cur_lcm->get_y() << ") into cell " << mesh->FID((path[i])->get_face()) << ".\n";
 
         //get equivalence classes for this LCM
         xiMatrixEntry* down = cur_lcm->get_down();
@@ -296,7 +297,7 @@ void BarcodeCalculator::store_barcodes(std::vector<Halfedge*>& path)
             R_high->print();
             std::cout << "  Matrix U for high simplices:\n";
             U_high->print();
-            std::cout << "  Discrete barcode:\n";
+            std::cout << "  Discrete barcode: ";
             cur_face->get_barcode().print();
         }
 
@@ -799,13 +800,16 @@ void BarcodeCalculator::add_partition_entries(xiMatrixEntry* head)
 
 //stores a discrete barcode in a 2-cell of the arrangement
 ///TODO: IMPROVE THIS!!!
+/// Is there a better way to handle endpoints at infinity?
 void BarcodeCalculator::store_discrete_barcode(Face* cell, MapMatrix_Perm* RL, MapMatrix_Perm* RH)
 {
+    std::cout << "  -----barcode: ";
+
     //mark this cell as visited
     cell->mark_as_visited();
 
     //get a reference to the discrete barcode object
-    DiscreteBarcode dbc = cell->get_barcode();
+    DiscreteBarcode& dbc = cell->get_barcode();
 
     //loop over all zero-columns in matrix R_low
     for(unsigned c=0; c < RL->width(); c++)
@@ -820,16 +824,20 @@ void BarcodeCalculator::store_discrete_barcode(Face* cell, MapMatrix_Perm* RL, M
             if(s != -1)  //then simplex c is paired with negative simplex s
             {
                 //find index of xi support point corresponding to simplex s
-                unsigned b = ( (partition_low.lower_bound(s) )->second)->index;
+                unsigned b = ( (partition_high.lower_bound(s) )->second)->index;
+
+                std::cout << "(" << c << "," << s << ")-->(" << a << "," << b << ") ";
 
                 if(a != b)  //then we have a bar of positive length
                     dbc.add_bar(a, b);
             }
             else //then simplex c generates an essential cycle
             {
+                std::cout << c << "-->" << a << " ";
                 dbc.add_bar(a, -1);     //b = -1 = MAX_UNSIGNED indicates this is an essential cycle
             }
         }
     }
+    std::cout << "\n";
 }//end store_discrete_barcode()
 

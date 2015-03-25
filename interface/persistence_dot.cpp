@@ -3,7 +3,7 @@
 
 
 
-PersistenceDot::PersistenceDot(PersistenceDiagram *p_diagram, double unscaled_x, double unscaled_y, int radius, unsigned index) :
+PersistenceDot::PersistenceDot(PersistenceDiagram *p_diagram, double unscaled_x, double unscaled_y, double radius, unsigned index) :
     pdgm(p_diagram),
     x(unscaled_x), y(unscaled_y),
     index(index),

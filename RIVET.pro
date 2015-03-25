@@ -34,7 +34,8 @@ SOURCES += main.cpp                         \
     dcel/xi_point.cpp \
     dcel/multigrade.cpp \
     math/barcode_calculator.cpp \
-    dcel/discrete_barcode.cpp
+    dcel/discrete_barcode.cpp \
+    interface/barcode.cpp
     
 
 HEADERS  += visualizationwindow.h \
@@ -60,7 +61,8 @@ HEADERS  += visualizationwindow.h \
     dcel/xi_point.h \
     dcel/multigrade.h \
     math/barcode_calculator.h \
-    dcel/discrete_barcode.h
+    dcel/discrete_barcode.h \
+    interface/barcode.h
     
 
 FORMS   += visualizationwindow.ui         \

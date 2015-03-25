@@ -12,6 +12,8 @@
 #include <set>
 #include <utility>      // std::pair
 
+///THIS IS OBSOLETE! REPLACED BY class Barcode
+
 
 //// comparator class for sorting the long bars first ////
 //NOTE: floating-point errors have negligible effect here

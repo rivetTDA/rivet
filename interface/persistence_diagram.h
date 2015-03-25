@@ -14,7 +14,7 @@ class VisualizationWindow;
 #include "persistence_dot.h"
 class PersistenceDot;
 
-#include "../math/persistence_data.h"
+#include "barcode.h"
 
 class PersistenceDiagram
 {
@@ -24,9 +24,9 @@ public:
     void create_diagram();  //simply creates all objects; resize_diagram() handles positioning of objects
     void resize_diagram(double slice_length, double diagram_scale);  //resizes diagram to fill the QGraphicsView; called after every window resize
 
-    void draw_points(double zero, PersistenceData* pdata); //creates and draws persistence dots at the correct locations
+    void draw_points(double zero, Barcode* bc); //creates and draws persistence dots at the correct locations
 
-    void update_diagram(double slice_length, double diagram_scale, double zero, PersistenceData* pdata); //updates the diagram after a change in the slice line
+    void update_diagram(double slice_length, double diagram_scale, double zero, Barcode *bc); //updates the diagram after a change in the slice line
 
     void select_dot(PersistenceDot* clicked);   //highlight the specified dot, selected in the persistence diagram, and propagate to the slice diagram
     void select_dot(unsigned index);            //highlight the specified dot, which has been selected in the slice diagram

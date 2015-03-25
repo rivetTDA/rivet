@@ -18,13 +18,9 @@ LCM::LCM(xiMatrixEntry* point, bool strong) : x_coord(point->x), y_coord(point->
         down = point;
 }
 
+LCM::LCM(unsigned x, unsigned y) : x_coord(x), y_coord(y), down(NULL), left(NULL), curve(NULL)
+{ }
 
-///TODO: these other constructors might be unnecessary now
-//LCM::LCM(unsigned x, unsigned y) : x_coord(x), y_coord(y), curve(NULL)
-//{ }
-
-//LCM::LCM(unsigned x, unsigned y, Halfedge* e) : x_coord(x), y_coord(y), curve(e)
-//{ }
 
 LCM::LCM(const LCM& other)
 {

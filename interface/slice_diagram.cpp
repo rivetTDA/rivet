@@ -308,21 +308,21 @@ void SliceDiagram::update_window_controls()
 }
 
 //draws the barcode parallel to the slice line
-void SliceDiagram::draw_barcode(PersistenceData* pdata, bool show)
+void SliceDiagram::draw_barcode(Barcode *bc, bool show)     ///TODO: UPDATE THIS!!!
 {
     double zero_coord = get_zero();
 
     QPen pen(QBrush(QColor(160, 0, 200, 127)), 5); //semi-transparent purple
 
-    //draw cycles
+    //draw bars
     unsigned num_bars = 0;
-    for(std::multiset< double >::iterator it = pdata->get_cycles()->begin(); it != pdata->get_cycles()->end(); ++it)
+    for(std::multiset<MultiBar>::iterator it = bc->begin(); it != bc->end(); ++it)
     {
-        double start = *it - zero_coord;
-        double end = std::numeric_limits<double>::infinity();
+        double start = it->birth - zero_coord;
+        double end = it->death - zero_coord;
 
-        std::pair<double,double> p1 = compute_endpoint(start, num_bars+1);
-        std::pair<double,double> p2 = compute_endpoint(zero_coord + data_infty, num_bars+1);
+        std::pair<double,double> p1 = compute_endpoint(start, num_bars + 1);
+        std::pair<double,double> p2 = compute_endpoint(end, num_bars + 1);
 
         PersistenceBar* bar = new PersistenceBar(this, start, end, num_bars);
         bar->set_line(p1.first, p1.second, p2.first, p2.second);
@@ -331,29 +331,10 @@ void SliceDiagram::draw_barcode(PersistenceData* pdata, bool show)
         bars.push_back(bar);
         num_bars++;
     }
-
-    //draw pairs
-    for(std::multiset< std::pair<double,double> >::iterator it = pdata->get_pairs()->begin(); it != pdata->get_pairs()->end(); ++it)
-    {
-        double start = it->first - zero_coord;
-        double end = it->second - zero_coord;
-
-        std::pair<double,double> p1 = compute_endpoint(start, num_bars+1);
-        std::pair<double,double> p2 = compute_endpoint(end, num_bars+1);
-
-        PersistenceBar* bar = new PersistenceBar(this, start, end, num_bars);
-        bar->set_line(p1.first, p1.second, p2.first, p2.second);
-        bar->setVisible(show);
-        scene->addItem(bar);
-        bars.push_back(bar);
-        num_bars++;
-    }
-
-
 }//end draw_barcode()
 
 //updates the barcode (e.g. after a change in the slice line)
-void SliceDiagram::update_barcode(PersistenceData* pdata, bool show)
+void SliceDiagram::update_barcode(Barcode *bc, bool show)
 {
     //remove old bars
     selected = NULL;    //remove any current selection
@@ -364,7 +345,7 @@ void SliceDiagram::update_barcode(PersistenceData* pdata, bool show)
     }
 
     //draw new bars
-    draw_barcode(pdata, show);
+    draw_barcode(bc, show);
 }
 
 
@@ -373,6 +354,10 @@ std::pair<double,double> SliceDiagram::compute_endpoint(double coordinate, unsig
 {
     //difference in offset between consecutive bars (pixel units)
     int step_size = 10;
+
+    //handle infinity
+    if(coordinate = std::numeric_limits<double>::infinity())
+        coordinate = get_zero() + data_infty;
 
     //compute x and y relative to slice line (pixel units)
     double x = 0;

@@ -29,16 +29,14 @@ public:
     void update_line(double angle, double offset);  //updates the line, in response to a change in the controls in the VisualizationWindow
     void update_window_controls();   //updates controls in the VisualizationWindow, in response to a change in the line
 
-    void draw_barcode(PersistenceData* pdata, bool show); //draws the barcode parallel to the slice line; "show" determines whether or not bars are visible
-    void update_barcode(PersistenceData* pdata, bool show);  //updates the barcode (e.g. after a change in the slice line)
+    void draw_barcode(Barcode* bc, bool show); //draws the barcode parallel to the slice line; "show" determines whether or not bars are visible
+    void update_barcode(Barcode* bc, bool show);  //updates the barcode (e.g. after a change in the slice line)
 
     void select_bar(PersistenceBar* clicked);   //highlight the specified bar, selected in the slice diagram, and propagate to the persistence diagram
     void select_bar(unsigned index);            //highlight the specified bar, which has been selected in the persistence diagram
     void deselect_bar(bool propagate);          //remove selection; if propagate, then deselect dot in the persistence diagram
 
     void update_highlight();  //highlights part of the slice line
-    //    void highlight(double start, double end);   //highlights part of the slice line
-//    void remove_highlighting(); //removes highlighting of the slice line
 
     void toggle_xi0_points(bool show);  //if "show" is true, then xi_0 support points are drawn; otherwise, they are hidden
     void toggle_xi1_points(bool show);  //if "show" is true, then xi_1 support points are drawn; otherwise, they are hidden

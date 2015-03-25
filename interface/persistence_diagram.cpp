@@ -155,62 +155,66 @@ void PersistenceDiagram::resize_diagram(double slice_length, double diagram_scal
 }//end resize_diagram()
 
 //creates and draws persistence dots at the correct locations
-void PersistenceDiagram::draw_points(double zero, PersistenceData* pdata)
+void PersistenceDiagram::draw_points(double zero, Barcode* bc)
 {
     zero_coord = zero;
     qDebug() << "ZERO: " << zero_coord;
 
-    //draw cycles
-    unsigned num_big_cycles = 0;
+    //counters
     unsigned num_dots = 0;
-    for(std::multiset< double >::iterator it = pdata->get_cycles()->begin(); it != pdata->get_cycles()->end(); ++it)
-    {
-        double x = *it - zero_coord;
-        double y = std::numeric_limits<double>::infinity();
-
-        //create dot object
-        PersistenceDot* dot = new PersistenceDot(this, x, y, radius, num_dots);
-        scene->addItem(dot);
-        dots.push_back(dot);
-        num_dots++;
-
-        //position dot properly
-        if(x*scale > diagram_size)
-        {
-            num_big_cycles++;
-            dot->setVisible(false);
-        }
-        else
-        {
-            dot->setPos(x*scale, inf_dot_vpos);
-        }
-    }
-
-    //draw pairs
+    unsigned num_big_cycles = 0;
     unsigned num_big_points = 0;
-    for(std::multiset< std::pair<double,double> >::iterator it = pdata->get_pairs()->begin(); it != pdata->get_pairs()->end(); ++it)
+
+    //loop over all bars
+    for(std::multiset<MultiBar>::iterator it = bc->begin(); it != bc->end(); ++it)
     {
-        double x = it->first - zero_coord;
-        double y = it->second - zero_coord;
-
-        //create dot object
-        PersistenceDot* dot = new PersistenceDot(this, x, y, radius, num_dots);
-        scene->addItem(dot);
-        dots.push_back(dot);
-        num_dots++;
-
-        //position dot properly
-        if(x*scale > diagram_size)
+        if(it->death == std::numeric_limits<double>::infinity())    //essential cycle
         {
-            num_big_points++;
-            dot->setVisible(false);
-        }
-        else
-        {
-            if(y*scale > diagram_size)
-                dot->setPos(x*scale, lt_inf_dot_vpos);
+            //shift coordinate
+            double birth = it->birth - zero_coord;
+
+            //create dot object
+            PersistenceDot* dot = new PersistenceDot(this, birth, it->death, radius*sqrt(it->multiplicity), num_dots);
+            scene->addItem(dot);
+            dots.push_back(dot);
+            num_dots++;
+
+            //position dot properly
+            if(birth*scale > diagram_size)
+            {
+                num_big_cycles++;
+                dot->setVisible(false);
+            }
             else
-                dot->setPos(x*scale, y*scale);
+            {
+                dot->setPos(birth*scale, inf_dot_vpos);
+            }
+        }
+        else    //finite bar
+        {
+            //shift coordinates
+            double birth = it->birth - zero_coord;
+            double death = it->death - zero_coord;
+
+            //create dot object
+            PersistenceDot* dot = new PersistenceDot(this, birth, death, radius*sqrt(it->multiplicity), num_dots);
+            scene->addItem(dot);
+            dots.push_back(dot);
+            num_dots++;
+
+            //position dot properly
+            if(birth*scale > diagram_size)
+            {
+                num_big_points++;
+                dot->setVisible(false);
+            }
+            else
+            {
+                if(death*scale > diagram_size)
+                    dot->setPos(birth*scale, lt_inf_dot_vpos);
+                else
+                    dot->setPos(birth*scale, death*scale);
+            }
         }
     }
 
@@ -225,7 +229,7 @@ void PersistenceDiagram::draw_points(double zero, PersistenceData* pdata)
 }//end draw_points()
 
 //updates the diagram after a change in the slice line
-void PersistenceDiagram::update_diagram(double slice_length, double diagram_scale, double zero, PersistenceData* pdata)
+void PersistenceDiagram::update_diagram(double slice_length, double diagram_scale, double zero, Barcode* bc)
 {
     //update parameters
     line_size = slice_length/sqrt(2);   //divide by sqrt(2) because the line is drawn at a 45-degree angle
@@ -243,7 +247,7 @@ void PersistenceDiagram::update_diagram(double slice_length, double diagram_scal
     }
 
     //draw new dots
-    draw_points(zero, pdata);
+    draw_points(zero, bc);
 
 }//end update_diagram()
 

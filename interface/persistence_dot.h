@@ -13,7 +13,7 @@ class PersistenceDiagram;
 class PersistenceDot : public QGraphicsItem
 {
 public:
-    PersistenceDot(PersistenceDiagram* p_diagram, double unscaled_x, double unscaled_y, int radius, unsigned index);
+    PersistenceDot(PersistenceDiagram* p_diagram, double unscaled_x, double unscaled_y, double radius, unsigned index);
 
     QRectF boundingRect() const;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
@@ -37,7 +37,7 @@ private:
     double x;   //unscaled x-coordinate (projection units)
     double y;   //unscaled y-coordinate (projection units)
     unsigned index;   //index of this dot in the vector of PersistenceDots
-    int radius;
+    double radius;
     bool pressed;
     bool hover;
 };

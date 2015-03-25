@@ -635,16 +635,41 @@ void Mesh::find_subpath(unsigned& cur_node, std::vector< std::set<unsigned> >& a
 }//end find_subpath()
 
 
-//returns a persistence diagram associated with the specified point
+//returns discrete barcode associated with the specified line (point)
 //uses a naive point-location algorithm to find the cell containing the point
-PersistenceData* Mesh::get_persistence_data(double angle, double offset, std::vector<std::pair<unsigned, unsigned> > &xi)
+///TODO: implement smarter point-location!!!
+/// THIS FUNCTION HAS PROBLEMS!!!
+/// um...I think this current implementation assumes that xi support points are in the first quadrant...
+DiscreteBarcode& Mesh::get_discrete_barcode(double degrees, double offset)
 {
-/*	//find the cell that contains the point
+    if(degrees == 90) //then line is vertical
+    {
+        ///TODO: FIX THIS!!!
+        Face* cell = topleft->get_face();
+        return cell->get_barcode();
+    }
+
+    //for non-vertical lines, find the correct cell
+    double radians = degrees * 3.14159265/180;
+    double slope = atan(radians);
+    double intercept = offset/cos(radians);
+
 	//first, find starting point on left edge of strip
-	LCM* current = new LCM(0, offset);
+    unsigned y_index = -1;
+    for(unsigned i=0; i<y_grades.size(); i++)   ///THIS IS AWFUL.
+    {
+        if(y_grades[i] >= intercept)
+        {
+            if(y_index == -1 || (y_grades[i] - intercept) < (y_grades[y_index] - intercept) )
+                y_index = i;
+        }
+    }
+    LCM* current = new LCM(0, y_index);
 	std::set<LCM*>::iterator itleft;
-    itleft = all_lcms.upper_bound(current);	//returns an iterator to the first LCM that is greater than "current"
+    itleft = all_lcms.lower_bound(current);	//returns an iterator to the first LCM that is not less than than "current"
 	
+    intercept = -1*intercept; //negative is because of point-line duality
+
 	Face* cell = NULL;		//will later point to the cell containing the specified point
 	Halfedge* finger = NULL;	//for use in finding the cell
 	
@@ -656,7 +681,7 @@ PersistenceData* Mesh::get_persistence_data(double angle, double offset, std::ve
 	}
 	else
 	{
-		finger = (**itleft).get_curve();
+        finger = (**itleft).get_line();
 		
         if(verbosity >= 8) { std::cout << "  Reference LCM: (" << (**itleft).get_x() << ", " << (**itleft).get_y() << "); halfedge " << HID(finger) << ".\n"; }
 		
@@ -666,21 +691,21 @@ PersistenceData* Mesh::get_persistence_data(double angle, double offset, std::ve
 		
 			//find the edge of the current cell that crosses the horizontal line at offset
 			Vertex* next_pt = finger->get_next()->get_origin();
-			while(next_pt->get_r() > offset)
+            while(next_pt->get_y() > intercept)
 			{
 				if(verbosity >= 8) { std::cout << "    --finger: " << HID(finger) << ".\n"; }
 		
 				finger = finger->get_next();
 				next_pt = finger->get_next()->get_origin();
 			}
-			//now next_pt is at or below the horizontal line at offset
-			//if (angle, offset) is to the left of crossing point, then we have found the cell; otherwise, move to the adjacent cell
+            //now next_pt is at or below the horizontal line at intercept
+            //if (slope, intercept) is to the left of crossing point, then we have found the cell; otherwise, move to the adjacent cell
 			
-			if(verbosity >= 8) { std::cout << "    --found next_pt at (" << next_pt->get_theta() << ", " << next_pt->get_r() << "); finger: " << HID(finger) << ".\n"; }
+            if(verbosity >= 8) { std::cout << "    --found next_pt at (" << next_pt->get_x() << ", " << next_pt->get_y() << "); finger: " << HID(finger) << ".\n"; }
 			
-			if(next_pt->get_r() == offset) //then next_pt is on the horizontal line
+            if(next_pt->get_y() == intercept) //then next_pt is on the horizontal line
 			{
-				if(next_pt->get_theta() >= angle)	//found the cell
+                if(next_pt->get_x() >= slope)	//found the cell
 				{
 					cell = finger->get_face();
 				}
@@ -711,10 +736,10 @@ PersistenceData* Mesh::get_persistence_data(double angle, double offset, std::ve
 				}
 				else	//then edge is not vertical
 				{
-					LCM* curr_lcm = finger->get_LCM();
-                    double test_offset = curr_lcm->get_r_coord(angle);
+                    LCM* temp = finger->get_LCM();
+                    double test_intercept = (intercept + temp->get_y())/temp->get_x();  ///TODO: CHECK! ENSURE NO DIVISION BY ZERO!
 				
-					if(test_offset >= offset)	//found the cell
+                    if(test_intercept >= intercept)	//found the cell
 					{
 						cell = finger->get_face();
 					}
@@ -727,118 +752,10 @@ PersistenceData* Mesh::get_persistence_data(double angle, double offset, std::ve
 		}//end while(cell not found)
 	}//end else
 	
-    if(verbosity >= 3) { std::cout << "  -> Found point (" << angle << ", " << offset << ") in cell " << FID(cell) << ".\n"; }
-	
-	//get persistence data associated with the cell
-    CellPersistenceData* cell_data = cell->get_data();
-    std::vector<int> xi_global = *(cell_data->get_xi_global());
-	
-	//compute projections of the xi support points relevant to this cell
-	std::vector<std::pair<bool,double> > xi_proj;	//index is order_xi_support_point_index; first entry indicates whether the projection exists; second entry is projection coordinate
+    if(verbosity >= 3) { std::cout << "  -> Found point (" << slope << ", " << intercept << ") in cell " << FID(cell) << ".\n"; }
 
-    for(unsigned i=0; i<xi_global.size(); i++)
-	{
-		//get absolute coordinates of this xi support point
-//        double x = xi[xi_global[i]].first;
-//        double y = xi[xi_global[i]].second;
-//        std::cout << "XI: xi_global[" << i << "] = " << xi_global[i] << "; xi.size() = " << xi.size() << "\n";
-//        std::cout << "    xi[xi_global[i]].first = " << xi[xi_global[i]].first << "\n";// maps to " << bifiltration->get_time(xi[xi_global[i]].first) << "\n";
-        double x = x_grades[xi[xi_global[i]].first];
-        double y = y_grades[xi[xi_global[i]].second];
-
-
-		//project onto line
-		std::pair<bool,double> proj = project(angle, offset, x, y);
-		
-		if(verbosity >= 3)
-		{
-			std::cout << "  xi support point: global index " << xi_global[i] << ", (time, dist) = (" << x << ", " << y << "), ";
-			if(proj.first)
-				std::cout << "projected to " << proj.second << "\n";
-			else
-				std::cout << "has no projection onto this line\n";
-		}
-		
-		//store projection
-		xi_proj.push_back(proj);
-    }
-
-	//build persistence diagram
-    PersistenceData* pdata = new PersistenceData();			//DELETE this item later!
-	
-	//now we simply have to translate and store the persistence pairs and essential cycles
-    std::vector< std::pair<int,int> > pairs;
-    pairs = *(cell_data->get_pairs());
-	
-    for(unsigned i=0; i<pairs.size(); i++)
-	{
-		std::pair<bool,double> birth_proj = xi_proj[pairs[i].first];
-		std::pair<bool,double> death_proj = xi_proj[pairs[i].second];
-		
-		if(birth_proj.first && death_proj.first)	//both projections exist, so store pair
-		{
-            pdata->add_pair(birth_proj.second, death_proj.second);
-            if(verbosity >= 3) { std::cout << "    persistence pair: (" << pairs[i].first << ", " << pairs[i].second << ") -> (" << birth_proj.second << ", " << death_proj.second << ")\n"; }
-		}
-		else if(birth_proj.first)	//only the birth projection exists, so store cycle
-		{
-            pdata->add_cycle(birth_proj.second);
-			if(verbosity >= 3) { std::cout << "    cycle: " << birth_proj.second << " (death projected to infinity)\n"; }
-		}
-	}
-	
-	std::vector<int> cycles;
-    cycles = *(cell_data->get_cycles());
-	
-    for(unsigned i=0; i<cycles.size(); i++)
-	{
-		std::pair<bool,double> birth_proj = xi_proj[cycles[i]];
-		
-		if(birth_proj.first)	//projection exists, so store cycle
-		{
-            pdata->add_cycle(birth_proj.second);
-			if(verbosity >= 3) { std::cout << "    cycle: " << birth_proj.second << "\n"; }
-		}
-	}
-
-	//clean up
-	delete current;
-	
-    //return persistence data
-    return pdata;
-    */
+    return cell->get_barcode();
 }//end get_persistence_data
-
-//projects (x,y) onto the line determined by angle and offset
-std::pair<bool, double> Mesh::project(double angle, double offset, double x, double y)
-{
-	double p = 0;	//if there is a projection, then this will be set to its coordinate
-	bool b = true;	//if there is no projection, then this will be set to false
-	
-/*	if(angle == 0)	//horizontal line
-	{
-		if(y <= offset)	//then point is below line
-			p = x;
-		else	//no projection
-			b = false;
-	}
-    else if(angle < HALF_PI)	//line is neither horizontal nor vertical       ----- FIX THIS!!!!!
-	{
-		if(y > x*tan(angle) + offset/cos(angle))	//then point is above line
-			p = y/sin(angle) - offset/tan(angle); //project right
-		else
-			p = x/cos(angle) + offset*tan(angle); //project up
-	}
-	else	//vertical line
-	{
-		if(x <= -1*offset)
-			p = y;
-		else	//no projection
-			b = false;
-	}
-    */
-	return std::pair<bool, double>(b,p);
-}//end project()
 
 //prints a summary of the arrangement information, such as the number of LCMS, vertices, halfedges, and faces
 void Mesh::print_stats()

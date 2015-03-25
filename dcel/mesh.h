@@ -43,8 +43,9 @@ class Mesh
             //builds the DCEL arrangement, and computes and stores persistence data
             //also stores ordered list of xi support points in the supplied vector
 
-        PersistenceData* get_persistence_data(double angle, double offset, std::vector<std::pair<unsigned, unsigned> > & xi);
-            //returns persistence diagram data associated with the specified point (line); angle should be in RADIANS
+        DiscreteBarcode& get_discrete_barcode(double degrees, double offset);
+            ///TODO: IMPROVE THIS!!! CURRENT IMPLEMENTATION IS AWFUL!!!
+            //returns discrete barcode associated with the specified line (point)
 		
         void print_stats(); //prints a summary of the arrangement information, such as the number of LCMS, vertices, halfedges, and faces
 		void print();	//prints all the data from the mesh
@@ -71,9 +72,9 @@ class Mesh
 
         std::set<LCM*, LCM_LeftComparator> all_lcms;	//set of LCMs that are represented in the mesh, ordered by position of curve along left side of strip
 		
-        Halfedge* topleft;			//pointer to Halfedge that points down from top left corner (theta=0, r=infty)
-        Halfedge* bottomleft;       //pointer to Halfedge that points up from bottom left corner (theta=0, r=-infty)
-        Halfedge* bottomright;      //pointer to Halfedge that points up from bottom right corner (theta=pi/2, r=-infty)
+        Halfedge* topleft;			//pointer to Halfedge that points down from top left corner (0,infty)
+        Halfedge* bottomleft;       //pointer to Halfedge that points up from bottom left corner (0,-infty)
+        Halfedge* bottomright;      //pointer to Halfedge that points up from bottom right corner (infty,-infty)
 		
 		const int verbosity;			//controls display of output, for debugging        
 
@@ -87,9 +88,6 @@ class Mesh
 
         void find_path(std::vector<Halfedge *> &pathvec);   //finds a pseudo-optimal path through all 2-cells of the arrangement
         void find_subpath(unsigned& cur_node, std::vector< std::set<unsigned> >& adj, std::vector<Halfedge*>& pathvec, bool return_path); //builds the path recursively
-
-      ///THIS FUNCTION IS OBSOLETE!
-        std::pair<bool, double> project(double angle, double offset, double x, double y);	//projects (x,y) onto the line determined by angle and offset
 
 		
       //functions for testing

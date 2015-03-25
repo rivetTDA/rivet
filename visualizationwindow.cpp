@@ -11,8 +11,7 @@
 #include "dcel/lcm.h"
 #include "dcel/dcel.h"
 #include "dcel/mesh.h"
-#include "dcel/cell_persistence_data.h"
-#include "math/persistence_data.h"
+#include "interface/barcode.h"
 
 #include "boost/date_time/posix_time/posix_time.hpp"
 using namespace boost::posix_time;
@@ -22,7 +21,7 @@ using namespace boost::posix_time;
 VisualizationWindow::VisualizationWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::VisualizationWindow),
-    verbosity(7),
+    verbosity(7), INFTY(std::numeric_limits<double>::infinity()),
     slice_diagram(NULL), slice_update_lock(false),
     p_diagram(NULL), persistence_diagram_drawn(false)
 {
@@ -135,7 +134,7 @@ void VisualizationWindow::compute()
 
     arrangement = new Mesh(x_grades, x_exact, y_grades, y_exact, verbosity);
     arrangement->build_arrangement(mb, xi_support);     //also stores list of xi support points in the last argument
-        //NOTE: the following function also completes STEP 4: COMPUTE PERSISTENCE DATA AND STORE DISCRETE BARCODES IN THE ARRANGEMENT
+        //NOTE: this also computes and stores discrete barcodes in the arrangement
 
     ptime time_dcel_end(microsec_clock::local_time());      //stop timer
     time_duration duration_dcel(time_dcel_end - time_dcel_start);
@@ -148,13 +147,18 @@ void VisualizationWindow::compute()
             std::cout << "(" << xi_support[i].x << "," << xi_support[i].y << "), ";
         std::cout << "\n";
     }
+    if(verbosity >= 2) { std::cout << "DATA COMPUTED; READY FOR INTERACTIVITY.\n"; }
 
     //print arrangement info
-    std::cout << "   building the arrangement took " << duration_dcel << "\n";
+    std::cout << "   building the arrangement and computing discrete barcodes took " << duration_dcel << "\n";
     arrangement->print_stats();
+    ui->statusBar->showMessage("computed persistence data");
 
     //TESTING: verify consistency of the arrangement
 //    arrangement->test_consistency();
+
+
+  //STEP 4: PREPARE GRAPHICAL ELEMENTS
 
     //initialize the SliceDiagram and send xi support points
     slice_diagram = new SliceDiagram(sliceScene, this, data_xmin, data_xmax, data_ymin, data_ymax, ui->normCoordCheckBox->isChecked());
@@ -162,62 +166,37 @@ void VisualizationWindow::compute()
         slice_diagram->add_point(x_grades[it->x], y_grades[it->y], it->zero, it->one);
     slice_diagram->create_diagram(x_label, y_label);
 
-
     //update offset extents   //TODO: FIX THIS!!!
     ui->offsetSpinBox->setMinimum(-1*data_xmax);
     ui->offsetSpinBox->setMaximum(data_ymax);
 
-
-  //OLD STUFF -- NEEDS TO BE UPDATED!!!
-
-    //do the persistence computations in each cell
-/*    if(verbosity >= 2) { std::cout << "COMPUTING PERSISTENCE DATA FOR EACH CELL:\n"; }
-
-    ptime time_pdata_start(microsec_clock::local_time());   //start timer
-
-    arrangement->build_persistence_data();
-
-    ptime time_pdata_end(microsec_clock::local_time());     //stop timer
-    time_duration duration_pdata(time_pdata_end - time_pdata_start);
-
-    ui->statusBar->showMessage("computed persistence data");
-    std::cout << "   computing persistence data took " << duration_pdata << "\n";
-
-
-    if(verbosity >= 2) { std::cout << "DATA COMPUTED; READY FOR INTERACTIVITY.\n"; }
-
 //    qDebug() << "zero: " << slice_diagram->get_zero();
 
-    //draw persistence diagram
+    //inialize persistence diagram
     p_diagram = new PersistenceDiagram(pdScene, this, &fileName, dim);
     p_diagram->resize_diagram(slice_diagram->get_slice_length(), slice_diagram->get_pd_scale());
 
-    double radians = (ui->angleDoubleSpinBox->value())*3.14159265359/180;   //convert to radians
-    PersistenceData* pdata = arrangement->get_persistence_data(radians, ui->offsetSpinBox->value(), xi_support, bifiltration);
+    //get the barcode
+    double degrees = ui->angleDoubleSpinBox->value();
+    double offset = ui->offsetSpinBox->value();                             ///TODO: CHECK THIS!!!
+
+    DiscreteBarcode& dbc = arrangement->get_discrete_barcode(degrees, offset);
+    Barcode* barcode = rescale_discrete_barcode(dbc, degrees, offset);      ///TODO: CHECK THIS!!!
 
     //TESTING
-    std::cout<< "PERSISTENCE CYCLES: ";
-    for(std::set< double >::iterator it = pdata->get_cycles()->begin(); it != pdata->get_cycles()->end(); ++it)
-        std::cout << *it << ", ";
-    std::cout << "\n";
-    std::cout<< "PERSISTENCE PAIRS: ";
-    for(std::set< std::pair<double,double> >::iterator it = pdata->get_pairs()->begin(); it != pdata->get_pairs()->end(); ++it)
-        std::cout << "(" << it->first << ", " << it->second << ") ";
+    std::cout<< "RESCALED BARCODE: ";
+    barcode->print();
     std::cout << "\n";
 
-    p_diagram->draw_points(slice_diagram->get_zero(), pdata);
-    slice_diagram->draw_barcode(pdata, ui->barcodeCheckBox->isChecked());
+    //draw the barcode
+    p_diagram->draw_points(slice_diagram->get_zero(), barcode);
+    slice_diagram->draw_barcode(barcode, ui->barcodeCheckBox->isChecked());
 
-//    p_diagram->draw_points(slice_diagram->get_zero(), pdata->get_pairs(), pdata->get_cycles());        //I should be able to send pdata to draw_points, but I can't resolve the "multiple definition errors" that occur
-//    slice_diagram->draw_bars(pdata->get_pairs(), pdata->get_cycles());  //again, I would rather send pdata here...
-
-    delete pdata;
+    //clean up
+    delete barcode;
 
     persistence_diagram_drawn = true;
     ui->statusBar->showMessage("persistence diagram drawn");
-//*/
-
-
 }//end on_computeButton_clicked()
 
 void VisualizationWindow::on_angleDoubleSpinBox_valueChanged(double angle)
@@ -273,25 +252,89 @@ void VisualizationWindow::on_xi1CheckBox_toggled(bool checked)
 
 void VisualizationWindow::update_persistence_diagram()
 {
-    double radians = (ui->angleDoubleSpinBox->value())*3.14159265359/180;   //convert to radians
-/*   PersistenceData* pdata = arrangement->get_persistence_data(radians, ui->offsetSpinBox->value(), xi_support);
+    //get the barcode
+    double degrees = ui->angleDoubleSpinBox->value();
+    double offset = ui->offsetSpinBox->value();
+
+    DiscreteBarcode& dbc = arrangement->get_discrete_barcode(degrees, offset);
+    Barcode* barcode = rescale_discrete_barcode(dbc, degrees, offset);
 
     //TESTING
-    std::cout<< "PERSISTENCE CYCLES: ";
-    for(std::set< double >::iterator it = pdata->get_cycles()->begin(); it != pdata->get_cycles()->end(); ++it)
-        std::cout << *it << ", ";
-    std::cout << "\n";
-    std::cout<< "PERSISTENCE PAIRS: ";
-    for(std::set< std::pair<double,double> >::iterator it = pdata->get_pairs()->begin(); it != pdata->get_pairs()->end(); ++it)
-        std::cout << "(" << it->first << ", " << it->second << ") ";
+    std::cout<< "RESCALED BARCODE: ";
+    barcode->print();
     std::cout << "\n";
 
-    p_diagram->update_diagram(slice_diagram->get_slice_length(), slice_diagram->get_pd_scale(), slice_diagram->get_zero(), pdata);
-    slice_diagram->update_barcode(pdata, ui->barcodeCheckBox->isChecked());
+    //draw the barcode
+    p_diagram->update_diagram(slice_diagram->get_slice_length(), slice_diagram->get_pd_scale(), slice_diagram->get_zero(), barcode);
+    slice_diagram->update_barcode(barcode, ui->barcodeCheckBox->isChecked());
 
-    delete pdata;*/
+    //clean up
+    delete barcode;
 }
 
+//rescales a discrete barcode by projecting points onto the specified line
+// NOTE: angle in DEGREES
+Barcode* VisualizationWindow::rescale_discrete_barcode(DiscreteBarcode& dbc, double angle, double offset)
+{
+    Barcode* bc = new Barcode();     //NOTE: delete later!
+
+    //loop through discrete bars
+    for(std::set<DiscreteBar>::iterator it = dbc.begin(); it != dbc.end(); ++it)
+    {
+        xiPoint begin = xi_support[it->begin];
+        double birth = project(begin, angle, offset);
+
+        if(birth != INFTY)  //then bar exists in this rescaling
+        {
+            if(it->end >= xi_support.size())    //then endpoint is at infinity
+            {
+                bc->add_bar(birth, INFTY, it->multiplicity);
+            }
+            else    //then bar is finite
+            {
+                xiPoint end = xi_support[it->end];
+                double death = project(end, angle, offset);
+                bc->add_bar(birth, death, it->multiplicity);
+
+                //testing
+                if(birth > death)
+                    std::cout << "\nERROR: inverted bar (" << birth << "," << death << ")\n";
+            }
+        }
+    }
+
+    return bc;
+}//end rescale_discrete_barcode()
+
+//computes the projection of an xi support point onto the specified line
+//  NOTE: returns INFTY if the point has no projection (can happen only for horizontal and vertical lines)
+//  NOTE: angle in DEGREES
+double VisualizationWindow::project(xiPoint& pt, double angle, double offset)
+{
+    if(angle == 0)  //then line is horizontal
+    {
+        if( y_grades[pt.y] <= offset)   //then point is below the line, so projection exists
+            return x_grades[pt.x];
+        else    //then no projection
+            return INFTY;
+    }
+    else if(angle == 90)    //then line is vertical
+    {
+        if( x_grades[pt.x] <= -1*offset)   //then point is left of the line, so projection exists
+            return y_grades[pt.y];
+        else    //then no projection
+            return INFTY;
+    }
+    //if we get here, then line is neither horizontal nor vertical
+    double radians = angle * 3.14159265/180;
+    double x = x_grades[pt.x];
+    double y = y_grades[pt.y];
+
+    if( y > x*tan(radians) + offset/cos(radians) )	//then point is above line
+        return y/sin(radians) - offset/tan(radians); //project right
+
+    return x/cos(radians) + offset*tan(radians); //project up
+}//end project()
 
 void VisualizationWindow::set_line_parameters(double angle, double offset)
 {

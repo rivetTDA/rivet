@@ -5,6 +5,7 @@
 #include <QtGui>
 
 #include "dcel/mesh.h"
+#include "interface/barcode.h"
 
 #include <boost/multiprecision/cpp_int.hpp>
 typedef boost::multiprecision::cpp_rational exact;
@@ -63,6 +64,7 @@ private:
 
     //computational items
     const int verbosity;
+    const double INFTY;
 
     InputManager* im;
 
@@ -93,6 +95,8 @@ private:
 
     void update_persistence_diagram();
 
+    Barcode* rescale_discrete_barcode(DiscreteBarcode& dbc, double angle, double offset);
+    double project(xiPoint& pt, double angle, double offset);
 };
 
 #endif // VISUALIZATIONWINDOW_H
