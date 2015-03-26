@@ -142,7 +142,8 @@ void Mesh::build_interior()
 
         if(cur_lcm->get_y() != prev_y)	//then create new vertex
         {
-            leftedge = insert_vertex(leftedge, 0, y_grades[cur_lcm->get_y()]);    //set leftedge to edge that will follow the new edge
+            double dual_point_y_coord = -1*y_grades[cur_lcm->get_y()];  //point-line duality requires multiplying by -1
+            leftedge = insert_vertex(leftedge, 0, dual_point_y_coord);    //set leftedge to edge that will follow the new edge
             prev_y = cur_lcm->get_y();  //remember the discrete y-index
         }
 
@@ -155,7 +156,7 @@ void Mesh::build_interior()
         //remember relative position of this LCM
         cur_lcm->set_position(lines.size() - 1);
 
-        //remember curve associated with this LCM --- THIS MIGHT BE UNNECESSARY AFTER TESTING IS COMPLETE!!!
+        //remember line associated with this LCM --- THIS MIGHT BE UNNECESSARY AFTER TESTING IS COMPLETE!!!
         cur_lcm->set_line(new_edge);
     }
     if(verbosity >= 6) { std::cout << "\n"; }
@@ -188,7 +189,7 @@ void Mesh::build_interior()
     if(verbosity >= 5) { std::cout << "PART 2: PROCESSING INTERIOR INTERSECTIONS\n"; }
 
     int status_counter = 0;
-    int status_interval = 10000;
+    int status_interval = 10000;    //controls frequency of output
 
     //current position of sweep line
     Crossing* sweep = NULL;
@@ -227,7 +228,6 @@ void Mesh::build_interior()
             last_pos++; //last_pos = cur->b->get_position();
 
             if(verbosity >= 6) { std::cout << " |---also intersects LCM " << cur->b << " (" << last_pos << ")\n"; }
-
         }
 
     //TESTING
@@ -362,26 +362,29 @@ void Mesh::build_interior()
     if(verbosity >= 5) { std::cout << "PART 3: RIGHT EDGE OF THE STRIP\n"; }
 
     Halfedge* rightedge = bottomright; //need a reference halfedge along the right side of the strip
-    unsigned cur_x = 0;      //keep track of x-coordinate of last LCM whose line was connected to right edge
+    unsigned cur_x = 0;      //keep track of x-coordinate of last LCM whose line was connected to right edge (x-coordinate of LCM is slope of line)
 
     //connect each line to the right edge of the arrangement (at x = INFTY)
     //    requires creating a vertex for each unique slope (i.e. LCM x-coordinate)
     //    lines that have the same slope m are "tied together" at the same vertex, with coordinates (INFTY, m)
     for(unsigned cur_pos = 0; cur_pos < lines.size(); cur_pos++)
     {
-        LCM* cur_lcm = lines[cur_pos]->get_LCM();
+        Halfedge* incoming = lines[cur_pos];
+        LCM* cur_lcm = incoming->get_LCM();
 
-        if(cur_lcm->get_x() > cur_x || cur_pos == 0)    //then insert a new vertex
+        if(cur_lcm->get_x() > cur_x || cur_pos == 0)    //then create a new vertex for this line
         {
             cur_x = cur_lcm->get_x();
             rightedge = insert_vertex( rightedge, INFTY, x_grades[cur_x] );
         }
-        //otherwise, connect current line to the previously-inserted vertex
+        else    //no new vertex required, but update previous entry for vertical-line queries
+            vertical_line_query_list.pop_back();
 
+        //store Halfedge for vertical-line queries
+        vertical_line_query_list.push_back(incoming->get_twin());
+
+        //connect current line to the most-recently-inserted vertex
         Vertex* cur_vertex = rightedge->get_origin();
-
-        //anchor halfedge to vertex
-        Halfedge* incoming = lines[cur_pos];
         incoming->get_twin()->set_origin(cur_vertex);
 
         //update halfedge pointers
@@ -401,7 +404,7 @@ void Mesh::build_interior()
 //inserts a new vertex on the specified edge, with the specified coordinates, and updates all relevant pointers
 //  i.e. new vertex is between initial and termainal points of the specified edge
 //returns pointer to a new halfedge, whose initial point is the new vertex, and that follows the specified edge around its face
-Halfedge* Mesh::insert_vertex(Halfedge* edge, double x, double y)
+Halfedge* Mesh:: insert_vertex(Halfedge* edge, double x, double y)
 {
 	//create new vertex
     Vertex* new_vertex = new Vertex(x, y);
@@ -444,7 +447,7 @@ Halfedge* Mesh::insert_vertex(Halfedge* edge, double x, double y)
 	return up;
 }//end insert_vertex()
 
-//creates the first pair of Halfedges in an LCM curve, anchored on the left edge of the strip at origin of specified edge
+//creates the first pair of Halfedges in an LCM line, anchored on the left edge of the strip at origin of specified edge
 //  also creates a new face (the face below the new edge)
 //  CAUTION: leaves NULL: new_edge.next and new_twin.prev
 Halfedge* Mesh::create_edge_left(Halfedge* edge, LCM* lcm)
@@ -636,20 +639,76 @@ void Mesh::find_subpath(unsigned& cur_node, std::vector< std::set<unsigned> >& a
 
 
 //returns discrete barcode associated with the specified line (point)
-//uses a naive point-location algorithm to find the cell containing the point
-///TODO: implement smarter point-location!!!
-/// THIS FUNCTION HAS PROBLEMS!!!
-/// um...I think this current implementation assumes that xi support points are in the first quadrant...
 DiscreteBarcode& Mesh::get_discrete_barcode(double degrees, double offset)
 {
     if(degrees == 90) //then line is vertical
     {
-        ///TODO: FIX THIS!!!
-        Face* cell = topleft->get_face();
+        Face* cell = find_vertical_line(-1*offset); //multiply by -1 to correct for orientation of offset
+
+        ///TODO: store some point/cell to seed the next query
+
         return cell->get_barcode();
     }
+    //else -- the line is not vertical
+    double radians = degrees * 3.14159265/180;
+    double slope = atan(radians);
+    double intercept = offset/cos(radians);
 
-    //for non-vertical lines, find the correct cell
+    Face* cell = find_point(slope, -1*intercept);   //multiply by -1 for point-line duality
+        ///TODO: IMPLEMENT THIS, use previous seed
+
+    ///TODO: store seed
+
+    return cell->get_barcode();
+}//end get_discrete_barcode()
+
+//finds the (unbounded) cell associated to dual point of the vertical line with the given x-coordinate
+//  i.e. finds the Halfedge whose LCM x-coordinate is the largest such coordinate not larger than than x_coord; returns the Face corresponding to that Halfedge
+Face* Mesh::find_vertical_line(double x_coord)
+{
+    //is there an LCM with x-coordinate not greater than x_coord?
+    if(vertical_line_query_list.size() >= 1 && x_grades[ vertical_line_query_list[0]->get_LCM()->get_x() ] <= x_coord)
+    {
+        //binary search the vertical line query list
+        unsigned min = 0;
+        unsigned max = vertical_line_query_list.size() - 1;
+        unsigned best = 0;
+
+        while(max >= min)
+        {
+            unsigned mid = (max + min)/2;
+            LCM* test = vertical_line_query_list[mid]->get_LCM();
+
+            if(x_grades[test->get_x()] <= x_coord)    //found a lower bound, but search upper subarray for a better lower bound
+            {
+                best = mid;
+                min = mid + 1;
+            }
+            else    //search lower subarray
+                max = mid - 1;
+        }
+
+        //testing
+        std::cout << "----vertical line search: found LCM with x-coordinate " << vertical_line_query_list[mid]->get_LCM()->get_x() << "\n";
+
+        return vertical_line_query_list[best]->get_face();
+    }
+
+    //if we get here, then either there are no LCMs or x_coord is less than the x-coordinates of all LCMs
+    std::cout << "----vertical line search: returning lowest face\n";
+    return bottomright->get_twin()->get_face();
+
+}//end find_vertical_line()
+
+//find a 2-cell containing the specified point
+Face* Mesh::find_point(double x, double y)
+{
+
+
+}
+
+
+/*    //for non-vertical lines, find the correct cell
     double radians = degrees * 3.14159265/180;
     double slope = atan(radians);
     double intercept = offset/cos(radians);
@@ -755,7 +814,7 @@ DiscreteBarcode& Mesh::get_discrete_barcode(double degrees, double offset)
     if(verbosity >= 3) { std::cout << "  -> Found point (" << slope << ", " << intercept << ") in cell " << FID(cell) << ".\n"; }
 
     return cell->get_barcode();
-}//end get_persistence_data
+*/
 
 //prints a summary of the arrangement information, such as the number of LCMS, vertices, halfedges, and faces
 void Mesh::print_stats()
