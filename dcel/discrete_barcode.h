@@ -5,9 +5,9 @@
 
 struct DiscreteBar
 {
-    unsigned begin;             //index of xiMatrixEntry of the equivalence class corresponding to the beginning of this bar
-    unsigned end;               //index of xiMatrixEntry of the equivalence class corresponding to the end of this bar
-    mutable int multiplicity;   //maybe this is bad style, but multiplicity is not involved in comparisons
+    unsigned begin;                   //index of xiMatrixEntry of the equivalence class corresponding to the beginning of this bar
+    unsigned end;                     //index of xiMatrixEntry of the equivalence class corresponding to the end of this bar
+    mutable unsigned multiplicity;    //maybe this is bad style, but multiplicity is not involved in comparisons
 
     DiscreteBar(unsigned a, unsigned b);
     DiscreteBar(const DiscreteBar& other);

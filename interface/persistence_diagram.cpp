@@ -174,7 +174,7 @@ void PersistenceDiagram::draw_points(double zero, Barcode* bc)
             double birth = it->birth - zero_coord;
 
             //create dot object
-            PersistenceDot* dot = new PersistenceDot(this, birth, it->death, radius*sqrt(it->multiplicity), num_dots);
+            PersistenceDot* dot = new PersistenceDot(this, birth, it->death, radius*sqrt((double) (it->multiplicity)), num_dots);
             scene->addItem(dot);
             dots.push_back(dot);
             num_dots++;

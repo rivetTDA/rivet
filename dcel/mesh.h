@@ -44,7 +44,6 @@ class Mesh
             //also stores ordered list of xi support points in the supplied vector
 
         DiscreteBarcode& get_discrete_barcode(double degrees, double offset);
-            ///TODO: IMPROVE THIS!!! CURRENT IMPLEMENTATION IS AWFUL!!!
             //returns discrete barcode associated with the specified line (point)
 		
         void print_stats(); //prints a summary of the arrangement information, such as the number of LCMS, vertices, halfedges, and faces
@@ -92,10 +91,13 @@ class Mesh
         void find_path(std::vector<Halfedge *> &pathvec);   //finds a pseudo-optimal path through all 2-cells of the arrangement
         void find_subpath(unsigned& cur_node, std::vector< std::set<unsigned> >& adj, std::vector<Halfedge*>& pathvec, bool return_path); //builds the path recursively
 
+      //functions for searching the arrangement
+        LCM* find_least_upper_LCM(double y_coord); //finds the first LCM that intersects the left edge of the arrangement at a point not less than the specified y-coordinate; if no such LCM, returns NULL
+
         Face* find_vertical_line(double x_coord); //finds the (unbounded) cell associated to dual point of the vertical line with the given x-coordinate
             //i.e. finds the Halfedge whose LCM x-coordinate is the largest such coordinate not larger than than x_coord; returns the Face corresponding to that Halfedge
 
-        Face* find_point(double x, double y);    //finds a 2-cell containing the specified point
+        Face* find_point(double x_coord, double y_coord);    //finds a 2-cell containing the specified point
 
       //functions for testing
         unsigned HID(Halfedge* h);		//halfedge ID, for printing and debugging

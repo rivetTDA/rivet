@@ -156,7 +156,7 @@ void Mesh::build_interior()
         //remember relative position of this LCM
         cur_lcm->set_position(lines.size() - 1);
 
-        //remember line associated with this LCM --- THIS MIGHT BE UNNECESSARY AFTER TESTING IS COMPLETE!!!
+        //remember line associated with this LCM
         cur_lcm->set_line(new_edge);
     }
     if(verbosity >= 6) { std::cout << "\n"; }
@@ -647,20 +647,79 @@ DiscreteBarcode& Mesh::get_discrete_barcode(double degrees, double offset)
 
         ///TODO: store some point/cell to seed the next query
 
+        std::cout << " ||| vertical line found in cell " << FID(cell) << "\n";
         return cell->get_barcode();
     }
-    //else -- the line is not vertical
+
+    if(degrees == 0) //then line is horizontal
+    {
+        Face* cell = topleft->get_twin()->get_face();    //default
+        LCM* lcm = find_least_upper_LCM(offset);
+
+        if(lcm != NULL)
+            cell = lcm->get_line()->get_face();
+
+        ///TODO: store some point/cell to seed the next query
+
+        std::cout << " --- horizontal line found in cell " << FID(cell) << "\n";
+        return cell->get_barcode();
+    }
+
+    //else: the line is neither horizontal nor vertical
     double radians = degrees * 3.14159265/180;
     double slope = atan(radians);
     double intercept = offset/cos(radians);
 
     Face* cell = find_point(slope, -1*intercept);   //multiply by -1 for point-line duality
-        ///TODO: IMPLEMENT THIS, use previous seed
+        ///TODO: REPLACE THIS WITH A SEEDED SEARCH
 
     ///TODO: store seed
 
-    return cell->get_barcode();
+    return cell->get_barcode();  ////FIX THIS!!!
 }//end get_discrete_barcode()
+
+//finds the first LCM that intersects the left edge of the arrangement at a point not less than the specified y-coordinate
+//  if no such LCM, returns NULL
+LCM* Mesh::find_least_upper_LCM(double y_coord)
+{
+    //binary search to find greatest y-grade not greater than than y_coord
+    unsigned best = 0;
+    if(y_grades.size() >= 1 && y_grades[0] <= y_coord)
+    {
+        //binary search the vector y_grades
+        unsigned min = 0;
+        unsigned max = y_grades.size() - 1;
+
+        while(max >= min)
+        {
+            unsigned mid = (max + min)/2;
+
+            if(y_grades[mid] <= y_coord)    //found a lower bound, but search upper subarray for a better lower bound
+            {
+                best = mid;
+                min = mid + 1;
+            }
+            else    //search lower subarray
+                max = mid - 1;
+        }
+    }
+    else
+        return NULL;
+
+    //if we get here, then y_grades[best] is the greatest y-grade not greater than y_coord
+    //now find LCM whose line intersects the left edge of the arrangement lowest, but not below y_grade[best]
+    unsigned int zero = 0;  //disambiguate the following function call
+    LCM* test = new LCM(zero, best);
+    std::set<LCM*, LCM_LeftComparator>::iterator it = all_lcms.lower_bound(test);
+    delete test;
+
+    if(it == all_lcms.end())    //not found
+    {
+        return NULL;
+    }
+    //else
+    return *it;
+}//end find_least_upper_LCM()
 
 //finds the (unbounded) cell associated to dual point of the vertical line with the given x-coordinate
 //  i.e. finds the Halfedge whose LCM x-coordinate is the largest such coordinate not larger than than x_coord; returns the Face corresponding to that Halfedge
@@ -689,7 +748,7 @@ Face* Mesh::find_vertical_line(double x_coord)
         }
 
         //testing
-        std::cout << "----vertical line search: found LCM with x-coordinate " << vertical_line_query_list[mid]->get_LCM()->get_x() << "\n";
+        std::cout << "----vertical line search: found LCM with x-coordinate " << vertical_line_query_list[best]->get_LCM()->get_x() << "\n";
 
         return vertical_line_query_list[best]->get_face();
     }
@@ -701,120 +760,92 @@ Face* Mesh::find_vertical_line(double x_coord)
 }//end find_vertical_line()
 
 //find a 2-cell containing the specified point
-Face* Mesh::find_point(double x, double y)
+Face* Mesh::find_point(double x_coord, double y_coord)
 {
+    //start on the left edge of the arrangement, at the correct y-coordinate
+    LCM* start = find_least_upper_LCM(-1*y_coord);
 
+    Face* cell = NULL;		//will later point to the cell containing the specified point
+    Halfedge* finger = NULL;	//for use in finding the cell
 
-}
+    if(start == NULL)	//then starting point is in the top (unbounded) cell
+        finger = topleft->get_twin()->get_next();   //this is the top edge of the top cell (at y=infty)
+    else
+        finger = start->get_line();
 
+    if(verbosity >= 8) { std::cout << "  Reference LCM: (" << x_grades[start->get_x()] << ", " << y_grades[start->get_y()] << "); halfedge " << HID(finger) << ".\n"; }
 
-/*    //for non-vertical lines, find the correct cell
-    double radians = degrees * 3.14159265/180;
-    double slope = atan(radians);
-    double intercept = offset/cos(radians);
-
-	//first, find starting point on left edge of strip
-    unsigned y_index = -1;
-    for(unsigned i=0; i<y_grades.size(); i++)   ///THIS IS AWFUL.
+    while(cell == NULL) //while not found
     {
-        if(y_grades[i] >= intercept)
+        if(verbosity >= 8) { std::cout << "  Considering cell " << FID(finger->get_face()) << ".\n"; }
+
+        //find the edge of the current cell that crosses the horizontal line at y_coord
+        Vertex* next_pt = finger->get_next()->get_origin();
+        while(next_pt->get_y() > y_coord)
         {
-            if(y_index == -1 || (y_grades[i] - intercept) < (y_grades[y_index] - intercept) )
-                y_index = i;
+            if(verbosity >= 8) { std::cout << "    --finger: " << HID(finger) << ".\n"; }
+
+            finger = finger->get_next();
+            next_pt = finger->get_next()->get_origin();
         }
-    }
-    LCM* current = new LCM(0, y_index);
-	std::set<LCM*>::iterator itleft;
-    itleft = all_lcms.lower_bound(current);	//returns an iterator to the first LCM that is not less than than "current"
-	
-    intercept = -1*intercept; //negative is because of point-line duality
+        //now next_pt is at or below the horizontal line at y_coord
+        //if (slope, intercept) is to the left of crossing point, then we have found the cell; otherwise, move to the adjacent cell
 
-	Face* cell = NULL;		//will later point to the cell containing the specified point
-	Halfedge* finger = NULL;	//for use in finding the cell
-	
-    if(itleft == all_lcms.end())	//then point is above all LCMS on the left edge of the strip
-	{
-		if(verbosity >= 8) { std::cout << "  Point is in top cell.\n"; }
-		finger = topleft->get_twin();
-		cell = finger->get_face();	//found the cell
-	}
-	else
-	{
-        finger = (**itleft).get_line();
-		
-        if(verbosity >= 8) { std::cout << "  Reference LCM: (" << (**itleft).get_x() << ", " << (**itleft).get_y() << "); halfedge " << HID(finger) << ".\n"; }
-		
-		while(cell == NULL)
-		{
-			if(verbosity >= 8) { std::cout << "  Considering cell " << FID(finger->get_face()) << ".\n"; }
-		
-			//find the edge of the current cell that crosses the horizontal line at offset
-			Vertex* next_pt = finger->get_next()->get_origin();
-            while(next_pt->get_y() > intercept)
-			{
-				if(verbosity >= 8) { std::cout << "    --finger: " << HID(finger) << ".\n"; }
-		
-				finger = finger->get_next();
-				next_pt = finger->get_next()->get_origin();
-			}
-            //now next_pt is at or below the horizontal line at intercept
-            //if (slope, intercept) is to the left of crossing point, then we have found the cell; otherwise, move to the adjacent cell
-			
-            if(verbosity >= 8) { std::cout << "    --found next_pt at (" << next_pt->get_x() << ", " << next_pt->get_y() << "); finger: " << HID(finger) << ".\n"; }
-			
-            if(next_pt->get_y() == intercept) //then next_pt is on the horizontal line
-			{
-                if(next_pt->get_x() >= slope)	//found the cell
-				{
-					cell = finger->get_face();
-				}
-				else	//move to adjacent cell
-				{
-					//find degree of vertex
-					Halfedge* thumb = finger->get_next();
-					int deg = 1;
-					while(thumb != finger->get_twin())
-					{
-						thumb = thumb->get_twin()->get_next();
-						deg++;
-					}
-					
-					//move halfway around the vertex
-					finger = finger->get_next();
-					for(int i=0; i<deg/2; i++)
-					{
-						finger = finger->get_twin()->get_next();
-					}
-				}
-			}
-			else	//then next_pt is below the horizontal line
-			{
-				if(finger->get_LCM() == NULL)	//then edge is vertical, so we have found the cell
-				{
-					cell = finger->get_face();
-				}
-				else	//then edge is not vertical
-				{
-                    LCM* temp = finger->get_LCM();
-                    double test_intercept = (intercept + temp->get_y())/temp->get_x();  ///TODO: CHECK! ENSURE NO DIVISION BY ZERO!
-				
-                    if(test_intercept >= intercept)	//found the cell
-					{
-						cell = finger->get_face();
-					}
-					else	//move to adjacent cell
-					{
-						finger = finger->get_twin();
-					}
-				}
-			}
-		}//end while(cell not found)
-	}//end else
-	
-    if(verbosity >= 3) { std::cout << "  -> Found point (" << slope << ", " << intercept << ") in cell " << FID(cell) << ".\n"; }
+        if(verbosity >= 8) { std::cout << "    --found next_pt at (" << next_pt->get_x() << ", " << next_pt->get_y() << "); finger: " << HID(finger) << ".\n"; }
 
-    return cell->get_barcode();
-*/
+        if(next_pt->get_y() == y_coord) //then next_pt is on the horizontal line
+        {
+            if(next_pt->get_x() >= x_coord)	//found the cell
+            {
+                cell = finger->get_face();
+            }
+            else	//move to adjacent cell
+            {
+                //find degree of vertex
+                Halfedge* thumb = finger->get_next();
+                int deg = 1;
+                while(thumb != finger->get_twin())
+                {
+                    thumb = thumb->get_twin()->get_next();
+                    deg++;
+                }
+
+                //move halfway around the vertex
+                finger = finger->get_next();
+                for(int i=0; i<deg/2; i++)
+                {
+                    finger = finger->get_twin()->get_next();
+                }
+            }
+        }
+        else	//then next_pt is below the horizontal line
+        {
+            if(finger->get_LCM() == NULL)	//then edge is vertical, so we have found the cell
+            {
+                cell = finger->get_face();
+            }
+            else	//then edge is not vertical
+            {
+                LCM* temp = finger->get_LCM();
+                double x_pos = ( y_coord + y_grades[temp->get_y()] )/x_grades[temp->get_x()];  ///TODO: ENSURE NO DIVISION BY ZERO! (shouldn't happen because distinct horizontal lines don't intersect)
+
+                if(x_pos >= x_coord)	//found the cell
+                {
+                    cell = finger->get_face();
+                }
+                else	//move to adjacent cell
+                {
+                    finger = finger->get_twin();
+                }
+            }
+        }//end while(cell not found)
+    }//end else
+
+    if(verbosity >= 3) { std::cout << "  -> Found point (" << x_coord << ", " << y_coord << ") in cell " << FID(cell) << ".\n"; }
+
+    return cell;
+}//end find_point()
+
 
 //prints a summary of the arrangement information, such as the number of LCMS, vertices, halfedges, and faces
 void Mesh::print_stats()

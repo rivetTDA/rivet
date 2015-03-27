@@ -799,7 +799,7 @@ void BarcodeCalculator::add_partition_entries(xiMatrixEntry* head)
 }//end add_partition_entries()
 
 //stores a discrete barcode in a 2-cell of the arrangement
-///TODO: IMPROVE THIS!!!
+///TODO: IMPROVE THIS!!! (store previous barcode at the simplicial level, and only examine columns that were modified in the recent update)
 /// Is there a better way to handle endpoints at infinity?
 void BarcodeCalculator::store_discrete_barcode(Face* cell, MapMatrix_Perm* RL, MapMatrix_Perm* RH)
 {

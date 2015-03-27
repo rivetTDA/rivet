@@ -5,11 +5,11 @@
 
 struct MultiBar
 {
-    double birth;       //coordinate where this bar begins
-    double death;       //coordinate where this bar ends
-    int multiplicity;   //multiplicity of this bar
+    double birth;            //coordinate where this bar begins
+    double death;            //coordinate where this bar ends
+    unsigned multiplicity;   //multiplicity of this bar
 
-    MultiBar(double b, double d, int m);
+    MultiBar(double b, double d, unsigned m);
     MultiBar(const MultiBar& other);
 
     bool operator<(const MultiBar other) const;
@@ -21,7 +21,7 @@ class Barcode
     public:
         Barcode();
 
-        void add_bar(double b, double d, int m);    //adds a bar to the barcode
+        void add_bar(double b, double d, unsigned m);    //adds a bar to the barcode
 
         std::multiset<MultiBar>::iterator begin();   //returns an iterator to the first bar in the barcode
         std::multiset<MultiBar>::iterator end();     //returns an iterator to the pst-the-end element the barcode

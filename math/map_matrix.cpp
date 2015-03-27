@@ -601,7 +601,16 @@ int MapMatrix_Perm::low(unsigned j)
 //returns the index of the column with low l, or -1 if there is no such column
 int MapMatrix_Perm::find_low(unsigned l)
 {
-    return low_col[l];
+    ///THIS IS AWFUL, BUT LOW ARRAY IS BROKEN
+    for(int j=0; j<columns.size(); j++)
+    {
+        if(low(j) == l)
+            return j;
+    }
+    return -1;
+
+///RESTORE THIS WHEN USING LOW ARRAY!!!
+//    return low_col[l];
 }
 
 //transposes rows i and i+1
@@ -622,10 +631,11 @@ void MapMatrix_Perm::swap_rows(unsigned i)
     mrep[i] = b;
     mrep[i+1] = a;
 
-    //also swap entries in low array
-    int t = low_col[i];
-    low_col[i] = low_col[i+1];
-    low_col[i+1] = t;
+///RESTORE THIS WHEN USING LOW ARRAY!!!
+//    //also swap entries in low array
+//    int t = low_col[i];
+//    low_col[i] = low_col[i+1];
+//    low_col[i+1] = t;
 }//end swap_rows()
 
 //transposes columns j and j+1
@@ -635,6 +645,15 @@ void MapMatrix_Perm::swap_columns(unsigned j)
     MapMatrixNode* temp = columns[j];
     columns[j] = columns[j+1];
     columns[j+1] = temp;
+
+///RESTORE THIS WHEN USING LOW ARRAY!!!
+//    //also swap entries in low array
+//    int a = low(j);
+//    if(a != -1)
+//        low_col[a] = j;
+//    int b = low(j+1);
+//    if(b != -1)
+//        low_col[b] = j+1;
 }
 
 //reduces this matrix and returns the corresponding upper-triangular matrix for the RU-decomposition

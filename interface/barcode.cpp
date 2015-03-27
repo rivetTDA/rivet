@@ -3,7 +3,7 @@
 #include <math.h>
 #include <iostream>
 
-MultiBar::MultiBar(double b, double d, int m) :
+MultiBar::MultiBar(double b, double d, unsigned m) :
     birth(b), death(d), multiplicity(m)
 { }
 
@@ -35,7 +35,7 @@ Barcode::Barcode()
 { }
 
 //adds a bar to the barcode
-void Barcode::add_bar(double b, double d, int m)
+void Barcode::add_bar(double b, double d, unsigned m)
 {
     bars.insert(MultiBar(b, d, m));
 }

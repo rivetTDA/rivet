@@ -28,8 +28,8 @@ class LCM   //updated to store only discrete indexes
         unsigned get_x() const;		//get the discrete x-coordinate (e.g. time index) of the multi-index
         unsigned get_y() const;		//get the discrete y-coordinate (e.g. distance index) of the multi-index
 
-        void set_line(Halfedge* e);	//set the pointer to the curve corresponding to this LCM in the arrangement
-        Halfedge* get_line() const;		//get the pointer to the curve corresponding to this LCM in the arrangement
+        void set_line(Halfedge* e);	//set the pointer to the line corresponding to this LCM in the arrangement
+        Halfedge* get_line() const;		//get the pointer to the line corresponding to this LCM in the arrangement
 
         void set_position(unsigned p);  //sets the relative position of the LCM curve at the sweep line, used for Bentley-Ottmann DCEL construction algorithm
         unsigned get_position() const;  //gets the relative position of the LCM curve at the sweep line, used for Bentley-Ottmann DCEL construction algorithm
