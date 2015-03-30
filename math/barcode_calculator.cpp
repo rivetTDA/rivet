@@ -283,6 +283,13 @@ void BarcodeCalculator::store_barcodes(std::vector<Halfedge*>& path)
         //remember that we have crossed this anchor
         cur_lcm->toggle();
 
+        //testing
+        std::cout << "  LCMS above the current line: ";
+        for(std::set<LCM*, LCM_LeftComparator>::iterator it = mesh->all_lcms.begin(); it != mesh->all_lcms.end(); ++it)
+            if((*it)->is_above())
+                std::cout << "(" << (*it)->get_x() << "," << (*it)->get_y() << ") ";
+        std::cout << "\n";
+
         //if this cell does not yet have a discrete barcode, then store the discrete barcode here
         Face* cur_face = (path[i])->get_face();
         if(!cur_face->has_been_visited())

@@ -19,46 +19,46 @@ Mesh::Mesh(const std::vector<double> &xg, const std::vector<exact> &xe, const st
     INFTY(std::numeric_limits<double>::infinity()),
     verbosity(v)
 {
-	//create vertices
-	vertices.push_back( new Vertex(0, INFTY) );		//index 0
-    vertices.push_back( new Vertex(INFTY, INFTY) );	//index 1
-    vertices.push_back( new Vertex(INFTY, -INFTY) );	//index 2
-	vertices.push_back( new Vertex(0, -INFTY) );		//index 3
-	
-	//create halfedges
-	for(int i=0; i<4; i++)
-	{
-		halfedges.push_back( new Halfedge( vertices[i], NULL) );		//index 0, 2, 4, 6 (inside halfedges)
-		halfedges.push_back( new Halfedge( vertices[(i+1)%4], NULL) );		//index 1, 3, 5, 7 (outside halfedges)
-		halfedges[2*i]->set_twin( halfedges[2*i+1] );
-		halfedges[2*i+1]->set_twin( halfedges[2*i] );
-	}
-	
+    //create vertices
+    vertices.push_back( new Vertex(0, INFTY) );         //index 0
+    vertices.push_back( new Vertex(INFTY, INFTY) );     //index 1
+    vertices.push_back( new Vertex(INFTY, -INFTY) );    //index 2
+    vertices.push_back( new Vertex(0, -INFTY) );        //index 3
+
+    //create halfedges
+    for(int i=0; i<4; i++)
+    {
+        halfedges.push_back( new Halfedge( vertices[i], NULL) );		//index 0, 2, 4, 6 (inside halfedges)
+        halfedges.push_back( new Halfedge( vertices[(i+1)%4], NULL) );		//index 1, 3, 5, 7 (outside halfedges)
+        halfedges[2*i]->set_twin( halfedges[2*i+1] );
+        halfedges[2*i+1]->set_twin( halfedges[2*i] );
+    }
+
     topleft = halfedges[7];	//remember this halfedge to make curve insertion easier
     bottomleft = halfedges[6];  //remember these halfedges
     bottomright = halfedges[3]; //    for the Bentley-Ottmann algorithm
-	
-	//set pointers on vertices
-	for(int i=0; i<4; i++)
-	{
-		vertices[i]->set_incident_edge( halfedges[2*i] );
-	}
-	
-	//create face
+
+    //set pointers on vertices
+    for(int i=0; i<4; i++)
+    {
+        vertices[i]->set_incident_edge( halfedges[2*i] );
+    }
+
+    //create face
     faces.push_back( new Face( halfedges[0] ) );
-	
-	//set the remaining pointers on the halfedges
-	for(int i=0; i<4; i++)
-	{
-		Halfedge* inside = halfedges[2*i];
-		inside->set_next( halfedges[(2*i+2)%8] );
-		inside->set_prev( halfedges[(2*i+6)%8] );
-		inside->set_face( faces[0] );
-		
-		Halfedge* outside = halfedges[2*i+1];
-		outside->set_next( halfedges[(2*i+7)%8] );
-		outside->set_prev( halfedges[(2*i+3)%8] );
-	}
+
+    //set the remaining pointers on the halfedges
+    for(int i=0; i<4; i++)
+    {
+        Halfedge* inside = halfedges[2*i];
+        inside->set_next( halfedges[(2*i+2)%8] );
+        inside->set_prev( halfedges[(2*i+6)%8] );
+        inside->set_face( faces[0] );
+
+        Halfedge* outside = halfedges[2*i+1];
+        outside->set_next( halfedges[(2*i+7)%8] );
+        outside->set_prev( halfedges[(2*i+3)%8] );
+    }
 }//end constructor
 
 //destructor
@@ -366,7 +366,7 @@ void Mesh::build_interior()
 
     //connect each line to the right edge of the arrangement (at x = INFTY)
     //    requires creating a vertex for each unique slope (i.e. LCM x-coordinate)
-    //    lines that have the same slope m are "tied together" at the same vertex, with coordinates (INFTY, m)
+    //    lines that have the same slope m are "tied together" at the same vertex, with coordinates (INFTY, INFTY)
     for(unsigned cur_pos = 0; cur_pos < lines.size(); cur_pos++)
     {
         Halfedge* incoming = lines[cur_pos];
@@ -375,7 +375,7 @@ void Mesh::build_interior()
         if(cur_lcm->get_x() > cur_x || cur_pos == 0)    //then create a new vertex for this line
         {
             cur_x = cur_lcm->get_x();
-            rightedge = insert_vertex( rightedge, INFTY, x_grades[cur_x] );
+            rightedge = insert_vertex( rightedge, INFTY, INFTY );
         }
         else    //no new vertex required, but update previous entry for vertical-line queries
             vertical_line_query_list.pop_back();
@@ -667,7 +667,7 @@ DiscreteBarcode& Mesh::get_discrete_barcode(double degrees, double offset)
 
     //else: the line is neither horizontal nor vertical
     double radians = degrees * 3.14159265/180;
-    double slope = atan(radians);
+    double slope = tan(radians);
     double intercept = offset/cos(radians);
 
     Face* cell = find_point(slope, -1*intercept);   //multiply by -1 for point-line duality
@@ -769,11 +769,15 @@ Face* Mesh::find_point(double x_coord, double y_coord)
     Halfedge* finger = NULL;	//for use in finding the cell
 
     if(start == NULL)	//then starting point is in the top (unbounded) cell
+    {
         finger = topleft->get_twin()->get_next();   //this is the top edge of the top cell (at y=infty)
+        if(verbosity >= 8) { std::cout << "  Starting in top (unbounded) cell\n"; }
+    }
     else
+    {
         finger = start->get_line();
-
-    if(verbosity >= 8) { std::cout << "  Reference LCM: (" << x_grades[start->get_x()] << ", " << y_grades[start->get_y()] << "); halfedge " << HID(finger) << ".\n"; }
+        if(verbosity >= 8) { std::cout << "  Reference LCM: (" << x_grades[start->get_x()] << ", " << y_grades[start->get_y()] << "); halfedge " << HID(finger) << ".\n"; }
+    }
 
     while(cell == NULL) //while not found
     {
@@ -783,10 +787,10 @@ Face* Mesh::find_point(double x_coord, double y_coord)
         Vertex* next_pt = finger->get_next()->get_origin();
         while(next_pt->get_y() > y_coord)
         {
-            if(verbosity >= 8) { std::cout << "    --finger: " << HID(finger) << ".\n"; }
-
             finger = finger->get_next();
             next_pt = finger->get_next()->get_origin();
+
+            if(verbosity >= 8) { std::cout << "    --next point: (" << next_pt->get_x() << ", " << next_pt->get_y() << "); finger: " << HID(finger) << ".\n"; }
         }
         //now next_pt is at or below the horizontal line at y_coord
         //if (slope, intercept) is to the left of crossing point, then we have found the cell; otherwise, move to the adjacent cell
