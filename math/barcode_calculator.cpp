@@ -123,6 +123,8 @@ void BarcodeCalculator::store_barcodes(std::vector<Halfedge*>& path)
         std::cout << "  Boundary matrix for high simplices:\n";
         R_high->print();
     }
+    /// TESTING ONLY
+    D = bifiltration->get_boundary_mx(low_simplex_order, high_simplex_order);
 
 
   // PART 2: INITIAL PERSISTENCE COMPUTATION (RU-decomposition)
@@ -297,6 +299,8 @@ void BarcodeCalculator::store_barcodes(std::vector<Halfedge*>& path)
             R_high->print();
             std::cout << "  Matrix U for high simplices:\n";
             U_high->print();
+            std::cout << "  Matrix D for high simplices:\n";
+            D->print();
             std::cout << "  Discrete barcode: ";
             cur_face->get_barcode().print();
         }
@@ -767,6 +771,21 @@ void BarcodeCalculator::move_high_columns(int s, unsigned n, int t, MapMatrix_Pe
                     UH->swap_rows(a);
                 }
             }
+
+            /// TESTING ONLY
+            D->swap_columns(a);
+            for(unsigned row = 0; row < D->height(); row++)
+            {
+                for(unsigned col = 0; col < D->width(); col++)
+                {
+                    bool temp = false;
+                    for(unsigned e = 0; e < D->width(); e++)
+                        temp = ( temp != (RH->entry(row, e) && UH->entry(e, col)) );
+                    if(temp != D->entry(row, col))
+                        std::cout << "====>>>> MATRIX ERROR AT THIS STEP!\n";
+               }
+            }
+
         }//end for(i=...)
     }//end for(c=...)
     std::cout << "\n";

@@ -37,6 +37,9 @@ class BarcodeCalculator
         std::map<unsigned, xiMatrixEntry*> partition_low;   //map from "low" columns to equivalence-class representatives -- implicitly stores the partition of the set of \xi support points
         std::map<unsigned, xiMatrixEntry*> partition_high;  //map from "high" columns to equivalence-class representatives -- implicitly stores the partition of the set of \xi support points
 
+        ///TESTING ONLY
+        MapMatrix_Perm* D;
+
       //functions
 
         //stores multigrade info for the persistence computations (data structures prepared with respect to a near-vertical line positioned to the right of all \xi support points)
