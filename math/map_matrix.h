@@ -114,6 +114,8 @@ class MapMatrix_Perm : public MapMatrix
         std::vector<unsigned> perm;     //permutation vector
         std::vector<unsigned> mrep;     //inverse permutation vector
         std::vector<int> low_col;       //stores index of column with each low number, or -1 if no such column exists -- NOTE: only accurate after decompose_RU() is called
+
+        std::vector<unsigned> col_perm; ///column permutation vector -- FOR TESTING ONLY
 };
 
 

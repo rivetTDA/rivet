@@ -530,7 +530,7 @@ void MapMatrix::print()
 
 MapMatrix_Perm::MapMatrix_Perm(unsigned rows, unsigned cols) :
     MapMatrix(rows, cols),
-    perm(rows), mrep(rows), low_col(rows, -1)
+    perm(rows), mrep(rows), low_col(rows, -1), col_perm(cols)
 {
     //initialize permutation vectors to the identity permutation
     for(unsigned i=0; i < rows; i++)
@@ -538,6 +538,9 @@ MapMatrix_Perm::MapMatrix_Perm(unsigned rows, unsigned cols) :
         perm[i] = i;
         mrep[i] = i;
     }
+
+    for(unsigned j=0; j < cols; j++)
+        col_perm[j] = j;
 }
 
 MapMatrix_Perm::MapMatrix_Perm(unsigned size) :
@@ -654,6 +657,11 @@ void MapMatrix_Perm::swap_columns(unsigned j)
 //    int b = low(j+1);
 //    if(b != -1)
 //        low_col[b] = j+1;
+
+    ///TESTING ONLY
+    unsigned a = col_perm[j];
+    col_perm[j] = col_perm[j+1];
+    col_perm[j+1] = a;
 }
 
 //reduces this matrix and returns the corresponding upper-triangular matrix for the RU-decomposition
@@ -684,6 +692,16 @@ MapMatrix_RowPriority_Perm* MapMatrix_Perm::decompose_RU()
 //function to print the matrix to standard output, for testing purposes
 void MapMatrix_Perm::print()
 {
+    //print permutation
+    std::cout << "    row permutation: ";
+    for(unsigned i=0; i<num_rows; i++)
+        std::cout << perm[i] << " ";
+    std::cout << "\n";
+    std::cout << "    INVERSE column permutation: ";
+    for(unsigned j=0; j<columns.size(); j++)
+        std::cout << col_perm[j] << " ";
+    std::cout << "\n";
+
     //handle empty matrix
     if(num_rows == 0 || columns.size() == 0)
     {

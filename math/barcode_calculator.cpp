@@ -149,7 +149,13 @@ void BarcodeCalculator::store_barcodes(std::vector<Halfedge*>& path)
         R_high->print();
         std::cout << "  Matrix U for high simplices:\n";
         U_high->print();
-        std::cout << "  Discrete barcode: ";
+        std::cout << "  Low partition: ";
+        for(std::map<unsigned, xiMatrixEntry*>::iterator it = partition_low.begin(); it != partition_low.end(); ++it)
+            std::cout << it->first << "->" << it->second->index << ", ";
+        std::cout << "\n  High partition: ";
+        for(std::map<unsigned, xiMatrixEntry*>::iterator it = partition_high.begin(); it != partition_high.end(); ++it)
+            std::cout << it->first << "->" << it->second->index << ", ";
+        std::cout << "\n  Discrete barcode: ";
         first_cell->get_barcode().print();
     }
 
@@ -258,8 +264,8 @@ void BarcodeCalculator::store_barcodes(std::vector<Halfedge*>& path)
 
             if(generator->low_class_size != -1)    //then merge classes
             {
-                at_LCM->low_class_size += generator->low_class_size;
-                at_LCM->high_class_size += generator->high_class_size;
+                at_LCM->low_class_size = at_LCM->low_count + generator->low_class_size;
+                at_LCM->high_class_size = at_LCM->high_count + generator->high_class_size;
                 generator->low_class_size = -1;    //indicates that this xiMatrixEntry is NOT the head of an equivalence class
 
                 remove_partition_entries(generator);
@@ -306,9 +312,15 @@ void BarcodeCalculator::store_barcodes(std::vector<Halfedge*>& path)
             R_high->print();
             std::cout << "  Matrix U for high simplices:\n";
             U_high->print();
-            std::cout << "  Matrix D for high simplices:\n";
-            D->print();
-            std::cout << "  Discrete barcode: ";
+//            std::cout << "  Matrix D for high simplices:\n";
+//            D->print();
+            std::cout << "  Low partition: ";
+            for(std::map<unsigned, xiMatrixEntry*>::iterator it = partition_low.begin(); it != partition_low.end(); ++it)
+                std::cout << it->first << "->" << it->second->index << ", ";
+            std::cout << "\n  High partition: ";
+            for(std::map<unsigned, xiMatrixEntry*>::iterator it = partition_high.begin(); it != partition_high.end(); ++it)
+                std::cout << it->first << "->" << it->second->index << ", ";
+            std::cout << "\n  Discrete barcode: ";
             cur_face->get_barcode().print();
         }
 
@@ -801,20 +813,25 @@ void BarcodeCalculator::move_high_columns(int s, unsigned n, int t, MapMatrix_Pe
 //removes entries corresponding to xiMatrixEntry head from partition_low and partition_high
 void BarcodeCalculator::remove_partition_entries(xiMatrixEntry* head)
 {
+    std::cout << "    ----removing partition entries for xiMatrixEntry " << head->index << " (" << head->low_index << "; " << head->high_index << ")\n";
+
     //low simplices
     std::map<unsigned, xiMatrixEntry*>::iterator it1 = partition_low.find(head->low_index);
-    if(it1 != partition_low.end())
+    if(it1 != partition_low.end() && it1->second == head)
         partition_low.erase(it1);
 
     //high simplices
     std::map<unsigned, xiMatrixEntry*>::iterator it2 = partition_high.find(head->high_index);
-    if(it2 != partition_high.end())
+    if(it2 != partition_high.end() && it2->second == head)
         partition_high.erase(it2);
+
 }//end remove_partition_entries()
 
 //if the equivalence class corresponding to xiMatrixEntry head has nonempty sets of "low" or "high" simplices, then this function creates the appropriate entries in partition_low and partition_high
 void BarcodeCalculator::add_partition_entries(xiMatrixEntry* head)
 {
+    std::cout << "    ----adding partition entries for xiMatrixEntry " << head->index << " (" << head->low_index << "; " << head->high_index << ")\n";
+
     //low simplices
     if(head->low_class_size > 0)
         partition_low.insert( std::pair<unsigned, xiMatrixEntry*>(head->low_index, head) );
