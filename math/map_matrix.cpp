@@ -530,7 +530,7 @@ void MapMatrix::print()
 
 MapMatrix_Perm::MapMatrix_Perm(unsigned rows, unsigned cols) :
     MapMatrix(rows, cols),
-    perm(rows), mrep(rows), low_col(rows, -1), col_perm(cols)
+    perm(rows), mrep(rows), low_by_row(rows, -1), col_perm(cols)
 {
     //initialize permutation vectors to the identity permutation
     for(unsigned i=0; i < rows; i++)
@@ -545,7 +545,7 @@ MapMatrix_Perm::MapMatrix_Perm(unsigned rows, unsigned cols) :
 
 MapMatrix_Perm::MapMatrix_Perm(unsigned size) :
     MapMatrix(size),
-    perm(size), mrep(size), low_col(size, -1)
+    perm(size), mrep(size), low_by_row(size, -1)
 {
     //initialize permutation vectors to the identity permutation
     for(unsigned i=0; i < size; i++)
@@ -570,6 +570,32 @@ bool MapMatrix_Perm::entry(unsigned i, unsigned j)
 {
     return MapMatrix::entry(mrep[i], j);
 }
+
+//reduces this matrix and returns the corresponding upper-triangular matrix for the RU-decomposition
+//NOTE -- only to be called before any rows are swapped!
+MapMatrix_RowPriority_Perm* MapMatrix_Perm::decompose_RU()
+{
+    //create the matrix U
+    MapMatrix_RowPriority_Perm* U = new MapMatrix_RowPriority_Perm(columns.size());   //NOTE: must be deleted later!
+
+    //loop through columns
+    for(unsigned j=0; j<columns.size(); j++)
+    {
+        //while column j is nonempty and its low number is found in the low array, do column operations
+        while( columns[j] != NULL && low_by_row[columns[j]->get_row()] >= 0 )
+        {
+            int c = low_by_row[columns[j]->get_row()];
+            add_column(c, j);
+            U->add_row(j, c);  //perform the opposite row operation on U
+        }
+
+        if(columns[j] != NULL)    //then column is still nonempty, so update lows
+            low_by_row[low(j)] = j;
+    }
+
+    //return the matrix U
+    return U;
+}//end decompose_RU()
 
 //returns the "low" index in the specified column, or -1 if the column is empty
 //NOTE: this is potentially slow, but I don't know how to improve it (we could store the low number with each column, but then we would have to keep this data up-to-date)
@@ -613,7 +639,7 @@ int MapMatrix_Perm::find_low(unsigned l)
     return -1;
 
 ///RESTORE THIS WHEN USING LOW ARRAY!!!
-//    return low_col[l];
+//    return low_by_row[l];
 }
 
 //transposes rows i and i+1
@@ -634,11 +660,8 @@ void MapMatrix_Perm::swap_rows(unsigned i)
     mrep[i] = b;
     mrep[i+1] = a;
 
-///RESTORE THIS WHEN USING LOW ARRAY!!!
-//    //also swap entries in low array
-//    int t = low_col[i];
-//    low_col[i] = low_col[i+1];
-//    low_col[i+1] = t;
+///WRITE CODE FOR USING LOW ARRAYS!
+
 }//end swap_rows()
 
 //transposes columns j and j+1
@@ -649,7 +672,7 @@ void MapMatrix_Perm::swap_columns(unsigned j)
     columns[j] = columns[j+1];
     columns[j+1] = temp;
 
-///RESTORE THIS WHEN USING LOW ARRAY!!!
+///WRITE CODE FOR USING LOW ARRAYS!
 //    //also swap entries in low array
 //    int a = low(j);
 //    if(a != -1)
@@ -663,31 +686,6 @@ void MapMatrix_Perm::swap_columns(unsigned j)
     col_perm[j] = col_perm[j+1];
     col_perm[j+1] = a;
 }
-
-//reduces this matrix and returns the corresponding upper-triangular matrix for the RU-decomposition
-MapMatrix_RowPriority_Perm* MapMatrix_Perm::decompose_RU()
-{
-    //create the matrix U
-    MapMatrix_RowPriority_Perm* U = new MapMatrix_RowPriority_Perm(columns.size());   //NOTE: must be deleted later!
-
-    //loop through columns
-    for(unsigned j=0; j<columns.size(); j++)
-    {
-        //while column j is nonempty and its low number is found in the low array, do column operations
-        while(low(j) >= 0 && low_col[low(j)] >= 0)
-        {
-            int c = low_col[low(j)];
-            add_column(c, j);
-            U->add_row(j, c);  //perform the opposite row operation on U
-        }
-
-        if(low(j) >= 0)    //then column is still nonempty, so update lows
-            low_col[low(j)] = j;
-    }
-
-    //return the matrix U
-    return U;
-}//end decompose_RU()
 
 //function to print the matrix to standard output, for testing purposes
 void MapMatrix_Perm::print()

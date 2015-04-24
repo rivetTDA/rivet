@@ -100,20 +100,23 @@ class MapMatrix_Perm : public MapMatrix
         void set(unsigned i, unsigned j);       //sets (to 1) the entry in row i, column j
         bool entry(unsigned i, unsigned j);     //returns true if entry (i,j) is 1, false otherwise
 
+        MapMatrix_RowPriority_Perm* decompose_RU();  //reduces this matrix, fills the low array, and returns the corresponding upper-triangular matrix for the RU-decomposition
+            //NOTE -- only to be called before any rows are swapped!
+
         int low(unsigned j);        //returns the "low" index in the specified column, or -1 if the column is empty
         int find_low(unsigned l);   //returns the index of the column with low l, or -1 if there is no such column
 
         void swap_rows(unsigned i);  //transposes rows i and i+1
         void swap_columns(unsigned j); //transposes columns j and j+1
 
-        MapMatrix_RowPriority_Perm* decompose_RU();  //reduces this matrix, fills the low array, and returns the corresponding upper-triangular matrix for the RU-decomposition
 
         virtual void print();       //prints the matrix to standard output (for testing)
 
     protected:
         std::vector<unsigned> perm;     //permutation vector
         std::vector<unsigned> mrep;     //inverse permutation vector
-        std::vector<int> low_col;       //stores index of column with each low number, or -1 if no such column exists -- NOTE: only accurate after decompose_RU() is called
+        std::vector<int> low_by_row;    //stores index of column with each low number, or -1 if no such column exists -- NOTE: only accurate after decompose_RU() is called
+        std::vector<int> low_by_col;    //stores the low number for each column, or -1 if the column is empty -- NOTE: only accurate after decompose_RU() is called
 
         std::vector<unsigned> col_perm; ///column permutation vector -- FOR TESTING ONLY
 };

@@ -662,14 +662,13 @@ void BarcodeCalculator::move_low_columns(int s, unsigned n, int t, MapMatrix_Per
                     int l = RH->find_low(b);
                     bool nonreduced = (k > -1 && l > -1 && RH->entry(a, l));
 
-                    //transpose rows and columns
-                    RL->swap_columns(a);
-                    RH->swap_rows(a);
+                    //ensure that UL[a,b]=0
+                    UL->clear(a, b);
+
+                    //transpose rows and columns  (don't need to swap columns of RL, because these columns are zero)
+                    RH->swap_rows(a);       //NOTE: also swaps entries in low array; RH is later "fixed" so that this is correct
                     UL->swap_columns(a);
                     UL->swap_rows(a);
-
-                    //ensure that UL[b,a]=0
-                    UL->clear(b, a);
 
                     //fix RH if necessary
                     if(nonreduced)  // (Case 1.1)
@@ -688,44 +687,67 @@ void BarcodeCalculator::move_low_columns(int s, unsigned n, int t, MapMatrix_Per
                 }
                 else    //simplex b is negative (Case 4)
                 {
+                    //ensure that UL[a,b]=0
+                    UL->clear(a, b);
+
                     //first, transpose rows and columns
-                    RL->swap_columns(a);
-                    RH->swap_rows(a);
+                    RL->swap_columns(a);//==>, true);  //NOTE: second parameter indicates that low array is updated
+                    RH->swap_rows(a);           //NOTE: also swaps entries in low array (and this is correct)
                     UL->swap_columns(a);
                     UL->swap_rows(a);
-
-                    //now, ensure that UL[b,a]=0
-                    UL->clear(b, a);
                 }
             }
             else    //simplex a is negative (Vineyards paper - Cases 2 and 3)
             {
-                if(UL->entry(a, b)) //then do row/column additions before swapping rows and columns (Cases 2.1 and 3.1)
+                if(b_pos)   //simplex b is positive (Case 3)
                 {
-                    //preliminary additions so that U will remain upper-triangular
-                    UL->add_row(b, a);
-                    RL->add_column(a, b);
-
-                    //transpose rows and columns
-                    RL->swap_columns(a);
+                    //transpose rows of R and columns of U
                     RH->swap_rows(a);
-                    UL->swap_columns(a);
-                    UL->swap_rows(a);
 
-                    //now it might be necessary to fix R
-                    if(b_pos || RL->low(a) == RL->low(b))
+                    if(UL->entry(a, b))    //case 3.1 -- here, R = RWPW, so no further action required on R
                     {
-                        RL->add_column(a, b);
-                        UL->add_row(b, a);
+                       UL->add_row(b, a);
+                       UL->swap_rows(a);
+                       UL->add_row(b, a);
+                    }
+                    else    //case 3.2
+                    {
+                        RL->swap_columns(a);//==>, true);
+                        UL->swap_rows(a);
                     }
                 }
-                else    //then just transpose rows and columns (Cases 2.2 and 3.2)
+                else    //simplex b is negative (Case 2)
                 {
-                    RL->swap_columns(a);
-                    RH->swap_rows(a);
-                    UL->swap_columns(a);
-                    UL->swap_rows(a);
+                    //transpose rows of R
+                    RH->swap_rows(a);   //neither of these rows contain lowest 1's in any column
+
+                    if(UL->entry(a, b)) //case 2.1
+                    {
+                        UL->add_row(b, a);  //so that U will remain upper-triangular
+                        UL->swap_rows(a);   //swap rows of U
+
+                        if(RL->low(a) < RL->low(b)) //case 2.1.1
+                        {
+                            RL->add_column(a, b);       //necessary due to the row addition on U; this doesn't change low entries
+                            RL->swap_columns(a);//==>, true);  //now swap columns of R and update low entries
+                        }
+                        else //case 2.1.2
+                        {
+                            RL->add_column(a, b);       //necessary due to the row addition on U; this doesn't change low entries
+                            RL->swap_columns(a);//==>, false); //now swap columns of R but DO NOT update low entries
+                            RL->add_column(a, b);       //restore R to reduced form; low entries now same as they were initially
+                            UL->add_row(b, a);          //necessary due to column addition on R
+                        }
+                    }
+                    else    //case 2.2
+                    {
+                        RL->swap_columns(a);//==>, true);  //swap columns and update low entries
+                        UL->swap_rows(a);           //swap rows of U
+                    }
                 }
+
+                //finally, for cases 2 and 3, transpose columns of U
+                UL->swap_columns(a);
             }
         }//end for(i=...)
     }//end for(c=...)
@@ -753,42 +775,63 @@ void BarcodeCalculator::move_high_columns(int s, unsigned n, int t, MapMatrix_Pe
 
             if(a_pos)   //simplex a is positive, so its column is zero, and the fix is easy  (Vineyards paper - Cases 1 and 4)
             {
-                //first, transpose rows and columns
-                RH->swap_columns(a);
+                if(!b_pos)   //only have to swap columns of R if column b is nonzero
+                    RH->swap_columns(a);//==>, true);
+
+                //ensure that UL[a,b]=0
+                UH->clear(a, b);
+
+                //transpose rows and columns of U
                 UH->swap_columns(a);
                 UH->swap_rows(a);
-
-                //now, ensure that UL[b,a]=0
-                UH->clear(b, a);
 
                 //done -- we don't care about the ROWS corresponding to simplices a and b, because we don't care about the boundaries of (d+2)-simplices
             }
             else    //simplex a is negative (Vineyards paper - Cases 2 and 3)
             {
-                if(UH->entry(a, b)) //then do row/column additions before swapping rows and columns (Cases 2.1 and 3.1)
+                if(b_pos)   //simplex b is positive (Case 3)
                 {
-                    //preliminary additions so that U will remain upper-triangular
-                    UH->add_row(b, a);
-                    RH->add_column(a, b);
-
-                    //transpose rows and columns
-                    RH->swap_columns(a);
-                    UH->swap_columns(a);
-                    UH->swap_rows(a);
-
-                    //now it might be necessary to fix R
-                    if(b_pos || RH->low(a) == RH->low(b))
+                    if(UH->entry(a, b))    //case 3.1 -- here, R = RWPW, so no further action required on R
                     {
-                        RH->add_column(a, b);
-                        UH->add_row(b, a);
+                       UH->add_row(b, a);
+                       UH->swap_rows(a);
+                       UH->add_row(b, a);
+                    }
+                    else    //case 3.2
+                    {
+                        RH->swap_columns(a);//==>, true);
+                        UH->swap_rows(a);
                     }
                 }
-                else    //then just transpose rows and columns (Cases 2.2 and 3.2)
+                else    //simplex b is negative (Case 2)
                 {
-                    RH->swap_columns(a);
-                    UH->swap_columns(a);
-                    UH->swap_rows(a);
+                    if(UH->entry(a, b)) //case 2.1
+                    {
+                        UH->add_row(b, a);  //so that U will remain upper-triangular
+                        UH->swap_rows(a);   //swap rows of U
+
+                        if(RH->low(a) < RH->low(b)) //case 2.1.1
+                        {
+                            RH->add_column(a, b);       //necessary due to the row addition on U; this doesn't change low entries
+                            RH->swap_columns(a);//==>, true);  //now swap columns of R and update low entries
+                        }
+                        else //case 2.1.2
+                        {
+                            RH->add_column(a, b);       //necessary due to the row addition on U; this doesn't change low entries
+                            RH->swap_columns(a);//==>, false); //now swap columns of R but DO NOT update low entries
+                            RH->add_column(a, b);       //restore R to reduced form; low entries now same as they were initially
+                            UH->add_row(b, a);          //necessary due to column addition on R
+                        }
+                    }
+                    else    //case 2.2
+                    {
+                        RH->swap_columns(a);//==>, true);  //swap columns and update low entries
+                        UH->swap_rows(a);           //swap rows of U
+                    }
                 }
+
+                //finally, for Cases 2 and 3, transpose columns of U
+                UH->swap_columns(a);
             }
 
             /// TESTING ONLY
@@ -802,6 +845,8 @@ void BarcodeCalculator::move_high_columns(int s, unsigned n, int t, MapMatrix_Pe
                         temp = ( temp != (RH->entry(row, e) && UH->entry(e, col)) );
                     if(temp != D->entry(row, col))
                         std::cout << "====>>>> MATRIX ERROR AT THIS STEP!\n";
+//                    else
+//                        std::cout << "====NO ERROR";
                }
             }
 
