@@ -530,7 +530,7 @@ void MapMatrix::print()
 
 MapMatrix_Perm::MapMatrix_Perm(unsigned rows, unsigned cols) :
     MapMatrix(rows, cols),
-    perm(rows), mrep(rows), low_by_row(rows, -1), col_perm(cols)
+    perm(rows), mrep(rows), low_by_row(rows, -1), low_by_col(cols, -1), col_perm(cols)
 {
     //initialize permutation vectors to the identity permutation
     for(unsigned i=0; i < rows; i++)
@@ -545,7 +545,7 @@ MapMatrix_Perm::MapMatrix_Perm(unsigned rows, unsigned cols) :
 
 MapMatrix_Perm::MapMatrix_Perm(unsigned size) :
     MapMatrix(size),
-    perm(size), mrep(size), low_by_row(size, -1)
+    perm(size), mrep(size), low_by_row(size, -1), low_by_col(size, -1)
 {
     //initialize permutation vectors to the identity permutation
     for(unsigned i=0; i < size; i++)
@@ -590,102 +590,120 @@ MapMatrix_RowPriority_Perm* MapMatrix_Perm::decompose_RU()
         }
 
         if(columns[j] != NULL)    //then column is still nonempty, so update lows
-            low_by_row[low(j)] = j;
+        {
+            low_by_col[j] = columns[j]->get_row();
+            low_by_row[columns[j]->get_row()] = j;
+        }
     }
 
     //return the matrix U
     return U;
 }//end decompose_RU()
 
-//returns the "low" index in the specified column, or -1 if the column is empty
-//NOTE: this is potentially slow, but I don't know how to improve it (we could store the low number with each column, but then we would have to keep this data up-to-date)
-//written to avoid comparing int and unsigned types
+//returns the row index of the lowest entry in the specified column, or -1 if the column is empty
 int MapMatrix_Perm::low(unsigned j)
 {
-    //make sure this query is valid
-    if(columns.size() <= j)
-        throw std::runtime_error("attempting to check low number of a column past end of matrix");
-
-    //return -1 if the column is empty
-    if(columns[j] == NULL)
-        return -1;
-
-    //consider the first node
-    MapMatrixNode* current = columns[j];
-    unsigned lowest = perm[current->get_row()];
-
-    //consider all following nodes
-    current = current->get_next();
-    while(current != NULL)
-    {
-        if(perm[current->get_row()] > lowest)
-            lowest = perm[current->get_row()];
-
-        current = current->get_next();
-    }
-
-    return lowest;
+    return low_by_col[j];
 }
 
 //returns the index of the column with low l, or -1 if there is no such column
 int MapMatrix_Perm::find_low(unsigned l)
 {
-    ///THIS IS AWFUL, BUT LOW ARRAY IS BROKEN
-    for(int j=0; j<columns.size(); j++)
-    {
-        if(low(j) == l)
-            return j;
-    }
-    return -1;
-
-///RESTORE THIS WHEN USING LOW ARRAY!!!
-//    return low_by_row[l];
+    return low_by_row[l];
 }
 
 //transposes rows i and i+1
 //NOTE: this causes low array to be incorrect iff there are columns k and l with low(k)=i, low(l)=i+1, and M[i,l]=1  (as in Vineyards, Case 1.1)
 //      the user must detect this and do a column operation to restore the matrix to a reduced state!
-void MapMatrix_Perm::swap_rows(unsigned i)
+void MapMatrix_Perm::swap_rows(unsigned i, bool update_lows)
 {
     //get original row indexes of these rows
     unsigned a = mrep[i];
     unsigned b = mrep[i+1];
 
-    //swap perm[a] and perm[b]
+    //swap entries in permutation and inverse permutation arrays
     unsigned temp = perm[a];
     perm[a] = perm[b];
     perm[b] = temp;
 
-    //swap mrep[i] and mrep[i+1]
     mrep[i] = b;
     mrep[i+1] = a;
 
-///WRITE CODE FOR USING LOW ARRAYS!
+    //update low arrays
+    if(update_lows)
+    {
+        int l = low_by_row[i];
+        int k = low_by_row[i+1];
 
+        low_by_row[i] = k;
+        low_by_row[i+1] = l;
+
+        if(l != -1)
+            low_by_col[l] = i+1;
+        if(k != -1)
+            low_by_col[k] = i;
+    }
 }//end swap_rows()
 
 //transposes columns j and j+1
-void MapMatrix_Perm::swap_columns(unsigned j)
+//NOTE: this does not update low arrays! user must do this via swap_lows()
+void MapMatrix_Perm::swap_columns(unsigned j, bool update_lows)
 {
     //swap columns
     MapMatrixNode* temp = columns[j];
     columns[j] = columns[j+1];
     columns[j+1] = temp;
 
-///WRITE CODE FOR USING LOW ARRAYS!
-//    //also swap entries in low array
-//    int a = low(j);
-//    if(a != -1)
-//        low_col[a] = j;
-//    int b = low(j+1);
-//    if(b != -1)
-//        low_col[b] = j+1;
+    //update low arrays
+    if(update_lows)
+    {
+        int l = low_by_col[j];
+        int k = low_by_col[j+1];
+
+        low_by_col[j] = k;
+        low_by_col[j+1] = l;
+
+        if(l != -1)
+            low_by_row[l] = j+1;
+        if(k != -1)
+            low_by_row[k] = j;
+    }
 
     ///TESTING ONLY
     unsigned a = col_perm[j];
     col_perm[j] = col_perm[j+1];
     col_perm[j+1] = a;
 }
+
+////updates low entries after swap of rows i and i+1
+//void MapMatrix_Perm::swap_lows_by_row(unsigned i)
+//{
+//    int a = low_by_row[i];
+//    int b = low_by_row[i+1];
+
+//    low_by_row[i] = b;
+//    low_by_row[i+1] = a;
+
+//    if(a != -1)
+//        low_by_col[a] = i+1;
+//    if(b != -1)
+//        low_by_col[b] = i;
+//}
+
+////updates low entries after swap of columns j and j+1
+//void MapMatrix_Perm::swap_lows_by_col(unsigned j)
+//{
+//    int a = low_by_col[j];
+//    int b = low_by_col[j+1];
+
+//    low_by_col[j] = b;
+//    low_by_col[j+1] = a;
+
+//    if(a != -1)
+//        low_by_row[a] = j+1;
+//    if(b != -1)
+//        low_by_row[b] = j;
+//}
 
 //function to print the matrix to standard output, for testing purposes
 void MapMatrix_Perm::print()
@@ -741,6 +759,48 @@ void MapMatrix_Perm::print()
     }
 }//end print()
 
+//check for inconsistencies in low arrays
+void MapMatrix_Perm::check_lows()
+{
+    for(unsigned i=0; i<num_rows; i++)
+    {
+        if(low_by_row[i] != -1)
+        {
+            if(low_by_col[low_by_row[i]] != i)
+                std::cout << "===>>> ERROR: INCONSISTNECY IN LOW ARRAYS\n";
+        }
+    }
+    for(unsigned j=0; j<columns.size(); j++)
+    {
+        //find the lowest entry in column j
+        unsigned lowest = -1;
+        if(columns[j] != NULL)
+        {
+            //consider the first node
+            MapMatrixNode* current = columns[j];
+            lowest = perm[current->get_row()];
+
+            //consider all following nodes
+            current = current->get_next();
+            while(current != NULL)
+            {
+                if(perm[current->get_row()] > lowest)
+                    lowest = perm[current->get_row()];
+
+                current = current->get_next();
+            }
+        }
+
+        //does this match low_by_col[j]?
+        if(lowest != low_by_col[j])
+            std::cout << "===>>> ERROR IN low_by_col[" << j << "]\n";
+        else if(lowest != -1)
+        {
+            if(low_by_row[lowest] != j)
+                std::cout << "===>>> ERROR: INCONSISTNECY IN LOW ARRAYS\n";
+        }
+    }
+}
 
 
 /********** implementation of class MapMatrix_RowPriority_Perm **********/

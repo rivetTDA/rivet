@@ -143,10 +143,12 @@ void BarcodeCalculator::store_barcodes(std::vector<Halfedge*>& path)
     {
         std::cout << "  Reduced matrix for low simplices:\n";
         R_low->print();
+        R_low->check_lows();
         std::cout << "  Matrix U for low simplices:\n";
         U_low->print();
         std::cout << "  Reduced matrix for high simplices:\n";
         R_high->print();
+        R_high->check_lows();
         std::cout << "  Matrix U for high simplices:\n";
         U_high->print();
         std::cout << "  Low partition: ";
@@ -306,10 +308,12 @@ void BarcodeCalculator::store_barcodes(std::vector<Halfedge*>& path)
         {
             std::cout << "  Reduced matrix for low simplices:\n";
             R_low->print();
+            R_low->check_lows();
             std::cout << "  Matrix U for low simplices:\n";
             U_low->print();
             std::cout << "  Reduced matrix for high simplices:\n";
             R_high->print();
+            R_high->check_lows();
             std::cout << "  Matrix U for high simplices:\n";
             U_high->print();
 //            std::cout << "  Matrix D for high simplices:\n";
@@ -660,39 +664,42 @@ void BarcodeCalculator::move_low_columns(int s, unsigned n, int t, MapMatrix_Per
                     //look for columns k and l in RH with low(k)=a, low(l)=b, and RH(a,l)=1 -- if these exist, then we must fix matrix RH following row/column swaps (Case 1.1)
                     int k = RH->find_low(a);
                     int l = RH->find_low(b);
-                    bool nonreduced = (k > -1 && l > -1 && RH->entry(a, l));
+                    bool RHal = (l > -1 && RH->entry(a, l));  //entry (a,l) in matrix RH
 
                     //ensure that UL[a,b]=0
                     UL->clear(a, b);
 
-                    //transpose rows and columns  (don't need to swap columns of RL, because these columns are zero)
-                    RH->swap_rows(a);       //NOTE: also swaps entries in low array; RH is later "fixed" so that this is correct
+                    //transpose rows and columns (don't need to swap columns of RL, because these columns are zero)
                     UL->swap_columns(a);
                     UL->swap_rows(a);
 
-                    //fix RH if necessary
-                    if(nonreduced)  // (Case 1.1)
+                    //swap rows, and fix RH if necessary
+                    if(k > -1 && RHal)  //case 1.1
                     {
                         if(k < l)
                         {
+                            RH->swap_rows(a, true);  //in this case, low entries change
                             RH->add_column(k, l);
                             UH->add_row(l, k);
                         }
                         else
                         {
+                            RH->swap_rows(a, false);  //in this case, low entries do not change
                             RH->add_column(l, k);
                             UH->add_row(k, l);
                         }
                     }
+                    else
+                        RH->swap_rows(a, !RHal);  //in this case, only necessary to update low entries if RH(a,l)=0 or if column l does not exist
                 }
                 else    //simplex b is negative (Case 4)
                 {
                     //ensure that UL[a,b]=0
                     UL->clear(a, b);
 
-                    //first, transpose rows and columns
-                    RL->swap_columns(a);//==>, true);  //NOTE: second parameter indicates that low array is updated
-                    RH->swap_rows(a);           //NOTE: also swaps entries in low array (and this is correct)
+                    //transpose rows and columns and update low arrays
+                    RL->swap_columns(a, true);
+                    RH->swap_rows(a, true);
                     UL->swap_columns(a);
                     UL->swap_rows(a);
                 }
@@ -701,8 +708,12 @@ void BarcodeCalculator::move_low_columns(int s, unsigned n, int t, MapMatrix_Per
             {
                 if(b_pos)   //simplex b is positive (Case 3)
                 {
-                    //transpose rows of R and columns of U
-                    RH->swap_rows(a);
+                    //look for column l in RH with low(l)=b and RH(a,l)=1
+                    int l = RH->find_low(b);
+                    bool RHal = (l > -1 && RH->entry(a, l));    //entry (a,l) in matrix RH
+
+                    //transpose rows of R; update low array if necessary
+                    RH->swap_rows(a, !RHal);
 
                     if(UL->entry(a, b))    //case 3.1 -- here, R = RWPW, so no further action required on R
                     {
@@ -712,14 +723,14 @@ void BarcodeCalculator::move_low_columns(int s, unsigned n, int t, MapMatrix_Per
                     }
                     else    //case 3.2
                     {
-                        RL->swap_columns(a);//==>, true);
+                        RL->swap_columns(a, true);
                         UL->swap_rows(a);
                     }
                 }
                 else    //simplex b is negative (Case 2)
                 {
                     //transpose rows of R
-                    RH->swap_rows(a);   //neither of these rows contain lowest 1's in any column
+                    RH->swap_rows(a, false);   //neither of these rows contain lowest 1's in any column
 
                     if(UL->entry(a, b)) //case 2.1
                     {
@@ -729,19 +740,19 @@ void BarcodeCalculator::move_low_columns(int s, unsigned n, int t, MapMatrix_Per
                         if(RL->low(a) < RL->low(b)) //case 2.1.1
                         {
                             RL->add_column(a, b);       //necessary due to the row addition on U; this doesn't change low entries
-                            RL->swap_columns(a);//==>, true);  //now swap columns of R and update low entries
+                            RL->swap_columns(a, true);  //now swap columns of R and update low entries
                         }
                         else //case 2.1.2
                         {
                             RL->add_column(a, b);       //necessary due to the row addition on U; this doesn't change low entries
-                            RL->swap_columns(a);//==>, false); //now swap columns of R but DO NOT update low entries
+                            RL->swap_columns(a, false); //now swap columns of R but DO NOT update low entries
                             RL->add_column(a, b);       //restore R to reduced form; low entries now same as they were initially
                             UL->add_row(b, a);          //necessary due to column addition on R
                         }
                     }
                     else    //case 2.2
                     {
-                        RL->swap_columns(a);//==>, true);  //swap columns and update low entries
+                        RL->swap_columns(a, true);  //swap columns of R and update low entries
                         UL->swap_rows(a);           //swap rows of U
                     }
                 }
@@ -776,7 +787,7 @@ void BarcodeCalculator::move_high_columns(int s, unsigned n, int t, MapMatrix_Pe
             if(a_pos)   //simplex a is positive, so its column is zero, and the fix is easy  (Vineyards paper - Cases 1 and 4)
             {
                 if(!b_pos)   //only have to swap columns of R if column b is nonzero
-                    RH->swap_columns(a);//==>, true);
+                    RH->swap_columns(a, true);
 
                 //ensure that UL[a,b]=0
                 UH->clear(a, b);
@@ -799,7 +810,7 @@ void BarcodeCalculator::move_high_columns(int s, unsigned n, int t, MapMatrix_Pe
                     }
                     else    //case 3.2
                     {
-                        RH->swap_columns(a);//==>, true);
+                        RH->swap_columns(a, true);
                         UH->swap_rows(a);
                     }
                 }
@@ -813,19 +824,19 @@ void BarcodeCalculator::move_high_columns(int s, unsigned n, int t, MapMatrix_Pe
                         if(RH->low(a) < RH->low(b)) //case 2.1.1
                         {
                             RH->add_column(a, b);       //necessary due to the row addition on U; this doesn't change low entries
-                            RH->swap_columns(a);//==>, true);  //now swap columns of R and update low entries
+                            RH->swap_columns(a, true);  //now swap columns of R and update low entries
                         }
                         else //case 2.1.2
                         {
                             RH->add_column(a, b);       //necessary due to the row addition on U; this doesn't change low entries
-                            RH->swap_columns(a);//==>, false); //now swap columns of R but DO NOT update low entries
+                            RH->swap_columns(a, false); //now swap columns of R but DO NOT update low entries
                             RH->add_column(a, b);       //restore R to reduced form; low entries now same as they were initially
                             UH->add_row(b, a);          //necessary due to column addition on R
                         }
                     }
                     else    //case 2.2
                     {
-                        RH->swap_columns(a);//==>, true);  //swap columns and update low entries
+                        RH->swap_columns(a, true);  //swap columns and update low entries
                         UH->swap_rows(a);           //swap rows of U
                     }
                 }
@@ -835,7 +846,7 @@ void BarcodeCalculator::move_high_columns(int s, unsigned n, int t, MapMatrix_Pe
             }
 
             /// TESTING ONLY
-            D->swap_columns(a);
+            D->swap_columns(a, false);
             for(unsigned row = 0; row < D->height(); row++)
             {
                 for(unsigned col = 0; col < D->width(); col++)

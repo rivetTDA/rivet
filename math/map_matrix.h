@@ -106,11 +106,16 @@ class MapMatrix_Perm : public MapMatrix
         int low(unsigned j);        //returns the "low" index in the specified column, or -1 if the column is empty
         int find_low(unsigned l);   //returns the index of the column with low l, or -1 if there is no such column
 
-        void swap_rows(unsigned i);  //transposes rows i and i+1
-        void swap_columns(unsigned j); //transposes columns j and j+1
+        void swap_rows(unsigned i, bool update_lows);     //transposes rows i and i+1, optionally updates low array
+        void swap_columns(unsigned j, bool update_lows);  //transposes columns j and j+1, optionally updates low array
 
+        ///the following have been incorporated into swap_rows() and swap_columns()
+//        void swap_lows_by_row(unsigned i); //updates low entries after swap of rows i and i+1
+//        void swap_lows_by_col(unsigned j); //updates low entries after swap of columns j and j+1
 
+      ///FOR TESTING ONLY
         virtual void print();       //prints the matrix to standard output (for testing)
+        void check_lows();          //checks for inconsistencies in low arrays
 
     protected:
         std::vector<unsigned> perm;     //permutation vector
