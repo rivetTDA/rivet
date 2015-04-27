@@ -109,10 +109,6 @@ class MapMatrix_Perm : public MapMatrix
         void swap_rows(unsigned i, bool update_lows);     //transposes rows i and i+1, optionally updates low array
         void swap_columns(unsigned j, bool update_lows);  //transposes columns j and j+1, optionally updates low array
 
-        ///the following have been incorporated into swap_rows() and swap_columns()
-//        void swap_lows_by_row(unsigned i); //updates low entries after swap of rows i and i+1
-//        void swap_lows_by_col(unsigned j); //updates low entries after swap of columns j and j+1
-
       ///FOR TESTING ONLY
         virtual void print();       //prints the matrix to standard output (for testing)
         void check_lows();          //checks for inconsistencies in low arrays
@@ -123,7 +119,7 @@ class MapMatrix_Perm : public MapMatrix
         std::vector<int> low_by_row;    //stores index of column with each low number, or -1 if no such column exists -- NOTE: only accurate after decompose_RU() is called
         std::vector<int> low_by_col;    //stores the low number for each column, or -1 if the column is empty -- NOTE: only accurate after decompose_RU() is called
 
-        std::vector<unsigned> col_perm; ///column permutation vector -- FOR TESTING ONLY
+//        std::vector<unsigned> col_perm; ///column permutation vector -- FOR TESTING ONLY
 };
 
 

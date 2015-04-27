@@ -124,11 +124,11 @@ void BarcodeCalculator::store_barcodes(std::vector<Halfedge*>& path)
         R_high->print();
     }
     /// TESTING ONLY
-    D = bifiltration->get_boundary_mx(low_simplex_order, high_simplex_order);
+    D_low = bifiltration->get_boundary_mx(low_simplex_order);
+    D_high = bifiltration->get_boundary_mx(low_simplex_order, high_simplex_order);
 
 
   // PART 2: INITIAL PERSISTENCE COMPUTATION (RU-decomposition)
-
 
     MapMatrix_RowPriority_Perm* U_low = R_low->decompose_RU();
     MapMatrix_RowPriority_Perm* U_high = R_high->decompose_RU();
@@ -209,7 +209,7 @@ void BarcodeCalculator::store_barcodes(std::vector<Halfedge*>& path)
                 //now move the columns
                 move_columns(down, left, true, R_low, U_low, R_high, U_high);
 
-                //most-move updates to equivalance class info
+                //post-move updates to equivalance class info
                 if(at_LCM != NULL)  //this anchor is supported
                 {
                     at_LCM->low_class_size = at_LCM->low_count + down->low_class_size;
@@ -553,7 +553,7 @@ void BarcodeCalculator::move_columns(xiMatrixEntry* first, xiMatrixEntry* second
                 //associate cur_grade with target
                 cur_grade->xi_entry = target;
                 target->insert_multigrade(cur_grade, true);
-                first->low_simplices.erase(it);    //NOTE: advances the iterator!!!
+                it = first->low_simplices.erase(it);    //NOTE: advances the iterator!!!
 
                 //if target is not the leftmost entry in its equivalence class, then move columns at cur_grade to the block of columns for target
                 if( (from_below && target->left != NULL) || (!from_below && target->down != NULL) )
@@ -611,7 +611,7 @@ void BarcodeCalculator::move_columns(xiMatrixEntry* first, xiMatrixEntry* second
                 //associate cur_grade with target
                 cur_grade->xi_entry = target;
                 target->insert_multigrade(cur_grade, true);
-                first->high_simplices.erase(it);    //NOTE: advances the iterator!!!
+                it = first->high_simplices.erase(it);    //NOTE: advances the iterator!!!
 
                 //if target is not the leftmost entry in its equivalence class, then move columns at cur_grade to the block of columns for target
                 if( (from_below && target->left != NULL) || (!from_below && target->down != NULL) )
@@ -760,6 +760,47 @@ void BarcodeCalculator::move_low_columns(int s, unsigned n, int t, MapMatrix_Per
                 //finally, for cases 2 and 3, transpose columns of U
                 UL->swap_columns(a);
             }
+
+            /// TESTING ONLY
+            D_low->swap_columns(a, false);
+            D_high->swap_rows(a, false);
+            bool err_low = false;
+            bool err_high = false;
+            for(unsigned row = 0; row < D_low->height(); row++)
+            {
+                for(unsigned col = 0; col < D_low->width(); col++)
+                {
+                    bool temp = false;
+                    for(unsigned e = 0; e < D_low->width(); e++)
+                        temp = ( temp != (RL->entry(row, e) && UL->entry(e, col)) );
+                    if(temp != D_low->entry(row, col))
+                        err_low = true;
+               }
+            }
+            for(unsigned row = 0; row < D_high->height(); row++)
+            {
+                for(unsigned col = 0; col < D_high->width(); col++)
+                {
+                    bool temp = false;
+                    for(unsigned e = 0; e < D_high->width(); e++)
+                        temp = ( temp != (RH->entry(row, e) && UH->entry(e, col)) );
+                    if(temp != D_high->entry(row, col))
+                        err_high = true;
+               }
+            }
+            if(err_low)
+            {
+                std::cout << "====>>>> MATRIX ERROR (low) AT THIS STEP!\n";
+//                std::cout << "  Reduced matrix for low simplices:\n";
+//                RL->print();
+//                std::cout << "  Matrix U for low simplices:\n";
+//                UL->print();
+//                std::cout << "  Matrix D for low simplices:\n";
+//                D_low->print();
+            }
+            if(err_high)
+                std::cout << "====>>>> MATRIX ERROR (high) AT THIS STEP!\n";
+
         }//end for(i=...)
     }//end for(c=...)
 
@@ -846,20 +887,21 @@ void BarcodeCalculator::move_high_columns(int s, unsigned n, int t, MapMatrix_Pe
             }
 
             /// TESTING ONLY
-            D->swap_columns(a, false);
-            for(unsigned row = 0; row < D->height(); row++)
+            D_high->swap_columns(a, false);
+            bool err_high = false;
+            for(unsigned row = 0; row < D_high->height(); row++)
             {
-                for(unsigned col = 0; col < D->width(); col++)
+                for(unsigned col = 0; col < D_high->width(); col++)
                 {
                     bool temp = false;
-                    for(unsigned e = 0; e < D->width(); e++)
+                    for(unsigned e = 0; e < D_high->width(); e++)
                         temp = ( temp != (RH->entry(row, e) && UH->entry(e, col)) );
-                    if(temp != D->entry(row, col))
-                        std::cout << "====>>>> MATRIX ERROR AT THIS STEP!\n";
-//                    else
-//                        std::cout << "====NO ERROR";
+                    if(temp != D_high->entry(row, col))
+                        err_high = true;
                }
             }
+            if(err_high)
+                std::cout << "====>>>> MATRIX ERROR (high) AT THIS STEP!\n";
 
         }//end for(i=...)
     }//end for(c=...)

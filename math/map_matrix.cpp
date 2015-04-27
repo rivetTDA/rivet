@@ -530,7 +530,7 @@ void MapMatrix::print()
 
 MapMatrix_Perm::MapMatrix_Perm(unsigned rows, unsigned cols) :
     MapMatrix(rows, cols),
-    perm(rows), mrep(rows), low_by_row(rows, -1), low_by_col(cols, -1), col_perm(cols)
+    perm(rows), mrep(rows), low_by_row(rows, -1), low_by_col(cols, -1) // col_perm(cols)
 {
     //initialize permutation vectors to the identity permutation
     for(unsigned i=0; i < rows; i++)
@@ -539,8 +539,8 @@ MapMatrix_Perm::MapMatrix_Perm(unsigned rows, unsigned cols) :
         mrep[i] = i;
     }
 
-    for(unsigned j=0; j < cols; j++)
-        col_perm[j] = j;
+//    for(unsigned j=0; j < cols; j++)
+//        col_perm[j] = j;
 }
 
 MapMatrix_Perm::MapMatrix_Perm(unsigned size) :
@@ -670,40 +670,10 @@ void MapMatrix_Perm::swap_columns(unsigned j, bool update_lows)
     }
 
     ///TESTING ONLY
-    unsigned a = col_perm[j];
-    col_perm[j] = col_perm[j+1];
-    col_perm[j+1] = a;
+//    unsigned a = col_perm[j];
+//    col_perm[j] = col_perm[j+1];
+//    col_perm[j+1] = a;
 }
-
-////updates low entries after swap of rows i and i+1
-//void MapMatrix_Perm::swap_lows_by_row(unsigned i)
-//{
-//    int a = low_by_row[i];
-//    int b = low_by_row[i+1];
-
-//    low_by_row[i] = b;
-//    low_by_row[i+1] = a;
-
-//    if(a != -1)
-//        low_by_col[a] = i+1;
-//    if(b != -1)
-//        low_by_col[b] = i;
-//}
-
-////updates low entries after swap of columns j and j+1
-//void MapMatrix_Perm::swap_lows_by_col(unsigned j)
-//{
-//    int a = low_by_col[j];
-//    int b = low_by_col[j+1];
-
-//    low_by_col[j] = b;
-//    low_by_col[j+1] = a;
-
-//    if(a != -1)
-//        low_by_row[a] = j+1;
-//    if(b != -1)
-//        low_by_row[b] = j;
-//}
 
 //function to print the matrix to standard output, for testing purposes
 void MapMatrix_Perm::print()
@@ -713,10 +683,10 @@ void MapMatrix_Perm::print()
     for(unsigned i=0; i<num_rows; i++)
         std::cout << perm[i] << " ";
     std::cout << "\n";
-    std::cout << "    INVERSE column permutation: ";
-    for(unsigned j=0; j<columns.size(); j++)
-        std::cout << col_perm[j] << " ";
-    std::cout << "\n";
+//    std::cout << "    INVERSE column permutation: ";
+//    for(unsigned j=0; j<columns.size(); j++)
+//        std::cout << col_perm[j] << " ";
+//    std::cout << "\n";
 
     //handle empty matrix
     if(num_rows == 0 || columns.size() == 0)
