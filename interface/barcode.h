@@ -25,6 +25,7 @@ class Barcode
 
         std::multiset<MultiBar>::iterator begin();   //returns an iterator to the first bar in the barcode
         std::multiset<MultiBar>::iterator end();     //returns an iterator to the pst-the-end element the barcode
+        unsigned size();    //returns the number of multibars in the barcode
 
         void print();   //for testing only
 

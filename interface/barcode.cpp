@@ -52,6 +52,12 @@ std::set<MultiBar>::iterator Barcode::end()
     return bars.end();
 }
 
+//returns the number of multibars in the barcode
+unsigned Barcode::size()
+{
+    return bars.size();
+}
+
 //for testing only
 void Barcode::print()
 {

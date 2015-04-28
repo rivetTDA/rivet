@@ -70,9 +70,10 @@ private:
 
     std::vector<QGraphicsEllipseItem*> xi0_dots;    //pointers to all green dots
     std::vector<QGraphicsEllipseItem*> xi1_dots;    //pointers to all red dots
-    std::vector<PersistenceBar*> bars;           //pointers to all bars (in the barcode)
+    std::vector< std::list<PersistenceBar*> > bars; //pointers to all bars (in the barcode) -- each element of the vector stores a list of one or more identical bars that correspond to a single dot in the persistence diagram
 
-    PersistenceBar* selected;
+    unsigned selected;              //index of the class of selected bars
+    const unsigned NOT_SELECTED;    //set to max_unsigned
 
   //data items
     struct xiFloatingPoint  ///TODO: is this a good design? consider how to most efficiently store the points
@@ -101,7 +102,7 @@ private:
     const int padding;  //distance between xi support point area and control rectangle (on the top and right sides)
 
     //private functions
-    std::pair<double,double> compute_endpoint(double coordinate, unsigned index);  //computes an endpoint of a bar in the barcode
+    std::pair<double,double> compute_endpoint(double coordinate, unsigned offset);  //computes an endpoint of a bar in the barcode
 };
 
 #endif // SLICE_DIAGRAM_H

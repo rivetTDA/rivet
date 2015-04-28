@@ -7,7 +7,7 @@
 SliceDiagram::SliceDiagram(QGraphicsScene* sc, VisualizationWindow* vw, double xmin, double xmax, double ymin, double ymax, bool norm_coords) :
     scene(sc), window(vw),
     dot_left(), dot_right(), slice_line(),
-    selected(NULL),
+    selected(-1), NOT_SELECTED(-1),
     data_xmin(xmin), data_xmax(xmax), data_ymin(ymin), data_ymax(ymax),
     data_infty(4*(xmax - xmin + ymax - ymin)),
     normalized_coords(norm_coords),
@@ -198,20 +198,25 @@ void SliceDiagram::resize_diagram()
 
     //reposition bars
     double infty = get_zero() + data_infty;
+    unsigned count = 1;
     for(unsigned i = 0; i < bars.size(); i++)
     {
-        double start = bars[i]->get_start();
-        double end = bars[i]->get_end();
-        if(end == std::numeric_limits<double>::infinity())
-            end = infty;
+        for(std::list<PersistenceBar*>::iterator it = bars[i].begin(); it != bars[i].end(); ++it)
+        {
+            double start = (*it)->get_start();
+            double end = (*it)->get_end();
+            if(end == std::numeric_limits<double>::infinity())
+                end = infty;
 
-        std::pair<double,double> p1 = compute_endpoint(start, i+1);
-        std::pair<double,double> p2 = compute_endpoint(end, i+1);
-        bars[i]->set_line(p1.first, p1.second, p2.first, p2.second);
+            std::pair<double,double> p1 = compute_endpoint(start, count);
+            std::pair<double,double> p2 = compute_endpoint(end, count);
+            (*it)->set_line(p1.first, p1.second, p2.first, p2.second);
+            count++;
+        }
     }
 
     //reposition highlighting
-    if(selected != NULL)
+    if(selected != NOT_SELECTED)
         update_highlight();
 
     //set scene rectangle (necessary to prevent auto-scrolling)
@@ -313,45 +318,52 @@ void SliceDiagram::draw_barcode(Barcode *bc, bool show)
     double zero_coord = get_zero();
 
     //draw bars
-    unsigned num_bars = 0;
+    unsigned num_bars = 1;
+    unsigned index = 0;
     for(std::multiset<MultiBar>::iterator it = bc->begin(); it != bc->end(); ++it)
     {
         double start = it->birth - zero_coord;
         double end = it->death - zero_coord;
+        bars.resize(bc->size());
 
         for(unsigned i=0; i < it->multiplicity; i++)
         {
-            std::pair<double,double> p1 = compute_endpoint(start, num_bars + 1);
-            std::pair<double,double> p2 = compute_endpoint(end, num_bars + 1);
+            std::pair<double,double> p1 = compute_endpoint(start, num_bars);
+            std::pair<double,double> p2 = compute_endpoint(end, num_bars);
 
-            PersistenceBar* bar = new PersistenceBar(this, start, end, num_bars);
+            PersistenceBar* bar = new PersistenceBar(this, start, end, index);
             bar->set_line(p1.first, p1.second, p2.first, p2.second);
             bar->setVisible(show);
             scene->addItem(bar);
-            bars.push_back(bar);
+            bars[index].push_back(bar);
             num_bars++;
         }
+        index++;
     }
 }//end draw_barcode()
 
 //updates the barcode (e.g. after a change in the slice line)
+//TODO: would it be better to move bars, instead of deleting and re-creating them?
 void SliceDiagram::update_barcode(Barcode *bc, bool show)
 {
     //remove old bars
-    selected = NULL;    //remove any current selection
-    while(!bars.empty())
+    selected = -1;    //remove any current selection
+    for(std::vector< std::list<PersistenceBar*> >::iterator it = bars.begin(); it != bars.end(); ++it)
     {
-        scene->removeItem(bars.back());
-        bars.pop_back();
+        while(!it->empty())
+        {
+            scene->removeItem(it->back());
+            delete it->back();
+            it->pop_back();
+        }
     }
 
     //draw new bars
     draw_barcode(bc, show);
 }
 
-
 //computes an endpoint of a bar in the barcode
-std::pair<double,double> SliceDiagram::compute_endpoint(double coordinate, unsigned index)
+std::pair<double,double> SliceDiagram::compute_endpoint(double coordinate, unsigned offset)
 {
     //difference in offset between consecutive bars (pixel units)
     int step_size = 10;
@@ -366,7 +378,7 @@ std::pair<double,double> SliceDiagram::compute_endpoint(double coordinate, unsig
     if(line_vert)
     {
         y = coordinate*scale_y; //position along the line
-        x = -1*(int)(step_size*index);
+        x = -1*(int)(step_size*offset);
     }
     else
     {
@@ -377,8 +389,8 @@ std::pair<double,double> SliceDiagram::compute_endpoint(double coordinate, unsig
 
         //offset from slice line
         double pixel_angle = atan(line_slope*scale_y/scale_x);  //angle (pixels)    NOTE: it would be slightly more efficient to only compute this once per barcode update
-        x -= step_size*index*sin(pixel_angle);
-        y += step_size*index*cos(pixel_angle);
+        x -= step_size*offset*sin(pixel_angle);
+        y += step_size*offset*cos(pixel_angle);
     }
 
     //adjust for position of slice line
@@ -392,11 +404,18 @@ std::pair<double,double> SliceDiagram::compute_endpoint(double coordinate, unsig
 void SliceDiagram::select_bar(PersistenceBar* clicked)
 {
     //remove old selection
-    if(selected != NULL && clicked != selected)
-        selected->deselect();
+    if(selected != NOT_SELECTED && clicked->get_index() != selected)
+    {
+        for(std::list<PersistenceBar*>::iterator it = bars[selected].begin(); it != bars[selected].end(); ++it)
+            (*it)->deselect();
+    }
 
     //remember current selection
-    selected = clicked;
+    selected = clicked->get_index();
+
+    //select all bars with the current index
+    for(std::list<PersistenceBar*>::iterator it = bars[selected].begin(); it != bars[selected].end(); ++it)
+        (*it)->select();
 
     //highlight part of slice line
     update_highlight();
@@ -405,16 +424,22 @@ void SliceDiagram::select_bar(PersistenceBar* clicked)
     window->select_dot(clicked->get_index());
 }
 
-//highlight the specified bar, which has been selected in the persistence diagram
+//highlight the specified class of bars, which has been selected in the persistence diagram
 void SliceDiagram::select_bar(unsigned index)
 {
     //remove old selection
-    if(selected != NULL && bars[index] != selected)
-        selected->deselect();
+    if(selected != NOT_SELECTED && index != selected)
+    {
+        for(std::list<PersistenceBar*>::iterator it = bars[selected].begin(); it != bars[selected].end(); ++it)
+            (*it)->deselect();
+    }
 
     //remember current selection
-    selected = bars[index];
-    selected->select();
+    selected = index;
+
+    //select all bars with the current index
+    for(std::list<PersistenceBar*>::iterator it = bars[selected].begin(); it != bars[selected].end(); ++it)
+        (*it)->select();
 
     //highlight part of slice line
     update_highlight();
@@ -424,10 +449,11 @@ void SliceDiagram::select_bar(unsigned index)
 void SliceDiagram::deselect_bar(bool propagate)
 {
     //remove selection
-    if(selected != NULL)
+    if(selected != NOT_SELECTED)
     {
-        selected->deselect();
-        selected = NULL;
+        for(std::list<PersistenceBar*>::iterator it = bars[selected].begin(); it != bars[selected].end(); ++it)
+            (*it)->deselect();
+        selected = -1;
     }
 
     //remove highlighted portion of slice line
@@ -438,20 +464,23 @@ void SliceDiagram::deselect_bar(bool propagate)
         window->deselect_dot();
 }
 
-
 //highlights part of the slice line
 void SliceDiagram::update_highlight()
 {
-    double start = selected->get_start();
-    double end = selected->get_end();
-    if(end == std::numeric_limits<double>::infinity())
-        end = get_zero() + data_infty;
+    if(selected != NOT_SELECTED)
+    {
+        PersistenceBar* selected_bar = bars[selected].front();
+        double start = selected_bar->get_start();
+        double end = selected_bar->get_end();
+        if(end == std::numeric_limits<double>::infinity())
+            end = get_zero() + data_infty;
 
-    std::pair<double,double> p1 = compute_endpoint(start, 0);
-    std::pair<double,double> p2 = compute_endpoint(end, 0);
+        std::pair<double,double> p1 = compute_endpoint(start, 0);
+        std::pair<double,double> p2 = compute_endpoint(end, 0);
 
-    highlight_line->setLine(p1.first, p1.second, p2.first, p2.second);
-    highlight_line->show();
+        highlight_line->setLine(p1.first, p1.second, p2.first, p2.second);
+        highlight_line->show();
+    }
 }
 
 //if "show" is true, then xi_0 support points are drawn; otherwise, they are hidden
@@ -471,8 +500,9 @@ void SliceDiagram::toggle_xi1_points(bool show)
 //if "show" is true, then barcode is drawn; otherwise, it is hidden
 void SliceDiagram::toggle_barcode(bool show)
 {
-    for(std::vector<PersistenceBar*>::iterator it = bars.begin(); it != bars.end(); ++it)
-        (*it)->setVisible(show);
+    for(std::vector< std::list<PersistenceBar*> >::iterator it1 = bars.begin(); it1 != bars.end(); ++it1)
+        for(std::list<PersistenceBar*>::iterator it2 = it1->begin(); it2 != it1->end(); ++it2)
+            (*it2)->setVisible(show);
 }
 
 //sets normalized coordinates or default coordinates

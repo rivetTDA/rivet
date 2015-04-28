@@ -3,7 +3,7 @@
 PersistenceBar::PersistenceBar(SliceDiagram *s_diagram, double unscaled_start, double unscaled_end, unsigned index) :
     sdgm(s_diagram),
     start(unscaled_start), end(unscaled_end),
-    index(index),
+    class_index(index),
     pressed(false), hover(false)
 {
     setAcceptHoverEvents(true);
@@ -70,7 +70,7 @@ double PersistenceBar::get_end()
 
 double PersistenceBar::get_index()
 {
-    return index;
+    return class_index;
 }
 
 void PersistenceBar::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
@@ -100,7 +100,7 @@ void PersistenceBar::mousePressEvent(QGraphicsSceneMouseEvent *event)
         sdgm->select_bar(this);
     }
 
-    update();
+//    update();
 //    QGraphicsItem::mousePressEvent(event);
 }
 

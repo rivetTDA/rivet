@@ -2,8 +2,9 @@
 #include "ui_dataselectdialog.h"
 
 DataSelectDialog::DataSelectDialog(VisualizationWindow* vw, QWidget *parent) :
-    vw(vw), QDialog(parent),
-    ui(new Ui::DataSelectDialog)
+    QDialog(parent),
+    ui(new Ui::DataSelectDialog),
+    vw(vw)
 {
     ui->setupUi(this);
 

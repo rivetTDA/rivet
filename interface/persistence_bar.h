@@ -40,7 +40,7 @@ private:
 
     double start;   //unscaled start coordinate (projection units)
     double end;     //unscaled end coordinate (projection units)
-    unsigned index;   //index of this dot in the vector of PersistenceBars
+    unsigned class_index;   //index of the dot corresponding to this bar in the Barcode object
 
     bool pressed;
     bool hover;

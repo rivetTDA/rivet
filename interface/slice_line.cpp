@@ -6,9 +6,9 @@
 
 
 SliceLine::SliceLine(SliceDiagram* sd) :
-    sdgm(sd),
     vertical(false), pressed(false), rotating(false), update_lock(false),
-    right_point(0,0)
+    right_point(0,0),
+    sdgm(sd)
 {
     setFlag(ItemIsMovable);
     setFlag(ItemSendsGeometryChanges);
