@@ -19,7 +19,6 @@
 #include "anchor.h"
 #include "dcel.h"
 #include "../math/xi_point.h"
-//#include "multigrade.h"   do I need this???
 #include "../math/multi_betti.h"
 #include "../math/persistence_updater.h"
 
