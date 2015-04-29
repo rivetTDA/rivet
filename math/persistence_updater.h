@@ -36,6 +36,7 @@ class PersistenceUpdater
 
         std::map<unsigned, xiMatrixEntry*> partition_low;   //map from "low" columns to equivalence-class representatives -- implicitly stores the partition of the set of \xi support points
         std::map<unsigned, xiMatrixEntry*> partition_high;  //map from "high" columns to equivalence-class representatives -- implicitly stores the partition of the set of \xi support points
+            ///IDEA: maybe the above should be called "block_lift" instead of "partition" since this would be more consistent with the paper
 
         ///TESTING ONLY
         MapMatrix_Perm* D_low;

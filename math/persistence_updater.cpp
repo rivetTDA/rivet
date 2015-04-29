@@ -32,8 +32,8 @@ void PersistenceUpdater::find_anchors()
             nonempty_cols.push_front(col_entry);
     }
 
-    //compute and store Anchors
-    for(int j = mesh->y_grades.size() - 1; j >= 0; j--)  //loop through all rows, top to bottom
+    //compute and store anchors
+    for(unsigned j = mesh->y_grades.size(); j-- > 0; )  //loop through all rows, top to bottom
     {
         xiMatrixEntry* row_entry = xi_matrix.get_row(j); //rightmost entry in row j, possibly NULL
 
@@ -50,19 +50,19 @@ void PersistenceUpdater::find_anchors()
             if(row_entry != col_entry)  //then there is a strict, non-supported anchor at (col_entry->x, row_entry->y)
             {
                 mesh->all_anchors.insert(new Anchor(col_entry, row_entry));
-                if(mesh->verbosity >= 4) { std::cout << "  anchor (strict, non-supported) found at (" << col_entry->x << ", " << row_entry->y << ")\n"; }
+                if(mesh->verbosity >= 10) { std::cout << "  anchor (strict, non-supported) found at (" << col_entry->x << ", " << row_entry->y << ")\n"; }
             }
             else    //then row_entry == col_entry, so there might be a supported anchor at (col_entry->x, row_entry->y), or there might be no anchor here
             {
                 if(col_entry->down != NULL && row_entry->left != NULL)  //then there is a strict and supported anchor
                 {
                     mesh->all_anchors.insert(new Anchor(col_entry, true));
-                    if(mesh->verbosity >= 4) { std::cout << "  anchor (strict and supported) found at (" << col_entry->x << ", " << col_entry->y << ")\n"; }
+                    if(mesh->verbosity >= 10) { std::cout << "  anchor (strict and supported) found at (" << col_entry->x << ", " << col_entry->y << ")\n"; }
                 }
                 else if(col_entry->down != NULL || row_entry->left != NULL)  //then there is a supported, non-strict anchor
                 {
                     mesh->all_anchors.insert(new Anchor(col_entry, false));
-                    if(mesh->verbosity >= 4) { std::cout << "  anchor (supported, non-strict) found at (" << col_entry->x << ", " << col_entry->y << ")\n"; }
+                    if(mesh->verbosity >= 10) { std::cout << "  anchor (supported, non-strict) found at (" << col_entry->x << ", " << col_entry->y << ")\n"; }
                 }
             }
 
@@ -91,41 +91,41 @@ void PersistenceUpdater::store_barcodes(std::vector<Halfedge*>& path)
   // PART 1: GET THE BOUNDARY MATRICES WITH PROPER SIMPLEX ORDERING
 
     //get multi-grade data in each dimension
-    if(mesh->verbosity >= 4) { std::cout << "Mapping low simplices:\n"; }
+    if(mesh->verbosity >= 6) { std::cout << "  Mapping low simplices:\n"; }
     IndexMatrix* ind_low = bifiltration->get_index_mx(dim);    //can we improve this with something more efficient than IndexMatrix?
     std::vector<int> low_simplex_order;     //this will be a map : dim_index --> order_index for dim-simplices
     store_multigrades(ind_low, true, low_simplex_order);
     delete ind_low;
 
-    if(mesh->verbosity >= 4) { std::cout << "Mapping high simplices:\n"; }
+    if(mesh->verbosity >= 6) { std::cout << "  Mapping high simplices:\n"; }
     IndexMatrix* ind_high = bifiltration->get_index_mx(dim + 1);    //again, could be improved?
     std::vector<int> high_simplex_order;     //this will be a map : dim_index --> order_index for (dim+1)-simplices
     store_multigrades(ind_high, false, high_simplex_order);
     delete ind_high;
 
     //testing only
-    std::cout << "== low_simplex_order: ";
-    for(int i=0; i<low_simplex_order.size(); i++)
-        std::cout << low_simplex_order[i] << ", ";
-    std::cout << "\n== high_simplex_order: ";
-    for(int i=0; i<high_simplex_order.size(); i++)
-        std::cout << high_simplex_order[i] << ", ";
-    std::cout << "\n";
+//    std::cout << "== low_simplex_order: ";
+//    for(int i=0; i<low_simplex_order.size(); i++)
+//        std::cout << low_simplex_order[i] << ", ";
+//    std::cout << "\n== high_simplex_order: ";
+//    for(int i=0; i<high_simplex_order.size(); i++)
+//        std::cout << high_simplex_order[i] << ", ";
+//    std::cout << "\n";
 
     //get boundary matrices (R) and identity matrices (U) for RU-decomposition
     MapMatrix_Perm* R_low = bifiltration->get_boundary_mx(low_simplex_order);
     MapMatrix_Perm* R_high = bifiltration->get_boundary_mx(low_simplex_order, high_simplex_order);
 
-    if(mesh->verbosity >= 4)
+    if(mesh->verbosity >= 8)
     {
         std::cout << "  Boundary matrix for low simplices:\n";
         R_low->print();
         std::cout << "  Boundary matrix for high simplices:\n";
         R_high->print();
     }
-    /// TESTING ONLY
-    D_low = bifiltration->get_boundary_mx(low_simplex_order);
-    D_high = bifiltration->get_boundary_mx(low_simplex_order, high_simplex_order);
+/// TESTING ONLY - CHECK THAT D=RU
+///    D_low = bifiltration->get_boundary_mx(low_simplex_order);
+///    D_high = bifiltration->get_boundary_mx(low_simplex_order, high_simplex_order);
 
 
   // PART 2: INITIAL PERSISTENCE COMPUTATION (RU-decomposition)
@@ -137,10 +137,9 @@ void PersistenceUpdater::store_barcodes(std::vector<Halfedge*>& path)
     Face* first_cell = mesh->topleft->get_twin()->get_face();
     store_barcode_template(first_cell, R_low, R_high);
 
-    std::cout << "Initial persistence computation in cell " << mesh->FID(first_cell) << ".\n";
-
-    if(mesh->verbosity >= 4)
+    if(mesh->verbosity >= 8)
     {
+        std::cout << "Initial persistence computation in cell " << mesh->FID(first_cell) << ".\n";
         std::cout << "  Reduced matrix for low simplices:\n";
         R_low->print();
         R_low->check_lows();
@@ -167,10 +166,12 @@ void PersistenceUpdater::store_barcodes(std::vector<Halfedge*>& path)
     //traverse the path
     for(unsigned i=0; i<path.size(); i++)
     {
+        qDebug() << "step " << i << " of path";
+
         //determine which anchor is represented by this edge
         Anchor* cur_anchor = (path[i])->get_anchor();
 
-        std::cout << "Step " << i << " of the path: crossing anchor at (" << cur_anchor->get_x() << "," << cur_anchor->get_y() << ") into cell " << mesh->FID((path[i])->get_face()) << ".\n";
+        if(mesh->verbosity >= 8) { std::cout << "Step " << i << " of the path: crossing anchor at (" << cur_anchor->get_x() << "," << cur_anchor->get_y() << ") into cell " << mesh->FID((path[i])->get_face()) << ".\n"; }
 
         //get equivalence classes for this anchor
         xiMatrixEntry* down = cur_anchor->get_down();
@@ -190,7 +191,7 @@ void PersistenceUpdater::store_barcodes(std::vector<Halfedge*>& path)
 
             if(cur_anchor->is_above()) //then anchor is crossed from below to above
             {
-                std::cout << " == strict anchor crossed below to above ==\n";
+                if(mesh->verbosity >= 9) { std::cout << " == strict anchor crossed below to above ==\n"; }
 
                 //pre-move updates to equivalence class info
                 if(at_anchor != NULL)  //this anchor is supported
@@ -224,7 +225,7 @@ void PersistenceUpdater::store_barcodes(std::vector<Halfedge*>& path)
             }
             else    //then anchor is crossed from above to below
             {
-                std::cout << " == strict anchor crossed above to below ==\n";
+                if(mesh->verbosity >= 9) { std::cout << " == strict anchor crossed above to below ==\n"; }
 
                 //pre-move updates to equivalence class info
                 if(at_anchor != NULL)
@@ -292,11 +293,11 @@ void PersistenceUpdater::store_barcodes(std::vector<Halfedge*>& path)
         cur_anchor->toggle();
 
         //testing
-        std::cout << "  Anchors above the current line: ";
-        for(std::set<Anchor*, Anchor_LeftComparator>::iterator it = mesh->all_anchors.begin(); it != mesh->all_anchors.end(); ++it)
-            if((*it)->is_above())
-                std::cout << "(" << (*it)->get_x() << "," << (*it)->get_y() << ") ";
-        std::cout << "\n";
+//        std::cout << "  Anchors above the current line: ";
+//        for(std::set<Anchor*, Anchor_LeftComparator>::iterator it = mesh->all_anchors.begin(); it != mesh->all_anchors.end(); ++it)
+//            if((*it)->is_above())
+//                std::cout << "(" << (*it)->get_x() << "," << (*it)->get_y() << ") ";
+//        std::cout << "\n";
 
         //if this cell does not yet have a barcode template, then store it now
         Face* cur_face = (path[i])->get_face();
@@ -304,7 +305,7 @@ void PersistenceUpdater::store_barcodes(std::vector<Halfedge*>& path)
             store_barcode_template(cur_face, R_low, R_high);
 
         //testing
-        if(mesh->verbosity >= 4)
+        if(mesh->verbosity >= 8)
         {
             std::cout << "  Reduced matrix for low simplices:\n";
             R_low->print();
@@ -316,8 +317,8 @@ void PersistenceUpdater::store_barcodes(std::vector<Halfedge*>& path)
             R_high->check_lows();
             std::cout << "  Matrix U for high simplices:\n";
             U_high->print();
-//            std::cout << "  Matrix D for high simplices:\n";
-//            D->print();
+///            std::cout << "  Matrix D for high simplices:\n";
+///            D_high->print();
             std::cout << "  Low partition: ";
             for(std::map<unsigned, xiMatrixEntry*>::iterator it = partition_low.begin(); it != partition_low.end(); ++it)
                 std::cout << it->first << "->" << it->second->index << ", ";
@@ -353,7 +354,7 @@ void PersistenceUpdater::store_multigrades(IndexMatrix* ind, bool low, std::vect
     Frontier frontier;
 
     //loop through rows of xiSupportMatrix, from top to bottom
-    for(int y = ind->height() - 1; y >= 0; y--)
+    for(unsigned y = ind->height(); y-- > 0; )  //y counts down from (ind->height() - 1) to 0
     {
         //update the frontier for row y
         xiMatrixEntry* cur = xi_matrix.get_row(y);
@@ -381,7 +382,7 @@ void PersistenceUpdater::store_multigrades(IndexMatrix* ind, bool low, std::vect
 
         //store all multigrades and simplices whose y-grade is y
         Frontier::iterator it = frontier.begin();
-        for(int x = ind->width() - 1; x >= 0; x--)
+        for(unsigned x = ind->width(); x-- > 0; )  //x counts down from (ind->widtht() - 1) to 0
         {
             //get range of column indexes for simplices at multigrade (x,y)
             int last_col = ind->get(y, x);  //arguments are row, then column
@@ -399,7 +400,7 @@ void PersistenceUpdater::store_multigrades(IndexMatrix* ind, bool low, std::vect
                 {
 //                    qDebug() << "      processing columns" << first_col << "to" << last_col << ": map to infinity";
                     xi_matrix.get_infinity()->add_multigrade(x, y, last_col - first_col, last_col, low);
-                    if(mesh->verbosity >= 4) { std::cout << "    simplices at (" << x << ", " << y << "), in columns " << (first_col + 1) << " to " << last_col << ", mapped to infinity\n"; }
+                    if(mesh->verbosity >= 8) { std::cout << "    simplices at (" << x << ", " << y << "), in columns " << (first_col + 1) << " to " << last_col << ", mapped to infinity\n"; }
                 }
                 else    //then map multigrade (x,y) to the last element of the frontier such that (*it)->x >= x
                 {
@@ -413,7 +414,7 @@ void PersistenceUpdater::store_multigrades(IndexMatrix* ind, bool low, std::vect
 
                     //now map the multigrade to the element given by the iterator
                     (*it)->add_multigrade(x, y, last_col - first_col, last_col, low);
-                    if(mesh->verbosity >= 4) { std::cout << "    simplices at (" << x << ", " << y << "), in columns " << (first_col + 1) << " to " << last_col << ", mapped to xi support point (" << (*it)->x << ", " << (*it)->y << ")\n"; }
+                    if(mesh->verbosity >= 8) { std::cout << "    simplices at (" << x << ", " << y << "), in columns " << (first_col + 1) << " to " << last_col << ", mapped to xi support point (" << (*it)->x << ", " << (*it)->y << ")\n"; }
                 }
             }
         }//end x loop
@@ -432,17 +433,17 @@ void PersistenceUpdater::store_multigrades(IndexMatrix* ind, bool low, std::vect
     for(std::list<Multigrade*>::iterator it = mgrades->begin(); it != mgrades->end(); ++it)
     {
         Multigrade* mg = *it;
-        std::cout << "  multigrade (" << mg->x << "," << mg->y << ") at infinity has " << mg->num_cols << " simplices with last index " << mg->simplex_index << "\n";
+        if(mesh->verbosity >= 8) { std::cout << "  multigrade (" << mg->x << "," << mg->y << ") at infinity has " << mg->num_cols << " simplices with last index " << mg->simplex_index << "\n"; }
 
         for(unsigned s=0; s < mg->num_cols; s++)  // simplex with dim_index (mg->simplex_inded - s) has order_index o_index
         {
-            std::cout << "   -- simplex with dim_index " << (mg->simplex_index - s) << " has order_index " << o_index << "\n";
+            if(mesh->verbosity >= 8) { std::cout << "   -- simplex with dim_index " << (mg->simplex_index - s) << " has order_index " << o_index << "\n"; }
             simplex_order[mg->simplex_index - s] = o_index;
             o_index--;
         }
     }
 
-    //now loop over all xiMatrixEntries in backwards reverse lexicographical order
+    //now loop over all xiMatrixEntries in backwards colex order
     for(unsigned row = xi_matrix.height(); row > 0; )  //since row is unsigned, it will be one more than the current row, and the decrement operator appears inside the loop
     {
         cur = xi_matrix.get_row(--row);
@@ -463,11 +464,11 @@ void PersistenceUpdater::store_multigrades(IndexMatrix* ind, bool low, std::vect
             for(std::list<Multigrade*>::iterator it = mgrades->begin(); it != mgrades->end(); ++it)
             {
                 Multigrade* mg = *it;
-                std::cout << "  multigrade (" << mg->x << "," << mg->y << ") has " << mg->num_cols << " simplices with last index " << mg->simplex_index << "\n";
+                if(mesh->verbosity >= 8) { std::cout << "  multigrade (" << mg->x << "," << mg->y << ") has " << mg->num_cols << " simplices with last index " << mg->simplex_index << "\n"; }
 
                 for(unsigned s=0; s < mg->num_cols; s++)  // simplex with dim_index (mg->simplex_inded - s) has order_index o_index
                 {
-                    std::cout << "   -- simplex with dim_index " << (mg->simplex_index - s) << " has order_index " << o_index << "\n";
+                    if(mesh->verbosity >= 8) { std::cout << "   -- simplex with dim_index " << (mg->simplex_index - s) << " has order_index " << o_index << "\n"; }
                     simplex_order[mg->simplex_index - s] = o_index;
                     o_index--;
                 }
@@ -643,16 +644,16 @@ void PersistenceUpdater::move_columns(xiMatrixEntry* first, xiMatrixEntry* secon
 //moves a block of n columns, the rightmost of which is column s, to a new position following column t (NOTE: assumes s <= t)
 void PersistenceUpdater::move_low_columns(int s, unsigned n, int t, MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH)
 {
-    std::cout << "   --Transpositions for low simplices: [" << s << ", " << n << ", " << t << "] ";
+    if(mesh->verbosity >= 9) { std::cout << "   --Transpositions for low simplices: [" << s << ", " << n << ", " << t << "] "; }
     for(unsigned c=0; c<n; c++) //move column that starts at s-c
     {
-        for(unsigned i=s; i<t; i++)
+        for(int i=s; i<t; i++)
         {
-            unsigned a = i - c;
+            unsigned a = i - c; //TODO: cast i to unsigned???
             unsigned b = a + 1;
 
             //we must swap the d-simplices currently corresponding to columns a and b=a+1
-            std::cout << "(" << a << "," << b << ")";
+            if(mesh->verbosity >= 9) { std::cout << "(" << a << "," << b << ")"; }
 
             bool a_pos = (RL->low(a) == -1);    //true iff simplex corresponding to column a is positive
             bool b_pos = (RL->low(b) == -1);    //true iff simplex corresponding to column b=a+1 is positive
@@ -761,7 +762,8 @@ void PersistenceUpdater::move_low_columns(int s, unsigned n, int t, MapMatrix_Pe
                 UL->swap_columns(a);
             }
 
-            /// TESTING ONLY
+/// TESTING ONLY - CHECK THAT D=RU
+/*
             D_low->swap_columns(a, false);
             D_high->swap_rows(a, false);
             bool err_low = false;
@@ -800,27 +802,27 @@ void PersistenceUpdater::move_low_columns(int s, unsigned n, int t, MapMatrix_Pe
             }
             if(err_high)
                 std::cout << "====>>>> MATRIX ERROR (high) AT THIS STEP!\n";
-
+*/
         }//end for(i=...)
     }//end for(c=...)
 
-    std::cout << "\n";
+    if(mesh->verbosity >= 9) { std::cout << "\n"; }
 }//end move_low_columns()
 
 
 //moves a block of n columns, the rightmost of which is column s, to a new position following column t (NOTE: assumes s <= t)
 void PersistenceUpdater::move_high_columns(int s, unsigned n, int t, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH)
 {
-    std::cout << "   --Transpositions for high simplices: [" << s << ", " << n << ", " << t << "] ";
+    if(mesh->verbosity >= 9) { std::cout << "   --Transpositions for high simplices: [" << s << ", " << n << ", " << t << "] "; }
     for(unsigned c=0; c<n; c++) //move column that starts at s-c
     {
-        for(unsigned i=s; i<t; i++)
+        for(int i=s; i<t; i++)
         {
-            unsigned a = i - c;
+            unsigned a = i - c; //TODO: cast i to unsigned???
             unsigned b = a + 1;
 
             //we must swap the (d+1)-simplices currently corresponding to columns a and b=a+1
-            std::cout << "(" << a << "," << b << ")";
+            if(mesh->verbosity >= 9) { std::cout << "(" << a << "," << b << ")"; }
 
             bool a_pos = (RH->low(a) == -1);    //true iff simplex corresponding to column a is positive
             bool b_pos = (RH->low(b) == -1);    //true iff simplex corresponding to column b is positive
@@ -886,7 +888,8 @@ void PersistenceUpdater::move_high_columns(int s, unsigned n, int t, MapMatrix_P
                 UH->swap_columns(a);
             }
 
-            /// TESTING ONLY
+/// TESTING ONLY - CHECK THAT D=RU
+/*
             D_high->swap_columns(a, false);
             bool err_high = false;
             for(unsigned row = 0; row < D_high->height(); row++)
@@ -902,16 +905,17 @@ void PersistenceUpdater::move_high_columns(int s, unsigned n, int t, MapMatrix_P
             }
             if(err_high)
                 std::cout << "====>>>> MATRIX ERROR (high) AT THIS STEP!\n";
-
+*/
         }//end for(i=...)
     }//end for(c=...)
-    std::cout << "\n";
+
+    if(mesh->verbosity >= 9) { std::cout << "\n"; }
 }//end move_high_columns()
 
 //removes entries corresponding to xiMatrixEntry head from partition_low and partition_high
 void PersistenceUpdater::remove_partition_entries(xiMatrixEntry* head)
 {
-    std::cout << "    ----removing partition entries for xiMatrixEntry " << head->index << " (" << head->low_index << "; " << head->high_index << ")\n";
+    if(mesh->verbosity >= 9) { std::cout << "    ----removing partition entries for xiMatrixEntry " << head->index << " (" << head->low_index << "; " << head->high_index << ")\n"; }
 
     //low simplices
     std::map<unsigned, xiMatrixEntry*>::iterator it1 = partition_low.find(head->low_index);
@@ -928,7 +932,7 @@ void PersistenceUpdater::remove_partition_entries(xiMatrixEntry* head)
 //if the equivalence class corresponding to xiMatrixEntry head has nonempty sets of "low" or "high" simplices, then this function creates the appropriate entries in partition_low and partition_high
 void PersistenceUpdater::add_partition_entries(xiMatrixEntry* head)
 {
-    std::cout << "    ----adding partition entries for xiMatrixEntry " << head->index << " (" << head->low_index << "; " << head->high_index << ")\n";
+    if(mesh->verbosity >= 9) { std::cout << "    ----adding partition entries for xiMatrixEntry " << head->index << " (" << head->low_index << "; " << head->high_index << ")\n"; }
 
     //low simplices
     if(head->low_class_size > 0)
@@ -944,7 +948,7 @@ void PersistenceUpdater::add_partition_entries(xiMatrixEntry* head)
 /// Is there a better way to handle endpoints at infinity?
 void PersistenceUpdater::store_barcode_template(Face* cell, MapMatrix_Perm* RL, MapMatrix_Perm* RH)
 {
-    std::cout << "  -----barcode: ";
+//    std::cout << "  -----barcode: ";
 
     //mark this cell as visited
     cell->mark_as_visited();
@@ -967,18 +971,18 @@ void PersistenceUpdater::store_barcode_template(Face* cell, MapMatrix_Perm* RL, 
                 //find index of xi support point corresponding to simplex s
                 unsigned b = ( (partition_high.lower_bound(s) )->second)->index;
 
-                std::cout << "(" << c << "," << s << ")-->(" << a << "," << b << ") ";
+//                std::cout << "(" << c << "," << s << ")-->(" << a << "," << b << ") ";
 
                 if(a != b)  //then we have a bar of positive length
                     dbc.add_bar(a, b);
             }
             else //then simplex c generates an essential cycle
             {
-                std::cout << c << "-->" << a << " ";
+//                std::cout << c << "-->" << a << " ";
                 dbc.add_bar(a, -1);     //b = -1 = MAX_UNSIGNED indicates this is an essential cycle
             }
         }
     }
-    std::cout << "\n";
+//    std::cout << "\n";
 }//end store_barcode_template()
 

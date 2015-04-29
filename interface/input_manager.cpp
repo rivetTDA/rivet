@@ -185,7 +185,7 @@ void InputManager::read_point_cloud(unsigned x_bins, unsigned y_bins)
 //	sort(points.begin(), points.end());
 	
 	//test points vector
-	if(verbosity >= 6) 
+    if(verbosity >= 10)
 	{
 		std::cout << "TESTING VECTOR:\n";
         for(unsigned i=0; i<points.size(); i++)
@@ -204,7 +204,7 @@ void InputManager::read_point_cloud(unsigned x_bins, unsigned y_bins)
 
   /* step 2: compute distance matrix, and create ordered lists of all unique distance and time values */
 
-    if(verbosity >= 2) { std::cout << "BUILDING DISTANCE AND TIME LISTS:\n"; }
+    if(verbosity >= 2) { std::cout << "BUILDING DISTANCE AND TIME LISTS\n"; }
 
     unsigned num_points = points.size();
 
@@ -347,7 +347,7 @@ void InputManager::read_point_cloud(unsigned x_bins, unsigned y_bins)
     }
 
 
-    //======= TESTING ONLY =======
+/********* TESTING ONLY ********
     std::cout << "CHECK: (time) x_grades.size() = " << x_grades.size() << ", x_exact.size() = " << x_exact.size() << ", time_indexes.size() = " << time_indexes.size() << ", x_bins = " << x_bins << "\n";
     std::cout << "  all x-grades: \n";
     for(unsigned i=0; i<x_grades.size(); i++)
@@ -366,10 +366,11 @@ void InputManager::read_point_cloud(unsigned x_bins, unsigned y_bins)
         for(unsigned j=i+1; j<num_points; j++)
             std::cout << "    dist(" << i << ", " << j << ") = " << dist_indexes[ (j*(j-1))/2 + i ] << "\n";
     std::cout << "\n";
+*/
 
   /* step 3: build the bifiltration */
 
-    //simplex_tree will store only DISCRETE information!!!
+    //simplex_tree stores only DISCRETE information!
     //this only requires (suppose there are k points):
     //  1. a list of k discrete times
     //  2. a list of k(k-1)/2 discrete distances

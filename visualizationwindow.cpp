@@ -95,7 +95,7 @@ void VisualizationWindow::compute()
     std::cout << "   Number of y-grades: " << y_grades.size() << "; values " << data_ymin << " to " << data_ymax << "\n";
     std::cout << "\n";
 
-    if(verbosity >= 6)
+    if(verbosity >= 10)
     {
         std::cout << "x-grades:\n";
         for(unsigned i=0; i<x_grades.size(); i++)
@@ -140,14 +140,14 @@ void VisualizationWindow::compute()
     time_duration duration_dcel(time_dcel_end - time_dcel_start);
 
     //testing:
-    if(verbosity >= 4)
+    if(verbosity >= 10)
     {
         std::cout << "  SUPPORT POINTS OF xi_0 AND xi_1 (INTEGER VALUES): ";
         for(unsigned i=0; i<xi_support.size(); i++)
             std::cout << "(" << xi_support[i].x << "," << xi_support[i].y << "), ";
         std::cout << "\n";
     }
-    if(verbosity >= 2) { std::cout << "DATA COMPUTED; READY FOR INTERACTIVITY.\n"; }
+    if(verbosity >= 2) { std::cout << "COMPUTATION FINISHED; READY FOR INTERACTIVITY.\n"; }
 
     //print arrangement info
     std::cout << "   building the arrangement and computing barcode templates took " << duration_dcel << "\n";

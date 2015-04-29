@@ -150,14 +150,14 @@ void SimplexTree::build_VR_complex(std::vector<unsigned>& times, std::vector<uns
 
     //build simplex tree recursively
 	//this also assigns global indexes to each simplex
-	if(verbosity >= 2) { std::cout << "BUILDING SIMPLEX TREE:\n"; }
+    if(verbosity >= 2) { std::cout << "BUILDING SIMPLEX TREE\n"; }
     unsigned gic=0;	//global index counter
     for(unsigned i=0; i<times.size(); i++)
 	{
 		//create the node and add it as a child of root
         if(verbosity >= 10) { std::cout << "  adding node " << i << " as child of root \n"; }
 		
-        STNode* node = new STNode(i, root, times[i], 0, gic);			//delete THIS OBJECT LATER!
+        STNode* node = new STNode(i, root, times[i], 0, gic);			//delete later!
         root->append_child(node);
 		gic++;	//increment the global index counter
 		

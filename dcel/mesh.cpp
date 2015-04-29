@@ -107,7 +107,7 @@ void Mesh::build_arrangement(MultiBetti& mb, std::vector<xiPoint>& xi_pts)
 //		boundary of the mesh is created (as in the mesh constructor)
 void Mesh::build_interior()
 {
-    if(verbosity >= 5)
+    if(verbosity >= 6)
     {
         std::cout << "BUILDING ARRANGEMENT:  Anchors sorted for left edge of strip: ";
         for(std::set<Anchor*, Anchor_LeftComparator>::iterator it = all_anchors.begin(); it != all_anchors.end(); ++it)
@@ -129,7 +129,7 @@ void Mesh::build_interior()
     std::set< Anchor_pair > considered_pairs;
 
   // PART 1: INSERT VERTICES AND EDGES ALONG LEFT EDGE OF THE STRIP
-    if(verbosity >= 5) { std::cout << "PART 1: LEFT EDGE OF STRIP\n"; }
+    if(verbosity >= 6) { std::cout << "PART 1: LEFT EDGE OF STRIP\n"; }
 
     //for each Anchor, create vertex and associated halfedges, anchored on the left edge of the strip
     Halfedge* leftedge = bottomleft;
@@ -138,7 +138,7 @@ void Mesh::build_interior()
     {
         Anchor* cur_anchor = *it;
 
-        if(verbosity >= 6) { std::cout << "  Processing Anchor " << cur_anchor << " at (" << cur_anchor->get_x() << "," << cur_anchor->get_y() << "), "; }
+        if(verbosity >= 8) { std::cout << "  Processing Anchor " << cur_anchor << " at (" << cur_anchor->get_x() << "," << cur_anchor->get_y() << "), "; }
 
         if(cur_anchor->get_y() != prev_y)	//then create new vertex
         {
@@ -159,7 +159,7 @@ void Mesh::build_interior()
         //remember line associated with this Anchor
         cur_anchor->set_line(new_edge);
     }
-    if(verbosity >= 6) { std::cout << "\n"; }
+    if(verbosity >= 8) { std::cout << "\n"; }
 
     //for each pair of consecutive lines, if they intersect, store the intersection
     for(unsigned i = 0; i < lines.size() - 1; i++)
@@ -186,7 +186,7 @@ void Mesh::build_interior()
 
   // PART 2: PROCESS INTERIOR INTERSECTIONS
     //    order: x left to right; for a given x, then y low to high
-    if(verbosity >= 5) { std::cout << "PART 2: PROCESSING INTERIOR INTERSECTIONS\n"; }
+    if(verbosity >= 6) { std::cout << "PART 2: PROCESSING INTERIOR INTERSECTIONS\n"; }
 
     int status_counter = 0;
     int status_interval = 10000;    //controls frequency of output
@@ -205,7 +205,7 @@ void Mesh::build_interior()
         unsigned first_pos = cur->a->get_position();   //most recent edge in the curve corresponding to Anchor a
         unsigned last_pos = cur->b->get_position();   //most recent edge in the curve corresponding to Anchor b
 
-        if(verbosity >= 6) { std::cout << " next intersection: Anchor " << cur->a << " (pos " << first_pos << "), Anchor " << cur->b << " (pos " << last_pos << ")\n"; }
+        if(verbosity >= 8) { std::cout << " next intersection: Anchor " << cur->a << " (pos " << first_pos << "), Anchor " << cur->b << " (pos " << last_pos << ")\n"; }
 
         if(last_pos != first_pos + 1)
         {
@@ -227,7 +227,7 @@ void Mesh::build_interior()
 
             last_pos++; //last_pos = cur->b->get_position();
 
-            if(verbosity >= 6) { std::cout << " |---also intersects Anchor " << cur->b << " (" << last_pos << ")\n"; }
+            if(verbosity >= 8) { std::cout << " |---also intersects Anchor " << cur->b << " (" << last_pos << ")\n"; }
         }
 
     //TESTING
@@ -237,7 +237,7 @@ void Mesh::build_interior()
         //compute y-coordinate of intersection
         double intersect_y = x_grades[sweep->a->get_x()]*(sweep->x) - y_grades[sweep->a->get_y()];
 
-        if(verbosity >= 6) { std::cout << "  found intersection between " << (last_pos - first_pos + 1) << " edges at x = " << sweep->x << ", y = " << intersect_y << "\n"; }
+        if(verbosity >= 8) { std::cout << "  found intersection between " << (last_pos - first_pos + 1) << " edges at x = " << sweep->x << ", y = " << intersect_y << "\n"; }
 
         //create new vertex
         Vertex* new_vertex = new Vertex(sweep->x, intersect_y);
@@ -358,8 +358,8 @@ void Mesh::build_interior()
         }
     }//end while
 
-  // PART 3: INSERT VERTICES ON RIGHT EDGE OF STRIP AND CONNECT EDGES           TODO: FIX THIS PART!!!!!!!!!!!!!!!!!!!!!!!!!!
-    if(verbosity >= 5) { std::cout << "PART 3: RIGHT EDGE OF THE STRIP\n"; }
+  // PART 3: INSERT VERTICES ON RIGHT EDGE OF STRIP AND CONNECT EDGES
+    if(verbosity >= 6) { std::cout << "PART 3: RIGHT EDGE OF THE STRIP\n"; }
 
     Halfedge* rightedge = bottomright; //need a reference halfedge along the right side of the strip
     unsigned cur_x = 0;      //keep track of x-coordinate of last Anchor whose line was connected to right edge (x-coordinate of Anchor is slope of line)
@@ -525,13 +525,14 @@ void Mesh::find_path(std::vector<Halfedge*>& pathvec)
     }
 
     //TESTING -- print the edges in the dual graph
-    if(verbosity >= 2)
+    if(verbosity >= 10)
     {
         std::cout << "EDGES IN THE DUAL GRAPH OF THE ARRANGEMENT: \n";
         typedef boost::graph_traits<Graph>::edge_iterator edge_iterator;
         std::pair<edge_iterator, edge_iterator> ei = boost::edges(dual_graph);
         for(edge_iterator it = ei.first; it != ei.second; ++it)
-            std::cout << "  (" << boost::source(*it, dual_graph) << ", " << boost::target(*it, dual_graph) << ")\n";
+            std::cout << "  (" << boost::source(*it, dual_graph) << ", " << boost::target(*it, dual_graph) << "), ";
+        std::cout << "\n";
     }
 
 
@@ -541,11 +542,12 @@ void Mesh::find_path(std::vector<Halfedge*>& pathvec)
     std::vector<Edge> spanning_tree_edges;
     boost::kruskal_minimum_spanning_tree(dual_graph, std::back_inserter(spanning_tree_edges));
 
-    if(verbosity >= 2)
+    if(verbosity >= 10)
     {
         std::cout << "num MST edges: " << spanning_tree_edges.size() << "\n";
         for(unsigned i=0; i<spanning_tree_edges.size(); i++)
-            std::cout << "  (" << boost::source(spanning_tree_edges[i], dual_graph) << ", " << boost::target(spanning_tree_edges[i], dual_graph) << ")\n";
+            std::cout << "  (" << boost::source(spanning_tree_edges[i], dual_graph) << ", " << boost::target(spanning_tree_edges[i], dual_graph) << "), ";
+        std::cout << "\n";
     }
 
 //  // PART 2-ALTERNATE: FIND A HAMILTONIAN TOUR
@@ -583,16 +585,13 @@ void Mesh::find_path(std::vector<Halfedge*>& pathvec)
     find_subpath(start, adjacencies, pathvec, false);
 
     //TESTING -- PRINT PATH
-    if(verbosity >= 2)
+    if(verbosity >= 10)
     {
         std::cout << "PATH: " << start << ", ";
-        for(int i=0; i<pathvec.size(); i++)
+        for(unsigned i=0; i<pathvec.size(); i++)
             std::cout << (face_indexes.find((pathvec[i])->get_face()))->second << ", ";
         std::cout << "\n";
     }
-
-
-
 }//end find_path()
 
 //recursive method to build part of the path
@@ -1145,7 +1144,7 @@ Mesh::Crossing::Crossing(Anchor* a, Anchor* b, Mesh* m) : a(a), b(b), m(m)
     x = (m->y_grades[a->get_y()] - m->y_grades[b->get_y()])/(m->x_grades[a->get_x()] - m->x_grades[b->get_x()]);
 
     //TESTING ONLY
-    std::cout << "  Crossing created for curves " << a->get_position() << " (Anchor " << a << ") and " << b->get_position() << " (Anchor " << b << "), which intersect at x = " << x << "\n";
+//    std::cout << "  Crossing created for curves " << a->get_position() << " (Anchor " << a << ") and " << b->get_position() << " (Anchor " << b << "), which intersect at x = " << x << "\n";
 }
 
 //returns true iff this Crossing has (exactly) the same x-coordinate as other Crossing
