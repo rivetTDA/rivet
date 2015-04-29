@@ -1,5 +1,5 @@
-#ifndef __DISCRETE_BARCODE_H__
-#define __DISCRETE_BARCODE_H__
+#ifndef __BARCODE_TEMPLATE_H__
+#define __BARCODE_TEMPLATE_H__
 
 #include <set>
 
@@ -32,4 +32,4 @@ class BarcodeTemplate
         std::set<BarTemplate> bars;
 };
 
-#endif // __DISCRETE_BARCODE_H__
+#endif // __BARCODE_TEMPLATE_H__

@@ -12,7 +12,7 @@
 #include "map_matrix.h"
 #include "index_matrix.h"
 #include "../dcel/xi_support_matrix.h"
-#include "../dcel/discrete_barcode.h"
+#include "../dcel/barcode_template.h"
 class Mesh;
 
 class BarcodeCalculator

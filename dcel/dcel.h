@@ -12,7 +12,7 @@ class Halfedge;
 class Face;
 
 #include "lcm.h"
-#include "discrete_barcode.h"
+#include "barcode_template.h"
 #include <iostream>
 
 class Vertex

@@ -1,4 +1,4 @@
-#include "discrete_barcode.h"
+#include "barcode_template.h"
 
 #include <iostream>
 
