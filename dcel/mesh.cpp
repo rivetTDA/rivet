@@ -83,8 +83,8 @@ void Mesh::build_arrangement(MultiBetti& mb, std::vector<xiPoint>& xi_pts)
 {
     //precondition: the constructor has already created the boundary of the arrangement
 
-    //BarcodeCalculator object is able to do the calculations necessary for finding anchors and computing barcode templates
-    BarcodeCalculator bcalc(this, mb, xi_pts);
+    //PersistenceUpdater object is able to do the calculations necessary for finding anchors and computing barcode templates
+    PersistenceUpdater bcalc(this, mb, xi_pts);
 
     //first, compute anchors and store them in the vector Mesh::all_anchors
     bcalc.find_anchors();

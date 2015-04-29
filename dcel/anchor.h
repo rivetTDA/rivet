@@ -49,9 +49,9 @@ class Anchor   //updated to store only discrete indexes
             //NOTE: if the anchor is both strict and supported, then down is NULL and left points to the xiMatrixEntry at the anchor coordinates
             //      if the anchor is not strict (but supported), then left is NULL and down points to the xiMatrixEntry at the anchor coordinates
 
-        Halfedge* dual_line;	//pointer to left-most halfedge corresponding to this Anchor in the arrangement --- IS THIS USED FOR ANYTHING BESIDES TESTING???
-        unsigned position;  //relative position of Anchor line at sweep line, used for Bentley-Ottmann DCEL construction algorithm
-        bool above_line;    //true iff this Anchor is above the current slice line, used for the vineyard-update process of storing persistence data in cells of the arrangement
+        Halfedge* dual_line;    //pointer to left-most halfedge corresponding to this Anchor in the arrangement
+        unsigned position;      //relative position of Anchor line at sweep line, used for Bentley-Ottmann DCEL construction algorithm
+        bool above_line;        //true iff this Anchor is above the current slice line, used for the vineyard-update process of storing persistence data in cells of the arrangement
 };
 
 

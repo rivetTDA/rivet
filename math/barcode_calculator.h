@@ -1,12 +1,12 @@
 /**
- * \class	BarcodeCalculator
+ * \class	PersistenceUpdater
  * \brief	Computes barcode templates (using the mathematics of "vineyard updates" to store in the Mesh)
  * \author	Matthew L. Wright
  * \date	March 2015
  */
 
-#ifndef __BARCODE_CALCULATOR_H__
-#define __BARCODE_CALCULATOR_H__
+#ifndef __PERSISTENCE_UPDATER_H__
+#define __PERSISTENCE_UPDATER_H__
 
 #include "../dcel/mesh.h"
 #include "map_matrix.h"
@@ -15,11 +15,11 @@
 #include "../dcel/barcode_template.h"
 class Mesh;
 
-class BarcodeCalculator
+class PersistenceUpdater
 {
     public:
 
-        BarcodeCalculator(Mesh* m, MultiBetti& mb, std::vector<xiPoint>& xi_pts);  //constructor -- also fills xi_matrix with the xi support points
+        PersistenceUpdater(Mesh* m, MultiBetti& mb, std::vector<xiPoint>& xi_pts);  //constructor -- also fills xi_matrix with the xi support points
 
         void find_anchors(); //computes anchors and stores them in mesh->all_anchors; anchor-lines will be created when mesh->build_interior() is called
 
@@ -70,4 +70,4 @@ class BarcodeCalculator
         void store_barcode_template(Face* cell, MapMatrix_Perm* RL, MapMatrix_Perm* RH);
 };
 
-#endif // __BARCODE_CALCULATOR_H__
+#endif // __PERSISTENCE_UPDATER_H__

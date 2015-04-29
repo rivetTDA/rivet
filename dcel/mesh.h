@@ -29,7 +29,7 @@ typedef boost::multiprecision::cpp_rational exact;
 
 class Mesh
 {
-    friend class BarcodeCalculator; //allow BarcodeCalculator access to private variables in Mesh
+    friend class PersistenceUpdater; //allow PersistenceUpdater access to private variables in Mesh
 
     public:
         Mesh(const std::vector<double>& xg, const std::vector<exact>& xe, const std::vector<double>& yg, const std::vector<exact>& ye, int v);

@@ -4,7 +4,7 @@
 
 
 //constructor -- also fills xi_matrix with the xi support points
-BarcodeCalculator::BarcodeCalculator(Mesh *m, MultiBetti &mb, std::vector<xiPoint> &xi_pts) :
+PersistenceUpdater::PersistenceUpdater(Mesh *m, MultiBetti &mb, std::vector<xiPoint> &xi_pts) :
     mesh(m), bifiltration(mb.bifiltration), dim(mb.dimension),
     xi_matrix(m->x_grades.size(), m->y_grades.size())
 {
@@ -19,7 +19,7 @@ BarcodeCalculator::BarcodeCalculator(Mesh *m, MultiBetti &mb, std::vector<xiPoin
 
 
 //computes anchors and stores them in mesh->all_anchors; anchor-lines will be created when mesh->build_interior() is called
-void BarcodeCalculator::find_anchors()
+void PersistenceUpdater::find_anchors()
 {
     if(mesh->verbosity >= 2) { std::cout << "Finding anchors...\n"; }
 
@@ -86,7 +86,7 @@ void BarcodeCalculator::find_anchors()
 
 
 //computes and stores a barcode template in each 2-cell of mesh
-void BarcodeCalculator::store_barcodes(std::vector<Halfedge*>& path)
+void PersistenceUpdater::store_barcodes(std::vector<Halfedge*>& path)
 {
   // PART 1: GET THE BOUNDARY MATRICES WITH PROPER SIMPLEX ORDERING
 
@@ -344,7 +344,7 @@ void BarcodeCalculator::store_barcodes(std::vector<Halfedge*>& path)
 //stores multigrade info for the persistence computations (data structures prepared with respect to a near-vertical line positioned to the right of all \xi support points)
 //  low is true for simplices of dimension hom_dim, false for simplices of dimension hom_dim+1
 //  simplex_order will be filled with a map : dim_index --> order_index for simplices of the given dimension, for use in creating the boundary matrices
-void BarcodeCalculator::store_multigrades(IndexMatrix* ind, bool low, std::vector<int>& simplex_order)
+void PersistenceUpdater::store_multigrades(IndexMatrix* ind, bool low, std::vector<int>& simplex_order)
 {
   //STEP 1: store multigrade data in the xiSupportMatrix
 
@@ -499,7 +499,7 @@ void BarcodeCalculator::store_multigrades(IndexMatrix* ind, bool low, std::vecto
 //moves columns from an equivalence class given by xiMatrixEntry* first to their new positions after or among the columns in the equivalence class given by xiMatrixEntry* second
 // the boolean argument indicates whether an anchor is being crossed from below (or from above)
 ///TODO: IMPLEMENT LAZY SWAPPING!
-void BarcodeCalculator::move_columns(xiMatrixEntry* first, xiMatrixEntry* second, bool from_below, MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH)
+void PersistenceUpdater::move_columns(xiMatrixEntry* first, xiMatrixEntry* second, bool from_below, MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH)
 {
     //get column indexes (so we know which columns to move)
     int low_col = first->low_index;   //rightmost column index of low simplices for the equivalence class to move
@@ -641,7 +641,7 @@ void BarcodeCalculator::move_columns(xiMatrixEntry* first, xiMatrixEntry* second
 
 
 //moves a block of n columns, the rightmost of which is column s, to a new position following column t (NOTE: assumes s <= t)
-void BarcodeCalculator::move_low_columns(int s, unsigned n, int t, MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH)
+void PersistenceUpdater::move_low_columns(int s, unsigned n, int t, MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH)
 {
     std::cout << "   --Transpositions for low simplices: [" << s << ", " << n << ", " << t << "] ";
     for(unsigned c=0; c<n; c++) //move column that starts at s-c
@@ -809,7 +809,7 @@ void BarcodeCalculator::move_low_columns(int s, unsigned n, int t, MapMatrix_Per
 
 
 //moves a block of n columns, the rightmost of which is column s, to a new position following column t (NOTE: assumes s <= t)
-void BarcodeCalculator::move_high_columns(int s, unsigned n, int t, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH)
+void PersistenceUpdater::move_high_columns(int s, unsigned n, int t, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH)
 {
     std::cout << "   --Transpositions for high simplices: [" << s << ", " << n << ", " << t << "] ";
     for(unsigned c=0; c<n; c++) //move column that starts at s-c
@@ -909,7 +909,7 @@ void BarcodeCalculator::move_high_columns(int s, unsigned n, int t, MapMatrix_Pe
 }//end move_high_columns()
 
 //removes entries corresponding to xiMatrixEntry head from partition_low and partition_high
-void BarcodeCalculator::remove_partition_entries(xiMatrixEntry* head)
+void PersistenceUpdater::remove_partition_entries(xiMatrixEntry* head)
 {
     std::cout << "    ----removing partition entries for xiMatrixEntry " << head->index << " (" << head->low_index << "; " << head->high_index << ")\n";
 
@@ -926,7 +926,7 @@ void BarcodeCalculator::remove_partition_entries(xiMatrixEntry* head)
 }//end remove_partition_entries()
 
 //if the equivalence class corresponding to xiMatrixEntry head has nonempty sets of "low" or "high" simplices, then this function creates the appropriate entries in partition_low and partition_high
-void BarcodeCalculator::add_partition_entries(xiMatrixEntry* head)
+void PersistenceUpdater::add_partition_entries(xiMatrixEntry* head)
 {
     std::cout << "    ----adding partition entries for xiMatrixEntry " << head->index << " (" << head->low_index << "; " << head->high_index << ")\n";
 
@@ -942,7 +942,7 @@ void BarcodeCalculator::add_partition_entries(xiMatrixEntry* head)
 //stores a barcode template in a 2-cell of the arrangement
 ///TODO: IMPROVE THIS!!! (store previous barcode at the simplicial level, and only examine columns that were modified in the recent update)
 /// Is there a better way to handle endpoints at infinity?
-void BarcodeCalculator::store_barcode_template(Face* cell, MapMatrix_Perm* RL, MapMatrix_Perm* RH)
+void PersistenceUpdater::store_barcode_template(Face* cell, MapMatrix_Perm* RL, MapMatrix_Perm* RH)
 {
     std::cout << "  -----barcode: ";
 
