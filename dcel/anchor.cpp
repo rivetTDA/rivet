@@ -3,7 +3,7 @@
 #include <cstddef>  //for NULL
 #include <math.h>
 
-#include "xi_support_matrix.h"
+#include "../math/xi_support_matrix.h"
 
 //constructor for a strict Anchor, requires pointers to the "generators" of the anchor
 Anchor::Anchor(xiMatrixEntry* down, xiMatrixEntry* left) : x_coord(down->x), y_coord(left->y), down(down), left(left), above_line(true)

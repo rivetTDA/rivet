@@ -15,7 +15,6 @@ SOURCES += main.cpp                         \
 		dataselectdialog.cpp                \
 		dcel/dcel.cpp                       \
 		dcel/mesh.cpp                       \
-		dcel/xi_support_matrix.cpp          \
 		interface/control_dot.cpp           \
 		interface/input_manager.cpp         \
 		interface/persistence_bar.cpp       \
@@ -26,21 +25,20 @@ SOURCES += main.cpp                         \
 		math/index_matrix.cpp               \
 		math/map_matrix.cpp                 \
 		math/multi_betti.cpp                \
-		math/persistence_data.cpp           \
 		math/simplex_tree.cpp               \
 		math/st_node.cpp \
-    dcel/xi_point.cpp \
     interface/barcode.cpp \
     dcel/barcode_template.cpp \
     dcel/anchor.cpp \
-    math/persistence_updater.cpp
+    math/persistence_updater.cpp \
+    math/xi_support_matrix.cpp \
+    math/xi_point.cpp
     
 
 HEADERS  += visualizationwindow.h \
 		dataselectdialog.h \
 		dcel/dcel.h                       \
 		dcel/mesh.h                       \
-		dcel/xi_support_matrix.h          \
 		interface/control_dot.h           \
 		interface/input_manager.h         \
 		interface/persistence_bar.h       \
@@ -51,14 +49,14 @@ HEADERS  += visualizationwindow.h \
 		math/index_matrix.h               \
 		math/map_matrix.h                 \
 		math/multi_betti.h                \
-		math/persistence_data.h           \
 		math/simplex_tree.h               \
 		math/st_node.h \
-    dcel/xi_point.h \
     interface/barcode.h \
     dcel/barcode_template.h \
     dcel/anchor.h \
-    math/persistence_updater.h
+    math/persistence_updater.h \
+    math/xi_support_matrix.h \
+    math/xi_point.h
     
 
 FORMS   += visualizationwindow.ui         \

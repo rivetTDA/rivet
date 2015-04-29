@@ -5,7 +5,7 @@
 #include <vector>
 #include <list>
 
-#include "../math/multi_betti.h"
+#include "multi_betti.h"
 
 #include "xi_point.h"
 struct Multigrade;

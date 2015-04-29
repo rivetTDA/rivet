@@ -11,7 +11,7 @@
 #include "../dcel/mesh.h"
 #include "map_matrix.h"
 #include "index_matrix.h"
-#include "../dcel/xi_support_matrix.h"
+#include "xi_support_matrix.h"
 #include "../dcel/barcode_template.h"
 class Mesh;
 

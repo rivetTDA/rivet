@@ -10,7 +10,6 @@ class VisualizationWindow;
 class ControlDot;
 #include "slice_line.h"
 class SliceLine;
-#include "../math/persistence_data.h"
 #include "persistence_bar.h"
 class PersistenceBar;
 

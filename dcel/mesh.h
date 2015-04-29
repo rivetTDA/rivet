@@ -18,9 +18,8 @@
 
 #include "anchor.h"
 #include "dcel.h"
-#include "xi_point.h"
+#include "../math/xi_point.h"
 //#include "multigrade.h"   do I need this???
-#include "../math/persistence_data.h"
 #include "../math/multi_betti.h"
 #include "../math/persistence_updater.h"
 
