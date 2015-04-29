@@ -8,7 +8,9 @@
 #include "../math/multi_betti.h"
 
 #include "xi_point.h"
-#include "multigrade.h"
+struct Multigrade;
+
+
 
 //// these are the nodes in the sparse matrix
 struct xiMatrixEntry
@@ -43,6 +45,22 @@ struct xiMatrixEntry
 
     void insert_multigrade(Multigrade* mg, bool low);  //inserts a Multigrade at the beginning of the list for the given dimension; does not update column counts!
 };
+
+
+//// each node in the sparse matrix maintains two lists of multigrades
+struct Multigrade
+{
+    unsigned x;     //x-coordinate of this multigrade
+    unsigned y;     //y-coordinate of this multigrade
+
+    unsigned num_cols; //number of columns (i.e. simplices) at this multigrade
+    int simplex_index; //last dim_index of the simplices at this multigrade; necessary so that we can build the boundary matrix
+
+    xiMatrixEntry* xi_entry; //pointer to the entry in the xiSupportMatrix to which this multigrade is assocated
+
+    Multigrade(unsigned x, unsigned y, unsigned num_cols, int simplex_index, xiMatrixEntry* xi);   //constructor
+};
+
 
 //// sparse matrix to store the set U of support points of the multi-graded Betti numbers
 class xiSupportMatrix

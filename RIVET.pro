@@ -30,7 +30,6 @@ SOURCES += main.cpp                         \
 		math/simplex_tree.cpp               \
 		math/st_node.cpp \
     dcel/xi_point.cpp \
-    dcel/multigrade.cpp \
     interface/barcode.cpp \
     dcel/barcode_template.cpp \
     dcel/anchor.cpp \
@@ -56,7 +55,6 @@ HEADERS  += visualizationwindow.h \
 		math/simplex_tree.h               \
 		math/st_node.h \
     dcel/xi_point.h \
-    dcel/multigrade.h \
     interface/barcode.h \
     dcel/barcode_template.h \
     dcel/anchor.h \
