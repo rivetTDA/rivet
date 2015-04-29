@@ -3,30 +3,30 @@
 #include <iostream>
 
 
-DiscreteBar::DiscreteBar(unsigned a, unsigned b) :
+BarTemplate::BarTemplate(unsigned a, unsigned b) :
     begin(a), end(b), multiplicity(1)
 { }
 
-DiscreteBar::DiscreteBar(const DiscreteBar& other) :
+BarTemplate::BarTemplate(const BarTemplate& other) :
     begin(other.begin), end(other.end), multiplicity(other.multiplicity)
 { }
 
-bool DiscreteBar::operator<(const DiscreteBar other) const
+bool BarTemplate::operator<(const BarTemplate other) const
 {
     return (begin < other.begin) || (begin == other.begin && end < other.end);
 }
 
 
 
-DiscreteBarcode::DiscreteBarcode()
+BarcodeTemplate::BarcodeTemplate()
 { }
 
 //adds a bar to the barcode (updating multiplicity, if necessary)
-void DiscreteBarcode::add_bar(unsigned a, unsigned b)
+void BarcodeTemplate::add_bar(unsigned a, unsigned b)
 {
     //look for the bar
-    DiscreteBar bar(a,b);
-    std::set<DiscreteBar>::iterator it = bars.find(bar);
+    BarTemplate bar(a,b);
+    std::set<BarTemplate>::iterator it = bars.find(bar);
 
     if(it == bars.end())    //then the bar doesn't already exist, so insert it
     {
@@ -39,23 +39,23 @@ void DiscreteBarcode::add_bar(unsigned a, unsigned b)
 }
 
 //returns an iterator to the first bar in the barcode
-std::set<DiscreteBar>::iterator DiscreteBarcode::begin()
+std::set<BarTemplate>::iterator BarcodeTemplate::begin()
 {
     return bars.begin();
 }
 
 //returns an iterator to the past-the-end element of the barcode
-std::set<DiscreteBar>::iterator DiscreteBarcode::end()
+std::set<BarTemplate>::iterator BarcodeTemplate::end()
 {
     return bars.end();
 }
 
 //for testing only
-void DiscreteBarcode::print()
+void BarcodeTemplate::print()
 {
-    for(std::set<DiscreteBar>::iterator it = bars.begin(); it != bars.end(); ++it)
+    for(std::set<BarTemplate>::iterator it = bars.begin(); it != bars.end(); ++it)
     {
-        DiscreteBar b = *it;
+        BarTemplate b = *it;
         std::cout << "(" << b.begin << "," << b.end << ")x" << b.multiplicity << ", ";
     }
     std::cout << "\n";

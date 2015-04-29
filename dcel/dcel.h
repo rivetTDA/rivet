@@ -12,8 +12,8 @@ class Halfedge;
 class Face;
 
 #include "lcm.h"
-#include "cell_persistence_data.h"
 #include "discrete_barcode.h"
+#include <iostream>
 
 class Vertex
 {
@@ -75,12 +75,12 @@ class Face
 {
     public:
         Face(Halfedge* e);      //constructor: requires pointer to a boundary halfedge
-        ~Face();                //destructor: destroys discrete barcode
+        ~Face();                //destructor: destroys barcode template
 
         void set_boundary(Halfedge* e);     //set the pointer to a halfedge on the boundary of this face
         Halfedge* get_boundary();           //get the (pointer to the) boundary halfedge
 
-        DiscreteBarcode& get_barcode();     //returns a reference to the discrete barcode stored in this cell
+        BarcodeTemplate &get_barcode();     //returns a reference to the barcode template stored in this cell
 
         bool has_been_visited();            //true iff cell has been visited in the vineyard-update process (so that we can distinguish a cell with an empty barcode from an unvisited cell)
         void mark_as_visited();             //marks this cell as visited
@@ -92,7 +92,7 @@ class Face
 
     private:
         Halfedge* boundary;     //pointer to one halfedge in the boundary of this cell
-        DiscreteBarcode dbc;    //discrete barcode stored in this cell
+        BarcodeTemplate dbc;    //barcode template stored in this cell
         bool visited;           //initially false, set to true after this cell has been visited in the vineyard-update process (so that we can distinguish a cell with an empty barcode from an unvisited cell)
 //        CellPersistenceData pdata;	//persistence data associated with this face -- TODO: should this be a pointer???
 

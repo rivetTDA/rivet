@@ -95,7 +95,7 @@ private:
 
     void update_persistence_diagram();
 
-    Barcode* rescale_discrete_barcode(DiscreteBarcode& dbc, double angle, double offset);
+    Barcode* rescale_barcode_template(BarcodeTemplate &dbc, double angle, double offset);
     double project(xiPoint& pt, double angle, double offset);
 };
 

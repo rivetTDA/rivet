@@ -13,7 +13,6 @@ TEMPLATE = app
 SOURCES += main.cpp                         \
 		visualizationwindow.cpp             \
 		dataselectdialog.cpp                \
-		dcel/cell_persistence_data.cpp      \
 		dcel/dcel.cpp                       \
 		dcel/lcm.cpp                        \
 		dcel/mesh.cpp                       \
@@ -40,7 +39,6 @@ SOURCES += main.cpp                         \
 
 HEADERS  += visualizationwindow.h \
 		dataselectdialog.h \
-		dcel/cell_persistence_data.h      \
 		dcel/dcel.h                       \
 		dcel/lcm.h                        \
 		dcel/mesh.h                       \

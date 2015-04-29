@@ -85,7 +85,7 @@ void BarcodeCalculator::find_anchors()
 }//end find_anchors()
 
 
-//computes and stores a discrete barcode in each 2-cell of mesh
+//computes and stores a barcode template in each 2-cell of mesh
 void BarcodeCalculator::store_barcodes(std::vector<Halfedge*>& path)
 {
   // PART 1: GET THE BOUNDARY MATRICES WITH PROPER SIMPLEX ORDERING
@@ -133,9 +133,9 @@ void BarcodeCalculator::store_barcodes(std::vector<Halfedge*>& path)
     MapMatrix_RowPriority_Perm* U_low = R_low->decompose_RU();
     MapMatrix_RowPriority_Perm* U_high = R_high->decompose_RU();
 
-    //store the discrete barcode in the first cell
+    //store the barcode template in the first cell
     Face* first_cell = mesh->topleft->get_twin()->get_face();
-    store_discrete_barcode(first_cell, R_low, R_high);
+    store_barcode_template(first_cell, R_low, R_high);
 
     std::cout << "Initial persistence computation in cell " << mesh->FID(first_cell) << ".\n";
 
@@ -157,7 +157,7 @@ void BarcodeCalculator::store_barcodes(std::vector<Halfedge*>& path)
         std::cout << "\n  High partition: ";
         for(std::map<unsigned, xiMatrixEntry*>::iterator it = partition_high.begin(); it != partition_high.end(); ++it)
             std::cout << it->first << "->" << it->second->index << ", ";
-        std::cout << "\n  Discrete barcode: ";
+        std::cout << "\n  Barcode Template: ";
         first_cell->get_barcode().print();
     }
 
@@ -298,10 +298,10 @@ void BarcodeCalculator::store_barcodes(std::vector<Halfedge*>& path)
                 std::cout << "(" << (*it)->get_x() << "," << (*it)->get_y() << ") ";
         std::cout << "\n";
 
-        //if this cell does not yet have a discrete barcode, then store the discrete barcode here
+        //if this cell does not yet have a barcode template, then store it now
         Face* cur_face = (path[i])->get_face();
         if(!cur_face->has_been_visited())
-            store_discrete_barcode(cur_face, R_low, R_high);
+            store_barcode_template(cur_face, R_low, R_high);
 
         //testing
         if(mesh->verbosity >= 4)
@@ -324,7 +324,7 @@ void BarcodeCalculator::store_barcodes(std::vector<Halfedge*>& path)
             std::cout << "\n  High partition: ";
             for(std::map<unsigned, xiMatrixEntry*>::iterator it = partition_high.begin(); it != partition_high.end(); ++it)
                 std::cout << it->first << "->" << it->second->index << ", ";
-            std::cout << "\n  Discrete barcode: ";
+            std::cout << "\n  Barcode Template: ";
             cur_face->get_barcode().print();
         }
 
@@ -939,18 +939,18 @@ void BarcodeCalculator::add_partition_entries(xiMatrixEntry* head)
         partition_high.insert( std::pair<unsigned, xiMatrixEntry*>(head->high_index, head) );
 }//end add_partition_entries()
 
-//stores a discrete barcode in a 2-cell of the arrangement
+//stores a barcode template in a 2-cell of the arrangement
 ///TODO: IMPROVE THIS!!! (store previous barcode at the simplicial level, and only examine columns that were modified in the recent update)
 /// Is there a better way to handle endpoints at infinity?
-void BarcodeCalculator::store_discrete_barcode(Face* cell, MapMatrix_Perm* RL, MapMatrix_Perm* RH)
+void BarcodeCalculator::store_barcode_template(Face* cell, MapMatrix_Perm* RL, MapMatrix_Perm* RH)
 {
     std::cout << "  -----barcode: ";
 
     //mark this cell as visited
     cell->mark_as_visited();
 
-    //get a reference to the discrete barcode object
-    DiscreteBarcode& dbc = cell->get_barcode();
+    //get a reference to the barcode template object
+    BarcodeTemplate& dbc = cell->get_barcode();
 
     //loop over all zero-columns in matrix R_low
     for(unsigned c=0; c < RL->width(); c++)
@@ -980,5 +980,5 @@ void BarcodeCalculator::store_discrete_barcode(Face* cell, MapMatrix_Perm* RL, M
         }
     }
     std::cout << "\n";
-}//end store_discrete_barcode()
+}//end store_barcode_template()
 

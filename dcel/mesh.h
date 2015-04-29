@@ -20,7 +20,6 @@
 #include "dcel.h"
 #include "xi_point.h"
 //#include "multigrade.h"   do I need this???
-#include "cell_persistence_data.h"
 #include "../math/persistence_data.h"
 #include "../math/multi_betti.h"
 #include "../math/barcode_calculator.h"
@@ -43,8 +42,8 @@ class Mesh
             //builds the DCEL arrangement, and computes and stores persistence data
             //also stores ordered list of xi support points in the supplied vector
 
-        DiscreteBarcode& get_discrete_barcode(double degrees, double offset);
-            //returns discrete barcode associated with the specified line (point)
+        BarcodeTemplate& get_barcode_template(double degrees, double offset);
+            //returns barcode template associated with the specified line (point)
 		
         void print_stats(); //prints a summary of the arrangement information, such as the number of LCMS, vertices, halfedges, and faces
 		void print();	//prints all the data from the mesh

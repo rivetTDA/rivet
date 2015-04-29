@@ -83,7 +83,7 @@ void Mesh::build_arrangement(MultiBetti& mb, std::vector<xiPoint>& xi_pts)
 {
     //precondition: the constructor has already created the boundary of the arrangement
 
-    //BarcodeCalculator object is able to do the calculations necessary for finding anchors and computing discrete barcodes
+    //BarcodeCalculator object is able to do the calculations necessary for finding anchors and computing barcode templates
     BarcodeCalculator bcalc(this, mb, xi_pts);
 
     //first, compute anchors and store them in the vector Mesh::all_lcms
@@ -96,7 +96,7 @@ void Mesh::build_arrangement(MultiBetti& mb, std::vector<xiPoint>& xi_pts)
     std::vector<Halfedge*> path;
     find_path(path);
 
-    //finally, we can traverse the path, computing and storing a discrete barcode in each 2-cell
+    //finally, we can traverse the path, computing and storing a barcode template in each 2-cell
     bcalc.store_barcodes(path);
 
 }//end build_arrangement()
@@ -638,8 +638,8 @@ void Mesh::find_subpath(unsigned& cur_node, std::vector< std::set<unsigned> >& a
 }//end find_subpath()
 
 
-//returns discrete barcode associated with the specified line (point)
-DiscreteBarcode& Mesh::get_discrete_barcode(double degrees, double offset)
+//returns barcode template associated with the specified line (point)
+BarcodeTemplate& Mesh::get_barcode_template(double degrees, double offset)
 {
     if(degrees == 90) //then line is vertical
     {
@@ -676,7 +676,7 @@ DiscreteBarcode& Mesh::get_discrete_barcode(double degrees, double offset)
     ///TODO: store seed
 
     return cell->get_barcode();  ////FIX THIS!!!
-}//end get_discrete_barcode()
+}//end get_barcode_template()
 
 //finds the first LCM that intersects the left edge of the arrangement at a point not less than the specified y-coordinate
 //  if no such LCM, returns NULL

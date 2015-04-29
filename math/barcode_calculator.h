@@ -1,6 +1,6 @@
 /**
  * \class	BarcodeCalculator
- * \brief	Computes discrete barcodes (using the mathematics of "vineyard updates" to store in the Mesh.
+ * \brief	Computes barcode templates (using the mathematics of "vineyard updates" to store in the Mesh)
  * \author	Matthew L. Wright
  * \date	March 2015
  */
@@ -23,7 +23,7 @@ class BarcodeCalculator
 
         void find_anchors(); //computes anchors and stores them in mesh->all_lcms; anchor-lines will be created when mesh->build_interior() is called
 
-        void store_barcodes(std::vector<Halfedge *> &path);  //computes and stores a discrete barcode in each 2-cell of mesh
+        void store_barcodes(std::vector<Halfedge *> &path);  //computes and stores a barcode template in each 2-cell of mesh
 
     private:
       //data structures
@@ -65,9 +65,9 @@ class BarcodeCalculator
         //if the equivalence class corresponding to xiMatrixEntry head has nonempty sets of "low" or "high" simplices, then this function creates the appropriate entries in partition_low and partition_high
         void add_partition_entries(xiMatrixEntry* head);
 
-        //stores a discrete barcode in a 2-cell of the arrangement
+        //stores a barcode template in a 2-cell of the arrangement
         ///TODO: IMPROVE THIS -- track most recent barcode at the simplicial level and re-examine only the necessary columns!!!
-        void store_discrete_barcode(Face* cell, MapMatrix_Perm* RL, MapMatrix_Perm* RH);
+        void store_barcode_template(Face* cell, MapMatrix_Perm* RL, MapMatrix_Perm* RH);
 };
 
 #endif // __BARCODE_CALCULATOR_H__

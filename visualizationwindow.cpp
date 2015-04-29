@@ -134,7 +134,7 @@ void VisualizationWindow::compute()
 
     arrangement = new Mesh(x_grades, x_exact, y_grades, y_exact, verbosity);
     arrangement->build_arrangement(mb, xi_support);     //also stores list of xi support points in the last argument
-        //NOTE: this also computes and stores discrete barcodes in the arrangement
+        //NOTE: this also computes and stores barcode templates in the arrangement
 
     ptime time_dcel_end(microsec_clock::local_time());      //stop timer
     time_duration duration_dcel(time_dcel_end - time_dcel_start);
@@ -150,7 +150,7 @@ void VisualizationWindow::compute()
     if(verbosity >= 2) { std::cout << "DATA COMPUTED; READY FOR INTERACTIVITY.\n"; }
 
     //print arrangement info
-    std::cout << "   building the arrangement and computing discrete barcodes took " << duration_dcel << "\n";
+    std::cout << "   building the arrangement and computing barcode templates took " << duration_dcel << "\n";
     arrangement->print_stats();
     ui->statusBar->showMessage("computed persistence data");
 
@@ -180,8 +180,8 @@ void VisualizationWindow::compute()
     double degrees = ui->angleDoubleSpinBox->value();
     double offset = ui->offsetSpinBox->value();                             ///TODO: CHECK THIS!!!
 
-    DiscreteBarcode& dbc = arrangement->get_discrete_barcode(degrees, offset);
-    Barcode* barcode = rescale_discrete_barcode(dbc, degrees, offset);      ///TODO: CHECK THIS!!!
+    BarcodeTemplate& dbc = arrangement->get_barcode_template(degrees, offset);
+    Barcode* barcode = rescale_barcode_template(dbc, degrees, offset);      ///TODO: CHECK THIS!!!
 
     //TESTING
     std::cout<< "RESCALED BARCODE: ";
@@ -256,8 +256,8 @@ void VisualizationWindow::update_persistence_diagram()
     double degrees = ui->angleDoubleSpinBox->value();
     double offset = ui->offsetSpinBox->value();
 
-    DiscreteBarcode& dbc = arrangement->get_discrete_barcode(degrees, offset);
-    Barcode* barcode = rescale_discrete_barcode(dbc, degrees, offset);
+    BarcodeTemplate& dbc = arrangement->get_barcode_template(degrees, offset);
+    Barcode* barcode = rescale_barcode_template(dbc, degrees, offset);
 
     //TESTING
     std::cout<< "RESCALED BARCODE: ";
@@ -272,14 +272,14 @@ void VisualizationWindow::update_persistence_diagram()
     delete barcode;
 }
 
-//rescales a discrete barcode by projecting points onto the specified line
+//rescales a barcode template by projecting points onto the specified line
 // NOTE: angle in DEGREES
-Barcode* VisualizationWindow::rescale_discrete_barcode(DiscreteBarcode& dbc, double angle, double offset)
+Barcode* VisualizationWindow::rescale_barcode_template(BarcodeTemplate& dbc, double angle, double offset)
 {
     Barcode* bc = new Barcode();     //NOTE: delete later!
 
-    //loop through discrete bars
-    for(std::set<DiscreteBar>::iterator it = dbc.begin(); it != dbc.end(); ++it)
+    //loop through bars
+    for(std::set<BarTemplate>::iterator it = dbc.begin(); it != dbc.end(); ++it)
     {
         xiPoint begin = xi_support[it->begin];
         double birth = project(begin, angle, offset);
@@ -304,7 +304,7 @@ Barcode* VisualizationWindow::rescale_discrete_barcode(DiscreteBarcode& dbc, dou
     }
 
     return bc;
-}//end rescale_discrete_barcode()
+}//end rescale_barcode_template()
 
 //computes the projection of an xi support point onto the specified line
 //  NOTE: returns INFTY if the point has no projection (can happen only for horizontal and vertical lines)

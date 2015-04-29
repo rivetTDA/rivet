@@ -147,7 +147,7 @@ Halfedge* Face::get_boundary()
     return boundary;
 }
 
-DiscreteBarcode& Face::get_barcode()
+BarcodeTemplate& Face::get_barcode()
 {
     return dbc;
 }
