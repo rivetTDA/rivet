@@ -84,10 +84,10 @@ void Mesh::build_arrangement(MultiBetti& mb, std::vector<xiPoint>& xi_pts)
     //precondition: the constructor has already created the boundary of the arrangement
 
     //PersistenceUpdater object is able to do the calculations necessary for finding anchors and computing barcode templates
-    PersistenceUpdater bcalc(this, mb, xi_pts);
+    PersistenceUpdater updater(this, mb, xi_pts);
 
     //first, compute anchors and store them in the vector Mesh::all_anchors
-    bcalc.find_anchors();
+    updater.find_anchors();
 
     //now that we have all the anchors, we can build the interior of the arrangement
     build_interior();
@@ -97,7 +97,7 @@ void Mesh::build_arrangement(MultiBetti& mb, std::vector<xiPoint>& xi_pts)
     find_path(path);
 
     //finally, we can traverse the path, computing and storing a barcode template in each 2-cell
-    bcalc.store_barcodes(path);
+    updater.store_barcodes(path);
 
 }//end build_arrangement()
 

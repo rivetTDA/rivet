@@ -31,10 +31,10 @@ SOURCES += main.cpp                         \
 		math/st_node.cpp \
     dcel/xi_point.cpp \
     dcel/multigrade.cpp \
-    math/barcode_calculator.cpp \
     interface/barcode.cpp \
     dcel/barcode_template.cpp \
-    dcel/anchor.cpp
+    dcel/anchor.cpp \
+    math/persistence_updater.cpp
     
 
 HEADERS  += visualizationwindow.h \
@@ -57,10 +57,10 @@ HEADERS  += visualizationwindow.h \
 		math/st_node.h \
     dcel/xi_point.h \
     dcel/multigrade.h \
-    math/barcode_calculator.h \
     interface/barcode.h \
     dcel/barcode_template.h \
-    dcel/anchor.h
+    dcel/anchor.h \
+    math/persistence_updater.h
     
 
 FORMS   += visualizationwindow.ui         \

@@ -22,7 +22,7 @@
 //#include "multigrade.h"   do I need this???
 #include "../math/persistence_data.h"
 #include "../math/multi_betti.h"
-#include "../math/barcode_calculator.h"
+#include "../math/persistence_updater.h"
 
 #include <boost/multiprecision/cpp_int.hpp>
 typedef boost::multiprecision::cpp_rational exact;

@@ -1,4 +1,4 @@
-#include "barcode_calculator.h"
+#include "persistence_updater.h"
 
 #include <qdebug.h>
 
