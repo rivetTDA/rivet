@@ -128,7 +128,7 @@ void VisualizationWindow::compute()
   //STEP 3: BUILD THE ARRANGEMENT
 
     //build the arrangement
-    if(verbosity >= 2) { std::cout << "CALCULATING LCMs AND BUILDING THE DCEL ARRANGEMENT\n"; }
+    if(verbosity >= 2) { std::cout << "CALCULATING ANCHORS AND BUILDING THE DCEL ARRANGEMENT\n"; }
 
     ptime time_dcel_start(microsec_clock::local_time());    //start timer
 

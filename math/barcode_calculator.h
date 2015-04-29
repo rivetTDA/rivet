@@ -21,7 +21,7 @@ class BarcodeCalculator
 
         BarcodeCalculator(Mesh* m, MultiBetti& mb, std::vector<xiPoint>& xi_pts);  //constructor -- also fills xi_matrix with the xi support points
 
-        void find_anchors(); //computes anchors and stores them in mesh->all_lcms; anchor-lines will be created when mesh->build_interior() is called
+        void find_anchors(); //computes anchors and stores them in mesh->all_anchors; anchor-lines will be created when mesh->build_interior() is called
 
         void store_barcodes(std::vector<Halfedge *> &path);  //computes and stores a barcode template in each 2-cell of mesh
 
@@ -49,7 +49,7 @@ class BarcodeCalculator
         void store_multigrades(IndexMatrix* ind, bool low, std::vector<int>& simplex_order);
 
         //moves columns from an equivalence class given by xiMatrixEntry* first to their new positions after or among the columns in the equivalence class given by xiMatrixEntry* second
-        // the boolean argument indicates whether an LCM is being crossed from below (or from above)
+        // the boolean argument indicates whether an anchor is being crossed from below (or from above)
         ///TODO: IMPLEMENT LAZY SWAPPING!
         void move_columns(xiMatrixEntry* first, xiMatrixEntry* second, bool from_below, MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH);
 

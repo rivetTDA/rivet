@@ -38,25 +38,25 @@ class Vertex
 class Halfedge
 {
     public:
-        Halfedge(Vertex* v, LCM* p);	//constructor, requires origin vertex as well as LCM corresponding to this halfedge (LCM never changes)
-        Halfedge();			//constructor for a null Halfedge
+        Halfedge(Vertex* v, Anchor* p); //constructor, requires origin vertex as well as Anchor corresponding to this halfedge (Anchor never changes)
+        Halfedge();                     //constructor for a null Halfedge
 
-        void set_twin(Halfedge* e);	//set the twin halfedge
-        Halfedge* get_twin() const;		//get the twin halfedge
+        void set_twin(Halfedge* e); //set the twin halfedge
+        Halfedge* get_twin() const; //get the twin halfedge
 
-        void set_next(Halfedge* e);	//set the next halfedge in the boundary of the face that this halfedge borders
-        Halfedge* get_next() const;		//get the next halfedge
+        void set_next(Halfedge* e); //set the next halfedge in the boundary of the face that this halfedge borders
+        Halfedge* get_next() const; //get the next halfedge
 
-        void set_prev(Halfedge* e);	//set the previous halfedge in the boundary of the face that this halfedge borders
-        Halfedge* get_prev() const;		//get the previous halfedge
+        void set_prev(Halfedge* e); //set the previous halfedge in the boundary of the face that this halfedge borders
+        Halfedge* get_prev() const; //get the previous halfedge
 
         void set_origin(Vertex* v); //set the origin vertex
-        Vertex* get_origin() const;		//get the origin vertex
+        Vertex* get_origin() const; //get the origin vertex
 
-        void set_face(Face* f);		//set the face that this halfedge borders
-        Face* get_face() const;		//get the face that this halfedge borders
+        void set_face(Face* f);     //set the face that this halfedge borders
+        Face* get_face() const;     //get the face that this halfedge borders
 
-        LCM* get_LCM() const;			//get the LCM coordinates
+        Anchor *get_anchor() const; //get the Anchor
 
         friend std::ostream& operator<<(std::ostream& os, const Halfedge& e);	//for printing the halfedge
 
@@ -65,8 +65,8 @@ class Halfedge
         Halfedge* twin;		//pointer to the halfedge that, together with this halfedge, make one edge
         Halfedge* next;		//pointer to the next halfedge around the boundary of the face to the right of this halfedge
         Halfedge* prev;		//pointer to the previous halfedge around the boundary of the face to the right of this halfedge
-        Face* face;		//pointer to the face to the right of this halfedge
-        LCM* lcm;		//stores the (time, dist)-coordinates (in persistence space) of the LCM corresponding to this halfedge
+        Face* face;		    //pointer to the face to the right of this halfedge
+        Anchor* anchor;		//stores the coordinates of the anchor corresponding to this halfedge
 
 };//end class Halfedge
 

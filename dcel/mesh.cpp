@@ -73,7 +73,7 @@ Mesh::~Mesh()
     for(std::vector<Face*>::iterator it = faces.begin(); it != faces.end(); ++it)
         delete (*it);
 
-    for(std::set<LCM*>::iterator it = all_lcms.begin(); it != all_lcms.end(); ++it)
+    for(std::set<Anchor*>::iterator it = all_anchors.begin(); it != all_anchors.end(); ++it)
         delete (*it);
 }//end destructor
 
@@ -86,7 +86,7 @@ void Mesh::build_arrangement(MultiBetti& mb, std::vector<xiPoint>& xi_pts)
     //BarcodeCalculator object is able to do the calculations necessary for finding anchors and computing barcode templates
     BarcodeCalculator bcalc(this, mb, xi_pts);
 
-    //first, compute anchors and store them in the vector Mesh::all_lcms
+    //first, compute anchors and store them in the vector Mesh::all_anchors
     bcalc.find_anchors();
 
     //now that we have all the anchors, we can build the interior of the arrangement
@@ -101,16 +101,16 @@ void Mesh::build_arrangement(MultiBetti& mb, std::vector<xiPoint>& xi_pts)
 
 }//end build_arrangement()
 
-//function to build the arrangement using a version of the Bentley-Ottmann algorithm, given all LCMs
+//function to build the arrangement using a version of the Bentley-Ottmann algorithm, given all Anchors
 //preconditions:
-//		all LCMs are in a list, ordered by lcm_left_comparator
+//		all Anchors are in a list, ordered by Anchor_LeftComparator
 //		boundary of the mesh is created (as in the mesh constructor)
 void Mesh::build_interior()
 {
     if(verbosity >= 5)
     {
-        std::cout << "BUILDING ARRANGEMENT:  LCMs sorted for left edge of strip: ";
-        for(std::set<LCM*, LCM_LeftComparator>::iterator it = all_lcms.begin(); it != all_lcms.end(); ++it)
+        std::cout << "BUILDING ARRANGEMENT:  Anchors sorted for left edge of strip: ";
+        for(std::set<Anchor*, Anchor_LeftComparator>::iterator it = all_anchors.begin(); it != all_anchors.end(); ++it)
             std::cout << "(" << (*it)->get_x() << "," << (*it)->get_y() << ") ";
         std::cout << "\n";
     }
@@ -119,58 +119,58 @@ void Mesh::build_interior()
 
     //data structure for ordered list of lines
     std::vector<Halfedge*> lines;
-    lines.reserve(all_lcms.size());
+    lines.reserve(all_anchors.size());
 
     //data structure for queue of future intersections
     std::priority_queue< Crossing*, std::vector<Crossing*>, CrossingComparator > crossings;
 
-    //data structure for all pairs of LCMs whose potential crossings have been considered
-    typedef std::pair<LCM*,LCM*> LCM_pair;
-    std::set< LCM_pair > considered_pairs;
+    //data structure for all pairs of Anchors whose potential crossings have been considered
+    typedef std::pair<Anchor*,Anchor*> Anchor_pair;
+    std::set< Anchor_pair > considered_pairs;
 
   // PART 1: INSERT VERTICES AND EDGES ALONG LEFT EDGE OF THE STRIP
     if(verbosity >= 5) { std::cout << "PART 1: LEFT EDGE OF STRIP\n"; }
 
-    //for each LCM, create vertex and associated halfedges, anchored on the left edge of the strip
+    //for each Anchor, create vertex and associated halfedges, anchored on the left edge of the strip
     Halfedge* leftedge = bottomleft;
     unsigned prev_y = std::numeric_limits<unsigned>::max();
-    for(std::set<LCM*, LCM_LeftComparator>::iterator it = all_lcms.begin(); it != all_lcms.end(); ++it)
+    for(std::set<Anchor*, Anchor_LeftComparator>::iterator it = all_anchors.begin(); it != all_anchors.end(); ++it)
     {
-        LCM* cur_lcm = *it;
+        Anchor* cur_anchor = *it;
 
-        if(verbosity >= 6) { std::cout << "  Processing LCM " << cur_lcm << " at (" << cur_lcm->get_x() << "," << cur_lcm->get_y() << "), "; }
+        if(verbosity >= 6) { std::cout << "  Processing Anchor " << cur_anchor << " at (" << cur_anchor->get_x() << "," << cur_anchor->get_y() << "), "; }
 
-        if(cur_lcm->get_y() != prev_y)	//then create new vertex
+        if(cur_anchor->get_y() != prev_y)	//then create new vertex
         {
-            double dual_point_y_coord = -1*y_grades[cur_lcm->get_y()];  //point-line duality requires multiplying by -1
+            double dual_point_y_coord = -1*y_grades[cur_anchor->get_y()];  //point-line duality requires multiplying by -1
             leftedge = insert_vertex(leftedge, 0, dual_point_y_coord);    //set leftedge to edge that will follow the new edge
-            prev_y = cur_lcm->get_y();  //remember the discrete y-index
+            prev_y = cur_anchor->get_y();  //remember the discrete y-index
         }
 
         //now insert new edge at origin vertex of leftedge
-        Halfedge* new_edge = create_edge_left(leftedge, cur_lcm);
+        Halfedge* new_edge = create_edge_left(leftedge, cur_anchor);
 
-        //remember Halfedge corresponding to this LCM
+        //remember Halfedge corresponding to this Anchor
         lines.push_back(new_edge);
 
-        //remember relative position of this LCM
-        cur_lcm->set_position(lines.size() - 1);
+        //remember relative position of this Anchor
+        cur_anchor->set_position(lines.size() - 1);
 
-        //remember line associated with this LCM
-        cur_lcm->set_line(new_edge);
+        //remember line associated with this Anchor
+        cur_anchor->set_line(new_edge);
     }
     if(verbosity >= 6) { std::cout << "\n"; }
 
     //for each pair of consecutive lines, if they intersect, store the intersection
     for(unsigned i = 0; i < lines.size() - 1; i++)
     {
-        LCM* a = lines[i]->get_LCM();
-        LCM* b = lines[i+1]->get_LCM();
-        if( a->comparable(b) )    //then the LCMs are (strongly) comparable, so we must store an intersection
+        Anchor* a = lines[i]->get_anchor();
+        Anchor* b = lines[i+1]->get_anchor();
+        if( a->comparable(b) )    //then the Anchors are (strongly) comparable, so we must store an intersection
             crossings.push(new Crossing(a, b, this));
 
         //remember that we have now considered this intersection
-        considered_pairs.insert(LCM_pair(a,b));
+        considered_pairs.insert(Anchor_pair(a,b));
     }
 
     //TESTING
@@ -180,7 +180,7 @@ void Mesh::build_interior()
 //        //get the next intersection from the queue
 //        Crossing* cur = crossings.top();
 //        crossings.pop();
-//        std::cout << " intersection: LCM " << cur->a << " (" << cur->a->get_position() << "), LCM " << cur->b << " (" << cur->b->get_position() << ") intersect at x = " << cur->x << "\n";
+//        std::cout << " intersection: Anchor " << cur->a << " (" << cur->a->get_position() << "), Anchor " << cur->b << " (" << cur->b->get_position() << ") intersect at x = " << cur->x << "\n";
 //    }
 
 
@@ -202,10 +202,10 @@ void Mesh::build_interior()
 
         //process the intersection
         sweep = cur;
-        unsigned first_pos = cur->a->get_position();   //most recent edge in the curve corresponding to LCM a
-        unsigned last_pos = cur->b->get_position();   //most recent edge in the curve corresponding to LCM b
+        unsigned first_pos = cur->a->get_position();   //most recent edge in the curve corresponding to Anchor a
+        unsigned last_pos = cur->b->get_position();   //most recent edge in the curve corresponding to Anchor b
 
-        if(verbosity >= 6) { std::cout << " next intersection: LCM " << cur->a << " (pos " << first_pos << "), LCM " << cur->b << " (pos " << last_pos << ")\n"; }
+        if(verbosity >= 6) { std::cout << " next intersection: Anchor " << cur->a << " (pos " << first_pos << "), Anchor " << cur->b << " (pos " << last_pos << ")\n"; }
 
         if(last_pos != first_pos + 1)
         {
@@ -227,7 +227,7 @@ void Mesh::build_interior()
 
             last_pos++; //last_pos = cur->b->get_position();
 
-            if(verbosity >= 6) { std::cout << " |---also intersects LCM " << cur->b << " (" << last_pos << ")\n"; }
+            if(verbosity >= 6) { std::cout << " |---also intersects Anchor " << cur->b << " (" << last_pos << ")\n"; }
         }
 
     //TESTING
@@ -254,9 +254,9 @@ void Mesh::build_interior()
             incoming->get_twin()->set_origin(new_vertex);
 
             //create next pair of twin halfedges along the current curve (i.e. curves[incident_edges[i]] )
-            Halfedge* new_edge = new Halfedge(new_vertex, incoming->get_LCM());	//points AWAY FROM new_vertex
+            Halfedge* new_edge = new Halfedge(new_vertex, incoming->get_anchor());	//points AWAY FROM new_vertex
             halfedges.push_back(new_edge);
-            Halfedge* new_twin = new Halfedge(NULL, incoming->get_LCM());		//points TOWARDS new_vertex
+            Halfedge* new_twin = new Halfedge(NULL, incoming->get_anchor());		//points TOWARDS new_vertex
             halfedges.push_back(new_twin);
 
             //update halfedge pointers
@@ -300,9 +300,9 @@ void Mesh::build_interior()
             //update lines vector
             lines[cur_pos] = new_edge; //the portion of this vector [first_pos, last_pos] must be reversed after this loop is finished!
 
-            //remember position of this LCM
-            new_edge->get_LCM()->set_position(last_pos - (cur_pos - first_pos));
-//            if(verbosity >= 6) { std::cout << "    - set LCM " << new_edge->get_LCM() << " to position " << (last_pos - (cur_pos - first_pos)) << "\n"; }
+            //remember position of this Anchor
+            new_edge->get_anchor()->set_position(last_pos - (cur_pos - first_pos));
+//            if(verbosity >= 6) { std::cout << "    - set Anchor " << new_edge->get_anchor() << " to position " << (last_pos - (cur_pos - first_pos)) << "\n"; }
         }
 
         //update lines vector: flip portion of vector [first_pos, last_pos]
@@ -317,34 +317,34 @@ void Mesh::build_interior()
         //TESTING
 //        std::cout << "      TESTING: ";
 //        for(unsigned i = first_pos; i<= last_pos; i++)
-//            std::cout << i << ": " << curves[i]->get_LCM() << "; ";
+//            std::cout << i << ": " << curves[i]->get_anchor() << "; ";
 //        std::cout << "\n";
 
         //find new intersections and add them to intersections queue
         if(first_pos > 0)   //then consider lower intersection
         {
-            LCM* a = lines[first_pos-1]->get_LCM();
-            LCM* b = lines[first_pos]->get_LCM();
+            Anchor* a = lines[first_pos-1]->get_anchor();
+            Anchor* b = lines[first_pos]->get_anchor();
 
-            if(considered_pairs.find(LCM_pair(a,b)) == considered_pairs.end()
-                    && considered_pairs.find(LCM_pair(b,a)) == considered_pairs.end() )	//then this pair has not yet been considered
+            if(considered_pairs.find(Anchor_pair(a,b)) == considered_pairs.end()
+                    && considered_pairs.find(Anchor_pair(b,a)) == considered_pairs.end() )	//then this pair has not yet been considered
             {
-                considered_pairs.insert(LCM_pair(a,b));
-                if( a->comparable(b) )    //then the LCMs are (strongly) comparable, so we have found an intersection to store
+                considered_pairs.insert(Anchor_pair(a,b));
+                if( a->comparable(b) )    //then the Anchors are (strongly) comparable, so we have found an intersection to store
                     crossings.push(new Crossing(a, b, this));
             }
         }
 
         if(last_pos + 1 < lines.size())    //then consider upper intersection
         {
-            LCM* a = lines[last_pos]->get_LCM();
-            LCM* b = lines[last_pos+1]->get_LCM();
+            Anchor* a = lines[last_pos]->get_anchor();
+            Anchor* b = lines[last_pos+1]->get_anchor();
 
-            if( considered_pairs.find(LCM_pair(a,b)) == considered_pairs.end()
-                    && considered_pairs.find(LCM_pair(b,a)) == considered_pairs.end() )	//then this pair has not yet been considered
+            if( considered_pairs.find(Anchor_pair(a,b)) == considered_pairs.end()
+                    && considered_pairs.find(Anchor_pair(b,a)) == considered_pairs.end() )	//then this pair has not yet been considered
             {
-                considered_pairs.insert(LCM_pair(a,b));
-                if( a->comparable(b) )    //then the LCMs are (strongly) comparable, so we have found an intersection to store
+                considered_pairs.insert(Anchor_pair(a,b));
+                if( a->comparable(b) )    //then the Anchors are (strongly) comparable, so we have found an intersection to store
                     crossings.push(new Crossing(a, b, this));
             }
         }
@@ -362,19 +362,19 @@ void Mesh::build_interior()
     if(verbosity >= 5) { std::cout << "PART 3: RIGHT EDGE OF THE STRIP\n"; }
 
     Halfedge* rightedge = bottomright; //need a reference halfedge along the right side of the strip
-    unsigned cur_x = 0;      //keep track of x-coordinate of last LCM whose line was connected to right edge (x-coordinate of LCM is slope of line)
+    unsigned cur_x = 0;      //keep track of x-coordinate of last Anchor whose line was connected to right edge (x-coordinate of Anchor is slope of line)
 
     //connect each line to the right edge of the arrangement (at x = INFTY)
-    //    requires creating a vertex for each unique slope (i.e. LCM x-coordinate)
+    //    requires creating a vertex for each unique slope (i.e. Anchor x-coordinate)
     //    lines that have the same slope m are "tied together" at the same vertex, with coordinates (INFTY, INFTY)
     for(unsigned cur_pos = 0; cur_pos < lines.size(); cur_pos++)
     {
         Halfedge* incoming = lines[cur_pos];
-        LCM* cur_lcm = incoming->get_LCM();
+        Anchor* cur_anchor = incoming->get_anchor();
 
-        if(cur_lcm->get_x() > cur_x || cur_pos == 0)    //then create a new vertex for this line
+        if(cur_anchor->get_x() > cur_x || cur_pos == 0)    //then create a new vertex for this line
         {
-            cur_x = cur_lcm->get_x();
+            cur_x = cur_anchor->get_x();
             rightedge = insert_vertex( rightedge, INFTY, INFTY );
         }
         else    //no new vertex required, but update previous entry for vertical-line queries
@@ -404,20 +404,20 @@ void Mesh::build_interior()
 //inserts a new vertex on the specified edge, with the specified coordinates, and updates all relevant pointers
 //  i.e. new vertex is between initial and termainal points of the specified edge
 //returns pointer to a new halfedge, whose initial point is the new vertex, and that follows the specified edge around its face
-Halfedge* Mesh:: insert_vertex(Halfedge* edge, double x, double y)
+Halfedge* Mesh::insert_vertex(Halfedge* edge, double x, double y)
 {
 	//create new vertex
     Vertex* new_vertex = new Vertex(x, y);
 	vertices.push_back(new_vertex);
 	
-	//get twin and LCM of this edge
+    //get twin and Anchor of this edge
 	Halfedge* twin = edge->get_twin();
-	LCM* lcm = edge->get_LCM();
+    Anchor* anchor = edge->get_anchor();
 	
 	//create new halfedges
-    Halfedge* up = new Halfedge(new_vertex, lcm);
+    Halfedge* up = new Halfedge(new_vertex, anchor);
 	halfedges.push_back(up);
-    Halfedge* dn = new Halfedge(new_vertex, lcm);
+    Halfedge* dn = new Halfedge(new_vertex, anchor);
 	halfedges.push_back(dn);
 		
 	//update pointers
@@ -447,15 +447,15 @@ Halfedge* Mesh:: insert_vertex(Halfedge* edge, double x, double y)
 	return up;
 }//end insert_vertex()
 
-//creates the first pair of Halfedges in an LCM line, anchored on the left edge of the strip at origin of specified edge
+//creates the first pair of Halfedges in an Anchor line, anchored on the left edge of the strip at origin of specified edge
 //  also creates a new face (the face below the new edge)
 //  CAUTION: leaves NULL: new_edge.next and new_twin.prev
-Halfedge* Mesh::create_edge_left(Halfedge* edge, LCM* lcm)
+Halfedge* Mesh::create_edge_left(Halfedge* edge, Anchor* anchor)
 {
     //create new halfedges
-    Halfedge* new_edge = new Halfedge(edge->get_origin(), lcm); //points AWAY FROM left edge
+    Halfedge* new_edge = new Halfedge(edge->get_origin(), anchor); //points AWAY FROM left edge
     halfedges.push_back(new_edge);
-    Halfedge* new_twin = new Halfedge(NULL, lcm);   //points TOWARDS left edge
+    Halfedge* new_twin = new Halfedge(NULL, anchor);   //points TOWARDS left edge
     halfedges.push_back(new_twin);
 
     //create new face
@@ -484,7 +484,7 @@ Halfedge* Mesh::create_edge_left(Halfedge* edge, LCM* lcm)
 
 //finds a pseudo-optimal path through all 2-cells of the arrangement
 // path consists of a vector of Halfedges
-// at each step of the path, the Halfedge points to the LCM being crossed and the 2-cell (Face) being entered
+// at each step of the path, the Halfedge points to the Anchor being crossed and the 2-cell (Face) being entered
 void Mesh::find_path(std::vector<Halfedge*>& pathvec)
 {
   // PART 1: BUILD THE DUAL GRAPH OF THE ARRANGEMENT
@@ -517,7 +517,7 @@ void Mesh::find_path(std::vector<Halfedge*>& pathvec)
                 //if i < j, then create an (undirected) edge between these faces
                 if(i < j)
                     boost::add_edge(i, j, 1, dual_graph);   //for now, all edges have unit weight
-                ///TODO: WEIGHT EDGES BY NUMBER OF SIMPLICES THAT SWAP FOR EACH LCM
+                ///TODO: WEIGHT EDGES BY NUMBER OF SIMPLICES THAT SWAP FOR EACH Anchor
             }
             //move to the next neighbor
             current = current->get_next();
@@ -654,10 +654,10 @@ BarcodeTemplate& Mesh::get_barcode_template(double degrees, double offset)
     if(degrees == 0) //then line is horizontal
     {
         Face* cell = topleft->get_twin()->get_face();    //default
-        LCM* lcm = find_least_upper_LCM(offset);
+        Anchor* anchor = find_least_upper_anchor(offset);
 
-        if(lcm != NULL)
-            cell = lcm->get_line()->get_face();
+        if(anchor != NULL)
+            cell = anchor->get_line()->get_face();
 
         ///TODO: store some point/cell to seed the next query
 
@@ -678,9 +678,9 @@ BarcodeTemplate& Mesh::get_barcode_template(double degrees, double offset)
     return cell->get_barcode();  ////FIX THIS!!!
 }//end get_barcode_template()
 
-//finds the first LCM that intersects the left edge of the arrangement at a point not less than the specified y-coordinate
-//  if no such LCM, returns NULL
-LCM* Mesh::find_least_upper_LCM(double y_coord)
+//finds the first anchor that intersects the left edge of the arrangement at a point not less than the specified y-coordinate
+//  if no such anchor, returns NULL
+Anchor* Mesh::find_least_upper_anchor(double y_coord)
 {
     //binary search to find greatest y-grade not greater than than y_coord
     unsigned best = 0;
@@ -707,26 +707,26 @@ LCM* Mesh::find_least_upper_LCM(double y_coord)
         return NULL;
 
     //if we get here, then y_grades[best] is the greatest y-grade not greater than y_coord
-    //now find LCM whose line intersects the left edge of the arrangement lowest, but not below y_grade[best]
+    //now find Anchor whose line intersects the left edge of the arrangement lowest, but not below y_grade[best]
     unsigned int zero = 0;  //disambiguate the following function call
-    LCM* test = new LCM(zero, best);
-    std::set<LCM*, LCM_LeftComparator>::iterator it = all_lcms.lower_bound(test);
+    Anchor* test = new Anchor(zero, best);
+    std::set<Anchor*, Anchor_LeftComparator>::iterator it = all_anchors.lower_bound(test);
     delete test;
 
-    if(it == all_lcms.end())    //not found
+    if(it == all_anchors.end())    //not found
     {
         return NULL;
     }
     //else
     return *it;
-}//end find_least_upper_LCM()
+}//end find_least_upper_anchor()
 
 //finds the (unbounded) cell associated to dual point of the vertical line with the given x-coordinate
-//  i.e. finds the Halfedge whose LCM x-coordinate is the largest such coordinate not larger than than x_coord; returns the Face corresponding to that Halfedge
+//  i.e. finds the Halfedge whose Anchor x-coordinate is the largest such coordinate not larger than than x_coord; returns the Face corresponding to that Halfedge
 Face* Mesh::find_vertical_line(double x_coord)
 {
-    //is there an LCM with x-coordinate not greater than x_coord?
-    if(vertical_line_query_list.size() >= 1 && x_grades[ vertical_line_query_list[0]->get_LCM()->get_x() ] <= x_coord)
+    //is there an Anchor with x-coordinate not greater than x_coord?
+    if(vertical_line_query_list.size() >= 1 && x_grades[ vertical_line_query_list[0]->get_anchor()->get_x() ] <= x_coord)
     {
         //binary search the vertical line query list
         unsigned min = 0;
@@ -736,7 +736,7 @@ Face* Mesh::find_vertical_line(double x_coord)
         while(max >= min)
         {
             unsigned mid = (max + min)/2;
-            LCM* test = vertical_line_query_list[mid]->get_LCM();
+            Anchor* test = vertical_line_query_list[mid]->get_anchor();
 
             if(x_grades[test->get_x()] <= x_coord)    //found a lower bound, but search upper subarray for a better lower bound
             {
@@ -748,12 +748,12 @@ Face* Mesh::find_vertical_line(double x_coord)
         }
 
         //testing
-        std::cout << "----vertical line search: found LCM with x-coordinate " << vertical_line_query_list[best]->get_LCM()->get_x() << "\n";
+        std::cout << "----vertical line search: found Anchor with x-coordinate " << vertical_line_query_list[best]->get_anchor()->get_x() << "\n";
 
         return vertical_line_query_list[best]->get_face();
     }
 
-    //if we get here, then either there are no LCMs or x_coord is less than the x-coordinates of all LCMs
+    //if we get here, then either there are no Anchors or x_coord is less than the x-coordinates of all Anchors
     std::cout << "----vertical line search: returning lowest face\n";
     return bottomright->get_twin()->get_face();
 
@@ -763,7 +763,7 @@ Face* Mesh::find_vertical_line(double x_coord)
 Face* Mesh::find_point(double x_coord, double y_coord)
 {
     //start on the left edge of the arrangement, at the correct y-coordinate
-    LCM* start = find_least_upper_LCM(-1*y_coord);
+    Anchor* start = find_least_upper_anchor(-1*y_coord);
 
     Face* cell = NULL;		//will later point to the cell containing the specified point
     Halfedge* finger = NULL;	//for use in finding the cell
@@ -776,7 +776,7 @@ Face* Mesh::find_point(double x_coord, double y_coord)
     else
     {
         finger = start->get_line();
-        if(verbosity >= 8) { std::cout << "  Reference LCM: (" << x_grades[start->get_x()] << ", " << y_grades[start->get_y()] << "); halfedge " << HID(finger) << ".\n"; }
+        if(verbosity >= 8) { std::cout << "  Reference Anchor: (" << x_grades[start->get_x()] << ", " << y_grades[start->get_y()] << "); halfedge " << HID(finger) << ".\n"; }
     }
 
     while(cell == NULL) //while not found
@@ -824,13 +824,13 @@ Face* Mesh::find_point(double x_coord, double y_coord)
         }
         else	//then next_pt is below the horizontal line
         {
-            if(finger->get_LCM() == NULL)	//then edge is vertical, so we have found the cell
+            if(finger->get_anchor() == NULL)	//then edge is vertical, so we have found the cell
             {
                 cell = finger->get_face();
             }
             else	//then edge is not vertical
             {
-                LCM* temp = finger->get_LCM();
+                Anchor* temp = finger->get_anchor();
                 double x_pos = ( y_coord + y_grades[temp->get_y()] )/x_grades[temp->get_x()];  ///TODO: ENSURE NO DIVISION BY ZERO! (shouldn't happen because distinct horizontal lines don't intersect)
 
                 if(x_pos >= x_coord)	//found the cell
@@ -851,11 +851,11 @@ Face* Mesh::find_point(double x_coord, double y_coord)
 }//end find_point()
 
 
-//prints a summary of the arrangement information, such as the number of LCMS, vertices, halfedges, and faces
+//prints a summary of the arrangement information, such as the number of anchors, vertices, halfedges, and faces
 void Mesh::print_stats()
 {
     std::cout << "The arrangement contains: \n";
-    std::cout << "    " << all_lcms.size() << " LCMs\n";
+    std::cout << "    " << all_anchors.size() << " anchors\n";
     std::cout << "    " << vertices.size() << " vertices\n";
     std::cout << "    " << halfedges.size() << " halfedges\n";
     std::cout << "    " << faces.size() << " faces\n";
@@ -877,10 +877,10 @@ void Mesh::print()
 		Halfedge* t = e->get_twin();
 //		std::cout << "    halfedge " << i << " (" << e << "): " << *(e->get_origin()) << "--" << *(t->get_origin()) << "; ";	//also prints memory location
 		std::cout << "    halfedge " << i << ": " << *(e->get_origin()) << "--" << *(t->get_origin()) << "; ";
-		if(e->get_LCM() == NULL)
-			std::cout << "LCM null; ";
+        if(e->get_anchor() == NULL)
+            std::cout << "Anchor null; ";
 		else
-            std::cout << "LCM coords (" << e->get_LCM()->get_x() << ", " << e->get_LCM()->get_y() << "); ";
+            std::cout << "Anchor coords (" << e->get_anchor()->get_x() << ", " << e->get_anchor()->get_y() << "); ";
 		std::cout << "twin: " << HID(t) << "; next: " << HID(e->get_next()) << "; prev: " << HID(e->get_prev()) << "; face: " << FID(e->get_face()) << "\n";;
 	}
 	
@@ -900,11 +900,11 @@ void Mesh::print()
 	}while(curr != start);
 	std::cout << "cycle\n";
 	
-	std::cout << "  LCM set: ";
-	std::set<LCM*>::iterator it;
-    for(it = all_lcms.begin(); it != all_lcms.end(); ++it)
+    std::cout << "  Anchor set: ";
+    std::set<Anchor*>::iterator it;
+    for(it = all_anchors.begin(); it != all_anchors.end(); ++it)
 	{
-		LCM cur = **it;
+        Anchor cur = **it;
         std::cout << "(" << cur.get_x() << ", " << cur.get_y() << ") halfedge " << HID(cur.get_line()) << "; ";
 	}
 	std::cout << "\n";
@@ -1049,24 +1049,24 @@ void Mesh::test_consistency()
     bool curve_problem = false;
     std::set<int> edges_found_in_curves;
 
-    for(std::set<LCM*>::iterator it = all_lcms.begin(); it != all_lcms.end(); ++it)
+    for(std::set<Anchor*>::iterator it = all_anchors.begin(); it != all_anchors.end(); ++it)
     {
-        LCM* lcm = *it;
-        std::cout << "  Checking curve for LCM (" << lcm->get_x() <<", " << lcm->get_y() << ")\n";
+        Anchor* anchor = *it;
+        std::cout << "  Checking curve for anchor (" << anchor->get_x() <<", " << anchor->get_y() << ")\n";
 
-        Halfedge* edge = lcm->get_line();
+        Halfedge* edge = anchor->get_line();
         do{
             edges_found_in_curves.insert(HID(edge));
             edges_found_in_curves.insert(HID(edge->get_twin()));
 
-            if(edge->get_LCM() != lcm)
+            if(edge->get_anchor() != anchor)
             {
-                std::cout << "    PROBLEM: halfedge " << HID(edge) << " does not point to this LCM.\n";
+                std::cout << "    PROBLEM: halfedge " << HID(edge) << " does not point to this Anchor.\n";
                 curve_problem = true;
             }
-            if(edge->get_twin()->get_LCM() != lcm)
+            if(edge->get_twin()->get_anchor() != anchor)
             {
-                std::cout << "    PROBLEM: halfedge " << HID(edge->get_twin()) << ", twin of halfedge " << HID(edge) << ", does not point to this LCM.\n";
+                std::cout << "    PROBLEM: halfedge " << HID(edge->get_twin()) << ", twin of halfedge " << HID(edge) << ", does not point to this anchor.\n";
                 curve_problem = true;
             }
 
@@ -1079,7 +1079,7 @@ void Mesh::test_consistency()
 
             //find next edge in this curve
             edge = edge->get_next();
-            while(edge->get_LCM() != lcm)
+            while(edge->get_anchor() != anchor)
                 edge = edge->get_twin()->get_next();
 
         }while(edge->get_origin()->get_x() < INFTY);
@@ -1106,7 +1106,7 @@ void Mesh::test_consistency()
     {
         if(edges_found_in_curves.find(i) == edges_found_in_curves.end())
         {
-            std::cout << "  PROBLEM: halfedge " << i << " not found in any LCM curve";
+            std::cout << "  PROBLEM: halfedge " << i << " not found in any anchor line";
             all_edges_found = false;
         }
     }
@@ -1115,9 +1115,9 @@ void Mesh::test_consistency()
 
 
     if(!curve_problem)
-        std::cout << "   ---No problems detected among LCM curves.\n";
+        std::cout << "   ---No problems detected among anchor lines.\n";
     else
-        std::cout << "   ---Problems detected among LCM curves.\n";
+        std::cout << "   ---Problems detected among anchor lines.\n";
 
 
     //check curves
@@ -1138,14 +1138,14 @@ void Mesh::test_consistency()
 /********** the following objects and functions are for exact comparisons **********/
 
 //Crossing constructor
-//precondition: LCMs a and b must be comparable
-Mesh::Crossing::Crossing(LCM* a, LCM* b, Mesh* m) : a(a), b(b), m(m)
+//precondition: Anchors a and b must be comparable
+Mesh::Crossing::Crossing(Anchor* a, Anchor* b, Mesh* m) : a(a), b(b), m(m)
 {
     //store the x-coordinate of the crossing for fast (inexact) comparisons
     x = (m->y_grades[a->get_y()] - m->y_grades[b->get_y()])/(m->x_grades[a->get_x()] - m->x_grades[b->get_x()]);
 
     //TESTING ONLY
-    std::cout << "  Crossing created for curves " << a->get_position() << " (LCM  " << a << ") and " << b->get_position() << " (LCM " << b << "), which intersect at x = " << x << "\n";
+    std::cout << "  Crossing created for curves " << a->get_position() << " (Anchor " << a << ") and " << b->get_position() << " (Anchor " << b << "), which intersect at x = " << x << "\n";
 }
 
 //returns true iff this Crossing has (exactly) the same x-coordinate as other Crossing
@@ -1170,15 +1170,15 @@ bool Mesh::CrossingComparator::operator()(const Crossing* c1, const Crossing* c2
     if(c1->a->get_position() >= c1->b->get_position() || c2->a->get_position() >= c2->b->get_position())
     {
         std::cerr << "INVERTED CROSSING ERROR\n";
-        std::cerr << "crossing 1 involves LCMS " << c1->a << " (pos " << c1->a->get_position() << ") and " << c1->b << " (pos " << c1->b->get_position() << "),";
-        std::cerr << "crossing 2 involves LCMS " << c2->a << " (pos " << c2->a->get_position() << ") and " << c2->b << " (pos " << c2->b->get_position() << "),";
+        std::cerr << "crossing 1 involves anchors " << c1->a << " (pos " << c1->a->get_position() << ") and " << c1->b << " (pos " << c1->b->get_position() << "),";
+        std::cerr << "crossing 2 involves anchors " << c2->a << " (pos " << c2->a->get_position() << ") and " << c2->b << " (pos " << c2->b->get_position() << "),";
         throw std::exception();
     }
 //    if(c1->a->get_position() == c2->a->get_position())
 //    {
 //        std::cerr << "ILLEGAL CROSSING ERROR\n";
-//        std::cerr << "crossing 1 involves LCMS " << c1->a << " (pos " << c1->a->get_position() << ") and " << c1->b << " (pos " << c1->b->get_position() << "),";
-//        std::cerr << "crossing 2 involves LCMS " << c2->a << " (pos " << c2->a->get_position() << ") and " << c2->b << " (pos " << c2->b->get_position() << "),";
+//        std::cerr << "crossing 1 involves anchors " << c1->a << " (pos " << c1->a->get_position() << ") and " << c1->b << " (pos " << c1->b->get_position() << "),";
+//        std::cerr << "crossing 2 involves anchors " << c2->a << " (pos " << c2->a->get_position() << ") and " << c2->b << " (pos " << c2->b->get_position() << "),";
 //        throw std::exception();
 //    }
 

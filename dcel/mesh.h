@@ -36,7 +36,7 @@ class Mesh
             //constructor; sets up bounding box (with empty interior) for the affine Grassmannian
             //  requires references to vectors of all multi-grade values (both double and exact values)
 		
-        ~Mesh();	//destructor: deletes all cells and LCMs --- CHECK THIS!!!
+        ~Mesh();	//destructor: deletes all cells and anchors --- CHECK THIS!!!
 		
         void build_arrangement(MultiBetti& mb, std::vector<xiPoint>& xi_pts);
             //builds the DCEL arrangement, and computes and stores persistence data
@@ -45,7 +45,7 @@ class Mesh
         BarcodeTemplate& get_barcode_template(double degrees, double offset);
             //returns barcode template associated with the specified line (point)
 		
-        void print_stats(); //prints a summary of the arrangement information, such as the number of LCMS, vertices, halfedges, and faces
+        void print_stats(); //prints a summary of the arrangement information, such as the number of anchors, vertices, halfedges, and faces
 		void print();	//prints all the data from the mesh
         void test_consistency();    //attempts to find inconsistencies in the DCEL arrangement
 		
@@ -68,13 +68,13 @@ class Mesh
 		
 		const double INFTY;
 
-        std::set<LCM*, LCM_LeftComparator> all_lcms;	//set of LCMs that are represented in the mesh, ordered by position of curve along left side of the arrangement, from bottom to top
+        std::set<Anchor*, Anchor_LeftComparator> all_anchors;	//set of Anchors that are represented in the mesh, ordered by position of curve along left side of the arrangement, from bottom to top
 		
         Halfedge* topleft;			//pointer to Halfedge that points down from top left corner (0,infty)
         Halfedge* bottomleft;       //pointer to Halfedge that points up from bottom left corner (0,-infty)
         Halfedge* bottomright;      //pointer to Halfedge that points up from bottom right corner (infty,-infty)
 		
-        std::vector<Halfedge*> vertical_line_query_list; //stores a pointer to the rightmost Halfedge of the "top" line of each unique slope, ordered from small slopes to big slopes (each Halfedge points to LCM and Face for vertical-line queries)
+        std::vector<Halfedge*> vertical_line_query_list; //stores a pointer to the rightmost Halfedge of the "top" line of each unique slope, ordered from small slopes to big slopes (each Halfedge points to Anchor and Face for vertical-line queries)
 
         const int verbosity;			//controls display of output, for debugging
 
@@ -85,16 +85,16 @@ class Mesh
             //precondition: all achors have been stored via find_anchors()
 
         Halfedge* insert_vertex(Halfedge* edge, double x, double y);	//inserts a new vertex on the specified edge, with the specified coordinates, and updates all relevant pointers
-        Halfedge* create_edge_left(Halfedge* edge, LCM* lcm);    //creates the first pair of Halfedges in an LCM line, anchored on the left edge of the strip
+        Halfedge* create_edge_left(Halfedge* edge, Anchor *anchor);    //creates the first pair of Halfedges in an anchor line, anchored on the left edge of the strip
 
         void find_path(std::vector<Halfedge *> &pathvec);   //finds a pseudo-optimal path through all 2-cells of the arrangement
         void find_subpath(unsigned& cur_node, std::vector< std::set<unsigned> >& adj, std::vector<Halfedge*>& pathvec, bool return_path); //builds the path recursively
 
       //functions for searching the arrangement
-        LCM* find_least_upper_LCM(double y_coord); //finds the first LCM that intersects the left edge of the arrangement at a point not less than the specified y-coordinate; if no such LCM, returns NULL
+        Anchor* find_least_upper_anchor(double y_coord); //finds the first anchor that intersects the left edge of the arrangement at a point not less than the specified y-coordinate; if no such anchor, returns NULL
 
         Face* find_vertical_line(double x_coord); //finds the (unbounded) cell associated to dual point of the vertical line with the given x-coordinate
-            //i.e. finds the Halfedge whose LCM x-coordinate is the largest such coordinate not larger than than x_coord; returns the Face corresponding to that Halfedge
+            //i.e. finds the Halfedge whose anchor x-coordinate is the largest such coordinate not larger than than x_coord; returns the Face corresponding to that Halfedge
 
         Face* find_point(double x_coord, double y_coord);    //finds a 2-cell containing the specified point
 
@@ -106,12 +106,12 @@ class Mesh
 
       //struct to hold a future intersection event
         struct Crossing {
-            LCM* a;     //pointer to one line
-            LCM* b;     //pointer to the other line -- must ensure that line for LCM a is below line for LCM b just before the crossing point!!!!!
+            Anchor* a;     //pointer to one line
+            Anchor* b;     //pointer to the other line -- must ensure that line for anchor a is below line for anchor b just before the crossing point!!!!!
             double x;   //x-coordinate of intersection point (floating-point)
             Mesh* m;    //pointer to the mesh, so the Crossing has access to the vectors x_grades, x_exact, y_grades, and y_exact
 
-            Crossing(LCM* a, LCM* b, Mesh* m);  //precondition: LCMs a and b must be comparable
+            Crossing(Anchor* a, Anchor* b, Mesh* m);  //precondition: Anchors a and b must be comparable
             bool x_equal(const Crossing* other) const;  //returns true iff this Crossing has (exactly) the same x-coordinate as other Crossing
         };
 

@@ -5,12 +5,12 @@
 
 #include "xi_support_matrix.h"
 
-//constructor for a NON-WEAK LCM, requires pointers to the "generators" of the LCM
-LCM::LCM(xiMatrixEntry* down, xiMatrixEntry* left) : x_coord(down->x), y_coord(left->y), down(down), left(left), above_line(true)
+//constructor for a strict Anchor, requires pointers to the "generators" of the anchor
+Anchor::Anchor(xiMatrixEntry* down, xiMatrixEntry* left) : x_coord(down->x), y_coord(left->y), down(down), left(left), above_line(true)
 { }
 
-//constructor for a WEAK LCM, requires pointer to the xi support at the LCM
-LCM::LCM(xiMatrixEntry* point, bool strong) : x_coord(point->x), y_coord(point->y), down(NULL), left(NULL), above_line(true)
+//constructor for a supported Anchor, requires pointer to the xi support point at the anchor and a bool indicating whether this anchor is strict (i.e. whether xi support points exist both left and down)
+Anchor::Anchor(xiMatrixEntry* point, bool strong) : x_coord(point->x), y_coord(point->y), down(NULL), left(NULL), above_line(true)
 {
     if(strong)
         left = point;
@@ -18,22 +18,22 @@ LCM::LCM(xiMatrixEntry* point, bool strong) : x_coord(point->x), y_coord(point->
         down = point;
 }
 
-LCM::LCM(unsigned x, unsigned y) : x_coord(x), y_coord(y), down(NULL), left(NULL), curve(NULL)
+Anchor::Anchor(unsigned x, unsigned y) : x_coord(x), y_coord(y), down(NULL), left(NULL), dual_line(NULL)
 { }
 
 
-LCM::LCM(const LCM& other)
+Anchor::Anchor(const Anchor& other)
 {
     x_coord = other.x_coord;
     y_coord = other.y_coord;
     down = other.down;
     left = other.left;
-    curve = other.curve;
+    dual_line = other.dual_line;
     position = other.position;
     above_line = other.above_line;
 }
 
-LCM& LCM::operator= (const LCM& other)
+Anchor& Anchor::operator= (const Anchor& other)
 {
     //check for self-assignment
     if(this == &other)
@@ -42,70 +42,70 @@ LCM& LCM::operator= (const LCM& other)
     //do the copy
     x_coord = other.x_coord;
     y_coord = other.y_coord;
-    curve = other.curve;
+    dual_line = other.dual_line;
     position = other.position;
     above_line = other.above_line;
 
     return *this;
 }
 
-bool LCM::operator== (const LCM& other) const
+bool Anchor::operator== (const Anchor& other) const
 {
     return (x_coord == other.x_coord && y_coord == other.y_coord);
 }
 
-bool LCM::comparable(LCM *other) const   //tests whether two LCMs are (strongly) comparable
+bool Anchor::comparable(Anchor *other) const   //tests whether two Anchors are (strongly) comparable
 {
     return ( y_coord > other->get_y() && x_coord > other->get_x() ) || ( y_coord < other->get_y() && x_coord < other->get_x() );
 }
 
 
-unsigned LCM::get_x() const
+unsigned Anchor::get_x() const
 {
     return x_coord;
 }
 
-unsigned LCM::get_y() const
+unsigned Anchor::get_y() const
 {
     return y_coord;
 }
 
-void LCM::set_line(Halfedge* e)
+void Anchor::set_line(Halfedge* e)
 {
-    curve = e;
+    dual_line = e;
 }
 
-Halfedge* LCM::get_line() const
+Halfedge* Anchor::get_line() const
 {
-    return curve;
+    return dual_line;
 }
 
-void LCM::set_position(unsigned p)
+void Anchor::set_position(unsigned p)
 {
     position = p;
 }
 
-unsigned LCM::get_position() const
+unsigned Anchor::get_position() const
 {
     return position;
 }
 
-bool LCM::is_above()
+bool Anchor::is_above()
 {
     return above_line;
 }
 
-void LCM::toggle()
+void Anchor::toggle()
 {
     above_line = !above_line;
 }
 
-xiMatrixEntry* LCM::get_down()
+xiMatrixEntry* Anchor::get_down()
 {
     return down;
 }
 
-xiMatrixEntry* LCM::get_left()
+xiMatrixEntry* Anchor::get_left()
 {
     return left;
 }

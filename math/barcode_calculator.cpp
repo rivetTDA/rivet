@@ -18,7 +18,7 @@ BarcodeCalculator::BarcodeCalculator(Mesh *m, MultiBetti &mb, std::vector<xiPoin
 }
 
 
-//computes anchors and stores them in mesh->all_lcms; anchor-lines will be created when mesh->build_interior() is called
+//computes anchors and stores them in mesh->all_anchors; anchor-lines will be created when mesh->build_interior() is called
 void BarcodeCalculator::find_anchors()
 {
     if(mesh->verbosity >= 2) { std::cout << "Finding anchors...\n"; }
@@ -32,7 +32,7 @@ void BarcodeCalculator::find_anchors()
             nonempty_cols.push_front(col_entry);
     }
 
-    //compute and store LCMs
+    //compute and store Anchors
     for(int j = mesh->y_grades.size() - 1; j >= 0; j--)  //loop through all rows, top to bottom
     {
         xiMatrixEntry* row_entry = xi_matrix.get_row(j); //rightmost entry in row j, possibly NULL
@@ -43,25 +43,25 @@ void BarcodeCalculator::find_anchors()
             if(row_entry == NULL)   //then there is nothing else in this row
                 break;
 
-            //check if there is a LCM in position (i,j)
+            //check if there is a Anchor in position (i,j)
             xiMatrixEntry* col_entry = *it;
             if(col_entry == NULL)
                  qDebug() << "ERROR in Mesh::store_xi_points() : NULL col_entry";
             if(row_entry != col_entry)  //then there is a strict, non-supported anchor at (col_entry->x, row_entry->y)
             {
-                mesh->all_lcms.insert(new LCM(col_entry, row_entry));
+                mesh->all_anchors.insert(new Anchor(col_entry, row_entry));
                 if(mesh->verbosity >= 4) { std::cout << "  anchor (strict, non-supported) found at (" << col_entry->x << ", " << row_entry->y << ")\n"; }
             }
             else    //then row_entry == col_entry, so there might be a supported anchor at (col_entry->x, row_entry->y), or there might be no anchor here
             {
                 if(col_entry->down != NULL && row_entry->left != NULL)  //then there is a strict and supported anchor
                 {
-                    mesh->all_lcms.insert(new LCM(col_entry, true));
+                    mesh->all_anchors.insert(new Anchor(col_entry, true));
                     if(mesh->verbosity >= 4) { std::cout << "  anchor (strict and supported) found at (" << col_entry->x << ", " << col_entry->y << ")\n"; }
                 }
                 else if(col_entry->down != NULL || row_entry->left != NULL)  //then there is a supported, non-strict anchor
                 {
-                    mesh->all_lcms.insert(new LCM(col_entry, false));
+                    mesh->all_anchors.insert(new Anchor(col_entry, false));
                     if(mesh->verbosity >= 4) { std::cout << "  anchor (supported, non-strict) found at (" << col_entry->x << ", " << col_entry->y << ")\n"; }
                 }
             }
@@ -168,38 +168,38 @@ void BarcodeCalculator::store_barcodes(std::vector<Halfedge*>& path)
     for(unsigned i=0; i<path.size(); i++)
     {
         //determine which anchor is represented by this edge
-        LCM* cur_lcm = (path[i])->get_LCM();
+        Anchor* cur_anchor = (path[i])->get_anchor();
 
-        std::cout << "Step " << i << " of the path: crossing LCM at (" << cur_lcm->get_x() << "," << cur_lcm->get_y() << ") into cell " << mesh->FID((path[i])->get_face()) << ".\n";
+        std::cout << "Step " << i << " of the path: crossing anchor at (" << cur_anchor->get_x() << "," << cur_anchor->get_y() << ") into cell " << mesh->FID((path[i])->get_face()) << ".\n";
 
-        //get equivalence classes for this LCM
-        xiMatrixEntry* down = cur_lcm->get_down();
-        xiMatrixEntry* left = cur_lcm->get_left();
+        //get equivalence classes for this anchor
+        xiMatrixEntry* down = cur_anchor->get_down();
+        xiMatrixEntry* left = cur_anchor->get_left();
 
         //if this is a strict anchor, then swap simplices
         if(left != NULL) //then this is a strict anchor and some simplices swap
         {
-            xiMatrixEntry* at_LCM = NULL;   //remains NULL iff this anchor is not supported
+            xiMatrixEntry* at_anchor = NULL;   //remains NULL iff this anchor is not supported
 
             if(down == NULL)    //then this is also a supported anchor
             {
-                at_LCM = left;
+                at_anchor = left;
                 down = left->down;
                 left = left->left;
             }//now down and left are correct (and should not be NULL)
 
-            if(cur_lcm->is_above()) //then anchor is crossed from below to above
+            if(cur_anchor->is_above()) //then anchor is crossed from below to above
             {
                 std::cout << " == strict anchor crossed below to above ==\n";
 
                 //pre-move updates to equivalence class info
-                if(at_LCM != NULL)  //this anchor is supported
+                if(at_anchor != NULL)  //this anchor is supported
                 {
-                    left->low_index = at_LCM->low_index - at_LCM->low_count;                //necessary since low_index, low_class_size,
-                    left->low_class_size = at_LCM->low_class_size - at_LCM->low_count;      //  high_index, and high_class_size
-                    left->high_index = at_LCM->high_index - at_LCM->high_count;             //  are only reliable for the head
-                    left->high_class_size = at_LCM->high_class_size - at_LCM->high_count;   //  of each equivalence class
-                    remove_partition_entries(at_LCM);   //this partition might become empty
+                    left->low_index = at_anchor->low_index - at_anchor->low_count;                //necessary since low_index, low_class_size,
+                    left->low_class_size = at_anchor->low_class_size - at_anchor->low_count;      //  high_index, and high_class_size
+                    left->high_index = at_anchor->high_index - at_anchor->high_count;             //  are only reliable for the head
+                    left->high_class_size = at_anchor->high_class_size - at_anchor->high_count;   //  of each equivalence class
+                    remove_partition_entries(at_anchor);   //this partition might become empty
                 }
                 else    //this anchor is not supported
                     remove_partition_entries(left);     //this partition will move
@@ -210,30 +210,30 @@ void BarcodeCalculator::store_barcodes(std::vector<Halfedge*>& path)
                 move_columns(down, left, true, R_low, U_low, R_high, U_high);
 
                 //post-move updates to equivalance class info
-                if(at_LCM != NULL)  //this anchor is supported
+                if(at_anchor != NULL)  //this anchor is supported
                 {
-                    at_LCM->low_class_size = at_LCM->low_count + down->low_class_size;
-                    at_LCM->high_class_size = at_LCM->high_count + down->high_class_size;
+                    at_anchor->low_class_size = at_anchor->low_count + down->low_class_size;
+                    at_anchor->high_class_size = at_anchor->high_count + down->high_class_size;
                     down->low_class_size = -1;  //this xiMatrixEntry is no longer the head of an equivalence class
-                    add_partition_entries(at_LCM);
+                    add_partition_entries(at_anchor);
                 }
                 else    //this anchor is not supported
                     add_partition_entries(down);
 
                 add_partition_entries(left);
             }
-            else    //then LCM is crossed from above to below
+            else    //then anchor is crossed from above to below
             {
                 std::cout << " == strict anchor crossed above to below ==\n";
 
                 //pre-move updates to equivalence class info
-                if(at_LCM != NULL)
+                if(at_anchor != NULL)
                 {
-                    down->low_index = at_LCM->low_index - at_LCM->low_count;                //necessary since low_index, low_class_size,
-                    down->low_class_size = at_LCM->low_class_size - at_LCM->low_count;      //  high_index, and high_class_size
-                    down->high_index = at_LCM->high_index - at_LCM->high_count;             //  are only reliable for the head
-                    down->high_class_size = at_LCM->high_class_size - at_LCM->high_count;   //  of each equivalence class
-                    remove_partition_entries(at_LCM);   //this partition might become empty
+                    down->low_index = at_anchor->low_index - at_anchor->low_count;                //necessary since low_index, low_class_size,
+                    down->low_class_size = at_anchor->low_class_size - at_anchor->low_count;      //  high_index, and high_class_size
+                    down->high_index = at_anchor->high_index - at_anchor->high_count;             //  are only reliable for the head
+                    down->high_class_size = at_anchor->high_class_size - at_anchor->high_count;   //  of each equivalence class
+                    remove_partition_entries(at_anchor);   //this partition might become empty
                 }
                 else    //this anchor is not supported
                     remove_partition_entries(down);     //this partition will move
@@ -244,12 +244,12 @@ void BarcodeCalculator::store_barcodes(std::vector<Halfedge*>& path)
                 move_columns(left, down, false, R_low, U_low, R_high, U_high);
 
                 //post-move updates to equivalance class info
-                if(at_LCM != NULL)  //this anchor is supported
+                if(at_anchor != NULL)  //this anchor is supported
                 {
-                    at_LCM->low_class_size = at_LCM->low_count + left->low_class_size;
-                    at_LCM->high_class_size = at_LCM->high_count + left->high_class_size;
+                    at_anchor->low_class_size = at_anchor->low_count + left->low_class_size;
+                    at_anchor->high_class_size = at_anchor->high_count + left->high_class_size;
                     left->low_class_size = -1;  //this xiMatrixEntry is no longer the head of an equivalence class
-                    add_partition_entries(at_LCM);
+                    add_partition_entries(at_anchor);
                 }
                 else    //this anchor is not supported
                     add_partition_entries(left);
@@ -259,41 +259,41 @@ void BarcodeCalculator::store_barcodes(std::vector<Halfedge*>& path)
         }
         else    //then this is a supported, non-strict anchor, and we just have to split or merge equivalence classes
         {
-            xiMatrixEntry* at_LCM = down;
-            xiMatrixEntry* generator = at_LCM->down;
+            xiMatrixEntry* at_anchor = down;
+            xiMatrixEntry* generator = at_anchor->down;
             if(generator == NULL)
-                generator = at_LCM->left;
+                generator = at_anchor->left;
 
             if(generator->low_class_size != -1)    //then merge classes
             {
-                at_LCM->low_class_size = at_LCM->low_count + generator->low_class_size;
-                at_LCM->high_class_size = at_LCM->high_count + generator->high_class_size;
+                at_anchor->low_class_size = at_anchor->low_count + generator->low_class_size;
+                at_anchor->high_class_size = at_anchor->high_count + generator->high_class_size;
                 generator->low_class_size = -1;    //indicates that this xiMatrixEntry is NOT the head of an equivalence class
 
                 remove_partition_entries(generator);
-                add_partition_entries(at_LCM);  //this is necessary in case the class was previously empty
+                add_partition_entries(at_anchor);  //this is necessary in case the class was previously empty
             }
             else    //then split classes
             {
-                generator->low_index = at_LCM->low_index - at_LCM->low_count;
-                generator->low_class_size = at_LCM->low_class_size - at_LCM->low_count;
-                at_LCM->low_class_size = at_LCM->low_count;
-                generator->high_index = at_LCM->high_index - at_LCM->high_count;
-                generator->high_class_size = at_LCM->high_class_size - at_LCM->high_count;
-                at_LCM->high_class_size = at_LCM->high_count;
+                generator->low_index = at_anchor->low_index - at_anchor->low_count;
+                generator->low_class_size = at_anchor->low_class_size - at_anchor->low_count;
+                at_anchor->low_class_size = at_anchor->low_count;
+                generator->high_index = at_anchor->high_index - at_anchor->high_count;
+                generator->high_class_size = at_anchor->high_class_size - at_anchor->high_count;
+                at_anchor->high_class_size = at_anchor->high_count;
 
-                remove_partition_entries(at_LCM);   //this is necessary because the class corresponding
-                add_partition_entries(at_LCM);      //  to at_LCM might have become empty
+                remove_partition_entries(at_anchor);   //this is necessary because the class corresponding
+                add_partition_entries(at_anchor);      //  to at_anchor might have become empty
                 add_partition_entries(generator);
             }
         }
 
         //remember that we have crossed this anchor
-        cur_lcm->toggle();
+        cur_anchor->toggle();
 
         //testing
-        std::cout << "  LCMS above the current line: ";
-        for(std::set<LCM*, LCM_LeftComparator>::iterator it = mesh->all_lcms.begin(); it != mesh->all_lcms.end(); ++it)
+        std::cout << "  Anchors above the current line: ";
+        for(std::set<Anchor*, Anchor_LeftComparator>::iterator it = mesh->all_anchors.begin(); it != mesh->all_anchors.end(); ++it)
             if((*it)->is_above())
                 std::cout << "(" << (*it)->get_x() << "," << (*it)->get_y() << ") ";
         std::cout << "\n";
@@ -497,7 +497,7 @@ void BarcodeCalculator::store_multigrades(IndexMatrix* ind, bool low, std::vecto
 
 
 //moves columns from an equivalence class given by xiMatrixEntry* first to their new positions after or among the columns in the equivalence class given by xiMatrixEntry* second
-// the boolean argument indicates whether an LCM is being crossed from below (or from above)
+// the boolean argument indicates whether an anchor is being crossed from below (or from above)
 ///TODO: IMPLEMENT LAZY SWAPPING!
 void BarcodeCalculator::move_columns(xiMatrixEntry* first, xiMatrixEntry* second, bool from_below, MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH)
 {
