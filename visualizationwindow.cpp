@@ -8,7 +8,7 @@
 #include "interface/input_manager.h"
 #include "math/simplex_tree.h"
 #include "math/multi_betti.h"
-#include "dcel/lcm.h"
+#include "dcel/anchor.h"
 #include "dcel/dcel.h"
 #include "dcel/mesh.h"
 #include "interface/barcode.h"

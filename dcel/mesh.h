@@ -16,7 +16,7 @@
 #include <math.h>	//necessary for atan
 #include <set>
 
-#include "lcm.h"
+#include "anchor.h"
 #include "dcel.h"
 #include "xi_point.h"
 //#include "multigrade.h"   do I need this???

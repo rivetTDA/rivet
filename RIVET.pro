@@ -14,7 +14,6 @@ SOURCES += main.cpp                         \
 		visualizationwindow.cpp             \
 		dataselectdialog.cpp                \
 		dcel/dcel.cpp                       \
-		dcel/lcm.cpp                        \
 		dcel/mesh.cpp                       \
 		dcel/xi_support_matrix.cpp          \
 		interface/control_dot.cpp           \
@@ -34,13 +33,13 @@ SOURCES += main.cpp                         \
     dcel/multigrade.cpp \
     math/barcode_calculator.cpp \
     interface/barcode.cpp \
-    dcel/barcode_template.cpp
+    dcel/barcode_template.cpp \
+    dcel/anchor.cpp
     
 
 HEADERS  += visualizationwindow.h \
 		dataselectdialog.h \
 		dcel/dcel.h                       \
-		dcel/lcm.h                        \
 		dcel/mesh.h                       \
 		dcel/xi_support_matrix.h          \
 		interface/control_dot.h           \
@@ -60,7 +59,8 @@ HEADERS  += visualizationwindow.h \
     dcel/multigrade.h \
     math/barcode_calculator.h \
     interface/barcode.h \
-    dcel/barcode_template.h
+    dcel/barcode_template.h \
+    dcel/anchor.h
     
 
 FORMS   += visualizationwindow.ui         \
