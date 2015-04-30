@@ -42,10 +42,19 @@ void xiMatrixEntry::insert_multigrade(Multigrade* mg, bool low)
 
 /********** Multigrade **********/
 
+//constructor
 Multigrade::Multigrade(unsigned x, unsigned y, unsigned num_cols, int simplex_index, xiMatrixEntry *xi) :
     x(x), y(y), num_cols(num_cols), simplex_index(simplex_index), xi_entry(xi)
 { }
 
+//comparator for sorting Multigrades (reverse) lexicographically
+bool Multigrade::LexComparator(const Multigrade* first, const Multigrade* second)
+{
+    if( first->x > second->x || (first->x == second->x && first->y > second->y) )
+        return true;
+    //else
+    return false;
+}
 
 /********** xiSupportMatrix **********/
 

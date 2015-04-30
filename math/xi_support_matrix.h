@@ -22,8 +22,8 @@ struct xiMatrixEntry
     xiMatrixEntry* down;     //pointer to the next support point below this one
     xiMatrixEntry* left;     //pointer to the next support point left of this one
 
-    std::list<Multigrade*> low_simplices;     //associated multigrades for simplices of lower dimension --- MAYBE SHOULD BE forward_list
-    std::list<Multigrade*> high_simplices;    //associated multigrades for simplices of higher dimension --- MAYBE SHOULD BE forward_list
+    std::list<Multigrade*> low_simplices;     //associated multigrades for simplices of lower dimension
+    std::list<Multigrade*> high_simplices;    //associated multigrades for simplices of higher dimension
 
     ///TODO: THINK ABOUT THE FOLLOWING VARIABLES -- IS THERE A BETTER WAY TO STORE THIS INFO?
     unsigned low_count;     //number of columns in matrix of simplices of lower dimension that are mapped to this xiMatrixEntry (does not depend on whether this entry is the head of an equivalence class)
@@ -54,11 +54,13 @@ struct Multigrade
     unsigned y;     //y-coordinate of this multigrade
 
     unsigned num_cols; //number of columns (i.e. simplices) at this multigrade
-    int simplex_index; //last dim_index of the simplices at this multigrade; necessary so that we can build the boundary matrix
+    int simplex_index; //last dim_index of the simplices at this multigrade; necessary so that we can build the boundary matrix, but not used after that
 
     xiMatrixEntry* xi_entry; //pointer to the entry in the xiSupportMatrix to which this multigrade is assocated
 
     Multigrade(unsigned x, unsigned y, unsigned num_cols, int simplex_index, xiMatrixEntry* xi);   //constructor
+
+    static bool LexComparator(const Multigrade* first, const Multigrade* second);   //comparator for sorting Multigrades lexicographically
 };
 
 

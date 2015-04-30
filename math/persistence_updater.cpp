@@ -166,11 +166,10 @@ void PersistenceUpdater::store_barcodes(std::vector<Halfedge*>& path)
     //traverse the path
     for(unsigned i=0; i<path.size(); i++)
     {
-        qDebug() << "step " << i << " of path";
-
         //determine which anchor is represented by this edge
         Anchor* cur_anchor = (path[i])->get_anchor();
 
+        qDebug() << "step" << i << "of path: crossing anchor at ("<< cur_anchor->get_x() << "," << cur_anchor->get_y() << ")";
         if(mesh->verbosity >= 8) { std::cout << "Step " << i << " of the path: crossing anchor at (" << cur_anchor->get_x() << "," << cur_anchor->get_y() << ") into cell " << mesh->FID((path[i])->get_face()) << ".\n"; }
 
         //get equivalence classes for this anchor
@@ -347,6 +346,8 @@ void PersistenceUpdater::store_barcodes(std::vector<Halfedge*>& path)
 //  simplex_order will be filled with a map : dim_index --> order_index for simplices of the given dimension, for use in creating the boundary matrices
 void PersistenceUpdater::store_multigrades(IndexMatrix* ind, bool low, std::vector<int>& simplex_order)
 {
+    qDebug() << "STORING MULTIGRADES: low =" << low;
+
   //STEP 1: store multigrade data in the xiSupportMatrix
 
     //initialize linked list to track the "frontier"
@@ -382,7 +383,7 @@ void PersistenceUpdater::store_multigrades(IndexMatrix* ind, bool low, std::vect
 
         //store all multigrades and simplices whose y-grade is y
         Frontier::iterator it = frontier.begin();
-        for(unsigned x = ind->width(); x-- > 0; )  //x counts down from (ind->widtht() - 1) to 0
+        for(unsigned x = ind->width(); x-- > 0; )  //x counts down from (ind->width() - 1) to 0
         {
             //get range of column indexes for simplices at multigrade (x,y)
             int last_col = ind->get(y, x);  //arguments are row, then column
@@ -398,13 +399,12 @@ void PersistenceUpdater::store_multigrades(IndexMatrix* ind, bool low, std::vect
                 //if the frontier is empty or if x is to the right of the first element, then map multigrade (x,y) to infinity
                 if( it == frontier.end() || (*it)->x < x )    //NOTE: if iterator has advanced from frontier.begin(), then it MUST be the case that x < (*it)->x
                 {
-//                    qDebug() << "      processing columns" << first_col << "to" << last_col << ": map to infinity";
                     xi_matrix.get_infinity()->add_multigrade(x, y, last_col - first_col, last_col, low);
-                    if(mesh->verbosity >= 8) { std::cout << "    simplices at (" << x << ", " << y << "), in columns " << (first_col + 1) << " to " << last_col << ", mapped to infinity\n"; }
+
+                    qDebug() << "    simplices at (" << x << "," << y << "), in columns" << (first_col + 1) << "to" << last_col << ", mapped to infinity";
                 }
                 else    //then map multigrade (x,y) to the last element of the frontier such that (*it)->x >= x
                 {
-//                    qDebug() << "      processing columns" << first_col << "to" << last_col << ": map to finite point";
                     //advance the iterator to the first element of the frontier such that (*it)->x < x
                     while( it != frontier.end() && (*it)->x >= x )
                         ++it;
@@ -414,7 +414,8 @@ void PersistenceUpdater::store_multigrades(IndexMatrix* ind, bool low, std::vect
 
                     //now map the multigrade to the element given by the iterator
                     (*it)->add_multigrade(x, y, last_col - first_col, last_col, low);
-                    if(mesh->verbosity >= 8) { std::cout << "    simplices at (" << x << ", " << y << "), in columns " << (first_col + 1) << " to " << last_col << ", mapped to xi support point (" << (*it)->x << ", " << (*it)->y << ")\n"; }
+
+                    qDebug() << "    simplices at (" << x << "," << y << "), in columns" << (first_col + 1) << "to" << last_col << ", mapped to xi support point (" << (*it)->x << ", " << (*it)->y << ")";
                 }
             }
         }//end x loop
@@ -433,20 +434,21 @@ void PersistenceUpdater::store_multigrades(IndexMatrix* ind, bool low, std::vect
     for(std::list<Multigrade*>::iterator it = mgrades->begin(); it != mgrades->end(); ++it)
     {
         Multigrade* mg = *it;
-        if(mesh->verbosity >= 8) { std::cout << "  multigrade (" << mg->x << "," << mg->y << ") at infinity has " << mg->num_cols << " simplices with last index " << mg->simplex_index << "\n"; }
+        qDebug() << "  multigrade (" << mg->x << "," << mg->y << ") at infinity has" << mg->num_cols << "simplices with last index" << mg->simplex_index<< "which will map to order_index" << o_index;
 
-        for(unsigned s=0; s < mg->num_cols; s++)  // simplex with dim_index (mg->simplex_inded - s) has order_index o_index
+
+        for(unsigned s=0; s < mg->num_cols; s++)  // simplex with dim_index (mg->simplex_index - s) has order_index o_index
         {
-            if(mesh->verbosity >= 8) { std::cout << "   -- simplex with dim_index " << (mg->simplex_index - s) << " has order_index " << o_index << "\n"; }
+//            if(mesh->verbosity >= 8) { std::cout << "   -- simplex with dim_index " << (mg->simplex_index - s) << " has order_index " << o_index << "\n"; }
             simplex_order[mg->simplex_index - s] = o_index;
             o_index--;
         }
     }
 
     //now loop over all xiMatrixEntries in backwards colex order
-    for(unsigned row = xi_matrix.height(); row > 0; )  //since row is unsigned, it will be one more than the current row, and the decrement operator appears inside the loop
+    for(unsigned row = xi_matrix.height(); row-- > 0; )  //row counts down from (xi_matrix->height() - 1) to 0
     {
-        cur = xi_matrix.get_row(--row);
+        cur = xi_matrix.get_row(row);
         if(cur == NULL)
             continue;
 
@@ -459,16 +461,22 @@ void PersistenceUpdater::store_multigrades(IndexMatrix* ind, bool low, std::vect
         //consider all xiMatrixEntries in this row
         while(cur != NULL)
         {
-            //store map values for all simplices at all multigrades at this xiMatrixEntry
+            qDebug() << "----xiMatrixEntry (" << cur->x << "," << cur->y << ")";
+
+            //get the multigrade list for this xiMatrixEntry
             mgrades = (low) ? &(cur->low_simplices) : &(cur->high_simplices);
+
+            //sort the multigrades in lexicographical order
+            mgrades->sort(Multigrade::LexComparator);
+
+            //store map values for all simplices at these multigrades
             for(std::list<Multigrade*>::iterator it = mgrades->begin(); it != mgrades->end(); ++it)
             {
                 Multigrade* mg = *it;
-                if(mesh->verbosity >= 8) { std::cout << "  multigrade (" << mg->x << "," << mg->y << ") has " << mg->num_cols << " simplices with last index " << mg->simplex_index << "\n"; }
+                qDebug() << "  multigrade (" << mg->x << "," << mg->y << ") has" << mg->num_cols << "simplices with last dim_index" << mg->simplex_index << "which will map to order_index" << o_index;
 
-                for(unsigned s=0; s < mg->num_cols; s++)  // simplex with dim_index (mg->simplex_inded - s) has order_index o_index
+                for(unsigned s=0; s < mg->num_cols; s++)  // simplex with dim_index (mg->simplex_index - s) has order_index o_index
                 {
-                    if(mesh->verbosity >= 8) { std::cout << "   -- simplex with dim_index " << (mg->simplex_index - s) << " has order_index " << o_index << "\n"; }
                     simplex_order[mg->simplex_index - s] = o_index;
                     o_index--;
                 }
@@ -516,7 +524,7 @@ void PersistenceUpdater::move_columns(xiMatrixEntry* first, xiMatrixEntry* secon
     //loop over all xiMatrixEntrys in the first equivalence class
     while(first != NULL)
     {
-        //move all "low" simplices for this xiMatrixEntry
+        //move all "low" simplices for this xiMatrixEntry (start with rightmost column, end with leftmost)
         std::list<Multigrade*>::iterator it = first->low_simplices.begin();
         while(it != first->low_simplices.end())
         {
@@ -611,7 +619,7 @@ void PersistenceUpdater::move_columns(xiMatrixEntry* first, xiMatrixEntry* secon
 
                 //associate cur_grade with target
                 cur_grade->xi_entry = target;
-                target->insert_multigrade(cur_grade, true);
+                target->insert_multigrade(cur_grade, false);
                 it = first->high_simplices.erase(it);    //NOTE: advances the iterator!!!
 
                 //if target is not the leftmost entry in its equivalence class, then move columns at cur_grade to the block of columns for target
