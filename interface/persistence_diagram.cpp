@@ -158,7 +158,7 @@ void PersistenceDiagram::resize_diagram(double slice_length, double diagram_scal
 void PersistenceDiagram::draw_points(double zero, Barcode* bc)
 {
     zero_coord = zero;
-    qDebug() << "ZERO: " << zero_coord;
+//    qDebug() << "ZERO: " << zero_coord;
 
     //counters
     unsigned num_dots = 0;

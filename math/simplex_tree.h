@@ -92,14 +92,8 @@ class SimplexTree {
 
         int get_size(int dim);                  //returns the number of simplices of dimension (hom_dim-1), hom_dim, or (hom_dim+1)
 
-        ///// THESE FUNCTIONS MIGHT NEED TO BE UPDATED
-            MapMatrix* get_boundary_mx(std::vector<int> coface_global, std::map<int,int> face_order);
-                //THIS FUNCTION IS OBSOLETE
-                //computes a boundary matrix, using given orders on simplices of dimensions d (cofaces) and d-1 (faces)
-                //used in persistence_data.cpp
-
+        ///// THESE FUNCTIONS ARE UNUSED AND MIGHT NEED TO BE UPDATED
             SimplexData get_simplex_data(int index);	//returns the multi-grade of the simplex with given global simplex index, as well as the dimension of the simplex
-
             int get_num_simplices();		//returns the total number of simplices represented in the simplex tree
                 //TODO: would it be more efficient to store the total number of simplices???
 		

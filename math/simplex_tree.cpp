@@ -150,13 +150,11 @@ void SimplexTree::build_VR_complex(std::vector<unsigned>& times, std::vector<uns
 
     //build simplex tree recursively
 	//this also assigns global indexes to each simplex
-    if(verbosity >= 2) { std::cout << "BUILDING SIMPLEX TREE\n"; }
+    if(verbosity >= 6) { qDebug() << "BUILDING SIMPLEX TREE"; }
     unsigned gic=0;	//global index counter
     for(unsigned i=0; i<times.size(); i++)
 	{
-		//create the node and add it as a child of root
-        if(verbosity >= 10) { std::cout << "  adding node " << i << " as child of root \n"; }
-		
+		//create the node and add it as a child of root		
         STNode* node = new STNode(i, root, times[i], 0, gic);			//delete later!
         root->append_child(node);
 		gic++;	//increment the global index counter
@@ -173,7 +171,6 @@ void SimplexTree::build_VR_complex(std::vector<unsigned>& times, std::vector<uns
 }//end build_VR_complex()
 
 //function to build (recursively) a subtree of the simplex tree
-// IMPROVEMENT: this function could be rewritten to use INTEGER time and distance INDEXES, rather than DOUBLE time and distance VALUES
 void SimplexTree::build_VR_subtree(std::vector<unsigned>& times, std::vector<unsigned>& distances, STNode& parent, std::vector<unsigned>& parent_indexes, unsigned prev_time, unsigned prev_dist, unsigned cur_dim, unsigned& gic)
 {
     //loop through all points that could be children of this node
@@ -725,54 +722,6 @@ SimplexData SimplexTree::get_simplex_data(int index)
     SimplexData sd = { target->grade_x(), target->grade_y(), dim };
 	return sd;	//TODO: is this good design?
 }
-
-///THE FOLLOWING FUNCTION IS OBSOLETE!
-//computes a boundary matrix, using given orders on simplices of dimensions d (cofaces) and d-1 (faces)
-    // coface_global is a map: order_simplex_index -> global_simplex_index
-    // face_order is a map: global_simplex_index -> order_simplex_index
-MapMatrix* SimplexTree::get_boundary_mx(std::vector<int> coface_global, std::map<int,int> face_order)
-{
-
-    //create the matrix
-    int num_cols = coface_global.size();
-    int num_rows = face_order.size();
-    MapMatrix* mat = new MapMatrix(num_rows, num_cols);			//DELETE this object later???
-
-    //loop through columns
-    for(int j=0; j<num_cols; j++)
-    {
-        //find all vertices of the simplex corresponding to this column
-        std::vector<int> verts = find_vertices(coface_global[j]);
-
-        //if the simplex has a nontrivial boundary, then consider its facets
-        if(verts.size() > 1)
-        {
-            //find all boundary simplices of this simplex
-            for(unsigned k=0; k<verts.size(); k++)
-            {
-                //make a list of all vertices in verts[] except verts[k]
-                std::vector<int> facet;
-                for(unsigned l=0; l<verts.size(); l++)
-                    if(l != k)
-                        facet.push_back(verts[l]);
-
-                //look up global index of the boundary simplex
-                int gi = find_simplex(facet)->global_index();       //TODO: ought to check that find_simplex() returns a non-NULL value
-
-                //look up order index of the simplex
-                int oi = face_order.at(gi);
-
-                //for this boundary simplex, enter "1" in the appropriate cell in the matrix (row oi, column j)
-                (*mat).set(oi,j);
-
-            }//end for(k=0;...)
-        }//end if(verts.size() > 1)
-    }//end for(j=0;...)
-
-    //return the MapMatrix
-    return mat;
-
-}//end get_boundary_mx
 
 
 //returns the number of unique x-coordinates of the multi-grades

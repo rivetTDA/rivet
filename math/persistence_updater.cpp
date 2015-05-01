@@ -1,6 +1,7 @@
 #include "persistence_updater.h"
 
 #include <qdebug.h>
+#include <QTime>
 
 
 //constructor -- also fills xi_matrix with the xi support points
@@ -21,7 +22,7 @@ PersistenceUpdater::PersistenceUpdater(Mesh *m, MultiBetti &mb, std::vector<xiPo
 //computes anchors and stores them in mesh->all_anchors; anchor-lines will be created when mesh->build_interior() is called
 void PersistenceUpdater::find_anchors()
 {
-    if(mesh->verbosity >= 2) { std::cout << "Finding anchors...\n"; }
+    if(mesh->verbosity >= 2) { qDebug() << "FINDING ANCHORS"; }
 
     //get pointers to top entries in nonempty columns
     std::list<xiMatrixEntry*> nonempty_cols;
@@ -50,19 +51,19 @@ void PersistenceUpdater::find_anchors()
             if(row_entry != col_entry)  //then there is a strict, non-supported anchor at (col_entry->x, row_entry->y)
             {
                 mesh->all_anchors.insert(new Anchor(col_entry, row_entry));
-                if(mesh->verbosity >= 10) { std::cout << "  anchor (strict, non-supported) found at (" << col_entry->x << ", " << row_entry->y << ")\n"; }
+                if(mesh->verbosity >= 10) { qDebug() << "  anchor (strict, non-supported) found at (" << col_entry->x << "," << row_entry->y << ")"; }
             }
             else    //then row_entry == col_entry, so there might be a supported anchor at (col_entry->x, row_entry->y), or there might be no anchor here
             {
                 if(col_entry->down != NULL && row_entry->left != NULL)  //then there is a strict and supported anchor
                 {
                     mesh->all_anchors.insert(new Anchor(col_entry, true));
-                    if(mesh->verbosity >= 10) { std::cout << "  anchor (strict and supported) found at (" << col_entry->x << ", " << col_entry->y << ")\n"; }
+                    if(mesh->verbosity >= 10) { qDebug() << "  anchor (strict and supported) found at (" << col_entry->x << "," << col_entry->y << ")"; }
                 }
                 else if(col_entry->down != NULL || row_entry->left != NULL)  //then there is a supported, non-strict anchor
                 {
                     mesh->all_anchors.insert(new Anchor(col_entry, false));
-                    if(mesh->verbosity >= 10) { std::cout << "  anchor (supported, non-strict) found at (" << col_entry->x << ", " << col_entry->y << ")\n"; }
+                    if(mesh->verbosity >= 10) { qDebug() << "  anchor (supported, non-strict) found at (" << col_entry->x << "," << col_entry->y << ")"; }
                 }
             }
 
@@ -88,16 +89,20 @@ void PersistenceUpdater::find_anchors()
 //computes and stores a barcode template in each 2-cell of mesh
 void PersistenceUpdater::store_barcodes(std::vector<Halfedge*>& path)
 {
-  // PART 1: GET THE BOUNDARY MATRICES WITH PROPER SIMPLEX ORDERING
+    QTime timer;    //for timing the computations
+
+    // PART 1: GET THE BOUNDARY MATRICES WITH PROPER SIMPLEX ORDERING
+
+    timer.start();
 
     //get multi-grade data in each dimension
-    if(mesh->verbosity >= 6) { std::cout << "  Mapping low simplices:\n"; }
+    if(mesh->verbosity >= 6) { qDebug() << "  Mapping low simplices:"; }
     IndexMatrix* ind_low = bifiltration->get_index_mx(dim);    //can we improve this with something more efficient than IndexMatrix?
     std::vector<int> low_simplex_order;     //this will be a map : dim_index --> order_index for dim-simplices
     store_multigrades(ind_low, true, low_simplex_order);
     delete ind_low;
 
-    if(mesh->verbosity >= 6) { std::cout << "  Mapping high simplices:\n"; }
+    if(mesh->verbosity >= 6) { qDebug() << "  Mapping high simplices:"; }
     IndexMatrix* ind_high = bifiltration->get_index_mx(dim + 1);    //again, could be improved?
     std::vector<int> high_simplex_order;     //this will be a map : dim_index --> order_index for (dim+1)-simplices
     store_multigrades(ind_high, false, high_simplex_order);
@@ -116,6 +121,10 @@ void PersistenceUpdater::store_barcodes(std::vector<Halfedge*>& path)
     MapMatrix_Perm* R_low = bifiltration->get_boundary_mx(low_simplex_order);
     MapMatrix_Perm* R_high = bifiltration->get_boundary_mx(low_simplex_order, high_simplex_order);
 
+    //print runtime data
+    qDebug() << "  --> computing initial order on simplices and building the boundary matrices took" << timer.elapsed() << "milliseconds";
+
+    //testing
     if(mesh->verbosity >= 8)
     {
         std::cout << "  Boundary matrix for low simplices:\n";
@@ -130,8 +139,12 @@ void PersistenceUpdater::store_barcodes(std::vector<Halfedge*>& path)
 
   // PART 2: INITIAL PERSISTENCE COMPUTATION (RU-decomposition)
 
+    timer.start();
+
     MapMatrix_RowPriority_Perm* U_low = R_low->decompose_RU();
     MapMatrix_RowPriority_Perm* U_high = R_high->decompose_RU();
+
+    qDebug() << "  --> computing the RU decomposition took" << timer.elapsed() << "milliseconds";
 
     //store the barcode template in the first cell
     Face* first_cell = mesh->topleft->get_twin()->get_face();
@@ -163,13 +176,19 @@ void PersistenceUpdater::store_barcodes(std::vector<Halfedge*>& path)
 
   // PART 3: TRAVERSE THE PATH AND DO VINEYARD UPDATES
 
+    qDebug() << "TRAVERSING THE PATH: path has" << path.size() << "steps";
+    timer.start();
+
     //traverse the path
+    QTime steptimer;
     for(unsigned i=0; i<path.size(); i++)
     {
+        steptimer.start();  //time update at each step of the path
+
         //determine which anchor is represented by this edge
         Anchor* cur_anchor = (path[i])->get_anchor();
 
-        qDebug() << "step" << i << "of path: crossing anchor at ("<< cur_anchor->get_x() << "," << cur_anchor->get_y() << ")";
+        qDebug() << "  step" << i << "of path: crossing anchor at ("<< cur_anchor->get_x() << "," << cur_anchor->get_y() << ")";
         if(mesh->verbosity >= 8) { std::cout << "Step " << i << " of the path: crossing anchor at (" << cur_anchor->get_x() << "," << cur_anchor->get_y() << ") into cell " << mesh->FID((path[i])->get_face()) << ".\n"; }
 
         //get equivalence classes for this anchor
@@ -328,7 +347,13 @@ void PersistenceUpdater::store_barcodes(std::vector<Halfedge*>& path)
             cur_face->get_barcode().print();
         }
 
+        //print runtime data
+        qDebug() << "    --> this step took" <<steptimer.elapsed() << "milliseconds";
+
     }//end path traversal
+
+    //print runtime data
+    qDebug() << "  --> path traversal and persistence updates took" << timer.elapsed() << "milliseconds";
 
 
   // PART 4: CLEAN UP
@@ -346,7 +371,7 @@ void PersistenceUpdater::store_barcodes(std::vector<Halfedge*>& path)
 //  simplex_order will be filled with a map : dim_index --> order_index for simplices of the given dimension, for use in creating the boundary matrices
 void PersistenceUpdater::store_multigrades(IndexMatrix* ind, bool low, std::vector<int>& simplex_order)
 {
-    qDebug() << "STORING MULTIGRADES: low =" << low;
+    if(mesh->verbosity >= 6) { qDebug() << "STORING MULTIGRADES: low =" << low; }
 
   //STEP 1: store multigrade data in the xiSupportMatrix
 
@@ -401,7 +426,7 @@ void PersistenceUpdater::store_multigrades(IndexMatrix* ind, bool low, std::vect
                 {
                     xi_matrix.get_infinity()->add_multigrade(x, y, last_col - first_col, last_col, low);
 
-                    qDebug() << "    simplices at (" << x << "," << y << "), in columns" << (first_col + 1) << "to" << last_col << ", mapped to infinity";
+                    if(mesh->verbosity >= 6) { qDebug() << "    simplices at (" << x << "," << y << "), in columns" << (first_col + 1) << "to" << last_col << ", mapped to infinity"; }
                 }
                 else    //then map multigrade (x,y) to the last element of the frontier such that (*it)->x >= x
                 {
@@ -415,7 +440,7 @@ void PersistenceUpdater::store_multigrades(IndexMatrix* ind, bool low, std::vect
                     //now map the multigrade to the element given by the iterator
                     (*it)->add_multigrade(x, y, last_col - first_col, last_col, low);
 
-                    qDebug() << "    simplices at (" << x << "," << y << "), in columns" << (first_col + 1) << "to" << last_col << ", mapped to xi support point (" << (*it)->x << ", " << (*it)->y << ")";
+                    if(mesh->verbosity >= 6) { qDebug() << "    simplices at (" << x << "," << y << "), in columns" << (first_col + 1) << "to" << last_col << ", mapped to xi support point (" << (*it)->x << ", " << (*it)->y << ")"; }
                 }
             }
         }//end x loop
@@ -434,12 +459,10 @@ void PersistenceUpdater::store_multigrades(IndexMatrix* ind, bool low, std::vect
     for(std::list<Multigrade*>::iterator it = mgrades->begin(); it != mgrades->end(); ++it)
     {
         Multigrade* mg = *it;
-        qDebug() << "  multigrade (" << mg->x << "," << mg->y << ") at infinity has" << mg->num_cols << "simplices with last index" << mg->simplex_index<< "which will map to order_index" << o_index;
-
+        if(mesh->verbosity >= 6) { qDebug() << "  multigrade (" << mg->x << "," << mg->y << ") at infinity has" << mg->num_cols << "simplices with last index" << mg->simplex_index<< "which will map to order_index" << o_index; }
 
         for(unsigned s=0; s < mg->num_cols; s++)  // simplex with dim_index (mg->simplex_index - s) has order_index o_index
         {
-//            if(mesh->verbosity >= 8) { std::cout << "   -- simplex with dim_index " << (mg->simplex_index - s) << " has order_index " << o_index << "\n"; }
             simplex_order[mg->simplex_index - s] = o_index;
             o_index--;
         }
@@ -461,7 +484,7 @@ void PersistenceUpdater::store_multigrades(IndexMatrix* ind, bool low, std::vect
         //consider all xiMatrixEntries in this row
         while(cur != NULL)
         {
-            qDebug() << "----xiMatrixEntry (" << cur->x << "," << cur->y << ")";
+            if(mesh->verbosity >= 6) { qDebug() << "----xiMatrixEntry (" << cur->x << "," << cur->y << ")"; }
 
             //get the multigrade list for this xiMatrixEntry
             mgrades = (low) ? &(cur->low_simplices) : &(cur->high_simplices);
@@ -473,7 +496,7 @@ void PersistenceUpdater::store_multigrades(IndexMatrix* ind, bool low, std::vect
             for(std::list<Multigrade*>::iterator it = mgrades->begin(); it != mgrades->end(); ++it)
             {
                 Multigrade* mg = *it;
-                qDebug() << "  multigrade (" << mg->x << "," << mg->y << ") has" << mg->num_cols << "simplices with last dim_index" << mg->simplex_index << "which will map to order_index" << o_index;
+                if(mesh->verbosity >= 6) { qDebug() << "  multigrade (" << mg->x << "," << mg->y << ") has" << mg->num_cols << "simplices with last dim_index" << mg->simplex_index << "which will map to order_index" << o_index; }
 
                 for(unsigned s=0; s < mg->num_cols; s++)  // simplex with dim_index (mg->simplex_index - s) has order_index o_index
                 {

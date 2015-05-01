@@ -74,7 +74,7 @@ InputManager::InputManager(int d, int v) :
 void InputManager::start(std::string filename, unsigned x_bins, unsigned y_bins)
 {
 	//read the file
-    if(verbosity >= 2) { std::cout << "READING FILE: " << filename << "\n"; }
+    if(verbosity >= 2) { qDebug() << "READING FILE:" << QString(filename.c_str()); }
 	std::string line;
     infile.open(filename.data());
 	if(infile.is_open())
@@ -96,13 +96,13 @@ void InputManager::start(std::string filename, unsigned x_bins, unsigned y_bins)
 		}
 		else
 		{
-			std::cout << "Error: Unrecognized file type.\n";
+            qDebug() << "Error: Unrecognized file type.";
 			throw std::exception();
 		}
 	}
 	else
 	{
-        std::cout << "Error: Unable to open file " << filename << ".\n";
+        qDebug() << "Error: Unable to open file: " << QString(filename.c_str());
 		throw std::exception();
 	}
 	
@@ -143,7 +143,7 @@ SimplexTree* InputManager::get_bifiltration()
 //  constructs a simplex tree representing the bifiltered Vietoris-Rips complex
 void InputManager::read_point_cloud(unsigned x_bins, unsigned y_bins)
 {
-	if(verbosity >= 2) { std::cout << "  Found a point cloud file.\n"; }
+    if(verbosity >= 2) { qDebug() << "  Found a point cloud file."; }
 	
   /* step 1: read data file and store exact (rational) values */
 
@@ -155,13 +155,13 @@ void InputManager::read_point_cloud(unsigned x_bins, unsigned y_bins)
 	//read dimension of the points from the first line of the file
 	std::getline(infile,line);
 	std::stringstream(line) >> dimension;
-    if(verbosity >= 4) { std::cout << "  dimension of data: " << dimension << "; max dimension of simplices: " << (hom_dim + 1) << "\n"; }
+    if(verbosity >= 4) { qDebug() << "  dimension of data: " << dimension << "; max dimension of simplices: " << (hom_dim + 1); }
 	
 	//read maximum distance for edges in Vietoris-Rips complex
     std::getline(infile,line);
     boost::algorithm::trim(line);
     exact max_dist = str_to_exact(line);
-	if(verbosity >= 4) { std::cout << "  maximum distance: " << max_dist << "\n"; }
+    if(verbosity >= 4) { qDebug() << "  maximum distance: " << max_dist; }
 		
 	//read points
     while( std::getline(infile,line) )
@@ -178,7 +178,7 @@ void InputManager::read_point_cloud(unsigned x_bins, unsigned y_bins)
 		points.push_back(p);
 	}
 	
-	if(verbosity >= 4) { std::cout << "  read " << points.size() << " points; input finished\n"; }
+    if(verbosity >= 4) { qDebug() << "  read " << points.size() << " points; input finished"; }
 
     //sort the points -- THIS IS UNNECESSARY, RIGHT???
 //	if(verbosity >= 2) { std::cout << "SORTING POINTS BY BIRTH TIME\n"; }
@@ -204,7 +204,7 @@ void InputManager::read_point_cloud(unsigned x_bins, unsigned y_bins)
 
   /* step 2: compute distance matrix, and create ordered lists of all unique distance and time values */
 
-    if(verbosity >= 2) { std::cout << "BUILDING DISTANCE AND TIME LISTS\n"; }
+    if(verbosity >= 2) { qDebug() << "BUILDING DISTANCE AND TIME LISTS"; }
 
     unsigned num_points = points.size();
 
@@ -376,7 +376,7 @@ void InputManager::read_point_cloud(unsigned x_bins, unsigned y_bins)
     //  2. a list of k(k-1)/2 discrete distances
     //  3. max dimension of simplices to construct
 
-    if(verbosity >= 2) { std::cout << "BUILDING VIETORIS-RIPS BIFILTRATION\n"; }
+    if(verbosity >= 2) { qDebug() << "BUILDING VIETORIS-RIPS BIFILTRATION"; }
 
     simplex_tree.build_VR_complex(time_indexes, dist_indexes, x_grades.size(), y_grades.size());
 
@@ -398,7 +398,7 @@ void InputManager::read_point_cloud(unsigned x_bins, unsigned y_bins)
 //reads a bifiltration and constructs a simplex tree
 void InputManager::read_bifiltration()
 {
-    if(verbosity >= 2) { std::cout << "  Found a bifiltration file. CANNOT CURRENTLY READ BIFILTRATION FILES!\n"; }
+    if(verbosity >= 2) { qDebug() << "  Found a bifiltration file. CANNOT CURRENTLY READ BIFILTRATION FILES!\n"; }
 /* THIS MUST BE UPDATED!!!
 	//prepare (temporary) data structures
 	std::string line;		//string to hold one line of input

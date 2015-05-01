@@ -2,6 +2,7 @@
 
 #include <math.h>
 #include <iostream>
+#include <qdebug.h>
 
 MultiBar::MultiBar(double b, double d, unsigned m) :
     birth(b), death(d), multiplicity(m)
@@ -61,10 +62,11 @@ unsigned Barcode::size()
 //for testing only
 void Barcode::print()
 {
+    QDebug qd = qDebug().nospace();
+    qd << "      rescaled barcode: ";
     for(std::multiset<MultiBar>::iterator it = bars.begin(); it != bars.end(); ++it)
     {
         MultiBar b = *it;
-        std::cout << "(" << b.birth << "," << b.death << ")x" << b.multiplicity << ", ";
+        qd << "(" << b.birth << "," << b.death << ")x" << b.multiplicity << ", ";
     }
-    std::cout << "\n";
 }

@@ -4,6 +4,7 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QDebug>
+#include <QTime>
 
 #include "interface/input_manager.h"
 #include "math/simplex_tree.h"
@@ -13,15 +14,13 @@
 #include "dcel/mesh.h"
 #include "interface/barcode.h"
 
-#include "boost/date_time/posix_time/posix_time.hpp"
-using namespace boost::posix_time;
-
+//#include "boost/date_time/posix_time/posix_time.hpp"
 
 
 VisualizationWindow::VisualizationWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::VisualizationWindow),
-    verbosity(7), INFTY(std::numeric_limits<double>::infinity()),
+    verbosity(5), INFTY(std::numeric_limits<double>::infinity()),
     slice_diagram(NULL), slice_update_lock(false),
     p_diagram(NULL), persistence_diagram_drawn(false)
 {
@@ -66,6 +65,8 @@ void VisualizationWindow::setComputationParameters(int hom_dim, unsigned num_x_b
 //void VisualizationWindow::on_computeButton_clicked() //read the file and do the persistent homology computation
 void VisualizationWindow::compute()
 {
+    QTime timer;    //for timing the computations
+
   //STEP 1: INPUT DATA AND CREATE BIFILTRATION
 
     //start the input manager
@@ -88,12 +89,11 @@ void VisualizationWindow::compute()
     double data_ymax = y_grades.back();
 
     //print bifiltration statistics
-    std::cout << "\nBIFILTRATION:\n";
-    std::cout << "   Number of simplices of dimension " << dim << ": " << bifiltration->get_size(dim) << "\n";
-    std::cout << "   Number of simplices of dimension " << (dim+1) << ": " << bifiltration->get_size(dim+1) << "\n";
-    std::cout << "   Number of x-grades: " << x_grades.size() << "; values " << data_xmin << " to " << data_xmax << "\n";
-    std::cout << "   Number of y-grades: " << y_grades.size() << "; values " << data_ymin << " to " << data_ymax << "\n";
-    std::cout << "\n";
+    qDebug() << "\nBIFILTRATION:";
+    qDebug() << "   Number of simplices of dimension" << dim << ":" << bifiltration->get_size(dim);
+    qDebug() << "   Number of simplices of dimension" << (dim+1) << ":" << bifiltration->get_size(dim+1);
+    qDebug() << "   Number of x-grades:" << x_grades.size() << "; values" << data_xmin << "to" << data_xmax;
+    qDebug() << "   Number of y-grades:" << y_grades.size() << "; values" << data_ymin << "to" << data_ymax << "\n";
 
     if(verbosity >= 10)
     {
@@ -111,33 +111,26 @@ void VisualizationWindow::compute()
   //STEP 2: COMPUTE SUPPORT POINTS OF MULTI-GRADED BETTI NUMBERS
 
     //compute xi_0 and xi_1 at all multi-grades
-    if(verbosity >= 2) { std::cout << "COMPUTING xi_0 AND xi_1 FOR HOMOLOGY DIMENSION " << dim << ":\n"; }
+    if(verbosity >= 2) { qDebug() << "COMPUTING xi_0 AND xi_1 FOR HOMOLOGY DIMENSION " << dim << ":"; }
     MultiBetti mb(bifiltration, dim, verbosity);
 
-    ptime time_xi_start(microsec_clock::local_time());  //start timer
-
+    timer.start();
     mb.compute_fast();
-
-    ptime time_xi_end(microsec_clock::local_time());    //stop timer
-    time_duration duration_xi(time_xi_end - time_xi_start);
-
-    std::cout << "   xi_i computation took " << duration_xi << "\n";
+    qDebug() << "  --> xi_i computation took" << timer.elapsed() << "milliseconds";
     ui->statusBar->showMessage("computed xi support points");
 
 
   //STEP 3: BUILD THE ARRANGEMENT
 
     //build the arrangement
-    if(verbosity >= 2) { std::cout << "CALCULATING ANCHORS AND BUILDING THE DCEL ARRANGEMENT\n"; }
+    if(verbosity >= 2) { qDebug() << "CALCULATING ANCHORS AND BUILDING THE DCEL ARRANGEMENT"; }
 
-    ptime time_dcel_start(microsec_clock::local_time());    //start timer
-
+    timer.start();
     arrangement = new Mesh(x_grades, x_exact, y_grades, y_exact, verbosity);
     arrangement->build_arrangement(mb, xi_support);     //also stores list of xi support points in the last argument
         //NOTE: this also computes and stores barcode templates in the arrangement
 
-    ptime time_dcel_end(microsec_clock::local_time());      //stop timer
-    time_duration duration_dcel(time_dcel_end - time_dcel_start);
+    qDebug() << "   building the line arrangement and computing all barcode templates took" << timer.elapsed() << "milliseconds";
 
     //testing:
     if(verbosity >= 10)
@@ -147,12 +140,11 @@ void VisualizationWindow::compute()
             std::cout << "(" << xi_support[i].x << "," << xi_support[i].y << "), ";
         std::cout << "\n";
     }
-    if(verbosity >= 2) { std::cout << "COMPUTATION FINISHED; READY FOR INTERACTIVITY.\n"; }
+    if(verbosity >= 2) { qDebug() << "COMPUTATION FINISHED; READY FOR INTERACTIVITY."; }
 
     //print arrangement info
-    std::cout << "   building the arrangement and computing barcode templates took " << duration_dcel << "\n";
     arrangement->print_stats();
-    ui->statusBar->showMessage("computed persistence data");
+    ui->statusBar->showMessage("computed all barcode templates");
 
     //TESTING: verify consistency of the arrangement
 //    arrangement->test_consistency();
@@ -184,9 +176,7 @@ void VisualizationWindow::compute()
     Barcode* barcode = rescale_barcode_template(dbc, degrees, offset);      ///TODO: CHECK THIS!!!
 
     //TESTING
-    std::cout<< "RESCALED BARCODE: ";
     barcode->print();
-    std::cout << "\n";
 
     //draw the barcode
     p_diagram->draw_points(slice_diagram->get_zero(), barcode);
@@ -260,9 +250,7 @@ void VisualizationWindow::update_persistence_diagram()
     Barcode* barcode = rescale_barcode_template(dbc, degrees, offset);
 
     //TESTING
-    std::cout<< "RESCALED BARCODE: ";
     barcode->print();
-    std::cout << "\n";
 
     //draw the barcode
     p_diagram->update_diagram(slice_diagram->get_slice_length(), slice_diagram->get_pd_scale(), slice_diagram->get_zero(), barcode);

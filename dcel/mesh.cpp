@@ -6,6 +6,7 @@
 
 #include <list>
 #include <qdebug.h>
+#include <QTime>
 
 #include <boost/graph/graph_traits.hpp>
 #include <boost/graph/adjacency_list.hpp>
@@ -83,18 +84,24 @@ void Mesh::build_arrangement(MultiBetti& mb, std::vector<xiPoint>& xi_pts)
 {
     //precondition: the constructor has already created the boundary of the arrangement
 
-    //PersistenceUpdater object is able to do the calculations necessary for finding anchors and computing barcode templates
-    PersistenceUpdater updater(this, mb, xi_pts);
+    QTime timer;    //for timing the computations
+    PersistenceUpdater updater(this, mb, xi_pts);   //PersistenceUpdater object is able to do the calculations necessary for finding anchors and computing barcode templates
 
     //first, compute anchors and store them in the vector Mesh::all_anchors
+    timer.start();
     updater.find_anchors();
+    qDebug() << "  --> finding anchors took" << timer.elapsed() << "milliseconds";
 
     //now that we have all the anchors, we can build the interior of the arrangement
+    timer.start();
     build_interior();
+    qDebug() << "  --> building the interior of the line arrangement took" << timer.elapsed() << "milliseconds";
 
     //now that the arrangement is constructed, we can find a path -- NOTE: path starts with a (near-vertical) line to the right of all multigrades
     std::vector<Halfedge*> path;
+    timer.start();
     find_path(path);
+    qDebug() << "  --> finding the path took" << timer.elapsed() << "milliseconds";
 
     //finally, we can traverse the path, computing and storing a barcode template in each 2-cell
     updater.store_barcodes(path);
@@ -109,10 +116,10 @@ void Mesh::build_interior()
 {
     if(verbosity >= 6)
     {
-        std::cout << "BUILDING ARRANGEMENT:  Anchors sorted for left edge of strip: ";
+        QDebug qd = qDebug().nospace();
+        qd << "BUILDING ARRANGEMENT:  Anchors sorted for left edge of strip: ";
         for(std::set<Anchor*, Anchor_LeftComparator>::iterator it = all_anchors.begin(); it != all_anchors.end(); ++it)
-            std::cout << "(" << (*it)->get_x() << "," << (*it)->get_y() << ") ";
-        std::cout << "\n";
+            qd << "(" << (*it)->get_x() << "," << (*it)->get_y() << ") ";
     }
 
     // DATA STRUCTURES
@@ -129,7 +136,7 @@ void Mesh::build_interior()
     std::set< Anchor_pair > considered_pairs;
 
   // PART 1: INSERT VERTICES AND EDGES ALONG LEFT EDGE OF THE STRIP
-    if(verbosity >= 6) { std::cout << "PART 1: LEFT EDGE OF STRIP\n"; }
+    if(verbosity >= 6) { qDebug() << "PART 1: LEFT EDGE OF STRIP"; }
 
     //for each Anchor, create vertex and associated halfedges, anchored on the left edge of the strip
     Halfedge* leftedge = bottomleft;
@@ -138,7 +145,7 @@ void Mesh::build_interior()
     {
         Anchor* cur_anchor = *it;
 
-        if(verbosity >= 8) { std::cout << "  Processing Anchor " << cur_anchor << " at (" << cur_anchor->get_x() << "," << cur_anchor->get_y() << "), "; }
+        if(verbosity >= 8) { qDebug() << "  Processing Anchor" << cur_anchor << "at (" << cur_anchor->get_x() << "," << cur_anchor->get_y() << ")"; }
 
         if(cur_anchor->get_y() != prev_y)	//then create new vertex
         {
@@ -159,7 +166,6 @@ void Mesh::build_interior()
         //remember line associated with this Anchor
         cur_anchor->set_line(new_edge);
     }
-    if(verbosity >= 8) { std::cout << "\n"; }
 
     //for each pair of consecutive lines, if they intersect, store the intersection
     for(unsigned i = 0; i < lines.size() - 1; i++)
@@ -173,20 +179,10 @@ void Mesh::build_interior()
         considered_pairs.insert(Anchor_pair(a,b));
     }
 
-    //TESTING
-//    std::cout << "THE PRIORITY QUEUE CONTAINS:\n";
-//    while(!crossings.empty())
-//    {
-//        //get the next intersection from the queue
-//        Crossing* cur = crossings.top();
-//        crossings.pop();
-//        std::cout << " intersection: Anchor " << cur->a << " (" << cur->a->get_position() << "), Anchor " << cur->b << " (" << cur->b->get_position() << ") intersect at x = " << cur->x << "\n";
-//    }
-
 
   // PART 2: PROCESS INTERIOR INTERSECTIONS
     //    order: x left to right; for a given x, then y low to high
-    if(verbosity >= 6) { std::cout << "PART 2: PROCESSING INTERIOR INTERSECTIONS\n"; }
+    if(verbosity >= 6) { qDebug() << "PART 2: PROCESSING INTERIOR INTERSECTIONS\n"; }
 
     int status_counter = 0;
     int status_interval = 10000;    //controls frequency of output
@@ -205,7 +201,7 @@ void Mesh::build_interior()
         unsigned first_pos = cur->a->get_position();   //most recent edge in the curve corresponding to Anchor a
         unsigned last_pos = cur->b->get_position();   //most recent edge in the curve corresponding to Anchor b
 
-        if(verbosity >= 8) { std::cout << " next intersection: Anchor " << cur->a << " (pos " << first_pos << "), Anchor " << cur->b << " (pos " << last_pos << ")\n"; }
+        if(verbosity >= 8) { qDebug() << " next intersection: Anchor" << cur->a << " (pos" << first_pos << "), Anchor" << cur->b << " (pos" << last_pos; }
 
         if(last_pos != first_pos + 1)
         {
@@ -227,17 +223,13 @@ void Mesh::build_interior()
 
             last_pos++; //last_pos = cur->b->get_position();
 
-            if(verbosity >= 8) { std::cout << " |---also intersects Anchor " << cur->b << " (" << last_pos << ")\n"; }
+            if(verbosity >= 8) { qDebug() << " |---also intersects Anchor" << cur->b << "(" << last_pos << ")"; }
         }
-
-    //TESTING
-//        Crossing* next = crossings.top();
-//        std::cout << "      [looking ahead: " << next->a << " (" << next->a->get_position() << "), " << next->b << " (" << next->b->get_position() << ") at theta = " << next->t << "]\n";
 
         //compute y-coordinate of intersection
         double intersect_y = x_grades[sweep->a->get_x()]*(sweep->x) - y_grades[sweep->a->get_y()];
 
-        if(verbosity >= 8) { std::cout << "  found intersection between " << (last_pos - first_pos + 1) << " edges at x = " << sweep->x << ", y = " << intersect_y << "\n"; }
+        if(verbosity >= 8) { qDebug() << "  found intersection between" << (last_pos - first_pos + 1) << "edges at x =" << sweep->x << ", y =" << intersect_y; }
 
         //create new vertex
         Vertex* new_vertex = new Vertex(sweep->x, intersect_y);
@@ -302,7 +294,6 @@ void Mesh::build_interior()
 
             //remember position of this Anchor
             new_edge->get_anchor()->set_position(last_pos - (cur_pos - first_pos));
-//            if(verbosity >= 6) { std::cout << "    - set Anchor " << new_edge->get_anchor() << " to position " << (last_pos - (cur_pos - first_pos)) << "\n"; }
         }
 
         //update lines vector: flip portion of vector [first_pos, last_pos]
@@ -313,12 +304,6 @@ void Mesh::build_interior()
             lines[first_pos + i] = lines[last_pos - i];
             lines[last_pos - i] = temp;
         }
-
-        //TESTING
-//        std::cout << "      TESTING: ";
-//        for(unsigned i = first_pos; i<= last_pos; i++)
-//            std::cout << i << ": " << curves[i]->get_anchor() << "; ";
-//        std::cout << "\n";
 
         //find new intersections and add them to intersections queue
         if(first_pos > 0)   //then consider lower intersection
@@ -354,12 +339,12 @@ void Mesh::build_interior()
         {
             status_counter++;
             if(status_counter % status_interval == 0)
-                std::cout << "      processed " << status_counter << " intersections; theta = " << sweep << "\n";
+                qDebug() << "      processed" << status_counter << "intersections; sweep position =" << sweep;
         }
     }//end while
 
   // PART 3: INSERT VERTICES ON RIGHT EDGE OF STRIP AND CONNECT EDGES
-    if(verbosity >= 6) { std::cout << "PART 3: RIGHT EDGE OF THE STRIP\n"; }
+    if(verbosity >= 6) { qDebug() << "PART 3: RIGHT EDGE OF THE STRIP"; }
 
     Halfedge* rightedge = bottomright; //need a reference halfedge along the right side of the strip
     unsigned cur_x = 0;      //keep track of x-coordinate of last Anchor whose line was connected to right edge (x-coordinate of Anchor is slope of line)
@@ -516,8 +501,14 @@ void Mesh::find_path(std::vector<Halfedge*>& pathvec)
 
                 //if i < j, then create an (undirected) edge between these faces
                 if(i < j)
-                    boost::add_edge(i, j, 1, dual_graph);   //for now, all edges have unit weight
-                ///TODO: WEIGHT EDGES BY NUMBER OF SIMPLICES THAT SWAP FOR EACH Anchor
+                {
+                    ///TODO: IMPROVE THE EDGE WEIGHTS
+                    /// currently, the edge weight is the product of the discrete coordinates of the anchor
+                    /// this is the simplest, possibly reasonable edge weighting scheme I could think of
+                    unsigned edge_weight = (current->get_anchor()->get_x())*(current->get_anchor()->get_y());
+
+                    boost::add_edge(i, j, edge_weight, dual_graph);
+                }
             }
             //move to the next neighbor
             current = current->get_next();
@@ -527,12 +518,12 @@ void Mesh::find_path(std::vector<Halfedge*>& pathvec)
     //TESTING -- print the edges in the dual graph
     if(verbosity >= 10)
     {
-        std::cout << "EDGES IN THE DUAL GRAPH OF THE ARRANGEMENT: \n";
+        QDebug qd = qDebug().nospace();
+        qd << "EDGES IN THE DUAL GRAPH OF THE ARRANGEMENT: ";
         typedef boost::graph_traits<Graph>::edge_iterator edge_iterator;
         std::pair<edge_iterator, edge_iterator> ei = boost::edges(dual_graph);
         for(edge_iterator it = ei.first; it != ei.second; ++it)
-            std::cout << "  (" << boost::source(*it, dual_graph) << ", " << boost::target(*it, dual_graph) << "), ";
-        std::cout << "\n";
+            qd << "  (" << boost::source(*it, dual_graph) << ", " << boost::target(*it, dual_graph) << "), ";
     }
 
 
@@ -544,10 +535,10 @@ void Mesh::find_path(std::vector<Halfedge*>& pathvec)
 
     if(verbosity >= 10)
     {
-        std::cout << "num MST edges: " << spanning_tree_edges.size() << "\n";
+        QDebug qd = qDebug().nospace();
+        qd << "num MST edges: " << spanning_tree_edges.size() << "\n";
         for(unsigned i=0; i<spanning_tree_edges.size(); i++)
-            std::cout << "  (" << boost::source(spanning_tree_edges[i], dual_graph) << ", " << boost::target(spanning_tree_edges[i], dual_graph) << "), ";
-        std::cout << "\n";
+            qd << "  (" << boost::source(spanning_tree_edges[i], dual_graph) << ", " << boost::target(spanning_tree_edges[i], dual_graph) << "), ";
     }
 
 //  // PART 2-ALTERNATE: FIND A HAMILTONIAN TOUR
@@ -587,10 +578,11 @@ void Mesh::find_path(std::vector<Halfedge*>& pathvec)
     //TESTING -- PRINT PATH
     if(verbosity >= 10)
     {
-        std::cout << "PATH: " << start << ", ";
+        QDebug qd = qDebug().nospace();
+        qd << "PATH: " << start << ", ";
         for(unsigned i=0; i<pathvec.size(); i++)
-            std::cout << (face_indexes.find((pathvec[i])->get_face()))->second << ", ";
-        std::cout << "\n";
+            qd << (face_indexes.find((pathvec[i])->get_face()))->second << ", ";
+        qd << "\n";
     }
 }//end find_path()
 
@@ -646,7 +638,7 @@ BarcodeTemplate& Mesh::get_barcode_template(double degrees, double offset)
 
         ///TODO: store some point/cell to seed the next query
 
-        std::cout << " ||| vertical line found in cell " << FID(cell) << "\n";
+        if(verbosity >= 3) { qDebug() << " ||| vertical line found in cell " << FID(cell); }
         return cell->get_barcode();
     }
 
@@ -660,7 +652,7 @@ BarcodeTemplate& Mesh::get_barcode_template(double degrees, double offset)
 
         ///TODO: store some point/cell to seed the next query
 
-        std::cout << " --- horizontal line found in cell " << FID(cell) << "\n";
+        if(verbosity >= 3) { qDebug() << " --- horizontal line found in cell " << FID(cell); }
         return cell->get_barcode();
     }
 
@@ -747,13 +739,13 @@ Face* Mesh::find_vertical_line(double x_coord)
         }
 
         //testing
-        std::cout << "----vertical line search: found Anchor with x-coordinate " << vertical_line_query_list[best]->get_anchor()->get_x() << "\n";
+        if(verbosity >= 6) { qDebug() << "----vertical line search: found anchor with x-coordinate " << vertical_line_query_list[best]->get_anchor()->get_x(); }
 
         return vertical_line_query_list[best]->get_face();
     }
 
     //if we get here, then either there are no Anchors or x_coord is less than the x-coordinates of all Anchors
-    std::cout << "----vertical line search: returning lowest face\n";
+    if(verbosity >= 6) { qDebug() << "----vertical line search: returning lowest face"; }
     return bottomright->get_twin()->get_face();
 
 }//end find_vertical_line()
@@ -770,17 +762,17 @@ Face* Mesh::find_point(double x_coord, double y_coord)
     if(start == NULL)	//then starting point is in the top (unbounded) cell
     {
         finger = topleft->get_twin()->get_next();   //this is the top edge of the top cell (at y=infty)
-        if(verbosity >= 8) { std::cout << "  Starting in top (unbounded) cell\n"; }
+        if(verbosity >= 8) { qDebug() << "  Starting in top (unbounded) cell"; }
     }
     else
     {
         finger = start->get_line();
-        if(verbosity >= 8) { std::cout << "  Reference Anchor: (" << x_grades[start->get_x()] << ", " << y_grades[start->get_y()] << "); halfedge " << HID(finger) << ".\n"; }
+        if(verbosity >= 8) { qDebug() << "  Reference Anchor: (" << x_grades[start->get_x()] << "," << y_grades[start->get_y()] << "); halfedge" << HID(finger); }
     }
 
     while(cell == NULL) //while not found
     {
-        if(verbosity >= 8) { std::cout << "  Considering cell " << FID(finger->get_face()) << ".\n"; }
+        if(verbosity >= 8) { qDebug() << "  Considering cell " << FID(finger->get_face()); }
 
         //find the edge of the current cell that crosses the horizontal line at y_coord
         Vertex* next_pt = finger->get_next()->get_origin();
@@ -789,12 +781,12 @@ Face* Mesh::find_point(double x_coord, double y_coord)
             finger = finger->get_next();
             next_pt = finger->get_next()->get_origin();
 
-            if(verbosity >= 8) { std::cout << "    --next point: (" << next_pt->get_x() << ", " << next_pt->get_y() << "); finger: " << HID(finger) << ".\n"; }
+            if(verbosity >= 8) { qDebug() << "    --next point: (" << next_pt->get_x() << "," << next_pt->get_y() << "); finger:" << HID(finger); }
         }
         //now next_pt is at or below the horizontal line at y_coord
         //if (slope, intercept) is to the left of crossing point, then we have found the cell; otherwise, move to the adjacent cell
 
-        if(verbosity >= 8) { std::cout << "    --found next_pt at (" << next_pt->get_x() << ", " << next_pt->get_y() << "); finger: " << HID(finger) << ".\n"; }
+        if(verbosity >= 8) { qDebug() << "    --found next_pt at (" << next_pt->get_x() << "," << next_pt->get_y() << "); finger:" << HID(finger); }
 
         if(next_pt->get_y() == y_coord) //then next_pt is on the horizontal line
         {
@@ -844,7 +836,7 @@ Face* Mesh::find_point(double x_coord, double y_coord)
         }//end while(cell not found)
     }//end else
 
-    if(verbosity >= 3) { std::cout << "  -> Found point (" << x_coord << ", " << y_coord << ") in cell " << FID(cell) << ".\n"; }
+    if(verbosity >= 3) { qDebug() << "  Found point (" << x_coord << "," << y_coord << ") in cell" << FID(cell); }
 
     return cell;
 }//end find_point()
@@ -853,11 +845,7 @@ Face* Mesh::find_point(double x_coord, double y_coord)
 //prints a summary of the arrangement information, such as the number of anchors, vertices, halfedges, and faces
 void Mesh::print_stats()
 {
-    std::cout << "The arrangement contains: \n";
-    std::cout << "    " << all_anchors.size() << " anchors\n";
-    std::cout << "    " << vertices.size() << " vertices\n";
-    std::cout << "    " << halfedges.size() << " halfedges\n";
-    std::cout << "    " << faces.size() << " faces\n";
+    qDebug() << "The arrangement contains:" << all_anchors.size() << "anchors," << vertices.size() << "vertices" << halfedges.size() << "halfedges, and" << faces.size() << "faces";
 }
 
 //print all the data from the mesh
