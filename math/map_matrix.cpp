@@ -5,6 +5,7 @@
 #include "map_matrix.h"
 
 #include <iostream> //for testing only
+#include <qdebug.h>
 
 
 /********** implementation of base class MapMatrix_Base **********/
@@ -679,10 +680,10 @@ void MapMatrix_Perm::swap_columns(unsigned j, bool update_lows)
 void MapMatrix_Perm::print()
 {
     //print permutation
-    std::cout << "    row permutation: ";
-    for(unsigned i=0; i<num_rows; i++)
-        std::cout << perm[i] << " ";
-    std::cout << "\n";
+//    std::cout << "    row permutation: ";
+//    for(unsigned i=0; i<num_rows; i++)
+//        std::cout << perm[i] << " ";
+//    std::cout << "\n";
 //    std::cout << "    INVERSE column permutation: ";
 //    for(unsigned j=0; j<columns.size(); j++)
 //        std::cout << col_perm[j] << " ";
@@ -691,7 +692,7 @@ void MapMatrix_Perm::print()
     //handle empty matrix
     if(num_rows == 0 || columns.size() == 0)
     {
-        std::cout << "        (empty matrix: " << num_rows << " rows by " << columns.size() << " columns)\n";
+        qDebug() << "        (empty matrix:" << num_rows << "rows by" << columns.size() << "columns)";
         return;
     }
 
@@ -717,15 +718,16 @@ void MapMatrix_Perm::print()
     //print the matrix
     for(unsigned i=0; i<num_rows; i++)
     {
-        std::cout << "        |";
+        QDebug qd = qDebug().nospace();
+        qd << "        |";
         for(unsigned j=0; j<columns.size(); j++)
         {
             if(mx[i][j])
-                std::cout << " 1";
+                qd << " 1";
             else
-                std::cout << " 0";
+                qd << " 0";
         }
-        std::cout << " |\n";
+        qd << " |";
     }
 }//end print()
 
@@ -737,7 +739,7 @@ void MapMatrix_Perm::check_lows()
         if(low_by_row[i] != -1)
         {
             if(low_by_col[low_by_row[i]] != i)
-                std::cout << "===>>> ERROR: INCONSISTNECY IN LOW ARRAYS\n";
+                qDebug() << "===>>> ERROR: INCONSISTNECY IN LOW ARRAYS";
         }
     }
     for(unsigned j=0; j<columns.size(); j++)
@@ -763,11 +765,11 @@ void MapMatrix_Perm::check_lows()
 
         //does this match low_by_col[j]?
         if(lowest != low_by_col[j])
-            std::cout << "===>>> ERROR IN low_by_col[" << j << "]\n";
+            qDebug() << "===>>> ERROR IN low_by_col[" << j << "]";
         else if(lowest != -1)
         {
             if(low_by_row[lowest] != j)
-                std::cout << "===>>> ERROR: INCONSISTNECY IN LOW ARRAYS\n";
+                qDebug() << "===>>> ERROR: INCONSISTNECY IN LOW ARRAYS";
         }
     }
 }
@@ -853,7 +855,7 @@ void MapMatrix_RowPriority_Perm::print()
     //handle empty matrix
     if(num_rows == 0 || columns.size() == 0)
     {
-        std::cout << "        (empty matrix: " << columns.size() << " rows by " << num_rows << " columns)\n";
+        qDebug() << "        (empty matrix:" << columns.size() << "rows by" << num_rows << "columns)";
         return;
     }
 
@@ -879,14 +881,15 @@ void MapMatrix_RowPriority_Perm::print()
     //print the matrix
     for(unsigned i=0; i<num_rows; i++)
     {
-        std::cout << "        |";
+        QDebug qd = qDebug().nospace();
+        qd << "        |";
         for(unsigned j=0; j<columns.size(); j++)
         {
             if(mx[i][j])
-                std::cout << " 1";
+                qd << " 1";
             else
-                std::cout << " 0";
+                qd << " 0";
         }
-        std::cout << " |\n";
+        qd << " |";
     }
 }//end print()

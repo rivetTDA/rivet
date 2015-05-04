@@ -23,7 +23,8 @@ class PersistenceUpdater
 
         void find_anchors(); //computes anchors and stores them in mesh->all_anchors; anchor-lines will be created when mesh->build_interior() is called
 
-        void store_barcodes(std::vector<Halfedge *> &path);  //computes and stores a barcode template in each 2-cell of mesh
+        void store_barcodes(std::vector<Halfedge *> &path);     //computes and stores a barcode template in each 2-cell of mesh
+        void store_barcodes_lazy(std::vector<Halfedge*>& path); //computes and stores barcode templates using lazy updates
 
     private:
       //data structures
@@ -39,6 +40,7 @@ class PersistenceUpdater
             ///IDEA: maybe the above should be called "block_lift" instead of "partition" since this would be more consistent with the paper
 
         ///TESTING ONLY
+        bool testing;
         MapMatrix_Perm* D_low;
         MapMatrix_Perm* D_high;
 
@@ -50,15 +52,27 @@ class PersistenceUpdater
         void store_multigrades(IndexMatrix* ind, bool low, std::vector<int>& simplex_order);
 
         //moves columns from an equivalence class given by xiMatrixEntry* first to their new positions after or among the columns in the equivalence class given by xiMatrixEntry* second
-        // the boolean argument indicates whether an anchor is being crossed from below (or from above)
-        ///TODO: IMPLEMENT LAZY SWAPPING!
-        void move_columns(xiMatrixEntry* first, xiMatrixEntry* second, bool from_below, MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH);
+        //  the boolean argument indicates whether an anchor is being crossed from below (or from above)
+        //  returns a count of the number of transpositions performed
+        unsigned long move_columns(xiMatrixEntry* first, xiMatrixEntry* second, bool from_below, MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH);
+
+        //for lazy updates -- moves columns from an equivalence class given by xiMatrixEntry* first either past the equivalence class given by xiMatrixEntry* second or into its bin
+        //  the boolean argument indicates whether an anchor is being crossed from below (or from above)
+        //  returns a count of the number of transpositions performed
+        unsigned long move_columns_lazy(xiMatrixEntry* first, xiMatrixEntry* second, bool from_below, MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH);
+
+        //for lazy updates -- finds columns in the unsorted bin that should map to the anchor, and moves them
+        //  returns a count of the number of transpositions performed
+        unsigned long move_columns_from_bin_horizontal(xiMatrixEntry* bin, xiMatrixEntry* at_anchor, MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH);   //for horizontal classes
+        unsigned long move_columns_from_bin_vertical(xiMatrixEntry* bin, xiMatrixEntry* at_anchor, MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH);     //for vertical classes
 
         //moves a block of n columns, the rightmost of which is column s, to a new position following column t (NOTE: assumes s <= t)
-        void move_low_columns(int s, unsigned n, int t, MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH);
+        //  returns a count of the number of transpositions performed
+        unsigned long move_low_columns(int s, unsigned n, int t, MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH);
 
         //moves a block of n columns, the rightmost of which is column s, to a new position following column t (NOTE: assumes s <= t)
-        void move_high_columns(int s, unsigned n, int t, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH);
+        //  returns a count of the number of transpositions performed
+        unsigned long move_high_columns(int s, unsigned n, int t, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH);
 
         //removes entries corresponding to xiMatrixEntry head from partition_low and partition_high
         void remove_partition_entries(xiMatrixEntry* head);

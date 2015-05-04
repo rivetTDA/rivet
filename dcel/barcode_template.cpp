@@ -1,7 +1,7 @@
 #include "barcode_template.h"
 
 #include <iostream>
-
+#include <qdebug.h>
 
 BarTemplate::BarTemplate(unsigned a, unsigned b) :
     begin(a), end(b), multiplicity(1)
@@ -53,12 +53,12 @@ std::set<BarTemplate>::iterator BarcodeTemplate::end()
 //for testing only
 void BarcodeTemplate::print()
 {
+    QDebug qd = qDebug().nospace();
     for(std::set<BarTemplate>::iterator it = bars.begin(); it != bars.end(); ++it)
     {
         BarTemplate b = *it;
-        std::cout << "(" << b.begin << "," << b.end << ")x" << b.multiplicity << ", ";
+        qd << "(" << b.begin << "," << b.end << ")x" << b.multiplicity << ", ";
     }
-    std::cout << "\n";
 }
 
 

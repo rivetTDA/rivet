@@ -15,6 +15,7 @@ struct Multigrade;
 //// these are the nodes in the sparse matrix
 struct xiMatrixEntry
 {
+  //data structures
     unsigned x;     //discrete x-grade of this support point
     unsigned y;     //discrete y-grade of this support point
     unsigned index; //index of this support point in the vector of support points stored in VisualizationWindow
@@ -37,13 +38,16 @@ struct xiMatrixEntry
     int high_index;    //if(head_of_class) then high_index is the index of rightmost column in matrix of simplices of higher dimension that is mapped to this equivalence class; otherwise, low_index is arbitrary and UNRELIABLE
         //NOTE: if there are no low (resp. high) columns mapped to this xiMatrixEntry, then low_index (resp. high_index) is the index of the column just left of where such columns would appear (could be -1)
 
+  //functions
     xiMatrixEntry();    //empty constructor, e.g. for the entry representing infinity
     xiMatrixEntry(unsigned x, unsigned y, unsigned i, xiMatrixEntry* d, xiMatrixEntry* l);  //regular constructor
 
     void add_multigrade(unsigned x, unsigned y, unsigned num_cols, int index, bool low);  //associates a (new) multigrades to this xi entry
         //the "low" argument is true if this multigrade is for low_simplices, and false if it is for high_simplices
 
-    void insert_multigrade(Multigrade* mg, bool low);  //inserts a Multigrade at the beginning of the list for the given dimension; does not update column counts!
+    void insert_multigrade(Multigrade* mg, bool low);  //inserts a Multigrade at the end of the list for the given dimension; does not update column counts!
+
+    void move_bin_here(xiMatrixEntry* bin); //for lazy updates -- moves all Multigrades from bin to this entry; updates column counts
 };
 
 
@@ -79,13 +83,18 @@ class xiSupportMatrix
 
         unsigned height();  //retuns the number of rows;
 
+        //the following are only necessary for lazy updates
+        xiMatrixEntry* get_row_bin(unsigned r); //gets a pointer to the "bin" of unsorted grades for row r
+        xiMatrixEntry* get_col_bin(unsigned c); //gets a pointer to the "bin" of unsorted grades for column c
+
     private:
         std::vector<xiMatrixEntry*> columns;
         std::vector<xiMatrixEntry*> rows;
         xiMatrixEntry infinity;
 
-        ///TODO: also need lists of multigrades at each row and column, to support lazy updates
-
+        //the following are only necessary for lazy updates
+        std::vector<xiMatrixEntry> col_bins;
+        std::vector<xiMatrixEntry> row_bins;
 };
 
 #endif // XI_SUPPORT_MATRIX_H

@@ -286,7 +286,7 @@ Barcode* VisualizationWindow::rescale_barcode_template(BarcodeTemplate& dbc, dou
 
                 //testing
                 if(birth > death)
-                    std::cout << "\nERROR: inverted bar (" << birth << "," << death << ")\n";
+                    qDebug() << "=====>>>>> ERROR: inverted bar (" << birth << "," << death << ")";
             }
         }
     }

@@ -39,6 +39,26 @@ void xiMatrixEntry::insert_multigrade(Multigrade* mg, bool low)
         high_simplices.push_back(mg);
 }
 
+//moves all Multigrades from bin to this entry
+//  for use when merging two classes during lazy updates
+void xiMatrixEntry::move_bin_here(xiMatrixEntry* bin)
+{
+    //move low simplices
+    for(std::list<Multigrade*>::iterator it = bin->low_simplices.begin(); it != bin->low_simplices.end(); ++it)
+        low_simplices.push_back(*it);
+    bin->low_simplices.clear();
+
+    //move high simplices
+    for(std::list<Multigrade*>::iterator it = bin->high_simplices.begin(); it != bin->high_simplices.end(); ++it)
+        high_simplices.push_back(*it);
+
+    //update counters
+    low_count += bin->low_count;
+    bin->low_count = 0;
+    high_count += bin->high_count;
+    bin->high_count = 0;
+}
+
 
 /********** Multigrade **********/
 
@@ -60,7 +80,8 @@ bool Multigrade::LexComparator(const Multigrade* first, const Multigrade* second
 
 //constructor for xiSupportMatrix
 xiSupportMatrix::xiSupportMatrix(unsigned width, unsigned height) :
-    columns(width), rows(height), infinity()
+    columns(width), rows(height), infinity(),
+    col_bins(width), row_bins(height)
 { }
 
 //destructor
@@ -126,4 +147,16 @@ xiMatrixEntry* xiSupportMatrix::get_infinity()
 unsigned xiSupportMatrix::height()
 {
     return rows.size();
+}
+
+//gets a pointer to the "bin" of unsorted grades for row r
+xiMatrixEntry* xiSupportMatrix::get_row_bin(unsigned r)
+{
+    return &row_bins[r];
+}
+
+//gets a pointer to the "bin" of unsorted grades for column c
+xiMatrixEntry* xiSupportMatrix::get_col_bin(unsigned c)
+{
+    return &col_bins[c];
 }
