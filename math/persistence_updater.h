@@ -83,6 +83,11 @@ class PersistenceUpdater
         //stores a barcode template in a 2-cell of the arrangement
         ///TODO: IMPROVE THIS -- track most recent barcode at the simplicial level and re-examine only the necessary columns!!!
         void store_barcode_template(Face* cell, MapMatrix_Perm* RL, MapMatrix_Perm* RH);
+
+        ///TESTING ONLY
+        void check_low_matrix(MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL);
+        void check_high_matrix(MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH);
+
 };
 
 #endif // __PERSISTENCE_UPDATER_H__

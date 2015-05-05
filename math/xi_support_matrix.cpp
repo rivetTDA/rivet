@@ -5,7 +5,8 @@
 //empty constructor, e.g. for the entry representing infinity
 xiMatrixEntry::xiMatrixEntry() :
     x(-1), y(-1), index(-1),    //sets these items to MAX_UNSIGNED, right?
-    down(NULL), left(NULL)
+    down(NULL), left(NULL),
+    low_count(0), high_count(0), low_class_size(-1), high_class_size(0), low_index(0), high_index(0)
 { }
 
 //regular constructor
@@ -64,7 +65,8 @@ void xiMatrixEntry::move_bin_here(xiMatrixEntry* bin)
 
 //constructor
 Multigrade::Multigrade(unsigned x, unsigned y, unsigned num_cols, int simplex_index, xiMatrixEntry *xi) :
-    x(x), y(y), num_cols(num_cols), simplex_index(simplex_index), xi_entry(xi)
+    x(x), y(y), num_cols(num_cols), simplex_index(simplex_index)
+  //UNUSED: xi_entry(xi)
 { }
 
 //comparator for sorting Multigrades (reverse) lexicographically
