@@ -910,6 +910,12 @@ void PersistenceUpdater::store_multigrades(IndexMatrix* ind, bool low, std::vect
 // the boolean argument indicates whether an anchor is being crossed from below (or from above)
 unsigned long PersistenceUpdater::move_columns(xiMatrixEntry* first, xiMatrixEntry* second, bool from_below, MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH)
 {
+    ///DEBUGGING
+    if(first->low_index + second->low_class_size != second->low_index || first->high_index + second->high_class_size != second->high_index)
+    {
+        qDebug() << "  ===>>> ERROR: swapping non-consecutive column blocks!";
+    }
+
     //get column indexes (so we know which columns to move)
     int low_col = first->low_index;   //rightmost column index of low simplices for the equivalence class to move
     int high_col = first->high_index; //rightmost column index of high simplices for the equivalence class to move
@@ -1055,6 +1061,12 @@ unsigned long PersistenceUpdater::move_columns(xiMatrixEntry* first, xiMatrixEnt
 //  returns a count of the number of transpositions performed
 unsigned long PersistenceUpdater::move_columns_lazy(xiMatrixEntry* first, xiMatrixEntry* second, bool from_below, MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH)
 {
+    ///DEBUGGING
+    if(first->low_index + second->low_class_size != second->low_index || first->high_index + second->high_class_size != second->high_index)
+    {
+        qDebug() << "  ===>>> ERROR: swapping non-consecutive column blocks!";
+    }
+
     //get column indexes (so we know which columns to move)
     int low_col = first->low_index;   //rightmost column index of low simplices for the equivalence class to move
     int high_col = first->high_index; //rightmost column index of high simplices for the equivalence class to move
@@ -1142,6 +1154,13 @@ unsigned long PersistenceUpdater::move_columns_lazy(xiMatrixEntry* first, xiMatr
         else    //then we just processed the bin, so we are now finished
             cur_entry = NULL;
     }//end xiMatrixEntry loop
+
+    ///DEBUGGING
+    if(second->low_index + first->low_class_size != first->low_index || second->high_index + first->high_class_size != first->high_index)
+    {
+        qDebug() << "  ===>>> ERROR: swap resulted in non-consecutive column blocks!";
+    }
+
 
     return swap_counter;
 }//end move_columns_lazy()
