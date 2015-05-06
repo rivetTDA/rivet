@@ -910,11 +910,15 @@ void PersistenceUpdater::store_multigrades(IndexMatrix* ind, bool low, std::vect
 // the boolean argument indicates whether an anchor is being crossed from below (or from above)
 unsigned long PersistenceUpdater::move_columns(xiMatrixEntry* first, xiMatrixEntry* second, bool from_below, MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH)
 {
-    ///DEBUGGING
-    if(first->low_index + second->low_class_size != second->low_index || first->high_index + second->high_class_size != second->high_index)
-    {
-        qDebug() << "  ===>>> ERROR: swapping non-consecutive column blocks!";
-    }
+//    ///DEBUGGING
+//    if(first->low_index + second->low_class_size != second->low_index || first->high_index + second->high_class_size != second->high_index)
+//    {
+//        qDebug() << "  ===>>> ERROR: swapping non-consecutive column blocks!";
+//    }
+//    if((first->x == 8 && second->y == 9) || (second->x == 8 && first->y == 9))
+//    {
+//        qDebug() << "at anchor (8,9)";
+//    }
 
     //get column indexes (so we know which columns to move)
     int low_col = first->low_index;   //rightmost column index of low simplices for the equivalence class to move
@@ -969,7 +973,6 @@ unsigned long PersistenceUpdater::move_columns(xiMatrixEntry* first, xiMatrixEnt
                 }
 
                 //associate cur_grade with target
-//UNUSED:                cur_grade->xi_entry = target;
                 target->insert_multigrade(cur_grade, true);
                 it = first->low_simplices.erase(it);    //NOTE: advances the iterator!!!
 
@@ -1027,7 +1030,6 @@ unsigned long PersistenceUpdater::move_columns(xiMatrixEntry* first, xiMatrixEnt
                 }
 
                 //associate cur_grade with target
-//UNUSED:                cur_grade->xi_entry = target;
                 target->insert_multigrade(cur_grade, false);
                 it = first->high_simplices.erase(it);    //NOTE: advances the iterator!!!
 
@@ -1053,6 +1055,15 @@ unsigned long PersistenceUpdater::move_columns(xiMatrixEntry* first, xiMatrixEnt
         first = from_below ? first->down : first->left;
     }//end while
 
+//    ///DEBUGGING
+//    if(second->low_index + first_head->low_class_size != first_head->low_index || second->high_index + first_head->high_class_size != first_head->high_index)
+//    {
+//        qDebug() << "  ===>>> ERROR: swap resulted in non-consecutive column blocks!";
+//    }
+//    if((first_head->x == 8 && second->y == 9) || (second->x == 8 && first_head->y == 9))
+//    {
+//        qDebug() << "at anchor (8,9)";
+//    }
     return swap_counter;
 }//end move_columns()
 
@@ -1066,6 +1077,11 @@ unsigned long PersistenceUpdater::move_columns_lazy(xiMatrixEntry* first, xiMatr
     {
         qDebug() << "  ===>>> ERROR: swapping non-consecutive column blocks!";
     }
+//    if((first->x == 8 && second->y == 9) || (second->x == 8 && first->y == 9))
+//    {
+
+//        qDebug() << "at anchor (8,9)";
+//    }
 
     //get column indexes (so we know which columns to move)
     int low_col = first->low_index;   //rightmost column index of low simplices for the equivalence class to move
@@ -1143,9 +1159,24 @@ unsigned long PersistenceUpdater::move_columns_lazy(xiMatrixEntry* first, xiMatr
         //advance to the next xiMatrixEntry in the first equivalence class
         if(cur_entry != first_bin)  //then look for the next entry in the equivalence class
         {
+            xiMatrixEntry* prev_entry = cur_entry;
             cur_entry = from_below ? cur_entry->down : cur_entry->left;
+
             if(cur_entry == NULL)   //then there is no next entry, so we must advance to the bin
             {
+                //if prev_entry is not an anchor, then we must check its other bin and move simplices from it (this corrects for the problem that occurs when crossing a non-anchor xi support point with nonempty bin)
+                xiMatrixEntry* other_direction = from_below ? prev_entry->left : prev_entry->down;
+                if(other_direction == NULL) //then prev_entry is not an anchor
+                {
+                    xiMatrixEntry* other_bin = from_below ? xi_matrix.get_row_bin(prev_entry->y) : xi_matrix.get_col_bin(prev_entry->x);
+                    if(other_bin->low_count > 0 || other_bin->high_count > 0)
+                    {
+//                        qDebug() << "       adjusting bins for (" << prev_entry->x << "," << prev_entry->y << ")";
+                        first_bin->move_bin_here(other_bin);
+                    }
+                }
+
+                //now we can advance to the bin in the correct direction
                 first_bin->low_index = second->low_index;       //set the bin indexes
                 first_bin->high_index = second->high_index;     //  to their new positions
                 cur_entry = first_bin;
@@ -1160,7 +1191,10 @@ unsigned long PersistenceUpdater::move_columns_lazy(xiMatrixEntry* first, xiMatr
     {
         qDebug() << "  ===>>> ERROR: swap resulted in non-consecutive column blocks!";
     }
-
+//    if((first->x == 8 && second->y == 9) || (second->x == 8 && first->y == 9))
+//    {
+//        qDebug() << "at anchor (8,9)";
+//    }
 
     return swap_counter;
 }//end move_columns_lazy()
@@ -1278,7 +1312,7 @@ unsigned long PersistenceUpdater::move_columns_from_bin_vertical(xiMatrixEntry* 
 //moves a block of n columns, the rightmost of which is column s, to a new position following column t (NOTE: assumes s <= t)
 unsigned long PersistenceUpdater::move_low_columns(int s, unsigned n, int t, MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH)
 {
-    qDebug() << "   --Transpositions for low simplices: [" << s << "," << n << "," << t << "]:" << (n*(t-s)) << "total";
+//    qDebug() << "   --Transpositions for low simplices: [" << s << "," << n << "," << t << "]:" << (n*(t-s)) << "total";
     if(s > t)
     {
         qDebug() << "    ===>>> ERROR: illegal column move";
@@ -1417,7 +1451,7 @@ unsigned long PersistenceUpdater::move_low_columns(int s, unsigned n, int t, Map
 //moves a block of n columns, the rightmost of which is column s, to a new position following column t (NOTE: assumes s <= t)
 unsigned long PersistenceUpdater::move_high_columns(int s, unsigned n, int t, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH)
 {
-    qDebug() << "   --Transpositions for high simplices: [" << s << "," << n << "," << t << "]:" << (n*(t-s)) << "total";
+//    qDebug() << "   --Transpositions for high simplices: [" << s << "," << n << "," << t << "]:" << (n*(t-s)) << "total";
     if(s > t)
     {
         qDebug() << "    ===>>> ERROR: illegal column move";

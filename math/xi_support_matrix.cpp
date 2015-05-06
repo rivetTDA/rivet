@@ -52,6 +52,7 @@ void xiMatrixEntry::move_bin_here(xiMatrixEntry* bin)
     //move high simplices
     for(std::list<Multigrade*>::iterator it = bin->high_simplices.begin(); it != bin->high_simplices.end(); ++it)
         high_simplices.push_back(*it);
+    bin->high_simplices.clear();
 
     //update counters
     low_count += bin->low_count;
