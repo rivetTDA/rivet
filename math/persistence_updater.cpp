@@ -182,15 +182,17 @@ void PersistenceUpdater::store_barcodes(std::vector<Halfedge*>& path)
 
     ///TEMPORARY: data structures for analyzing the computation
     unsigned long total_transpositions = 0;
-    std::vector<unsigned long> swap_counters(path.size(),0);
-    std::vector<int> crossing_times(path.size(),0);
+//    std::vector<unsigned long> swap_counters(path.size(),0);
+//    std::vector<int> crossing_times(path.size(),0);
+    unsigned long max_swaps = 0;
+    int max_time = 0;
 
     //traverse the path
     QTime steptimer;
     for(unsigned i=0; i<path.size(); i++)
     {
         steptimer.start();          //time update at each step of the path
-        unsigned long stepcounter = 0;   //counts number of transpositions at each step
+        unsigned long swap_counter = 0;   //counts number of transpositions at each step
 
         //determine which anchor is represented by this edge
         Anchor* cur_anchor = (path[i])->get_anchor();
@@ -232,7 +234,7 @@ void PersistenceUpdater::store_barcodes(std::vector<Halfedge*>& path)
                 remove_partition_entries(down);         //this partition will move
 
                 //now move the columns
-                stepcounter += move_columns(down, left, true, R_low, U_low, R_high, U_high);
+                swap_counter += move_columns(down, left, true, R_low, U_low, R_high, U_high);
 
                 //post-move updates to equivalance class info
                 if(at_anchor != NULL)  //this anchor is supported
@@ -266,7 +268,7 @@ void PersistenceUpdater::store_barcodes(std::vector<Halfedge*>& path)
                 remove_partition_entries(left);         //this partition will move
 
                 //now move the columns
-                stepcounter += move_columns(left, down, false, R_low, U_low, R_high, U_high);
+                swap_counter += move_columns(left, down, false, R_low, U_low, R_high, U_high);
 
                 //post-move updates to equivalance class info
                 if(at_anchor != NULL)  //this anchor is supported
@@ -359,12 +361,16 @@ void PersistenceUpdater::store_barcodes(std::vector<Halfedge*>& path)
 
         //print runtime data
         int step_time = steptimer.elapsed();
-        qDebug() << "    --> this step took" << step_time << "milliseconds and involved" << stepcounter << "transpositions";
+//        qDebug() << "    --> this step took" << step_time << "milliseconds and involved" << stepcounter << "transpositions";
 
         //store data for analysis
-        total_transpositions += stepcounter;
-        swap_counters[i] = stepcounter;
-        crossing_times[i] = step_time;
+        total_transpositions += swap_counter;
+//        swap_counters[i] = swap_counter;
+//        crossing_times[i] = step_time;
+        if(swap_counter > max_swaps)
+            max_swaps = swap_counter;
+        if(step_time > max_time)
+            max_time = step_time;
 
     }//end path traversal
 
@@ -372,9 +378,10 @@ void PersistenceUpdater::store_barcodes(std::vector<Halfedge*>& path)
     qDebug() << "  --> path traversal and persistence updates took" << timer.elapsed() << "milliseconds and involved" << total_transpositions << "transpositions";
 
     ///TEMPORARY
-    qDebug() << "DATA: number of transpositions and runtime for each crossing:";
-    for(unsigned i=0; i<swap_counters.size(); i++)
-        qDebug().nospace() << swap_counters[i] << ", " << crossing_times[i];
+//    qDebug() << "DATA: number of transpositions and runtime for each crossing:";
+//    for(unsigned i=0; i<swap_counters.size(); i++)
+//        qDebug().nospace() << swap_counters[i] << ", " << crossing_times[i];
+    qDebug() << "DATA: max number of swaps per crossing:" << max_swaps << "; max time per crossing:" << max_time;
 
 
   // PART 4: CLEAN UP
@@ -473,8 +480,10 @@ void PersistenceUpdater::store_barcodes_lazy(std::vector<Halfedge*>& path)
 
     ///TEMPORARY: data structures for analyzing the computation
     unsigned long total_transpositions = 0;
-    std::vector<unsigned long> swap_counters(path.size(),0);
-    std::vector<int> crossing_times(path.size(),0);
+//    std::vector<unsigned long> swap_counters(path.size(),0);
+//    std::vector<int> crossing_times(path.size(),0);
+    unsigned long max_swaps = 0;
+    int max_time = 0;
 
     //traverse the path
     QTime steptimer;
@@ -703,12 +712,16 @@ void PersistenceUpdater::store_barcodes_lazy(std::vector<Halfedge*>& path)
 
         //print runtime data
         int step_time = steptimer.elapsed();
-        qDebug() << "    --> this step took" << step_time << "milliseconds and involved" << swap_counter << "transpositions";
+//        qDebug() << "    --> this step took" << step_time << "milliseconds and involved" << swap_counter << "transpositions";
 
         //store data for analysis
         total_transpositions += swap_counter;
-        swap_counters[i] = swap_counter;
-        crossing_times[i] = step_time;
+//        swap_counters[i] = swap_counter;
+//        crossing_times[i] = step_time;
+        if(swap_counter > max_swaps)
+            max_swaps = swap_counter;
+        if(step_time > max_time)
+            max_time = step_time;
 
     }//end path traversal
 
@@ -716,9 +729,10 @@ void PersistenceUpdater::store_barcodes_lazy(std::vector<Halfedge*>& path)
     qDebug() << "  --> path traversal and persistence updates took" << timer.elapsed() << "milliseconds and involved" << total_transpositions << "transpositions";
 
     ///TEMPORARY
-    qDebug() << "DATA: number of transpositions and runtime for each crossing:";
-    for(unsigned i=0; i<swap_counters.size(); i++)
-        qDebug().nospace() << swap_counters[i] << ", " << crossing_times[i];
+//    qDebug() << "DATA: number of transpositions and runtime for each crossing:";
+//    for(unsigned i=0; i<swap_counters.size(); i++)
+//        qDebug().nospace() << swap_counters[i] << ", " << crossing_times[i];
+    qDebug() << "DATA: max number of swaps per crossing:" << max_swaps << "; max time per crossing:" << max_time;
 
 
   // PART 4: CLEAN UP

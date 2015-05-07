@@ -65,9 +65,8 @@ void xiMatrixEntry::move_bin_here(xiMatrixEntry* bin)
 /********** Multigrade **********/
 
 //constructor
-Multigrade::Multigrade(unsigned x, unsigned y, unsigned num_cols, int simplex_index, xiMatrixEntry *xi) :
+Multigrade::Multigrade(unsigned x, unsigned y, unsigned num_cols, int simplex_index) :
     x(x), y(y), num_cols(num_cols), simplex_index(simplex_index)
-  //UNUSED: xi_entry(xi)
 { }
 
 //comparator for sorting Multigrades (reverse) lexicographically

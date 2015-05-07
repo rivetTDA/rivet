@@ -96,6 +96,7 @@ void Mesh::build_arrangement(MultiBetti& mb, std::vector<xiPoint>& xi_pts)
     timer.start();
     build_interior();
     qDebug() << "  --> building the interior of the line arrangement took" << timer.elapsed() << "milliseconds";
+    print_stats();
 
     //now that the arrangement is constructed, we can find a path -- NOTE: path starts with a (near-vertical) line to the right of all multigrades
     std::vector<Halfedge*> path;
@@ -104,8 +105,8 @@ void Mesh::build_arrangement(MultiBetti& mb, std::vector<xiPoint>& xi_pts)
     qDebug() << "  --> finding the path took" << timer.elapsed() << "milliseconds";
 
     //finally, we can traverse the path, computing and storing a barcode template in each 2-cell
-    updater.store_barcodes_lazy(path);
-    //updater.store_barcodes(path);
+    //updater.store_barcodes_lazy(path);
+    updater.store_barcodes(path);
 
 }//end build_arrangement()
 
