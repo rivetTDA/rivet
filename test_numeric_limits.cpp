@@ -20,8 +20,17 @@ int main () {
   minus -= 3;
     std::cout << "  -2: " << minus << "\n";
 
-   
-    
-    
+  std::cout << "Maximum value for int: " << std::numeric_limits<int>::max() << '\n';
+  std::cout << "Maximum value for long int: " << std::numeric_limits<long int>::max() << '\n';
+  std::cout << "Maximum value for unsigned long: " << std::numeric_limits<unsigned long>::max() << '\n';
+  
+  int a = 100000000;
+  int b = 200000000;
+  int prod = a*b;
+  std::cout << "int a = " << a << "; b = " << b << "; ab = " << prod << "\n";
+  unsigned long lprod = static_cast<unsigned long>(a) * static_cast<unsigned long>(b);  // (long int) a*(long int) b;
+  std::cout << "long product " << lprod << "\n";
+
+  
   return 0;
 }

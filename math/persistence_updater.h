@@ -23,8 +23,11 @@ class PersistenceUpdater
 
         void find_anchors(); //computes anchors and stores them in mesh->all_anchors; anchor-lines will be created when mesh->build_interior() is called
 
-        void store_barcodes(std::vector<Halfedge *> &path);     //computes and stores a barcode template in each 2-cell of mesh
-        void store_barcodes_lazy(std::vector<Halfedge*>& path); //computes and stores barcode templates using lazy updates
+        //functions to compute and store barcode templates in each 2-cell of the mesh
+        void store_barcodes(std::vector<Halfedge *> &path);             //standard algorithm with non-lazy swaps
+        void store_barcodes_lazy(std::vector<Halfedge*>& path);         //uses lazy updates and unsorted "bins" for each row and column
+        void store_barcodes_with_reset(std::vector<Halfedge*>& path);   //resets the matrices and does a standard persistence calculation for expensive crossings
+
 
     private:
       //data structures

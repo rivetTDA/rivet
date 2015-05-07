@@ -394,6 +394,7 @@ void PersistenceUpdater::store_barcodes(std::vector<Halfedge*>& path)
 }//end store_barcodes()
 
 //computes and stores barcode templates using lazy updates
+//uses lazy updates and unsorted "bins" for each row and column
 void PersistenceUpdater::store_barcodes_lazy(std::vector<Halfedge*>& path)
 {
     QTime timer;    //for timing the computations
@@ -743,6 +744,255 @@ void PersistenceUpdater::store_barcodes_lazy(std::vector<Halfedge*>& path)
     delete U_high;
 
 }//end store_barcodes_lazy()
+
+//computes and stores a barcode template in each 2-cell of mesh
+//resets the matrices and does a standard persistence calculation for expensive crossings
+void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path)
+{
+    QTime timer;    //for timing the computations
+
+    // PART 1: GET THE BOUNDARY MATRICES WITH PROPER SIMPLEX ORDERING
+
+    timer.start();
+
+    //get multi-grade data in each dimension
+    if(mesh->verbosity >= 6) { qDebug() << "  Mapping low simplices:"; }
+    IndexMatrix* ind_low = bifiltration->get_index_mx(dim);    //can we improve this with something more efficient than IndexMatrix?
+    std::vector<int> low_simplex_order;     //this will be a map : dim_index --> order_index for dim-simplices
+    store_multigrades(ind_low, true, low_simplex_order);
+    delete ind_low;
+
+    if(mesh->verbosity >= 6) { qDebug() << "  Mapping high simplices:"; }
+    IndexMatrix* ind_high = bifiltration->get_index_mx(dim + 1);    //again, could be improved?
+    std::vector<int> high_simplex_order;     //this will be a map : dim_index --> order_index for (dim+1)-simplices
+    store_multigrades(ind_high, false, high_simplex_order);
+    delete ind_high;
+
+    //testing only
+//    std::cout << "== low_simplex_order: ";
+//    for(int i=0; i<low_simplex_order.size(); i++)
+//        std::cout << low_simplex_order[i] << ", ";
+//    std::cout << "\n== high_simplex_order: ";
+//    for(int i=0; i<high_simplex_order.size(); i++)
+//        std::cout << high_simplex_order[i] << ", ";
+//    std::cout << "\n";
+
+    //get boundary matrices (R) and identity matrices (U) for RU-decomposition
+    MapMatrix_Perm* R_low = bifiltration->get_boundary_mx(low_simplex_order);
+    MapMatrix_Perm* R_high = bifiltration->get_boundary_mx(low_simplex_order, high_simplex_order);
+
+    //print runtime data
+    qDebug() << "  --> computing initial order on simplices and building the boundary matrices took" << timer.elapsed() << "milliseconds";
+
+
+  // PART 2: INITIAL PERSISTENCE COMPUTATION (RU-decomposition)
+
+    timer.start();
+
+    MapMatrix_RowPriority_Perm* U_low = R_low->decompose_RU();
+    MapMatrix_RowPriority_Perm* U_high = R_high->decompose_RU();
+
+    qDebug() << "  --> computing the RU decomposition took" << timer.elapsed() << "milliseconds";
+
+    //store the barcode template in the first cell
+    Face* first_cell = mesh->topleft->get_twin()->get_face();
+    store_barcode_template(first_cell, R_low, R_high);
+
+    qDebug() << "Initial persistence computation in cell " << mesh->FID(first_cell);
+
+
+  // PART 3: TRAVERSE THE PATH AND DO VINEYARD UPDATES
+
+    qDebug() << "TRAVERSING THE PATH USING THE RESET ALGORITHM: path has" << path.size() << "steps";
+    qDebug() << "                              ^^^^^^^^^^^^^^^";
+
+    ///TODO: set the threshold dynamically
+    unsigned long threshold = 10000000;     //if the number of swaps might exceed this threshold, then do a persistence calculation from scratch
+    qDebug() << "reset threshold set to" << threshold;
+
+    timer.start();
+
+    ///TEMPORARY: data structures for analyzing the computation
+    unsigned long total_transpositions = 0;
+//    std::vector<unsigned long> swap_counters(path.size(),0);
+//    std::vector<int> crossing_times(path.size(),0);
+    unsigned long max_swaps = 0;
+    int max_time = 0;
+
+    //traverse the path
+    QTime steptimer;
+    for(unsigned i=0; i<path.size(); i++)
+    {
+        steptimer.start();          //time update at each step of the path
+        unsigned long swap_counter = 0;   //counts number of transpositions at each step
+
+        //determine which anchor is represented by this edge
+        Anchor* cur_anchor = (path[i])->get_anchor();
+
+        qDebug() << "  step" << i << "of path: crossing anchor at ("<< cur_anchor->get_x() << "," << cur_anchor->get_y() << ") into cell" << mesh->FID((path[i])->get_face());
+
+        //get equivalence classes for this anchor
+        xiMatrixEntry* down = cur_anchor->get_down();
+        xiMatrixEntry* left = cur_anchor->get_left();
+
+        //if this is a strict anchor, then swap simplices
+        if(left != NULL) //then this is a strict anchor and some simplices swap
+        {
+            xiMatrixEntry* at_anchor = NULL;   //remains NULL iff this anchor is not supported
+
+            if(down == NULL)    //then this is also a supported anchor
+            {
+                at_anchor = left;
+                down = left->down;
+                left = left->left;
+            }//now down and left are correct (and should not be NULL)
+
+            //estimate how many swaps will occur
+            unsigned long swap_estimate = static_cast<unsigned long>(left->low_class_size) * static_cast<unsigned long>(down->low_class_size)
+                    + static_cast<unsigned long>(left->high_class_size) * static_cast<unsigned long>(down->high_class_size);
+
+            //process the swaps
+            if(cur_anchor->is_above()) //then anchor is crossed from below to above
+            {
+                if(mesh->verbosity >= 9) { qDebug() << " == strict anchor crossed below to above =="; }
+
+                //pre-move updates to equivalence class info
+                if(at_anchor != NULL)  //this anchor is supported
+                {
+                    left->low_index = at_anchor->low_index - at_anchor->low_count;                //necessary since low_index, low_class_size,
+                    left->low_class_size = at_anchor->low_class_size - at_anchor->low_count;      //  high_index, and high_class_size
+                    left->high_index = at_anchor->high_index - at_anchor->high_count;             //  are only reliable for the head
+                    left->high_class_size = at_anchor->high_class_size - at_anchor->high_count;   //  of each equivalence class
+                    remove_partition_entries(at_anchor);   //this partition might become empty
+                }
+                else    //this anchor is not supported
+                    remove_partition_entries(left);     //this partition will move
+
+                remove_partition_entries(down);         //this partition will move
+
+                //now move the columns
+                swap_counter += move_columns(down, left, true, R_low, U_low, R_high, U_high);
+
+                //post-move updates to equivalance class info
+                if(at_anchor != NULL)  //this anchor is supported
+                {
+                    at_anchor->low_class_size = at_anchor->low_count + down->low_class_size;
+                    at_anchor->high_class_size = at_anchor->high_count + down->high_class_size;
+                    down->low_class_size = -1;  //this xiMatrixEntry is no longer the head of an equivalence class
+                    add_partition_entries(at_anchor);
+                }
+                else    //this anchor is not supported
+                    add_partition_entries(down);
+
+                add_partition_entries(left);
+            }
+            else    //then anchor is crossed from above to below
+            {
+                if(mesh->verbosity >= 9) { qDebug() << " == strict anchor crossed above to below =="; }
+
+                //pre-move updates to equivalence class info
+                if(at_anchor != NULL)
+                {
+                    down->low_index = at_anchor->low_index - at_anchor->low_count;                //necessary since low_index, low_class_size,
+                    down->low_class_size = at_anchor->low_class_size - at_anchor->low_count;      //  high_index, and high_class_size
+                    down->high_index = at_anchor->high_index - at_anchor->high_count;             //  are only reliable for the head
+                    down->high_class_size = at_anchor->high_class_size - at_anchor->high_count;   //  of each equivalence class
+                    remove_partition_entries(at_anchor);   //this partition might become empty
+                }
+                else    //this anchor is not supported
+                    remove_partition_entries(down);     //this partition will move
+
+                remove_partition_entries(left);         //this partition will move
+
+                //now move the columns
+                swap_counter += move_columns(left, down, false, R_low, U_low, R_high, U_high);
+
+                //post-move updates to equivalance class info
+                if(at_anchor != NULL)  //this anchor is supported
+                {
+                    at_anchor->low_class_size = at_anchor->low_count + left->low_class_size;
+                    at_anchor->high_class_size = at_anchor->high_count + left->high_class_size;
+                    left->low_class_size = -1;  //this xiMatrixEntry is no longer the head of an equivalence class
+                    add_partition_entries(at_anchor);
+                }
+                else    //this anchor is not supported
+                    add_partition_entries(left);
+
+                add_partition_entries(down);
+            }
+        }
+        else    //then this is a supported, non-strict anchor, and we just have to split or merge equivalence classes
+        {
+            xiMatrixEntry* at_anchor = down;
+            xiMatrixEntry* generator = at_anchor->down;
+            if(generator == NULL)
+                generator = at_anchor->left;
+
+            if(generator->low_class_size != -1)    //then merge classes
+            {
+                at_anchor->low_class_size = at_anchor->low_count + generator->low_class_size;
+                at_anchor->high_class_size = at_anchor->high_count + generator->high_class_size;
+                generator->low_class_size = -1;    //indicates that this xiMatrixEntry is NOT the head of an equivalence class
+
+                remove_partition_entries(generator);
+                add_partition_entries(at_anchor);  //this is necessary in case the class was previously empty
+            }
+            else    //then split classes
+            {
+                generator->low_index = at_anchor->low_index - at_anchor->low_count;
+                generator->low_class_size = at_anchor->low_class_size - at_anchor->low_count;
+                at_anchor->low_class_size = at_anchor->low_count;
+                generator->high_index = at_anchor->high_index - at_anchor->high_count;
+                generator->high_class_size = at_anchor->high_class_size - at_anchor->high_count;
+                at_anchor->high_class_size = at_anchor->high_count;
+
+                remove_partition_entries(at_anchor);   //this is necessary because the class corresponding
+                add_partition_entries(at_anchor);      //  to at_anchor might have become empty
+                add_partition_entries(generator);
+            }
+        }
+
+        //remember that we have crossed this anchor
+        cur_anchor->toggle();
+
+        //if this cell does not yet have a barcode template, then store it now
+        Face* cur_face = (path[i])->get_face();
+        if(!cur_face->has_been_visited())
+            store_barcode_template(cur_face, R_low, R_high);
+
+        //print runtime data
+        int step_time = steptimer.elapsed();
+//        qDebug() << "    --> this step took" << step_time << "milliseconds and involved" << stepcounter << "transpositions";
+
+        //store data for analysis
+        total_transpositions += swap_counter;
+//        swap_counters[i] = swap_counter;
+//        crossing_times[i] = step_time;
+        if(swap_counter > max_swaps)
+            max_swaps = swap_counter;
+        if(step_time > max_time)
+            max_time = step_time;
+
+    }//end path traversal
+
+    //print runtime data
+    qDebug() << "  --> path traversal and persistence updates took" << timer.elapsed() << "milliseconds and involved" << total_transpositions << "transpositions";
+
+    ///TEMPORARY
+//    qDebug() << "DATA: number of transpositions and runtime for each crossing:";
+//    for(unsigned i=0; i<swap_counters.size(); i++)
+//        qDebug().nospace() << swap_counters[i] << ", " << crossing_times[i];
+    qDebug() << "DATA: max number of swaps per crossing:" << max_swaps << "; max time per crossing:" << max_time;
+
+
+  // PART 4: CLEAN UP
+
+    delete R_low;
+    delete R_high;
+    delete U_low;
+    delete U_high;
+
+}//end store_barcodes_with_reset()
 
 
 //stores multigrade info for the persistence computations (data structures prepared with respect to a near-vertical line positioned to the right of all \xi support points)
