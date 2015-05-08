@@ -866,9 +866,9 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path)
                     remove_partition_entries(at_anchor);   //this partition might become empty
                 }
                 else    //this anchor is not supported
-                    remove_partition_entries(left);     //this partition will move
+                    remove_partition_entries(left);     //this block of the partition will move
 
-                remove_partition_entries(down);         //this partition will move
+                remove_partition_entries(down);         //this block of the partition will move
 
                 //now move the columns
                 swap_counter += move_columns(down, left, true, R_low, U_low, R_high, U_high);
@@ -882,9 +882,9 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path)
                     add_partition_entries(at_anchor);
                 }
                 else    //this anchor is not supported
-                    add_partition_entries(down);
+                    add_partition_entries(down);        //this block of the partition moved
 
-                add_partition_entries(left);
+                add_partition_entries(left);            //this block of the partition moved
             }
             else    //then anchor is crossed from above to below
             {
@@ -900,9 +900,9 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path)
                     remove_partition_entries(at_anchor);   //this partition might become empty
                 }
                 else    //this anchor is not supported
-                    remove_partition_entries(down);     //this partition will move
+                    remove_partition_entries(down);     //this block of the partition will move
 
-                remove_partition_entries(left);         //this partition will move
+                remove_partition_entries(left);         //this block of the partition will move
 
                 //now move the columns
                 swap_counter += move_columns(left, down, false, R_low, U_low, R_high, U_high);
@@ -916,9 +916,9 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path)
                     add_partition_entries(at_anchor);
                 }
                 else    //this anchor is not supported
-                    add_partition_entries(left);
+                    add_partition_entries(left);        //this block of the partition moved
 
-                add_partition_entries(down);
+                add_partition_entries(down);            //this block of the partition moved
             }
         }
         else    //then this is a supported, non-strict anchor, and we just have to split or merge equivalence classes
@@ -1179,10 +1179,6 @@ unsigned long PersistenceUpdater::move_columns(xiMatrixEntry* first, xiMatrixEnt
 //    {
 //        qDebug() << "  ===>>> ERROR: swapping non-consecutive column blocks!";
 //    }
-//    if((first->x == 8 && second->y == 9) || (second->x == 8 && first->y == 9))
-//    {
-//        qDebug() << "at anchor (8,9)";
-//    }
 
     //get column indexes (so we know which columns to move)
     int low_col = first->low_index;   //rightmost column index of low simplices for the equivalence class to move
@@ -1323,10 +1319,6 @@ unsigned long PersistenceUpdater::move_columns(xiMatrixEntry* first, xiMatrixEnt
 //    if(second->low_index + first_head->low_class_size != first_head->low_index || second->high_index + first_head->high_class_size != first_head->high_index)
 //    {
 //        qDebug() << "  ===>>> ERROR: swap resulted in non-consecutive column blocks!";
-//    }
-//    if((first_head->x == 8 && second->y == 9) || (second->x == 8 && first_head->y == 9))
-//    {
-//        qDebug() << "at anchor (8,9)";
 //    }
     return swap_counter;
 }//end move_columns()
@@ -1805,6 +1797,120 @@ unsigned long PersistenceUpdater::move_high_columns(int s, unsigned n, int t, Ma
 
     return n*(t-s);
 }//end move_high_columns()
+
+//swaps two blocks of columns by updating the total order on columns, then rebuilding the matrices and computing a new RU-decomposition
+void PersistenceUpdater::update_order_and_reset_matrices(xiMatrixEntry* first, xiMatrixEntry* second, bool from_below, MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH)
+{
+  //STEP 1: update the lift map for all multigrades, storing the current column index for each multigrade
+
+    //get column indexes (so we know which columns to move)
+    int low_col = first->low_index;   //rightmost column index of low simplices for the equivalence class to move
+    int high_col = first->high_index; //rightmost column index of high simplices for the equivalence class to move
+
+    //set column indexes for the first class to their final position
+    first->low_index = second->low_index;
+    first->high_index = second->high_index;
+
+    //loop over all xiMatrixEntrys in the first equivalence class
+    xiMatrixEntry* cur_entry = first;
+    while(cur_entry != NULL)
+    {
+        //move all "low" simplices for this xiMatrixEntry (start with rightmost column, end with leftmost)
+        for(std::list<Multigrade*>::iterator it = first->low_simplices.begin(); it != first->low_simplices.end(); ) //NOTE: iterator advances in loop
+        {
+            Multigrade* cur_grade = *it;
+
+            //remember current position of this grade
+            cur_grade->simplex_index = ???
+
+            ///TODO: improve this!
+            if( (from_below && cur_grade->x > second->x) || (!from_below && cur_grade->y > second->y) )
+                //then move columns at cur_grade past columns at xiMatrixEntry second; lift map does not change ( lift : multigrades --> xiSupportElements )
+            {
+                ///FIX THIS: swap_counter += move_low_columns(low_col, cur_grade->num_cols, second->low_index, RL, UL, RH, UH);
+                second->low_index -= cur_grade->num_cols;
+                ++it;
+            }
+            else    //then move columns at cur_grade to some position in the equivalence class given by xiMatrixEntry second; lift map changes
+            {
+                //determine the new lift map for these columns
+                xiMatrixEntry* target = second;
+                int target_col = second->low_index - second->low_count;
+                if(from_below)
+                {
+                    while( (target->left != NULL) && (cur_grade->x <= target->left->x) )
+                    {
+                        target = target->left;
+                        target_col -= target->low_count;
+                    }
+                }
+                else
+                {
+                    while( (target->down != NULL) && (cur_grade->y <= target->down->y) )
+                    {
+                        target = target->down;
+                        target_col -= target->low_count;
+                    }
+                }
+
+                //associate cur_grade with target
+                target->insert_multigrade(cur_grade, true);
+                it = first->low_simplices.erase(it);    //NOTE: advances the iterator!!!
+
+                //if target is not the leftmost entry in its equivalence class, then move columns at cur_grade to the block of columns for target
+                if( (from_below && target->left != NULL) || (!from_below && target->down != NULL) )
+                    ///FIX THIS: swap_counter += move_low_columns(low_col, cur_grade->num_cols, target_col, RL, UL, RH, UH);
+                //else, then the columns don't actually have to move
+
+                //update column counts
+                first->low_count -= cur_grade->num_cols;
+                target->low_count += cur_grade->num_cols;
+
+                //update equivalence class sizes
+                first_head->low_class_size -= cur_grade->num_cols;
+                second->low_class_size += cur_grade->num_cols;
+            }
+
+            //update column index
+            low_col -= cur_grade->num_cols;
+        }//end "low" simplex loop
+
+        ///TODO: high simplices
+
+
+
+        //advance to the next xiMatrixEntry in the first equivalence class
+        cur_entry = from_below ? cur_entry->down : cur_entry->left;
+    }
+
+
+  //STEP 2: traverse grades in the new order and build the new order on matrix columns
+
+
+    //re-build the matrix R based on the new order
+
+
+    //compute the new RU-decomposition
+
+
+}//end update_order_and_reset_matrices()
+
+//swaps two blocks of columns by using a quicksort to update the matrices, then fixing the RU-decomposition (Gaussian elimination on U followed by reduction of R)
+void PersistenceUpdater::quicksort_and_reduce(xiMatrixEntry* first, xiMatrixEntry* second, bool from_below, MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH)
+{
+    //update the lift map for all multigrades, storing the current column index for each multigrade
+
+
+    //traverse grades in the new order and build the new order on matrix columns
+
+
+    //quicksort the columns to put them in the new order, updating the permutation
+
+
+    //re-build the matrix R based on the new
+
+
+}//end quicksort_and_reduce()
 
 //removes entries corresponding to xiMatrixEntry head from partition_low and partition_high
 void PersistenceUpdater::remove_partition_entries(xiMatrixEntry* head)

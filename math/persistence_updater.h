@@ -24,9 +24,11 @@ class PersistenceUpdater
         void find_anchors(); //computes anchors and stores them in mesh->all_anchors; anchor-lines will be created when mesh->build_interior() is called
 
         //functions to compute and store barcode templates in each 2-cell of the mesh
+        //there are four options here, and it isn't yet clear which is best
         void store_barcodes(std::vector<Halfedge *> &path);             //standard algorithm with non-lazy swaps
         void store_barcodes_lazy(std::vector<Halfedge*>& path);         //uses lazy updates and unsorted "bins" for each row and column
-        void store_barcodes_with_reset(std::vector<Halfedge*>& path);   //resets the matrices and does a standard persistence calculation for expensive crossings
+        void store_barcodes_with_reset(std::vector<Halfedge*>& path);   //hybrid approach -- for expensive crossings, resets the matrices and does a standard persistence calculation
+        void store_barcodes_quicksort(std::vector<Halfedge*>& path);    //hybrid approach -- for expensive crossings, rearranges columns via quicksort and fixes the RU-decomposition globally
 
 
     private:
@@ -76,6 +78,14 @@ class PersistenceUpdater
         //moves a block of n columns, the rightmost of which is column s, to a new position following column t (NOTE: assumes s <= t)
         //  returns a count of the number of transpositions performed
         unsigned long move_high_columns(int s, unsigned n, int t, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH);
+
+        //swaps two blocks of columns by updating the total order on columns, then rebuilding the matrices and computing a new RU-decomposition
+        ///TODO: FINISH THIS!
+        void update_order_and_reset_matrices(xiMatrixEntry* first, xiMatrixEntry* second, bool from_below, MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH);
+
+        //swaps two blocks of columns by using a quicksort to update the matrices, then fixing the RU-decomposition (Gaussian elimination on U followed by reduction of R)
+        ///TODO: IMPLEMENT THIS!
+        void quicksort_and_reduce(xiMatrixEntry* first, xiMatrixEntry* second, bool from_below, MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH);
 
         //removes entries corresponding to xiMatrixEntry head from partition_low and partition_high
         void remove_partition_entries(xiMatrixEntry* head);
