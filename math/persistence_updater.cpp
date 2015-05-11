@@ -2359,6 +2359,7 @@ void PersistenceUpdater::update_order_and_reset_matrices(xiMatrixEntry* first, x
     high_col = first->high_index;
     bool processing_first_block = true;
 
+    //loop over xiMatrixEntrys that have simplices which move
     while(cur_entry != NULL)
     {
         //update positions of "low" simplices for this entry
@@ -2374,8 +2375,6 @@ void PersistenceUpdater::update_order_and_reset_matrices(xiMatrixEntry* first, x
             }
         }
 
-
-
         //update positions of "high" simplices for this entry
         for(std::list<Multigrade*>::iterator it = cur_entry->high_simplices.begin(); it != cur_entry->high_simplices.end(); ++it)
         {
@@ -2388,8 +2387,6 @@ void PersistenceUpdater::update_order_and_reset_matrices(xiMatrixEntry* first, x
                 high_col--;
             }
         }
-
-
 
         //move to next entry
         if(processing_first_block)
@@ -2405,8 +2402,12 @@ void PersistenceUpdater::update_order_and_reset_matrices(xiMatrixEntry* first, x
             cur_entry = from_below ? cur_entry->left : cur_entry->down;
     }//end while
 
-TODO: MUST UPDATE inv_perm_low!
-TODO: MUST UPDATE inv_perm_high!
+    //fix inverse permutation vectors -- is there a better way to do this?
+    for(unsigned i=0; i < perm_low.size(); i++)
+        inv_perm_low[perm_low[i]] = i;
+    for(unsigned i=0; i < perm_high.size(); i++)
+        inv_perm_high[perm_high[i]] = i;
+
 
   //STEP 3: re-build the matrix R based on the new order
 
