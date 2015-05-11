@@ -21,12 +21,12 @@ void xiMatrixEntry::add_multigrade(unsigned x, unsigned y, unsigned num_cols, in
 {
     if(low)
     {
-        low_simplices.push_back(new Multigrade(x, y, num_cols, index, this));
+        low_simplices.push_back(new Multigrade(x, y, num_cols, index));
         low_count += num_cols;
     }
     else
     {
-        high_simplices.push_back(new Multigrade(x, y, num_cols, index, this));
+        high_simplices.push_back(new Multigrade(x, y, num_cols, index));
         high_count += num_cols;
     }
 }

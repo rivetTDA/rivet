@@ -34,8 +34,8 @@ class MapMatrix_Base {
         MapMatrix_Base(unsigned size);                 //constructor to create a (square) identity matrix
         virtual ~MapMatrix_Base();                             //destructor
 
-        virtual unsigned width();				//returns the number of columns in the matrix
-        virtual unsigned height();				//returns the number of rows in the matrix
+        virtual unsigned width() const;				//returns the number of columns in the matrix
+        virtual unsigned height() const;				//returns the number of rows in the matrix
 
         virtual void set(unsigned i, unsigned j);       //sets (to 1) the entry in row i, column j
         virtual void clear(unsigned i, unsigned j);     //clears (sets to 0) the entry in row i, column j
@@ -70,8 +70,8 @@ class MapMatrix : public MapMatrix_Base
         MapMatrix(unsigned size);                 //constructor to create a (square) identity matrix
         virtual ~MapMatrix();                             //destructor
 		
-        unsigned width();               //returns the number of columns in the matrix
-        unsigned height();              //returns the number of rows in the matrix
+        unsigned width() const;               //returns the number of columns in the matrix
+        unsigned height() const;              //returns the number of rows in the matrix
 		
         virtual void set(unsigned i, unsigned j);       //sets (to 1) the entry in row i, column j
         virtual bool entry(unsigned i, unsigned j);     //returns true if entry (i,j) is 1, false otherwise
@@ -95,6 +95,7 @@ class MapMatrix_Perm : public MapMatrix
     public:
         MapMatrix_Perm(unsigned rows, unsigned cols);
         MapMatrix_Perm(unsigned size);
+        MapMatrix_Perm(const MapMatrix_Perm& other);    //copy constructor
         ~MapMatrix_Perm();
 
         void set(unsigned i, unsigned j);       //sets (to 1) the entry in row i, column j
@@ -108,6 +109,8 @@ class MapMatrix_Perm : public MapMatrix
 
         void swap_rows(unsigned i, bool update_lows);     //transposes rows i and i+1, optionally updates low array
         void swap_columns(unsigned j, bool update_lows);  //transposes columns j and j+1, optionally updates low array
+
+        void rebuild(MapMatrix_Perm* reference, std::vector<unsigned>& col_order);   //clears the matrix, then rebuilds it from reference with columns permuted according to col_order
 
       ///FOR TESTING ONLY
         virtual void print();       //prints the matrix to standard output (for testing)
@@ -130,8 +133,8 @@ class MapMatrix_RowPriority_Perm: public MapMatrix_Base
         MapMatrix_RowPriority_Perm(unsigned size);   //constructs the identity matrix of specified size
         ~MapMatrix_RowPriority_Perm();
 
-        unsigned width();				//returns the number of columns in the matrix
-        unsigned height();				//returns the number of rows in the matrix
+        unsigned width() const;				//returns the number of columns in the matrix
+        unsigned height() const;				//returns the number of rows in the matrix
 
         void set(unsigned i, unsigned j);       //sets (to 1) the entry in row i, column j
         void clear(unsigned i, unsigned j);     //clears (sets to 0) the entry in row i, column j

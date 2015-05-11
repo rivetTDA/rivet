@@ -62,13 +62,13 @@ MapMatrix_Base::~MapMatrix_Base()
 }
 
 //returns the number of columns in the matrix
-unsigned MapMatrix_Base::width()
+unsigned MapMatrix_Base::width() const
 {
     return columns.size();
 }
 
 //returns the number of rows in the matrix
-unsigned MapMatrix_Base::height()
+unsigned MapMatrix_Base::height() const
 {
     return num_rows;
 }
@@ -323,13 +323,13 @@ MapMatrix::~MapMatrix()
 { }
 
 //returns the number of columns in the matrix
-unsigned MapMatrix::width()
+unsigned MapMatrix::width() const
 {
     return MapMatrix_Base::width();
 }
 
 //returns the number of rows in the matrix
-unsigned MapMatrix::height()
+unsigned MapMatrix::height() const
 {
     return MapMatrix_Base::height();
 }
@@ -556,6 +556,34 @@ MapMatrix_Perm::MapMatrix_Perm(unsigned size) :
     }
 }
 
+//copy constructor
+MapMatrix_Perm::MapMatrix_Perm(const MapMatrix_Perm& other) :
+    MapMatrix(other.height(), other.width()),
+    perm(other.perm), mrep(other.mrep), low_by_row(other.low_by_row), low_by_col(other.low_by_col)
+{
+    //copy all matrix entries
+    for(unsigned j=0; j<other.width(); j++)
+    {
+        MapMatrixNode* other_node = other.columns[j];
+        if(other_node != NULL)
+        {
+            //create the first node in this column
+            MapMatrixNode* cur_node = new MapMatrixNode(other_node->get_row());
+            columns[j] = cur_node;
+
+            //create all other nodes in this column
+            other_node = other_node->get_next();
+            while(other_node != NULL)
+            {
+                MapMatrixNode* new_node = new MapMatrixNode(other_node->get_row());
+                cur_node->set_next(new_node);
+                cur_node = new_node;
+                other_node = other_node->get_next();
+            }
+        }
+    }
+}
+
 MapMatrix_Perm::~MapMatrix_Perm()
 { }
 
@@ -623,7 +651,7 @@ void MapMatrix_Perm::swap_rows(unsigned i, bool update_lows)
     unsigned b = mrep[i+1];
 
     //swap entries in permutation and inverse permutation arrays
-    unsigned temp = perm[a];
+    unsigned temp = perm[a];    ///TODO: why do I do this? isn't temp == i?
     perm[a] = perm[b];
     perm[b] = temp;
 
@@ -675,6 +703,71 @@ void MapMatrix_Perm::swap_columns(unsigned j, bool update_lows)
 //    col_perm[j] = col_perm[j+1];
 //    col_perm[j+1] = a;
 }
+
+//clears the matrix, then rebuilds it from reference with columns permuted according to col_order
+//  NOTE: reference should have the same size as this matrix!
+//  col_order is a map: (column index in reference matrix) -> (column index in rebuilt matrix
+void MapMatrix_Perm::rebuild(MapMatrix_Perm* reference, std::vector<unsigned>& col_order)
+{
+    ///TESTING: check the permutation
+    std::vector<bool> check(columns.size(), false);
+    for(unsigned j=0; j < columns.size(); j++)
+        check[col_order[j]] = true;
+    for(unsigned j=0; j < columns.size(); j++)
+        if(check[j] == false)
+        {
+            qDebug() << "ERROR: column permutation skipped" << j;
+        }
+
+    //clear the matrix
+    for(unsigned j=0; j < columns.size(); j++)
+    {
+        MapMatrixNode* current = columns[j];
+        while(current != NULL)
+        {
+            MapMatrixNode* next = current->get_next();
+            delete current;
+            current = next;
+        }
+    }
+
+    //reset low arrays
+    for(unsigned i=0; i < num_rows; i++)
+        low_by_row[i] = -1;
+    for(unsigned j=0; j < columns.size(); j++)
+        low_by_col[j] = -1;
+
+    //reset permutation vectors
+    for(unsigned i=0; i < num_rows; i++)
+    {
+        perm[i] = i;
+        mrep[i] = i;
+    }
+
+    //build the new matrix
+    for(unsigned j=0; j < columns.size(); j++)
+    {
+        //copy column j from reference into column col_order[j] of this matrix
+        MapMatrixNode* ref_node = reference->columns[j];
+        if(ref_node != NULL)
+        {
+            //create the first node in this column
+            MapMatrixNode* cur_node = new MapMatrixNode(ref_node->get_row());
+            columns[col_order[j]] = cur_node;
+
+            //create all other nodes in this column
+            ref_node = ref_node->get_next();
+            while(ref_node != NULL)
+            {
+                MapMatrixNode* new_node = new MapMatrixNode(ref_node->get_row());
+                cur_node->set_next(new_node);
+                cur_node = new_node;
+                ref_node = ref_node->get_next();
+            }
+        }
+    }
+}//end rebuild()
+
 
 //function to print the matrix to standard output, for testing purposes
 void MapMatrix_Perm::print()
@@ -792,12 +885,12 @@ MapMatrix_RowPriority_Perm::MapMatrix_RowPriority_Perm(unsigned size) :
 MapMatrix_RowPriority_Perm::~MapMatrix_RowPriority_Perm()
 { }
 
-unsigned MapMatrix_RowPriority_Perm::width()
+unsigned MapMatrix_RowPriority_Perm::width() const
 {
     return MapMatrix_Base::height();
 }
 
-unsigned MapMatrix_RowPriority_Perm::height()
+unsigned MapMatrix_RowPriority_Perm::height() const
 {
     return MapMatrix_Base::width();
 }
