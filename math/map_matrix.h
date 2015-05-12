@@ -111,6 +111,7 @@ class MapMatrix_Perm : public MapMatrix
         void swap_columns(unsigned j, bool update_lows);  //transposes columns j and j+1, optionally updates low array
 
         void rebuild(MapMatrix_Perm* reference, std::vector<unsigned>& col_order);   //clears the matrix, then rebuilds it from reference with columns permuted according to col_order
+        void rebuild(MapMatrix_Perm* reference, std::vector<unsigned>& col_order, std::vector<unsigned>& row_order);   //clears the matrix, then rebuilds it from reference with columns permuted according to col_order and rows permuted according to row_order
 
       ///FOR TESTING ONLY
         virtual void print();       //prints the matrix to standard output (for testing)
@@ -145,7 +146,8 @@ class MapMatrix_RowPriority_Perm: public MapMatrix_Base
         void swap_rows(unsigned i);    //transposes rows i and i+1
         void swap_columns(unsigned j); //transposes columns j and j+1
 
-        void print();			//prints the matrix to standard output (for testing)
+        void print();			//prints the matrix to qDebug() for testing
+        void print_perm();      //prints the permutation vectors to qDebug() for testing
 
     protected:
         std::vector<unsigned> perm;     //permutation vector

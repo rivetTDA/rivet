@@ -54,6 +54,7 @@ std::set<BarTemplate>::iterator BarcodeTemplate::end()
 void BarcodeTemplate::print()
 {
     QDebug qd = qDebug().nospace();
+    qd << "      ";
     for(std::set<BarTemplate>::iterator it = bars.begin(); it != bars.end(); ++it)
     {
         BarTemplate b = *it;

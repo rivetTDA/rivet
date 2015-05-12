@@ -319,6 +319,7 @@ void PersistenceUpdater::store_barcodes(std::vector<Halfedge*>& path)
         cur_anchor->toggle();
 
         //testing
+//        U_high->print_perm();
 //        std::cout << "  Anchors above the current line: ";
 //        for(std::set<Anchor*, Anchor_LeftComparator>::iterator it = mesh->all_anchors.begin(); it != mesh->all_anchors.end(); ++it)
 //            if((*it)->is_above())
@@ -354,8 +355,8 @@ void PersistenceUpdater::store_barcodes(std::vector<Halfedge*>& path)
 //            for(std::map<unsigned, xiMatrixEntry*>::iterator it = partition_high.begin(); it != partition_high.end(); ++it)
 //                qDebug() << "     " << it->first << "->" << it->second->index << ", ";
 //            qDebug() << "  Barcode Template: ";
-//            cur_face->get_barcode().print();
-            check_low_matrix(R_low, U_low);
+            cur_face->get_barcode().print();
+//            check_low_matrix(R_low, U_low);
 //            check_high_matrix(R_high, U_high);
         }
 
@@ -768,15 +769,6 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path)
     store_multigrades(ind_high, false, high_simplex_order);
     delete ind_high;
 
-    //testing only
-//    std::cout << "== low_simplex_order: ";
-//    for(int i=0; i<low_simplex_order.size(); i++)
-//        std::cout << low_simplex_order[i] << ", ";
-//    std::cout << "\n== high_simplex_order: ";
-//    for(int i=0; i<high_simplex_order.size(); i++)
-//        std::cout << high_simplex_order[i] << ", ";
-//    std::cout << "\n";
-
     //get boundary matrices (R) and identity matrices (U) for RU-decomposition
     MapMatrix_Perm* R_low = bifiltration->get_boundary_mx(low_simplex_order);
     MapMatrix_Perm* R_high = bifiltration->get_boundary_mx(low_simplex_order, high_simplex_order);
@@ -829,7 +821,7 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path)
     qDebug() << "                              ^^^^^^^^^^^^^^^";
 
     ///TODO: set the threshold dynamically
-    unsigned long threshold = 10000000;     //if the number of swaps might exceed this threshold, then do a persistence calculation from scratch
+    unsigned long threshold = 800000;     //if the number of swaps might exceed this threshold, then do a persistence calculation from scratch
     unsigned long swap_estimate = 0;
     qDebug() << "reset threshold set to" << threshold;
 
@@ -846,8 +838,9 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path)
     QTime steptimer;
     for(unsigned i=0; i<path.size(); i++)
     {
-        steptimer.start();          //time update at each step of the path
+        steptimer.start();                //time update at each step of the path
         unsigned long swap_counter = 0;   //counts number of transpositions at each step
+        swap_estimate = 0;
 
         //determine which anchor is represented by this edge
         Anchor* cur_anchor = (path[i])->get_anchor();
@@ -870,15 +863,9 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path)
                 left = left->left;
             }//now down and left are correct (and should not be NULL)
 
-            //estimate how many swaps will occur
-            swap_estimate = static_cast<unsigned long>(left->low_class_size) * static_cast<unsigned long>(down->low_class_size)
-                    + static_cast<unsigned long>(left->high_class_size) * static_cast<unsigned long>(down->high_class_size);
-
             //process the swaps
-            if(cur_anchor->is_above()) //then anchor is crossed from below to above
+            if(cur_anchor->is_above()) //then the anchor is crossed from below to above
             {
-                if(mesh->verbosity >= 9) { qDebug() << " == strict anchor crossed below to above =="; }
-
                 //pre-move updates to equivalence class info
                 if(at_anchor != NULL)  //this anchor is supported
                 {
@@ -894,6 +881,8 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path)
                 remove_partition_entries(down);         //this block of the partition will move
 
                 //now permute the columns and fix the RU-decomposition
+                swap_estimate = static_cast<unsigned long>(left->low_class_size) * static_cast<unsigned long>(down->low_class_size)
+                        + static_cast<unsigned long>(left->high_class_size) * static_cast<unsigned long>(down->high_class_size);
                 if(swap_estimate < threshold)
                     swap_counter += move_columns(down, left, true, R_low, U_low, R_high, U_high, perm_low, inv_perm_low, perm_high, inv_perm_high);
                 else
@@ -914,8 +903,6 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path)
             }
             else    //then anchor is crossed from above to below
             {
-                if(mesh->verbosity >= 9) { qDebug() << " == strict anchor crossed above to below =="; }
-
                 //pre-move updates to equivalence class info
                 if(at_anchor != NULL)
                 {
@@ -931,6 +918,8 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path)
                 remove_partition_entries(left);         //this block of the partition will move
 
                 //now permute the columns and fix the RU-decomposition
+                swap_estimate = static_cast<unsigned long>(left->low_class_size) * static_cast<unsigned long>(down->low_class_size)
+                        + static_cast<unsigned long>(left->high_class_size) * static_cast<unsigned long>(down->high_class_size);
                 if(swap_estimate < threshold)
                     swap_counter += move_columns(left, down, false, R_low, U_low, R_high, U_high, perm_low, inv_perm_low, perm_high, inv_perm_high);
                 else
@@ -989,12 +978,15 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path)
         if(!cur_face->has_been_visited())
             store_barcode_template(cur_face, R_low, R_high);
 
+        //TESTING ONLY
+        cur_face->get_barcode().print();
+
         //print runtime data
         int step_time = steptimer.elapsed();
         if(swap_estimate < threshold)
             qDebug() << "    --> this step took" << step_time << "milliseconds and involved" << swap_counter << "transpositions";
         else
-            qDebug() << "    --> this step took" << step_time << "-- reset matrices to avoid an estimated" << swap_estimate << "transpositions";
+            qDebug() << "    --> this step took" << step_time << "milliseconds -- reset matrices to avoid an estimated" << swap_estimate << "transpositions";
 
         //store data for analysis
         total_transpositions += swap_counter;
@@ -2043,7 +2035,7 @@ unsigned long PersistenceUpdater::move_high_columns(int s, unsigned n, int t, Ma
             unsigned b = a + 1;
 
             //we must swap the (d+1)-simplices currently corresponding to columns a and b=a+1
-            if(mesh->verbosity >= 9) { qDebug() << "(" << a << "," << b << ")"; }
+//            qDebug() << "(" << a << "," << b << ")";
 
             bool a_pos = (RH->low(a) == -1);    //true iff simplex corresponding to column a is positive
             bool b_pos = (RH->low(b) == -1);    //true iff simplex corresponding to column b is positive
@@ -2137,7 +2129,7 @@ unsigned long PersistenceUpdater::move_high_columns(int s, unsigned n, int t, Ma
             unsigned b = a + 1;
 
             //we must swap the (d+1)-simplices currently corresponding to columns a and b=a+1
-            if(mesh->verbosity >= 9) { qDebug() << "(" << a << "," << b << ")"; }
+//            qDebug() << "(" << a << "," << b << ")";
 
             bool a_pos = (RH->low(a) == -1);    //true iff simplex corresponding to column a is positive
             bool b_pos = (RH->low(b) == -1);    //true iff simplex corresponding to column b is positive
@@ -2226,18 +2218,44 @@ unsigned long PersistenceUpdater::move_high_columns(int s, unsigned n, int t, Ma
 //swaps two blocks of columns by updating the total order on columns, then rebuilding the matrices and computing a new RU-decomposition
 void PersistenceUpdater::update_order_and_reset_matrices(xiMatrixEntry* first, xiMatrixEntry* second, bool from_below, MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH, MapMatrix_Perm* RL_initial, MapMatrix_Perm* RH_initial, Perm& perm_low, Perm& inv_perm_low, Perm& perm_high, Perm& inv_perm_high)
 {
-  //STEP 1: update the lift map for all multigrades, storing the current column index for each multigrade
+  //STEP 1: update the lift map for all multigrades and store the current column index for each multigrade
 
-    //get column indexes (so we know which columns to move)
-    int low_col = first->low_index;   //rightmost column index of low simplices for the equivalence class to move
-    int high_col = first->high_index; //rightmost column index of high simplices for the equivalence class to move
+    //get column indexes for the second equivalence class
+    int low_col = second->low_index;
+    int high_col = second->high_index;
+
+    //loop over all xiMatrixEntrys in the second equivalence class, storing current column indexes for each multigrade
+    xiMatrixEntry* cur_entry = second;
+    while(cur_entry != NULL)
+    {
+        //"low" simplices for this xiMatrixEntry (start with rightmost column, end with leftmost)
+        for(std::list<Multigrade*>::iterator it = cur_entry->low_simplices.begin(); it != cur_entry->low_simplices.end(); ++it)
+        {
+            (*it)->simplex_index = low_col;
+            low_col -= (*it)->num_cols;
+        }
+
+        //"high" simplices for this xiMatrixEntry (start with rightmost column, end with leftmost)
+        for(std::list<Multigrade*>::iterator it = cur_entry->high_simplices.begin(); it != cur_entry->high_simplices.end(); ++it)
+        {
+            (*it)->simplex_index = high_col;
+            high_col -= (*it)->num_cols;
+        }
+
+        //advance to the next xiMatrixEntry in the first equivalence class
+        cur_entry = from_below ? cur_entry->left : cur_entry->down;
+    }
+
+    //get column indexes for the first equivalence class
+    low_col = first->low_index;   //rightmost column index of low simplices for the equivalence class to move
+    high_col = first->high_index; //rightmost column index of high simplices for the equivalence class to move
 
     //set column indexes for the first class to their final position
     first->low_index = second->low_index;
     first->high_index = second->high_index;
 
-    //loop over all xiMatrixEntrys in the first equivalence class
-    xiMatrixEntry* cur_entry = first;
+    //loop over all xiMatrixEntrys in the first equivalence class, storing current column indexes and updating the lift map
+    cur_entry = first;
     while(cur_entry != NULL)
     {
         //move all "low" simplices for this xiMatrixEntry (start with rightmost column, end with leftmost)
@@ -2412,7 +2430,7 @@ void PersistenceUpdater::update_order_and_reset_matrices(xiMatrixEntry* first, x
   //STEP 3: re-build the matrix R based on the new order
 
     RL->rebuild(RL_initial, perm_low);
-    RH->rebuild(RH_initial, perm_high);
+    RH->rebuild(RH_initial, perm_high, perm_low);
 
 
   //STEP 4: compute the new RU-decomposition

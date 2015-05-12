@@ -706,7 +706,7 @@ void MapMatrix_Perm::swap_columns(unsigned j, bool update_lows)
 
 //clears the matrix, then rebuilds it from reference with columns permuted according to col_order
 //  NOTE: reference should have the same size as this matrix!
-//  col_order is a map: (column index in reference matrix) -> (column index in rebuilt matrix
+//  col_order is a map: (column index in reference matrix) -> (column index in rebuilt matrix)
 void MapMatrix_Perm::rebuild(MapMatrix_Perm* reference, std::vector<unsigned>& col_order)
 {
     ///TESTING: check the permutation
@@ -764,6 +764,65 @@ void MapMatrix_Perm::rebuild(MapMatrix_Perm* reference, std::vector<unsigned>& c
                 cur_node = new_node;
                 ref_node = ref_node->get_next();
             }
+        }
+    }
+}//end rebuild()
+
+//clears the matrix, then rebuilds it from reference with columns permuted according to col_order and rows permuted according to row_order
+//  NOTE: reference should have the same size as this matrix!
+//  col_order is a map: (column index in reference matrix) -> (column index in rebuilt matrix) and similarly for row_order
+void MapMatrix_Perm::rebuild(MapMatrix_Perm* reference, std::vector<unsigned>& col_order, std::vector<unsigned>& row_order)
+{
+    ///TESTING: check the permutation
+    std::vector<bool> check(columns.size(), false);
+    for(unsigned j=0; j < columns.size(); j++)
+        check[col_order[j]] = true;
+    for(unsigned j=0; j < columns.size(); j++)
+        if(check[j] == false)
+        {
+            qDebug() << "ERROR: column permutation skipped" << j;
+        }
+
+    //clear the matrix
+    for(unsigned j=0; j < columns.size(); j++)
+    {
+        MapMatrixNode* current = columns[j];
+        while(current != NULL)
+        {
+            MapMatrixNode* next = current->get_next();
+            delete current;
+            current = next;
+        }
+        columns[j] = NULL;  ///TODO: CHECK -- HAVE I AVOIDED A MEMORY LEAK HERE?
+    }
+
+    //reset low arrays
+    for(unsigned i=0; i < num_rows; i++)
+        low_by_row[i] = -1;
+    for(unsigned j=0; j < columns.size(); j++)
+        low_by_col[j] = -1;
+
+    //reset permutation vectors
+    for(unsigned i=0; i < num_rows; i++)
+    {
+        perm[i] = i;
+        mrep[i] = i;
+    }
+
+    //build the new matrix
+    for(unsigned j=0; j < columns.size(); j++)
+    {
+        MapMatrixNode* ref_node = reference->columns[j];
+        while(ref_node != NULL)
+        {
+//            if(j==153915 || j==14897 || j==40016)
+//            {
+//                MapMatrixNode* test = columns[col_order[j]];
+//                test->get_next();
+//            }
+
+            MapMatrix::set( row_order[ ref_node->get_row() ], col_order[j] );
+            ref_node = ref_node->get_next();
         }
     }
 }//end rebuild()
@@ -941,7 +1000,7 @@ void MapMatrix_RowPriority_Perm::swap_columns(unsigned j)
     mrep[j+1] = a;
 }
 
-//prints the matrix to stadard output, for testing
+//prints the matrix to qDebug(), for testing
 //this function is identical to MapMatrix::print(), with rows and columns transposed
 void MapMatrix_RowPriority_Perm::print()
 {
@@ -986,3 +1045,15 @@ void MapMatrix_RowPriority_Perm::print()
         qd << " |";
     }
 }//end print()
+
+//prints the permutation vectors to qDebug() for testing
+void MapMatrix_RowPriority_Perm::print_perm()
+{
+    QDebug qd = qDebug();
+    qd << " ==== Perm:";
+    for(unsigned i=0; i<perm.size(); i++)
+        qd << perm[i];
+    qd << "\n ==== Mrep:";
+    for(unsigned i=0; i<mrep.size(); i++)
+        qd << mrep[i];
+}
