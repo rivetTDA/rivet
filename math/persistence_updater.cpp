@@ -829,9 +829,8 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path)
 
     ///TEMPORARY: data structures for analyzing the computation
     unsigned long total_transpositions = 0;
-//    std::vector<unsigned long> swap_counters(path.size(),0);
-//    std::vector<int> crossing_times(path.size(),0);
-    unsigned long max_swaps = 0;
+    unsigned number_of_resets = 0;
+    unsigned total_time_for_resets = 0;
     int max_time = 0;
 
     //traverse the path
@@ -978,35 +977,30 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path)
         if(!cur_face->has_been_visited())
             store_barcode_template(cur_face, R_low, R_high);
 
-        //TESTING ONLY
-        cur_face->get_barcode().print();
-
-        //print runtime data
+        //print/store data for analysis
         int step_time = steptimer.elapsed();
         if(swap_estimate < threshold)
-            qDebug() << "    --> this step took" << step_time << "milliseconds and involved" << swap_counter << "transpositions";
+        {
+//            qDebug() << "    --> this step took" << step_time << "milliseconds and involved" << swap_counter << "transpositions";
+            total_transpositions += swap_counter;
+        }
         else
-            qDebug() << "    --> this step took" << step_time << "milliseconds -- reset matrices to avoid an estimated" << swap_estimate << "transpositions";
+        {
+//            qDebug() << "    --> this step took" << step_time << "milliseconds -- reset matrices to avoid an estimated" << swap_estimate << "transpositions";
+            number_of_resets++;
+            total_time_for_resets += step_time;
+        }
 
-        //store data for analysis
-        total_transpositions += swap_counter;
-//        swap_counters[i] = swap_counter;
-//        crossing_times[i] = step_time;
-        if(swap_counter > max_swaps)
-            max_swaps = swap_counter;
         if(step_time > max_time)
             max_time = step_time;
-
     }//end path traversal
 
     //print runtime data
-    qDebug() << "  --> path traversal and persistence updates took" << timer.elapsed() << "milliseconds and involved" << total_transpositions << "transpositions";
-
-    ///TEMPORARY
-//    qDebug() << "DATA: number of transpositions and runtime for each crossing:";
-//    for(unsigned i=0; i<swap_counters.size(); i++)
-//        qDebug().nospace() << swap_counters[i] << ", " << crossing_times[i];
-    qDebug() << "DATA: max number of swaps per crossing:" << max_swaps << "; max time per crossing:" << max_time;
+    qDebug() << "DATA: path traversal and persistence updates took" << timer.elapsed() << "milliseconds";
+    qDebug() << "    max time per anchor crossing:" << max_time;
+    qDebug() << "    total number of transpositions:" << total_transpositions;
+    qDebug() << "    matrices were reset" << number_of_resets << "times when estimated number of transpositions exceeded" << threshold;
+    qDebug() << "    average time for reset:" << (total_time_for_resets/number_of_resets) << "milliseconds";
 
 
   // PART 4: CLEAN UP

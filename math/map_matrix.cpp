@@ -710,14 +710,14 @@ void MapMatrix_Perm::swap_columns(unsigned j, bool update_lows)
 void MapMatrix_Perm::rebuild(MapMatrix_Perm* reference, std::vector<unsigned>& col_order)
 {
     ///TESTING: check the permutation
-    std::vector<bool> check(columns.size(), false);
-    for(unsigned j=0; j < columns.size(); j++)
-        check[col_order[j]] = true;
-    for(unsigned j=0; j < columns.size(); j++)
-        if(check[j] == false)
-        {
-            qDebug() << "ERROR: column permutation skipped" << j;
-        }
+//    std::vector<bool> check(columns.size(), false);
+//    for(unsigned j=0; j < columns.size(); j++)
+//        check[col_order[j]] = true;
+//    for(unsigned j=0; j < columns.size(); j++)
+//        if(check[j] == false)
+//        {
+//            qDebug() << "ERROR: column permutation skipped" << j;
+//        }
 
     //clear the matrix
     for(unsigned j=0; j < columns.size(); j++)
