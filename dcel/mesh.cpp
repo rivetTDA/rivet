@@ -553,9 +553,9 @@ void Mesh::find_path(std::vector<Halfedge*>& pathvec)
 //    std::vector<Vertex> tsp_vertices;
 //    boost::metric_tsp_approx_tour(dual_graph, std::back_inserter(tsp_vertices));
 
-//    std::cout << "num TSP vertices: " << tsp_vertices.size() << "\n";
+//    qDebug() << "num TSP vertices: " << tsp_vertices.size() << "\n";
 //    for(unsigned i=0; i<tsp_vertices.size(); i++)
-//        std::cout << "  " << tsp_vertices[i] << "\n";
+//        qDebug() << "  " << tsp_vertices[i] << "\n";
 
   // PART 3: CONVERT THE OUTPUT OF PART 2 TO A PATH
 
@@ -854,51 +854,49 @@ void Mesh::print_stats()
 //print all the data from the mesh
 void Mesh::print()
 {
-	std::cout << "  Vertices\n";
+    qDebug() << "  Vertices";
     for(unsigned i=0; i<vertices.size(); i++)
 	{
-		std::cout << "    vertex " << i << ": " << *vertices[i] << "; incident edge: " << HID(vertices[i]->get_incident_edge()) << "\n";
+        qDebug() << "    vertex " << i << ": " << *vertices[i] << "; incident edge: " << HID(vertices[i]->get_incident_edge());
 	}
 	
-	std::cout << "  Halfedges\n";
+    qDebug() << "  Halfedges\n";
     for(unsigned i=0; i<halfedges.size(); i++)
 	{
 		Halfedge* e = halfedges[i];
 		Halfedge* t = e->get_twin();
-//		std::cout << "    halfedge " << i << " (" << e << "): " << *(e->get_origin()) << "--" << *(t->get_origin()) << "; ";	//also prints memory location
-		std::cout << "    halfedge " << i << ": " << *(e->get_origin()) << "--" << *(t->get_origin()) << "; ";
+//		qDebug() << "    halfedge " << i << " (" << e << "): " << *(e->get_origin()) << "--" << *(t->get_origin()) << "; ";	//also prints memory location
+        qDebug() << "    halfedge " << i << ": " << *(e->get_origin()) << "--" << *(t->get_origin()) << "; ";
         if(e->get_anchor() == NULL)
-            std::cout << "Anchor null; ";
+            qDebug() << "Anchor null; ";
 		else
-            std::cout << "Anchor coords (" << e->get_anchor()->get_x() << ", " << e->get_anchor()->get_y() << "); ";
-		std::cout << "twin: " << HID(t) << "; next: " << HID(e->get_next()) << "; prev: " << HID(e->get_prev()) << "; face: " << FID(e->get_face()) << "\n";;
+            qDebug() << "Anchor coords (" << e->get_anchor()->get_x() << ", " << e->get_anchor()->get_y() << "); ";
+        qDebug() << "twin: " << HID(t) << "; next: " << HID(e->get_next()) << "; prev: " << HID(e->get_prev()) << "; face: " << FID(e->get_face());
 	}
 	
-	std::cout << "  Faces\n";
+    qDebug() << "  Faces";
     for(unsigned i=0; i<faces.size(); i++)
 	{
-//		std::cout << "    face " << i << " (" << faces[i] << "): " << *faces[i] << "\n";	//also prints memory location
-		std::cout << "    face " << i << ": " << *faces[i] << "\n";
+//		qDebug() << "    face " << i << " (" << faces[i] << "): " << *faces[i];	//also prints memory location
+        qDebug() << "    face " << i << ": " << *faces[i];
 	}
 	
-	std::cout << "  Outside (unbounded) region: ";
+    qDebug() << "  Outside (unbounded) region: ";
 	Halfedge* start = halfedges[1];
 	Halfedge* curr = start;
 	do{
-		std::cout << *(curr->get_origin()) << "--";
+        qDebug() << *(curr->get_origin()) << "--";
 		curr = curr->get_next();
 	}while(curr != start);
-	std::cout << "cycle\n";
+    qDebug() << "cycle";
 	
-    std::cout << "  Anchor set: ";
+    qDebug() << "  Anchor set: ";
     std::set<Anchor*>::iterator it;
     for(it = all_anchors.begin(); it != all_anchors.end(); ++it)
 	{
         Anchor cur = **it;
-        std::cout << "(" << cur.get_x() << ", " << cur.get_y() << ") halfedge " << HID(cur.get_line()) << "; ";
-	}
-	std::cout << "\n";
-	
+        qDebug() << "(" << cur.get_x() << ", " << cur.get_y() << ") halfedge " << HID(cur.get_line()) << "; ";
+	}	
 }//end print()
 
 /********** functions for testing **********/
@@ -935,53 +933,51 @@ unsigned Mesh::FID(Face* f)
 void Mesh::test_consistency()
 {
     //check faces
-    std::cout << "Checking faces:\n";
+    qDebug() << "Checking faces:";
     bool face_problem = false;
     std::set<int> edges_found_in_faces;
 
     for(std::vector<Face*>::iterator it = faces.begin(); it != faces.end(); ++it)
     {
         Face* face = *it;
-        std::cout << "  Checking face " << FID(face) << "\n";
+        qDebug() << "  Checking face " << FID(face);
 
         if(face->get_boundary() == NULL)
         {
-            std::cout << "    PROBLEM: face " << FID(face) << " has null edge pointer.\n";
+            qDebug() << "    PROBLEM: face" << FID(face) << "has null edge pointer.";
             face_problem = true;
         }
         else
         {
             Halfedge* start = face->get_boundary();
-//            std::cout << "    starting halfedge " << HID(start) << " [" << *start << "]\n";
             edges_found_in_faces.insert(HID(start));
 
             if(start->get_face() != face)
             {
-                std::cout << "    PROBLEM: starting halfedge edge " << HID(start) << " of face " << FID(face) << " doesn't point back to face.\n";
+                qDebug() << "    PROBLEM: starting halfedge edge" << HID(start) << "of face" << FID(face) << "doesn't point back to face.";
                 face_problem = true;
             }
 
             if(start->get_next() == NULL)
-                std::cout << "    PROBLEM: starting halfedge " << HID(start) << " of face " << FID(face) << " has NULL next pointer.\n";
+                qDebug() << "    PROBLEM: starting halfedge" << HID(start) << "of face" << FID(face) << "has NULL next pointer.";
             else
             {
                 Halfedge* cur = start->get_next();
                 int i = 0;
                 while(cur != start)
                 {
-//                    std::cout << "    halfedge " << HID(cur) << " [" << *cur << "]\n";
                     edges_found_in_faces.insert(HID(cur));
 
                     if(cur->get_face() != face)
                     {
-                        std::cout << "    PROBLEM: halfedge edge " << HID(cur) << " points to face " << FID(cur->get_face()) << " instead of face " << FID(face) << ".\n";
+                        qDebug() << "    PROBLEM: halfedge edge" << HID(cur) << "points to face" << FID(cur->get_face()) << "instead of face" << FID(face);
                         face_problem = true;
                         break;
                     }
 
                     if(cur->get_next() == NULL)
                     {
-                        std::cout << "    PROBLEM: halfedge " << HID(cur) << " has NULL next pointer.\n";
+                        qDebug() << "    PROBLEM: halfedge" << HID(cur) << "has NULL next pointer.";
                         face_problem = true;
                         break;
                     }
@@ -991,7 +987,7 @@ void Mesh::test_consistency()
                     i++;
                     if(i >= 1000)
                     {
-                        std::cout << "    PROBLEM: halfedges of face " << FID(face) << " do not form a cycle (or, if they do, it has more than 1000 edges).\n";
+                        qDebug() << "    PROBLEM: halfedges of face" << FID(face) << "do not form a cycle (or, if they do, it has more than 1000 edges).";
                         face_problem = true;
                         break;
                     }
@@ -1001,12 +997,11 @@ void Mesh::test_consistency()
         }
     }//end face loop
     if(!face_problem)
-        std::cout << "   ---No problems detected among faces.\n";
+        qDebug() << "   ---No problems detected among faces.";
     else
-        std::cout << "   ---Problems detected among faces.\n";
+        qDebug() << "   ---Problems detected among faces.";
 
     //find exterior halfedges
-//    std::cout << "  Checking exterior face\n";
     Halfedge* start = halfedges[1];
     Halfedge* cur = start;
     do{
@@ -1014,7 +1009,7 @@ void Mesh::test_consistency()
 
         if(cur->get_next() == NULL)
         {
-            std::cout << "    PROBLEM: halfedge " << HID(cur) << " has NULL next pointer.\n";
+            qDebug() << "    PROBLEM: halfedge " << HID(cur) << " has NULL next pointer.";
             break;
         }
         cur = cur->get_next();
@@ -1026,23 +1021,23 @@ void Mesh::test_consistency()
     {
         if(edges_found_in_faces.find(i) == edges_found_in_faces.end())
         {
-            std::cout << "  PROBLEM: halfedge " << i << "not found in any face\n";
+            qDebug() << "  PROBLEM: halfedge" << i << "not found in any face";
             all_edges_found = false;
         }
     }
     if(all_edges_found)
-        std::cout << "   ---All halfedges found in faces, as expected.\n";
+        qDebug() << "   ---All halfedges found in faces, as expected.";
 
 
     //check curves
-    std::cout << "Checking curves:\n";
+    qDebug() << "Checking curves:\n";
     bool curve_problem = false;
     std::set<int> edges_found_in_curves;
 
     for(std::set<Anchor*>::iterator it = all_anchors.begin(); it != all_anchors.end(); ++it)
     {
         Anchor* anchor = *it;
-        std::cout << "  Checking curve for anchor (" << anchor->get_x() <<", " << anchor->get_y() << ")\n";
+        qDebug() << "  Checking curve for anchor (" << anchor->get_x() <<"," << anchor->get_y() << ")";
 
         Halfedge* edge = anchor->get_line();
         do{
@@ -1051,18 +1046,18 @@ void Mesh::test_consistency()
 
             if(edge->get_anchor() != anchor)
             {
-                std::cout << "    PROBLEM: halfedge " << HID(edge) << " does not point to this Anchor.\n";
+                qDebug() << "    PROBLEM: halfedge" << HID(edge) << "does not point to this Anchor.";
                 curve_problem = true;
             }
             if(edge->get_twin()->get_anchor() != anchor)
             {
-                std::cout << "    PROBLEM: halfedge " << HID(edge->get_twin()) << ", twin of halfedge " << HID(edge) << ", does not point to this anchor.\n";
+                qDebug() << "    PROBLEM: halfedge" << HID(edge->get_twin()) << ", twin of halfedge " << HID(edge) << ", does not point to this anchor.";
                 curve_problem = true;
             }
 
             if(edge->get_next() == NULL)
             {
-                std::cout << "    PROBLEM: halfedge " << HID(edge) << " has NULL next pointer.\n";
+                qDebug() << "    PROBLEM: halfedge" << HID(edge) << "has NULL next pointer.";
                 curve_problem = true;
                 break;
             }
@@ -1084,7 +1079,7 @@ void Mesh::test_consistency()
 
         if(cur->get_next() == NULL)
         {
-            std::cout << "    PROBLEM: halfedge " << HID(cur) << " has NULL next pointer.\n";
+            qDebug() << "    PROBLEM: halfedge" << HID(cur) << "has NULL next pointer.";
             break;
         }
         cur = cur->get_next();
@@ -1096,31 +1091,28 @@ void Mesh::test_consistency()
     {
         if(edges_found_in_curves.find(i) == edges_found_in_curves.end())
         {
-            std::cout << "  PROBLEM: halfedge " << i << " not found in any anchor line";
+            qDebug() << "  PROBLEM: halfedge" << i << "not found in any anchor line";
             all_edges_found = false;
         }
     }
     if(all_edges_found)
-        std::cout << "   ---All halfedges found in curves, as expected.\n";
+        qDebug() << "   ---All halfedges found in curves, as expected.";
 
 
     if(!curve_problem)
-        std::cout << "   ---No problems detected among anchor lines.\n";
+        qDebug() << "   ---No problems detected among anchor lines.";
     else
-        std::cout << "   ---Problems detected among anchor lines.\n";
+        qDebug() << "   ---Problems detected among anchor lines.";
 
 
     //check curves
-    std::cout << "Checking order of vertices along right edge of the strip:\n";
+    qDebug() << "Checking order of vertices along right edge of the strip:";
     Halfedge* redge = halfedges[3];
     while(redge != halfedges[1])
     {
-        std::cout << " y = " << redge->get_origin()->get_y() << "\n";
+        qDebug() << " y = " << redge->get_origin()->get_y();
         redge = redge->get_next();
     }
-
-
-
 }//end test_consistency()
 
 
@@ -1133,9 +1125,6 @@ Mesh::Crossing::Crossing(Anchor* a, Anchor* b, Mesh* m) : a(a), b(b), m(m)
 {
     //store the x-coordinate of the crossing for fast (inexact) comparisons
     x = (m->y_grades[a->get_y()] - m->y_grades[b->get_y()])/(m->x_grades[a->get_x()] - m->x_grades[b->get_x()]);
-
-    //TESTING ONLY
-//    std::cout << "  Crossing created for curves " << a->get_position() << " (Anchor " << a << ") and " << b->get_position() << " (Anchor " << b << "), which intersect at x = " << x << "\n";
 }
 
 //returns true iff this Crossing has (exactly) the same x-coordinate as other Crossing
