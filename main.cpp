@@ -1,4 +1,4 @@
-#include <QtGui/QApplication>
+#include <QApplication>
 #include "visualizationwindow.h"
 #include "dataselectdialog.h"
 

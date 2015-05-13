@@ -2,6 +2,7 @@
 #define PERSISTENCEDIAGRAM_H
 
 #include <QGraphicsScene>
+#include <QGraphicsView>
 #include <QtGui>
 #include <QDebug>
 #include <sstream>

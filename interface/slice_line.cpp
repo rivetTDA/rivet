@@ -1,6 +1,7 @@
 #include "slice_line.h"
 
 #include <QtGui>
+#include <QGraphicsSceneMouseEvent>
 #include <QDebug>
 #include <algorithm>
 
