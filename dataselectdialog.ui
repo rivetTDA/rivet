@@ -14,7 +14,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>RIVET: Select Data</string>
+   <string>Welcome to RIVET!</string>
   </property>
   <property name="modal">
    <bool>true</bool>
@@ -93,14 +93,17 @@
     </rect>
    </property>
    <property name="text">
-    <string>Re-load a saved computation.</string>
+    <string>Re-load a saved computation. (not supported yet)</string>
    </property>
   </widget>
   <widget class="QPushButton" name="shortcutButton1">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="geometry">
     <rect>
      <x>460</x>
-     <y>140</y>
+     <y>230</y>
      <width>151</width>
      <height>27</height>
     </rect>
@@ -110,10 +113,13 @@
    </property>
   </widget>
   <widget class="QPushButton" name="shortcutButton2">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="geometry">
     <rect>
      <x>460</x>
-     <y>170</y>
+     <y>260</y>
      <width>151</width>
      <height>27</height>
     </rect>
@@ -299,6 +305,22 @@
     </property>
    </widget>
   </widget>
+  <widget class="QLabel" name="label_4">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>460</x>
+     <y>210</y>
+     <width>151</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Disabled shortcuts</string>
+   </property>
+  </widget>
   <zorder>frame</zorder>
   <zorder>rawDataFileButton</zorder>
   <zorder>computeButton</zorder>
@@ -307,6 +329,7 @@
   <zorder>label_2</zorder>
   <zorder>shortcutButton1</zorder>
   <zorder>shortcutButton2</zorder>
+  <zorder>label_4</zorder>
  </widget>
  <resources/>
  <connections/>

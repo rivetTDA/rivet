@@ -103,8 +103,6 @@ void VisualizationWindow::compute()
         std::cout << "y-grades:\n";
         for(unsigned i=0; i<y_grades.size(); i++)
             std::cout << "  " << y_grades[i] << " = " << y_exact[i] << "\n";
-//        std::cout << "bifiltration simplex tree:\n";
-//            bifiltration->print();
     }
 
 

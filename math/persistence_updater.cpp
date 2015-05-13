@@ -1000,7 +1000,8 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path)
     qDebug() << "    max time per anchor crossing:" << max_time;
     qDebug() << "    total number of transpositions:" << total_transpositions;
     qDebug() << "    matrices were reset" << number_of_resets << "times when estimated number of transpositions exceeded" << threshold;
-    qDebug() << "    average time for reset:" << (total_time_for_resets/number_of_resets) << "milliseconds";
+    if(number_of_resets > 0)
+        qDebug() << "    average time for reset:" << (total_time_for_resets/number_of_resets) << "milliseconds";
 
 
   // PART 4: CLEAN UP
