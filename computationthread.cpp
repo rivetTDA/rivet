@@ -55,8 +55,8 @@ void ComputationThread::run()
 
     //print bifiltration statistics
     qDebug() << "\nBIFILTRATION:";
-    qDebug() << "   Number of simplices of dimension" << dim << ":" << bifiltration->get_size(dim);
-    qDebug() << "   Number of simplices of dimension" << (dim+1) << ":" << bifiltration->get_size(dim+1);
+    qDebug() << "   Number of simplices of dimension" << params.dim << ":" << bifiltration->get_size(dim);
+    qDebug() << "   Number of simplices of dimension" << (params.dim+1) << ":" << bifiltration->get_size(dim+1);
     qDebug() << "   Number of x-grades:" << x_grades.size() << "; values" << data_xmin << "to" << data_xmax;
     qDebug() << "   Number of y-grades:" << y_grades.size() << "; values" << data_ymin << "to" << data_ymax << "\n";
 
