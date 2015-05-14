@@ -33,7 +33,9 @@ SOURCES	+= main.cpp                         \
 		dcel/anchor.cpp						\
 		math/persistence_updater.cpp		\
 		math/xi_support_matrix.cpp			\
-		math/xi_point.cpp
+		math/xi_point.cpp \
+    interface/progressdialog.cpp \
+    computationthread.cpp
     
 
 HEADERS  += visualizationwindow.h			\
@@ -57,8 +59,12 @@ HEADERS  += visualizationwindow.h			\
 		dcel/anchor.h						\
 		math/persistence_updater.h			\
 		math/xi_support_matrix.h			\
-		math/xi_point.h
+		math/xi_point.h \
+    interface/progressdialog.h \
+    computationthread.h \
+    interface/input_parameters.h
     
 
 FORMS   += visualizationwindow.ui			\
-		dataselectdialog.ui
+		dataselectdialog.ui \
+    interface/progressdialog.ui

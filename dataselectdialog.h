@@ -4,8 +4,7 @@
 #include <QDialog>
 #include <QFileDialog>
 
-class VisualizationWindow;
-#include "visualizationwindow.h"
+#include "interface/input_parameters.h"
 
 namespace Ui {
 class DataSelectDialog;
@@ -16,7 +15,7 @@ class DataSelectDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit DataSelectDialog(VisualizationWindow* vw, QWidget *parent = 0);
+    explicit DataSelectDialog(InputParameters& params, QWidget *parent = 0);
     ~DataSelectDialog();
 
 private slots:
@@ -30,7 +29,8 @@ private slots:
 
 private:
     Ui::DataSelectDialog *ui;
-    VisualizationWindow* vw;
+
+    InputParameters& params;
 
     QString fileName;   //name of data file
 

@@ -7,6 +7,7 @@
 #include <QTime>
 
 #include "interface/input_manager.h"
+#include "interface/progressdialog.h"
 #include "math/simplex_tree.h"
 #include "math/multi_betti.h"
 #include "dcel/anchor.h"
@@ -14,13 +15,13 @@
 #include "dcel/mesh.h"
 #include "interface/barcode.h"
 
-//#include "boost/date_time/posix_time/posix_time.hpp"
-
 
 VisualizationWindow::VisualizationWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::VisualizationWindow),
     verbosity(5), INFTY(std::numeric_limits<double>::infinity()),
+    ds_dialog(input_params),
+    cthread(verbosity),
     slice_diagram(NULL), slice_update_lock(false),
     p_diagram(NULL), persistence_diagram_drawn(false)
 {
@@ -45,6 +46,7 @@ VisualizationWindow::~VisualizationWindow()
     delete ui;
 }
 
+/* DEPRECATED
 //sets the name of the data file
 void VisualizationWindow::setFile(QString name)
 {
@@ -61,74 +63,24 @@ void VisualizationWindow::setComputationParameters(int hom_dim, unsigned num_x_b
     x_label = x_text;
     y_label = y_text;
 }
+*/
 
 //void VisualizationWindow::on_computeButton_clicked() //read the file and do the persistent homology computation
-void VisualizationWindow::compute()
+void VisualizationWindow::start_computation()
 {
-    QTime timer;    //for timing the computations
+    //create the progress box
+//    ProgressDialog prog_dialog;
+//    prog_dialog.exec();
 
-  //STEP 1: INPUT DATA AND CREATE BIFILTRATION
+    //start the computation in a new thread
 
-    //start the input manager
-    im = new InputManager(dim, verbosity);
-    //const char* filestr = fileName.toStdString().data();
-    std::string filestr = fileName.toStdString();
-    im->start(filestr, x_bins, y_bins);
-
-    //get the data
-    x_grades = im->get_x_grades();
-    y_grades = im->get_y_grades();
-    std::vector<exact> x_exact = im->get_x_exact();
-    std::vector<exact> y_exact = im->get_y_exact();
-    bifiltration = im->get_bifiltration();
-
-    //get data extents
-    double data_xmin = x_grades.front();
-    double data_xmax = x_grades.back();
-    double data_ymin = y_grades.front();
-    double data_ymax = y_grades.back();
-
-    //print bifiltration statistics
-    qDebug() << "\nBIFILTRATION:";
-    qDebug() << "   Number of simplices of dimension" << dim << ":" << bifiltration->get_size(dim);
-    qDebug() << "   Number of simplices of dimension" << (dim+1) << ":" << bifiltration->get_size(dim+1);
-    qDebug() << "   Number of x-grades:" << x_grades.size() << "; values" << data_xmin << "to" << data_xmax;
-    qDebug() << "   Number of y-grades:" << y_grades.size() << "; values" << data_ymin << "to" << data_ymax << "\n";
-
-    if(verbosity >= 10)
-    {
-        qDebug() << "x-grades:";
-        for(unsigned i=0; i<x_grades.size(); i++)
-            qDebug() << "  " << x_grades[i] << " = " << x_exact[i];
-        qDebug() << "y-grades:";
-        for(unsigned i=0; i<y_grades.size(); i++)
-            qDebug() << "  " << y_grades[i] << " = " << y_exact[i];
-    }
+    ///TODO: FINISH THIS!
+    cthread.compute(input_params, x_grades, y_grades, xi_support);
 
 
-  //STEP 2: COMPUTE SUPPORT POINTS OF MULTI-GRADED BETTI NUMBERS
 
-    //compute xi_0 and xi_1 at all multi-grades
-    if(verbosity >= 2) { qDebug() << "COMPUTING xi_0 AND xi_1 FOR HOMOLOGY DIMENSION " << dim << ":"; }
-    MultiBetti mb(bifiltration, dim, verbosity);
+/* UNDER CONSTRUCTION...
 
-    timer.start();
-    mb.compute_fast();
-    qDebug() << "  --> xi_i computation took" << timer.elapsed() << "milliseconds";
-    ui->statusBar->showMessage("computed xi support points");
-
-
-  //STEP 3: BUILD THE ARRANGEMENT
-
-    //build the arrangement
-    if(verbosity >= 2) { qDebug() << "CALCULATING ANCHORS AND BUILDING THE DCEL ARRANGEMENT"; }
-
-    timer.start();
-    arrangement = new Mesh(x_grades, x_exact, y_grades, y_exact, verbosity);
-    arrangement->build_arrangement(mb, xi_support);     //also stores list of xi support points in the last argument
-        //NOTE: this also computes and stores barcode templates in the arrangement
-
-    qDebug() << "   building the line arrangement and computing all barcode templates took" << timer.elapsed() << "milliseconds";
 
     if(verbosity >= 2) { qDebug() << "COMPUTATION FINISHED; READY FOR INTERACTIVITY."; }
 
@@ -177,6 +129,7 @@ void VisualizationWindow::compute()
 
     persistence_diagram_drawn = true;
     ui->statusBar->showMessage("persistence diagram drawn");
+  */
 }//end on_computeButton_clicked()
 
 void VisualizationWindow::on_angleDoubleSpinBox_valueChanged(double angle)
@@ -344,6 +297,13 @@ void VisualizationWindow::select_dot(unsigned index)
 void VisualizationWindow::deselect_dot()
 {
     p_diagram->deselect_dot(false);
+}
+
+void VisualizationWindow::showEvent(QShowEvent* event)
+{
+    QMainWindow::showEvent(event);
+    ds_dialog.exec();               //show the DataSelectDialog box and blocks until the dialog is closed
+    start_computation();            //starts the persistence calculation
 }
 
 void VisualizationWindow::resizeEvent(QResizeEvent* /*unused*/)

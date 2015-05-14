@@ -4,26 +4,29 @@
 #include <QMainWindow>
 #include <QtGui>
 
+class DataSelectDialog;
+#include "dataselectdialog.h"
 #include "dcel/mesh.h"
 #include "interface/barcode.h"
 
 #include <boost/multiprecision/cpp_int.hpp>
 typedef boost::multiprecision::cpp_rational exact;
 
+#include "computationthread.h"
 #include "interface/slice_diagram.h"
 class SliceDiagram;
-
 #include "interface/persistence_diagram.h"
 class PersistenceDiagram;
+class Mesh;
+
+
+
 
 
 namespace Ui {
 class VisualizationWindow;
 }
 
-class InputManager;
-class Mesh;
-class SimplexTree;
 
 class VisualizationWindow : public QMainWindow
 {
@@ -33,9 +36,9 @@ public:
     explicit VisualizationWindow(QWidget *parent = 0);
     ~VisualizationWindow();
 
-    void setFile(QString name); //sets the name of the data file
-    void setComputationParameters(int hom_dim, unsigned num_x_bins, unsigned num_y_bins, QString x_text, QString y_text);    //sets parameters for the computation
-    void compute(); //begins the computation pipeline
+//DEPRECATED    void setFile(QString name); //sets the name of the data file
+//DEPRECATED    void setComputationParameters(int hom_dim, unsigned num_x_bins, unsigned num_y_bins, QString x_text, QString y_text);    //sets parameters for the computation
+    void start_computation(); //begins the computation pipeline
 
     void set_line_parameters(double angle, double offset);
 
@@ -44,6 +47,8 @@ public:
     void select_dot(unsigned index);
     void deselect_dot();
 
+protected:
+    void showEvent(QShowEvent* event);      //shows the DataSelectDialog and blocks until it is closed
     void resizeEvent(QResizeEvent*);
     
 private slots:
@@ -62,26 +67,22 @@ private slots:
 private:
     Ui::VisualizationWindow *ui;
 
-    //computational items
+    //data items
     const int verbosity;
     const double INFTY;
 
-    InputManager* im;
+    InputParameters input_params;     //parameters set by the user via the DataSelectDialog
+    DataSelectDialog ds_dialog;       //dialog box that gets the input parameters
 
-    QString fileName;   //name of data file
-    int dim;            //dimension of homology to compute
-    unsigned x_bins;    //number of bins for x-coordinate (if 0, then bins are not used for x)
-    unsigned y_bins;    //number of bins for y-coordinate (if 0, then bins are not used for y)
-    QString x_label;    //label for x-axis of slice diagram
-    QString y_label;    //label for y-axis of slice_diagram
-
-    std::vector<double> x_grades;
-    std::vector<double> y_grades;
-    SimplexTree* bifiltration;  //discrete bifiltration
-
+    std::vector<double> x_grades;     //floating-point x-coordinates of the grades
+    std::vector<double> y_grades;     //floating-point y-coordinates of the grades
     std::vector<xiPoint> xi_support;  //stores discrete coordinates of xi support points, with multiplicities
 
     Mesh* arrangement; //pointer to the DCEL arrangement
+
+    //computation items
+    ComputationThread cthread;
+
 
     //items for slice diagram
     QGraphicsScene* sliceScene;

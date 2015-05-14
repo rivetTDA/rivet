@@ -155,13 +155,18 @@ void InputManager::read_point_cloud(unsigned x_bins, unsigned y_bins)
 	//read dimension of the points from the first line of the file
 	std::getline(infile,line);
 	std::stringstream(line) >> dimension;
-    if(verbosity >= 4) { qDebug() << "  dimension of data: " << dimension << "; max dimension of simplices: " << (hom_dim + 1); }
+    if(verbosity >= 4) { qDebug() << "  dimension of data:" << dimension << "; max dimension of simplices: " << (hom_dim + 1); }
 	
 	//read maximum distance for edges in Vietoris-Rips complex
     std::getline(infile,line);
     boost::algorithm::trim(line);
     exact max_dist = str_to_exact(line);
-    if(verbosity >= 4) { qDebug() << "  maximum distance: " << max_dist; }
+    if(verbosity >= 4)
+    {
+        std::ostringstream oss;
+        oss << max_dist;
+        qDebug() << "  maximum distance:" << oss.str().data();
+    }
 		
 	//read points
     while( std::getline(infile,line) )
