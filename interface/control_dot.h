@@ -18,7 +18,7 @@ public:
     ControlDot(SliceLine* line, bool left_bottom);
 
     QRectF boundingRect() const;
-    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *);
     QVariant itemChange(GraphicsItemChange change, const QVariant &value);
 
     void set_position(const QPointF &newpos);

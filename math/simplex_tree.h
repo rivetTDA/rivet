@@ -97,9 +97,6 @@ class SimplexTree {
             int get_num_simplices();		//returns the total number of simplices represented in the simplex tree
                 //TODO: would it be more efficient to store the total number of simplices???
 		
-        ///// FUNCTIONS FOR TESTING
-            void print();				//prints a representation of the simplex tree
-
 		
 	private:
         STNode* root;		//root node of the simplex tree
@@ -128,8 +125,6 @@ class SimplexTree {
         void find_vertices_recursively(std::vector<int> &vertices, STNode* node, int key);	//recursively search for a global index and keep track of vertices
 
         void write_boundary_column(MapMatrix* mat, STNode* sim, int col, int offset);   //writes boundary information for simplex represented by sim in column col of matrix mat; offset allows for block matrices such as B+C
-
-        void print_subtree(STNode *, int);	//recursive function that prints the simplex tree
 };
 
 #endif // __SimplexTree_H__

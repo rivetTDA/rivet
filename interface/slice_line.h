@@ -8,7 +8,6 @@
 #include "control_dot.h"
 class ControlDot;
 class SliceDiagram;
-//class VisualizationWindow;
 
 class SliceLine : public QGraphicsItem
 {
@@ -20,7 +19,7 @@ public:
     QRectF boundingRect() const;
     QPainterPath shape() const;
 
-    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *);
 
     QVariant itemChange(GraphicsItemChange change, const QVariant &value);
 

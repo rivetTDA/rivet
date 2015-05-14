@@ -44,7 +44,7 @@ public:
     void select_dot(unsigned index);
     void deselect_dot();
 
-    void resizeEvent(QResizeEvent* event);
+    void resizeEvent(QResizeEvent*);
     
 private slots:
     void on_angleDoubleSpinBox_valueChanged(double angle);

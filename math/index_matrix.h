@@ -22,8 +22,6 @@ public:
     unsigned width();    //returns number of columns
     unsigned height();   //returns number of rows
 
-    void print();   //for testing
-
 private:
     unsigned num_rows;
     unsigned num_cols;

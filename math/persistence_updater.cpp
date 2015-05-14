@@ -109,15 +109,6 @@ void PersistenceUpdater::store_barcodes(std::vector<Halfedge*>& path)
     store_multigrades(ind_high, false, high_simplex_order);
     delete ind_high;
 
-    //testing only
-//    std::cout << "== low_simplex_order: ";
-//    for(int i=0; i<low_simplex_order.size(); i++)
-//        std::cout << low_simplex_order[i] << ", ";
-//    std::cout << "\n== high_simplex_order: ";
-//    for(int i=0; i<high_simplex_order.size(); i++)
-//        std::cout << high_simplex_order[i] << ", ";
-//    std::cout << "\n";
-
     //get boundary matrices (R) and identity matrices (U) for RU-decomposition
     MapMatrix_Perm* R_low = bifiltration->get_boundary_mx(low_simplex_order);
     MapMatrix_Perm* R_high = bifiltration->get_boundary_mx(low_simplex_order, high_simplex_order);
@@ -320,11 +311,10 @@ void PersistenceUpdater::store_barcodes(std::vector<Halfedge*>& path)
 
         //testing
 //        U_high->print_perm();
-//        std::cout << "  Anchors above the current line: ";
+//        qDebug() << "  Anchors above the current line: ";
 //        for(std::set<Anchor*, Anchor_LeftComparator>::iterator it = mesh->all_anchors.begin(); it != mesh->all_anchors.end(); ++it)
 //            if((*it)->is_above())
-//                std::cout << "(" << (*it)->get_x() << "," << (*it)->get_y() << ") ";
-//        std::cout << "\n";
+//                qDebug() << "(" << (*it)->get_x() << "," << (*it)->get_y() << ") ";
 
         //if this cell does not yet have a barcode template, then store it now
         Face* cur_face = (path[i])->get_face();

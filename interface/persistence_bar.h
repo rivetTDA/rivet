@@ -18,7 +18,7 @@ public:
     QRectF boundingRect() const;
     QPainterPath shape() const;
 
-    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *);
 
     void set_line(double start_x, double start_y, double end_x, double end_y);
 
@@ -30,10 +30,10 @@ public:
     double get_index(); //returns the index of this bar (e.g. to send to the PersistenceDiagram for highlighting effects)
 
 protected:
-    void hoverEnterEvent(QGraphicsSceneHoverEvent *event);
-    void hoverLeaveEvent(QGraphicsSceneHoverEvent *event);
-    void mousePressEvent(QGraphicsSceneMouseEvent *event);
-    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
+    void hoverEnterEvent(QGraphicsSceneHoverEvent *);
+    void hoverLeaveEvent(QGraphicsSceneHoverEvent *);
+    void mousePressEvent(QGraphicsSceneMouseEvent *);
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *);
 
 private:
     SliceDiagram* sdgm;

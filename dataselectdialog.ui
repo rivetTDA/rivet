@@ -98,7 +98,7 @@
   </widget>
   <widget class="QPushButton" name="shortcutButton1">
    <property name="enabled">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <property name="geometry">
     <rect>
@@ -114,7 +114,7 @@
   </widget>
   <widget class="QPushButton" name="shortcutButton2">
    <property name="enabled">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <property name="geometry">
     <rect>

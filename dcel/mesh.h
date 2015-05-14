@@ -8,10 +8,8 @@
 #ifndef __DCEL_Mesh_H__
 #define __DCEL_Mesh_H__
 
-//includes????  namespace????
 #include <vector>
 #include <queue>
-#include <iostream>
 #include <limits>	//necessary for infinity
 #include <math.h>	//necessary for atan
 #include <set>

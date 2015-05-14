@@ -24,7 +24,7 @@ QPainterPath PersistenceBar::shape() const
     return stroker.createStroke(path);
 }
 
-void PersistenceBar::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+void PersistenceBar::paint(QPainter *painter, const QStyleOptionGraphicsItem * /*unused*/, QWidget * /*unused*/)
 {
     QPen pen(QColor(160, 0, 200, 127));   //semi-transparent purple
     pen.setWidth(4);
@@ -73,19 +73,19 @@ double PersistenceBar::get_index()
     return class_index;
 }
 
-void PersistenceBar::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
+void PersistenceBar::hoverEnterEvent(QGraphicsSceneHoverEvent * /*unused*/)
 {
     hover = true;
     update();
 }
 
-void PersistenceBar::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)
+void PersistenceBar::hoverLeaveEvent(QGraphicsSceneHoverEvent * /*unused*/)
 {
     hover = false;
     update();
 }
 
-void PersistenceBar::mousePressEvent(QGraphicsSceneMouseEvent *event)
+void PersistenceBar::mousePressEvent(QGraphicsSceneMouseEvent * /*unused*/)
 {
     if(pressed) //then unselect this bar
     {
@@ -104,7 +104,7 @@ void PersistenceBar::mousePressEvent(QGraphicsSceneMouseEvent *event)
 //    QGraphicsItem::mousePressEvent(event);
 }
 
-void PersistenceBar::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+void PersistenceBar::mouseReleaseEvent(QGraphicsSceneMouseEvent * /*unused*/)
 {
 //    pressed = false;
 //    update();

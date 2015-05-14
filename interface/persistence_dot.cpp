@@ -19,7 +19,7 @@ QRectF PersistenceDot::boundingRect() const
     return QRectF(-radius, -radius, 2*radius, 2*radius);
 }
 
-void PersistenceDot::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+void PersistenceDot::paint(QPainter *painter, const QStyleOptionGraphicsItem * /*unused*/, QWidget * /*unused*/)
 {
     QRectF rect = boundingRect();
     QBrush brush(QColor(160, 0, 200, 127));   //semi-transparent purple
@@ -68,19 +68,19 @@ double PersistenceDot::get_index()
     return index;
 }
 
-void PersistenceDot::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
+void PersistenceDot::hoverEnterEvent(QGraphicsSceneHoverEvent * /*unused*/)
 {
     hover = true;
     update();
 }
 
-void PersistenceDot::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)
+void PersistenceDot::hoverLeaveEvent(QGraphicsSceneHoverEvent * /*unused*/)
 {
     hover = false;
     update();
 }
 
-void PersistenceDot::mousePressEvent(QGraphicsSceneMouseEvent *event)
+void PersistenceDot::mousePressEvent(QGraphicsSceneMouseEvent * /*unused*/)
 {
     if(pressed) //then unselect this dot
     {
@@ -99,7 +99,7 @@ void PersistenceDot::mousePressEvent(QGraphicsSceneMouseEvent *event)
 //    QGraphicsItem::mousePressEvent(event);
 }
 
-void PersistenceDot::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+void PersistenceDot::mouseReleaseEvent(QGraphicsSceneMouseEvent * /*unused*/)
 {
 //    pressed = false;
 //    update();

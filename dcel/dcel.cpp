@@ -1,8 +1,6 @@
 #include "dcel.h"
 
-
-#include <iostream> //for testing only
-
+#include <qdebug.h>
 
 
 /*** implementation of class Vertex **/
@@ -33,10 +31,10 @@ double Vertex::get_y()
     return y;
 }
 
-std::ostream& operator<<(std::ostream& os, const Vertex& v)
+QDebug& operator<<(QDebug& qd, const Vertex& v)
 {
-    os << "(" << v.x << ", " << v.y << ")";
-    return os;
+    qd.nospace() << "(" << v.x << ", " << v.y << ")";
+    return qd.space();
 }
 
 
@@ -115,16 +113,15 @@ Anchor* Halfedge::get_anchor() const
     return anchor;
 }
 
-std::ostream& operator<<(std::ostream& os, const Halfedge& e)
+QDebug& operator<<(QDebug& qd, const Halfedge& e)
 {
     Halfedge* t = e.twin;
-    os << *(e.origin) << "--" << *(t->origin) << "; ";
+    qd.nospace() << *(e.origin) << "--" << *(t->origin) << "; ";
     if(e.anchor == NULL)
-        os << "Anchor null; ";
+        qd.nospace() << "Anchor null; ";
     else
-        os << "Anchor coords (" << e.anchor->get_x() << ", " << e.anchor->get_y() << "); ";
-//	os << "twin: " << (e.twin) << "; next: " << (e.next) << "; prev: " << (e.prev) << "; face: " << (e.face);
-    return os;
+        qd.nospace() << "Anchor coords (" << e.anchor->get_x() << ", " << e.anchor->get_y() << "); ";
+    return qd;
 }
 
 
@@ -162,15 +159,15 @@ void Face::mark_as_visited()
     visited = true;
 }
 
-std::ostream& operator<<(std::ostream& os, const Face& f)
+QDebug& operator<<(QDebug& qd, const Face& f)
 {
     Halfedge* start = f.boundary;
     Halfedge* curr = start;
     do{
-        os << *(curr->get_origin()) << "--";
+        qd.nospace() << *(curr->get_origin()) << "--";
         curr = curr->get_next();
     }while(curr != start);
-    os << "cycle; ";
-    return os;
+    qd.nospace() << "cycle; ";
+    return qd;
 }
 

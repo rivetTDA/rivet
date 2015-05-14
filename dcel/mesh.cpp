@@ -208,7 +208,7 @@ void Mesh::build_interior()
 
         if(last_pos != first_pos + 1)
         {
-            std::cerr << "ERROR: intersection between non-consecutive curves [1]: x = " << sweep->x << "\n";
+            qDebug() << "ERROR: intersection between non-consecutive curves [1]: x = " << sweep->x << "\n";
             throw std::exception();
         }
 
@@ -220,7 +220,7 @@ void Mesh::build_interior()
 
             if(cur->b->get_position() != last_pos + 1)
             {
-                std::cerr << "ERROR: intersection between non-consecutive curves [2]\n";
+                qDebug() << "ERROR: intersection between non-consecutive curves [2]\n";
                 throw std::exception();
             }
 
@@ -607,7 +607,7 @@ void Mesh::find_subpath(unsigned& cur_node, std::vector< std::set<unsigned> >& a
 
             if(cur_edge == (faces[cur_node])->get_boundary())   //THIS SHOULD NEVER HAPPEN
             {
-                std::cerr << "ERROR: cannot find edge between 2-cells " << cur_node << " and " << next_node << "\n";
+                qDebug() << "ERROR: cannot find edge between 2-cells " << cur_node << " and " << next_node << "\n";
                 throw std::exception();
             }
         }
@@ -860,12 +860,11 @@ void Mesh::print()
         qDebug() << "    vertex " << i << ": " << *vertices[i] << "; incident edge: " << HID(vertices[i]->get_incident_edge());
 	}
 	
-    qDebug() << "  Halfedges\n";
+    qDebug() << "  Halfedges";
     for(unsigned i=0; i<halfedges.size(); i++)
 	{
 		Halfedge* e = halfedges[i];
 		Halfedge* t = e->get_twin();
-//		qDebug() << "    halfedge " << i << " (" << e << "): " << *(e->get_origin()) << "--" << *(t->get_origin()) << "; ";	//also prints memory location
         qDebug() << "    halfedge " << i << ": " << *(e->get_origin()) << "--" << *(t->get_origin()) << "; ";
         if(e->get_anchor() == NULL)
             qDebug() << "Anchor null; ";
@@ -877,11 +876,10 @@ void Mesh::print()
     qDebug() << "  Faces";
     for(unsigned i=0; i<faces.size(); i++)
 	{
-//		qDebug() << "    face " << i << " (" << faces[i] << "): " << *faces[i];	//also prints memory location
         qDebug() << "    face " << i << ": " << *faces[i];
 	}
 	
-    qDebug() << "  Outside (unbounded) region: ";
+/*    qDebug() << "  Outside (unbounded) region: ";
 	Halfedge* start = halfedges[1];
 	Halfedge* curr = start;
 	do{
@@ -889,7 +887,7 @@ void Mesh::print()
 		curr = curr->get_next();
 	}while(curr != start);
     qDebug() << "cycle";
-	
+*/
     qDebug() << "  Anchor set: ";
     std::set<Anchor*>::iterator it;
     for(it = all_anchors.begin(); it != all_anchors.end(); ++it)
@@ -1148,19 +1146,11 @@ bool Mesh::CrossingComparator::operator()(const Crossing* c1, const Crossing* c2
     //TESTING
     if(c1->a->get_position() >= c1->b->get_position() || c2->a->get_position() >= c2->b->get_position())
     {
-        std::cerr << "INVERTED CROSSING ERROR\n";
-        std::cerr << "crossing 1 involves anchors " << c1->a << " (pos " << c1->a->get_position() << ") and " << c1->b << " (pos " << c1->b->get_position() << "),";
-        std::cerr << "crossing 2 involves anchors " << c2->a << " (pos " << c2->a->get_position() << ") and " << c2->b << " (pos " << c2->b->get_position() << "),";
+        qDebug() << "INVERTED CROSSING ERROR\n";
+        qDebug() << "crossing 1 involves anchors " << c1->a << " (pos " << c1->a->get_position() << ") and " << c1->b << " (pos " << c1->b->get_position() << "),";
+        qDebug() << "crossing 2 involves anchors " << c2->a << " (pos " << c2->a->get_position() << ") and " << c2->b << " (pos " << c2->b->get_position() << "),";
         throw std::exception();
     }
-//    if(c1->a->get_position() == c2->a->get_position())
-//    {
-//        std::cerr << "ILLEGAL CROSSING ERROR\n";
-//        std::cerr << "crossing 1 involves anchors " << c1->a << " (pos " << c1->a->get_position() << ") and " << c1->b << " (pos " << c1->b->get_position() << "),";
-//        std::cerr << "crossing 2 involves anchors " << c2->a << " (pos " << c2->a->get_position() << ") and " << c2->b << " (pos " << c2->b->get_position() << "),";
-//        throw std::exception();
-//    }
-
 
     Mesh* m = c1->m;    //makes it easier to reference arrays in the mesh
 

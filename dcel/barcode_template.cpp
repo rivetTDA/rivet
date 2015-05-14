@@ -1,7 +1,7 @@
 #include "barcode_template.h"
 
-#include <iostream>
 #include <qdebug.h>
+
 
 BarTemplate::BarTemplate(unsigned a, unsigned b) :
     begin(a), end(b), multiplicity(1)

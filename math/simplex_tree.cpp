@@ -8,7 +8,6 @@
 #include <set>
 #include <vector>
 #include <math.h>
-#include <iostream>
 #include <limits>   //std::numeric_limits
 #include <QDebug>
 
@@ -196,8 +195,6 @@ void SimplexTree::build_VR_subtree(std::vector<unsigned>& times, std::vector<uns
 				current_time = prev_time;
 			
 			//create the node and add it as a child of its parent
-            if(verbosity >= 10) { std::cout << "  adding node " << j << " as child of " << parent_indexes.back() << "; current_dist = " << current_dist << "\n"; }
-			
             STNode* node = new STNode(j, &parent, current_time, current_dist, gic);				//delete THIS OBJECT LATER!
 			parent.append_child(node);
 			gic++;	//increment the global index counter
@@ -336,12 +333,9 @@ DirectSumMatrices SimplexTree::get_merge_mxs()
         for(int x=0; x<=x_grades; x++)  //columns          <--- CHECK! DO WE WANT <= HERE? FOR NOW, YES.
         {
             //process simplices for the current multi-grade (x,y)
-//            std::cout << "grade (" << x << "," << y << "): ";
-
             //first, insert columns for simplices that appear in B at the multi-grade (x-1,y)
             while( (it_b != ordered_simplices.end()) && ((*it_b)->grade_x() == x - 1) && ((*it_b)->grade_y() == y) )
             {
-//                std::cout << "adding column from B, ";
                 col++;
                 write_boundary_column(boundary, *it_b, col, 0);
                 merge->set(b, col);
@@ -352,7 +346,6 @@ DirectSumMatrices SimplexTree::get_merge_mxs()
             //second, insert columns for simplices that appear in C at the multi-grade (x,y-1)
             while( (it_c != ordered_simplices.end()) && ((*it_c)->grade_x() == x) && ((*it_c)->grade_y() == y - 1) )
             {
-//                std::cout << "adding column from C, ";
                 col++;
                 write_boundary_column(boundary, *it_c, col, num_rows);
                 merge->set(c, col);
@@ -362,8 +355,6 @@ DirectSumMatrices SimplexTree::get_merge_mxs()
 
             //finished a multi-grade; record column index
             end_cols->set(y, x, col);
-
-//            std::cout << std::endl;
         }
     }
 
@@ -691,7 +682,7 @@ SimplexData SimplexTree::get_simplex_data(int index)
 	{
 		if(kids.size() == 0)
 		{
-			std::cerr << "ERROR: vector of size zero in SimplexTree::get_multi_index()\n";
+            qDebug() << "ERROR: vector of size zero in SimplexTree::get_multi_index()\n";
 			throw std::exception();
 		}
 		
@@ -748,28 +739,6 @@ int SimplexTree::get_size(int dim)
     else
         return -1;
 }
-
-
-// RECURSIVELY PRINT TREE
-void SimplexTree::print()
-{
-	print_subtree(root, 1);
-	
-}
-
-void SimplexTree::print_subtree(STNode* node, int indent)
-{
-	//print current node
-	for(int i=0; i<indent; i++)
-		std::cout << "  ";
-    node->print();
-	
-	//print children nodes
-    std::vector<STNode*> kids = node->get_children();
-    for(unsigned i=0; i<kids.size(); i++)
-        print_subtree(kids[i], indent+1);
-}
-
 
 //returns the total number of simplices represented in the simplex tree
 int SimplexTree::get_num_simplices()	

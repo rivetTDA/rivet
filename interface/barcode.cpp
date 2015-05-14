@@ -1,7 +1,6 @@
 #include "barcode.h"
 
 #include <math.h>
-#include <iostream>
 #include <qdebug.h>
 
 MultiBar::MultiBar(double b, double d, unsigned m) :

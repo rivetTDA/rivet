@@ -37,7 +37,7 @@ QPainterPath SliceLine::shape() const
     return stroker.createStroke(path);
 }
 
-void SliceLine::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+void SliceLine::paint(QPainter *painter, const QStyleOptionGraphicsItem * /*unused*/, QWidget * /*unused*/)
 {
     QPen pen(QColor(0, 0, 255, 150));   //semi-transparent blue
     pen.setWidth(4);

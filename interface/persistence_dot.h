@@ -16,7 +16,7 @@ public:
     PersistenceDot(PersistenceDiagram* p_diagram, double unscaled_x, double unscaled_y, double radius, unsigned index);
 
     QRectF boundingRect() const;
-    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *);
 
     void select();
     void deselect();
@@ -26,10 +26,10 @@ public:
     double get_index(); //returns the index of this dot (e.g. to send to the SliceDiagram for highlighting effects)
 
 protected:
-    void hoverEnterEvent(QGraphicsSceneHoverEvent *event);
-    void hoverLeaveEvent(QGraphicsSceneHoverEvent *event);
-    void mousePressEvent(QGraphicsSceneMouseEvent *event);
-    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
+    void hoverEnterEvent(QGraphicsSceneHoverEvent *);
+    void hoverLeaveEvent(QGraphicsSceneHoverEvent *);
+    void mousePressEvent(QGraphicsSceneMouseEvent *);
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *);
 
 private:
     PersistenceDiagram* pdgm;

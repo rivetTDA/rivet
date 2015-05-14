@@ -17,7 +17,7 @@ QRectF ControlDot::boundingRect() const
     return QRectF(-10,-10,20,20);
 }
 
-void ControlDot::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+void ControlDot::paint(QPainter *painter, const QStyleOptionGraphicsItem * /*unused*/, QWidget * /*unused*/)
 {
     QRectF rect = boundingRect();
     QBrush brush(QColor(0, 0, 255, 150));   //semi-transparent blue

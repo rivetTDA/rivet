@@ -97,12 +97,12 @@ void VisualizationWindow::compute()
 
     if(verbosity >= 10)
     {
-        std::cout << "x-grades:\n";
+        qDebug() << "x-grades:";
         for(unsigned i=0; i<x_grades.size(); i++)
-            std::cout << "  " << x_grades[i] << " = " << x_exact[i] << "\n";
-        std::cout << "y-grades:\n";
+            qDebug() << "  " << x_grades[i] << " = " << x_exact[i];
+        qDebug() << "y-grades:";
         for(unsigned i=0; i<y_grades.size(); i++)
-            std::cout << "  " << y_grades[i] << " = " << y_exact[i] << "\n";
+            qDebug() << "  " << y_grades[i] << " = " << y_exact[i];
     }
 
 
@@ -130,14 +130,6 @@ void VisualizationWindow::compute()
 
     qDebug() << "   building the line arrangement and computing all barcode templates took" << timer.elapsed() << "milliseconds";
 
-    //testing:
-    if(verbosity >= 10)
-    {
-        std::cout << "  SUPPORT POINTS OF xi_0 AND xi_1 (INTEGER VALUES): ";
-        for(unsigned i=0; i<xi_support.size(); i++)
-            std::cout << "(" << xi_support[i].x << "," << xi_support[i].y << "), ";
-        std::cout << "\n";
-    }
     if(verbosity >= 2) { qDebug() << "COMPUTATION FINISHED; READY FOR INTERACTIVITY."; }
 
     //print arrangement info
@@ -354,7 +346,7 @@ void VisualizationWindow::deselect_dot()
     p_diagram->deselect_dot(false);
 }
 
-void VisualizationWindow::resizeEvent(QResizeEvent* event)
+void VisualizationWindow::resizeEvent(QResizeEvent* /*unused*/)
 {
 //    qDebug() << "resize event! slice_diagrma = " << slice_diagram;
     if(slice_diagram != NULL)

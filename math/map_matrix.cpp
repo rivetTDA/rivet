@@ -487,7 +487,7 @@ void MapMatrix::print()
     //handle empty matrix
 	if(num_rows == 0 || columns.size() == 0)
 	{
-        std::cout << "        (empty matrix: " << num_rows << " rows by " << columns.size() << " columns)\n";
+        qDebug() << "        (empty matrix:" << num_rows << "rows by" << columns.size() << "columns)";
 		return;
 	}
 	
@@ -511,17 +511,18 @@ void MapMatrix::print()
 	}
 	
 	//print the matrix
+    QDebug qd = qDebug().nospace();
     for(unsigned i=0; i<num_rows; i++)
 	{
-		std::cout << "        |";
+        qd << "        |";
         for(unsigned j=0; j<columns.size(); j++)
 		{
 			if(mx[i][j])
-				std::cout << " 1";
+                qd << " 1";
 			else
-				std::cout << " 0";
+                qd << " 0";
 		}
-		std::cout << " |\n";
+        qd << " |\n";
 	}
 }//end print()
 
@@ -831,16 +832,6 @@ void MapMatrix_Perm::rebuild(MapMatrix_Perm* reference, std::vector<unsigned>& c
 //function to print the matrix to standard output, for testing purposes
 void MapMatrix_Perm::print()
 {
-    //print permutation
-//    std::cout << "    row permutation: ";
-//    for(unsigned i=0; i<num_rows; i++)
-//        std::cout << perm[i] << " ";
-//    std::cout << "\n";
-//    std::cout << "    INVERSE column permutation: ";
-//    for(unsigned j=0; j<columns.size(); j++)
-//        std::cout << col_perm[j] << " ";
-//    std::cout << "\n";
-
     //handle empty matrix
     if(num_rows == 0 || columns.size() == 0)
     {

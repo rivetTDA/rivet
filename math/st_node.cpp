@@ -5,7 +5,6 @@
 #include "st_node.h"
 
 #include <cstddef>  //for NULL keyword
-#include <iostream> //for testing only
 
 //constructor for empty node
 STNode::STNode() :
@@ -43,21 +42,11 @@ int STNode::grade_x() const
     return mg_x;
 }
 
-//int STNode::get_birth() //DEPRECATED
-//{
-//    return mg_x;
-//}
-
 //returns the second component of the multi-grade for this simplex
 int STNode::grade_y() const
 {
     return mg_y;
 }
-
-//int STNode::get_dist()  //DEPRECATED
-//{
-//    return mg_y;
-//}
 
 //sets the global index for the simplex represented by this node
 void STNode::set_global_index(int i)
@@ -121,7 +110,6 @@ STNode* STNode::add_child(int v, int x, int y)
 	}
 	
 	//if not found, create a new node
-//	std::cout << " ---- creating new node with vertex index " << v << " as child of node with vertex index " << vertex << "\n";
     STNode* newnode = new STNode(v, this, x, y, -1);
 	children.insert(children.begin() + max + 1, newnode);
 	return newnode;
@@ -134,26 +122,5 @@ std::vector<STNode*> STNode::get_children()
 	return children;
 }
 
-
-//print a text representation of this node
-void STNode::print()
-{
-    std::cout << "NODE: vertex " << vertex <<  "; global index: " << g_index << "; dim index: " << d_index << "; multi-index: (" << mg_x << ", " << mg_y << "); parent: ";
-	if(parent)
-		std::cout << (*parent).get_vertex() << "; ";
-	else
-		std::cout << "NULL; ";
-	std::cout << "children: ";
-	if(children.size() == 0)
-	
-		std::cout << "NONE";
-    for(unsigned i=0; i<children.size(); i++)
-	{
-		if(i>0)
-			std::cout << ", ";
-		std::cout << (*children[i]).get_vertex();
-	}
-    std::cout << "\n";
-}
 
 

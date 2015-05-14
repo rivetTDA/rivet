@@ -179,28 +179,7 @@ void InputManager::read_point_cloud(unsigned x_bins, unsigned y_bins)
 	}
 	
     if(verbosity >= 4) { qDebug() << "  read " << points.size() << " points; input finished"; }
-
-    //sort the points -- THIS IS UNNECESSARY, RIGHT???
-//	if(verbosity >= 2) { std::cout << "SORTING POINTS BY BIRTH TIME\n"; }
-//	sort(points.begin(), points.end());
 	
-	//test points vector
-    if(verbosity >= 10)
-	{
-		std::cout << "TESTING VECTOR:\n";
-        for(unsigned i=0; i<points.size(); i++)
-		{
-            ExactPoint p = points[i];
-			std::cout << "  point " << i << ": (";
-            for(unsigned j=0; j<p.coords.size(); j++)
-			{
-                std::cout << p.coords[j];
-                if(j<p.coords.size()-1) { std::cout << ", "; }
-			}
-            std::cout << ") born at time " << p.birth << "\n";
-		}
-		std::cout << "  found " << points.size() << " points\n";
-	}
 
   /* step 2: compute distance matrix, and create ordered lists of all unique distance and time values */
 
@@ -347,27 +326,6 @@ void InputManager::read_point_cloud(unsigned x_bins, unsigned y_bins)
     }
 
 
-/********* TESTING ONLY ********
-    std::cout << "CHECK: (time) x_grades.size() = " << x_grades.size() << ", x_exact.size() = " << x_exact.size() << ", time_indexes.size() = " << time_indexes.size() << ", x_bins = " << x_bins << "\n";
-    std::cout << "  all x-grades: \n";
-    for(unsigned i=0; i<x_grades.size(); i++)
-        std::cout << "    " << i << ": " << x_grades[i] << " = " << x_exact[i] << "\n";
-    std::cout << "  x-indexes of points: ";
-    for(unsigned i=0; i<time_indexes.size(); i++)
-        std::cout << time_indexes[i] << " ";
-    std::cout << "\n";
-
-    std::cout << "CHECK: (distance) y_grades.size() = " << y_grades.size() << ", y_exact.size() = " << y_exact.size() << ", dist_indexes.size() = " << dist_indexes.size() << ", y_bins = " << y_bins << "\n";
-    std::cout << "  all y-grades: \n";
-    for(unsigned i=0; i<y_grades.size(); i++)
-        std::cout << "    " << i << ": " << y_grades[i] << " = " << y_exact[i] << "\n";
-    std::cout << "  y-indexes of pairs:\n";
-    for(unsigned i=0; i<num_points-1; i++)
-        for(unsigned j=i+1; j<num_points; j++)
-            std::cout << "    dist(" << i << ", " << j << ") = " << dist_indexes[ (j*(j-1))/2 + i ] << "\n";
-    std::cout << "\n";
-*/
-
   /* step 3: build the bifiltration */
 
     //simplex_tree stores only DISCRETE information!
@@ -425,14 +383,6 @@ void InputManager::read_bifiltration()
 		int time, dist;
 		iss >> time;
 		iss >> dist;
-		
-		if(verbosity >= 4)
-		{
-			std::cout << "    simplex [" << verts[0];
-			for(int i=1; i<=dim; i++)
-				std::cout  << " " << verts[i];
-			std::cout << "] with multi-index (" << time << ", " << dist << ")\n"; 
-		}
 		
 		//add the simplex to the simplex tree
 		simplex_tree.add_simplex(verts, time, dist);
