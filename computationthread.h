@@ -6,6 +6,7 @@
 
 #include "interface/input_parameters.h"
 #include "math/xi_point.h"
+#include "dcel/mesh.h"
 
 #include <boost/multiprecision/cpp_int.hpp>
 typedef boost::multiprecision::cpp_rational exact;
@@ -16,10 +17,13 @@ class ComputationThread : public QThread
     Q_OBJECT
 
     public:
-        ComputationThread(int verbosity, QObject *parent = 0);
+        ComputationThread(int verbosity, InputParameters& params, std::vector<double>& x_grades, std::vector<double>& y_grades, std::vector<xiPoint>& xi_support, QObject *parent = 0);
         ~ComputationThread();
 
-        void compute(InputParameters& p, std::vector<double>& xg, std::vector<double>& yg, std::vector<xiPoint>& xi);
+        void compute();
+
+    signals:
+        void arrangementReady(Mesh* arrangement);
 
     protected:
         void run() Q_DECL_OVERRIDE;
@@ -30,6 +34,7 @@ class ComputationThread : public QThread
         std::vector<double>& y_grades;
         std::vector<xiPoint>& xi_support;
 
+        Mesh* arrangement;      //TODO: should this be a pointer?
 
         const int verbosity;
 };

@@ -65,12 +65,16 @@ exact str_to_exact(std::string& str)
 
 
 //constructor
-InputManager::InputManager(int d, int v) :
-    verbosity(v), hom_dim(d),
-    simplex_tree(d, v)
+InputManager::InputManager(int dim, std::vector<double>& x_grades, std::vector<exact>& x_exact, std::vector<double>& y_grades, std::vector<exact>&y_exact, SimplexTree& bifiltration, int verbosity) :
+    verbosity(verbosity), hom_dim(dim),
+    x_grades(x_grades), x_exact(x_exact),
+    y_grades(y_grades), y_exact(y_exact),
+    simplex_tree(bifiltration)
 { }
 
 //function to run the input manager, requires a filename
+//  post condition: x_grades and x_exact have size x_bins, and they contain the grade values for the 2-D persistence module in double and exact form (respectively)
+//                  similarly for y_grades and y_exact
 void InputManager::start(std::string filename, unsigned x_bins, unsigned y_bins)
 {
 	//read the file
@@ -110,32 +114,32 @@ void InputManager::start(std::string filename, unsigned x_bins, unsigned y_bins)
 	
 }//end start()
 
-//functions to return grade values
-std::vector<double> InputManager::get_x_grades()
-{
-    return x_grades;
-}
+//DEPRECATED!!! functions to return grade values
+//std::vector<double> InputManager::get_x_grades()
+//{
+//    return x_grades;
+//}
 
-std::vector<exact> InputManager::get_x_exact()
-{
-    return x_exact;
-}
+//std::vector<exact> InputManager::get_x_exact()
+//{
+//    return x_exact;
+//}
 
-std::vector<double> InputManager::get_y_grades()
-{
-    return y_grades;
-}
+//std::vector<double> InputManager::get_y_grades()
+//{
+//    return y_grades;
+//}
 
-std::vector<exact> InputManager::get_y_exact()
-{
-    return y_exact;
-}
+//std::vector<exact> InputManager::get_y_exact()
+//{
+//    return y_exact;
+//}
 
 //returns a pointer to the simplex tree representing the bifiltration
-SimplexTree* InputManager::get_bifiltration()
-{
-    return &simplex_tree;
-}
+//SimplexTree* InputManager::get_bifiltration()
+//{
+//    return &simplex_tree;
+//}
 
 
 //reads a point cloud

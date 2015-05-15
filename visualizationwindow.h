@@ -36,8 +36,6 @@ public:
     explicit VisualizationWindow(QWidget *parent = 0);
     ~VisualizationWindow();
 
-//DEPRECATED    void setFile(QString name); //sets the name of the data file
-//DEPRECATED    void setComputationParameters(int hom_dim, unsigned num_x_bins, unsigned num_y_bins, QString x_text, QString y_text);    //sets parameters for the computation
     void start_computation(); //begins the computation pipeline
 
     void set_line_parameters(double angle, double offset);
@@ -52,6 +50,8 @@ protected:
     void resizeEvent(QResizeEvent*);
     
 private slots:
+    void augmented_arrangement_ready(Mesh* arrangement);
+
     void on_angleDoubleSpinBox_valueChanged(double angle);
 
     void on_offsetSpinBox_valueChanged(double arg1);
@@ -85,6 +85,7 @@ private:
 
 
     //items for slice diagram
+    bool line_selection_ready;      //initially false, but set to true when data is in place for line selection
     QGraphicsScene* sliceScene;
     SliceDiagram* slice_diagram;
     bool slice_update_lock;

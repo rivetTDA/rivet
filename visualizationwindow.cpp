@@ -21,7 +21,9 @@ VisualizationWindow::VisualizationWindow(QWidget *parent) :
     ui(new Ui::VisualizationWindow),
     verbosity(5), INFTY(std::numeric_limits<double>::infinity()),
     ds_dialog(input_params),
-    cthread(verbosity),
+    x_grades(), y_grades(), xi_support(),
+    cthread(verbosity, input_params, x_grades, y_grades, xi_support),
+    line_selection_ready(false),
     slice_diagram(NULL), slice_update_lock(false),
     p_diagram(NULL), persistence_diagram_drawn(false)
 {
@@ -39,6 +41,9 @@ VisualizationWindow::VisualizationWindow(QWidget *parent) :
     ui->pdView->setScene(pdScene);
     ui->pdView->scale(1,-1);
     ui->pdView->setRenderHint(QPainter::Antialiasing);
+
+    //connect signals from ComputationThread to slots in VisualizationWindow
+    QObject::connect(&cthread, &ComputationThread::arrangementReady, this, &VisualizationWindow::augmented_arrangement_ready);
 }
 
 VisualizationWindow::~VisualizationWindow()
@@ -46,26 +51,7 @@ VisualizationWindow::~VisualizationWindow()
     delete ui;
 }
 
-/* DEPRECATED
-//sets the name of the data file
-void VisualizationWindow::setFile(QString name)
-{
-    fileName = name;
-    ui->statusBar->showMessage("file: "+fileName);
-}
-
-//sets parameters for the computation
-void VisualizationWindow::setComputationParameters(int hom_dim, unsigned num_x_bins, unsigned num_y_bins, QString x_text, QString y_text)
-{
-    dim = hom_dim;
-    x_bins = num_x_bins;
-    y_bins = num_y_bins;
-    x_label = x_text;
-    y_label = y_text;
-}
-*/
-
-//void VisualizationWindow::on_computeButton_clicked() //read the file and do the persistent homology computation
+//start the persistent homology computation in a new thread
 void VisualizationWindow::start_computation()
 {
     //create the progress box
@@ -73,14 +59,14 @@ void VisualizationWindow::start_computation()
 //    prog_dialog.exec();
 
     //start the computation in a new thread
+    cthread.compute();
 
-    ///TODO: FINISH THIS!
-    cthread.compute(input_params, x_grades, y_grades, xi_support);
+}//end start_computation()
 
-
-
-/* UNDER CONSTRUCTION...
-
+void VisualizationWindow::augmented_arrangement_ready(Mesh* arrangement)
+{
+    //receive the arrangement
+    this->arrangement = arrangement;
 
     if(verbosity >= 2) { qDebug() << "COMPUTATION FINISHED; READY FOR INTERACTIVITY."; }
 
@@ -91,23 +77,30 @@ void VisualizationWindow::start_computation()
     //TESTING: verify consistency of the arrangement
 //    arrangement->test_consistency();
 
+    //get data extents
+    double data_xmin = x_grades.front();
+    double data_xmax = x_grades.back();
+    double data_ymin = y_grades.front();
+    double data_ymax = y_grades.back();
 
-  //STEP 4: PREPARE GRAPHICAL ELEMENTS
+    //prepare graphical elements
 
     //initialize the SliceDiagram and send xi support points
     slice_diagram = new SliceDiagram(sliceScene, this, data_xmin, data_xmax, data_ymin, data_ymax, ui->normCoordCheckBox->isChecked());
     for(std::vector<xiPoint>::iterator it = xi_support.begin(); it != xi_support.end(); ++it)
         slice_diagram->add_point(x_grades[it->x], y_grades[it->y], it->zero, it->one);
-    slice_diagram->create_diagram(x_label, y_label);
+    slice_diagram->create_diagram(input_params.x_label, input_params.y_label);
 
     //update offset extents   //TODO: FIX THIS!!!
     ui->offsetSpinBox->setMinimum(-1*data_xmax);
     ui->offsetSpinBox->setMaximum(data_ymax);
 
+    line_selection_ready = true;
+
 //    qDebug() << "zero: " << slice_diagram->get_zero();
 
     //inialize persistence diagram
-    p_diagram = new PersistenceDiagram(pdScene, this, &fileName, dim);
+    p_diagram = new PersistenceDiagram(pdScene, this, &(input_params.fileName), input_params.dim);
     p_diagram->resize_diagram(slice_diagram->get_slice_length(), slice_diagram->get_pd_scale());
 
     //get the barcode
@@ -129,14 +122,14 @@ void VisualizationWindow::start_computation()
 
     persistence_diagram_drawn = true;
     ui->statusBar->showMessage("persistence diagram drawn");
-  */
-}//end on_computeButton_clicked()
+
+}//end augmented_arrangement_ready()
 
 void VisualizationWindow::on_angleDoubleSpinBox_valueChanged(double angle)
 {
 //    qDebug() << "angleDoubleSpinBox_valueChanged(); angle: " << angle << "; slice_update_lock: " << slice_update_lock;
 
-    if(!slice_update_lock)
+    if(line_selection_ready && !slice_update_lock)
         slice_diagram->update_line(angle, ui->offsetSpinBox->value());
 
     if(persistence_diagram_drawn)
@@ -147,7 +140,7 @@ void VisualizationWindow::on_offsetSpinBox_valueChanged(double offset)
 {
 //    qDebug() << "offsetSpinBox_valueChanged(); offset: " << offset << "; slice_update_lock: " << slice_update_lock;
 
-    if(!slice_update_lock)
+    if(line_selection_ready && !slice_update_lock)
         slice_diagram->update_line(ui->angleDoubleSpinBox->value(), offset);
 
     if(persistence_diagram_drawn)
@@ -156,7 +149,7 @@ void VisualizationWindow::on_offsetSpinBox_valueChanged(double offset)
 
 void VisualizationWindow::on_normCoordCheckBox_clicked(bool checked)
 {
-    if(slice_diagram != NULL)
+    if(line_selection_ready)
     {
         slice_diagram->set_normalized_coords(checked);
         slice_diagram->resize_diagram();
@@ -167,20 +160,20 @@ void VisualizationWindow::on_normCoordCheckBox_clicked(bool checked)
 
 void VisualizationWindow::on_barcodeCheckBox_clicked(bool checked)
 {
-    if(slice_diagram != NULL)
-    {
+    if(line_selection_ready)
         slice_diagram->toggle_barcode(checked);
-    }
 }
 
 void VisualizationWindow::on_xi0CheckBox_toggled(bool checked)
 {
-    slice_diagram->toggle_xi0_points(checked);
+    if(line_selection_ready)
+        slice_diagram->toggle_xi0_points(checked);
 }
 
 void VisualizationWindow::on_xi1CheckBox_toggled(bool checked)
 {
-    slice_diagram->toggle_xi1_points(checked);
+    if(line_selection_ready)
+        slice_diagram->toggle_xi1_points(checked);
 }
 
 void VisualizationWindow::update_persistence_diagram()
