@@ -12,6 +12,8 @@
 #include "map_matrix.h"
 #include "index_matrix.h"
 #include "xi_support_matrix.h"
+#include "../computationthread.h"
+class ComputationThread;
 #include "../dcel/barcode_template.h"
 class Mesh;
 
@@ -27,7 +29,7 @@ class PersistenceUpdater
         //there are four options here, and it isn't yet clear which is best
         void store_barcodes(std::vector<Halfedge *> &path);             //standard algorithm with non-lazy swaps
         void store_barcodes_lazy(std::vector<Halfedge*>& path);         //uses lazy updates and unsorted "bins" for each row and column
-        void store_barcodes_with_reset(std::vector<Halfedge*>& path);   //hybrid approach -- for expensive crossings, resets the matrices and does a standard persistence calculation
+        void store_barcodes_with_reset(std::vector<Halfedge*>& path, ComputationThread* cthread);   //hybrid approach -- for expensive crossings, resets the matrices and does a standard persistence calculation
         void store_barcodes_quicksort(std::vector<Halfedge*>& path);    //hybrid approach -- for expensive crossings, rearranges columns via quicksort and fixes the RU-decomposition globally
 
 

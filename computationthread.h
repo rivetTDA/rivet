@@ -7,6 +7,7 @@
 #include "interface/input_parameters.h"
 #include "math/xi_point.h"
 #include "dcel/mesh.h"
+class Mesh;
 
 #include <boost/multiprecision/cpp_int.hpp>
 typedef boost::multiprecision::cpp_rational exact;
@@ -23,6 +24,8 @@ class ComputationThread : public QThread
         void compute();
 
     signals:
+        void sendProgressUpdate(QString text, int percent);
+        void sendProgressPercent(int percent);
         void xiSupportReady();
         void arrangementReady(Mesh* arrangement);
 

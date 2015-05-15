@@ -19,6 +19,8 @@
 #include "../math/xi_point.h"
 #include "../math/multi_betti.h"
 #include "../math/persistence_updater.h"
+#include "../computationthread.h"
+class ComputationThread;
 
 #include <boost/multiprecision/cpp_int.hpp>
 typedef boost::multiprecision::cpp_rational exact;
@@ -34,7 +36,7 @@ class Mesh
 		
         ~Mesh();	//destructor: deletes all cells and anchors --- CHECK THIS!!!
 		
-        void build_arrangement(MultiBetti& mb, std::vector<xiPoint>& xi_pts);
+        void build_arrangement(MultiBetti& mb, std::vector<xiPoint>& xi_pts, ComputationThread* cthread);
             //builds the DCEL arrangement, and computes and stores persistence data
             //also stores ordered list of xi support points in the supplied vector
 

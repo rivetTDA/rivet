@@ -29,6 +29,8 @@ void ComputationThread::run()
 {
   //STEP 1: INPUT DATA AND CREATE BIFILTRATION
 
+    emit sendProgressUpdate(QString("Reading data file..."), 0);
+
     //local data elements
     std::vector<exact> x_exact;
     std::vector<exact> y_exact;
@@ -70,6 +72,8 @@ void ComputationThread::run()
 
   //STEP 2: COMPUTE SUPPORT POINTS OF MULTI-GRADED BETTI NUMBERS
 
+    emit sendProgressUpdate(QString("Computing multi-graded Betti numbers..."), 0);
+
     //compute xi_0 and xi_1 at all multi-grades
     if(verbosity >= 2) { qDebug() << "COMPUTING xi_0 AND xi_1 FOR HOMOLOGY DIMENSION " << params.dim << ":"; }
     MultiBetti mb(bifiltration, params.dim, verbosity);
@@ -92,7 +96,7 @@ void ComputationThread::run()
 
     timer.start();
     arrangement = new Mesh(x_grades, x_exact, y_grades, y_exact, verbosity);    //NOTE: delete later!
-    arrangement->build_arrangement(mb, xi_support);     //also stores list of xi support points in the last argument
+    arrangement->build_arrangement(mb, xi_support, this);     //also stores list of xi support points in the last argument
       //NOTE: this also computes and stores barcode templates in the arrangement
 
     qDebug() << "   building the line arrangement and computing all barcode templates took" << timer.elapsed() << "milliseconds";

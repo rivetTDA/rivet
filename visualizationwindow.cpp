@@ -43,6 +43,8 @@ VisualizationWindow::VisualizationWindow(QWidget *parent) :
     ui->pdView->setRenderHint(QPainter::Antialiasing);
 
     //connect signals from ComputationThread to slots in VisualizationWindow
+    QObject::connect(&cthread, &ComputationThread::sendProgressUpdate, &prog_dialog, &ProgressDialog::updateProgress);
+    QObject::connect(&cthread, &ComputationThread::sendProgressPercent, &prog_dialog, &ProgressDialog::updatePercent);
     QObject::connect(&cthread, &ComputationThread::xiSupportReady, this, &VisualizationWindow::paint_xi_support);
     QObject::connect(&cthread, &ComputationThread::arrangementReady, this, &VisualizationWindow::augmented_arrangement_ready);
 }
@@ -55,9 +57,10 @@ VisualizationWindow::~VisualizationWindow()
 //start the persistent homology computation in a new thread
 void VisualizationWindow::start_computation()
 {
-    //create the progress box
-//    ProgressDialog prog_dialog;
-//    prog_dialog.exec();
+    //show the progress box
+    prog_dialog.show();
+    prog_dialog.activateWindow();
+    prog_dialog.raise();
 
     //start the computation in a new thread
     cthread.compute();
@@ -86,6 +89,9 @@ void VisualizationWindow::augmented_arrangement_ready(Mesh* arrangement)
     //receive the arrangement
     this->arrangement = arrangement;
 
+    //close the progress dialog box
+    prog_dialog.close();
+
     if(verbosity >= 2) { qDebug() << "COMPUTATION FINISHED; READY FOR INTERACTIVITY."; }
 
     //print arrangement info
@@ -94,7 +100,6 @@ void VisualizationWindow::augmented_arrangement_ready(Mesh* arrangement)
 
     //TESTING: verify consistency of the arrangement
 //    arrangement->test_consistency();
-
 
 //    qDebug() << "zero: " << slice_diagram->get_zero();
 

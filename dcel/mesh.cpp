@@ -80,7 +80,7 @@ Mesh::~Mesh()
 
 //builds the DCEL arrangement, computes and stores persistence data
 //also stores ordered list of xi support points in the supplied vector
-void Mesh::build_arrangement(MultiBetti& mb, std::vector<xiPoint>& xi_pts)
+void Mesh::build_arrangement(MultiBetti& mb, std::vector<xiPoint>& xi_pts, ComputationThread* cthread)
 {
     //precondition: the constructor has already created the boundary of the arrangement
 
@@ -88,26 +88,30 @@ void Mesh::build_arrangement(MultiBetti& mb, std::vector<xiPoint>& xi_pts)
     PersistenceUpdater updater(this, mb, xi_pts);   //PersistenceUpdater object is able to do the calculations necessary for finding anchors and computing barcode templates
 
     //first, compute anchors and store them in the vector Mesh::all_anchors
+    emit cthread->sendProgressUpdate(QString("Finding anchors..."), 50);
     timer.start();
     updater.find_anchors();
     qDebug() << "  --> finding anchors took" << timer.elapsed() << "milliseconds";
 
     //now that we have all the anchors, we can build the interior of the arrangement
+    emit cthread->sendProgressUpdate(QString("Building the line arrangement..."), 0);
     timer.start();
     build_interior();
     qDebug() << "  --> building the interior of the line arrangement took" << timer.elapsed() << "milliseconds";
     print_stats();
 
     //now that the arrangement is constructed, we can find a path -- NOTE: path starts with a (near-vertical) line to the right of all multigrades
+    emit cthread->sendProgressUpdate(QString("Finding the path..."), 0);
     std::vector<Halfedge*> path;
     timer.start();
     find_path(path);
     qDebug() << "  --> finding the path took" << timer.elapsed() << "milliseconds";
 
     //finally, we can traverse the path, computing and storing a barcode template in each 2-cell
+    emit cthread->sendProgressUpdate(QString("Computing barcode templates..."), 0);
     //updater.store_barcodes(path);
     //updater.store_barcodes_lazy(path);
-    updater.store_barcodes_with_reset(path);
+    updater.store_barcodes_with_reset(path, cthread);
 
 }//end build_arrangement()
 

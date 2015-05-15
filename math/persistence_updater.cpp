@@ -738,7 +738,7 @@ void PersistenceUpdater::store_barcodes_lazy(std::vector<Halfedge*>& path)
 
 //computes and stores a barcode template in each 2-cell of mesh
 //resets the matrices and does a standard persistence calculation for expensive crossings
-void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path)
+void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path, ComputationThread* cthread)
 {
     QTime timer;    //for timing the computations
 
@@ -966,6 +966,9 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path)
         Face* cur_face = (path[i])->get_face();
         if(!cur_face->has_been_visited())
             store_barcode_template(cur_face, R_low, R_high);
+
+        //update progress bar
+        cthread->sendProgressPercent( (int)(((double)(i+1)*100)/path.size()) );
 
         //print/store data for analysis
         int step_time = steptimer.elapsed();

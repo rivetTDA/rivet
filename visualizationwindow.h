@@ -13,6 +13,7 @@ class DataSelectDialog;
 typedef boost::multiprecision::cpp_rational exact;
 
 #include "computationthread.h"
+#include "interface/progressdialog.h"
 #include "interface/slice_diagram.h"
 class SliceDiagram;
 #include "interface/persistence_diagram.h"
@@ -79,7 +80,7 @@ private:
 
     //computation items
     ComputationThread cthread;
-
+    ProgressDialog prog_dialog;
 
     //items for slice diagram
     bool line_selection_ready;      //initially false, but set to true when data is in place for line selection
