@@ -13,6 +13,7 @@
 #include <vector>
 #include "simplex_tree.h"
 #include "index_matrix.h"
+#include "math/xi_point.h"
 #include <boost/multi_array.hpp>
 
 typedef std::vector<int> Vector;
@@ -34,6 +35,8 @@ class MultiBetti
 
         int xi0(unsigned x, unsigned y);		//returns xi_0 at the specified (discrete) multi-grade
         int xi1(unsigned x, unsigned y);		//returns xi_1 at the specified (discrete) multi-grade
+
+        void store_support_points(std::vector<xiPoint>& xi_supp);   //stores the xi support points in xi_supp in lexicographical order
 		
         void print_lows(Vector &lows);  //TESTING ONLY
 		

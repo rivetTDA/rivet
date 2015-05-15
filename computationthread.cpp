@@ -79,7 +79,11 @@ void ComputationThread::run()
     qDebug() << "  --> xi_i computation took" << timer.elapsed() << "milliseconds";
 
     //store the xi support points
-    ///TODO: working here
+    mb.store_support_points(xi_support);
+
+    //signal that xi support points are ready for visualization
+    emit xiSupportReady();
+
 
   //STEP 3: BUILD THE ARRANGEMENT
 

@@ -23,6 +23,7 @@ class ComputationThread : public QThread
         void compute();
 
     signals:
+        void xiSupportReady();
         void arrangementReady(Mesh* arrangement);
 
     protected:

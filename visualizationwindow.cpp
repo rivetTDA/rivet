@@ -43,6 +43,7 @@ VisualizationWindow::VisualizationWindow(QWidget *parent) :
     ui->pdView->setRenderHint(QPainter::Antialiasing);
 
     //connect signals from ComputationThread to slots in VisualizationWindow
+    QObject::connect(&cthread, &ComputationThread::xiSupportReady, this, &VisualizationWindow::paint_xi_support);
     QObject::connect(&cthread, &ComputationThread::arrangementReady, this, &VisualizationWindow::augmented_arrangement_ready);
 }
 
@@ -63,6 +64,23 @@ void VisualizationWindow::start_computation()
 
 }//end start_computation()
 
+//this slot is signaled when the xi support points are ready to be drawn
+void VisualizationWindow::paint_xi_support()
+{
+    //initialize the SliceDiagram and send xi support points
+    slice_diagram = new SliceDiagram(sliceScene, this, x_grades.front(), x_grades.back(), y_grades.front(), y_grades.back(), ui->normCoordCheckBox->isChecked());
+    for(std::vector<xiPoint>::iterator it = xi_support.begin(); it != xi_support.end(); ++it)
+        slice_diagram->add_point(x_grades[it->x], y_grades[it->y], it->zero, it->one);
+    slice_diagram->create_diagram(input_params.x_label, input_params.y_label);
+
+    //update offset extents   //TODO: FIX THIS!!!
+    ui->offsetSpinBox->setMinimum(-1*x_grades.back());
+    ui->offsetSpinBox->setMaximum(y_grades.back());
+
+    line_selection_ready = true;
+}
+
+//this slot is signaled when the agumented arrangement is ready
 void VisualizationWindow::augmented_arrangement_ready(Mesh* arrangement)
 {
     //receive the arrangement
@@ -77,25 +95,6 @@ void VisualizationWindow::augmented_arrangement_ready(Mesh* arrangement)
     //TESTING: verify consistency of the arrangement
 //    arrangement->test_consistency();
 
-    //get data extents
-    double data_xmin = x_grades.front();
-    double data_xmax = x_grades.back();
-    double data_ymin = y_grades.front();
-    double data_ymax = y_grades.back();
-
-    //prepare graphical elements
-
-    //initialize the SliceDiagram and send xi support points
-    slice_diagram = new SliceDiagram(sliceScene, this, data_xmin, data_xmax, data_ymin, data_ymax, ui->normCoordCheckBox->isChecked());
-    for(std::vector<xiPoint>::iterator it = xi_support.begin(); it != xi_support.end(); ++it)
-        slice_diagram->add_point(x_grades[it->x], y_grades[it->y], it->zero, it->one);
-    slice_diagram->create_diagram(input_params.x_label, input_params.y_label);
-
-    //update offset extents   //TODO: FIX THIS!!!
-    ui->offsetSpinBox->setMinimum(-1*data_xmax);
-    ui->offsetSpinBox->setMaximum(data_ymax);
-
-    line_selection_ready = true;
 
 //    qDebug() << "zero: " << slice_diagram->get_zero();
 

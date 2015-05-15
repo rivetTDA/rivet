@@ -50,18 +50,15 @@ protected:
     void resizeEvent(QResizeEvent*);
     
 private slots:
+    void paint_xi_support();
+
     void augmented_arrangement_ready(Mesh* arrangement);
 
     void on_angleDoubleSpinBox_valueChanged(double angle);
-
     void on_offsetSpinBox_valueChanged(double arg1);
-
     void on_xi0CheckBox_toggled(bool checked);
-
     void on_xi1CheckBox_toggled(bool checked);
-
     void on_normCoordCheckBox_clicked(bool checked);
-
     void on_barcodeCheckBox_clicked(bool checked);
 
 private:

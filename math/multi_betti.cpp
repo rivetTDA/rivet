@@ -616,7 +616,21 @@ int MultiBetti::xi1(unsigned x, unsigned y)
 {
     return xi[x][y][1];
 }
-	
 
+//stores the xi support points in xi_supp in lexicographical order
+void MultiBetti::store_support_points(std::vector<xiPoint>& xi_supp)
+{
+    for(unsigned i = 0; i < num_x_grades; i++)
+    {
+        for(unsigned j = 0; j < num_y_grades; j++)
+        {
+            int xi0 = xi[i][j][0];
+            int xi1 = xi[i][j][1];
+
+            if(xi0 != 0 || xi1 != 0)    //then we have found an xi support point
+                xi_supp.push_back( xiPoint(i, j, xi0, xi1) );
+        }
+    }
+}
 
 
