@@ -8,14 +8,17 @@
 #ifndef __PERSISTENCE_UPDATER_H__
 #define __PERSISTENCE_UPDATER_H__
 
+class xiSupportMatrix;
+#include "xi_support_matrix.h"
+class Mesh;
 #include "../dcel/mesh.h"
 #include "map_matrix.h"
 #include "index_matrix.h"
-#include "xi_support_matrix.h"
-#include "../computationthread.h"
+class MultiBetti;
+#include "multi_betti.h"
 class ComputationThread;
+#include "../computationthread.h"
 #include "../dcel/barcode_template.h"
-class Mesh;
 
 class PersistenceUpdater
 {

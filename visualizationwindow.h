@@ -62,6 +62,8 @@ private slots:
     void on_normCoordCheckBox_clicked(bool checked);
     void on_barcodeCheckBox_clicked(bool checked);
 
+    void on_actionExit_triggered();
+
 private:
     Ui::VisualizationWindow *ui;
 

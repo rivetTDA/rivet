@@ -75,7 +75,7 @@ InputManager::InputManager(int dim, std::vector<double>& x_grades, std::vector<e
 //function to run the input manager, requires a filename
 //  post condition: x_grades and x_exact have size x_bins, and they contain the grade values for the 2-D persistence module in double and exact form (respectively)
 //                  similarly for y_grades and y_exact
-void InputManager::start(std::string filename, unsigned x_bins, unsigned y_bins)
+void InputManager::start(std::string filename, unsigned x_bins, unsigned y_bins, ComputationThread* cthread)
 {
 	//read the file
     if(verbosity >= 2) { qDebug() << "READING FILE:" << QString(filename.c_str()); }
@@ -92,7 +92,7 @@ void InputManager::start(std::string filename, unsigned x_bins, unsigned y_bins)
 		//call appropriate handler function
 		if(filetype == "points")
 		{
-            read_point_cloud(x_bins, y_bins);
+            read_point_cloud(x_bins, y_bins, cthread);
 		}
 		else if(filetype == "bifiltration")
 		{
@@ -114,42 +114,15 @@ void InputManager::start(std::string filename, unsigned x_bins, unsigned y_bins)
 	
 }//end start()
 
-//DEPRECATED!!! functions to return grade values
-//std::vector<double> InputManager::get_x_grades()
-//{
-//    return x_grades;
-//}
-
-//std::vector<exact> InputManager::get_x_exact()
-//{
-//    return x_exact;
-//}
-
-//std::vector<double> InputManager::get_y_grades()
-//{
-//    return y_grades;
-//}
-
-//std::vector<exact> InputManager::get_y_exact()
-//{
-//    return y_exact;
-//}
-
-//returns a pointer to the simplex tree representing the bifiltration
-//SimplexTree* InputManager::get_bifiltration()
-//{
-//    return &simplex_tree;
-//}
-
 
 //reads a point cloud
 //  points are given by coordinates in Euclidean space, and each point has a birth time
 //  constructs a simplex tree representing the bifiltered Vietoris-Rips complex
-void InputManager::read_point_cloud(unsigned x_bins, unsigned y_bins)
+void InputManager::read_point_cloud(unsigned x_bins, unsigned y_bins, ComputationThread* cthread)
 {
     if(verbosity >= 2) { qDebug() << "  Found a point cloud file."; }
 	
-  /* step 1: read data file and store exact (rational) values */
+  // STEP 1: read data file and store exact (rational) values
 
 	//prepare (temporary) data structures
     int dimension;              //integer dimension of data
@@ -190,9 +163,10 @@ void InputManager::read_point_cloud(unsigned x_bins, unsigned y_bins)
     if(verbosity >= 4) { qDebug() << "  read " << points.size() << " points; input finished"; }
 	
 
-  /* step 2: compute distance matrix, and create ordered lists of all unique distance and time values */
+  // STEP 2: compute distance matrix, and create ordered lists of all unique distance and time values
 
     if(verbosity >= 2) { qDebug() << "BUILDING DISTANCE AND TIME LISTS"; }
+    cthread->advanceProgressStage();
 
     unsigned num_points = points.size();
 
@@ -334,8 +308,11 @@ void InputManager::read_point_cloud(unsigned x_bins, unsigned y_bins)
         }
     }
 
+    //update progress
+    cthread->setCurrentProgress(30);
 
-  /* step 3: build the bifiltration */
+
+  // STEP 3: build the bifiltration
 
     //simplex_tree stores only DISCRETE information!
     //this only requires (suppose there are k points):

@@ -827,6 +827,8 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
     QTime steptimer;
     for(unsigned i=0; i<path.size(); i++)
     {
+        cthread->setCurrentProgress(i);    //update progress bar
+
         steptimer.start();                //time update at each step of the path
         unsigned long swap_counter = 0;   //counts number of transpositions at each step
         swap_estimate = 0;
@@ -966,9 +968,6 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
         Face* cur_face = (path[i])->get_face();
         if(!cur_face->has_been_visited())
             store_barcode_template(cur_face, R_low, R_high);
-
-        //update progress bar
-        cthread->sendProgressPercent( (int)(((double)(i+1)*100)/path.size()) );
 
         //print/store data for analysis
         int step_time = steptimer.elapsed();

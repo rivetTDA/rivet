@@ -22,6 +22,7 @@
 
 #include "../math/simplex_tree.h"
 #include "../math/map_matrix.h"
+#include "../computationthread.h"
 
 typedef boost::multiprecision::cpp_rational exact;
 
@@ -84,19 +85,10 @@ class InputManager
         InputManager(int dim, std::vector<double>& x_grades, std::vector<exact>& x_exact, std::vector<double>& y_grades, std::vector<exact>&y_exact, SimplexTree& bifiltration, int verbosity);
             //constructor; requires dimension of homology to be computed, vectors in which grades will be stored, and verbosity parameter
 
-        void start(std::string filename, unsigned x_bins, unsigned y_bins);	//function to run the input manager, requires a filename
+        void start(std::string filename, unsigned x_bins, unsigned y_bins, ComputationThread *cthread);	//function to run the input manager, requires a filename
 		
-        //functions to access the grade values -- maybe returning vectors is not the best design here???
-//DEPRECATED        std::vector<double> get_x_grades(); //returns a vector of floating-point values of x-grades, sorted exactly
-//DEPRECATED        std::vector<exact> get_x_exact();     //exact (e.g. rational) values of all x-grades, sorted
 
-//DEPRECATED        std::vector<double> get_y_grades();   //floating-point values of all y-grades, sorted exactly
-//DEPRECATED        std::vector<exact> get_y_exact();     //exact (e.g. rational) values of all y-grades, sorted
-
-//DEPRECATED        SimplexTree* get_bifiltration();	//returns a pointer to the simplex tree representing the bifiltration
-		
-		
-	private:
+    private:
 		const int verbosity;			//controls display of output, for debugging
 
         int hom_dim;                    //dimension of homology to be computed
@@ -111,7 +103,7 @@ class InputManager
 
         SimplexTree& simplex_tree;		//simplex tree constructed from the input; contains only discrete data (i.e. integer multi-grades)
 
-        void read_point_cloud(unsigned x_bins, unsigned y_bins);		//reads a point cloud and constructs a simplex tree representing the bifiltered Vietoris-Rips complex
+        void read_point_cloud(unsigned x_bins, unsigned y_bins, ComputationThread* cthread);		//reads a point cloud and constructs a simplex tree representing the bifiltered Vietoris-Rips complex
 		void read_bifiltration();		//reads a bifiltration and constructs a simplex tree
 		
         exact approx(double x);         //finds a rational approximation of a floating-point value; precondition: x > 0

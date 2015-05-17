@@ -1,5 +1,9 @@
 #include "xi_support_matrix.h"
 
+#include "multi_betti.h"
+
+#include <cstddef>  //for NULL
+
 /********** xiMatrixEntry **********/
 
 //empty constructor, e.g. for the entry representing infinity

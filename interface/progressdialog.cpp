@@ -5,9 +5,18 @@
 
 ProgressDialog::ProgressDialog(QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::ProgressDialog)
+    ui(new Ui::ProgressDialog),
+    current_stage(1),
+    stage_maximum(100)
 {
     ui->setupUi(this);
+
+    stage_progress.push_back(0);
+    stage_progress.push_back(2);    //we'll say that when the file is read we are 2% done,
+    stage_progress.push_back(4);    // and when the bifiltration is built we are 4% done,
+    stage_progress.push_back(10);   // and when the Betti numbers are computed we are 10% done
+    stage_progress.push_back(12);   // and when the line arrangement is built we are 12% done
+    stage_progress.push_back(100);  // and when the barcode templates are computed we are 100% done
 }
 
 ProgressDialog::~ProgressDialog()
@@ -15,14 +24,48 @@ ProgressDialog::~ProgressDialog()
     delete ui;
 }
 
-void ProgressDialog::updateProgress(QString text, int percent)
+void ProgressDialog::advanceToNextStage()
 {
-    ui->description->setText(text);
-    ui->progressBar->setValue(percent);
+    QLabel* prevLabel = getLabel(current_stage);
+    QFont font = prevLabel->font();
+    font.setBold(false);
+    prevLabel->setFont(font);
+
+    ui->progressBar->setValue(stage_progress[current_stage]);
+
+    current_stage++;
+    stage_maximum = 100;
+
+    QLabel* nextLabel = getLabel(current_stage);
+    font.setBold(true);
+    nextLabel->setFont(font);
+    nextLabel->setEnabled(true);
+
+//    qDebug() << "ProgressDialog: advanced to stage" << current_stage;
 }
 
-void ProgressDialog::updatePercent(int percent)
+void ProgressDialog::setStageMaximum(unsigned max)
 {
-    ui->progressBar->setValue(percent);
+    stage_maximum = max;
 }
 
+void ProgressDialog::updateProgress(unsigned current)
+{
+    double stage_percent = ((double) current)/stage_maximum;
+    int value = (int) (stage_percent*(stage_progress[current_stage] - stage_progress[current_stage - 1]) + stage_progress[current_stage - 1]);
+    ui->progressBar->setValue(value);
+}
+
+QLabel* ProgressDialog::getLabel(unsigned i)
+{
+    if(i == 1)
+        return ui->step1description;
+    else if(i == 2)
+        return ui->step2description;
+    else if(i == 3)
+        return ui->step3description;
+    else if(i == 4)
+        return ui->step4description;
+    else
+        return ui->step5description;
+}

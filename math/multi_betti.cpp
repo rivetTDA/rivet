@@ -19,16 +19,22 @@ MultiBetti::MultiBetti(SimplexTree& st, int dim, int v) :
 }//end constructor
 
 //computes xi_0 and xi_1 at all multi-indexes in a fast way
-void MultiBetti::compute_fast()
+void MultiBetti::compute_fast(ComputationThread* cthread)
 {
     // STEP 1: compute nullity
     compute_nullities();
 
+    cthread->setCurrentProgress(20);
+
     // STEP 2: compute rank
     compute_ranks();
 
+    cthread->setCurrentProgress(40);
+
     // STEP 3: compute alpha (concludes computation of xi_0)
     compute_alpha();
+
+    cthread->setCurrentProgress(70);
 
     // STEP 4: compute eta (concludes computation of xi_1)
     compute_eta();

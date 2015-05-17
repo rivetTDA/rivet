@@ -2,6 +2,7 @@
 #define PROGRESSDIALOG_H
 
 #include <QDialog>
+#include <QLabel>
 
 namespace Ui {
 class ProgressDialog;
@@ -16,11 +17,17 @@ public:
     ~ProgressDialog();
 
 public slots:
-    void updateProgress(QString text, int percent);
-    void updatePercent(int percent);
+    void advanceToNextStage();
+    void setStageMaximum(unsigned max);
+    void updateProgress(unsigned current);
 
 private:
     Ui::ProgressDialog *ui;
+    std::vector<unsigned> stage_progress;
+    unsigned current_stage;
+    unsigned stage_maximum;
+
+    QLabel* getLabel(unsigned i);
 };
 
 #endif // PROGRESSDIALOG_H

@@ -27,9 +27,7 @@ void ComputationThread::compute()
 //this function does the work
 void ComputationThread::run()
 {
-  //STEP 1: INPUT DATA AND CREATE BIFILTRATION
-
-    emit sendProgressUpdate(QString("Reading data file..."), 0);
+  //STAGES 1 and 2: INPUT DATA AND CREATE BIFILTRATION
 
     //local data elements
     std::vector<exact> x_exact;
@@ -40,7 +38,7 @@ void ComputationThread::run()
     //get the data via the InputManager
     InputManager im(params.dim, x_grades, x_exact, y_grades, y_exact, bifiltration, verbosity);     //NOTE: InputManager will fill the vectors x_grades, x_exact, y_grades, and y_exact, and also build the bifiltration
     std::string filestr = params.fileName.toStdString();
-    im.start(filestr, params.x_bins, params.y_bins);
+    im.start(filestr, params.x_bins, params.y_bins, this);
 
     //print bifiltration statistics
     if(verbosity >= 2)
@@ -70,16 +68,16 @@ void ComputationThread::run()
     }
 
 
-  //STEP 2: COMPUTE SUPPORT POINTS OF MULTI-GRADED BETTI NUMBERS
+  //STAGE 3: COMPUTE MULTIGRADED BETTI NUMBERS
 
-    emit sendProgressUpdate(QString("Computing multi-graded Betti numbers..."), 0);
+    emit advanceProgressStage(); //update progress box to stage 3
 
     //compute xi_0 and xi_1 at all multi-grades
     if(verbosity >= 2) { qDebug() << "COMPUTING xi_0 AND xi_1 FOR HOMOLOGY DIMENSION " << params.dim << ":"; }
     MultiBetti mb(bifiltration, params.dim, verbosity);
 
     timer.start();
-    mb.compute_fast();
+    mb.compute_fast(this);
     qDebug() << "  --> xi_i computation took" << timer.elapsed() << "milliseconds";
 
     //store the xi support points
@@ -89,7 +87,9 @@ void ComputationThread::run()
     emit xiSupportReady();
 
 
-  //STEP 3: BUILD THE ARRANGEMENT
+  //STAGES 4 and 5: BUILD THE LINE ARRANGEMENT AND COMPUTE BARCODE TEMPLATES
+
+    emit advanceProgressStage(); //update progress box to stage 4
 
     //build the arrangement
     if(verbosity >= 2) { qDebug() << "CALCULATING ANCHORS AND BUILDING THE DCEL ARRANGEMENT"; }

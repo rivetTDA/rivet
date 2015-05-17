@@ -24,8 +24,9 @@ class ComputationThread : public QThread
         void compute();
 
     signals:
-        void sendProgressUpdate(QString text, int percent);
-        void sendProgressPercent(int percent);
+        void advanceProgressStage();
+        void setProgressMaximum(unsigned max);
+        void setCurrentProgress(unsigned current);
         void xiSupportReady();
         void arrangementReady(Mesh* arrangement);
 

@@ -88,27 +88,30 @@ void Mesh::build_arrangement(MultiBetti& mb, std::vector<xiPoint>& xi_pts, Compu
     PersistenceUpdater updater(this, mb, xi_pts);   //PersistenceUpdater object is able to do the calculations necessary for finding anchors and computing barcode templates
 
     //first, compute anchors and store them in the vector Mesh::all_anchors
-    emit cthread->sendProgressUpdate(QString("Finding anchors..."), 50);
+    emit cthread->setCurrentProgress(10);
     timer.start();
     updater.find_anchors();
     qDebug() << "  --> finding anchors took" << timer.elapsed() << "milliseconds";
 
     //now that we have all the anchors, we can build the interior of the arrangement
-    emit cthread->sendProgressUpdate(QString("Building the line arrangement..."), 0);
+    emit cthread->setCurrentProgress(25);
     timer.start();
     build_interior();
     qDebug() << "  --> building the interior of the line arrangement took" << timer.elapsed() << "milliseconds";
     print_stats();
 
     //now that the arrangement is constructed, we can find a path -- NOTE: path starts with a (near-vertical) line to the right of all multigrades
-    emit cthread->sendProgressUpdate(QString("Finding the path..."), 0);
+    emit cthread->setCurrentProgress(75);
     std::vector<Halfedge*> path;
     timer.start();
     find_path(path);
     qDebug() << "  --> finding the path took" << timer.elapsed() << "milliseconds";
 
+    //update the progress dialog box
+    cthread->advanceProgressStage();            //update now in stage 5 (compute discrete barcodes)
+    cthread->setProgressMaximum(path.size());
+
     //finally, we can traverse the path, computing and storing a barcode template in each 2-cell
-    emit cthread->sendProgressUpdate(QString("Computing barcode templates..."), 0);
     //updater.store_barcodes(path);
     //updater.store_barcodes_lazy(path);
     updater.store_barcodes_with_reset(path, cthread);
@@ -1019,7 +1022,7 @@ void Mesh::test_consistency()
 
     //check if all edges were found
     bool all_edges_found = true;
-    for(int i=0; i<halfedges.size(); i++)
+    for(unsigned i=0; i<halfedges.size(); i++)
     {
         if(edges_found_in_faces.find(i) == edges_found_in_faces.end())
         {
@@ -1089,7 +1092,7 @@ void Mesh::test_consistency()
 
     //check if all edges were found
     all_edges_found = true;
-    for(int i=0; i<halfedges.size(); i++)
+    for(unsigned i=0; i<halfedges.size(); i++)
     {
         if(edges_found_in_curves.find(i) == edges_found_in_curves.end())
         {

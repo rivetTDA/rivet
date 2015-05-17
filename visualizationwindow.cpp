@@ -43,8 +43,9 @@ VisualizationWindow::VisualizationWindow(QWidget *parent) :
     ui->pdView->setRenderHint(QPainter::Antialiasing);
 
     //connect signals from ComputationThread to slots in VisualizationWindow
-    QObject::connect(&cthread, &ComputationThread::sendProgressUpdate, &prog_dialog, &ProgressDialog::updateProgress);
-    QObject::connect(&cthread, &ComputationThread::sendProgressPercent, &prog_dialog, &ProgressDialog::updatePercent);
+    QObject::connect(&cthread, &ComputationThread::advanceProgressStage, &prog_dialog, &ProgressDialog::advanceToNextStage);
+    QObject::connect(&cthread, &ComputationThread::setProgressMaximum, &prog_dialog, &ProgressDialog::setStageMaximum);
+    QObject::connect(&cthread, &ComputationThread::setCurrentProgress, &prog_dialog, &ProgressDialog::updateProgress);
     QObject::connect(&cthread, &ComputationThread::xiSupportReady, this, &VisualizationWindow::paint_xi_support);
     QObject::connect(&cthread, &ComputationThread::arrangementReady, this, &VisualizationWindow::augmented_arrangement_ready);
 }
@@ -313,4 +314,9 @@ void VisualizationWindow::resizeEvent(QResizeEvent* /*unused*/)
         if(p_diagram != NULL)
             p_diagram->resize_diagram(slice_diagram->get_slice_length(), slice_diagram->get_pd_scale());
     }
+}
+
+void VisualizationWindow::on_actionExit_triggered()
+{
+    close();
 }

@@ -13,6 +13,8 @@
 #include <vector>
 #include "simplex_tree.h"
 #include "index_matrix.h"
+class ComputationThread;
+#include "../computationthread.h"
 #include "math/xi_point.h"
 #include <boost/multi_array.hpp>
 
@@ -25,7 +27,7 @@ class MultiBetti
 	public:
         MultiBetti(SimplexTree& st, int dim, int v);		//constructor sets up the data structure but doesn't compute the multi-graded Betti numbers xi_0 and xi_1
 		
-        void compute_fast();		//computes xi_0 and xi_1 at all multi-grades in a fast way
+        void compute_fast(ComputationThread *cthread);		//computes xi_0 and xi_1 at all multi-grades in a fast way
 		
         //functions to compute xi_0 and xi_1    ----later, make these private and access them via compute_fast();
         void compute_nullities();

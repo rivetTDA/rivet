@@ -8,6 +8,7 @@
 #ifndef __ANCHOR_H__
 #define __ANCHOR_H__
 
+#include "../math/xi_support_matrix.h"
 struct xiMatrixEntry;
 
 class Halfedge;
