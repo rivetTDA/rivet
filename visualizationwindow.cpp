@@ -91,7 +91,7 @@ void VisualizationWindow::augmented_arrangement_ready(Mesh* arrangement)
     this->arrangement = arrangement;
 
     //close the progress dialog box
-    prog_dialog.close();
+    prog_dialog.setComputationFinished();
 
     if(verbosity >= 2) { qDebug() << "COMPUTATION FINISHED; READY FOR INTERACTIVITY."; }
 

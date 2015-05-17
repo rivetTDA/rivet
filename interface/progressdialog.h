@@ -20,12 +20,17 @@ public slots:
     void advanceToNextStage();
     void setStageMaximum(unsigned max);
     void updateProgress(unsigned current);
+    void setComputationFinished();
+
+protected:
+    void closeEvent(QCloseEvent *);
 
 private:
     Ui::ProgressDialog *ui;
     std::vector<unsigned> stage_progress;
     unsigned current_stage;
     unsigned stage_maximum;
+    bool computation_finished;
 
     QLabel* getLabel(unsigned i);
 };

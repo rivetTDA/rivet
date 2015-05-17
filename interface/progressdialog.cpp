@@ -1,13 +1,15 @@
 #include "progressdialog.h"
 #include "ui_progressdialog.h"
 
+#include <QCloseEvent>
 #include <QDebug>
 
 ProgressDialog::ProgressDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::ProgressDialog),
     current_stage(1),
-    stage_maximum(100)
+    stage_maximum(100),
+    computation_finished(false)
 {
     ui->setupUi(this);
 
@@ -54,6 +56,20 @@ void ProgressDialog::updateProgress(unsigned current)
     double stage_percent = ((double) current)/stage_maximum;
     int value = (int) (stage_percent*(stage_progress[current_stage] - stage_progress[current_stage - 1]) + stage_progress[current_stage - 1]);
     ui->progressBar->setValue(value);
+}
+
+void ProgressDialog::setComputationFinished()
+{
+    computation_finished = true;
+    close();
+}
+
+void ProgressDialog::closeEvent(QCloseEvent *event)
+{
+    if(!computation_finished)
+        event->ignore();
+    else
+        event->accept();
 }
 
 QLabel* ProgressDialog::getLabel(unsigned i)
