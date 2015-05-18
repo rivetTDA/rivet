@@ -37,7 +37,8 @@ SOURCES	+= main.cpp                         \
     interface/progressdialog.cpp \
     computationthread.cpp \
     interface/aboutmessagebox.cpp \
-    interface/configuredialog.cpp
+    interface/configuredialog.cpp \
+    interface/config_parameters.cpp
     
 
 HEADERS  += visualizationwindow.h			\
@@ -66,7 +67,8 @@ HEADERS  += visualizationwindow.h			\
     computationthread.h \
     interface/input_parameters.h \
     interface/aboutmessagebox.h \
-    interface/configuredialog.h
+    interface/configuredialog.h \
+    interface/config_parameters.h
     
 
 FORMS   += visualizationwindow.ui			\

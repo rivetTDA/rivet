@@ -6,10 +6,11 @@
 #include <algorithm>
 
 
-SliceLine::SliceLine(SliceDiagram* sd) :
+SliceLine::SliceLine(SliceDiagram* sd, ConfigParameters *params) :
     vertical(false), pressed(false), rotating(false), update_lock(false),
     right_point(0,0),
-    sdgm(sd)
+    sdgm(sd),
+    config_params(params)
 {
     setFlag(ItemIsMovable);
     setFlag(ItemSendsGeometryChanges);
@@ -39,12 +40,12 @@ QPainterPath SliceLine::shape() const
 
 void SliceLine::paint(QPainter *painter, const QStyleOptionGraphicsItem * /*unused*/, QWidget * /*unused*/)
 {
-    QPen pen(QColor(0, 0, 255, 150));   //semi-transparent blue
+    QPen pen(config_params->sliceLineColor);
     pen.setWidth(4);
 
     if(pressed)
     {
-        pen.setColor(QColor(0, 200, 200, 150));       //semi-transparent cyan
+        pen.setColor(config_params->sliceLineHighlightColor);
     }
 
     painter->setRenderHint(QPainter::Antialiasing);

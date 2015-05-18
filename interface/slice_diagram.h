@@ -12,13 +12,13 @@ class ControlDot;
 class SliceLine;
 #include "persistence_bar.h"
 class PersistenceBar;
-
+#include "config_parameters.h"
 
 
 class SliceDiagram
 {
 public:
-    SliceDiagram(QGraphicsScene* sc, VisualizationWindow* vw, double xmin, double xmax, double ymin, double ymax, bool norm_coords);
+    SliceDiagram(QGraphicsScene* sc, VisualizationWindow* vw, ConfigParameters* params, double xmin, double xmax, double ymin, double ymax, bool norm_coords);
 
     void add_point(double x_coord, double y_coord, int xi0m, int xi1m);
 
@@ -50,6 +50,8 @@ private:
   //graphics items
     QGraphicsScene* scene;
     VisualizationWindow* window;
+
+    ConfigParameters* config_params;
 
     QGraphicsSimpleTextItem* data_xmin_text;
     QGraphicsSimpleTextItem* data_xmax_text;
@@ -99,6 +101,8 @@ private:
 
     const int unit_radius;  //radius for a dot representing a xi support point of multiplicity 1
     const int padding;  //distance between xi support point area and control rectangle (on the top and right sides)
+
+
 
     //private functions
     std::pair<double,double> compute_endpoint(double coordinate, unsigned offset);  //computes an endpoint of a bar in the barcode

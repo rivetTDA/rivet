@@ -3,8 +3,9 @@
 
 
 
-PersistenceDot::PersistenceDot(PersistenceDiagram *p_diagram, double unscaled_x, double unscaled_y, double radius, unsigned index) :
+PersistenceDot::PersistenceDot(PersistenceDiagram *p_diagram, ConfigParameters* params, double unscaled_x, double unscaled_y, double radius, unsigned index) :
     pdgm(p_diagram),
+    config_params(params),
     x(unscaled_x), y(unscaled_y),
     index(index),
     radius(radius),
@@ -22,15 +23,15 @@ QRectF PersistenceDot::boundingRect() const
 void PersistenceDot::paint(QPainter *painter, const QStyleOptionGraphicsItem * /*unused*/, QWidget * /*unused*/)
 {
     QRectF rect = boundingRect();
-    QBrush brush(QColor(160, 0, 200, 127));   //semi-transparent purple
+    QBrush brush(config_params->persistenceColor);
 
     if(hover)
-        painter->setPen(QPen(QBrush(QColor(255, 140, 0, 150)),3));
+        painter->setPen(QPen(QBrush(config_params->persistenceHighlightColor),3));
     else
         painter->setPen(Qt::NoPen);
 
     if(pressed)
-        brush.setColor(QColor(255, 140, 0, 220));      //semi-transparent orange
+        brush.setColor(config_params->persistenceHighlightColor);
 
     painter->setRenderHint(QPainter::Antialiasing);
 //    painter->setPen(Qt::NoPen);

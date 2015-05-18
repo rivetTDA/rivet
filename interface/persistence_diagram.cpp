@@ -1,7 +1,8 @@
 #include "persistence_diagram.h"
 
-PersistenceDiagram::PersistenceDiagram(QGraphicsScene* sc, VisualizationWindow* vw, QString *filename, int dim) : //, double length, double scale, double zero) :
+PersistenceDiagram::PersistenceDiagram(QGraphicsScene* sc, VisualizationWindow* vw, ConfigParameters *params, QString *filename, int dim) : //, double length, double scale, double zero) :
     scene(sc),  window(vw),
+    config_params(params),
     selected(NULL),
     radius(5),
     filename(filename), dim(dim)
@@ -174,7 +175,7 @@ void PersistenceDiagram::draw_points(double zero, Barcode* bc)
             double birth = it->birth - zero_coord;
 
             //create dot object
-            PersistenceDot* dot = new PersistenceDot(this, birth, it->death, radius*sqrt((double) (it->multiplicity)), num_dots);
+            PersistenceDot* dot = new PersistenceDot(this, config_params, birth, it->death, radius*sqrt((double) (it->multiplicity)), num_dots);
             scene->addItem(dot);
             dots.push_back(dot);
             num_dots++;
@@ -197,7 +198,7 @@ void PersistenceDiagram::draw_points(double zero, Barcode* bc)
             double death = it->death - zero_coord;
 
             //create dot object
-            PersistenceDot* dot = new PersistenceDot(this, birth, death, radius*sqrt(it->multiplicity), num_dots);
+            PersistenceDot* dot = new PersistenceDot(this, config_params, birth, death, radius*sqrt(it->multiplicity), num_dots);
             scene->addItem(dot);
             dots.push_back(dot);
             num_dots++;

@@ -12,6 +12,7 @@
 #include "../visualizationwindow.h"
 class VisualizationWindow;
 
+#include "config_parameters.h"
 #include "persistence_dot.h"
 class PersistenceDot;
 
@@ -20,7 +21,7 @@ class PersistenceDot;
 class PersistenceDiagram
 {
 public:
-    PersistenceDiagram(QGraphicsScene* sc, VisualizationWindow* vw, QString* filename, int dim);
+    PersistenceDiagram(QGraphicsScene* sc, VisualizationWindow* vw, ConfigParameters* params, QString* filename, int dim);
 
     void create_diagram();  //simply creates all objects; resize_diagram() handles positioning of objects
     void resize_diagram(double slice_length, double diagram_scale);  //resizes diagram to fill the QGraphicsView; called after every window resize
@@ -37,6 +38,8 @@ private:
     //graphics items
     QGraphicsScene* scene;
     VisualizationWindow* window;
+
+    ConfigParameters* config_params;
 
     QGraphicsRectItem* bounding_rect;
     QGraphicsLineItem* diag_line;

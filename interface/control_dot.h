@@ -11,11 +11,13 @@ class SliceDiagram;
 #include "slice_line.h"
 class SliceLine;
 
+#include "config_parameters.h"
+
 
 class ControlDot : public QGraphicsItem
 {
 public:
-    ControlDot(SliceLine* line, bool left_bottom);
+    ControlDot(SliceLine* line, bool left_bottom, ConfigParameters* params);
 
     QRectF boundingRect() const;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *);
@@ -30,6 +32,7 @@ protected:
 private:
     SliceLine* slice_line;
     QGraphicsTextItem* coords;
+    ConfigParameters* config_params;
 
     bool pressed;
     bool left_bottom;   //TRUE if this is a left-bottom control dot, FALSE if this is a right-top control dot

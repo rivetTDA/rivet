@@ -45,73 +45,129 @@
     <widget class="QWidget" name="gridLayoutWidget">
      <property name="geometry">
       <rect>
-       <x>9</x>
-       <y>60</y>
-       <width>231</width>
-       <height>111</height>
+       <x>20</x>
+       <y>40</y>
+       <width>268</width>
+       <height>161</height>
       </rect>
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
-      <item row="1" column="0">
+      <item row="1" column="1">
        <widget class="QLabel" name="label_3">
         <property name="text">
          <string>ξ₁ points</string>
         </property>
        </widget>
       </item>
-      <item row="0" column="0">
+      <item row="0" column="1">
        <widget class="QLabel" name="xi0_color_label">
         <property name="text">
          <string>ξ₀ points</string>
         </property>
        </widget>
       </item>
-      <item row="3" column="0">
+      <item row="3" column="1">
        <widget class="QLabel" name="label_6">
         <property name="text">
          <string>Highlight</string>
         </property>
        </widget>
       </item>
-      <item row="4" column="0">
+      <item row="4" column="1">
        <widget class="QLabel" name="label_5">
         <property name="text">
          <string>Line selection</string>
         </property>
        </widget>
       </item>
-      <item row="2" column="0">
+      <item row="2" column="1">
        <widget class="QLabel" name="label_4">
         <property name="text">
          <string>Persistence diagram</string>
         </property>
        </widget>
       </item>
+      <item row="2" column="0">
+       <widget class="QPushButton" name="persistenceColorButton">
+        <property name="autoFillBackground">
+         <bool>true</bool>
+        </property>
+        <property name="styleSheet">
+         <string notr="true"/>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="flat">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QPushButton" name="xi1colorButton">
+        <property name="autoFillBackground">
+         <bool>true</bool>
+        </property>
+        <property name="styleSheet">
+         <string notr="true"/>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="flat">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QPushButton" name="xi0colorButton">
+        <property name="autoFillBackground">
+         <bool>true</bool>
+        </property>
+        <property name="styleSheet">
+         <string notr="true"/>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="flat">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QPushButton" name="persistenceHighlightColorButton">
+        <property name="autoFillBackground">
+         <bool>true</bool>
+        </property>
+        <property name="styleSheet">
+         <string notr="true"/>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="flat">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QPushButton" name="lineColorButton">
+        <property name="autoFillBackground">
+         <bool>true</bool>
+        </property>
+        <property name="styleSheet">
+         <string notr="true"/>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="flat">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
      </layout>
-    </widget>
-    <widget class="QPushButton" name="testButton">
-     <property name="geometry">
-      <rect>
-       <x>390</x>
-       <y>60</y>
-       <width>99</width>
-       <height>27</height>
-      </rect>
-     </property>
-     <property name="autoFillBackground">
-      <bool>true</bool>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">background-color: #0000FF;
-border: none;
-outline: none;</string>
-     </property>
-     <property name="text">
-      <string/>
-     </property>
-     <property name="flat">
-      <bool>true</bool>
-     </property>
     </widget>
    </widget>
    <widget class="QWidget" name="tab_2">

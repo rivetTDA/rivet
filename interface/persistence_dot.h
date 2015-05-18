@@ -6,6 +6,7 @@
 #include <QGraphicsItem>
 #include <QDebug>
 
+#include "config_parameters.h"
 #include "persistence_diagram.h"
 class PersistenceDiagram;
 
@@ -13,7 +14,7 @@ class PersistenceDiagram;
 class PersistenceDot : public QGraphicsItem
 {
 public:
-    PersistenceDot(PersistenceDiagram* p_diagram, double unscaled_x, double unscaled_y, double radius, unsigned index);
+    PersistenceDot(PersistenceDiagram* p_diagram, ConfigParameters* params, double unscaled_x, double unscaled_y, double radius, unsigned index);
 
     QRectF boundingRect() const;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *);
@@ -33,6 +34,7 @@ protected:
 
 private:
     PersistenceDiagram* pdgm;
+    ConfigParameters* config_params;
 
     double x;   //unscaled x-coordinate (projection units)
     double y;   //unscaled y-coordinate (projection units)

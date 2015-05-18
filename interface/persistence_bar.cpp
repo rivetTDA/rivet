@@ -1,7 +1,8 @@
 #include "persistence_bar.h"
 
-PersistenceBar::PersistenceBar(SliceDiagram *s_diagram, double unscaled_start, double unscaled_end, unsigned index) :
+PersistenceBar::PersistenceBar(SliceDiagram *s_diagram, ConfigParameters* params, double unscaled_start, double unscaled_end, unsigned index) :
     sdgm(s_diagram),
+    config_params(params),
     start(unscaled_start), end(unscaled_end),
     class_index(index),
     pressed(false), hover(false)
@@ -26,12 +27,12 @@ QPainterPath PersistenceBar::shape() const
 
 void PersistenceBar::paint(QPainter *painter, const QStyleOptionGraphicsItem * /*unused*/, QWidget * /*unused*/)
 {
-    QPen pen(QColor(160, 0, 200, 127));   //semi-transparent purple
+    QPen pen(config_params->persistenceColor);
     pen.setWidth(4);
 
     if(pressed)
     {
-        pen.setColor(QColor(255, 140, 0, 220));      //semi-transparent orange
+        pen.setColor(config_params->persistenceHighlightColor);
     }
 
     painter->setRenderHint(QPainter::Antialiasing);

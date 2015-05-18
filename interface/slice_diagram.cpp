@@ -4,8 +4,9 @@
 #include <QDebug>
 #include <sstream>
 
-SliceDiagram::SliceDiagram(QGraphicsScene* sc, VisualizationWindow* vw, double xmin, double xmax, double ymin, double ymax, bool norm_coords) :
+SliceDiagram::SliceDiagram(QGraphicsScene* sc, VisualizationWindow* vw, ConfigParameters* params, double xmin, double xmax, double ymin, double ymax, bool norm_coords) :
     scene(sc), window(vw),
+    config_params(params),
     dot_left(), dot_right(), slice_line(),
     selected(-1), NOT_SELECTED(-1),
     data_xmin(xmin), data_xmax(xmax), data_ymin(ymin), data_ymax(ymax),
@@ -27,10 +28,10 @@ void SliceDiagram::create_diagram(QString x_text, QString y_text)
     //pens and brushes
     QPen blackPen(Qt::black);
     blackPen.setWidth(2);
-    QBrush greenBrush(QColor(0, 255, 0, 100));   //green semi-transparent, for xi_0 support dots
-    QBrush redBrush(QColor(255, 0, 0, 100));   //red semi-transparent, for xi_1 support dots
+    QBrush xi0brush(config_params->xi0color);
+    QBrush xi1brush(config_params->xi1color);
     QPen grayPen(Qt::gray);
-    QPen highlighter(QBrush(QColor(255, 140, 0, 150)), 6); //orange semi-transparent, for highlighting part of the slice line
+    QPen highlighter(QBrush(config_params->persistenceHighlightColor), 6);
 
     //draw bounds
     gray_line_vertical = scene->addLine(QLineF(), grayPen); //(diagram_width, 0, diagram_width, diagram_height, grayPen);
@@ -73,12 +74,12 @@ void SliceDiagram::create_diagram(QString x_text, QString y_text)
     {
         if(points[i].zero > 0)  //then draw a green disk
         {
-            QGraphicsEllipseItem* item = scene->addEllipse(QRectF(), Qt::NoPen, greenBrush);
+            QGraphicsEllipseItem* item = scene->addEllipse(QRectF(), Qt::NoPen, xi0brush);
             xi0_dots.push_back(item);
         }
         if(points[i].one > 0)  //then draw a red disk
         {
-            QGraphicsEllipseItem* item = scene->addEllipse(QRectF(), Qt::NoPen, redBrush);
+            QGraphicsEllipseItem* item = scene->addEllipse(QRectF(), Qt::NoPen, xi1brush);
             xi1_dots.push_back(item);
         }
     }
@@ -88,13 +89,13 @@ void SliceDiagram::create_diagram(QString x_text, QString y_text)
     line_slope = (data_ymax - data_ymin)/(data_xmax - data_xmin);    //slope in data units
     line_pos = 0;   //start the line at the lower left corner of the box
 
-    slice_line = new SliceLine(this);
+    slice_line = new SliceLine(this, config_params);
     scene->addItem(slice_line);
 
-    dot_left = new ControlDot(slice_line, true);
+    dot_left = new ControlDot(slice_line, true, config_params);
     scene->addItem(dot_left);
 
-    dot_right = new ControlDot(slice_line, false);
+    dot_right = new ControlDot(slice_line, false, config_params);
     scene->addItem(dot_right);
 
     slice_line->setDots(dot_left, dot_right);
@@ -331,7 +332,7 @@ void SliceDiagram::draw_barcode(Barcode *bc, bool show)
             std::pair<double,double> p1 = compute_endpoint(start, num_bars);
             std::pair<double,double> p2 = compute_endpoint(end, num_bars);
 
-            PersistenceBar* bar = new PersistenceBar(this, start, end, index);
+            PersistenceBar* bar = new PersistenceBar(this, config_params, start, end, index);
             bar->set_line(p1.first, p1.second, p2.first, p2.second);
             bar->setVisible(show);
             scene->addItem(bar);

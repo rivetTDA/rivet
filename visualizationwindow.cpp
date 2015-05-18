@@ -28,7 +28,8 @@ VisualizationWindow::VisualizationWindow(QWidget *parent) :
     cthread(verbosity, input_params, x_grades, y_grades, xi_support),
     line_selection_ready(false),
     slice_diagram(NULL), slice_update_lock(false),
-    p_diagram(NULL), persistence_diagram_drawn(false)
+    p_diagram(NULL), persistence_diagram_drawn(false),
+    configBox(config_params)
 {
     ui->setupUi(this);
 
@@ -77,7 +78,7 @@ void VisualizationWindow::start_computation()
 void VisualizationWindow::paint_xi_support()
 {
     //initialize the SliceDiagram and send xi support points
-    slice_diagram = new SliceDiagram(sliceScene, this, x_grades.front(), x_grades.back(), y_grades.front(), y_grades.back(), ui->normCoordCheckBox->isChecked());
+    slice_diagram = new SliceDiagram(sliceScene, this, &config_params, x_grades.front(), x_grades.back(), y_grades.front(), y_grades.back(), ui->normCoordCheckBox->isChecked());
     for(std::vector<xiPoint>::iterator it = xi_support.begin(); it != xi_support.end(); ++it)
         slice_diagram->add_point(x_grades[it->x], y_grades[it->y], it->zero, it->one);
     slice_diagram->create_diagram(input_params.x_label, input_params.y_label);
@@ -111,7 +112,7 @@ void VisualizationWindow::augmented_arrangement_ready(Mesh* arrangement)
 //    arrangement->test_consistency();
 
     //inialize persistence diagram
-    p_diagram = new PersistenceDiagram(pdScene, this, &(input_params.fileName), input_params.dim);
+    p_diagram = new PersistenceDiagram(pdScene, this, &config_params, &(input_params.fileName), input_params.dim);
     p_diagram->resize_diagram(slice_diagram->get_slice_length(), slice_diagram->get_pd_scale());
 
     //get the barcode
@@ -359,7 +360,5 @@ void VisualizationWindow::on_actionAbout_triggered()
 
 void VisualizationWindow::on_actionConfigure_triggered()
 {
-    ConfigureDialog* config = new ConfigureDialog;  //TODO: is this how we should open windows?
-    config->exec();
-    delete config;
+    configBox.exec();
 }

@@ -8,11 +8,12 @@
 #include "control_dot.h"
 class ControlDot;
 class SliceDiagram;
+#include "config_parameters.h"
 
 class SliceLine : public QGraphicsItem
 {
 public:
-    SliceLine(SliceDiagram* sd); //VisualizationWindow* vw);
+    SliceLine(SliceDiagram* sd, ConfigParameters* params); //VisualizationWindow* vw);
 
     void setDots(ControlDot* left, ControlDot* right);
 
@@ -63,6 +64,7 @@ private:
     ControlDot* right_dot;
 
     SliceDiagram* sdgm;
+    ConfigParameters* config_params;
 
     void compute_right_point(); //sets correct position of right_point, given slope of line and position of left point
 };

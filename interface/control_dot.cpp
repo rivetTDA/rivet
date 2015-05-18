@@ -5,8 +5,10 @@
 #include <sstream>
 
 
-ControlDot::ControlDot(SliceLine* line, bool left_bottom) :
-    slice_line(line), pressed(false), left_bottom(left_bottom), update_lock(false)
+ControlDot::ControlDot(SliceLine* line, bool left_bottom, ConfigParameters* params) :
+    slice_line(line),
+    config_params(params),
+    pressed(false), left_bottom(left_bottom), update_lock(false)
 {
     setFlag(ItemIsMovable);
     setFlag(ItemSendsGeometryChanges);
@@ -20,11 +22,11 @@ QRectF ControlDot::boundingRect() const
 void ControlDot::paint(QPainter *painter, const QStyleOptionGraphicsItem * /*unused*/, QWidget * /*unused*/)
 {
     QRectF rect = boundingRect();
-    QBrush brush(QColor(0, 0, 255, 150));   //semi-transparent blue
+    QBrush brush(config_params->sliceLineColor);
 
     if(pressed)
     {
-        brush.setColor(QColor(0, 200, 200, 150));      //semi-transparent cyan
+        brush.setColor(config_params->sliceLineHighlightColor);
     }
 
     painter->setRenderHint(QPainter::Antialiasing);

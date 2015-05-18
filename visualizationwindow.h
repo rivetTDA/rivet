@@ -20,6 +20,8 @@ class SliceDiagram;
 #include "interface/persistence_diagram.h"
 class PersistenceDiagram;
 class Mesh;
+#include "interface/configuredialog.h"
+#include "interface/config_parameters.h"
 
 
 
@@ -79,6 +81,7 @@ private:
 
     bool data_selected;               //false until user selects data, then true
     InputParameters input_params;     //parameters set by the user via the DataSelectDialog
+    ConfigParameters config_params;   //parameters that control the visualization
     DataSelectDialog ds_dialog;       //dialog box that gets the input parameters
 
     std::vector<double> x_grades;     //floating-point x-coordinates of the grades
@@ -109,6 +112,7 @@ private:
 
     //other items
     AboutMessageBox aboutBox;
+    ConfigureDialog configBox;
 };
 
 #endif // VISUALIZATIONWINDOW_H

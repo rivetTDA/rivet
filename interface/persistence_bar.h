@@ -6,6 +6,7 @@
 #include <QGraphicsItem>
 #include <QDebug>
 
+#include "config_parameters.h"
 #include "slice_diagram.h"
 class SliceDiagram;
 
@@ -13,7 +14,7 @@ class SliceDiagram;
 class PersistenceBar : public QGraphicsItem
 {
 public:
-    PersistenceBar(SliceDiagram* s_diagram, double unscaled_start, double unscaled_end, unsigned index);
+    PersistenceBar(SliceDiagram* s_diagram, ConfigParameters* params, double unscaled_start, double unscaled_end, unsigned index);
 
     QRectF boundingRect() const;
     QPainterPath shape() const;
@@ -37,6 +38,7 @@ protected:
 
 private:
     SliceDiagram* sdgm;
+    ConfigParameters* config_params;
 
     double start;   //unscaled start coordinate (projection units)
     double end;     //unscaled end coordinate (projection units)
