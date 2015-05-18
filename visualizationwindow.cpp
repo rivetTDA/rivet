@@ -8,6 +8,7 @@
 
 #include "interface/input_manager.h"
 #include "interface/progressdialog.h"
+#include "interface/aboutmessagebox.h"
 #include "math/simplex_tree.h"
 #include "math/multi_betti.h"
 #include "dcel/anchor.h"
@@ -20,6 +21,7 @@ VisualizationWindow::VisualizationWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::VisualizationWindow),
     verbosity(5), INFTY(std::numeric_limits<double>::infinity()),
+    data_selected(false),
     ds_dialog(input_params),
     x_grades(), y_grades(), xi_support(),
     cthread(verbosity, input_params, x_grades, y_grades, xi_support),
@@ -48,6 +50,8 @@ VisualizationWindow::VisualizationWindow(QWidget *parent) :
     QObject::connect(&cthread, &ComputationThread::setCurrentProgress, &prog_dialog, &ProgressDialog::updateProgress);
     QObject::connect(&cthread, &ComputationThread::xiSupportReady, this, &VisualizationWindow::paint_xi_support);
     QObject::connect(&cthread, &ComputationThread::arrangementReady, this, &VisualizationWindow::augmented_arrangement_ready);
+
+    QObject::connect(&prog_dialog, &ProgressDialog::stopComputation, &cthread, &ComputationThread::terminate);  ///TODO: don't use QThread::terminate()! modify ComputationThread so that it can stop gracefully and clean up after itself
 }
 
 VisualizationWindow::~VisualizationWindow()
@@ -77,11 +81,22 @@ void VisualizationWindow::paint_xi_support()
         slice_diagram->add_point(x_grades[it->x], y_grades[it->y], it->zero, it->one);
     slice_diagram->create_diagram(input_params.x_label, input_params.y_label);
 
+    //enable control items
+    ui->xi0CheckBox->setEnabled(true);
+    ui->xi1CheckBox->setEnabled(true);
+    ui->normCoordCheckBox->setEnabled(true);
+    ui->angleLabel->setEnabled(true);
+    ui->angleDoubleSpinBox->setEnabled(true);
+    ui->offsetLabel->setEnabled(true);
+    ui->offsetSpinBox->setEnabled(true);
+
     //update offset extents   //TODO: FIX THIS!!!
     ui->offsetSpinBox->setMinimum(-1*x_grades.back());
     ui->offsetSpinBox->setMaximum(y_grades.back());
 
+    //update status
     line_selection_ready = true;
+    ui->statusBar->showMessage("multigraded Betti number visualization ready");
 }
 
 //this slot is signaled when the agumented arrangement is ready
@@ -90,19 +105,9 @@ void VisualizationWindow::augmented_arrangement_ready(Mesh* arrangement)
     //receive the arrangement
     this->arrangement = arrangement;
 
-    //close the progress dialog box
-    prog_dialog.setComputationFinished();
-
-    if(verbosity >= 2) { qDebug() << "COMPUTATION FINISHED; READY FOR INTERACTIVITY."; }
-
-    //print arrangement info
+    //TESTING: print arrangement info and verify consistency
     arrangement->print_stats();
-    ui->statusBar->showMessage("computed all barcode templates");
-
-    //TESTING: verify consistency of the arrangement
 //    arrangement->test_consistency();
-
-//    qDebug() << "zero: " << slice_diagram->get_zero();
 
     //inialize persistence diagram
     p_diagram = new PersistenceDiagram(pdScene, this, &(input_params.fileName), input_params.dim);
@@ -125,8 +130,14 @@ void VisualizationWindow::augmented_arrangement_ready(Mesh* arrangement)
     //clean up
     delete barcode;
 
+    //enable control items
+    ui->barcodeCheckBox->setEnabled(true);
+
+    //update status
+    if(verbosity >= 2) { qDebug() << "COMPUTATION FINISHED; READY FOR INTERACTIVITY."; }
+    prog_dialog.setComputationFinished();   //also closes the progress dialog box
     persistence_diagram_drawn = true;
-    ui->statusBar->showMessage("persistence diagram drawn");
+    ui->statusBar->showMessage("ready for interactive barcode exploration");
 
 }//end augmented_arrangement_ready()
 
@@ -299,9 +310,13 @@ void VisualizationWindow::deselect_dot()
 
 void VisualizationWindow::showEvent(QShowEvent* event)
 {
-    QMainWindow::showEvent(event);
-    ds_dialog.exec();               //show the DataSelectDialog box and blocks until the dialog is closed
-    start_computation();            //starts the persistence calculation
+    if(!data_selected)
+    {
+        QMainWindow::showEvent(event);
+        ds_dialog.exec();               //show the DataSelectDialog box and blocks until the dialog is closed
+        start_computation();            //starts the persistence calculation
+        data_selected = true;
+    }
 }
 
 void VisualizationWindow::resizeEvent(QResizeEvent* /*unused*/)
@@ -316,7 +331,27 @@ void VisualizationWindow::resizeEvent(QResizeEvent* /*unused*/)
     }
 }
 
+void VisualizationWindow::closeEvent(QCloseEvent* event)
+{
+    QMessageBox::StandardButton reallyExit;
+    reallyExit = QMessageBox::question(this, "Exit?", "Are you sure you want to exit? All computation will be lost!", QMessageBox::Yes|QMessageBox::No);
+
+    if(reallyExit == QMessageBox::Yes)
+    {
+        event->accept();
+        qDebug() << "User has closed RIVET.";
+    }
+    else
+        event->ignore();
+}
+
+
 void VisualizationWindow::on_actionExit_triggered()
 {
     close();
+}
+
+void VisualizationWindow::on_actionAbout_triggered()
+{
+    aboutBox.show();
 }

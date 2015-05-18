@@ -106,6 +106,7 @@ xiSupportMatrix::~xiSupportMatrix()
 }
 
 //stores xi support points from MultiBetti in the xiSupportMatrix and in the supplied vector
+///TODO: UPDATE THIS FUNCTION!
 void xiSupportMatrix::fill(MultiBetti& mb, std::vector<xiPoint>& xi_pts)
 {
     unsigned num_xi_pts = 0;

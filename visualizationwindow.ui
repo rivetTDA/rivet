@@ -60,6 +60,9 @@
         </item>
         <item>
          <widget class="QCheckBox" name="normCoordCheckBox">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="text">
            <string>&amp;Fit diagram to window</string>
           </property>
@@ -80,6 +83,9 @@
         </item>
         <item>
          <widget class="QCheckBox" name="barcodeCheckBox">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="text">
            <string>Show &amp;barcode</string>
           </property>
@@ -152,6 +158,9 @@
          <layout class="QGridLayout" name="gridLayout">
           <item row="1" column="2">
            <widget class="QDoubleSpinBox" name="offsetSpinBox">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
             <property name="minimumSize">
              <size>
               <width>90</width>
@@ -171,6 +180,9 @@
           </item>
           <item row="1" column="1">
            <widget class="QLabel" name="offsetLabel">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
             <property name="text">
              <string>&amp;Offset:</string>
             </property>
@@ -181,6 +193,9 @@
           </item>
           <item row="0" column="1">
            <widget class="QLabel" name="angleLabel">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
             <property name="text">
              <string>&amp;Angle:</string>
             </property>
@@ -191,6 +206,9 @@
           </item>
           <item row="0" column="2">
            <widget class="QDoubleSpinBox" name="angleDoubleSpinBox">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
             <property name="minimumSize">
              <size>
               <width>90</width>
@@ -221,6 +239,9 @@
          <layout class="QVBoxLayout" name="verticalLayout">
           <item>
            <widget class="QCheckBox" name="xi0CheckBox">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
             <property name="text">
              <string>Show ξ₀ (&amp;green)</string>
             </property>
@@ -231,6 +252,9 @@
           </item>
           <item>
            <widget class="QCheckBox" name="xi1CheckBox">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
             <property name="text">
              <string>Show ξ₁ (&amp;red)</string>
             </property>
@@ -280,6 +304,9 @@
         </item>
         <item>
          <widget class="QLabel" name="cleanDiagLabel">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="text">
            <string>Clean Diagonal</string>
           </property>

@@ -8,6 +8,7 @@ class DataSelectDialog;
 #include "dataselectdialog.h"
 #include "dcel/mesh.h"
 #include "interface/barcode.h"
+#include "interface/aboutmessagebox.h"
 
 #include <boost/multiprecision/cpp_int.hpp>
 typedef boost::multiprecision::cpp_rational exact;
@@ -49,6 +50,7 @@ public:
 protected:
     void showEvent(QShowEvent* event);      //shows the DataSelectDialog and blocks until it is closed
     void resizeEvent(QResizeEvent*);
+    void closeEvent(QCloseEvent* event);
     
 private slots:
     void paint_xi_support();
@@ -64,6 +66,8 @@ private slots:
 
     void on_actionExit_triggered();
 
+    void on_actionAbout_triggered();
+
 private:
     Ui::VisualizationWindow *ui;
 
@@ -71,6 +75,7 @@ private:
     const int verbosity;
     const double INFTY;
 
+    bool data_selected;               //false until user selects data, then true
     InputParameters input_params;     //parameters set by the user via the DataSelectDialog
     DataSelectDialog ds_dialog;       //dialog box that gets the input parameters
 
@@ -99,6 +104,9 @@ private:
 
     Barcode* rescale_barcode_template(BarcodeTemplate &dbc, double angle, double offset);
     double project(xiPoint& pt, double angle, double offset);
+
+    //other items
+    AboutMessageBox aboutBox;
 };
 
 #endif // VISUALIZATIONWINDOW_H

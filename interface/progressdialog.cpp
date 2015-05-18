@@ -2,6 +2,7 @@
 #include "ui_progressdialog.h"
 
 #include <QCloseEvent>
+#include <QMessageBox>
 #include <QDebug>
 
 ProgressDialog::ProgressDialog(QWidget *parent) :
@@ -84,4 +85,18 @@ QLabel* ProgressDialog::getLabel(unsigned i)
         return ui->step4description;
     else
         return ui->step5description;
+}
+
+void ProgressDialog::on_stopButton_clicked()
+{
+    QMessageBox::StandardButton reallyStop;
+    reallyStop = QMessageBox::question(this, "Stop computation?", "Are you sure you want to stop the computation?", QMessageBox::Yes|QMessageBox::No);
+
+    if(reallyStop == QMessageBox::Yes)
+    {
+        emit stopComputation();
+        computation_finished = true;
+        close();
+        qDebug() << "COMPUTATION INTERRUPTED BY USER";
+    }
 }

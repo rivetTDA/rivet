@@ -25,6 +25,12 @@ public slots:
 protected:
     void closeEvent(QCloseEvent *);
 
+signals:
+    void stopComputation();
+
+private slots:
+    void on_stopButton_clicked();
+
 private:
     Ui::ProgressDialog *ui;
     std::vector<unsigned> stage_progress;

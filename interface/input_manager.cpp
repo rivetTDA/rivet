@@ -20,7 +20,7 @@ exact str_to_exact(std::string& str)
     exact r;
 
     //find decimal point, if it exists
-    int dec = str.find(".");    //I thought this should be unsigned, but then the following if statement doesn't work.
+    std::string::size_type dec = str.find(".");
 
     if(dec == std::string::npos)	//then decimal point not found
     {
