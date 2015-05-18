@@ -36,7 +36,8 @@ SOURCES	+= main.cpp                         \
 		math/xi_point.cpp \
     interface/progressdialog.cpp \
     computationthread.cpp \
-    interface/aboutmessagebox.cpp
+    interface/aboutmessagebox.cpp \
+    interface/configuredialog.cpp
     
 
 HEADERS  += visualizationwindow.h			\
@@ -64,10 +65,12 @@ HEADERS  += visualizationwindow.h			\
     interface/progressdialog.h \
     computationthread.h \
     interface/input_parameters.h \
-    interface/aboutmessagebox.h
+    interface/aboutmessagebox.h \
+    interface/configuredialog.h
     
 
 FORMS   += visualizationwindow.ui			\
 		dataselectdialog.ui \
     interface/progressdialog.ui \
-    interface/aboutmessagebox.ui
+    interface/aboutmessagebox.ui \
+    interface/configuredialog.ui

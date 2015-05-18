@@ -9,6 +9,7 @@
 #include "interface/input_manager.h"
 #include "interface/progressdialog.h"
 #include "interface/aboutmessagebox.h"
+#include "interface/configuredialog.h"
 #include "math/simplex_tree.h"
 #include "math/multi_betti.h"
 #include "dcel/anchor.h"
@@ -354,4 +355,11 @@ void VisualizationWindow::on_actionExit_triggered()
 void VisualizationWindow::on_actionAbout_triggered()
 {
     aboutBox.show();
+}
+
+void VisualizationWindow::on_actionConfigure_triggered()
+{
+    ConfigureDialog* config = new ConfigureDialog;  //TODO: is this how we should open windows?
+    config->exec();
+    delete config;
 }

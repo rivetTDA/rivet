@@ -68,6 +68,8 @@ private slots:
 
     void on_actionAbout_triggered();
 
+    void on_actionConfigure_triggered();
+
 private:
     Ui::VisualizationWindow *ui;
 
