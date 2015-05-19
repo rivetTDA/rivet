@@ -111,8 +111,8 @@ private:
     double project(xiPoint& pt, double angle, double offset);
 
     //other items
-    AboutMessageBox aboutBox;
-    ConfigureDialog configBox;
+    AboutMessageBox aboutBox;       //which is better for these dialog boxes
+    ConfigureDialog* configBox;     // -- pointer or no pointer?
 };
 
 #endif // VISUALIZATIONWINDOW_H

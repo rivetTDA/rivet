@@ -47,8 +47,8 @@
       <rect>
        <x>20</x>
        <y>40</y>
-       <width>268</width>
-       <height>161</height>
+       <width>301</width>
+       <height>194</height>
       </rect>
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
@@ -69,7 +69,7 @@
       <item row="3" column="1">
        <widget class="QLabel" name="label_6">
         <property name="text">
-         <string>Highlight</string>
+         <string>Persistence diagram highlight</string>
         </property>
        </widget>
       </item>
@@ -167,6 +167,29 @@
         </property>
        </widget>
       </item>
+      <item row="5" column="1">
+       <widget class="QLabel" name="label_7">
+        <property name="text">
+         <string>Line selection highlight</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QPushButton" name="lineHighlightColorButton">
+        <property name="autoFillBackground">
+         <bool>true</bool>
+        </property>
+        <property name="styleSheet">
+         <string notr="true"/>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="flat">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </widget>
@@ -176,9 +199,9 @@
     </attribute>
    </widget>
   </widget>
-  <widget class="QPushButton" name="pushButton">
+  <widget class="QPushButton" name="okButton">
    <property name="enabled">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <property name="geometry">
     <rect>

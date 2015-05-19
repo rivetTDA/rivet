@@ -123,8 +123,6 @@ void SliceDiagram::resize_diagram()
     int view_width = view_list[0]->width();
     int view_height = view_list[0]->height();
 
-//    qDebug() << "width: " << view_width << ", height: " << view_height;
-
     //determine scale
     double left_text_width = std::max(data_ymin_text->boundingRect().width(), data_ymax_text->boundingRect().width());
     double diagram_max_width = view_width - padding - 2*scene_padding - text_padding - left_text_width;
@@ -226,7 +224,7 @@ void SliceDiagram::resize_diagram()
     double scene_rect_w = diagram_width + padding + text_padding + left_text_width;
     double scene_rect_h = diagram_height + padding + text_padding + lower_text_height;
     scene->setSceneRect(scene_rect_x, scene_rect_y, scene_rect_w, scene_rect_h);
-}
+}//end resize_diagram()
 
 //updates the line, in response to a change in the controls in the VisualizationWindow
 //NOTE: angle is in DEGREES
@@ -279,7 +277,7 @@ void SliceDiagram::update_line(double angle, double offset)
     }
 
     highlight_line->hide(); //since the line has changed, the highlighting is no longer valid
-}
+}//end update_line()
 
 //updates controls in the VisualizationWindow in response to a change in the line (also update SliceDiagram data values)
 void SliceDiagram::update_window_controls()
@@ -311,7 +309,7 @@ void SliceDiagram::update_window_controls()
     window->set_line_parameters(angle, offset);
 
     highlight_line->hide(); //since the line has changed, the highlighting is no longer valid
-}
+}//end update_window_controls()
 
 //draws the barcode parallel to the slice line
 void SliceDiagram::draw_barcode(Barcode *bc, bool show)
@@ -399,7 +397,7 @@ std::pair<double,double> SliceDiagram::compute_endpoint(double coordinate, unsig
     y += dot_left->pos().y();
 
     return std::pair<double,double>(x,y);
-}
+}//end compute_endpoint()
 
 //highlight the specified bar, selected in the slice diagram, and propagate to the persistence diagram
 void SliceDiagram::select_bar(PersistenceBar* clicked)
@@ -423,7 +421,7 @@ void SliceDiagram::select_bar(PersistenceBar* clicked)
 
     //highlight part of the persistence diagram
     window->select_dot(clicked->get_index());
-}
+}//end select_bar(PersistenceBar*)
 
 //highlight the specified class of bars, which has been selected in the persistence diagram
 void SliceDiagram::select_bar(unsigned index)
@@ -444,7 +442,7 @@ void SliceDiagram::select_bar(unsigned index)
 
     //highlight part of slice line
     update_highlight();
-}
+}//end select_bar(unsigned)
 
 //remove selection; if propagate, then deselect dot in the persistence diagram
 void SliceDiagram::deselect_bar(bool propagate)
@@ -463,7 +461,7 @@ void SliceDiagram::deselect_bar(bool propagate)
     //remove highlighting from slice diagram
     if(propagate)
         window->deselect_dot();
-}
+}//end deselect_bar()
 
 //highlights part of the slice line
 void SliceDiagram::update_highlight()
@@ -482,7 +480,7 @@ void SliceDiagram::update_highlight()
         highlight_line->setLine(p1.first, p1.second, p2.first, p2.second);
         highlight_line->show();
     }
-}
+}//end update_highlight()
 
 //if "show" is true, then xi_0 support points are drawn; otherwise, they are hidden
 void SliceDiagram::toggle_xi0_points(bool show)

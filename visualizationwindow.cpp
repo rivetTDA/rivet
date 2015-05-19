@@ -28,8 +28,7 @@ VisualizationWindow::VisualizationWindow(QWidget *parent) :
     cthread(verbosity, input_params, x_grades, y_grades, xi_support),
     line_selection_ready(false),
     slice_diagram(NULL), slice_update_lock(false),
-    p_diagram(NULL), persistence_diagram_drawn(false),
-    configBox(config_params)
+    p_diagram(NULL), persistence_diagram_drawn(false)
 {
     ui->setupUi(this);
 
@@ -360,5 +359,7 @@ void VisualizationWindow::on_actionAbout_triggered()
 
 void VisualizationWindow::on_actionConfigure_triggered()
 {
-    configBox.exec();
+    configBox = new ConfigureDialog(config_params, this);
+    configBox->exec();
+    delete configBox;
 }
