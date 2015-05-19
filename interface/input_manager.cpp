@@ -3,10 +3,17 @@
 
 #include "input_manager.h"
 
-#include <set>
+#include "../computationthread.h"
+#include "../math/simplex_tree.h"
+
 #include <QDebug>
+#include <QString>
 
 #include <boost/algorithm/string.hpp>
+
+#include <algorithm>
+#include <set>
+#include <sstream>
 
 
 //epsilon value for use in comparisons

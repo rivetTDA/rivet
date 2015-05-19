@@ -1,10 +1,14 @@
 #include "computationthread.h"
 
-#include <QTime>
-#include <QDebug>
+#include "dcel/mesh.h"
 #include "interface/input_manager.h"
-#include "math/simplex_tree.h"
+#include "interface/input_parameters.h"
 #include "math/multi_betti.h"
+#include "math/simplex_tree.h"
+#include "math/xi_point.h"
+
+#include <QDebug>
+#include <QTime>
 
 
 ComputationThread::ComputationThread(int verbosity, InputParameters& params, std::vector<double>& x_grades, std::vector<double>& y_grades, std::vector<xiPoint>& xi_support, QObject *parent) :

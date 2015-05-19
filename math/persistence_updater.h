@@ -8,17 +8,24 @@
 #ifndef __PERSISTENCE_UPDATER_H__
 #define __PERSISTENCE_UPDATER_H__
 
-class xiSupportMatrix;
-#include "xi_support_matrix.h"
-class Mesh;
-#include "../dcel/mesh.h"
-#include "map_matrix.h"
-#include "index_matrix.h"
-class MultiBetti;
-#include "multi_betti.h"
+//forward declarations
 class ComputationThread;
-#include "../computationthread.h"
-#include "../dcel/barcode_template.h"
+class Face;
+class Halfedge;
+class IndexMatrix;
+class MapMatrix_Perm;
+class MapMatrix_RowPriority_Perm;
+class Mesh;
+class MultiBetti;
+class SimplexTree;
+class xiPoint;
+class xiMatrixEntry;
+
+#include "xi_support_matrix.h"
+
+#include <map>
+#include <vector>
+
 
 class PersistenceUpdater
 {

@@ -10,17 +10,19 @@
 #ifndef __MultiBetti_H__
 #define __MultiBetti_H__
 
-#include <vector>
-#include "simplex_tree.h"
-#include "index_matrix.h"
+//forward declarations
+struct ColumnList;  //necessary for column reduction in MultiBetti::reduce(...)
 class ComputationThread;
-#include "../computationthread.h"
-#include "math/xi_point.h"
+class IndexMatrix;
+class MapMatrix;
+class SimplexTree;
+class xiPoint;
+
 #include <boost/multi_array.hpp>
 
+#include <vector>
 typedef std::vector<int> Vector;
 
-struct ColumnList;  //necessary for column reduction in MultiBetti::reduce(...)
 
 class MultiBetti
 {

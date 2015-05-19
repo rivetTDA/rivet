@@ -15,7 +15,6 @@
 #include <vector>
 
 
-
 class STNode {
 	public:
 		STNode();					//constructor for empty node

@@ -1,14 +1,14 @@
 #ifndef PERSISTENCE_BAR_H
 #define PERSISTENCE_BAR_H
 
-
-#include <QPainter>
-#include <QGraphicsItem>
-#include <QDebug>
-
-#include "config_parameters.h"
-#include "slice_diagram.h"
+//forward declarations
+struct ConfigParameters;
 class SliceDiagram;
+
+#include <QDebug>
+#include <QGraphicsItem>
+#include <QPainter>
+
 
 
 class PersistenceBar : public QGraphicsItem

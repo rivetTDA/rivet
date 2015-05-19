@@ -3,7 +3,17 @@
  */
 
 #include "multi_betti.h"
-#include <qdebug.h>
+
+#include "map_matrix.h"
+#include "index_matrix.h"
+#include "simplex_tree.h"
+#include "xi_point.h"
+#include "../computationthread.h"
+
+#include <QDebug>
+
+#include <set>
+
 
 //constructor
 MultiBetti::MultiBetti(SimplexTree& st, int dim, int v) :

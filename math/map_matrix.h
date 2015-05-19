@@ -23,7 +23,6 @@
 #define __MapMatrix_H__
 
 #include <vector>
-#include <stdexcept>
 
 
 //base class simply implements features common to all MapMatrices, whether column-priority or row-priority

@@ -4,14 +4,22 @@
 
 #include "mesh.h"
 
-#include <list>
-#include <qdebug.h>
+#include "dcel.h"
+#include "../computationthread.h"
+#include "../dcel/barcode_template.h"
+#include "../math/multi_betti.h"            //this include might not be necessary
+#include "../math/persistence_updater.h"
+
+#include <QDebug>
 #include <QTime>
 
-#include <boost/graph/graph_traits.hpp>
 #include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/graph_traits.hpp>
 #include <boost/graph/kruskal_min_spanning_tree.hpp>
-#include <boost/graph/metric_tsp_approx.hpp>
+//#include <boost/graph/metric_tsp_approx.hpp> -- NOT CURRENTLY USED
+
+#include <limits>	//necessary for infinity
+#include <queue>    //for std::priority_queue
 
 
 // Mesh constructor; sets up bounding box (with empty interior) for the affine Grassmannian

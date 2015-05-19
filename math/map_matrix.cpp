@@ -4,8 +4,9 @@
 
 #include "map_matrix.h"
 
-#include <iostream> //for testing only
-#include <qdebug.h>
+#include <QDebug>
+
+#include <stdexcept>    //for error-checking and debugging
 
 
 /********** implementation of base class MapMatrix_Base **********/

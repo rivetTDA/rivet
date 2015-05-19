@@ -4,6 +4,7 @@
 #include <QCloseEvent>
 #include <QMessageBox>
 #include <QDebug>
+#include <QtWidgets>
 
 ProgressDialog::ProgressDialog(QWidget *parent) :
     QDialog(parent),

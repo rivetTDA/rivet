@@ -8,22 +8,23 @@
 #ifndef __DCEL_Mesh_H__
 #define __DCEL_Mesh_H__
 
-#include <vector>
-#include <queue>
-#include <limits>	//necessary for infinity
-#include <math.h>	//necessary for atan
-#include <set>
+//forward declarations
+class BarcodeTemplate;
+class Face;
+class Halfedge;
+class Vertex;
+class MultiBetti;
+class ComputationThread;
 
 #include "anchor.h"
-#include "dcel.h"
 #include "../math/xi_point.h"
-#include "../math/multi_betti.h"
-#include "../math/persistence_updater.h"
-#include "../computationthread.h"
-class ComputationThread;
 
 #include <boost/multiprecision/cpp_int.hpp>
 typedef boost::multiprecision::cpp_rational exact;
+
+#include <vector>
+#include <set>
+
 
 class Mesh
 {

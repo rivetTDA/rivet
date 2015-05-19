@@ -1,17 +1,21 @@
 #ifndef SLICE_DIAGRAM_H
 #define SLICE_DIAGRAM_H
 
-#include <QGraphicsScene>
-#include <QtGui>
-
+//forward declarations
 class Barcode;
 class ControlDot;
-#include "control_dot.h"
-class SliceLine;
-#include "slice_line.h"
+struct ConfigParameters;
 class PersistenceBar;
-#include "persistence_bar.h"
-#include "config_parameters.h"
+class SliceLine;
+
+#include <QGraphicsScene>
+#include <QtWidgets>
+
+#include <list>
+#include <utility>  //for std::pair
+#include <vector>
+
+
 
 
 class SliceDiagram : public QGraphicsScene

@@ -4,6 +4,9 @@
 #include <QDialog>
 #include <QLabel>
 
+#include <vector>
+
+
 namespace Ui {
 class ProgressDialog;
 }

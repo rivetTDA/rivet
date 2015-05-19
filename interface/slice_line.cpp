@@ -1,9 +1,11 @@
 #include "slice_line.h"
 
-#include <QtGui>
-#include <QGraphicsSceneMouseEvent>
+#include "config_parameters.h"
+#include "control_dot.h"
+#include "slice_diagram.h"
+
 #include <QDebug>
-#include <algorithm>
+#include <QGraphicsSceneMouseEvent>
 
 
 SliceLine::SliceLine(SliceDiagram* sd, ConfigParameters *params) :

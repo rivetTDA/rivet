@@ -1,16 +1,19 @@
 #ifndef COMPUTATIONTHREAD_H
 #define COMPUTATIONTHREAD_H
 
+//forward declarations
+struct InputParameters;
+class Mesh;
+
+#include "math/xi_point.h"
+
 #include <QObject>
 #include <QThread>
 
-#include "interface/input_parameters.h"
-#include "math/xi_point.h"
-#include "dcel/mesh.h"
-class Mesh;
-
 #include <boost/multiprecision/cpp_int.hpp>
 typedef boost::multiprecision::cpp_rational exact;
+
+#include <vector>
 
 
 class ComputationThread : public QThread

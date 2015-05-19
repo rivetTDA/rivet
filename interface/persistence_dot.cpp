@@ -1,6 +1,9 @@
 #include "persistence_dot.h"
 
+#include "config_parameters.h"
+#include "persistence_diagram.h"
 
+#include <QDebug>
 
 
 PersistenceDot::PersistenceDot(PersistenceDiagram *p_diagram, ConfigParameters* params, double unscaled_x, double unscaled_y, double radius, unsigned index) :

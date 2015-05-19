@@ -1,13 +1,16 @@
 #ifndef PERSISTENCEDIAGRAM_H
 #define PERSISTENCEDIAGRAM_H
 
-#include <QGraphicsScene>
-#include <QtGui>
-
-#include "config_parameters.h"
-#include "persistence_dot.h"
+//forward declarations
+struct ConfigParameters;
 class PersistenceDot;
 class Barcode;
+
+#include <QGraphicsScene>
+#include <QtWidgets>
+
+#include <vector>
+
 
 class PersistenceDiagram : public QGraphicsScene
 {

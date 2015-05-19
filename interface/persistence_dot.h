@@ -1,14 +1,12 @@
 #ifndef PERSISTENCE_DOT_H
 #define PERSISTENCE_DOT_H
 
-
-#include <QPainter>
-#include <QGraphicsItem>
-#include <QDebug>
-
-#include "config_parameters.h"
-#include "persistence_diagram.h"
+//forward declarations
+struct ConfigParameters;
 class PersistenceDiagram;
+
+#include <QGraphicsItem>
+#include <QtWidgets>
 
 
 class PersistenceDot : public QGraphicsItem

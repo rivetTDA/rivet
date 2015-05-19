@@ -4,12 +4,14 @@
 
 #include "simplex_tree.h"
 
+#include "index_matrix.h"
+#include "map_matrix.h"
+#include "st_node.h"
 
-#include <set>
-#include <vector>
-#include <math.h>
-#include <limits>   //std::numeric_limits
 #include <QDebug>
+
+#include <limits>   //std::numeric_limits
+#include <stdexcept>
 
 
 //SimplexTree constructor; requires dimension of homology to be computed and verbosity parameter

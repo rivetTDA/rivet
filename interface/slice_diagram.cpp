@@ -1,13 +1,19 @@
 #include "slice_diagram.h"
 
-#include <algorithm>
-#include <set>
-#include <sstream>
+#include "barcode.h"
+#include "config_parameters.h"
+#include "control_dot.h"
+#include "persistence_bar.h"
+#include "slice_line.h"
 
 #include <QDebug>
 #include <QGraphicsView>
 
-#include "barcode.h"
+#include <limits>
+#include <math.h>
+#include <set>
+#include <sstream>
+
 
 SliceDiagram::SliceDiagram(ConfigParameters* params, QObject* parent) :
     QGraphicsScene(parent),
@@ -86,12 +92,12 @@ void SliceDiagram::create_diagram(QString x_text, QString y_text, double xmin, d
     //draw points
     for(unsigned i = 0; i < points.size(); i++)
     {
-        if(points[i].zero > 0)  //then draw a green disk
+        if(points[i].zero > 0)  //then draw a xi0 disk
         {
             QGraphicsEllipseItem* item = addEllipse(QRectF(), Qt::NoPen, xi0brush);
             xi0_dots.push_back(item);
         }
-        if(points[i].one > 0)  //then draw a red disk
+        if(points[i].one > 0)  //then draw a xi1 disk
         {
             QGraphicsEllipseItem* item = addEllipse(QRectF(), Qt::NoPen, xi1brush);
             xi1_dots.push_back(item);
@@ -250,6 +256,10 @@ void SliceDiagram::update_diagram()
         (*it)->setBrush(xi0brush);
     for(std::vector<QGraphicsEllipseItem*>::iterator it = xi1_dots.begin(); it != xi1_dots.end(); ++it)
         (*it)->setBrush(xi1brush);
+
+    //update the slice line highlight
+    QPen highlighter(QBrush(config_params->persistenceHighlightColor), 6);
+    highlight_line->setPen(highlighter);
 }//end update_diagram()
 
 //updates the line, in response to a change in the controls in the VisualizationWindow

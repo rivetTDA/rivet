@@ -1,10 +1,11 @@
 #ifndef DATASELECTDIALOG_H
 #define DATASELECTDIALOG_H
 
-#include <QDialog>
-#include <QFileDialog>
+//forward declarations
+struct InputParameters;
 
-#include "interface/input_parameters.h"
+#include <QDialog>
+
 
 namespace Ui {
 class DataSelectDialog;

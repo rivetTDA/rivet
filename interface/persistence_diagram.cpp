@@ -1,13 +1,16 @@
 #include "persistence_diagram.h"
 
-#include <QGraphicsView>
-#include <QtGui>
+#include "barcode.h"
+#include "config_parameters.h"
+#include "persistence_dot.h"
+
 #include <QDebug>
-#include <sstream>
+#include <QGraphicsView>
+
 #include <limits>
 #include <set>
+#include <sstream>
 
-#include "barcode.h"
 
 PersistenceDiagram::PersistenceDiagram(ConfigParameters* params, QObject* parent) :
     QGraphicsScene(parent),

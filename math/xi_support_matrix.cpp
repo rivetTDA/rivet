@@ -1,8 +1,10 @@
 #include "xi_support_matrix.h"
 
 #include "multi_betti.h"
+#include "xi_point.h"
 
 #include <cstddef>  //for NULL
+
 
 /********** xiMatrixEntry **********/
 

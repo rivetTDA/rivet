@@ -1,6 +1,15 @@
 #include "persistence_updater.h"
 
-#include <qdebug.h>
+#include "index_matrix.h"
+#include "map_matrix.h"
+#include "multi_betti.h"
+#include "simplex_tree.h"
+#include "../computationthread.h"
+#include "../dcel/barcode_template.h"
+#include "../dcel/dcel.h"
+#include "../dcel/mesh.h"
+
+#include <QDebug>
 #include <QTime>
 
 

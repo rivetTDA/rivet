@@ -1,30 +1,29 @@
 #ifndef VISUALIZATIONWINDOW_H
 #define VISUALIZATIONWINDOW_H
 
-#include <QMainWindow>
-#include <QtGui>
+//forward declarations
+class Barcode;
+class BarcodeTemplate;
+class Mesh;
+class xiPoint;
 
-class DataSelectDialog;
+#include "computationthread.h"
 #include "dataselectdialog.h"
-#include "dcel/mesh.h"
-#include "interface/barcode.h"
 #include "interface/aboutmessagebox.h"
+#include "interface/configuredialog.h"
+#include "interface/config_parameters.h"
+#include "interface/input_parameters.h"
+#include "interface/persistence_diagram.h"
+#include "interface/progressdialog.h"
+#include "interface/slice_diagram.h"
+
+#include <QMainWindow>
+#include <QtWidgets>
 
 #include <boost/multiprecision/cpp_int.hpp>
 typedef boost::multiprecision::cpp_rational exact;
 
-#include "computationthread.h"
-#include "interface/progressdialog.h"
-class SliceDiagram;
-#include "interface/slice_diagram.h"
-class PersistenceDiagram;
-#include "interface/persistence_diagram.h"
-class Mesh;
-#include "interface/configuredialog.h"
-#include "interface/config_parameters.h"
-
-
-
+#include <vector>
 
 
 namespace Ui {

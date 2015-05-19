@@ -1,6 +1,11 @@
 #include "dataselectdialog.h"
 #include "ui_dataselectdialog.h"
 
+#include "interface/input_parameters.h"
+
+#include <QFileDialog>
+
+
 DataSelectDialog::DataSelectDialog(InputParameters& params, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::DataSelectDialog),

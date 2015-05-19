@@ -7,13 +7,16 @@
 #ifndef __DCEL_H__
 #define __DCEL_H__
 
+//forward declarations
 class Vertex;
 class Halfedge;
 class Face;
+class Anchor;
 
-#include "anchor.h"
 #include "barcode_template.h"
-#include <qdebug.h>
+
+#include <QDebug>
+
 
 class Vertex
 {
@@ -57,7 +60,7 @@ class Halfedge
         void set_face(Face* f);     //set the face that this halfedge borders
         Face* get_face() const;     //get the face that this halfedge borders
 
-        Anchor *get_anchor() const; //get the Anchor
+        Anchor* get_anchor() const; //get the Anchor
 
         friend QDebug& operator<<(QDebug& qd, const Halfedge& e);	//for printing the halfedge
 
@@ -81,7 +84,7 @@ class Face
         void set_boundary(Halfedge* e);     //set the pointer to a halfedge on the boundary of this face
         Halfedge* get_boundary();           //get the (pointer to the) boundary halfedge
 
-        BarcodeTemplate &get_barcode();     //returns a reference to the barcode template stored in this cell
+        BarcodeTemplate& get_barcode();     //returns a reference to the barcode template stored in this cell
 
         bool has_been_visited();            //true iff cell has been visited in the vineyard-update process (so that we can distinguish a cell with an empty barcode from an unvisited cell)
         void mark_as_visited();             //marks this cell as visited

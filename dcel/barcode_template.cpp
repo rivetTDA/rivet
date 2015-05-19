@@ -1,6 +1,6 @@
 #include "barcode_template.h"
 
-#include <qdebug.h>
+#include <QDebug>
 
 
 BarTemplate::BarTemplate(unsigned a, unsigned b) :

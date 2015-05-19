@@ -1,13 +1,16 @@
 #ifndef CONFIGUREDIALOG_H
 #define CONFIGUREDIALOG_H
 
+struct ConfigParameters;
+
 #include <QDialog>
 #include <QColor>
-#include "config_parameters.h"
+
 
 namespace Ui {
 class ConfigureDialog;
 }
+
 
 class ConfigureDialog : public QDialog
 {

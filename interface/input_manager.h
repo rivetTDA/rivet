@@ -11,20 +11,18 @@
 #ifndef __InputManager_H__
 #define __InputManager_H__
 
-#include <iostream>
+//forward declarations
+class ComputationThread;
+class SimplexTree;
+
+#include <boost/multiprecision/cpp_int.hpp>
+typedef boost::multiprecision::cpp_rational exact;
+
 #include <fstream>
-#include <sstream>
+#include <math.h>
 #include <string>
 #include <vector>
-#include <math.h>
-#include <algorithm>
-#include <boost/multiprecision/cpp_int.hpp>
 
-#include "../math/simplex_tree.h"
-#include "../math/map_matrix.h"
-#include "../computationthread.h"
-
-typedef boost::multiprecision::cpp_rational exact;
 
 //first, a struct to help sort multi-grade values
 struct ExactValue

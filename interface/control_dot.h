@@ -1,16 +1,13 @@
 #ifndef CONTROL_DOT_H
 #define CONTROL_DOT_H
 
-
-#include <QPainter>
-#include <QGraphicsItem>
-
-#include "config_parameters.h"
-class SliceDiagram;
-#include "slice_diagram.h"
+struct ConfigParameters;
 class SliceLine;
-#include "slice_line.h"
 
+#include <QGraphicsItem>
+#include <QPainter>
+#include <QRectF>
+#include <QVariant>
 
 
 class ControlDot : public QGraphicsItem

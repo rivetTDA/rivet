@@ -1,14 +1,16 @@
 #ifndef SLICE_LINE_H
 #define SLICE_LINE_H
 
-
-#include <QPainter>
-#include <QGraphicsItem>
-
-#include "control_dot.h"
+//forward declarations
+struct ConfigParameters;
 class ControlDot;
 class SliceDiagram;
-#include "config_parameters.h"
+
+#include <QGraphicsItem>
+#include <QPainter>
+#include <QVariant>
+#include <QtWidgets>
+
 
 class SliceLine : public QGraphicsItem
 {

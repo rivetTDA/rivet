@@ -8,12 +8,12 @@
 #ifndef __ANCHOR_H__
 #define __ANCHOR_H__
 
-#include "../math/xi_support_matrix.h"
+//forward declarations
+class Halfedge;
 struct xiMatrixEntry;
 
-class Halfedge;
 
-class Anchor   //updated to store only discrete indexes
+class Anchor
 {
     public:
         Anchor(xiMatrixEntry* down, xiMatrixEntry* left);  //constructor for a strict Anchor, requires pointers to the "generators" of the anchor
@@ -58,7 +58,7 @@ class Anchor   //updated to store only discrete indexes
 
 //TODO: IS IT OK TO IMPLEMENT THE FOLLOWING COMPARATOR HERE, IN THE .h FILE???
 
-class Anchor_LeftComparator    //updated to work for linear arrangements, using discrete x- and y-coordinates
+class Anchor_LeftComparator
 {
     public:
         bool operator() (const Anchor* lhs, const Anchor* rhs) const  //returns true if lhs comes before rhs

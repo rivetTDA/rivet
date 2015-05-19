@@ -1,7 +1,12 @@
 #include "control_dot.h"
 
-#include <QtGui>
+#include "config_parameters.h"
+
+#include "slice_line.h"
+
 #include <QDebug>
+#include <QtWidgets>
+
 #include <sstream>
 
 

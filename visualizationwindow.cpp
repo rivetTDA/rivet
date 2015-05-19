@@ -1,24 +1,15 @@
 #include "visualizationwindow.h"
 #include "ui_visualizationwindow.h"
 
-#include <QFileDialog>
-#include <QMessageBox>
-#include <QDebug>
-#include <QTime>
-
-class SliceDiagram;
-#include "interface/slice_diagram.h"
-
-#include "interface/input_manager.h"
-#include "interface/progressdialog.h"
-#include "interface/aboutmessagebox.h"
-#include "interface/configuredialog.h"
-#include "math/simplex_tree.h"
-#include "math/multi_betti.h"
-#include "dcel/anchor.h"
-#include "dcel/dcel.h"
+#include "dcel/barcode_template.h"
 #include "dcel/mesh.h"
 #include "interface/barcode.h"
+#include "interface/config_parameters.h"
+
+#include <QDebug>
+#include <QFileDialog>
+#include <QMessageBox>
+#include <QTime>
 
 
 VisualizationWindow::VisualizationWindow(QWidget *parent) :

@@ -1,5 +1,11 @@
 #include "persistence_bar.h"
 
+#include "config_parameters.h"
+#include "slice_diagram.h"
+
+
+
+
 PersistenceBar::PersistenceBar(SliceDiagram *s_diagram, ConfigParameters* params, double unscaled_start, double unscaled_end, unsigned index) :
     sdgm(s_diagram),
     config_params(params),

@@ -1,15 +1,13 @@
 #ifndef XI_SUPPORT_MATRIX_H
 #define XI_SUPPORT_MATRIX_H
 
-
-#include <vector>
-#include <list>
-
+//forward declarations
 class MultiBetti;
-
-#include "xi_point.h"
 struct Multigrade;
+class xiPoint;
 
+#include <list>
+#include <vector>
 
 
 //// these are the nodes in the sparse matrix

@@ -1,7 +1,9 @@
 #include "anchor.h"
 
+#include "../math/xi_support_matrix.h"
+
 #include <cstddef>  //for NULL
-#include <math.h>
+
 
 //constructor for a strict Anchor, requires pointers to the "generators" of the anchor
 Anchor::Anchor(xiMatrixEntry* down, xiMatrixEntry* left) : x_coord(down->x), y_coord(left->y), down(down), left(left), above_line(true)
@@ -56,7 +58,6 @@ bool Anchor::comparable(Anchor *other) const   //tests whether two Anchors are (
 {
     return ( y_coord > other->get_y() && x_coord > other->get_x() ) || ( y_coord < other->get_y() && x_coord < other->get_x() );
 }
-
 
 unsigned Anchor::get_x() const
 {

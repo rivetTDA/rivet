@@ -1,7 +1,9 @@
 #include "barcode.h"
 
+#include <QDebug>
+
 #include <math.h>
-#include <qdebug.h>
+
 
 MultiBar::MultiBar(double b, double d, unsigned m) :
     birth(b), death(d), multiplicity(m)

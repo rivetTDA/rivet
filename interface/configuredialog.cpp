@@ -1,9 +1,11 @@
 #include "configuredialog.h"
 #include "ui_configuredialog.h"
 
+#include "config_parameters.h"
+
 #include <QColorDialog>
 #include <QDebug>
-#include <QPalette>
+
 
 ConfigureDialog::ConfigureDialog(ConfigParameters& params, QWidget *parent) :
     QDialog(parent),
@@ -88,11 +90,6 @@ void ConfigureDialog::on_xi0colorButton_clicked()
         ui->xi0colorButton->setAutoFillBackground(true);
         ui->xi0colorButton->setFlat(true);
     }
-
-//    QPalette pal = ui->xi0_color_widget->palette();
-//    pal.setColor(QPalette::Window, color);
-//    ui->xi0_color_widget->setPalette(pal);
-
 }
 
 void ConfigureDialog::on_xi1colorButton_clicked()

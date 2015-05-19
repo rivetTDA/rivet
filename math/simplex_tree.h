@@ -14,14 +14,15 @@
 #ifndef __SimplexTree_H__
 #define __SimplexTree_H__
 
-#include <utility>	// std::pair
-#include <map>
-#include <set>
-#include <stdexcept>
+//forward declarations
+class IndexMatrix;
+class MapMatrix;
+class MapMatrix_Perm;
 
 #include "st_node.h"
-#include "map_matrix.h"
-#include "index_matrix.h"
+
+#include <set>
+#include <vector>
 
 
 //struct SimplexData used for return type of SimplexTree::get_simplex_data()

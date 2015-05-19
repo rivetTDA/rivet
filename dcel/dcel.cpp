@@ -1,6 +1,8 @@
 #include "dcel.h"
 
-#include <qdebug.h>
+#include "anchor.h"
+
+#include <QDebug>
 
 
 /*** implementation of class Vertex **/
