@@ -1,17 +1,23 @@
 #include "persistence_diagram.h"
 
-PersistenceDiagram::PersistenceDiagram(QGraphicsScene* sc, VisualizationWindow* vw, ConfigParameters *params, QString *filename, int dim) : //, double length, double scale, double zero) :
-    scene(sc),  window(vw),
+#include <QGraphicsView>
+#include <QtGui>
+#include <QDebug>
+#include <sstream>
+#include <limits>
+#include <set>
+
+#include "barcode.h"
+
+PersistenceDiagram::PersistenceDiagram(ConfigParameters* params, QObject* parent) :
+    QGraphicsScene(parent),
     config_params(params),
     selected(NULL),
-    radius(5),
-    filename(filename), dim(dim)
-{
-    create_diagram();
-}
+    radius(5)
+{ }
 
 //simply creates all objects; resize_diagram() handles positioning of objects
-void PersistenceDiagram::create_diagram()
+void PersistenceDiagram::create_diagram(QString* filename, int dim)
 {
     //define pens and brushes
     QPen grayPen(QBrush(Qt::darkGray),2,Qt::DotLine, Qt::RoundCap, Qt::RoundJoin);
@@ -20,34 +26,34 @@ void PersistenceDiagram::create_diagram()
     QBrush purpleBrush(QColor(160, 0, 200));
 
     //create persistence diagram structure
-    bounding_rect = scene->addRect(QRectF(), grayPen);
-    diag_line = scene->addLine(QLineF(), thinPen);
-    blue_line = scene->addLine(QLineF(), bluePen);
+    bounding_rect = addRect(QRectF(), grayPen);
+    diag_line = addLine(QLineF(), thinPen);
+    blue_line = addLine(QLineF(), bluePen);
 
-    h_line = scene->addLine(QLineF(), grayPen);
-    v_line = scene->addLine(QLineF(), grayPen);
+    h_line = addLine(QLineF(), grayPen);
+    v_line = addLine(QLineF(), grayPen);
 
     //create text objects
-    inf_text = scene->addSimpleText("inf");
+    inf_text = addSimpleText("inf");
     inf_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
 
-    lt_inf_text = scene->addSimpleText("<inf");
+    lt_inf_text = addSimpleText("<inf");
     lt_inf_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
 
-    inf_count_text = scene->addSimpleText("0");
+    inf_count_text = addSimpleText("0");
     inf_count_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
     inf_count_text->setBrush(purpleBrush);
 
-    lt_inf_count_text = scene->addSimpleText("0");
+    lt_inf_count_text = addSimpleText("0");
     lt_inf_count_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
     lt_inf_count_text->setBrush(purpleBrush);
 
-    file_text = scene->addSimpleText(*filename);
+    file_text = addSimpleText(*filename);
     file_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
 
     std::ostringstream sdim;
     sdim << "homology dimension: " << dim;
-    dim_text = scene->addSimpleText(QString(sdim.str().data()));
+    dim_text = addSimpleText(QString(sdim.str().data()));
     dim_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
 }//end create_diagram()
 
@@ -63,7 +69,7 @@ void PersistenceDiagram::resize_diagram(double slice_length, double diagram_scal
     scale = diagram_scale/sqrt(2);      //similarly, divide by sqrt(2)
 
     //get dimensions of the QGraphicsView
-    QList<QGraphicsView*> view_list = scene->views();
+    QList<QGraphicsView*> view_list = views();
     int view_width = view_list[0]->width();
     int view_height = view_list[0]->height();
 
@@ -152,14 +158,13 @@ void PersistenceDiagram::resize_diagram(double slice_length, double diagram_scal
     double scene_rect_y = 0;
     double scene_rect_w = diagram_size + number_space - scene_rect_x;
     double scene_rect_h = diagram_size + 2*v_space - scene_rect_y;
-    scene->setSceneRect(scene_rect_x, scene_rect_y, scene_rect_w, scene_rect_h);
+    setSceneRect(scene_rect_x, scene_rect_y, scene_rect_w, scene_rect_h);
 }//end resize_diagram()
 
 //creates and draws persistence dots at the correct locations
 void PersistenceDiagram::draw_points(double zero, Barcode* bc)
 {
     zero_coord = zero;
-//    qDebug() << "ZERO: " << zero_coord;
 
     //counters
     unsigned num_dots = 0;
@@ -176,7 +181,7 @@ void PersistenceDiagram::draw_points(double zero, Barcode* bc)
 
             //create dot object
             PersistenceDot* dot = new PersistenceDot(this, config_params, birth, it->death, radius*sqrt((double) (it->multiplicity)), num_dots);
-            scene->addItem(dot);
+            addItem(dot);
             dots.push_back(dot);
             num_dots++;
 
@@ -199,7 +204,7 @@ void PersistenceDiagram::draw_points(double zero, Barcode* bc)
 
             //create dot object
             PersistenceDot* dot = new PersistenceDot(this, config_params, birth, death, radius*sqrt(it->multiplicity), num_dots);
-            scene->addItem(dot);
+            addItem(dot);
             dots.push_back(dot);
             num_dots++;
 
@@ -243,7 +248,7 @@ void PersistenceDiagram::update_diagram(double slice_length, double diagram_scal
     selected = NULL;    //remove any current selection
     while(!dots.empty())
     {
-        scene->removeItem(dots.back());
+        removeItem(dots.back());
         dots.pop_back();
     }
 
@@ -263,11 +268,25 @@ void PersistenceDiagram::select_dot(PersistenceDot* clicked)
     selected = clicked;
 
     //highlight part of the persistence diagram
-    window->select_bar(clicked->get_index());
+    emit persistence_dot_selected(clicked->get_index());
 }
 
-//highlight the specified dot, which has been selected in the slice diagram
-void PersistenceDiagram::select_dot(unsigned index)
+//remove selection; if propagate, then deselect bar in the slice diagram
+void PersistenceDiagram::deselect_dot()
+{
+    //remove selection
+    if(selected != NULL)
+    {
+        selected->deselect();
+        selected = NULL;
+    }
+
+    //remove highlighting from slice diagram
+    emit persistence_dot_deselected();
+}
+
+//highlight the specified dot, which has been selected externally
+void PersistenceDiagram::receive_dot_selection(unsigned index)
 {
     //remove old selection
     if(selected != NULL && dots[index] != selected)
@@ -278,17 +297,12 @@ void PersistenceDiagram::select_dot(unsigned index)
     selected->select();
 }
 
-//remove selection; if propagate, then deselect bar in the slice diagram
-void PersistenceDiagram::deselect_dot(bool propagate)
+//remove dot highlighting in response to external command
+void PersistenceDiagram::receive_dot_deselection()
 {
-    //remove selection
     if(selected != NULL)
     {
         selected->deselect();
         selected = NULL;
     }
-
-    //remove highlighting from slice diagram
-    if(propagate)
-        window->deselect_bar();
 }

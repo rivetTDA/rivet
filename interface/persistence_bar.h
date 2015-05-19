@@ -28,7 +28,7 @@ public:
 
     double get_start(); //returns the unscaled x-coordinate associated with this bar
     double get_end(); //returns the unscaled y-coordinate associated with this bar
-    double get_index(); //returns the index of this bar (e.g. to send to the PersistenceDiagram for highlighting effects)
+    unsigned get_index(); //returns the index of this bar (e.g. to send to the PersistenceDiagram for highlighting effects)
 
 protected:
     void hoverEnterEvent(QGraphicsSceneHoverEvent *);

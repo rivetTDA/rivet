@@ -64,7 +64,7 @@ double PersistenceDot::get_y()
 }
 
 //returns the index of this dot (e.g. to send to the SliceDiagram for highlighting effects)
-double PersistenceDot::get_index()
+unsigned PersistenceDot::get_index()
 {
     return index;
 }
@@ -87,7 +87,7 @@ void PersistenceDot::mousePressEvent(QGraphicsSceneMouseEvent * /*unused*/)
     {
         pressed = false;
         //call persistence diagram unselect function
-        pdgm->deselect_dot(true);
+        pdgm->deselect_dot();
     }
     else    //then select this dot
     {

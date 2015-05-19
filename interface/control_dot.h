@@ -5,13 +5,12 @@
 #include <QPainter>
 #include <QGraphicsItem>
 
-#include "slice_diagram.h"
-class SliceDiagram;
-
-#include "slice_line.h"
-class SliceLine;
-
 #include "config_parameters.h"
+class SliceDiagram;
+#include "slice_diagram.h"
+class SliceLine;
+#include "slice_line.h"
+
 
 
 class ControlDot : public QGraphicsItem

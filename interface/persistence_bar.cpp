@@ -69,7 +69,7 @@ double PersistenceBar::get_end()
     return end;
 }
 
-double PersistenceBar::get_index()
+unsigned PersistenceBar::get_index()
 {
     return class_index;
 }
@@ -92,7 +92,7 @@ void PersistenceBar::mousePressEvent(QGraphicsSceneMouseEvent * /*unused*/)
     {
         pressed = false;
         //call slice diagram unselect function
-        sdgm->deselect_bar(true);
+        sdgm->deselect_bar();
     }
     else    //then select this bar
     {

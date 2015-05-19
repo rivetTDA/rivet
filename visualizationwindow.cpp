@@ -6,6 +6,9 @@
 #include <QDebug>
 #include <QTime>
 
+class SliceDiagram;
+#include "interface/slice_diagram.h"
+
 #include "interface/input_manager.h"
 #include "interface/progressdialog.h"
 #include "interface/aboutmessagebox.h"
@@ -23,25 +26,23 @@ VisualizationWindow::VisualizationWindow(QWidget *parent) :
     ui(new Ui::VisualizationWindow),
     verbosity(5), INFTY(std::numeric_limits<double>::infinity()),
     data_selected(false),
+    input_params(), config_params(),
     ds_dialog(input_params),
     x_grades(), y_grades(), xi_support(),
     cthread(verbosity, input_params, x_grades, y_grades, xi_support),
-    line_selection_ready(false),
-    slice_diagram(NULL), slice_update_lock(false),
-    p_diagram(NULL), persistence_diagram_drawn(false)
+    line_selection_ready(false), slice_diagram(&config_params, this), slice_update_lock(false),
+    p_diagram(&config_params, this), persistence_diagram_drawn(false)
 {
     ui->setupUi(this);
 
-    //set up the slice diagram scene
-    sliceScene = new QGraphicsScene(this);
-    ui->sliceView->setScene(sliceScene);
+    //set up the slice diagram
+    ui->sliceView->setScene(&slice_diagram);
 //    ui->sliceView->setDragMode(QGraphicsView::ScrollHandDrag);
     ui->sliceView->scale(1,-1);
     ui->sliceView->setRenderHint(QPainter::Antialiasing);
 
     //set up the persistence diagram scene
-    pdScene = new QGraphicsScene(this);
-    ui->pdView->setScene(pdScene);
+    ui->pdView->setScene(&p_diagram);
     ui->pdView->scale(1,-1);
     ui->pdView->setRenderHint(QPainter::Antialiasing);
 
@@ -52,7 +53,16 @@ VisualizationWindow::VisualizationWindow(QWidget *parent) :
     QObject::connect(&cthread, &ComputationThread::xiSupportReady, this, &VisualizationWindow::paint_xi_support);
     QObject::connect(&cthread, &ComputationThread::arrangementReady, this, &VisualizationWindow::augmented_arrangement_ready);
 
+    //connect signals and slots for the diagrams
+    QObject::connect(&slice_diagram, &SliceDiagram::set_line_control_elements, this, &VisualizationWindow::set_line_parameters);
+    QObject::connect(&slice_diagram, &SliceDiagram::persistence_bar_selected, &p_diagram, &PersistenceDiagram::receive_dot_selection);
+    QObject::connect(&slice_diagram, &SliceDiagram::persistence_bar_deselected, &p_diagram, &PersistenceDiagram::receive_dot_deselection);
+    QObject::connect(&p_diagram, &PersistenceDiagram::persistence_dot_selected, &slice_diagram, &SliceDiagram::receive_bar_selection);
+    QObject::connect(&p_diagram, &PersistenceDiagram::persistence_dot_deselected, &slice_diagram, &SliceDiagram::receive_bar_deselection);
+
+    //connect other signals and slots
     QObject::connect(&prog_dialog, &ProgressDialog::stopComputation, &cthread, &ComputationThread::terminate);  ///TODO: don't use QThread::terminate()! modify ComputationThread so that it can stop gracefully and clean up after itself
+
 }
 
 VisualizationWindow::~VisualizationWindow()
@@ -76,11 +86,12 @@ void VisualizationWindow::start_computation()
 //this slot is signaled when the xi support points are ready to be drawn
 void VisualizationWindow::paint_xi_support()
 {
-    //initialize the SliceDiagram and send xi support points
-    slice_diagram = new SliceDiagram(sliceScene, this, &config_params, x_grades.front(), x_grades.back(), y_grades.front(), y_grades.back(), ui->normCoordCheckBox->isChecked());
+    //send xi support points to the SliceDiagram
     for(std::vector<xiPoint>::iterator it = xi_support.begin(); it != xi_support.end(); ++it)
-        slice_diagram->add_point(x_grades[it->x], y_grades[it->y], it->zero, it->one);
-    slice_diagram->create_diagram(input_params.x_label, input_params.y_label);
+        slice_diagram.add_point(x_grades[it->x], y_grades[it->y], it->zero, it->one);
+
+    //create the SliceDiagram
+    slice_diagram.create_diagram(input_params.x_label, input_params.y_label, x_grades.front(), x_grades.back(), y_grades.front(), y_grades.back(), ui->normCoordCheckBox->isChecked());
 
     //enable control items
     ui->xi0CheckBox->setEnabled(true);
@@ -111,8 +122,8 @@ void VisualizationWindow::augmented_arrangement_ready(Mesh* arrangement)
 //    arrangement->test_consistency();
 
     //inialize persistence diagram
-    p_diagram = new PersistenceDiagram(pdScene, this, &config_params, &(input_params.fileName), input_params.dim);
-    p_diagram->resize_diagram(slice_diagram->get_slice_length(), slice_diagram->get_pd_scale());
+    p_diagram.create_diagram(&(input_params.fileName), input_params.dim);
+    p_diagram.resize_diagram(slice_diagram.get_slice_length(), slice_diagram.get_pd_scale());
 
     //get the barcode
     double degrees = ui->angleDoubleSpinBox->value();
@@ -125,8 +136,8 @@ void VisualizationWindow::augmented_arrangement_ready(Mesh* arrangement)
     barcode->print();
 
     //draw the barcode
-    p_diagram->draw_points(slice_diagram->get_zero(), barcode);
-    slice_diagram->draw_barcode(barcode, ui->barcodeCheckBox->isChecked());
+    p_diagram.draw_points(slice_diagram.get_zero(), barcode);
+    slice_diagram.draw_barcode(barcode, ui->barcodeCheckBox->isChecked());
 
     //clean up
     delete barcode;
@@ -147,7 +158,7 @@ void VisualizationWindow::on_angleDoubleSpinBox_valueChanged(double angle)
 //    qDebug() << "angleDoubleSpinBox_valueChanged(); angle: " << angle << "; slice_update_lock: " << slice_update_lock;
 
     if(line_selection_ready && !slice_update_lock)
-        slice_diagram->update_line(angle, ui->offsetSpinBox->value());
+        slice_diagram.update_line(angle, ui->offsetSpinBox->value());
 
     if(persistence_diagram_drawn)
         update_persistence_diagram();
@@ -158,7 +169,7 @@ void VisualizationWindow::on_offsetSpinBox_valueChanged(double offset)
 //    qDebug() << "offsetSpinBox_valueChanged(); offset: " << offset << "; slice_update_lock: " << slice_update_lock;
 
     if(line_selection_ready && !slice_update_lock)
-        slice_diagram->update_line(ui->angleDoubleSpinBox->value(), offset);
+        slice_diagram.update_line(ui->angleDoubleSpinBox->value(), offset);
 
     if(persistence_diagram_drawn)
         update_persistence_diagram();
@@ -168,49 +179,52 @@ void VisualizationWindow::on_normCoordCheckBox_clicked(bool checked)
 {
     if(line_selection_ready)
     {
-        slice_diagram->set_normalized_coords(checked);
-        slice_diagram->resize_diagram();
-        if(p_diagram != NULL)
-            p_diagram->resize_diagram(slice_diagram->get_slice_length(), slice_diagram->get_pd_scale());
+        slice_diagram.set_normalized_coords(checked);
+        slice_diagram.resize_diagram();
+        if(persistence_diagram_drawn)
+            p_diagram.resize_diagram(slice_diagram.get_slice_length(), slice_diagram.get_pd_scale());
     }
 }
 
 void VisualizationWindow::on_barcodeCheckBox_clicked(bool checked)
 {
     if(line_selection_ready)
-        slice_diagram->toggle_barcode(checked);
+        slice_diagram.toggle_barcode(checked);
 }
 
 void VisualizationWindow::on_xi0CheckBox_toggled(bool checked)
 {
     if(line_selection_ready)
-        slice_diagram->toggle_xi0_points(checked);
+        slice_diagram.toggle_xi0_points(checked);
 }
 
 void VisualizationWindow::on_xi1CheckBox_toggled(bool checked)
 {
     if(line_selection_ready)
-        slice_diagram->toggle_xi1_points(checked);
+        slice_diagram.toggle_xi1_points(checked);
 }
 
 void VisualizationWindow::update_persistence_diagram()
 {
-    //get the barcode
-    double degrees = ui->angleDoubleSpinBox->value();
-    double offset = ui->offsetSpinBox->value();
+    if(persistence_diagram_drawn)
+    {
+        //get the barcode
+        double degrees = ui->angleDoubleSpinBox->value();
+        double offset = ui->offsetSpinBox->value();
 
-    BarcodeTemplate& dbc = arrangement->get_barcode_template(degrees, offset);
-    Barcode* barcode = rescale_barcode_template(dbc, degrees, offset);
+        BarcodeTemplate& dbc = arrangement->get_barcode_template(degrees, offset);
+        Barcode* barcode = rescale_barcode_template(dbc, degrees, offset);
 
-    //TESTING
-    barcode->print();
+        //TESTING
+        barcode->print();
 
-    //draw the barcode
-    p_diagram->update_diagram(slice_diagram->get_slice_length(), slice_diagram->get_pd_scale(), slice_diagram->get_zero(), barcode);
-    slice_diagram->update_barcode(barcode, ui->barcodeCheckBox->isChecked());
+        //draw the barcode
+        p_diagram.update_diagram(slice_diagram.get_slice_length(), slice_diagram.get_pd_scale(), slice_diagram.get_zero(), barcode);
+        slice_diagram.update_barcode(barcode, ui->barcodeCheckBox->isChecked());
 
-    //clean up
-    delete barcode;
+        //clean up
+        delete barcode;
+    }
 }
 
 //rescales a barcode template by projecting points onto the specified line
@@ -289,26 +303,6 @@ void VisualizationWindow::set_line_parameters(double angle, double offset)
     slice_update_lock = false;
 }
 
-void VisualizationWindow::select_bar(unsigned index)
-{
-    slice_diagram->select_bar(index);
-}
-
-void VisualizationWindow::deselect_bar()
-{
-    slice_diagram->deselect_bar(false);
-}
-
-void VisualizationWindow::select_dot(unsigned index)
-{
-    p_diagram->select_dot(index);
-}
-
-void VisualizationWindow::deselect_dot()
-{
-    p_diagram->deselect_dot(false);
-}
-
 void VisualizationWindow::showEvent(QShowEvent* event)
 {
     if(!data_selected)
@@ -323,12 +317,12 @@ void VisualizationWindow::showEvent(QShowEvent* event)
 void VisualizationWindow::resizeEvent(QResizeEvent* /*unused*/)
 {
 //    qDebug() << "resize event! slice_diagrma = " << slice_diagram;
-    if(slice_diagram != NULL)
+    if(line_selection_ready)
     {
-        slice_diagram->resize_diagram();
+        slice_diagram.resize_diagram();
 
-        if(p_diagram != NULL)
-            p_diagram->resize_diagram(slice_diagram->get_slice_length(), slice_diagram->get_pd_scale());
+        if(persistence_diagram_drawn)
+            p_diagram.resize_diagram(slice_diagram.get_slice_length(), slice_diagram.get_pd_scale());
     }
 }
 
@@ -360,6 +354,7 @@ void VisualizationWindow::on_actionAbout_triggered()
 void VisualizationWindow::on_actionConfigure_triggered()
 {
     configBox = new ConfigureDialog(config_params, this);
+    QObject::connect(configBox, &ConfigureDialog::configuration_changed, &slice_diagram, &SliceDiagram::update_diagram);
     configBox->exec();
     delete configBox;
 }

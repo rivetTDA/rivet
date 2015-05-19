@@ -68,6 +68,7 @@ void ConfigureDialog::on_okButton_clicked()
     config_params.sliceLineHighlightColor.setRgb(lineHiCol.red(), lineHiCol.green(), lineHiCol.blue(), config_params.sliceLineHighlightColor.alpha());
 
     //redraw the diagrams
+    emit configuration_changed();
     ///TODO: FINISH THIS
     ///   also think about how to best set opacity of colors
 

@@ -24,7 +24,7 @@ public:
 
     double get_x(); //returns the unscaled x-coordinate associated with this dot
     double get_y(); //returns the unscaled y-coordinate associated with this dot
-    double get_index(); //returns the index of this dot (e.g. to send to the SliceDiagram for highlighting effects)
+    unsigned get_index(); //returns the index of this dot (e.g. to send to the SliceDiagram for highlighting effects)
 
 protected:
     void hoverEnterEvent(QGraphicsSceneHoverEvent *);

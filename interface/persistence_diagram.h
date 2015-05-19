@@ -2,28 +2,21 @@
 #define PERSISTENCEDIAGRAM_H
 
 #include <QGraphicsScene>
-#include <QGraphicsView>
 #include <QtGui>
-#include <QDebug>
-#include <sstream>
-#include <limits>
-#include <set>
-
-#include "../visualizationwindow.h"
-class VisualizationWindow;
 
 #include "config_parameters.h"
 #include "persistence_dot.h"
 class PersistenceDot;
+class Barcode;
 
-#include "barcode.h"
-
-class PersistenceDiagram
+class PersistenceDiagram : public QGraphicsScene
 {
-public:
-    PersistenceDiagram(QGraphicsScene* sc, VisualizationWindow* vw, ConfigParameters* params, QString* filename, int dim);
+    Q_OBJECT
 
-    void create_diagram();  //simply creates all objects; resize_diagram() handles positioning of objects
+public:
+    PersistenceDiagram(ConfigParameters* params, QObject* parent = 0);
+
+    void create_diagram(QString* filename, int dim);  //simply creates all objects; resize_diagram() handles positioning of objects
     void resize_diagram(double slice_length, double diagram_scale);  //resizes diagram to fill the QGraphicsView; called after every window resize
 
     void draw_points(double zero, Barcode* bc); //creates and draws persistence dots at the correct locations
@@ -31,14 +24,18 @@ public:
     void update_diagram(double slice_length, double diagram_scale, double zero, Barcode *bc); //updates the diagram after a change in the slice line
 
     void select_dot(PersistenceDot* clicked);   //highlight the specified dot, selected in the persistence diagram, and propagate to the slice diagram
-    void select_dot(unsigned index);            //highlight the specified dot, which has been selected in the slice diagram
-    void deselect_dot(bool propagate);          //remove selection; if propagate, then deselect bar in the slice diagram
+    void deselect_dot();                        //remove selection and propagate to the slice diagram
+
+public slots:
+    void receive_dot_selection(unsigned index);     //highlight the specified dot, which has been selected externally
+    void receive_dot_deselection();                 //remove dot highlighting in response to external command
+
+signals:
+    void persistence_dot_selected(unsigned index);
+    void persistence_dot_deselected();
 
 private:
     //graphics items
-    QGraphicsScene* scene;
-    VisualizationWindow* window;
-
     ConfigParameters* config_params;
 
     QGraphicsRectItem* bounding_rect;
@@ -57,8 +54,6 @@ private:
     std::vector<PersistenceDot*> dots;
     PersistenceDot* selected;
 
-    //functions
-//    void draw_frame();
 
     //parameters
     double scale;        //scale of the persistence diagram

@@ -1,30 +1,44 @@
 #include "slice_diagram.h"
-#include <algorithm>
 
-#include <QDebug>
+#include <algorithm>
+#include <set>
 #include <sstream>
 
-SliceDiagram::SliceDiagram(QGraphicsScene* sc, VisualizationWindow* vw, ConfigParameters* params, double xmin, double xmax, double ymin, double ymax, bool norm_coords) :
-    scene(sc), window(vw),
+#include <QDebug>
+#include <QGraphicsView>
+
+#include "barcode.h"
+
+SliceDiagram::SliceDiagram(ConfigParameters* params, QObject* parent) :
+    QGraphicsScene(parent),
     config_params(params),
     dot_left(), dot_right(), slice_line(),
     selected(-1), NOT_SELECTED(-1),
-    data_xmin(xmin), data_xmax(xmax), data_ymin(ymin), data_ymax(ymax),
-    data_infty(4*(xmax - xmin + ymax - ymin)),
-    normalized_coords(norm_coords),
     unit_radius(5), padding(20)
-{
+{ }
 
+SliceDiagram::~SliceDiagram()
+{
+    ///TODO: IMPLEMENT THIS!!!
 }
 
+//receives an xi support point, which will be drawn when create_diagram() is called
 void SliceDiagram::add_point(double x_coord, double y_coord, int xi0m, int xi1m)
 {
     points.push_back(xiFloatingPoint(x_coord, y_coord, xi0m, xi1m));
 }
 
 //NOTE: create_diagram() simply creates all objects; resize_diagram() handles positioning of objects
-void SliceDiagram::create_diagram(QString x_text, QString y_text)
+void SliceDiagram::create_diagram(QString x_text, QString y_text, double xmin, double xmax, double ymin, double ymax, bool norm_coords)
 {
+    //set data-dependent parameters
+    data_xmin = xmin;
+    data_xmax = xmax;
+    data_ymin = ymin;
+    data_ymax = ymax;
+    normalized_coords = norm_coords;
+    data_infty = 4*(xmax - xmin + ymax - ymin);
+
     //pens and brushes
     QPen blackPen(Qt::black);
     blackPen.setWidth(2);
@@ -34,39 +48,39 @@ void SliceDiagram::create_diagram(QString x_text, QString y_text)
     QPen highlighter(QBrush(config_params->persistenceHighlightColor), 6);
 
     //draw bounds
-    gray_line_vertical = scene->addLine(QLineF(), grayPen); //(diagram_width, 0, diagram_width, diagram_height, grayPen);
-    gray_line_horizontal = scene->addLine(QLineF(), grayPen); //0, diagram_height, diagram_width, diagram_height, grayPen);
-    control_rect = scene->addRect(QRectF(), blackPen);  //0,0,diagram_width + padding,diagram_height + padding, blackPen);
+    gray_line_vertical = addLine(QLineF(), grayPen); //(diagram_width, 0, diagram_width, diagram_height, grayPen);
+    gray_line_horizontal = addLine(QLineF(), grayPen); //0, diagram_height, diagram_width, diagram_height, grayPen);
+    control_rect = addRect(QRectF(), blackPen);  //0,0,diagram_width + padding,diagram_height + padding, blackPen);
 
     //draw labels
     std::ostringstream s_xmin;
     s_xmin.precision(4);
     s_xmin << data_xmin;
-    data_xmin_text = scene->addSimpleText(QString(s_xmin.str().data()));
+    data_xmin_text = addSimpleText(QString(s_xmin.str().data()));
     data_xmin_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
 
     std::ostringstream s_xmax;
     s_xmax.precision(4);
     s_xmax << data_xmax;
-    data_xmax_text = scene->addSimpleText(QString(s_xmax.str().data()));
+    data_xmax_text = addSimpleText(QString(s_xmax.str().data()));
     data_xmax_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
 
     std::ostringstream s_ymin;
     s_ymin.precision(4);
     s_ymin << data_ymin;
-    data_ymin_text = scene->addSimpleText(QString(s_ymin.str().data()));
+    data_ymin_text = addSimpleText(QString(s_ymin.str().data()));
     data_ymin_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
 
     std::ostringstream s_ymax;
     s_ymax.precision(4);
     s_ymax << data_ymax;
-    data_ymax_text = scene->addSimpleText(QString(s_ymax.str().data()));
+    data_ymax_text = addSimpleText(QString(s_ymax.str().data()));
     data_ymax_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
 
-    x_label = scene->addSimpleText(x_text);
+    x_label = addSimpleText(x_text);
     x_label->setFlag(QGraphicsItem::ItemIgnoresTransformations);
 
-    y_label = scene->addSimpleText(y_text);
+    y_label = addSimpleText(y_text);
     y_label->setTransform(QTransform(0, 1, 1, 0, 0, 0));
 
     //draw points
@@ -74,12 +88,12 @@ void SliceDiagram::create_diagram(QString x_text, QString y_text)
     {
         if(points[i].zero > 0)  //then draw a green disk
         {
-            QGraphicsEllipseItem* item = scene->addEllipse(QRectF(), Qt::NoPen, xi0brush);
+            QGraphicsEllipseItem* item = addEllipse(QRectF(), Qt::NoPen, xi0brush);
             xi0_dots.push_back(item);
         }
         if(points[i].one > 0)  //then draw a red disk
         {
-            QGraphicsEllipseItem* item = scene->addEllipse(QRectF(), Qt::NoPen, xi1brush);
+            QGraphicsEllipseItem* item = addEllipse(QRectF(), Qt::NoPen, xi1brush);
             xi1_dots.push_back(item);
         }
     }
@@ -90,18 +104,18 @@ void SliceDiagram::create_diagram(QString x_text, QString y_text)
     line_pos = 0;   //start the line at the lower left corner of the box
 
     slice_line = new SliceLine(this, config_params);
-    scene->addItem(slice_line);
+    addItem(slice_line);
 
     dot_left = new ControlDot(slice_line, true, config_params);
-    scene->addItem(dot_left);
+    addItem(dot_left);
 
     dot_right = new ControlDot(slice_line, false, config_params);
-    scene->addItem(dot_right);
+    addItem(dot_right);
 
     slice_line->setDots(dot_left, dot_right);
 
     //add highlight line object, which is hidden until it is requested
-    highlight_line = scene->addLine(0, 0, 1, 1, highlighter);
+    highlight_line = addLine(0, 0, 1, 1, highlighter);
     highlight_line->hide();
 
     //fit scene to view -- THIS SETS POSITIONS OF ALL OBJECTS CREATED ABOVE!!!
@@ -119,7 +133,7 @@ void SliceDiagram::resize_diagram()
     int text_padding = 5;   //pixels
 
     //get dimensions of the QGraphicsView
-    QList<QGraphicsView*> view_list = scene->views();
+    QList<QGraphicsView*> view_list = views();
     int view_width = view_list[0]->width();
     int view_height = view_list[0]->height();
 
@@ -223,8 +237,20 @@ void SliceDiagram::resize_diagram()
     double scene_rect_y = -lower_text_height - text_padding;
     double scene_rect_w = diagram_width + padding + text_padding + left_text_width;
     double scene_rect_h = diagram_height + padding + text_padding + lower_text_height;
-    scene->setSceneRect(scene_rect_x, scene_rect_y, scene_rect_w, scene_rect_h);
+    setSceneRect(scene_rect_x, scene_rect_y, scene_rect_w, scene_rect_h);
 }//end resize_diagram()
+
+//updates the diagram after a change in configuration parameters
+void SliceDiagram::update_diagram()
+{
+    //update the xi dots (necessary because I didn't override their paint() function)
+    QBrush xi0brush(config_params->xi0color);
+    QBrush xi1brush(config_params->xi1color);
+    for(std::vector<QGraphicsEllipseItem*>::iterator it = xi0_dots.begin(); it != xi0_dots.end(); ++it)
+        (*it)->setBrush(xi0brush);
+    for(std::vector<QGraphicsEllipseItem*>::iterator it = xi1_dots.begin(); it != xi1_dots.end(); ++it)
+        (*it)->setBrush(xi1brush);
+}//end update_diagram()
 
 //updates the line, in response to a change in the controls in the VisualizationWindow
 //NOTE: angle is in DEGREES
@@ -263,15 +289,12 @@ void SliceDiagram::update_line(double angle, double offset)
         if(y_coord >= data_ymin)    //then slice line intersects left edge of box
         {
             line_pos = (y_coord - data_ymin)/(data_ymax - data_ymin);   //relative units
-
             slice_line->update_position(0, (y_coord - data_ymin)*scale_y, false, line_slope*scale_y/scale_x);
         }
         else    //then slice line intersects bottom of box
         {
             double x_coord = (data_ymin - offset/cos(radians))/line_slope;   //x-coordinate of slice line at y=data_ymin; data units
-
             line_pos = -1*(x_coord - data_xmin)/(data_xmax - data_xmin);   //relative units
-
             slice_line->update_position( (x_coord - data_xmin)*scale_x, 0, false, line_slope*scale_y/scale_x);
         }
     }
@@ -306,9 +329,11 @@ void SliceDiagram::update_window_controls()
         angle = angle*180/3.14159265;   //convert to degrees
     }
 
-    window->set_line_parameters(angle, offset);
+    //send updates
+    emit set_line_control_elements(angle, offset);
 
-    highlight_line->hide(); //since the line has changed, the highlighting is no longer valid
+    //since the line has changed, the highlighting is no longer valid
+    highlight_line->hide();
 }//end update_window_controls()
 
 //draws the barcode parallel to the slice line
@@ -333,7 +358,7 @@ void SliceDiagram::draw_barcode(Barcode *bc, bool show)
             PersistenceBar* bar = new PersistenceBar(this, config_params, start, end, index);
             bar->set_line(p1.first, p1.second, p2.first, p2.second);
             bar->setVisible(show);
-            scene->addItem(bar);
+            addItem(bar);
             bars[index].push_back(bar);
             num_bars++;
         }
@@ -351,7 +376,7 @@ void SliceDiagram::update_barcode(Barcode *bc, bool show)
     {
         while(!it->empty())
         {
-            scene->removeItem(it->back());
+            removeItem(it->back());
             delete it->back();
             it->pop_back();
         }
@@ -420,11 +445,29 @@ void SliceDiagram::select_bar(PersistenceBar* clicked)
     update_highlight();
 
     //highlight part of the persistence diagram
-    window->select_dot(clicked->get_index());
-}//end select_bar(PersistenceBar*)
+    emit persistence_bar_selected(clicked->get_index());
+}//end select_bar()
 
-//highlight the specified class of bars, which has been selected in the persistence diagram
-void SliceDiagram::select_bar(unsigned index)
+//remove selection; if propagate, then deselect dot in the persistence diagram
+void SliceDiagram::deselect_bar()
+{
+    //remove selection
+    if(selected != NOT_SELECTED)
+    {
+        for(std::list<PersistenceBar*>::iterator it = bars[selected].begin(); it != bars[selected].end(); ++it)
+            (*it)->deselect();
+        selected = -1;
+    }
+
+    //remove highlighted portion of slice line
+    highlight_line->hide();
+
+    //remove highlighting from slice diagram
+    emit persistence_bar_deselected();
+}//end deselect_bar()
+
+//highlight the specified class of bars, which has been selected externally
+void SliceDiagram::receive_bar_selection(unsigned index)
 {
     //remove old selection
     if(selected != NOT_SELECTED && index != selected)
@@ -442,10 +485,10 @@ void SliceDiagram::select_bar(unsigned index)
 
     //highlight part of slice line
     update_highlight();
-}//end select_bar(unsigned)
+}//end receive_bar_selection()
 
-//remove selection; if propagate, then deselect dot in the persistence diagram
-void SliceDiagram::deselect_bar(bool propagate)
+//remove bar highlighting in response to external command
+void SliceDiagram::receive_bar_deselection()
 {
     //remove selection
     if(selected != NOT_SELECTED)
@@ -457,11 +500,7 @@ void SliceDiagram::deselect_bar(bool propagate)
 
     //remove highlighted portion of slice line
     highlight_line->hide();
-
-    //remove highlighting from slice diagram
-    if(propagate)
-        window->deselect_dot();
-}//end deselect_bar()
+}//end receive_bar_deselection()
 
 //highlights part of the slice line
 void SliceDiagram::update_highlight()

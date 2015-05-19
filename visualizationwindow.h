@@ -15,10 +15,10 @@ typedef boost::multiprecision::cpp_rational exact;
 
 #include "computationthread.h"
 #include "interface/progressdialog.h"
-#include "interface/slice_diagram.h"
 class SliceDiagram;
-#include "interface/persistence_diagram.h"
+#include "interface/slice_diagram.h"
 class PersistenceDiagram;
+#include "interface/persistence_diagram.h"
 class Mesh;
 #include "interface/configuredialog.h"
 #include "interface/config_parameters.h"
@@ -42,23 +42,19 @@ public:
 
     void start_computation(); //begins the computation pipeline
 
-    void set_line_parameters(double angle, double offset);
-
-    void select_bar(unsigned index);
-    void deselect_bar();
-    void select_dot(unsigned index);
-    void deselect_dot();
-
 protected:
     void showEvent(QShowEvent* event);      //shows the DataSelectDialog and blocks until it is closed
     void resizeEvent(QResizeEvent*);
     void closeEvent(QCloseEvent* event);
     
-private slots:
+public slots:
     void paint_xi_support();
 
     void augmented_arrangement_ready(Mesh* arrangement);
 
+    void set_line_parameters(double angle, double offset);
+
+private slots:
     void on_angleDoubleSpinBox_valueChanged(double angle);
     void on_offsetSpinBox_valueChanged(double arg1);
     void on_xi0CheckBox_toggled(bool checked);
@@ -96,13 +92,11 @@ private:
 
     //items for slice diagram
     bool line_selection_ready;      //initially false, but set to true when data is in place for line selection
-    QGraphicsScene* sliceScene;
-    SliceDiagram* slice_diagram;
+    SliceDiagram slice_diagram;     //subclass of QGraphicsScene, contains all of the graphics elements for the line-selection diagram
     bool slice_update_lock;
 
     //items for persistence diagram
-    QGraphicsScene* pdScene;
-    PersistenceDiagram* p_diagram;
+    PersistenceDiagram p_diagram;   //subclass of QGraphicsScene, contains all of the graphics elements for the persistence diagram
     bool persistence_diagram_drawn;
 
     void update_persistence_diagram();
