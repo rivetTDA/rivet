@@ -48,9 +48,7 @@ protected:
     
 public slots:
     void paint_xi_support();
-
     void augmented_arrangement_ready(Mesh* arrangement);
-
     void set_line_parameters(double angle, double offset);
 
 private slots:
@@ -62,10 +60,11 @@ private slots:
     void on_barcodeCheckBox_clicked(bool checked);
 
     void on_actionExit_triggered();
-
     void on_actionAbout_triggered();
-
     void on_actionConfigure_triggered();
+    void on_actionSave_persistence_diagram_as_image_triggered();
+
+    void on_actionSave_line_selection_window_as_image_triggered();
 
 private:
     Ui::VisualizationWindow *ui;

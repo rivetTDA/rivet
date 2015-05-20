@@ -35,6 +35,20 @@ private slots:
     void on_lineHighlightColorButton_clicked();
 
 
+    void on_xi0spinBox_valueChanged(int arg1);
+    void on_xi1spinBox_valueChanged(int arg1);
+    void on_persistenceSpinBox_valueChanged(int arg1);
+    void on_persistenceHighlightSpinBox_valueChanged(int arg1);
+    void on_lineSpinBox_valueChanged(int arg1);
+    void on_lineHighlightSpinBox_valueChanged(int arg1);
+
+    void on_defaultColorsButton_clicked();
+
+    void on_bettiDotSpinBox_valueChanged(int arg1);
+    void on_persistenceDotSpinBox_valueChanged(int arg1);
+
+    void on_defaultSizesButton_clicked();
+
 private:
     Ui::ConfigureDialog *ui;
     ConfigParameters& config_params;
@@ -46,6 +60,8 @@ private:
     QColor perHiCol;
     QColor lineCol;
     QColor lineHiCol;
+    int bettiRadius;
+    int perRadius;
 };
 
 #endif // CONFIGUREDIALOG_H

@@ -43,6 +43,7 @@ VisualizationWindow::VisualizationWindow(QWidget *parent) :
     QObject::connect(&cthread, &ComputationThread::setCurrentProgress, &prog_dialog, &ProgressDialog::updateProgress);
     QObject::connect(&cthread, &ComputationThread::xiSupportReady, this, &VisualizationWindow::paint_xi_support);
     QObject::connect(&cthread, &ComputationThread::arrangementReady, this, &VisualizationWindow::augmented_arrangement_ready);
+    QObject::connect(&cthread, &ComputationThread::finished, &prog_dialog, &ProgressDialog::setComputationFinished);
 
     //connect signals and slots for the diagrams
     QObject::connect(&slice_diagram, &SliceDiagram::set_line_control_elements, this, &VisualizationWindow::set_line_parameters);
@@ -127,7 +128,7 @@ void VisualizationWindow::augmented_arrangement_ready(Mesh* arrangement)
     barcode->print();
 
     //draw the barcode
-    p_diagram.draw_points(slice_diagram.get_zero(), barcode);
+    p_diagram.draw_dots(slice_diagram.get_zero(), barcode);
     slice_diagram.draw_barcode(barcode, ui->barcodeCheckBox->isChecked());
 
     //clean up
@@ -138,7 +139,6 @@ void VisualizationWindow::augmented_arrangement_ready(Mesh* arrangement)
 
     //update status
     if(verbosity >= 2) { qDebug() << "COMPUTATION FINISHED; READY FOR INTERACTIVITY."; }
-    prog_dialog.setComputationFinished();   //also closes the progress dialog box
     persistence_diagram_drawn = true;
     ui->statusBar->showMessage("ready for interactive barcode exploration");
 
@@ -345,7 +345,28 @@ void VisualizationWindow::on_actionAbout_triggered()
 void VisualizationWindow::on_actionConfigure_triggered()
 {
     configBox = new ConfigureDialog(config_params, this);
-    QObject::connect(configBox, &ConfigureDialog::configuration_changed, &slice_diagram, &SliceDiagram::update_diagram);
+    QObject::connect(configBox, &ConfigureDialog::configuration_changed, &slice_diagram, &SliceDiagram::receive_parameter_change);
+    QObject::connect(configBox, &ConfigureDialog::configuration_changed, &p_diagram, &PersistenceDiagram::receive_parameter_change);
     configBox->exec();
     delete configBox;
+}
+
+void VisualizationWindow::on_actionSave_persistence_diagram_as_image_triggered()
+{
+    QString fileName= QFileDialog::getSaveFileName(this, "Export persistence diagram as image", QCoreApplication::applicationDirPath(), "PNG Image (*.png)");
+    if (!fileName.isNull())
+    {
+        QPixmap pixMap = ui->pdView->grab();
+        pixMap.save(fileName, "PNG");
+    }
+}
+
+void VisualizationWindow::on_actionSave_line_selection_window_as_image_triggered()
+{
+    QString fileName= QFileDialog::getSaveFileName(this, "Export line selection window as image", QCoreApplication::applicationDirPath(), "PNG Image (*.png)");
+    if (!fileName.isNull())
+    {
+        QPixmap pixMap = ui->sliceView->grab();
+        pixMap.save(fileName, "PNG");
+    }
 }

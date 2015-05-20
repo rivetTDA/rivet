@@ -5,6 +5,7 @@
 
 //these parameters control the visualization and are (mostly) user-customizable through the Configure dialog box
 struct ConfigParameters {
+  //colors
     QColor xi0color;
     QColor xi1color;
     QColor persistenceColor;
@@ -12,6 +13,11 @@ struct ConfigParameters {
     QColor sliceLineColor;
     QColor sliceLineHighlightColor;
 
+  //sizes
+    int bettiDotRadius;
+    int persistenceDotRadius;
+
+  //constructor
     ConfigParameters();
 };
 

@@ -30,7 +30,7 @@ public:
 
     void create_diagram(QString x_text, QString y_text, double xmin, double xmax, double ymin, double ymax, bool norm_coords);  //simply creates all objects; resize_diagram() handles positioning of objects
     void resize_diagram();  //resizes diagram to fill the QGraphicsView
-    void update_diagram();  //updates the diagram after a change in configuration parameters
+    void redraw_dots();     //redraws the support points of the multigraded Betti numbers
 
     void update_line(double angle, double offset);  //updates the line, in response to a change in the controls in the VisualizationWindow
     void update_window_controls();   //computes new angle and offset in response to a change in the line, emits signal for the VisualizationWindow
@@ -53,6 +53,7 @@ public:
     double get_zero();          //gets the coordinate on the slice line which we consider "zero" for the persistence diagram
 
 public slots:
+    void receive_parameter_change();            //updates the diagram after a change in configuration parameters
     void receive_bar_selection(unsigned index); //highlight the specified class of bars, which has been selected externally
     void receive_bar_deselection();             //remove bar highlighting in response to external command
 
@@ -112,7 +113,6 @@ private:
     bool line_vert;      //true if the line is vertical, false otherwise
     double line_pos;     //relative position of left endpoint of line: 0 is lower left corner, positive values (up to 1) are along left side, negative values (to -1) are along bottom edge of box
 
-    const int unit_radius;  //radius for a dot representing a xi support point of multiplicity 1
     const int padding;  //distance between xi support point area and control rectangle (on the top and right sides)
 
   //private functions

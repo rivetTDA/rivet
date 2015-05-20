@@ -15,8 +15,7 @@
 PersistenceDiagram::PersistenceDiagram(ConfigParameters* params, QObject* parent) :
     QGraphicsScene(parent),
     config_params(params),
-    selected(NULL),
-    radius(5)
+    selected(NULL)
 { }
 
 //simply creates all objects; resize_diagram() handles positioning of objects
@@ -25,13 +24,13 @@ void PersistenceDiagram::create_diagram(QString* filename, int dim)
     //define pens and brushes
     QPen grayPen(QBrush(Qt::darkGray),2,Qt::DotLine, Qt::RoundCap, Qt::RoundJoin);
     QPen thinPen(QBrush(Qt::darkGray),1,Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
-    QPen bluePen(QBrush(Qt::blue),3,Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
-    QBrush purpleBrush(QColor(160, 0, 200));
+    QPen slicePen(QBrush(config_params->sliceLineColor),3,Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+    QBrush purpleBrush(QColor(config_params->persistenceColor.rgb()));
 
     //create persistence diagram structure
     bounding_rect = addRect(QRectF(), grayPen);
     diag_line = addLine(QLineF(), thinPen);
-    blue_line = addLine(QLineF(), bluePen);
+    blue_line = addLine(QLineF(), slicePen);
 
     h_line = addLine(QLineF(), grayPen);
     v_line = addLine(QLineF(), grayPen);
@@ -103,7 +102,7 @@ void PersistenceDiagram::resize_diagram(double slice_length, double diagram_scal
         double x = dot->get_x();
         double y = dot->get_y();
 
-        if(y == std::numeric_limits<double>::infinity()) //then this dot represents a cycle
+        if(y == std::numeric_limits<double>::infinity()) //then this dot represents an essential cycle
         {
             if(x*scale > diagram_size)
             {
@@ -165,7 +164,7 @@ void PersistenceDiagram::resize_diagram(double slice_length, double diagram_scal
 }//end resize_diagram()
 
 //creates and draws persistence dots at the correct locations
-void PersistenceDiagram::draw_points(double zero, Barcode* bc)
+void PersistenceDiagram::draw_dots(double zero, Barcode* bc)
 {
     zero_coord = zero;
 
@@ -183,7 +182,7 @@ void PersistenceDiagram::draw_points(double zero, Barcode* bc)
             double birth = it->birth - zero_coord;
 
             //create dot object
-            PersistenceDot* dot = new PersistenceDot(this, config_params, birth, it->death, radius*sqrt((double) (it->multiplicity)), num_dots);
+            PersistenceDot* dot = new PersistenceDot(this, config_params, birth, it->death, config_params->persistenceDotRadius*sqrt((double) (it->multiplicity)), num_dots);
             addItem(dot);
             dots.push_back(dot);
             num_dots++;
@@ -206,7 +205,7 @@ void PersistenceDiagram::draw_points(double zero, Barcode* bc)
             double death = it->death - zero_coord;
 
             //create dot object
-            PersistenceDot* dot = new PersistenceDot(this, config_params, birth, death, radius*sqrt(it->multiplicity), num_dots);
+            PersistenceDot* dot = new PersistenceDot(this, config_params, birth, death, config_params->persistenceDotRadius*sqrt(it->multiplicity), num_dots);
             addItem(dot);
             dots.push_back(dot);
             num_dots++;
@@ -237,6 +236,16 @@ void PersistenceDiagram::draw_points(double zero, Barcode* bc)
     lt_inf_count_text->setText(QString(spts.str().data()));
 }//end draw_points()
 
+//redraws persistence dots; e.g. used after a change in parameters
+void PersistenceDiagram::redraw_dots()
+{
+    for(std::vector<PersistenceDot*>::iterator it = dots.begin(); it != dots.end(); ++it)
+    {
+        PersistenceDot* dot = *it;
+        dot->set_radius(config_params->persistenceDotRadius);
+    }
+}//void redraw_dots()
+
 //updates the diagram after a change in the slice line
 void PersistenceDiagram::update_diagram(double slice_length, double diagram_scale, double zero, Barcode* bc)
 {
@@ -256,7 +265,7 @@ void PersistenceDiagram::update_diagram(double slice_length, double diagram_scal
     }
 
     //draw new dots
-    draw_points(zero, bc);
+    draw_dots(zero, bc);
 
 }//end update_diagram()
 
@@ -309,3 +318,20 @@ void PersistenceDiagram::receive_dot_deselection()
         selected = NULL;
     }
 }
+
+//updates the diagram after a change in the configuration parameters
+void PersistenceDiagram::receive_parameter_change()
+{
+    //update the line highlight
+    QPen slicePen(QBrush(config_params->sliceLineColor), 3);
+    blue_line->setPen(slicePen);
+
+    //update persistence dots
+    redraw_dots();
+
+    //update text
+    QBrush persistenceBrush(QColor(config_params->persistenceColor.rgb()));
+    inf_count_text->setBrush(persistenceBrush);
+    lt_inf_count_text->setBrush(persistenceBrush);
+}
+

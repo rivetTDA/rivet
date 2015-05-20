@@ -20,7 +20,7 @@ SliceDiagram::SliceDiagram(ConfigParameters* params, QObject* parent) :
     config_params(params),
     dot_left(), dot_right(), slice_line(),
     selected(-1), NOT_SELECTED(-1),
-    unit_radius(5), padding(20)
+    padding(20)
 { }
 
 SliceDiagram::~SliceDiagram()
@@ -185,25 +185,7 @@ void SliceDiagram::resize_diagram()
     y_label->setPos(-1*text_padding - y_label->boundingRect().height(), (diagram_height - y_label->boundingRect().width())/2);
 
     //reposition points
-    //TODO: IS THIS GOOD DESIGN???
-    //NOTE: if this is too slow, we could store the radius of each dot so that we don't have to compute it on each resize
-    std::vector<QGraphicsEllipseItem*>::iterator it0 = xi0_dots.begin();
-    std::vector<QGraphicsEllipseItem*>::iterator it1 = xi1_dots.begin();
-    for(unsigned i = 0; i < points.size(); i++)
-    {
-        if(points[i].zero > 0)
-        {
-            double radius = round(unit_radius*sqrt(points[i].zero));
-            (*it0)->setRect((points[i].x - data_xmin)*scale_x - radius, (points[i].y - data_ymin)*scale_y - radius, 2*radius, 2*radius);
-            ++it0;
-        }
-        if(points[i].one > 0)  //then draw a red disk
-        {
-            double radius = round(unit_radius*sqrt(points[i].one));
-            (*it1)->setRect((points[i].x - data_xmin)*scale_x - radius, (points[i].y - data_ymin)*scale_y - radius, 2*radius, 2*radius);
-            ++it1;
-        }
-    }
+    redraw_dots();
 
     //reposition slice line
     slice_line->update_bounds(diagram_width, diagram_height, padding);
@@ -246,16 +228,42 @@ void SliceDiagram::resize_diagram()
     setSceneRect(scene_rect_x, scene_rect_y, scene_rect_w, scene_rect_h);
 }//end resize_diagram()
 
-//updates the diagram after a change in configuration parameters
-void SliceDiagram::update_diagram()
+//redraws the support points of the multigraded Betti numbers
+void SliceDiagram::redraw_dots()
 {
-    //update the xi dots (necessary because I didn't override their paint() function)
+    //NOTE: this should be fine, but if it is too slow, we could store the radius of each dot so that we don't have to compute it on each resize
+    std::vector<QGraphicsEllipseItem*>::iterator it0 = xi0_dots.begin();
+    std::vector<QGraphicsEllipseItem*>::iterator it1 = xi1_dots.begin();
+    for(unsigned i = 0; i < points.size(); i++)
+    {
+        if(points[i].zero > 0)
+        {
+            double radius = round( config_params->bettiDotRadius*sqrt(points[i].zero) );
+            (*it0)->setRect((points[i].x - data_xmin)*scale_x - radius, (points[i].y - data_ymin)*scale_y - radius, 2*radius, 2*radius);
+            ++it0;
+        }
+        if(points[i].one > 0)  //then draw a red disk
+        {
+            double radius = round( config_params->bettiDotRadius*sqrt(points[i].one) );
+            (*it1)->setRect((points[i].x - data_xmin)*scale_x - radius, (points[i].y - data_ymin)*scale_y - radius, 2*radius, 2*radius);
+            ++it1;
+        }
+    }
+}//end redraw_dots()
+
+//updates the diagram after a change in configuration parameters
+void SliceDiagram::receive_parameter_change()
+{
+    //update colors of the xi dots (necessary because I didn't override their paint() function)
     QBrush xi0brush(config_params->xi0color);
     QBrush xi1brush(config_params->xi1color);
     for(std::vector<QGraphicsEllipseItem*>::iterator it = xi0_dots.begin(); it != xi0_dots.end(); ++it)
         (*it)->setBrush(xi0brush);
     for(std::vector<QGraphicsEllipseItem*>::iterator it = xi1_dots.begin(); it != xi1_dots.end(); ++it)
         (*it)->setBrush(xi1brush);
+
+    //update sizes of the xi dots
+    redraw_dots();
 
     //update the slice line highlight
     QPen highlighter(QBrush(config_params->persistenceHighlightColor), 6);

@@ -72,6 +72,13 @@ unsigned PersistenceDot::get_index()
     return index;
 }
 
+//sets a new radius and re-draws the dot
+void PersistenceDot::set_radius(double r)
+{
+    radius = r;
+    update();
+}
+
 void PersistenceDot::hoverEnterEvent(QGraphicsSceneHoverEvent * /*unused*/)
 {
     hover = true;

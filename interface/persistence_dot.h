@@ -24,6 +24,8 @@ public:
     double get_y(); //returns the unscaled y-coordinate associated with this dot
     unsigned get_index(); //returns the index of this dot (e.g. to send to the SliceDiagram for highlighting effects)
 
+    void set_radius(double r);  //sets a new radius and re-draws the dot
+
 protected:
     void hoverEnterEvent(QGraphicsSceneHoverEvent *);
     void hoverLeaveEvent(QGraphicsSceneHoverEvent *);
