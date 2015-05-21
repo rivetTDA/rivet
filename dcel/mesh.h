@@ -60,6 +60,22 @@ class Mesh
         static double epsilon;
         static bool almost_equal(const double a, const double b);
 
+        //iterator that helps save all barcode templates to a file
+    /*    class BarcodeIterator
+        {
+            public:
+                BarcodeIterator();
+                BarcodeIterator operator++();       //prefix increment
+                BarcodeIterator operator++(int);    //postfix increment
+                BarcodeTemplate& operator*();
+                BarcodeTemplate* operator->();
+                bool operator==(const BarcodeIterator& other);
+                bool operator!=(const BarcodeIterator& other);
+
+            private:
+                std::vector<Face*>::iterator it;
+        };*/
+
     private:
       //data structures
         std::vector<Vertex*> vertices;		//all vertices in the mesh
