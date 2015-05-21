@@ -687,6 +687,18 @@ BarcodeTemplate& Mesh::get_barcode_template(double degrees, double offset)
     return cell->get_barcode();  ////FIX THIS!!!
 }//end get_barcode_template()
 
+//returns the barcode template associated with faces[i]
+BarcodeTemplate& Mesh::get_barcode_template(unsigned i)
+{
+    return faces[i]->get_barcode();
+}
+
+//returns the number of 2-cells, and thus the number of barcode templates, in the arrangement
+unsigned Mesh::num_faces()
+{
+    return faces.size();
+}
+
 //finds the first anchor that intersects the left edge of the arrangement at a point not less than the specified y-coordinate
 //  if no such anchor, returns NULL
 Anchor* Mesh::find_least_upper_anchor(double y_coord)

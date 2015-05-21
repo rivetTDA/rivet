@@ -43,6 +43,11 @@ class Mesh
 
         BarcodeTemplate& get_barcode_template(double degrees, double offset);
             //returns barcode template associated with the specified line (point)
+
+        BarcodeTemplate& get_barcode_template(unsigned i);
+            //returns the barcode template associated with faces[i]
+
+        unsigned num_faces();   //returns the number of 2-cells, and thus the number of barcode templates, in the arrangement
 		
         //TESTING ONLY
         void print_stats(); //prints a summary of the arrangement information, such as the number of anchors, vertices, halfedges, and faces
@@ -59,22 +64,6 @@ class Mesh
         //these are necessary for comparisons, but should they really be static members of Mesh???
         static double epsilon;
         static bool almost_equal(const double a, const double b);
-
-        //iterator that helps save all barcode templates to a file
-    /*    class BarcodeIterator
-        {
-            public:
-                BarcodeIterator();
-                BarcodeIterator operator++();       //prefix increment
-                BarcodeIterator operator++(int);    //postfix increment
-                BarcodeTemplate& operator*();
-                BarcodeTemplate* operator->();
-                bool operator==(const BarcodeIterator& other);
-                bool operator!=(const BarcodeIterator& other);
-
-            private:
-                std::vector<Face*>::iterator it;
-        };*/
 
     private:
       //data structures

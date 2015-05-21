@@ -433,8 +433,13 @@ void VisualizationWindow::on_actionSave_triggered()
 
             //write barcode templates
             stream << "barcode templates" << endl;
-
-
+            for(unsigned i = 0; i < arrangement->num_faces(); i++)
+            {
+                BarcodeTemplate& bc = arrangement->get_barcode_template(i);
+                for(std::set<BarTemplate>::iterator it = bc.begin(); it != bc.end(); ++it)
+                    stream << it->begin << "," << it->end << "," << it->multiplicity << " ";
+                stream << endl;
+            }
         }
         else
         {
