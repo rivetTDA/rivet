@@ -63,8 +63,8 @@ private slots:
     void on_actionAbout_triggered();
     void on_actionConfigure_triggered();
     void on_actionSave_persistence_diagram_as_image_triggered();
-
     void on_actionSave_line_selection_window_as_image_triggered();
+    void on_actionSave_triggered();
 
 private:
     Ui::VisualizationWindow *ui;
@@ -78,8 +78,10 @@ private:
     ConfigParameters config_params;   //parameters that control the visualization
     DataSelectDialog ds_dialog;       //dialog box that gets the input parameters
 
-    std::vector<double> x_grades;     //floating-point x-coordinates of the grades
+    std::vector<double> x_grades;     //floating-point x-coordinates of the grades, sorted exactly
+    std::vector<exact> x_exact;       //exact (e.g. rational) values of all x-grades, sorted
     std::vector<double> y_grades;     //floating-point y-coordinates of the grades
+    std::vector<exact> y_exact;       //exact (e.g. rational) values of all y-grades, sorted
     std::vector<xiPoint> xi_support;  //stores discrete coordinates of xi support points, with multiplicities
 
     Mesh* arrangement; //pointer to the DCEL arrangement

@@ -356,6 +356,8 @@
     <property name="title">
      <string>Help</string>
     </property>
+    <addaction name="actionOnline_help"/>
+    <addaction name="actionReport_bug"/>
     <addaction name="actionAbout"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
@@ -386,8 +388,11 @@
    </property>
   </action>
   <action name="actionSave">
-   <property name="enabled">
+   <property name="checkable">
     <bool>false</bool>
+   </property>
+   <property name="enabled">
+    <bool>true</bool>
    </property>
    <property name="text">
     <string>Save computed data...</string>
@@ -416,6 +421,22 @@
   <action name="actionSave_line_selection_window_as_image">
    <property name="text">
     <string>Export line selection window as image...</string>
+   </property>
+  </action>
+  <action name="actionOnline_help">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Online help</string>
+   </property>
+  </action>
+  <action name="actionReport_bug">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Report bug...</string>
    </property>
   </action>
  </widget>

@@ -36,3 +36,12 @@ III. Bifiltration
 	NO EMPTY LINES IN THE FILE!
 
 
+IV. Augmented arrangement (saved from prior computation in RIVET)
+
+	It suffices to store (1) exact values of the x- and y-grades, (2) non-zero values of xi_0 and xi_1 w.r.t. discrete coordinates, and (3) the barcode templates.
+	The arrangement can then be reconstructed via the Bentley-Ottmann algorithm, and no persistence calculations are necessary.
+	
+	
+	
+
+

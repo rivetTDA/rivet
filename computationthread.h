@@ -21,7 +21,7 @@ class ComputationThread : public QThread
     Q_OBJECT
 
     public:
-        ComputationThread(int verbosity, InputParameters& params, std::vector<double>& x_grades, std::vector<double>& y_grades, std::vector<xiPoint>& xi_support, QObject *parent = 0);
+        ComputationThread(int verbosity, InputParameters& params, std::vector<double>& x_grades, std::vector<exact>& x_exact, std::vector<double>& y_grades, std::vector<exact>& y_exact, std::vector<xiPoint>& xi_support, QObject *parent = 0);
         ~ComputationThread();
 
         void compute();
@@ -38,8 +38,12 @@ class ComputationThread : public QThread
 
     private:
         InputParameters& params;
+
         std::vector<double>& x_grades;
+        std::vector<exact>& x_exact;
         std::vector<double>& y_grades;
+        std::vector<exact>& y_exact;
+
         std::vector<xiPoint>& xi_support;
 
         Mesh* arrangement;      //TODO: should this be a pointer?

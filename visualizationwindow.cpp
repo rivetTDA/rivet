@@ -6,10 +6,15 @@
 #include "interface/barcode.h"
 #include "interface/config_parameters.h"
 
+#include <QDateTime>
 #include <QDebug>
+#include <QFile>
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QTextStream>
 #include <QTime>
+
+#include <sstream>
 
 
 VisualizationWindow::VisualizationWindow(QWidget *parent) :
@@ -19,8 +24,8 @@ VisualizationWindow::VisualizationWindow(QWidget *parent) :
     data_selected(false),
     input_params(), config_params(),
     ds_dialog(input_params),
-    x_grades(), y_grades(), xi_support(),
-    cthread(verbosity, input_params, x_grades, y_grades, xi_support),
+    x_grades(), x_exact(), y_grades(), y_exact(), xi_support(),
+    cthread(verbosity, input_params, x_grades, x_exact, y_grades, y_exact, xi_support),
     line_selection_ready(false), slice_diagram(&config_params, this), slice_update_lock(false),
     p_diagram(&config_params, this), persistence_diagram_drawn(false)
 {
@@ -359,6 +364,7 @@ void VisualizationWindow::on_actionSave_persistence_diagram_as_image_triggered()
         QPixmap pixMap = ui->pdView->grab();
         pixMap.save(fileName, "PNG");
     }
+    ///TODO: error handling?
 }
 
 void VisualizationWindow::on_actionSave_line_selection_window_as_image_triggered()
@@ -369,4 +375,73 @@ void VisualizationWindow::on_actionSave_line_selection_window_as_image_triggered
         QPixmap pixMap = ui->sliceView->grab();
         pixMap.save(fileName, "PNG");
     }
+    ///TODO: error handling?
 }
+
+void VisualizationWindow::on_actionSave_triggered()
+{
+    QString fileName= QFileDialog::getSaveFileName(this, "Save computed data", QCoreApplication::applicationDirPath(), "Text File (*.txt)");
+    if (!fileName.isNull())
+    {
+        QFile file(fileName);
+        if(file.open(QIODevice::ReadWrite))
+        {
+            QTextStream stream(&file);
+
+            //write header info, in comment form
+            stream << "# augmented arrangement data" << endl;
+            stream << "# computed by RIVET from the input file " << input_params.fileName << endl;
+            stream << "# homology dimension: " << input_params.dim << endl;
+            stream << "# bins: " << input_params.x_bins << " " << input_params.y_bins << endl;
+            stream << "# file created at: " << QDateTime::currentDateTime().toString() << endl << endl;
+
+            //write parameters
+            stream << "parameters" << endl;
+            stream << input_params.dim << endl;
+            stream << input_params.x_label << endl;
+            stream << input_params.y_label << endl << endl;
+
+            //write x-grades
+            stream << "x-grades" << endl;
+            for(std::vector<exact>::iterator it = x_exact.begin(); it != x_exact.end(); ++it)
+            {
+                std::ostringstream oss;
+                oss << *it;
+                stream << QString::fromStdString(oss.str()) << endl;
+            }
+            stream << endl;
+
+            //write y-grades
+            stream << "y-grades" << endl;
+            for(std::vector<exact>::iterator it = y_exact.begin(); it != y_exact.end(); ++it)
+            {
+                std::ostringstream oss;
+                oss << *it;
+                stream << QString::fromStdString(oss.str()) << endl;
+            }
+            stream << endl;
+
+
+            //write values of the multigraded Betti numbers
+            stream << "xi values" << endl;
+            for(std::vector<xiPoint>::iterator it = xi_support.begin(); it != xi_support.end(); ++it)
+            {
+                xiPoint p = *it;
+                stream << p.x << " " << p.y << " " << p.zero << " " << p.one << endl;
+            }
+            stream << endl;
+
+            //write barcode templates
+            stream << "barcode templates" << endl;
+
+
+        }
+        else
+        {
+            QMessageBox errorBox(QMessageBox::Warning, "Error", "Unable to write file.");
+            errorBox.exec();
+        }
+
+    }
+    ///TODO: error handling?
+}//end on_actionSave_triggered()

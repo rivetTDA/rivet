@@ -11,10 +11,10 @@
 #include <QTime>
 
 
-ComputationThread::ComputationThread(int verbosity, InputParameters& params, std::vector<double>& x_grades, std::vector<double>& y_grades, std::vector<xiPoint>& xi_support, QObject *parent) :
+ComputationThread::ComputationThread(int verbosity, InputParameters& params, std::vector<double>& x_grades, std::vector<exact>& x_exact, std::vector<double>& y_grades, std::vector<exact>& y_exact, std::vector<xiPoint>& xi_support, QObject *parent) :
     QThread(parent),
     params(params),
-    x_grades(x_grades), y_grades(y_grades), xi_support(xi_support),
+    x_grades(x_grades), x_exact(x_exact), y_grades(y_grades), y_exact(y_exact), xi_support(xi_support),
     verbosity(verbosity)
 { }
 
@@ -34,8 +34,6 @@ void ComputationThread::run()
   //STAGES 1 and 2: INPUT DATA AND CREATE BIFILTRATION
 
     //local data elements
-    std::vector<exact> x_exact;
-    std::vector<exact> y_exact;
     SimplexTree bifiltration(params.dim, verbosity);
     QTime timer;    //for timing the computations
 

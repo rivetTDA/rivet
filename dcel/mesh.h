@@ -44,6 +44,7 @@ class Mesh
         BarcodeTemplate& get_barcode_template(double degrees, double offset);
             //returns barcode template associated with the specified line (point)
 		
+        //TESTING ONLY
         void print_stats(); //prints a summary of the arrangement information, such as the number of anchors, vertices, halfedges, and faces
 		void print();	//prints all the data from the mesh
         void test_consistency();    //attempts to find inconsistencies in the DCEL arrangement
