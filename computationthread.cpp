@@ -38,9 +38,8 @@ void ComputationThread::run()
     QTime timer;    //for timing the computations
 
     //get the data via the InputManager
-    InputManager im(params.dim, x_grades, x_exact, y_grades, y_exact, bifiltration, verbosity);     //NOTE: InputManager will fill the vectors x_grades, x_exact, y_grades, and y_exact, and also build the bifiltration
-    std::string filestr = params.fileName.toStdString();
-    im.start(filestr, params.x_bins, params.y_bins, this);
+    InputManager im(params, this, x_grades, x_exact, y_grades, y_exact, bifiltration, verbosity);     //NOTE: InputManager will fill the vectors x_grades, x_exact, y_grades, and y_exact, and also build the bifiltration
+    im.start();
 
     //print bifiltration statistics
     if(verbosity >= 2)
@@ -51,7 +50,7 @@ void ComputationThread::run()
         qDebug() << "   Number of x-grades:" << x_grades.size() << "; values" << x_grades.front() << "to" << x_grades.back();
         qDebug() << "   Number of y-grades:" << y_grades.size() << "; values" << y_grades.front() << "to" << y_grades.back() << "\n";
     }
-    if(verbosity >= 10)
+    if(verbosity >= 8)
     {
       qDebug() << "x-grades:";
       for(unsigned i=0; i<x_grades.size(); i++)

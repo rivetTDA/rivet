@@ -421,7 +421,6 @@ void VisualizationWindow::on_actionSave_triggered()
             }
             stream << endl;
 
-
             //write values of the multigraded Betti numbers
             stream << "xi values" << endl;
             for(std::vector<xiPoint>::iterator it = xi_support.begin(); it != xi_support.end(); ++it)
@@ -437,7 +436,14 @@ void VisualizationWindow::on_actionSave_triggered()
             {
                 BarcodeTemplate& bc = arrangement->get_barcode_template(i);
                 for(std::set<BarTemplate>::iterator it = bc.begin(); it != bc.end(); ++it)
-                    stream << it->begin << "," << it->end << "," << it->multiplicity << " ";
+                {
+                    stream << it->begin << ",";
+                    if(it->end == (unsigned) -1)    //then the bar ends at infinity, but we just write "i"
+                        stream << "i";
+                    else
+                        stream << it->end;
+                    stream << "," << it->multiplicity << " ";
+                }
                 stream << endl;
             }
         }

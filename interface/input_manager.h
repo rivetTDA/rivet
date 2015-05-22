@@ -13,14 +13,17 @@
 
 //forward declarations
 class ComputationThread;
+struct InputParameters;
 class SimplexTree;
 
 #include <boost/multiprecision/cpp_int.hpp>
 typedef boost::multiprecision::cpp_rational exact;
 
-#include <fstream>
+#include <QFile>
+#include <QString>
+#include <QTextStream>
+
 #include <math.h>
-#include <string>
 #include <vector>
 
 
@@ -80,28 +83,27 @@ struct ExactValueComparator
 class InputManager
 {
 	public:
-        InputManager(int dim, std::vector<double>& x_grades, std::vector<exact>& x_exact, std::vector<double>& y_grades, std::vector<exact>&y_exact, SimplexTree& bifiltration, int verbosity);
+        InputManager(InputParameters& params, ComputationThread* cthread, std::vector<double>& x_grades, std::vector<exact>& x_exact, std::vector<double>& y_grades, std::vector<exact>&y_exact, SimplexTree& bifiltration, int verbosity);
             //constructor; requires dimension of homology to be computed, vectors in which grades will be stored, and verbosity parameter
 
-        void start(std::string filename, unsigned x_bins, unsigned y_bins, ComputationThread *cthread);	//function to run the input manager, requires a filename
+        void start();	//function to run the input manager, requires a filename
 		
 
     private:
-		const int verbosity;			//controls display of output, for debugging
-
+        InputParameters& input_params;  //parameters supplied by the user
+        const int verbosity;			//controls display of output, for debugging
         int hom_dim;                    //dimension of homology to be computed
-		
-		std::ifstream infile;			//file stream for the file containing the input
+        QFile infile;                   //input file
+        ComputationThread* cthread;     //pointer to the computation thread object
 		
         std::vector<double>& x_grades;  //floating-point values of all x-grades, sorted exactly
         std::vector<exact>& x_exact;    //exact (e.g. rational) values of all x-grades, sorted
-
         std::vector<double>& y_grades;  //floating-point values of all y-grades, sorted exactly
         std::vector<exact>& y_exact;    //exact (e.g. rational) values of all y-grades, sorted
 
         SimplexTree& simplex_tree;		//simplex tree constructed from the input; contains only discrete data (i.e. integer multi-grades)
 
-        void read_point_cloud(unsigned x_bins, unsigned y_bins, ComputationThread* cthread);		//reads a point cloud and constructs a simplex tree representing the bifiltered Vietoris-Rips complex
+        void read_point_cloud(QTextStream& in, ComputationThread* cthread);		//reads a point cloud and constructs a simplex tree representing the bifiltered Vietoris-Rips complex
 		void read_bifiltration();		//reads a bifiltration and constructs a simplex tree
 		
         exact approx(double x);         //finds a rational approximation of a floating-point value; precondition: x > 0
@@ -109,7 +111,7 @@ class InputManager
 };
 
 //helper function for converting a string to an exact value
-exact str_to_exact(std::string& str);
+exact str_to_exact(std::string str);
 
 //a struct to store exact coordinates of a point, along with a "birth time"
 struct ExactPoint {
@@ -127,12 +129,18 @@ struct ExactPoint {
         birth = str_to_exact(strs.back());
     }
 
+    ExactPoint(QStringList& list)   //first (size - 1) strings are coordinates, last string is "birth time"
+    {
+        coords.reserve(list.size() - 1);
+
+        for(int i = 0; i < list.size() - 1; i++)
+            coords.push_back(str_to_exact(list.at(i).toStdString()));
+
+        birth = str_to_exact(list.back().toStdString());
+    }
+
 
 };
 
-
-
-
-//#include "input_manager.cpp"
 
 #endif // __InputManager_H__

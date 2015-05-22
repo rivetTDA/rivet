@@ -4,6 +4,7 @@
 #include "input_manager.h"
 
 #include "../computationthread.h"
+#include "input_parameters.h"
 #include "../math/simplex_tree.h"
 
 #include <QDebug>
@@ -22,7 +23,7 @@ double ExactValue::epsilon = pow(2,-30);
 
 //helper function to convert a string to an exact (rational)
 //accepts string such as "12.34", "765", and "-10.8421"
-exact str_to_exact(std::string& str)
+exact str_to_exact(std::string str)
 {
     exact r;
 
@@ -72,8 +73,12 @@ exact str_to_exact(std::string& str)
 
 
 //constructor
-InputManager::InputManager(int dim, std::vector<double>& x_grades, std::vector<exact>& x_exact, std::vector<double>& y_grades, std::vector<exact>&y_exact, SimplexTree& bifiltration, int verbosity) :
-    verbosity(verbosity), hom_dim(dim),
+InputManager::InputManager(InputParameters& params, ComputationThread* cthread, std::vector<double>& x_grades, std::vector<exact>& x_exact, std::vector<double>& y_grades, std::vector<exact>&y_exact, SimplexTree& bifiltration, int verbosity) :
+    input_params(params),
+    verbosity(verbosity),
+    hom_dim(input_params.dim),
+    infile(input_params.fileName),
+    cthread(cthread),
     x_grades(x_grades), x_exact(x_exact),
     y_grades(y_grades), y_exact(y_exact),
     simplex_tree(bifiltration)
@@ -82,26 +87,24 @@ InputManager::InputManager(int dim, std::vector<double>& x_grades, std::vector<e
 //function to run the input manager, requires a filename
 //  post condition: x_grades and x_exact have size x_bins, and they contain the grade values for the 2-D persistence module in double and exact form (respectively)
 //                  similarly for y_grades and y_exact
-void InputManager::start(std::string filename, unsigned x_bins, unsigned y_bins, ComputationThread* cthread)
+void InputManager::start()
 {
 	//read the file
-    if(verbosity >= 2) { qDebug() << "READING FILE:" << QString(filename.c_str()); }
-	std::string line;
-    infile.open(filename.data());
-	if(infile.is_open())
+    if(verbosity >= 2) { qDebug() << "READING FILE:" << input_params.fileName; }
+    if(infile.open(QIODevice::ReadOnly | QIODevice::Text))
 	{
+        //set up text stream
+        QTextStream in(&infile);
+
         //determine what type of file it is
-		std::getline(infile,line);
-		std::istringstream iss(line);
-		std::string filetype;
-		iss >> filetype;
+        QString filetype = in.readLine();
 		
 		//call appropriate handler function
-		if(filetype == "points")
+        if(filetype == QString("points"))
 		{
-            read_point_cloud(x_bins, y_bins, cthread);
+            read_point_cloud(in, cthread);
 		}
-		else if(filetype == "bifiltration")
+        else if(filetype == QString("bifiltration"))
 		{
 			read_bifiltration();
 		}
@@ -113,11 +116,9 @@ void InputManager::start(std::string filename, unsigned x_bins, unsigned y_bins,
 	}
 	else
 	{
-        qDebug() << "Error: Unable to open file: " << QString(filename.c_str());
+        qDebug() << "Error: Unable to open file: " << input_params.fileName;
 		throw std::exception();
 	}
-	
-	infile.close();
 	
 }//end start()
 
@@ -125,42 +126,39 @@ void InputManager::start(std::string filename, unsigned x_bins, unsigned y_bins,
 //reads a point cloud
 //  points are given by coordinates in Euclidean space, and each point has a birth time
 //  constructs a simplex tree representing the bifiltered Vietoris-Rips complex
-void InputManager::read_point_cloud(unsigned x_bins, unsigned y_bins, ComputationThread* cthread)
+void InputManager::read_point_cloud(QTextStream &in, ComputationThread* cthread)
 {
     if(verbosity >= 2) { qDebug() << "  Found a point cloud file."; }
 	
   // STEP 1: read data file and store exact (rational) values
 
 	//prepare (temporary) data structures
-    int dimension;              //integer dimension of data
     std::vector<ExactPoint> points;	//create for points
-	std::string line;		//string to hold one line of input
 		
 	//read dimension of the points from the first line of the file
-	std::getline(infile,line);
-	std::stringstream(line) >> dimension;
+    QString line = in.readLine();
+    int dimension = line.toInt();
     if(verbosity >= 4) { qDebug() << "  dimension of data:" << dimension << "; max dimension of simplices: " << (hom_dim + 1); }
 	
 	//read maximum distance for edges in Vietoris-Rips complex
-    std::getline(infile,line);
-    boost::algorithm::trim(line);
-    exact max_dist = str_to_exact(line);
+    line = in.readLine().trimmed();
+    exact max_dist = str_to_exact(line.toStdString());  ///TODO: don't convert to std::string
     if(verbosity >= 4)
     {
         std::ostringstream oss;
         oss << max_dist;
-        qDebug() << "  maximum distance:" << oss.str().data();
+        qDebug().noquote() << "  maximum distance:" << QString::fromStdString(oss.str());
     }
 		
 	//read points
-    while( std::getline(infile,line) )
+    while( !in.atEnd() )
 	{
-        //parse current point from string
-        std::vector<std::string> coords;
-        coords.reserve(dimension + 1);
+        line = in.readLine().trimmed();
 
-        boost::algorithm::trim(line);
-        boost::split(coords, line, boost::is_any_of("\t "), boost::token_compress_on);
+        //split string by white space
+        QStringList coords = line.split(QRegExp("\\s+"));
+
+        //convert coordinate list to an exact point
         ExactPoint p(coords);
 		
 		//add current point to the vector
@@ -226,7 +224,7 @@ void InputManager::read_point_cloud(unsigned x_bins, unsigned y_bins, Computatio
     std::vector<unsigned> dist_indexes((num_points*(num_points-1))/2, max_unsigned);  //max_unsigned shall represent undefined distance
 
     //first, times
-    if(x_bins == 0 || x_bins >= time_set.size())    //then don't use bins
+    if(input_params.x_bins == 0 || input_params.x_bins >= time_set.size())    //then don't use bins
     {
         x_grades.reserve(time_set.size());
         x_exact.reserve(time_set.size());
@@ -248,14 +246,14 @@ void InputManager::read_point_cloud(unsigned x_bins, unsigned y_bins, Computatio
         //compute bin size
         exact x_min = (*time_set.begin())->exact_value;
         exact x_max = (*time_set.rbegin())->exact_value;
-        exact x_bin_size = (x_max - x_min)/x_bins;
+        exact x_bin_size = (x_max - x_min)/input_params.x_bins;
 
         //store bin values
-        x_grades.reserve(x_bins);
-        x_exact.reserve(x_bins);
+        x_grades.reserve(input_params.x_bins);
+        x_exact.reserve(input_params.x_bins);
 
         ExactSet::iterator it = time_set.begin();
-        for(unsigned c = 0; c < x_bins; c++)    //loop through all bins
+        for(unsigned c = 0; c < input_params.x_bins; c++)    //loop through all bins
         {
             ExactValue cur_bin( x_min + (c+1)*x_bin_size );    //store the bin value (i.e. the right endpoint of the bin interval)
             x_grades.push_back(cur_bin.double_value);
@@ -272,7 +270,7 @@ void InputManager::read_point_cloud(unsigned x_bins, unsigned y_bins, Computatio
     }
 
     //now, distances
-    if(y_bins == 0 || y_bins >= dist_set.size())    //then don't use bins
+    if(input_params.y_bins == 0 || input_params.y_bins >= dist_set.size())    //then don't use bins
     {
         y_grades.reserve(dist_set.size());
         y_exact.reserve(dist_set.size());
@@ -291,14 +289,14 @@ void InputManager::read_point_cloud(unsigned x_bins, unsigned y_bins, Computatio
     else    //then use bins: then the list size will equal the number of bins, and y-values will be equally spaced
     {
         //compute bin size: min distance is 0, so bin size is (max distance)/y_bins
-        exact y_bin_size = ((*dist_set.rbegin())->exact_value)/y_bins;
+        exact y_bin_size = ((*dist_set.rbegin())->exact_value)/input_params.y_bins;
 
         //store bin values
-        y_grades.reserve(y_bins);
-        y_exact.reserve(y_bins);
+        y_grades.reserve(input_params.y_bins);
+        y_exact.reserve(input_params.y_bins);
 
         ExactSet::iterator it = dist_set.begin();
-        for(unsigned c = 0; c < y_bins; c++)    //loop through all bins
+        for(unsigned c = 0; c < input_params.y_bins; c++)    //loop through all bins
         {
             ExactValue cur_bin( (c+1)*y_bin_size );    //store the bin value (i.e. the right endpoint of the bin interval)
             y_grades.push_back(cur_bin.double_value);
