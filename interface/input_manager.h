@@ -83,18 +83,16 @@ struct ExactValueComparator
 class InputManager
 {
 	public:
-        InputManager(InputParameters& params, ComputationThread* cthread, std::vector<double>& x_grades, std::vector<exact>& x_exact, std::vector<double>& y_grades, std::vector<exact>&y_exact, SimplexTree& bifiltration, int verbosity);
-            //constructor; requires dimension of homology to be computed, vectors in which grades will be stored, and verbosity parameter
+        InputManager(ComputationThread* cthread);
 
-        void start();	//function to run the input manager, requires a filename
+        void start();	//function to run the input manager
 		
-
     private:
+        ComputationThread* cthread;     //pointer to the computation thread object
         InputParameters& input_params;  //parameters supplied by the user
         const int verbosity;			//controls display of output, for debugging
         int hom_dim;                    //dimension of homology to be computed
         QFile infile;                   //input file
-        ComputationThread* cthread;     //pointer to the computation thread object
 		
         std::vector<double>& x_grades;  //floating-point values of all x-grades, sorted exactly
         std::vector<exact>& x_exact;    //exact (e.g. rational) values of all x-grades, sorted
@@ -119,8 +117,9 @@ class InputManager
         };
 
         void read_point_cloud(FileInputReader& reader);		//reads a point cloud and constructs a simplex tree representing the bifiltered Vietoris-Rips complex
-		void read_bifiltration();		//reads a bifiltration and constructs a simplex tree
-		
+        void read_bifiltration(FileInputReader& reader);	//reads a bifiltration and constructs a simplex tree
+        void read_RIVET_data(FileInputReader& reader);      //reads a file of previously-computed data from RIVET
+
         exact approx(double x);         //finds a rational approximation of a floating-point value; precondition: x > 0
 };
 

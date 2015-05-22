@@ -15,6 +15,7 @@ ComputationThread::ComputationThread(int verbosity, InputParameters& params, std
     QThread(parent),
     params(params),
     x_grades(x_grades), x_exact(x_exact), y_grades(y_grades), y_exact(y_exact), xi_support(xi_support),
+    bifiltration(params.dim, verbosity),
     verbosity(verbosity)
 { }
 
@@ -23,8 +24,6 @@ ComputationThread::~ComputationThread()
 
 void ComputationThread::compute()
 {
-    //do I need to check anything here???
-
     start();
 }
 
@@ -33,13 +32,11 @@ void ComputationThread::run()
 {
   //STAGES 1 and 2: INPUT DATA AND CREATE BIFILTRATION
 
-    //local data elements
-    SimplexTree bifiltration(params.dim, verbosity);
     QTime timer;    //for timing the computations
 
     //get the data via the InputManager
-    InputManager im(params, this, x_grades, x_exact, y_grades, y_exact, bifiltration, verbosity);     //NOTE: InputManager will fill the vectors x_grades, x_exact, y_grades, and y_exact, and also build the bifiltration
-    im.start();
+    InputManager im(this);      //NOTE: InputManager will fill the vectors x_grades, x_exact, y_grades, and y_exact, and also build the bifiltration
+    im.start();                 //   if the input file is raw data, then InputManager will build the bifiltration; if the input file is a RIVET data file, then InputManager will fill xi_support and barcode templates
 
     //print bifiltration statistics
     if(verbosity >= 2)

@@ -396,7 +396,7 @@ void VisualizationWindow::on_actionSave_triggered()
             stream << "# file created at: " << QDateTime::currentDateTime().toString() << endl << endl;
 
             //write parameters
-            stream << "parameters" << endl;
+            stream << "RIVET_0" << endl;
             stream << input_params.dim << endl;
             stream << input_params.x_label << endl;
             stream << input_params.y_label << endl << endl;

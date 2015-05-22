@@ -2,9 +2,11 @@
 #define COMPUTATIONTHREAD_H
 
 //forward declarations
+class InputManager;
 struct InputParameters;
 class Mesh;
 
+#include "math/simplex_tree.h"
 #include "math/xi_point.h"
 
 #include <QObject>
@@ -19,6 +21,8 @@ typedef boost::multiprecision::cpp_rational exact;
 class ComputationThread : public QThread
 {
     Q_OBJECT
+
+    friend class InputManager;  //so that we don't have to pass all of the data structures from ComputationThread to InputManager
 
     public:
         ComputationThread(int verbosity, InputParameters& params, std::vector<double>& x_grades, std::vector<exact>& x_exact, std::vector<double>& y_grades, std::vector<exact>& y_exact, std::vector<xiPoint>& xi_support, QObject *parent = 0);
@@ -45,6 +49,8 @@ class ComputationThread : public QThread
         std::vector<exact>& y_exact;
 
         std::vector<xiPoint>& xi_support;
+
+        SimplexTree bifiltration;
 
         Mesh* arrangement;      //TODO: should this be a pointer?
 

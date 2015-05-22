@@ -73,15 +73,15 @@ exact str_to_exact(std::string str)
 
 
 //constructor
-InputManager::InputManager(InputParameters& params, ComputationThread* cthread, std::vector<double>& x_grades, std::vector<exact>& x_exact, std::vector<double>& y_grades, std::vector<exact>&y_exact, SimplexTree& bifiltration, int verbosity) :
-    input_params(params),
-    verbosity(verbosity),
+InputManager::InputManager(ComputationThread* cthread) :
+    cthread(cthread),
+    input_params(cthread->params),
+    verbosity(cthread->verbosity),
     hom_dim(input_params.dim),
     infile(input_params.fileName),
-    cthread(cthread),
-    x_grades(x_grades), x_exact(x_exact),
-    y_grades(y_grades), y_exact(y_exact),
-    simplex_tree(bifiltration)
+    x_grades(cthread->x_grades), x_exact(cthread->x_exact),
+    y_grades(cthread->y_grades), y_exact(cthread->y_exact),
+    simplex_tree(cthread->bifiltration)
 { }
 
 //function to run the input manager, requires a filename
@@ -105,9 +105,13 @@ void InputManager::start()
 		}
         else if(filetype == QString("bifiltration"))
 		{
-			read_bifiltration();
+            read_bifiltration(reader);
 		}
-		else
+        else if(filetype == QString("RIVET_0"))
+        {
+            read_RIVET_data(reader);
+        }
+        else
 		{
             qDebug() << "Error: Unrecognized file type.";
 			throw std::exception();
@@ -123,7 +127,7 @@ void InputManager::start()
 
 
 //reads a point cloud
-//  points are given by coordinates in Euclidean space, and each point has a birth time
+//  points are given by coordinates in Euclidean space, and each point has a "birth time"
 //  constructs a simplex tree representing the bifiltered Vietoris-Rips complex
 void InputManager::read_point_cloud(FileInputReader& reader)
 {
@@ -331,7 +335,7 @@ void InputManager::read_point_cloud(FileInputReader& reader)
 }//end read_point_cloud()
 
 //reads a bifiltration and constructs a simplex tree
-void InputManager::read_bifiltration()
+void InputManager::read_bifiltration(FileInputReader& reader)
 {
     if(verbosity >= 2) { qDebug() << "  Found a bifiltration file. CANNOT CURRENTLY READ BIFILTRATION FILES!\n"; }
 /* THIS MUST BE UPDATED!!!
@@ -370,6 +374,29 @@ void InputManager::read_bifiltration()
     simplex_tree.update_dim_indexes();
 */
 }//end read_bifiltration()
+
+//reads a file of previously-computed data from RIVET
+void InputManager::read_RIVET_data(FileInputReader& reader)
+{
+    //read parameters
+    cthread->params.dim = reader.next_line().first().toInt();
+    cthread->params.x_label = reader.next_line().first();
+    cthread->params.y_label = reader.next_line().first();
+
+    //read x-grades
+
+
+    //read y-grades
+
+
+    //read xi values
+
+
+    //read barcode templates
+
+
+}//end read_RIVET_data()
+
 
 //finds a rational approximation of a floating-point value
 // precondition: x > 0
