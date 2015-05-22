@@ -384,17 +384,56 @@ void InputManager::read_RIVET_data(FileInputReader& reader)
     cthread->params.y_label = reader.next_line().first();
 
     //read x-grades
-
+    reader.next_line();  //this line should say "x-grades"
+    QStringList line = reader.next_line();
+    while(line.first().at(0) != QChar('y')) //stop when we reach "y-grades"
+    {
+        exact num(line.first().toStdString());
+        x_exact.push_back(num);
+        x_grades.push_back( numerator(num).convert_to<double>() / denominator(num).convert_to<double>() );
+        line = reader.next_line();
+    }
 
     //read y-grades
-
+    line = reader.next_line();  //because the current line says "y-grades"
+    while(line.first().at(0) != QChar('x')) //stop when we reach "xi"
+    {
+        exact num(line.first().toStdString());
+        y_exact.push_back(num);
+        y_grades.push_back( numerator(num).convert_to<double>() / denominator(num).convert_to<double>() );
+        line = reader.next_line();
+    }
 
     //read xi values
-
+    line = reader.next_line();  //because the current line says "xi"
+    while(line.first().at(0) != QChar('b')) //stop when we reach "barcode templates"
+    {
+        unsigned x = line.first().toUInt();
+        unsigned y = line.at(1).toUInt();
+        int zero = line.at(2).toInt();
+        int one = line.at(3).toInt();
+        cthread->xi_support.push_back(xiPoint(x, y, zero, one));
+        line = reader.next_line();
+    }
 
     //read barcode templates
+    //  NOTE: the current line says "barcode templates"
+    while(reader.has_next())
+    {
+        line = reader.next_line();
+        cthread->barcode_templates.push_back(BarcodeTemplate());    //create a new BarcodeTemplate
 
-
+        for(int i = 0; i < line.size(); i++)    //loop over all bars
+        {
+            QStringList nums = line.at(i).split(",");
+            unsigned a = nums.first().toUInt();
+            unsigned b = -1;                    //default, for b = infinity
+            if(nums.at(1) != QChar('i'))        //then b is finite
+                b = nums.at(1).toUInt();
+            unsigned m = nums.at(2).toUInt();
+            cthread->barcode_templates.back().add_bar(a, b, m);
+        }
+    }
 }//end read_RIVET_data()
 
 

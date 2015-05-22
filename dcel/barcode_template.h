@@ -10,6 +10,7 @@ struct BarTemplate
     mutable unsigned multiplicity;    //maybe this is bad style, but multiplicity is not involved in comparisons
 
     BarTemplate(unsigned a, unsigned b);
+    BarTemplate(unsigned a, unsigned b, unsigned m);
     BarTemplate(const BarTemplate& other);
 
     bool operator<(const BarTemplate other) const;
@@ -21,7 +22,8 @@ class BarcodeTemplate
     public:
         BarcodeTemplate();
 
-        void add_bar(unsigned a, unsigned b);      //adds a bar to the barcode (updating multiplicity, if necessary)
+        void add_bar(unsigned a, unsigned b);               //adds a bar to the barcode template (updating multiplicity, if necessary)
+        void add_bar(unsigned a, unsigned b, unsigned m);   //adds a bar with multiplicity to the barcode template
 
         std::set<BarTemplate>::iterator begin();    //returns an iterator to the first bar in the barcode
         std::set<BarTemplate>::iterator end();      //returns an iterator to the past-the-end element of the barcode

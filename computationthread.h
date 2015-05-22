@@ -6,6 +6,7 @@ class InputManager;
 struct InputParameters;
 class Mesh;
 
+#include "dcel/barcode_template.h"
 #include "math/simplex_tree.h"
 #include "math/xi_point.h"
 
@@ -49,10 +50,9 @@ class ComputationThread : public QThread
         std::vector<exact>& y_exact;
 
         std::vector<xiPoint>& xi_support;
-
         SimplexTree* bifiltration;
-
         Mesh* arrangement;
+        std::vector<BarcodeTemplate> barcode_templates; //only used if we read a RIVET data file and need to store the barcode templates before the arrangement is ready
 
         const int verbosity;
 };

@@ -134,6 +134,22 @@ void xiSupportMatrix::fill(MultiBetti& mb, std::vector<xiPoint>& xi_pts)
     }
 }//end fill()
 
+//stores xi support points in the xiSupportMatrix
+// precondition xi_pts contains the support points in lexicographical order
+void xiSupportMatrix::fill(std::vector<xiPoint>& xi_pts)
+{
+    for(unsigned i = 0; i < xi_pts.size(); i++)
+    {
+        unsigned x = xi_pts[i].x;
+        unsigned y = xi_pts[i].y;
+
+        xiMatrixEntry* cur_entry = new xiMatrixEntry(x, y, i, columns[x], rows[y]);
+        columns[x] = cur_entry;
+        rows[y] = cur_entry;
+    }
+}//end fill()
+
+
 //gets a pointer to the rightmost entry in row r; returns NULL if row r is empty
 xiMatrixEntry* xiSupportMatrix::get_row(unsigned r)
 {

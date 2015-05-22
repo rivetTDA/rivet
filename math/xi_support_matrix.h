@@ -71,7 +71,11 @@ class xiSupportMatrix
         xiSupportMatrix(unsigned width, unsigned height);   //constructor
         ~xiSupportMatrix();     //destructor
 
+        ///TODO: REPLACE THIS FUNCTION:
         void fill(MultiBetti& mb, std::vector<xiPoint>& xi_pts); //stores xi support points from MultiBetti in the xiSupportMatrix and in the supplied vector        
+
+        ///THIS IS THE REPLACEMENT:
+        void fill(std::vector<xiPoint>& xi_pts); //stores xi support points in the xiSupportMatrix; precondition xi_pts contains the support points in lexicographical order
 
         xiMatrixEntry* get_row(unsigned r); //gets a pointer to the rightmost entry in row r; returns NULL if row r is empty
         xiMatrixEntry* get_col(unsigned c); //gets a pointer to the top entry in column c; returns NULL if column c is empty

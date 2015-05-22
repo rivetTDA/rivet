@@ -37,9 +37,14 @@ class Mesh
 		
         ~Mesh();	//destructor: deletes all cells and anchors --- CHECK THIS!!!
 		
+        ///TODO: UPDATE THE FOLLOWING
         void build_arrangement(MultiBetti& mb, std::vector<xiPoint>& xi_pts, ComputationThread* cthread);
             //builds the DCEL arrangement, and computes and stores persistence data
             //also stores ordered list of xi support points in the supplied vector
+
+        ///NEW:
+        void build_arrangement(std::vector<xiPoint>& xi_pts);
+            //builds the DCEL arrangement from the supplied xi support points, but does NOT compute persistence data
 
         BarcodeTemplate& get_barcode_template(double degrees, double offset);
             //returns barcode template associated with the specified line (point)
