@@ -43,7 +43,7 @@ class Mesh
             //also stores ordered list of xi support points in the supplied vector
 
         ///NEW:
-        void build_arrangement(std::vector<xiPoint>& xi_pts);
+        void build_arrangement(std::vector<xiPoint>& xi_pts, ComputationThread *cthread);
             //builds the DCEL arrangement from the supplied xi support points, but does NOT compute persistence data
 
         BarcodeTemplate& get_barcode_template(double degrees, double offset);
@@ -51,6 +51,9 @@ class Mesh
 
         BarcodeTemplate& get_barcode_template(unsigned i);
             //returns the barcode template associated with faces[i]
+
+        void set_barcode_template(unsigned i, BarcodeTemplate& bt);
+            //stores (a copy of) the given barcode template in faces[i]
 
         unsigned num_faces();   //returns the number of 2-cells, and thus the number of barcode templates, in the arrangement
 		

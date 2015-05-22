@@ -88,10 +88,9 @@ Mesh::~Mesh()
 
 //builds the DCEL arrangement, computes and stores persistence data
 //also stores ordered list of xi support points in the supplied vector
+//precondition: the constructor has already created the boundary of the arrangement
 void Mesh::build_arrangement(MultiBetti& mb, std::vector<xiPoint>& xi_pts, ComputationThread* cthread)
 {
-    //precondition: the constructor has already created the boundary of the arrangement
-
     QTime timer;    //for timing the computations
     PersistenceUpdater updater(this, mb, xi_pts);   //PersistenceUpdater object is able to do the calculations necessary for finding anchors and computing barcode templates
 
@@ -125,6 +124,28 @@ void Mesh::build_arrangement(MultiBetti& mb, std::vector<xiPoint>& xi_pts, Compu
     updater.store_barcodes_with_reset(path, cthread);
 
 }//end build_arrangement()
+
+//builds the DCEL arrangement from the supplied xi support points, but does NOT compute persistence data
+void Mesh::build_arrangement(std::vector<xiPoint>& xi_pts, ComputationThread* cthread)
+{
+    QTime timer;
+    PersistenceUpdater updater(this, xi_pts);   ///TODO: write this constructor!!!!
+
+    //first, compute anchors and store them in the vector Mesh::all_anchors
+    emit cthread->setCurrentProgress(10);
+    timer.start();
+    updater.find_anchors();
+    qDebug() << "  --> finding anchors took" << timer.elapsed() << "milliseconds";
+
+    //now that we have all the anchors, we can build the interior of the arrangement
+    emit cthread->setCurrentProgress(30);
+    timer.start();
+    build_interior();   ///TODO: build_interior() should update its status!
+    qDebug() << "  --> building the interior of the line arrangement took" << timer.elapsed() << "milliseconds";
+    print_stats();
+
+}//end build_arrangement()
+
 
 //function to build the arrangement using a version of the Bentley-Ottmann algorithm, given all Anchors
 //preconditions:
@@ -691,6 +712,12 @@ BarcodeTemplate& Mesh::get_barcode_template(double degrees, double offset)
 BarcodeTemplate& Mesh::get_barcode_template(unsigned i)
 {
     return faces[i]->get_barcode();
+}
+
+//stores (a copy of) the given barcode template in faces[i]
+void Mesh::set_barcode_template(unsigned i, BarcodeTemplate& bt)
+{
+    faces[i].set_barcode(bt);
 }
 
 //returns the number of 2-cells, and thus the number of barcode templates, in the arrangement

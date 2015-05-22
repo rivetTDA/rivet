@@ -127,7 +127,7 @@ void ComputationThread::run()
         timer.start();
 
         arrangement = new Mesh(x_grades, x_exact, y_grades, y_exact, verbosity);    //NOTE: delete later!
-        arrangement->build_arrangement(xi_support); ///TODO: FINISH THIS!!!
+        arrangement->build_arrangement(xi_support, this); ///TODO: FINISH THIS!!!
 
         qDebug() << "   re-building the line arrangement took" << timer.elapsed() << "milliseconds";
         emit advanceProgressStage();    //update progress box to stage 5
@@ -136,7 +136,10 @@ void ComputationThread::run()
 
         timer.start();
 
-        ///TODO: STORE BARCODE TEMPLATES
+        for(unsigned i = 0; i < barcode_templates.size(); i++)
+        {
+            arrangement->set_barcode_template(i, barcode_templates[i]);     ///TODO: FINISH THIS!!!
+        }
 
         qDebug() << "   storing barcode templates took" << timer.elapsed() << "milliseconds";
 

@@ -84,7 +84,8 @@ class Face
         void set_boundary(Halfedge* e);     //set the pointer to a halfedge on the boundary of this face
         Halfedge* get_boundary();           //get the (pointer to the) boundary halfedge
 
-        BarcodeTemplate& get_barcode();     //returns a reference to the barcode template stored in this cell
+        BarcodeTemplate& get_barcode();         //returns a reference to the barcode template stored in this cell
+        void set_barcode(BarcodeTemplate& bt);  //stores (a copy of) the specified barcode template in this cell
 
         bool has_been_visited();            //true iff cell has been visited in the vineyard-update process (so that we can distinguish a cell with an empty barcode from an unvisited cell)
         void mark_as_visited();             //marks this cell as visited

@@ -151,6 +151,11 @@ BarcodeTemplate& Face::get_barcode()
     return dbc;
 }
 
+void Face::set_barcode(BarcodeTemplate& bt)
+{
+    dbc = bt;   ///TODO: is this good design???
+}
+
 bool Face::has_been_visited()
 {
     return visited;
