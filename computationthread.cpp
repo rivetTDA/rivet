@@ -14,8 +14,8 @@
 ComputationThread::ComputationThread(int verbosity, InputParameters& params, std::vector<double>& x_grades, std::vector<exact>& x_exact, std::vector<double>& y_grades, std::vector<exact>& y_exact, std::vector<xiPoint>& xi_support, QObject *parent) :
     QThread(parent),
     params(params),
-    x_grades(x_grades), x_exact(x_exact), y_grades(y_grades), y_exact(y_exact), xi_support(xi_support),
-    bifiltration(params.dim, verbosity),
+    x_grades(x_grades), x_exact(x_exact), y_grades(y_grades), y_exact(y_exact),
+    xi_support(xi_support),
     verbosity(verbosity)
 { }
 
@@ -34,6 +34,9 @@ void ComputationThread::run()
 
     QTime timer;    //for timing the computations
 
+    //create the SimplexTree
+    bifiltration = new SimplexTree(params.dim, verbosity);
+
     //get the data via the InputManager
     InputManager im(this);      //NOTE: InputManager will fill the vectors x_grades, x_exact, y_grades, and y_exact, and also build the bifiltration
     im.start();                 //   if the input file is raw data, then InputManager will build the bifiltration; if the input file is a RIVET data file, then InputManager will fill xi_support and barcode templates
@@ -42,8 +45,8 @@ void ComputationThread::run()
     if(verbosity >= 2)
     {
         qDebug() << "\nBIFILTRATION:";
-        qDebug() << "   Number of simplices of dimension" << params.dim << ":" << bifiltration.get_size(params.dim);
-        qDebug() << "   Number of simplices of dimension" << (params.dim + 1) << ":" << bifiltration.get_size(params.dim + 1);
+        qDebug() << "   Number of simplices of dimension" << params.dim << ":" << bifiltration->get_size(params.dim);
+        qDebug() << "   Number of simplices of dimension" << (params.dim + 1) << ":" << bifiltration->get_size(params.dim + 1);
         qDebug() << "   Number of x-grades:" << x_grades.size() << "; values" << x_grades.front() << "to" << x_grades.back();
         qDebug() << "   Number of y-grades:" << y_grades.size() << "; values" << y_grades.front() << "to" << y_grades.back() << "\n";
     }
@@ -101,5 +104,8 @@ void ComputationThread::run()
 
     //send (a pointer to) the arrangement back to the VisualizationWindow
     emit arrangementReady(arrangement);
+
+    //delete the SimplexTree
+    delete bifiltration;
 
 }//end run()

@@ -50,9 +50,9 @@ class ComputationThread : public QThread
 
         std::vector<xiPoint>& xi_support;
 
-        SimplexTree bifiltration;
+        SimplexTree* bifiltration;
 
-        Mesh* arrangement;      //TODO: should this be a pointer?
+        Mesh* arrangement;
 
         const int verbosity;
 };

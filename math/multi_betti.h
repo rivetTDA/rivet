@@ -27,7 +27,7 @@ typedef std::vector<int> Vector;
 class MultiBetti
 {
 	public:
-        MultiBetti(SimplexTree& st, int dim, int v);		//constructor sets up the data structure but doesn't compute the multi-graded Betti numbers xi_0 and xi_1
+        MultiBetti(SimplexTree* st, int dim, int v);		//constructor sets up the data structure but doesn't compute the multi-graded Betti numbers xi_0 and xi_1
 		
         void compute_fast(ComputationThread *cthread);		//computes xi_0 and xi_1 at all multi-grades in a fast way
 		
@@ -44,7 +44,7 @@ class MultiBetti
 		
         void print_lows(Vector &lows);  //TESTING ONLY
 		
-        SimplexTree& bifiltration;		//reference to the bifiltration
+        SimplexTree* bifiltration;		//pointer to the bifiltration
 
         const int dimension;		//dimension of homology to compute
 

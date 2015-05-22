@@ -319,7 +319,7 @@ void InputManager::read_point_cloud(FileInputReader& reader)
 
     if(verbosity >= 2) { qDebug() << "BUILDING VIETORIS-RIPS BIFILTRATION"; }
 
-    simplex_tree.build_VR_complex(time_indexes, dist_indexes, x_grades.size(), y_grades.size());
+    simplex_tree->build_VR_complex(time_indexes, dist_indexes, x_grades.size(), y_grades.size());
 
     //clean up
     for(ExactSet::iterator it = time_set.begin(); it != time_set.end(); ++it)

@@ -15,7 +15,7 @@
 
 //constructor -- also fills xi_matrix with the xi support points
 PersistenceUpdater::PersistenceUpdater(Mesh *m, MultiBetti &mb, std::vector<xiPoint> &xi_pts) :
-    mesh(m), bifiltration(&(mb.bifiltration)), dim(mb.dimension),
+    mesh(m), bifiltration(mb.bifiltration), dim(mb.dimension),
     xi_matrix(m->x_grades.size(), m->y_grades.size()),
     testing(false)
 {

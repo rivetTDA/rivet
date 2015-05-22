@@ -99,7 +99,7 @@ class InputManager
         std::vector<double>& y_grades;  //floating-point values of all y-grades, sorted exactly
         std::vector<exact>& y_exact;    //exact (e.g. rational) values of all y-grades, sorted
 
-        SimplexTree& simplex_tree;		//simplex tree constructed from the input; contains only discrete data (i.e. integer multi-grades)
+        SimplexTree* simplex_tree;		//simplex tree constructed from the input; contains only discrete data (i.e. integer multi-grades)
 
         //class to read the file, ignoring empty lines and comments, and split each line by white space
         class FileInputReader

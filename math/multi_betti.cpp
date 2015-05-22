@@ -16,14 +16,14 @@
 
 
 //constructor
-MultiBetti::MultiBetti(SimplexTree& st, int dim, int v) :
+MultiBetti::MultiBetti(SimplexTree* st, int dim, int v) :
 	bifiltration(st),		//remember location of the simplex tree
 	dimension(dim),			//remember the dimension
 	verbosity(v)			//controls the amount of output
 {
 	//ensure that xi matrix is the correct size
-    num_x_grades = bifiltration.num_x_grades();
-    num_y_grades = bifiltration.num_y_grades();
+    num_x_grades = bifiltration->num_x_grades();
+    num_y_grades = bifiltration->num_y_grades();
     xi.resize(boost::extents[num_x_grades][num_y_grades][2]);
 
 }//end constructor
@@ -58,8 +58,8 @@ void MultiBetti::compute_fast(ComputationThread* cthread)
 void MultiBetti::compute_nullities()
 {
     //get data
-    MapMatrix* bdry1 = bifiltration.get_boundary_mx(dimension);
-    IndexMatrix* ind1 = bifiltration.get_index_mx(dimension);
+    MapMatrix* bdry1 = bifiltration->get_boundary_mx(dimension);
+    IndexMatrix* ind1 = bifiltration->get_index_mx(dimension);
 
     //set up data structures
     Vector current_lows;
@@ -149,8 +149,8 @@ void MultiBetti::compute_nullities()
 void MultiBetti::compute_ranks()
 {
     //get data
-    MapMatrix* bdry2 = bifiltration.get_boundary_mx(dimension + 1);
-    IndexMatrix* ind2 = bifiltration.get_index_mx(dimension + 1);
+    MapMatrix* bdry2 = bifiltration->get_boundary_mx(dimension + 1);
+    IndexMatrix* ind2 = bifiltration->get_index_mx(dimension + 1);
 
     //set up data structures
     Vector current_lows;
@@ -266,13 +266,13 @@ struct ColumnList {
 void MultiBetti::compute_alpha()
 {
     //get data
-    DirectSumMatrices dsm = bifiltration.get_merge_mxs();
+    DirectSumMatrices dsm = bifiltration->get_merge_mxs();
     MapMatrix* bdry_bc = dsm.boundary_matrix;
     MapMatrix* merge = dsm.map_matrix;
     IndexMatrix* ind_bc = dsm.column_indexes;
 
-    MapMatrix* bdry_d = bifiltration.get_boundary_mx(dimension + 1);
-    IndexMatrix* ind_d = bifiltration.get_index_mx(dimension + 1);
+    MapMatrix* bdry_d = bifiltration->get_boundary_mx(dimension + 1);
+    IndexMatrix* ind_d = bifiltration->get_index_mx(dimension + 1);
 
     //set up data structures
     Vector current_lows_bc;                             //low arrays for matrix bdry_bc
@@ -371,12 +371,12 @@ void MultiBetti::compute_alpha()
 void MultiBetti::compute_eta()
 {
     //get data
-    DirectSumMatrices dsm = bifiltration.get_split_mxs();
+    DirectSumMatrices dsm = bifiltration->get_split_mxs();
     MapMatrix* bdry_bc = dsm.boundary_matrix;
     IndexMatrix* ind_bc = dsm.column_indexes;
     MapMatrix* split = dsm.map_matrix;
-    MapMatrix* bdry_a = bifiltration.get_boundary_mx(dimension);
-    IndexMatrix* ind_a = bifiltration.get_offset_index_mx(dimension);
+    MapMatrix* bdry_a = bifiltration->get_boundary_mx(dimension);
+    IndexMatrix* ind_a = bifiltration->get_offset_index_mx(dimension);
 
     //set up data structures
     Vector current_lows_a;                             //low arrays for matrix bdry_a
