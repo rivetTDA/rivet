@@ -321,13 +321,11 @@ void InputManager::read_point_cloud(FileInputReader& reader)
     for(ExactSet::iterator it = time_set.begin(); it != time_set.end(); ++it)
     {
         ExactValue* p = *it;
-        time_set.erase(it);
         delete p;
     }
     for(ExactSet::iterator it = dist_set.begin(); it != dist_set.end(); ++it)
     {
         ExactValue* p = *it;
-        dist_set.erase(it);
         delete p;
     }
 }//end read_point_cloud()
