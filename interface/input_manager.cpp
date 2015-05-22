@@ -93,16 +93,15 @@ void InputManager::start()
     if(verbosity >= 2) { qDebug() << "READING FILE:" << input_params.fileName; }
     if(infile.open(QIODevice::ReadOnly | QIODevice::Text))
 	{
-        //set up text stream
-        QTextStream in(&infile);
+        FileInputReader reader(infile);
 
         //determine what type of file it is
-        QString filetype = in.readLine();
+        QString filetype = reader.next_line().first();  ///TODO: error handling -- the file must have at least one line with non-whitespace characters
 		
 		//call appropriate handler function
         if(filetype == QString("points"))
 		{
-            read_point_cloud(in, cthread);
+            read_point_cloud(reader);
 		}
         else if(filetype == QString("bifiltration"))
 		{
@@ -126,47 +125,36 @@ void InputManager::start()
 //reads a point cloud
 //  points are given by coordinates in Euclidean space, and each point has a birth time
 //  constructs a simplex tree representing the bifiltered Vietoris-Rips complex
-void InputManager::read_point_cloud(QTextStream &in, ComputationThread* cthread)
+void InputManager::read_point_cloud(FileInputReader& reader)
 {
     if(verbosity >= 2) { qDebug() << "  Found a point cloud file."; }
 	
   // STEP 1: read data file and store exact (rational) values
 
-	//prepare (temporary) data structures
-    std::vector<ExactPoint> points;	//create for points
-		
-	//read dimension of the points from the first line of the file
-    QString line = in.readLine();
-    int dimension = line.toInt();
+    //read dimension of the points from the first line of the file
+    int dimension = reader.next_line().first().toInt();
     if(verbosity >= 4) { qDebug() << "  dimension of data:" << dimension << "; max dimension of simplices: " << (hom_dim + 1); }
-	
-	//read maximum distance for edges in Vietoris-Rips complex
-    line = in.readLine().trimmed();
-    exact max_dist = str_to_exact(line.toStdString());  ///TODO: don't convert to std::string
+
+    //read maximum distance for edges in Vietoris-Rips complex
+    exact max_dist = str_to_exact(reader.next_line().first().toStdString());  ///TODO: don't convert to std::string
     if(verbosity >= 4)
     {
         std::ostringstream oss;
         oss << max_dist;
         qDebug().noquote() << "  maximum distance:" << QString::fromStdString(oss.str());
     }
-		
-	//read points
-    while( !in.atEnd() )
-	{
-        line = in.readLine().trimmed();
 
-        //split string by white space
-        QStringList coords = line.split(QRegExp("\\s+"));
+    //read points
+    std::vector<ExactPoint> points;
+    while( reader.has_next() )
+    {
+        QStringList tokens = reader.next_line();
+        ExactPoint p(tokens);
+        points.push_back(p);
+    }
 
-        //convert coordinate list to an exact point
-        ExactPoint p(coords);
-		
-		//add current point to the vector
-		points.push_back(p);
-	}
-	
     if(verbosity >= 4) { qDebug() << "  read " << points.size() << " points; input finished"; }
-	
+
 
   // STEP 2: compute distance matrix, and create ordered lists of all unique distance and time values
 
@@ -399,4 +387,40 @@ exact InputManager::approx(double x)
     return exact( (int) floor(x*denom), denom);
 }
 
+//==================== FileInputReader class ====================
 
+InputManager::FileInputReader::FileInputReader(QFile& file) :
+    in(&file),
+    next_line_found(false)
+{
+    find_next();
+}
+
+void InputManager::FileInputReader::find_next()
+{
+    QChar comment('#');
+    while( !in.atEnd() && !next_line_found )
+    {
+        QString line = in.readLine().trimmed();
+        if( line.isEmpty() || line.at(0) == comment)    //then skip this line
+            continue;
+        //else -- found a nonempty next line
+        next_line_found = true;
+        next_line_tokens = line.split(QRegExp("\\s+"));
+    }
+}
+
+bool InputManager::FileInputReader::has_next()
+{
+    return next_line_found;
+}
+
+QStringList InputManager::FileInputReader::next_line()   ///TODO: maybe too much copying of QStringLists
+{
+    QStringList current = next_line_tokens;
+
+    next_line_found = false;
+    find_next();
+
+    return current;
+}

@@ -103,11 +103,25 @@ class InputManager
 
         SimplexTree& simplex_tree;		//simplex tree constructed from the input; contains only discrete data (i.e. integer multi-grades)
 
-        void read_point_cloud(QTextStream& in, ComputationThread* cthread);		//reads a point cloud and constructs a simplex tree representing the bifiltered Vietoris-Rips complex
+        //class to read the file, ignoring empty lines and comments, and split each line by white space
+        class FileInputReader
+        {
+            public:
+                FileInputReader(QFile& file);
+                bool has_next();
+                QStringList next_line();
+
+            private:
+                QTextStream in;
+                bool next_line_found;
+                QStringList next_line_tokens;
+                void find_next();
+        };
+
+        void read_point_cloud(FileInputReader& reader);		//reads a point cloud and constructs a simplex tree representing the bifiltered Vietoris-Rips complex
 		void read_bifiltration();		//reads a bifiltration and constructs a simplex tree
 		
         exact approx(double x);         //finds a rational approximation of a floating-point value; precondition: x > 0
-		
 };
 
 //helper function for converting a string to an exact value
