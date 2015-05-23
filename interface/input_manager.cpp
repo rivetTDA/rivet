@@ -14,7 +14,6 @@
 #include <boost/algorithm/string.hpp>
 
 #include <algorithm>
-#include <set>
 #include <sstream>
 
 
@@ -104,6 +103,10 @@ void InputManager::start()
 		{
             read_point_cloud(reader);
 		}
+        else if(filetype == QString("metric"))
+        {
+            read_discrete_metric_space(reader);
+        }
         else if(filetype == QString("bifiltration"))
 		{
             read_bifiltration(reader);
@@ -168,12 +171,11 @@ void InputManager::read_point_cloud(FileInputReader& reader)
 
     unsigned num_points = points.size();
 
-    typedef std::set<ExactValue*, ExactValueComparator> ExactSet;
-    ExactSet dist_set;  //stores all unique time values; must DELETE all elements later
-    ExactSet time_set;  //stores all unique distance values; must DELETE all elements later
+    ExactSet dist_set;  //stores all unique distance values; must DELETE all elements later
+    ExactSet time_set;  //stores all unique time values; must DELETE all elements later
     std::pair<ExactSet::iterator, bool> ret;    //for return value upon insert()
 
-    dist_set.insert(new ExactValue(exact(0)));
+    dist_set.insert(new ExactValue(exact(0)));  //distance from a point to itself is always zero
 
     //consider all points
     for(unsigned i=0; i<num_points; i++)
@@ -207,116 +209,31 @@ void InputManager::read_point_cloud(FileInputReader& reader)
                 (*(ret.first))->indexes.push_back( (j*(j-1))/2 + i );
             }
         }
-    }
+    }//end for
 
-    //convert distance and time sets to vectors
-    // also build vectors of discrete indexes for constructing the bifiltration
+  // STEP 3: build vectors of discrete indexes for constructing the bifiltration
 
     unsigned max_unsigned = std::numeric_limits<unsigned>::max();
-    std::vector<unsigned> time_indexes(num_points, max_unsigned);   //max_unsigned shall represent undefined time (is this reasonable?)
-    std::vector<unsigned> dist_indexes((num_points*(num_points-1))/2, max_unsigned);  //max_unsigned shall represent undefined distance
 
     //first, times
-    if(input_params.x_bins == 0 || input_params.x_bins >= time_set.size())    //then don't use bins
-    {
-        x_grades.reserve(time_set.size());
-        x_exact.reserve(time_set.size());
+    std::vector<unsigned> time_indexes(num_points, max_unsigned);   //vector of discrete time indexes for each point; max_unsigned shall represent undefined time (is this reasonable?)
+    build_grade_vectors(time_set, time_indexes, x_grades, x_exact, input_params.x_bins);
 
-        unsigned c = 0;  //counter for time indexes
-        for(ExactSet::iterator it=time_set.begin(); it!=time_set.end(); ++it)   //loop through all UNIQUE time values
-        {
-            x_grades.push_back( (*it)->double_value );
-            x_exact.push_back( (*it)->exact_value );
-
-            for(unsigned i = 0; i < (*it)->indexes.size(); i++ ) //loop through all point indexes for this time value
-                time_indexes[ (*it)->indexes[i] ] = c;   //store time index
-
-            c++;
-        }
-    }
-    else    //then use bins: then the list size will equal the number of bins, and x-values will be equally spaced
-    {
-        //compute bin size
-        exact x_min = (*time_set.begin())->exact_value;
-        exact x_max = (*time_set.rbegin())->exact_value;
-        exact x_bin_size = (x_max - x_min)/input_params.x_bins;
-
-        //store bin values
-        x_grades.reserve(input_params.x_bins);
-        x_exact.reserve(input_params.x_bins);
-
-        ExactSet::iterator it = time_set.begin();
-        for(unsigned c = 0; c < input_params.x_bins; c++)    //loop through all bins
-        {
-            ExactValue cur_bin( x_min + (c+1)*x_bin_size );    //store the bin value (i.e. the right endpoint of the bin interval)
-            x_grades.push_back(cur_bin.double_value);
-            x_exact.push_back(cur_bin.exact_value);
-
-            //store bin index for all points whose time value is in this bin
-            while( it != time_set.end() && **it <= cur_bin )
-            {
-                for(unsigned i = 0; i < (*it)->indexes.size(); i++ ) //loop through all point indexes for this time value
-                    time_indexes[ (*it)->indexes[i] ] = c;   //store time index
-                ++it;
-            }
-        }
-    }
-
-    //now, distances
-    if(input_params.y_bins == 0 || input_params.y_bins >= dist_set.size())    //then don't use bins
-    {
-        y_grades.reserve(dist_set.size());
-        y_exact.reserve(dist_set.size());
-
-        unsigned c = 0;  //counter for distance indexes
-        for(ExactSet::iterator it=dist_set.begin(); it!=dist_set.end(); ++it)   //loop through all UNIQUE distance values
-        {
-            y_grades.push_back( (*it)->double_value );
-            y_exact.push_back( (*it)->exact_value );
-
-            for(unsigned i = 0; i < (*it)->indexes.size(); i++ ) //loop through all pair-indexes for this distance value
-                dist_indexes[ (*it)->indexes[i] ] = c;   //store distance index
-            c++;
-        }
-    }
-    else    //then use bins: then the list size will equal the number of bins, and y-values will be equally spaced
-    {
-        //compute bin size: min distance is 0, so bin size is (max distance)/y_bins
-        exact y_bin_size = ((*dist_set.rbegin())->exact_value)/input_params.y_bins;
-
-        //store bin values
-        y_grades.reserve(input_params.y_bins);
-        y_exact.reserve(input_params.y_bins);
-
-        ExactSet::iterator it = dist_set.begin();
-        for(unsigned c = 0; c < input_params.y_bins; c++)    //loop through all bins
-        {
-            ExactValue cur_bin( (c+1)*y_bin_size );    //store the bin value (i.e. the right endpoint of the bin interval)
-            y_grades.push_back(cur_bin.double_value);
-            y_exact.push_back(cur_bin.exact_value);
-
-            //store bin index for all pair-indexes whose distance value is in this bin
-            while( it != dist_set.end() && **it <= cur_bin )
-            {
-                for(unsigned i = 0; i < (*it)->indexes.size(); i++ ) //loop through all pair-indexes for this distance value
-                    dist_indexes[ (*it)->indexes[i] ] = c;   //store distance index
-                ++it;
-            }
-            //TODO: TEST END CASE TO MAKE SURE THAT WE GET ALL THE DISTANCE VALUES THAT WE SHOULD GET
-        }
-    }
+    //second, distances
+    std::vector<unsigned> dist_indexes((num_points*(num_points-1))/2, max_unsigned);  //discrete distance matrix (triangle); max_unsigned shall represent undefined distance
+    build_grade_vectors(dist_set, dist_indexes, y_grades, y_exact, input_params.y_bins);
 
     //update progress
     cthread->setCurrentProgress(30);
 
 
-  // STEP 3: build the bifiltration
+  // STEP 4: build the bifiltration
 
     //simplex_tree stores only DISCRETE information!
     //this only requires (suppose there are k points):
     //  1. a list of k discrete times
     //  2. a list of k(k-1)/2 discrete distances
-    //  3. max dimension of simplices to construct
+    //  3. max dimension of simplices to construct, which is one more than the dimension of homology to be computed
 
     if(verbosity >= 2) { qDebug() << "BUILDING VIETORIS-RIPS BIFILTRATION"; }
 
@@ -334,6 +251,111 @@ void InputManager::read_point_cloud(FileInputReader& reader)
         delete p;
     }
 }//end read_point_cloud()
+
+//reads data representing a discrete metric space with a real-valued function and constructs a simplex tree
+void InputManager::read_discrete_metric_space(FileInputReader& reader)
+{
+    if(verbosity >= 2) { qDebug() << "  Found a discrete metric space file."; }
+
+  // STEP 1: read data file and store exact (rational) values of the function for each point
+
+    QStringList line = reader.next_line();
+    std::vector<exact> values;
+    values.reserve(line.size());
+
+    for(int i = 0; i < line.size(); i++)
+    {
+        values.push_back(str_to_exact(line.at(i).toStdString()));
+    }
+
+
+  // STEP 2: read data file and store exact (rational) values for all distances
+
+    //read the maximum length of edges to construct
+    exact max_dist = str_to_exact(reader.next_line().first().toStdString());  ///TODO: don't convert to std::string
+    if(verbosity >= 4)
+    {
+        std::ostringstream oss;
+        oss << max_dist;
+        qDebug().noquote() << "  maximum distance:" << QString::fromStdString(oss.str());
+    }
+
+    //prepare data structures
+    ExactSet value_set;     //stores all unique values of the function; must DELETE all elements later
+    ExactSet dist_set;      //stores all unique values of the distance metric; must DELETE all elements later
+    std::pair<ExactSet::iterator, bool> ret;    //for return value upon insert()
+
+    dist_set.insert(new ExactValue(exact(0)));  //distance from a point to itself is always zero
+
+    //consider all points
+    unsigned num_points = values.size();
+    for(unsigned i = 0; i < num_points; i++)
+    {
+        //store value, if it doesn't exist already
+        ret = value_set.insert(new ExactValue(values[i]));
+
+        //remember that point i has this value
+        (*(ret.first))->indexes.push_back(i);
+
+        //read distances from this point to all following points
+        if(i < num_points - 1)  //then there is at least one point after point i, and there should be another line to read
+        {
+            line = reader.next_line();
+
+            for(unsigned j = i+1; j < num_points; j++)
+            {
+                //read distance between points i and j
+                exact cur_dist = str_to_exact(line.at(j-(i+1)).toStdString());
+
+                if( cur_dist <= max_dist )  //then this distance is allowed
+                {
+                    //store distance value, if it doesn't exist already
+                    ret = dist_set.insert(new ExactValue(cur_dist));
+
+                    //remember that the pair of points (i,j) has this distance value, which will go in entry j(j-1)/2 + i
+                    (*(ret.first))->indexes.push_back( (j*(j-1))/2 + i );
+                }
+            }
+        }
+    }//end for
+
+    cthread->advanceProgressStage();    //advance progress box to stage 2: building bifiltration
+
+
+  // STEP 3: build vectors of discrete indexes for constructing the bifiltration
+
+    unsigned max_unsigned = std::numeric_limits<unsigned>::max();
+
+    //first, values
+    std::vector<unsigned> value_indexes(num_points, max_unsigned);   //vector of discrete value indexes for each point; max_unsigned shall represent undefined value (is this reasonable?)
+    build_grade_vectors(value_set, value_indexes, x_grades, x_exact, input_params.x_bins);
+
+    //second, distances
+    std::vector<unsigned> dist_indexes((num_points*(num_points-1))/2, max_unsigned);  //discrete distance matrix (triangle); max_unsigned shall represent undefined distance
+    build_grade_vectors(dist_set, dist_indexes, y_grades, y_exact, input_params.y_bins);
+
+    //update progress
+    cthread->setCurrentProgress(30);
+
+  // STEP 4: build the bifiltration
+
+    if(verbosity >= 2) { qDebug() << "BUILDING VIETORIS-RIPS BIFILTRATION"; }
+
+    //build the Vietoris-Rips bifiltration from the discrete index vectors
+    simplex_tree->build_VR_complex(value_indexes, dist_indexes, x_grades.size(), y_grades.size());
+
+    //clean up
+    for(ExactSet::iterator it = value_set.begin(); it != value_set.end(); ++it)
+    {
+        ExactValue* p = *it;
+        delete p;
+    }
+    for(ExactSet::iterator it = dist_set.begin(); it != dist_set.end(); ++it)
+    {
+        ExactValue* p = *it;
+        delete p;
+    }
+}//end read_discrete_metric_space()
 
 //reads a bifiltration and constructs a simplex tree
 void InputManager::read_bifiltration(FileInputReader& reader)
@@ -424,19 +446,70 @@ void InputManager::read_RIVET_data(FileInputReader& reader)
         line = reader.next_line();
         cthread->barcode_templates.push_back(BarcodeTemplate());    //create a new BarcodeTemplate
 
-        for(int i = 0; i < line.size(); i++)    //loop over all bars
+        if(line.first() != QString("-"))    //then the barcode is nonempty
         {
-            QStringList nums = line.at(i).split(",");
-            unsigned a = nums.first().toUInt();
-            unsigned b = -1;                    //default, for b = infinity
-            if(nums.at(1) != QChar('i'))        //then b is finite
-                b = nums.at(1).toUInt();
-            unsigned m = nums.at(2).toUInt();
-            cthread->barcode_templates.back().add_bar(a, b, m);
+            for(int i = 0; i < line.size(); i++)    //loop over all bars
+            {
+                QStringList nums = line.at(i).split(",");
+                unsigned a = nums.first().toUInt();
+                unsigned b = -1;                    //default, for b = infinity
+                if(nums.at(1) != QChar('i'))        //then b is finite
+                    b = nums.at(1).toUInt();
+                unsigned m = nums.at(2).toUInt();
+                cthread->barcode_templates.back().add_bar(a, b, m);
+            }
         }
     }
 }//end read_RIVET_data()
 
+//converts an ExactSets of values to the vectors of discrete values that SimplexTree uses to build the bifiltration, and also builds the grade vectors (floating-point and exact)
+void InputManager::build_grade_vectors(ExactSet& value_set, std::vector<unsigned>& discrete_indexes, std::vector<double>& grades_fp, std::vector<exact>& grades_exact, unsigned num_bins)
+{
+    if(num_bins == 0 || num_bins >= value_set.size())    //then don't use bins
+    {
+        grades_fp.reserve(value_set.size());
+        grades_exact.reserve(value_set.size());
+
+        unsigned c = 0;  //counter for indexes
+        for(ExactSet::iterator it = value_set.begin(); it != value_set.end(); ++it)   //loop through all UNIQUE values
+        {
+            grades_fp.push_back( (*it)->double_value );
+            grades_exact.push_back( (*it)->exact_value );
+
+            for(unsigned i = 0; i < (*it)->indexes.size(); i++ ) //loop through all point indexes for this value
+                discrete_indexes[ (*it)->indexes[i] ] = c;   //store discrete index
+
+            c++;
+        }
+    }
+    else    //then use bins: then the number of discrete indexes will equal the number of bins, and exact values will be equally spaced
+    {
+        //compute bin size
+        exact min = (*value_set.begin())->exact_value;
+        exact max = (*value_set.rbegin())->exact_value;
+        exact bin_size = (max - min)/num_bins;
+
+        //store bin values
+        x_grades.reserve(num_bins);
+        x_exact.reserve(num_bins);
+
+        ExactSet::iterator it = value_set.begin();
+        for(unsigned c = 0; c < num_bins; c++)    //loop through all bins
+        {
+            ExactValue cur_bin( min + (c+1)*bin_size );    //store the bin value (i.e. the right endpoint of the bin interval)
+            grades_fp.push_back(cur_bin.double_value);
+            grades_exact.push_back(cur_bin.exact_value);
+
+            //store bin index for all points whose time value is in this bin
+            while( it != value_set.end() && **it <= cur_bin )
+            {
+                for(unsigned i = 0; i < (*it)->indexes.size(); i++ ) //loop through all point indexes for this value
+                    discrete_indexes[ (*it)->indexes[i] ] = c;   //store discrete index
+                ++it;
+            }
+        }
+    }
+}//end build_grade_vectors()
 
 //finds a rational approximation of a floating-point value
 // precondition: x > 0

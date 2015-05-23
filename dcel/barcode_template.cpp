@@ -71,6 +71,12 @@ std::set<BarTemplate>::iterator BarcodeTemplate::end()
     return bars.end();
 }
 
+//returns true iff this barcode has no bars
+bool BarcodeTemplate::is_empty()
+{
+    return bars.empty();
+}
+
 //for testing only
 void BarcodeTemplate::print()
 {

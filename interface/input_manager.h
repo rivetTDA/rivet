@@ -24,6 +24,7 @@ typedef boost::multiprecision::cpp_rational exact;
 #include <QStringList>
 
 #include <math.h>
+#include <set>
 #include <vector>
 
 
@@ -78,6 +79,8 @@ struct ExactValueComparator
     }
 };
 
+//ExactSet will help sort grades
+typedef std::set<ExactValue*, ExactValueComparator> ExactSet;
 
 //now the InputManager class
 class InputManager
@@ -102,8 +105,11 @@ class InputManager
         SimplexTree* simplex_tree;		//simplex tree constructed from the input; contains only discrete data (i.e. integer multi-grades)
 
         void read_point_cloud(FileInputReader& reader);		//reads a point cloud and constructs a simplex tree representing the bifiltered Vietoris-Rips complex
+        void read_discrete_metric_space(FileInputReader& reader);   //reads data representing a discrete metric space with a real-valued function and constructs a simplex tree
         void read_bifiltration(FileInputReader& reader);	//reads a bifiltration and constructs a simplex tree
         void read_RIVET_data(FileInputReader& reader);      //reads a file of previously-computed data from RIVET
+
+        void build_grade_vectors(ExactSet& value_set, std::vector<unsigned>& indexes, std::vector<double>& grades_fp, std::vector<exact>& grades_exact, unsigned num_bins); //converts an ExactSets of values to the vectors of discrete values that SimplexTree uses to build the bifiltration, and also builds the grade vectors (floating-point and exact)
 
         exact approx(double x);         //finds a rational approximation of a floating-point value; precondition: x > 0
 };

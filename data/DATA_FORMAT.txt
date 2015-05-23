@@ -7,14 +7,20 @@ I. Point Cloud (for constructing a Vietoris-Rips complex)
 	Third line:	maximum length of edges to be constructed (decimal)
 	Other lines:	one line per point; each line contains decimal numbers, separated by white space, giving the point's coordinates and birth time
 	
-	NO EMPTY LINES IN THE FILE!
 
-II. Distance Matrix (or two?)
+II. Distance Matrix with a Real-valued Function
 
-	NOT IMPLEMENTED YET!
+	Suppose there are N points. The file specifies N values of the function and "distances" between all pairs of points.
 
+	First line: 	the word "metric"
+	Second line:	N values of the function, separated by white space
+	Third line:	maximum length (distance) of edges to be constructed
+	Lines 4 through N+2:	line i gives the distances from point (i-3) to all points (i-2) through N
+				that is, line i contains (N-i+3) numbers, separated by white space
 
 III. Bifiltration 
+
+	NOT CURRENTLY WORKING!!!
 
 	(Here we consider a bifiltration to be abstract, without geometric coordinates.)
 	REQUIREMENTS:
@@ -33,7 +39,7 @@ III. Bifiltration
 	
 	CAUTION: THE PROGRAM MIGHT NOT HANDLE NON-INTEGER MULTI-INDEXES YET!
 	
-	NO EMPTY LINES IN THE FILE!
+
 
 
 IV. Augmented arrangement (saved from prior computation in RIVET)

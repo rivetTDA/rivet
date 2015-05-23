@@ -27,6 +27,7 @@ class BarcodeTemplate
 
         std::set<BarTemplate>::iterator begin();    //returns an iterator to the first bar in the barcode
         std::set<BarTemplate>::iterator end();      //returns an iterator to the past-the-end element of the barcode
+        bool is_empty();                            //returns true iff this barcode has no bars
 
         void print();   //for testing only
 

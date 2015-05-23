@@ -70,6 +70,11 @@ void DataSelectDialog::on_openFileButton_clicked()
                 ui->fileTypeLabel->setText("This file appears to contain point-cloud data.");
                 raw_data_file_selected(infile);
             }
+            else if(filetype == QString("metric"))
+            {
+                ui->fileTypeLabel->setText("This file appears to contain metric data.");
+                raw_data_file_selected(infile);
+            }
             else if(filetype == QString("bifiltration"))
             {
                 ui->fileTypeLabel->setText("This file appears to contain bifiltration data.");

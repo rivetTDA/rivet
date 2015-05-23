@@ -435,14 +435,21 @@ void VisualizationWindow::on_actionSave_triggered()
             for(unsigned i = 0; i < arrangement->num_faces(); i++)
             {
                 BarcodeTemplate& bc = arrangement->get_barcode_template(i);
-                for(std::set<BarTemplate>::iterator it = bc.begin(); it != bc.end(); ++it)
+                if(bc.is_empty())
                 {
-                    stream << it->begin << ",";
-                    if(it->end == (unsigned) -1)    //then the bar ends at infinity, but we just write "i"
-                        stream << "i";
-                    else
-                        stream << it->end;
-                    stream << "," << it->multiplicity << " ";
+                    stream << "-";  //this denotes an empty barcode (necessary because FileInputReader ignores white space)
+                }
+                else
+                {
+                    for(std::set<BarTemplate>::iterator it = bc.begin(); it != bc.end(); ++it)
+                    {
+                        stream << it->begin << ",";
+                        if(it->end == (unsigned) -1)    //then the bar ends at infinity, but we just write "i"
+                            stream << "i";
+                        else
+                            stream << it->end;
+                        stream << "," << it->multiplicity << " ";
+                    }
                 }
                 stream << endl;
             }
