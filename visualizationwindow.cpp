@@ -111,6 +111,8 @@ void VisualizationWindow::paint_xi_support()
 //this slot is signaled when the agumented arrangement is ready
 void VisualizationWindow::augmented_arrangement_ready(Mesh* arrangement)
 {
+    qDebug() << "VisualizationWindow::augmented_arrangement_ready()";
+
     //receive the arrangement
     this->arrangement = arrangement;
 
@@ -384,7 +386,7 @@ void VisualizationWindow::on_actionSave_triggered()
     if (!fileName.isNull())
     {
         QFile file(fileName);
-        if(file.open(QIODevice::ReadWrite))
+        if(file.open(QIODevice::ReadWrite | QIODevice::Truncate))
         {
             QTextStream stream(&file);
 
@@ -453,6 +455,8 @@ void VisualizationWindow::on_actionSave_triggered()
                 }
                 stream << endl;
             }
+
+            file.close();   //close the file -- this might not be necessary
         }
         else
         {

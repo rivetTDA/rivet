@@ -62,12 +62,14 @@ void ProgressDialog::updateProgress(unsigned current)
 
 void ProgressDialog::setComputationFinished()
 {
+    qDebug() << "ProgressDialog::setComputationFinished()";
     computation_finished = true;
     close();
 }
 
 void ProgressDialog::closeEvent(QCloseEvent *event)
 {
+    qDebug() << "ProgressDialog::closeEvent()";
     if(!computation_finished)
         event->ignore();
     else
