@@ -27,18 +27,19 @@ SOURCES	+= main.cpp                         \
 		math/map_matrix.cpp                 \
 		math/multi_betti.cpp                \
 		math/simplex_tree.cpp               \
-		math/st_node.cpp					\
-		interface/barcode.cpp				\
-		dcel/barcode_template.cpp			\
-		dcel/anchor.cpp						\
-		math/persistence_updater.cpp		\
-		math/xi_support_matrix.cpp			\
-		math/xi_point.cpp \
-    interface/progressdialog.cpp \
-    computationthread.cpp \
-    interface/aboutmessagebox.cpp \
-    interface/configuredialog.cpp \
-    interface/config_parameters.cpp
+		math/st_node.cpp                    \
+		interface/barcode.cpp               \
+		dcel/barcode_template.cpp           \
+		dcel/anchor.cpp                     \
+		math/persistence_updater.cpp        \
+		math/xi_support_matrix.cpp          \
+		math/xi_point.cpp                   \
+		interface/progressdialog.cpp        \
+		computationthread.cpp               \
+		interface/aboutmessagebox.cpp       \
+		interface/configuredialog.cpp       \
+		interface/config_parameters.cpp     \
+		interface/file_input_reader.cpp
     
 
 HEADERS  += visualizationwindow.h			\
@@ -68,7 +69,8 @@ HEADERS  += visualizationwindow.h			\
     interface/input_parameters.h \
     interface/aboutmessagebox.h \
     interface/configuredialog.h \
-    interface/config_parameters.h
+    interface/config_parameters.h \
+    interface/file_input_reader.h
     
 
 FORMS   += visualizationwindow.ui			\

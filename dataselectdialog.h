@@ -5,6 +5,8 @@
 struct InputParameters;
 
 #include <QDialog>
+#include <QFile>
+#include <QString>
 
 
 namespace Ui {
@@ -20,20 +22,20 @@ public:
     ~DataSelectDialog();
 
 private slots:
-    void on_rawDataFileButton_clicked();
-
     void on_computeButton_clicked();
 
     void on_shortcutButton1_clicked();
 
     void on_shortcutButton2_clicked();
 
+    void on_openFileButton_clicked();
+
 private:
     Ui::DataSelectDialog *ui;
 
     InputParameters& params;
 
-    QString fileName;   //name of data file
+    void raw_data_file_selected(const QFile& file);
 
 };
 

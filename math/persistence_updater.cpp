@@ -13,14 +13,14 @@
 #include <QTime>
 
 
-//constructor -- also fills xi_matrix with the xi support points
-PersistenceUpdater::PersistenceUpdater(Mesh *m, MultiBetti &mb, std::vector<xiPoint> &xi_pts) :
-    mesh(m), bifiltration(mb.bifiltration), dim(mb.dimension),
+//constructor for when we must compute all of the barcode templates
+PersistenceUpdater::PersistenceUpdater(Mesh *m, SimplexTree* b, std::vector<xiPoint> &xi_pts) :
+    mesh(m), bifiltration(b), dim(b->hom_dim),
     xi_matrix(m->x_grades.size(), m->y_grades.size()),
     testing(false)
 {
     //fill the xiSupportMatrix with the xi support points
-    xi_matrix.fill(mb, xi_pts);
+    xi_matrix.fill(xi_pts);
 
     //create partition entries for infinity (which never change)
     unsigned infty = -1;    // = MAX_UNSIGNED, right?
@@ -28,6 +28,20 @@ PersistenceUpdater::PersistenceUpdater(Mesh *m, MultiBetti &mb, std::vector<xiPo
     partition_high.insert( std::pair<unsigned, xiMatrixEntry*>(infty, xi_matrix.get_infinity()) );
 }
 
+//constructor for when we load the pre-computed barcode templates from a RIVET data file
+PersistenceUpdater::PersistenceUpdater(Mesh* m, std::vector<xiPoint>& xi_pts) :
+    mesh(m),
+    xi_matrix(m->x_grades.size(), m->y_grades.size()),
+    testing(false)
+{
+    //fill the xiSupportMatrix with the xi support points
+    xi_matrix.fill(xi_pts);
+
+    //create partition entries for infinity (which never change)
+    unsigned infty = -1;    // = MAX_UNSIGNED
+    partition_low.insert( std::pair<unsigned, xiMatrixEntry*>(infty, xi_matrix.get_infinity()) );
+    partition_high.insert( std::pair<unsigned, xiMatrixEntry*>(infty, xi_matrix.get_infinity()) );
+}
 
 //computes anchors and stores them in mesh->all_anchors; anchor-lines will be created when mesh->build_interior() is called
 void PersistenceUpdater::find_anchors()

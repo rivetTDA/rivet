@@ -92,7 +92,7 @@ Mesh::~Mesh()
 void Mesh::build_arrangement(MultiBetti& mb, std::vector<xiPoint>& xi_pts, ComputationThread* cthread)
 {
     QTime timer;    //for timing the computations
-    PersistenceUpdater updater(this, mb, xi_pts);   //PersistenceUpdater object is able to do the calculations necessary for finding anchors and computing barcode templates
+    PersistenceUpdater updater(this, mb.bifiltration, xi_pts);   //PersistenceUpdater object is able to do the calculations necessary for finding anchors and computing barcode templates
 
     //first, compute anchors and store them in the vector Mesh::all_anchors
     emit cthread->setCurrentProgress(10);
@@ -126,10 +126,10 @@ void Mesh::build_arrangement(MultiBetti& mb, std::vector<xiPoint>& xi_pts, Compu
 }//end build_arrangement()
 
 //builds the DCEL arrangement from the supplied xi support points, but does NOT compute persistence data
-void Mesh::build_arrangement(std::vector<xiPoint>& xi_pts, ComputationThread* cthread)
+void Mesh::build_arrangement(std::vector<xiPoint>& xi_pts, std::vector<BarcodeTemplate>& barcode_templates, ComputationThread* cthread)
 {
     QTime timer;
-    PersistenceUpdater updater(this, xi_pts);   ///TODO: write this constructor!!!!
+    PersistenceUpdater updater(this, xi_pts);
 
     //first, compute anchors and store them in the vector Mesh::all_anchors
     emit cthread->setCurrentProgress(10);
@@ -144,13 +144,24 @@ void Mesh::build_arrangement(std::vector<xiPoint>& xi_pts, ComputationThread* ct
     qDebug() << "  --> building the interior of the line arrangement took" << timer.elapsed() << "milliseconds";
     print_stats();
 
+    //check
+    if(faces.size() != barcode_templates.size())
+        qDebug() << "ERROR: number of faces does not match number of barcode templates";
+    else
+        qDebug() << "number of faces = number of barcode templates";
+
+    //now store the barcode templates
+    for(unsigned i = 0; i < barcode_templates.size(); i++)
+    {
+        set_barcode_template(i, barcode_templates[i]);
+    }
 }//end build_arrangement()
 
 
 //function to build the arrangement using a version of the Bentley-Ottmann algorithm, given all Anchors
 //preconditions:
-//		all Anchors are in a list, ordered by Anchor_LeftComparator
-//		boundary of the mesh is created (as in the mesh constructor)
+//   all Anchors are in a list, ordered by Anchor_LeftComparator
+//   boundary of the mesh is created (as in the mesh constructor)
 void Mesh::build_interior()
 {
     if(verbosity >= 6)
@@ -161,7 +172,7 @@ void Mesh::build_interior()
             qd << "(" << (*it)->get_x() << "," << (*it)->get_y() << ") ";
     }
 
-    // DATA STRUCTURES
+  // DATA STRUCTURES
 
     //data structure for ordered list of lines
     std::vector<Halfedge*> lines;
@@ -717,7 +728,7 @@ BarcodeTemplate& Mesh::get_barcode_template(unsigned i)
 //stores (a copy of) the given barcode template in faces[i]
 void Mesh::set_barcode_template(unsigned i, BarcodeTemplate& bt)
 {
-    faces[i].set_barcode(bt);
+    faces[i]->set_barcode(bt);
 }
 
 //returns the number of 2-cells, and thus the number of barcode templates, in the arrangement

@@ -19,7 +19,7 @@ PersistenceDiagram::PersistenceDiagram(ConfigParameters* params, QObject* parent
 { }
 
 //simply creates all objects; resize_diagram() handles positioning of objects
-void PersistenceDiagram::create_diagram(QString* filename, int dim)
+void PersistenceDiagram::create_diagram(QString& filename, int dim)
 {
     //define pens and brushes
     QPen grayPen(QBrush(Qt::darkGray),2,Qt::DotLine, Qt::RoundCap, Qt::RoundJoin);
@@ -50,7 +50,7 @@ void PersistenceDiagram::create_diagram(QString* filename, int dim)
     lt_inf_count_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
     lt_inf_count_text->setBrush(purpleBrush);
 
-    file_text = addSimpleText(*filename);
+    file_text = addSimpleText(filename);
     file_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
 
     std::ostringstream sdim;

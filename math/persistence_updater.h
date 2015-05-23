@@ -31,7 +31,8 @@ class PersistenceUpdater
 {
     public:
 
-        PersistenceUpdater(Mesh* m, MultiBetti& mb, std::vector<xiPoint>& xi_pts);  //constructor -- also fills xi_matrix with the xi support points
+        PersistenceUpdater(Mesh* m, SimplexTree* b, std::vector<xiPoint>& xi_pts);  //constructor for when we must compute all of the barcode templates
+        PersistenceUpdater(Mesh* m, std::vector<xiPoint>& xi_pts); //constructor for when we load the pre-computed barcode templates from a RIVET data file
 
         void find_anchors(); //computes anchors and stores them in mesh->all_anchors; anchor-lines will be created when mesh->build_interior() is called
 

@@ -119,7 +119,7 @@ void VisualizationWindow::augmented_arrangement_ready(Mesh* arrangement)
 //    arrangement->test_consistency();
 
     //inialize persistence diagram
-    p_diagram.create_diagram(&(input_params.fileName), input_params.dim);
+    p_diagram.create_diagram(input_params.shortName, input_params.dim);
     p_diagram.resize_diagram(slice_diagram.get_slice_length(), slice_diagram.get_pd_scale());
 
     //get the barcode

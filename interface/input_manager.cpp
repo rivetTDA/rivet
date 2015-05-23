@@ -4,6 +4,7 @@
 #include "input_manager.h"
 
 #include "../computationthread.h"
+#include "file_input_reader.h"
 #include "input_parameters.h"
 #include "../math/simplex_tree.h"
 
@@ -451,40 +452,3 @@ exact InputManager::approx(double x)
     return exact( (int) floor(x*denom), denom);
 }
 
-//==================== FileInputReader class ====================
-
-InputManager::FileInputReader::FileInputReader(QFile& file) :
-    in(&file),
-    next_line_found(false)
-{
-    find_next();
-}
-
-void InputManager::FileInputReader::find_next()
-{
-    QChar comment('#');
-    while( !in.atEnd() && !next_line_found )
-    {
-        QString line = in.readLine().trimmed();
-        if( line.isEmpty() || line.at(0) == comment)    //then skip this line
-            continue;
-        //else -- found a nonempty next line
-        next_line_found = true;
-        next_line_tokens = line.split(QRegExp("\\s+"));
-    }
-}
-
-bool InputManager::FileInputReader::has_next()
-{
-    return next_line_found;
-}
-
-QStringList InputManager::FileInputReader::next_line()   ///TODO: maybe too much copying of QStringLists
-{
-    QStringList current = next_line_tokens;
-
-    next_line_found = false;
-    find_next();
-
-    return current;
-}

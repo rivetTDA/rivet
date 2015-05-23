@@ -43,7 +43,7 @@ class Mesh
             //also stores ordered list of xi support points in the supplied vector
 
         ///NEW:
-        void build_arrangement(std::vector<xiPoint>& xi_pts, ComputationThread *cthread);
+        void build_arrangement(std::vector<xiPoint>& xi_pts, std::vector<BarcodeTemplate>& barcode_templates, ComputationThread *cthread);
             //builds the DCEL arrangement from the supplied xi support points, but does NOT compute persistence data
 
         BarcodeTemplate& get_barcode_template(double degrees, double offset);
@@ -51,9 +51,6 @@ class Mesh
 
         BarcodeTemplate& get_barcode_template(unsigned i);
             //returns the barcode template associated with faces[i]
-
-        void set_barcode_template(unsigned i, BarcodeTemplate& bt);
-            //stores (a copy of) the given barcode template in faces[i]
 
         unsigned num_faces();   //returns the number of 2-cells, and thus the number of barcode templates, in the arrangement
 		
@@ -102,6 +99,8 @@ class Mesh
 
         void find_path(std::vector<Halfedge *> &pathvec);   //finds a pseudo-optimal path through all 2-cells of the arrangement
         void find_subpath(unsigned& cur_node, std::vector< std::set<unsigned> >& adj, std::vector<Halfedge*>& pathvec, bool return_path); //builds the path recursively
+
+        void set_barcode_template(unsigned i, BarcodeTemplate& bt);    //stores (a copy of) the given barcode template in faces[i]; used for re-building the arrangement from a RIVET data file
 
       //functions for searching the arrangement
         Anchor* find_least_upper_anchor(double y_coord); //finds the first anchor that intersects the left edge of the arrangement at a point not less than the specified y-coordinate; if no such anchor, returns NULL

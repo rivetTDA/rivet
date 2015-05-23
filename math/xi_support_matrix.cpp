@@ -108,31 +108,31 @@ xiSupportMatrix::~xiSupportMatrix()
 }
 
 //stores xi support points from MultiBetti in the xiSupportMatrix and in the supplied vector
-///TODO: UPDATE THIS FUNCTION!
-void xiSupportMatrix::fill(MultiBetti& mb, std::vector<xiPoint>& xi_pts)
-{
-    unsigned num_xi_pts = 0;
+///TODO: DEPRECATED
+//void xiSupportMatrix::fill(MultiBetti& mb, std::vector<xiPoint>& xi_pts)
+//{
+//    unsigned num_xi_pts = 0;
 
-    for(unsigned i=0; i<columns.size(); i++)
-    {
-        for(unsigned j=0; j<rows.size(); j++)
-        {
-            if(mb.xi0(i,j) != 0 || mb.xi1(i,j) != 0)    //then we have found an xi support point
-            {
-                //add this point to the vector -- THIS IS NOW DONE IN MultiBetti::store_support_points()
-//                xi_pts.push_back( xiPoint(i, j, mb.xi0(i,j), mb.xi1(i,j)) );   //index in the vector is num_xi_pts
+//    for(unsigned i=0; i<columns.size(); i++)
+//    {
+//        for(unsigned j=0; j<rows.size(); j++)
+//        {
+//            if(mb.xi0(i,j) != 0 || mb.xi1(i,j) != 0)    //then we have found an xi support point
+//            {
+//                //add this point to the vector -- THIS IS NOW DONE IN MultiBetti::store_support_points()
+////                xi_pts.push_back( xiPoint(i, j, mb.xi0(i,j), mb.xi1(i,j)) );   //index in the vector is num_xi_pts
 
-                //add this point to the sparse matrix
-                xiMatrixEntry* cur_entry = new xiMatrixEntry(i, j, num_xi_pts, columns[i], rows[j]);
-                columns[i] = cur_entry;
-                rows[j] = cur_entry;
+//                //add this point to the sparse matrix
+//                xiMatrixEntry* cur_entry = new xiMatrixEntry(i, j, num_xi_pts, columns[i], rows[j]);
+//                columns[i] = cur_entry;
+//                rows[j] = cur_entry;
 
-                //increment the index
-                num_xi_pts++;
-            }
-        }
-    }
-}//end fill()
+//                //increment the index
+//                num_xi_pts++;
+//            }
+//        }
+//    }
+//}//end fill()
 
 //stores xi support points in the xiSupportMatrix
 // precondition xi_pts contains the support points in lexicographical order

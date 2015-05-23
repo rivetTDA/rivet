@@ -13,6 +13,7 @@
 
 //forward declarations
 class ComputationThread;
+class FileInputReader;
 struct InputParameters;
 class SimplexTree;
 
@@ -20,8 +21,7 @@ class SimplexTree;
 typedef boost::multiprecision::cpp_rational exact;
 
 #include <QFile>
-#include <QString>
-#include <QTextStream>
+#include <QStringList>
 
 #include <math.h>
 #include <vector>
@@ -100,21 +100,6 @@ class InputManager
         std::vector<exact>& y_exact;    //exact (e.g. rational) values of all y-grades, sorted
 
         SimplexTree* simplex_tree;		//simplex tree constructed from the input; contains only discrete data (i.e. integer multi-grades)
-
-        //class to read the file, ignoring empty lines and comments, and split each line by white space
-        class FileInputReader
-        {
-            public:
-                FileInputReader(QFile& file);
-                bool has_next();
-                QStringList next_line();
-
-            private:
-                QTextStream in;
-                bool next_line_found;
-                QStringList next_line_tokens;
-                void find_next();
-        };
 
         void read_point_cloud(FileInputReader& reader);		//reads a point cloud and constructs a simplex tree representing the bifiltered Vietoris-Rips complex
         void read_bifiltration(FileInputReader& reader);	//reads a bifiltration and constructs a simplex tree

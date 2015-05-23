@@ -6,6 +6,7 @@
 //these parameters are set by the user via the DataSelectDialog before computation can begin
 struct InputParameters {
     QString fileName;   //name of data file
+    QString shortName;  //name of data file, without path
     int dim;            //dimension of homology to compute
     unsigned x_bins;    //number of bins for x-coordinate (if 0, then bins are not used for x)
     unsigned y_bins;    //number of bins for y-coordinate (if 0, then bins are not used for y)

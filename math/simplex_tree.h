@@ -98,7 +98,10 @@ class SimplexTree {
             int get_num_simplices();		//returns the total number of simplices represented in the simplex tree
                 //TODO: would it be more efficient to store the total number of simplices???
 		
-		
+
+        const int hom_dim;      //the dimension of homology to be computed; max dimension of simplices is one more than this
+        const int verbosity;	//controls display of output, for debugging
+
 	private:
         STNode* root;		//root node of the simplex tree
 
@@ -109,10 +112,6 @@ class SimplexTree {
         SimplexSet ordered_simplices;        //pointers to simplices of dimension hom_dim in reverse-lexicographical multi-grade order
         SimplexSet ordered_low_simplices;    //pointers to simplices of dimension (hom_dim - 1) in reverse-lexicographical multi-grade order
 
-        const int hom_dim;  //the dimension of homology to be computed; max dimension of simplices is one more than this
-		
-		const int verbosity;	//controls display of output, for debugging
-		
         void build_VR_subtree(std::vector<unsigned>& times, std::vector<unsigned>& distances, STNode &parent, std::vector<unsigned> &parent_indexes, unsigned prev_time, unsigned prev_dist, unsigned cur_dim, unsigned& gic);	//recursive function used in build_VR_complex()
 
         void add_faces(std::vector<int> & vertices, int x, int y);	//recursively adds faces of a simplex to the SimplexTree; WARNING: doesn't update global data structures (time_list, dist_list, or global indexes), so should only be called from add_simplex()

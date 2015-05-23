@@ -43,8 +43,6 @@ void ComputationThread::run()
     im.start();                 //   If the input file is raw data, then InputManager will also build the bifiltration.
                                 //   If the input file is a RIVET data file, then InputManager will fill xi_support and barcode templates, but bifiltration will remain NULL.
 
-    params.raw_data = false;    ///TODO: FIX THIS!!!!!!!!!!!!!!!!!!!!!
-
     //print bifiltration statistics
     if(verbosity >= 2 && params.raw_data)
     {
@@ -120,28 +118,16 @@ void ComputationThread::run()
         emit advanceProgressStage();    //update progress box to stage 4
 
 
-      //STAGE 4: BUILD THE LINE ARRANGEMENT
+      //STAGES 4 and 5: RE-BUILD THE AUGMENTED ARRANGEMENT
 
-        if(verbosity >= 2) { qDebug() << "CALCULATING ANCHORS AND BUILDING THE DCEL ARRANGEMENT"; }
+        if(verbosity >= 2) { qDebug() << "RE-BUILDING THE AUGMENTED ARRANGEMENT"; }
 
         timer.start();
 
         arrangement = new Mesh(x_grades, x_exact, y_grades, y_exact, verbosity);    //NOTE: delete later!
-        arrangement->build_arrangement(xi_support, this); ///TODO: FINISH THIS!!!
+        arrangement->build_arrangement(xi_support, barcode_templates, this);
 
-        qDebug() << "   re-building the line arrangement took" << timer.elapsed() << "milliseconds";
-        emit advanceProgressStage();    //update progress box to stage 5
-
-      //STAGE 5: STORE BARCODE TEMPLATES IN THE ARRANGEMENT
-
-        timer.start();
-
-        for(unsigned i = 0; i < barcode_templates.size(); i++)
-        {
-            arrangement->set_barcode_template(i, barcode_templates[i]);     ///TODO: FINISH THIS!!!
-        }
-
-        qDebug() << "   storing barcode templates took" << timer.elapsed() << "milliseconds";
+        qDebug() << "   re-building the augmented arrangement took" << timer.elapsed() << "milliseconds";
 
         //send (a pointer to) the arrangement back to the VisualizationWindow
         emit arrangementReady(arrangement);
