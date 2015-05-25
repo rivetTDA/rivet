@@ -218,7 +218,7 @@ void Mesh::build_interior()
     }
 
     //for each pair of consecutive lines, if they intersect, store the intersection
-    for(unsigned i = 0; i < lines.size() - 1; i++)
+    for(unsigned i = 0; i+1 < lines.size(); i++)
     {
         Anchor* a = lines[i]->get_anchor();
         Anchor* b = lines[i+1]->get_anchor();
