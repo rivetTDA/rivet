@@ -661,7 +661,7 @@ void Mesh::find_subpath(unsigned& cur_node, std::vector< std::set<unsigned> >& a
         pathvec.push_back(cur_edge->get_twin());
 
         //remove adjacencies that have been already processed
-        adj[cur_node].erase(it);        //removes (cur_node, next_node)
+        adj[cur_node].erase(next_node);        //removes (cur_node, next_node)
         adj[next_node].erase(cur_node); //removes (next_node, cur_node)
 
         //do we need to return to this node?
