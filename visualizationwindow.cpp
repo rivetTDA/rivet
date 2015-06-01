@@ -25,6 +25,7 @@ VisualizationWindow::VisualizationWindow(QWidget *parent) :
     input_params(), config_params(),
     ds_dialog(input_params),
     x_grades(), x_exact(), y_grades(), y_exact(), xi_support(),
+    angle_precise(0), offset_precise(0),
     cthread(verbosity, input_params, x_grades, x_exact, y_grades, y_exact, xi_support),
     line_selection_ready(false), slice_diagram(&config_params, this), slice_update_lock(false),
     p_diagram(&config_params, this), persistence_diagram_drawn(false)
@@ -99,7 +100,8 @@ void VisualizationWindow::paint_xi_support()
     ui->offsetLabel->setEnabled(true);
     ui->offsetSpinBox->setEnabled(true);
 
-    //update offset extents   //TODO: FIX THIS!!!
+    //update offset extents
+    ///TODO: FIX THIS!!!
     ui->offsetSpinBox->setMinimum(-1*x_grades.back());
     ui->offsetSpinBox->setMaximum(y_grades.back());
 
@@ -125,11 +127,8 @@ void VisualizationWindow::augmented_arrangement_ready(Mesh* arrangement)
     p_diagram.resize_diagram(slice_diagram.get_slice_length(), slice_diagram.get_pd_scale());
 
     //get the barcode
-    double degrees = ui->angleDoubleSpinBox->value();
-    double offset = ui->offsetSpinBox->value();                             ///TODO: CHECK THIS!!!
-
-    BarcodeTemplate& dbc = arrangement->get_barcode_template(degrees, offset);
-    Barcode* barcode = rescale_barcode_template(dbc, degrees, offset);      ///TODO: CHECK THIS!!!
+    BarcodeTemplate& dbc = arrangement->get_barcode_template(angle_precise, offset_precise);
+    Barcode* barcode = rescale_barcode_template(dbc, angle_precise, offset_precise);      ///TODO: CHECK THIS!!!
 
     //TESTING
     barcode->print();
@@ -153,24 +152,24 @@ void VisualizationWindow::augmented_arrangement_ready(Mesh* arrangement)
 
 void VisualizationWindow::on_angleDoubleSpinBox_valueChanged(double angle)
 {
-//    qDebug() << "angleDoubleSpinBox_valueChanged(); angle: " << angle << "; slice_update_lock: " << slice_update_lock;
-
     if(line_selection_ready && !slice_update_lock)
-        slice_diagram.update_line(angle, ui->offsetSpinBox->value());
+    {
+        angle_precise = angle;
+        slice_diagram.update_line(angle_precise, ui->offsetSpinBox->value());
+    }
 
-    if(persistence_diagram_drawn)
-        update_persistence_diagram();
+    update_persistence_diagram();
 }
 
 void VisualizationWindow::on_offsetSpinBox_valueChanged(double offset)
 {
-//    qDebug() << "offsetSpinBox_valueChanged(); offset: " << offset << "; slice_update_lock: " << slice_update_lock;
-
     if(line_selection_ready && !slice_update_lock)
-        slice_diagram.update_line(ui->angleDoubleSpinBox->value(), offset);
+    {
+        offset_precise = offset;
+        slice_diagram.update_line(ui->angleDoubleSpinBox->value(), offset_precise);
+    }
 
-    if(persistence_diagram_drawn)
-        update_persistence_diagram();
+    update_persistence_diagram();
 }
 
 void VisualizationWindow::on_normCoordCheckBox_clicked(bool checked)
@@ -207,11 +206,8 @@ void VisualizationWindow::update_persistence_diagram()
     if(persistence_diagram_drawn)
     {
         //get the barcode
-        double degrees = ui->angleDoubleSpinBox->value();
-        double offset = ui->offsetSpinBox->value();
-
-        BarcodeTemplate& dbc = arrangement->get_barcode_template(degrees, offset);
-        Barcode* barcode = rescale_barcode_template(dbc, degrees, offset);
+        BarcodeTemplate& dbc = arrangement->get_barcode_template(angle_precise, offset_precise);
+        Barcode* barcode = rescale_barcode_template(dbc, angle_precise, offset_precise);
 
         //TESTING
         barcode->print();
@@ -293,12 +289,17 @@ void VisualizationWindow::set_line_parameters(double angle, double offset)
 {
     slice_update_lock = true;
 
-//    qDebug() << "  set_line_parameters: angle = " << angle << "; offset = " << offset;
+    //store values internally
+    angle_precise = angle;
+    offset_precise = offset;
 
+    //update UI elements (values will be truncated)
     ui->angleDoubleSpinBox->setValue(angle);
     ui->offsetSpinBox->setValue(offset);
 
     slice_update_lock = false;
+
+    update_persistence_diagram();
 }
 
 void VisualizationWindow::showEvent(QShowEvent* event)

@@ -52,7 +52,7 @@ void ComputationThread::run()
         qDebug() << "   Number of x-grades:" << x_grades.size() << "; values" << x_grades.front() << "to" << x_grades.back();
         qDebug() << "   Number of y-grades:" << y_grades.size() << "; values" << y_grades.front() << "to" << y_grades.back() << "\n";
     }
-    if(verbosity >= 8)
+    if(verbosity >= 4)
     {
         qDebug() << "x-grades:";
         for(unsigned i=0; i<x_grades.size(); i++)

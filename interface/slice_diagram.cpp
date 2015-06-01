@@ -152,12 +152,12 @@ void SliceDiagram::resize_diagram()
     if(data_xmax > data_xmin)
         scale_x = diagram_max_width/(data_xmax - data_xmin);
     else    //then there is only one x-grade
-        scale_x = 1;                 //IS THIS WHAT WE WANT???
+        scale_x = 1;                 ///IS THIS WHAT WE WANT???
 
     if(data_ymax > data_ymin)
         scale_y = diagram_max_height/(data_ymax - data_ymin);
     else    //then there is only one x-grade
-        scale_y = 1;                 //IS THIS WHAT WE WANT???
+        scale_y = 1;                 ///IS THIS WHAT WE WANT???
 
     if(!normalized_coords)  //then we want scale_x and scale_y to be the same (choose the smaller of the two)
     {
@@ -327,9 +327,19 @@ void SliceDiagram::update_window_controls()
     line_vert = slice_line->is_vertical();
     line_slope = slice_line->get_slope()*scale_x/scale_y;   //convert pixel units to data units
     if(slice_line->pos().x() > 0)
-        line_pos = -1*slice_line->pos().x()/diagram_width;
+    {
+        if(diagram_width > 0)
+            line_pos = -1*slice_line->pos().x()/diagram_width;
+        else    //can this ever happen?
+            line_pos = 0;
+    }
     else
-        line_pos = slice_line->pos().y()/diagram_height;
+    {
+        if(diagram_height > 0)
+            line_pos = slice_line->pos().y()/diagram_height;
+        else
+            line_pos = 0;
+    }
 
     //update VisualizatoinWindow control objects
     //defaults for vertical line

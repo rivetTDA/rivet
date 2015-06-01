@@ -84,6 +84,9 @@ private:
     std::vector<exact> y_exact;       //exact (e.g. rational) values of all y-grades, sorted
     std::vector<xiPoint> xi_support;  //stores discrete coordinates of xi support points, with multiplicities
 
+    double angle_precise;       //sufficiently-precise internal value of the slice-line angle in DEGREES, necessary because QDoubleSpinBox truncates this value
+    double offset_precise;      //sufficiently-precise internal value of the slice-line offset, necessary because QDoubleSpinBox truncates this value
+
     Mesh* arrangement; //pointer to the DCEL arrangement
 
     //computation items
@@ -93,7 +96,7 @@ private:
     //items for slice diagram
     bool line_selection_ready;      //initially false, but set to true when data is in place for line selection
     SliceDiagram slice_diagram;     //subclass of QGraphicsScene, contains all of the graphics elements for the line-selection diagram
-    bool slice_update_lock;
+    bool slice_update_lock;         //true iff slice diagram is being updated; helps avoid an infinite loop
 
     //items for persistence diagram
     PersistenceDiagram p_diagram;   //subclass of QGraphicsScene, contains all of the graphics elements for the persistence diagram
