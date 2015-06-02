@@ -53,38 +53,6 @@
     <string>Compute</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="shortcutButton1">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="geometry">
-    <rect>
-     <x>440</x>
-     <y>330</y>
-     <width>151</width>
-     <height>27</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Use Sample3</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="shortcutButton2">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="geometry">
-    <rect>
-     <x>440</x>
-     <y>360</y>
-     <width>151</width>
-     <height>27</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Use CircleData4</string>
-   </property>
-  </widget>
   <widget class="QFrame" name="parameterFrame">
    <property name="enabled">
     <bool>false</bool>
@@ -304,22 +272,6 @@
     </property>
    </widget>
   </widget>
-  <widget class="QLabel" name="label_4">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="geometry">
-    <rect>
-     <x>440</x>
-     <y>310</y>
-     <width>151</width>
-     <height>17</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Disabled shortcuts</string>
-   </property>
-  </widget>
   <widget class="QFrame" name="frame">
    <property name="geometry">
     <rect>
@@ -409,9 +361,6 @@
   </widget>
   <zorder>parameterFrame</zorder>
   <zorder>computeButton</zorder>
-  <zorder>shortcutButton1</zorder>
-  <zorder>shortcutButton2</zorder>
-  <zorder>label_4</zorder>
   <zorder>frame</zorder>
  </widget>
  <resources/>

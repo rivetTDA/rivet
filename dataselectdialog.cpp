@@ -4,6 +4,7 @@
 #include "interface/file_input_reader.h"
 #include "interface/input_parameters.h"
 
+#include <QDebug>
 #include <QFileDialog>
 #include <QFileInfo>
 
@@ -36,19 +37,19 @@ void DataSelectDialog::on_computeButton_clicked()
 
 
 //THE FOLLOWING ARE FOR TESTING ONLY
-void DataSelectDialog::on_shortcutButton1_clicked()
-{
-    params.fileName = "/ima/home/mlwright/Repos/RIVET/data/sample3.txt";
-    ui->computeButton->setEnabled(true);
-}
+//void DataSelectDialog::on_shortcutButton1_clicked()
+//{
+//    params.fileName = "/ima/home/mlwright/Repos/RIVET/data/sample3.txt";
+//    ui->computeButton->setEnabled(true);
+//}
 
-void DataSelectDialog::on_shortcutButton2_clicked()
-{
-    params.fileName = "/ima/home/mlwright/Repos/RIVET/data/circle_data_240pts_inv_density.txt";
-    ui->homDimSpinBox->setValue(1);
-    ui->computeButton->setEnabled(true);
-    ui->xlabelBox->setText("codensity");
-}
+//void DataSelectDialog::on_shortcutButton2_clicked()
+//{
+//    params.fileName = "/ima/home/mlwright/Repos/RIVET/data/circle_data_240pts_inv_density.txt";
+//    ui->homDimSpinBox->setValue(1);
+//    ui->computeButton->setEnabled(true);
+//    ui->xlabelBox->setText("codensity");
+//}
 
 void DataSelectDialog::on_openFileButton_clicked()
 {

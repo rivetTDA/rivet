@@ -23,12 +23,11 @@ public:
 
 private slots:
     void on_computeButton_clicked();
-
-    void on_shortcutButton1_clicked();
-
-    void on_shortcutButton2_clicked();
-
     void on_openFileButton_clicked();
+
+//TESTING ONLY
+//    void on_shortcutButton1_clicked();
+//    void on_shortcutButton2_clicked();
 
 private:
     Ui::DataSelectDialog *ui;
