@@ -10,7 +10,7 @@
 #include <QGraphicsView>
 
 #include <limits>
-#include <math.h>
+#include <cmath>    //c++ version of math.h; includes overloaded absolute value functions
 #include <set>
 #include <sstream>
 
@@ -20,7 +20,8 @@ SliceDiagram::SliceDiagram(ConfigParameters* params, QObject* parent) :
     config_params(params),
     dot_left(), dot_right(), slice_line(),
     selected(-1), NOT_SELECTED(-1),
-    padding(20)
+    padding(20),
+    epsilon(pow(2,-30))
 { }
 
 SliceDiagram::~SliceDiagram()
@@ -370,13 +371,13 @@ void SliceDiagram::draw_barcode(Barcode *bc, bool show)
     double zero_coord = get_zero();
 
     //draw bars
+    bars.resize(bc->size());
     unsigned num_bars = 1;
     unsigned index = 0;
     for(std::multiset<MultiBar>::iterator it = bc->begin(); it != bc->end(); ++it)
     {
         double start = it->birth - zero_coord;
         double end = it->death - zero_coord;
-        bars.resize(bc->size());
 
         for(unsigned i=0; i < it->multiplicity; i++)
         {
@@ -605,16 +606,35 @@ double SliceDiagram::get_zero()
         return data_xmin;
     else
     {
-        double x0 = slice_line->pos().x()/scale_x + data_xmin;  //data units
-        double y0 = slice_line->pos().y()/scale_y + data_ymin;  //data units
+        //point (x0,y0) is the bottom/left endpoint of the slice line (in data units)
+        double x0 = slice_line->pos().x()/scale_x + data_xmin;
+        double y0 = slice_line->pos().y()/scale_y + data_ymin;
 
         double radians = atan(line_slope);
         double offset = cos(radians) * (y0 - tan(radians)*x0);
+
+        //point (x1,y1) is the orthogonal projection of (0,0) onto the slice line (in data units)
         double x1 = -1*offset * sin(radians);
         double y1 = offset * cos(radians);
 
-//        qDebug() << "radians: " << radians << "; offset: " << offset << "; x1: " << x1 << "; y1: " << y1;
+        //find the distance between (x0,y0) and (x1,y1)
+        double dist = sqrt( (x0 - x1)*(x0 - x1) + (y0 - y1)*(y0 - y1) );
 
-        return sqrt( (x0 - x1)*(x0 - x1) + (y0 - y1)*(y0 - y1) );
+        //return the distance with the correct sign
+        if(std::abs(x0 - x1) > epsilon)  //then determine the sign via the x-coordinates
+        {
+            if(x0 > x1)
+                return dist;
+            /*else*/
+            return -1*dist;
+        }
+        if(std::abs(y0 - y1) > epsilon)  //since the x-coordinates are almost equal, determine the sign via the y-coordinates
+        {
+            if(y0 > y1)
+                return dist;
+            /*else*/
+            return -1*dist;
+        }
+        return 0;   //if the x-coordinates are almost equal, and the y-coordinates are almost equal, then the distance is zero
     }
-}
+}//end get_zero()

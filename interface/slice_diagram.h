@@ -115,6 +115,8 @@ private:
 
     const int padding;  //distance between xi support point area and control rectangle (on the top and right sides)
 
+    const double epsilon;   //used for almost-equal comparisons
+
   //private functions
     std::pair<double,double> compute_endpoint(double coordinate, unsigned offset);  //computes an endpoint of a bar in the barcode
 };
