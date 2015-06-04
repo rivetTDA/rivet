@@ -113,7 +113,7 @@ class Mesh
       //functions for testing
         unsigned HID(Halfedge* h);		//halfedge ID, for printing and debugging
         unsigned FID(Face* f);		//face ID, for printing and debugging
-
+        unsigned VID(Vertex* v);    //vertex ID, for printing and debugging
 
 
       //struct to hold a future intersection event

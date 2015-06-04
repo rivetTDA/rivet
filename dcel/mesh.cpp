@@ -185,8 +185,8 @@ void Mesh::build_interior()
     typedef std::pair<Anchor*,Anchor*> Anchor_pair;
     std::set< Anchor_pair > considered_pairs;
 
-  // PART 1: INSERT VERTICES AND EDGES ALONG LEFT EDGE OF THE STRIP
-    if(verbosity >= 6) { qDebug() << "PART 1: LEFT EDGE OF STRIP"; }
+  // PART 1: INSERT VERTICES AND EDGES ALONG LEFT EDGE OF THE ARRANGEMENT
+    if(verbosity >= 6) { qDebug() << "PART 1: LEFT EDGE OF ARRANGEMENT"; }
 
     //for each Anchor, create vertex and associated halfedges, anchored on the left edge of the strip
     Halfedge* leftedge = bottomleft;
@@ -393,15 +393,16 @@ void Mesh::build_interior()
         }
     }//end while
 
-  // PART 3: INSERT VERTICES ON RIGHT EDGE OF STRIP AND CONNECT EDGES
-    if(verbosity >= 6) { qDebug() << "PART 3: RIGHT EDGE OF THE STRIP"; }
+  // PART 3: INSERT VERTICES ON RIGHT EDGE OF ARRANGEMENT AND CONNECT EDGES
+    if(verbosity >= 6) { qDebug() << "PART 3: RIGHT EDGE OF THE ARRANGEMENT"; }
 
     Halfedge* rightedge = bottomright; //need a reference halfedge along the right side of the strip
-    unsigned cur_x = 0;      //keep track of x-coordinate of last Anchor whose line was connected to right edge (x-coordinate of Anchor is slope of line)
+    unsigned cur_x = 0;      //keep track of discrete x-coordinate of last Anchor whose line was connected to right edge (x-coordinate of Anchor is slope of line)
 
     //connect each line to the right edge of the arrangement (at x = INFTY)
     //    requires creating a vertex for each unique slope (i.e. Anchor x-coordinate)
-    //    lines that have the same slope m are "tied together" at the same vertex, with coordinates (INFTY, INFTY)
+    //    lines that have the same slope m are "tied together" at the same vertex, with coordinates (INFTY, Y)
+    //    where Y = INFTY if m is positive, Y = -INFTY if m is negative, and Y = 0 if m is zero
     for(unsigned cur_pos = 0; cur_pos < lines.size(); cur_pos++)
     {
         Halfedge* incoming = lines[cur_pos];
@@ -410,7 +411,14 @@ void Mesh::build_interior()
         if(cur_anchor->get_x() > cur_x || cur_pos == 0)    //then create a new vertex for this line
         {
             cur_x = cur_anchor->get_x();
-            rightedge = insert_vertex( rightedge, INFTY, INFTY );
+
+            double Y = INFTY;               //default, for lines with positive slope
+            if(x_grades[cur_x] < 0)
+                Y = -1*Y;                   //for lines with negative slope
+            else if(x_grades[cur_x] == 0)
+                Y = 0;                      //for horizontal lines
+
+            rightedge = insert_vertex( rightedge, INFTY, Y );
         }
         else    //no new vertex required, but update previous entry for vertical-line queries
             vertical_line_query_list.pop_back();
@@ -680,6 +688,7 @@ void Mesh::find_subpath(unsigned& cur_node, std::vector< std::set<unsigned> >& a
 
 
 //returns barcode template associated with the specified line (point)
+//REQUIREMENT: 0 <= degrees <= 90
 BarcodeTemplate& Mesh::get_barcode_template(double degrees, double offset)
 {
     if(degrees == 90) //then line is vertical
@@ -710,6 +719,8 @@ BarcodeTemplate& Mesh::get_barcode_template(double degrees, double offset)
     double radians = degrees * 3.14159265/180;
     double slope = tan(radians);
     double intercept = offset/cos(radians);
+
+    qDebug().nospace() << "  Line (deg, off) = (" << degrees << ", " << offset << ") transformed to (slope, int) = (" << slope << ", " << intercept << ")";
 
     Face* cell = find_point(slope, -1*intercept);   //multiply by -1 for point-line duality
         ///TODO: REPLACE THIS WITH A SEEDED SEARCH
@@ -844,17 +855,31 @@ Face* Mesh::find_point(double x_coord, double y_coord)
 
         //find the edge of the current cell that crosses the horizontal line at y_coord
         Vertex* next_pt = finger->get_next()->get_origin();
+
+        if(verbosity >= 8)
+        {
+            if(finger->get_anchor() != NULL)
+                qDebug() << "     -- next point: (" << next_pt->get_x() << "," << next_pt->get_y() << ") vertex ID" << VID(next_pt) << "; along line corresponding to anchor at (" << finger->get_anchor()->get_x() << "," << finger->get_anchor()->get_y() << ")";
+            else
+                qDebug() << "     -- next point: (" << next_pt->get_x() << "," << next_pt->get_y() << ") vertex ID" << VID(next_pt) << "; along line corresponding to NULL anchor";
+        }
+
         while(next_pt->get_y() > y_coord)
         {
             finger = finger->get_next();
             next_pt = finger->get_next()->get_origin();
 
-            if(verbosity >= 8) { qDebug() << "    --next point: (" << next_pt->get_x() << "," << next_pt->get_y() << "); finger:" << HID(finger); }
+            if(verbosity >= 8)
+            {
+                if(finger->get_anchor() != NULL)
+                    qDebug() << "     -- next point: (" << next_pt->get_x() << "," << next_pt->get_y() << ") vertex ID" << VID(next_pt) << "; along line corresponding to anchor at (" << finger->get_anchor()->get_x() << "," << finger->get_anchor()->get_y() << ")";
+                else
+                    qDebug() << "     -- next point: (" << next_pt->get_x() << "," << next_pt->get_y() << ") vertex ID" << VID(next_pt) << "; along line corresponding to NULL anchor";
+            }
         }
-        //now next_pt is at or below the horizontal line at y_coord
-        //if (slope, intercept) is to the left of crossing point, then we have found the cell; otherwise, move to the adjacent cell
 
-        if(verbosity >= 8) { qDebug() << "    --found next_pt at (" << next_pt->get_x() << "," << next_pt->get_y() << "); finger:" << HID(finger); }
+        //now next_pt is at or below the horizontal line at y_coord
+        //if (x_coord, y_coord) is to the left of crossing point, then we have found the cell; otherwise, move to the adjacent cell
 
         if(next_pt->get_y() == y_coord) //then next_pt is on the horizontal line
         {
@@ -890,7 +915,7 @@ Face* Mesh::find_point(double x_coord, double y_coord)
             else	//then edge is not vertical
             {
                 Anchor* temp = finger->get_anchor();
-                double x_pos = ( y_coord + y_grades[temp->get_y()] )/x_grades[temp->get_x()];  ///TODO: ENSURE NO DIVISION BY ZERO! (shouldn't happen because distinct horizontal lines don't intersect)
+                double x_pos = ( y_coord + y_grades[temp->get_y()] )/x_grades[temp->get_x()];  //NOTE: division by zero never occurs because we are searching along a horizontal line, and thus we never cross horizontal lines in the arrangement
 
                 if(x_pos >= x_coord)	//found the cell
                 {
@@ -899,10 +924,12 @@ Face* Mesh::find_point(double x_coord, double y_coord)
                 else	//move to adjacent cell
                 {
                     finger = finger->get_twin();
+
+                    if(verbosity >= 8) { qDebug().nospace() << "   --- crossing line dual to anchor (" << temp->get_x() << "," << temp->get_y() << ") at x = " << x_pos; }
                 }
             }
-        }//end while(cell not found)
-    }//end else
+        }//end else
+    }//end while(cell not found)
 
     if(verbosity >= 3) { qDebug() << "  Found point (" << x_coord << "," << y_coord << ") in cell" << FID(cell); }
 
@@ -990,6 +1017,20 @@ unsigned Mesh::FID(Face* f)
 	
 	//we should only get here if f is NULL (meaning the unbounded, outside face)
 	return -1;	
+}
+
+//look up vertex ID, used in print() for debugging
+// VID = vertex ID
+unsigned Mesh::VID(Vertex* v)
+{
+    for(unsigned i=0; i<vertices.size(); i++)
+    {
+        if(vertices[i] == v)
+            return i;
+    }
+
+    //we should only get here if f is NULL (meaning the unbounded, outside face)
+    return -1;
 }
 
 //attempts to find inconsistencies in the DCEL arrangement
@@ -1092,15 +1133,15 @@ void Mesh::test_consistency()
         qDebug() << "   ---All halfedges found in faces, as expected.";
 
 
-    //check curves
-    qDebug() << "Checking curves:\n";
+    //check anchor lines
+    qDebug() << "Checking anchor lines:\n";
     bool curve_problem = false;
     std::set<int> edges_found_in_curves;
 
     for(std::set<Anchor*>::iterator it = all_anchors.begin(); it != all_anchors.end(); ++it)
     {
         Anchor* anchor = *it;
-        qDebug() << "  Checking curve for anchor (" << anchor->get_x() <<"," << anchor->get_y() << ")";
+        qDebug() << "  Checking line for anchor (" << anchor->get_x() <<"," << anchor->get_y() << ")";
 
         Halfedge* edge = anchor->get_line();
         do{
@@ -1125,13 +1166,13 @@ void Mesh::test_consistency()
                 break;
             }
 
-            //find next edge in this curve
+            //find next edge in this line
             edge = edge->get_next();
             while(edge->get_anchor() != anchor)
                 edge = edge->get_twin()->get_next();
 
         }while(edge->get_origin()->get_x() < INFTY);
-    }//end curve loop
+    }//end anchor line loop
 
     //ignore halfedges on both sides of boundary
     start = halfedges[1];
@@ -1168,12 +1209,12 @@ void Mesh::test_consistency()
         qDebug() << "   ---Problems detected among anchor lines.";
 
 
-    //check curves
+    //check anchor lines
     qDebug() << "Checking order of vertices along right edge of the strip:";
     Halfedge* redge = halfedges[3];
     while(redge != halfedges[1])
     {
-        qDebug() << " y = " << redge->get_origin()->get_y();
+        qDebug() << " y = " << redge->get_origin()->get_y() << "at vertex" << VID(redge->get_origin());
         redge = redge->get_next();
     }
 }//end test_consistency()

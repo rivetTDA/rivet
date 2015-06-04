@@ -334,10 +334,11 @@ void PersistenceUpdater::store_barcodes(std::vector<Halfedge*>& path)
 
         //testing
 //        U_high->print_perm();
-//        qDebug() << "  Anchors above the current line: ";
+//        QDebug qd = qDebug().nospace();
+//        qd << "    Anchors above the current line: ";
 //        for(std::set<Anchor*, Anchor_LeftComparator>::iterator it = mesh->all_anchors.begin(); it != mesh->all_anchors.end(); ++it)
 //            if((*it)->is_above())
-//                qDebug() << "(" << (*it)->get_x() << "," << (*it)->get_y() << ") ";
+//                qd << "(" << (*it)->get_x() << "," << (*it)->get_y() << ") ";
 
         //if this cell does not yet have a barcode template, then store it now
         Face* cur_face = (path[i])->get_face();
