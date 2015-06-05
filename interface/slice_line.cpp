@@ -143,7 +143,7 @@ void SliceLine::update_lb_endpoint(QPointF &delta)
     moveBy(delta.x(), delta.y());
 
     //calculate new slope
-    if(right_point.x() == 0)
+    if(right_point.x() <= 0)
         vertical = true;
     else
     {
@@ -167,7 +167,7 @@ void SliceLine::update_rt_endpoint(QPointF &delta)
     update();
 
     //calculate new slope
-    if(right_point.x() == 0)
+    if(right_point.x() <= 0)
         vertical = true;
     else
     {

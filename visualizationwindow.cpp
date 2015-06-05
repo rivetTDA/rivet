@@ -290,9 +290,9 @@ void VisualizationWindow::set_line_parameters(double angle, double offset)
     slice_update_lock = true;
 
     //correct for slight numerical errors that the interface might introduce
-    if(angle < 0)
+    if(angle < 0 && angle > -45)
         angle = 0;
-    if(angle > 90)
+    if(angle > 90 || angle < -40)
         angle = 90;
 
     //store values internally
