@@ -190,7 +190,7 @@ void PersistenceDiagram::draw_dots(double zero, Barcode* bc)
             //position dot properly
             if(birth*scale > diagram_size)
             {
-                num_big_cycles++;
+                num_big_cycles += it->multiplicity;
                 dot->setVisible(false);
             }
             else
@@ -213,7 +213,7 @@ void PersistenceDiagram::draw_dots(double zero, Barcode* bc)
             //position dot properly
             if(birth*scale > diagram_size)
             {
-                num_big_points++;
+                num_big_points += it->multiplicity;
                 dot->setVisible(false);
             }
             else

@@ -334,7 +334,7 @@ void VisualizationWindow::resizeEvent(QResizeEvent* /*unused*/)
 void VisualizationWindow::closeEvent(QCloseEvent* event)
 {
     QMessageBox::StandardButton reallyExit;
-    reallyExit = QMessageBox::question(this, "Exit?", "Are you sure you want to exit? All computation will be lost!", QMessageBox::Yes|QMessageBox::No);
+    reallyExit = QMessageBox::question(this, "Exit?", "Are you sure you want to exit? All unsaved data will be lost!", QMessageBox::Yes|QMessageBox::No);
 
     if(reallyExit == QMessageBox::Yes)
     {
