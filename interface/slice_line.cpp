@@ -58,15 +58,10 @@ void SliceLine::paint(QPainter *painter, const QStyleOptionGraphicsItem * /*unus
 //left-click and drag to move line, maintaining the same slope
 QVariant SliceLine::itemChange(GraphicsItemChange change, const QVariant &value)
 {
-//    if(change == QGraphicsItem::ItemPositionChange)
-//        qDebug() << "slice line ItemPositionChange; update_lock: " << update_lock;
-
     if(change == QGraphicsItem::ItemPositionChange && !update_lock)
     {
         QPointF mouse = value.toPointF();
         QPointF newpos(mouse);
-
-//        qDebug() << "mouse: (" << mouse.x() << ", " << mouse.y() << "); pos: (" << pos().x() << ", " << pos().y() << ")";
 
         if(vertical)    //handle vertical lines
         {
@@ -118,8 +113,8 @@ QVariant SliceLine::itemChange(GraphicsItemChange change, const QVariant &value)
         }
 
         //update control dots
-        left_dot->set_position(mapToScene(0, 0));
-        right_dot->set_position(mapToScene(right_point));
+        left_dot->set_position(newpos);
+        right_dot->set_position(newpos + right_point);
 
         //update ui control objects
         sdgm->update_window_controls();
@@ -277,8 +272,6 @@ void SliceLine::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
     if(rotating)
     {
-//        qDebug() << "right button move: (" << event->pos().x() << ", " << event->pos().y() << ")";
-
         //compute new slope
         if(event->pos().x() <= 0)
         {

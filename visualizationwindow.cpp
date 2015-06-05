@@ -14,6 +14,7 @@
 #include <QTextStream>
 #include <QTime>
 
+#include <algorithm>
 #include <sstream>
 
 
