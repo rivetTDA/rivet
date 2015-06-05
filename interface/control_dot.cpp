@@ -108,12 +108,10 @@ QVariant ControlDot::itemChange(GraphicsItemChange change, const QVariant &value
         }
 
         //update line position
-//        qDebug() << "  mouse: (" << mouse.x() << ", " << mouse.y() << "); moving line: (" << newpos.x() << ", " << newpos.y() << ")";
-        QPointF delta = newpos - pos();
         if(left_bottom)
-            slice_line->update_lb_endpoint(delta);
+            slice_line->update_lb_endpoint(newpos);
         else
-            slice_line->update_rt_endpoint(delta);
+            slice_line->update_rt_endpoint(newpos);
 
         //return
         return newpos;

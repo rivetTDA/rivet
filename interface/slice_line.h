@@ -26,8 +26,8 @@ public:
 
     QVariant itemChange(GraphicsItemChange change, const QVariant &value);
 
-    void update_lb_endpoint(QPointF &delta); //updates left-bottom endpoint; called by ControlDot on move event
-    void update_rt_endpoint(QPointF &delta); //updates right-top endpoint; called by ControlDot on move event
+    void update_lb_endpoint(QPointF& newpos); //updates left-bottom endpoint; called by ControlDot on move event
+    void update_rt_endpoint(QPointF& newpos); //updates right-top endpoint; called by ControlDot on move event
 
     double get_right_pt_x();    //gets x-coordinate of right-top endpoint (units: pixels)
     double get_right_pt_y();    //gets y-coordinate of right-top endpoint (units: pixels)

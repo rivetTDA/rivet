@@ -101,9 +101,9 @@ void VisualizationWindow::paint_xi_support()
     ui->offsetSpinBox->setEnabled(true);
 
     //update offset extents
-    ///TODO: FIX THIS!!!
-    ui->offsetSpinBox->setMinimum(-1*x_grades.back());
-    ui->offsetSpinBox->setMaximum(y_grades.back());
+    ///TODO: maybe these extents should be updated dynamically, based on the slope of the slice line
+    ui->offsetSpinBox->setMinimum( std::min(-1*x_grades.back(), y_grades.front()) );
+    ui->offsetSpinBox->setMaximum( std::max(y_grades.back(), -1*x_grades.front()) );
 
     //update status
     line_selection_ready = true;

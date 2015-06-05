@@ -117,8 +117,6 @@ QVariant SliceLine::itemChange(GraphicsItemChange change, const QVariant &value)
             }
         }
 
-//        qDebug() << "moving line; right point: (" << right_point.x() << ", " << right_point.y() << ")";
-
         //update control dots
         left_dot->set_position(mapToScene(0, 0));
         right_dot->set_position(mapToScene(right_point));
@@ -132,18 +130,18 @@ QVariant SliceLine::itemChange(GraphicsItemChange change, const QVariant &value)
 }
 
 //updates left-bottom endpoint
-void SliceLine::update_lb_endpoint(QPointF &delta)
+void SliceLine::update_lb_endpoint(QPointF& newpos)
 {
     update_lock = true;
 
     //reposition the right endpoint
-    right_point = right_point - delta;
+    right_point = right_point - (newpos - pos());
 
     //move the line so that the left endpoint is correct
-    moveBy(delta.x(), delta.y());
+    setPos(newpos);
 
     //calculate new slope
-    if(right_point.x() <= 0)
+    if(right_point.x() <= 0.001)    //caution: floating-point comparison; if line is within 1/1000 pixel of vertical, then we consider it vertical
         vertical = true;
     else
     {
@@ -158,16 +156,16 @@ void SliceLine::update_lb_endpoint(QPointF &delta)
 }
 
 //updates right-top endpoint
-void SliceLine::update_rt_endpoint(QPointF &delta)
+void SliceLine::update_rt_endpoint(QPointF& newpos)
 {
     update_lock = true;
 
     //reposition the right endpoint where it should be
-    right_point = right_point + delta;
+    right_point = newpos - pos();
     update();
 
     //calculate new slope
-    if(right_point.x() <= 0)
+    if(right_point.x() <= 0.001)    //caution: floating-point comparison; if line is within 1/1000 pixel of vertical, then we consider it vertical
         vertical = true;
     else
     {
