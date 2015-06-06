@@ -65,6 +65,7 @@ private slots:
     void on_actionSave_persistence_diagram_as_image_triggered();
     void on_actionSave_line_selection_window_as_image_triggered();
     void on_actionSave_triggered();
+    void on_actionOpen_triggered();
 
 private:
     Ui::VisualizationWindow *ui;

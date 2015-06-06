@@ -44,6 +44,9 @@ VisualizationWindow::VisualizationWindow(QWidget *parent) :
     ui->pdView->scale(1,-1);
     ui->pdView->setRenderHint(QPainter::Antialiasing);
 
+    //connect signal from DataSelectDialog to start the computation
+    QObject::connect(&ds_dialog, &DataSelectDialog::dataSelected, this, &VisualizationWindow::start_computation);
+
     //connect signals from ComputationThread to slots in VisualizationWindow
     QObject::connect(&cthread, &ComputationThread::advanceProgressStage, &prog_dialog, &ProgressDialog::advanceToNextStage);
     QObject::connect(&cthread, &ComputationThread::setProgressMaximum, &prog_dialog, &ProgressDialog::setStageMaximum);
@@ -69,9 +72,11 @@ VisualizationWindow::~VisualizationWindow()
     delete ui;
 }
 
-//start the persistent homology computation in a new thread
+//slot that starts the persistent homology computation in a new thread
 void VisualizationWindow::start_computation()
 {
+    data_selected = true;
+
     //show the progress box
     prog_dialog.show();
     prog_dialog.activateWindow();
@@ -315,8 +320,6 @@ void VisualizationWindow::showEvent(QShowEvent* event)
     {
         QMainWindow::showEvent(event);
         ds_dialog.exec();               //show the DataSelectDialog box and blocks until the dialog is closed
-        start_computation();            //starts the persistence calculation
-        data_selected = true;
     }
 }
 
@@ -475,3 +478,15 @@ void VisualizationWindow::on_actionSave_triggered()
     }
     ///TODO: error handling?
 }//end on_actionSave_triggered()
+
+void VisualizationWindow::on_actionOpen_triggered()
+{
+    ///TODO: get user confirmation and clear the existing data structures
+
+    QMessageBox msgBox;
+    msgBox.setText("This feature is not implemented yet.");
+    msgBox.exec();
+
+
+    ///TODO: open the data select dialog box and load new data
+}//end on_actionOpen_triggered()

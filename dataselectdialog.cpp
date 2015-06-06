@@ -25,6 +25,11 @@ DataSelectDialog::~DataSelectDialog()
     delete ui;
 }
 
+void DataSelectDialog::closeEvent(QCloseEvent* event)
+{
+    event->accept();
+}
+
 void DataSelectDialog::on_computeButton_clicked()
 {
     params.dim = ui->homDimSpinBox->value();
@@ -32,6 +37,9 @@ void DataSelectDialog::on_computeButton_clicked()
     params.y_bins = ui->ybinSpinBox->value();
     params.x_label = ui->xlabelBox->text();
     params.y_label = ui->ylabelBox->text();
+
+    emit dataSelected();
+
     close();
 }
 

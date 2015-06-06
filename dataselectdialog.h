@@ -7,6 +7,7 @@ struct InputParameters;
 #include <QDialog>
 #include <QFile>
 #include <QString>
+#include <QtWidgets>
 
 
 namespace Ui {
@@ -20,6 +21,12 @@ class DataSelectDialog : public QDialog
 public:
     explicit DataSelectDialog(InputParameters& params, QWidget *parent = 0);
     ~DataSelectDialog();
+
+signals:
+    void dataSelected();
+
+protected:
+    void closeEvent(QCloseEvent* event);
 
 private slots:
     void on_computeButton_clicked();
@@ -35,7 +42,6 @@ private:
     InputParameters& params;
 
     void raw_data_file_selected(const QFile& file);
-
 };
 
 #endif // DATASELECTDIALOG_H

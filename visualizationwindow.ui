@@ -387,10 +387,10 @@
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actionOpen">
    <property name="enabled">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <property name="text">
-    <string>Open computed data...</string>
+    <string>Load new data...</string>
    </property>
   </action>
   <action name="actionSave">
