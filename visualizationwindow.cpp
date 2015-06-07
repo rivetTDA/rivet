@@ -21,7 +21,7 @@
 VisualizationWindow::VisualizationWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::VisualizationWindow),
-    verbosity(5), INFTY(std::numeric_limits<double>::infinity()),
+    verbosity(5), INFTY(std::numeric_limits<double>::infinity()), PI(3.14159265358979323846),
     data_selected(false),
     input_params(), config_params(),
     ds_dialog(input_params),
@@ -140,8 +140,9 @@ void VisualizationWindow::augmented_arrangement_ready(Mesh* arrangement)
     barcode->print();
 
     //draw the barcode
-    p_diagram.draw_dots(slice_diagram.get_zero(), barcode);
-    slice_diagram.draw_barcode(barcode, ui->barcodeCheckBox->isChecked());
+    double zero_coord = project_zero(angle_precise, offset_precise);
+    p_diagram.draw_dots(zero_coord, barcode);
+    slice_diagram.draw_barcode(barcode, zero_coord, ui->barcodeCheckBox->isChecked());
 
     //clean up
     delete barcode;
@@ -217,10 +218,11 @@ void VisualizationWindow::update_persistence_diagram()
 
         //TESTING
         barcode->print();
+        double zero_coord = project_zero(angle_precise, offset_precise);
 
         //draw the barcode
-        p_diagram.update_diagram(slice_diagram.get_slice_length(), slice_diagram.get_pd_scale(), slice_diagram.get_zero(), barcode);
-        slice_diagram.update_barcode(barcode, ui->barcodeCheckBox->isChecked());
+        p_diagram.update_diagram(slice_diagram.get_slice_length(), slice_diagram.get_pd_scale(), zero_coord, barcode);
+        slice_diagram.update_barcode(barcode, zero_coord, ui->barcodeCheckBox->isChecked());
 
         //clean up
         delete barcode;
@@ -281,7 +283,7 @@ double VisualizationWindow::project(xiPoint& pt, double angle, double offset)
             return INFTY;
     }
     //if we get here, then line is neither horizontal nor vertical
-    double radians = angle * 3.14159265/180;
+    double radians = angle*PI/180;
     double x = x_grades[pt.x];
     double y = y_grades[pt.y];
 
@@ -290,6 +292,27 @@ double VisualizationWindow::project(xiPoint& pt, double angle, double offset)
 
     return x/cos(radians) + offset*tan(radians); //project up
 }//end project()
+
+//computes the projection of the lower-left corner of the line-selection window onto the specified line
+/// TESTING AS REPLACEMENT FOR SliceDiagram::get_zero()
+double VisualizationWindow::project_zero(double angle, double offset)
+{
+    if(angle == 0)  //then line is horizontal
+        return x_grades[0];
+
+    if(angle == 90)    //then line is vertical
+        return y_grades[0];
+
+    //if we get here, then line is neither horizontal nor vertical
+    double radians = angle*PI/180;
+    double x = x_grades[0];
+    double y = y_grades[0];
+
+    if( y > x*tan(radians) + offset/cos(radians) )	//then point is above line
+        return y/sin(radians) - offset/tan(radians); //project right
+
+    return x/cos(radians) + offset*tan(radians); //project up
+}//end project_zero()
 
 void VisualizationWindow::set_line_parameters(double angle, double offset)
 {

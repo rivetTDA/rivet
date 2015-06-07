@@ -21,7 +21,7 @@ SliceDiagram::SliceDiagram(ConfigParameters* params, QObject* parent) :
     dot_left(), dot_right(), slice_line(),
     selected(-1), NOT_SELECTED(-1),
     padding(20),
-    epsilon(pow(2,-30))
+    epsilon(pow(2,-30)), PI(3.14159265358979323846)
 { }
 
 SliceDiagram::~SliceDiagram()
@@ -300,7 +300,7 @@ void SliceDiagram::update_line(double angle, double offset)
     {
         //update SliceDiagram data values
         line_vert = false;
-        double radians = angle*3.14159265/180;
+        double radians = angle*PI/180;
         line_slope = tan(radians);
 
         //update line_pos and the SliceLine
@@ -355,7 +355,7 @@ void SliceDiagram::update_window_controls()
         double y_intercept = (slice_line->pos().y()/scale_y + data_ymin - line_slope * (slice_line->pos().x()/scale_x + data_xmin) );   //data units
         offset = cos(angle) * y_intercept;
 
-        angle = angle*180/3.14159265;   //convert to degrees
+        angle = angle*180/PI;   //convert to degrees
     }
 
     //send updates
@@ -366,14 +366,12 @@ void SliceDiagram::update_window_controls()
 }//end update_window_controls()
 
 //draws the barcode parallel to the slice line
-void SliceDiagram::draw_barcode(Barcode *bc, bool show)
+void SliceDiagram::draw_barcode(Barcode *bc, double zero_coord, bool show)
 {
-    double zero_coord = get_zero();
-
-    //draw bars
     bars.resize(bc->size());
     unsigned num_bars = 1;
     unsigned index = 0;
+
     for(std::multiset<MultiBar>::iterator it = bc->begin(); it != bc->end(); ++it)
     {
         double start = it->birth - zero_coord;
@@ -397,7 +395,7 @@ void SliceDiagram::draw_barcode(Barcode *bc, bool show)
 
 //updates the barcode (e.g. after a change in the slice line)
 //TODO: would it be better to move bars, instead of deleting and re-creating them?
-void SliceDiagram::update_barcode(Barcode *bc, bool show)
+void SliceDiagram::update_barcode(Barcode *bc, double zero_coord, bool show)
 {
     //remove old bars
     selected = -1;    //remove any current selection
@@ -412,7 +410,7 @@ void SliceDiagram::update_barcode(Barcode *bc, bool show)
     }
 
     //draw new bars
-    draw_barcode(bc, show);
+    draw_barcode(bc, zero_coord, show);
 }
 
 //computes an endpoint of a bar in the barcode
@@ -590,14 +588,21 @@ double SliceDiagram::get_slice_length()
 //gets the number of pixels per unit, for the persistence diagram
 double SliceDiagram::get_pd_scale()
 {
-    double angle = atan(line_slope*scale_y/scale_x);    //line_slope is in data units, so first convert to pixel units
+    double angle = PI/2;   //default, for vertical line
+    if(!line_vert)
+        angle = atan(line_slope*scale_y/scale_x);    //line_slope is in data units, so first convert to pixel units
+
+    qDebug() << "        angle in pixel units:" << angle << "; x-scale:" << scale_x << "; y-scale:" << scale_y;
+
     double sine = sin(angle);
     double cosine = cos(angle);
     double denominator = sqrt(scale_x*scale_x*sine*sine + scale_y*scale_y*cosine*cosine);
     return scale_x*scale_y/denominator;
 }
 
-//gets the coordinate on the slice line which we consider "zero" for the persistence diagram        //TODO: IMPROVE!!!
+//gets the coordinate on the slice line which we consider "zero" for the persistence diagram
+///DEPRECATED -- REPLACED WITH CLEANER, MORE PRECISE FUNCTION VisualizationWindow::project_zero
+///  IF THIS FUNCTION IS DELETED, THEN SliceDiagram::epsilon IS ALSO NOT NEEDED
 double SliceDiagram::get_zero()
 {
     //handle vertical lines

@@ -73,6 +73,7 @@ private:
     //data items
     const int verbosity;
     const double INFTY;
+    const double PI;
 
     bool data_selected;               //false until user selects data, then true
     InputParameters input_params;     //parameters set by the user via the DataSelectDialog
@@ -107,6 +108,10 @@ private:
 
     Barcode* rescale_barcode_template(BarcodeTemplate &dbc, double angle, double offset);
     double project(xiPoint& pt, double angle, double offset);
+
+    //computes the projection of the lower-left corner of the line-selection window onto the specified line
+    // TESTING AS REPLACEMENT FOR SliceDiagram::get_zero()
+    double project_zero(double angle, double offset);
 
     //other items
     AboutMessageBox aboutBox;       //which is better for these dialog boxes

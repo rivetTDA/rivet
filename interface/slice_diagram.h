@@ -35,8 +35,8 @@ public:
     void update_line(double angle, double offset);  //updates the line, in response to a change in the controls in the VisualizationWindow
     void update_window_controls();   //computes new angle and offset in response to a change in the line, emits signal for the VisualizationWindow
 
-    void draw_barcode(Barcode* bc, bool show); //draws the barcode parallel to the slice line; "show" determines whether or not bars are visible
-    void update_barcode(Barcode* bc, bool show);  //updates the barcode (e.g. after a change in the slice line)
+    void draw_barcode(Barcode* bc, double zero_coord, bool show); //draws the barcode parallel to the slice line; "show" determines whether or not bars are visible
+    void update_barcode(Barcode* bc, double zero_coord, bool show);  //updates the barcode (e.g. after a change in the slice line)
 
     void select_bar(PersistenceBar* clicked);   //highlight the specified class of bars, and propagate to the persistence diagram
     void deselect_bar();                        //remove selection and propagate to the persistence diagram
@@ -116,6 +116,7 @@ private:
     const int padding;  //distance between xi support point area and control rectangle (on the top and right sides)
 
     const double epsilon;   //used for almost-equal comparisons
+    const double PI;   //used in get_pd_scale() when the slice line is vertical
 
   //private functions
     std::pair<double,double> compute_endpoint(double coordinate, unsigned offset);  //computes an endpoint of a bar in the barcode
