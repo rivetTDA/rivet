@@ -592,8 +592,6 @@ double SliceDiagram::get_pd_scale()
     if(!line_vert)
         angle = atan(line_slope*scale_y/scale_x);    //line_slope is in data units, so first convert to pixel units
 
-    qDebug() << "        angle in pixel units:" << angle << "; x-scale:" << scale_x << "; y-scale:" << scale_y;
-
     double sine = sin(angle);
     double cosine = cos(angle);
     double denominator = sqrt(scale_x*scale_x*sine*sine + scale_y*scale_y*cosine*cosine);

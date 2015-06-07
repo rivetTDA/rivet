@@ -720,7 +720,7 @@ BarcodeTemplate& Mesh::get_barcode_template(double degrees, double offset)
     double slope = tan(radians);
     double intercept = offset/cos(radians);
 
-    qDebug().nospace() << "  Line (deg, off) = (" << degrees << ", " << offset << ") transformed to (slope, int) = (" << slope << ", " << intercept << ")";
+//    qDebug().nospace() << "  Line (deg, off) = (" << degrees << ", " << offset << ") transformed to (slope, int) = (" << slope << ", " << intercept << ")";
 
     Face* cell = find_point(slope, -1*intercept);   //multiply by -1 for point-line duality
         ///TODO: REPLACE THIS WITH A SEEDED SEARCH
