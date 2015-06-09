@@ -183,6 +183,7 @@ void PersistenceDiagram::draw_dots(double zero, Barcode* bc)
 
             //create dot object
             PersistenceDot* dot = new PersistenceDot(this, config_params, birth, it->death, config_params->persistenceDotRadius*sqrt((double) (it->multiplicity)), num_dots);
+            dot->setToolTip(QString::number(it->multiplicity));
             addItem(dot);
             dots.push_back(dot);
             num_dots++;
@@ -206,6 +207,7 @@ void PersistenceDiagram::draw_dots(double zero, Barcode* bc)
 
             //create dot object
             PersistenceDot* dot = new PersistenceDot(this, config_params, birth, death, config_params->persistenceDotRadius*sqrt(it->multiplicity), num_dots);
+            dot->setToolTip(QString::number(it->multiplicity));
             addItem(dot);
             dots.push_back(dot);
             num_dots++;
