@@ -62,10 +62,11 @@ void DataSelectDialog::on_computeButton_clicked()
 void DataSelectDialog::on_openFileButton_clicked()
 {
     //prompt user to select a file
-    params.fileName = QFileDialog::getOpenFileName(this, tr("Open Data File"), "/ima/home/mlwright/Repos","All files (*.*);;Text files (*.txt)");
+    QString selected_file = QFileDialog::getOpenFileName(this, tr("Open Data File"), "/ima/home/mlwright/Repos","All files (*.*);;Text files (*.txt)");
 
-    if (!params.fileName.isNull())
+    if(!selected_file.isNull())
     {
+        params.fileName = selected_file;
         QFile infile(params.fileName);
         if(infile.open(QIODevice::ReadOnly | QIODevice::Text))
         {
