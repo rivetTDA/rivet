@@ -60,8 +60,8 @@ QVariant SliceLine::itemChange(GraphicsItemChange change, const QVariant &value)
 {
     if(change == QGraphicsItem::ItemPositionChange && !update_lock)
     {
-        QPointF mouse = value.toPointF();
-        QPointF newpos(mouse);
+        QPointF mouse = value.toPointF();   //un-adjusted position given by the mouse
+        QPointF newpos(mouse);              //adjusted position to make the line stay within bounds
 
         if(vertical)    //handle vertical lines
         {
@@ -79,36 +79,40 @@ QVariant SliceLine::itemChange(GraphicsItemChange change, const QVariant &value)
             right_point.setX(0);
             right_point.setY(box_ymax);
         }
-        else        //handle non-vertical lines:
+        else        //handle non-vertical lines
         {
             //set newpos to keep left endpoint of line along left/bottom edge of box
-            if( mouse.y() >= slope*mouse.x() )    //then left endpoint of line is along left edge of box
+            if( mouse.y() >= slope*mouse.x() || slope == 0 )    //then left endpoint of line is along left edge of box
             {
+                double y_pos = std::min( mouse.y() - slope*mouse.x(), data_ymax );
+                if(y_pos < 0)   //this can happen if slope is zero
+                    y_pos = 0;
                 newpos.setX(0);
-                newpos.setY( std::min( mouse.y() - slope*mouse.x(), data_ymax ) );
+                newpos.setY(y_pos);
             }
             else    //then left endpoint of line is along bottom edge of box
             {
+                double x_pos = std::min( mouse.x() - mouse.y()/slope, data_xmax );
+                newpos.setX(x_pos);
                 newpos.setY(0);
-                if(slope > 0)
-                    newpos.setX( std::min( mouse.x() - mouse.y()/slope, data_xmax ) );
-                else
-                    newpos.setX(0);
             }
 
             //adjust right endpoint of line to stay on right/top edge of box
-            if( slope*(box_xmax-mouse.x()) + mouse.y() >= box_ymax) //then right endpoint of line is along top of box
+            if( slope*(box_xmax - newpos.x()) + newpos.y() >= box_ymax ) //then right endpoint of line is along top of box
             {
                 right_point.setY(box_ymax - newpos.y());
                 if(slope > 0)
-                    right_point.setX( std::max( (box_ymax - mouse.y())/slope + mouse.x() - newpos.x(), 0.0 ) );
-                else
+                    right_point.setX( (box_ymax - newpos.y())/slope );
+                else    //can this ever happen?
                     right_point.setX(box_xmax);
             }
             else    //then right endpoint of line is along right edge of box
             {
                 right_point.setX( box_xmax - newpos.x() );
-                right_point.setY( std::max(slope*(box_xmax-mouse.x()) + mouse.y() - newpos.y(), 0.0 ) );
+                if(slope > 0)
+                    right_point.setY( slope*(box_xmax - newpos.x()) );
+                else
+                    right_point.setY(0);
             }
         }
 
@@ -203,8 +207,8 @@ void SliceLine::update_bounds(double data_width, double data_height, int padding
 {
     update_lock = true;
 
-    data_xmax = data_width;
-    data_ymax = data_height;
+    data_xmax = data_width + padding/2;
+    data_ymax = data_height + padding/2;
     box_xmax = data_width + padding;
     box_ymax = data_height + padding;
 
