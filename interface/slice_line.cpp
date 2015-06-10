@@ -92,8 +92,7 @@ QVariant SliceLine::itemChange(GraphicsItemChange change, const QVariant &value)
             }
             else    //then left endpoint of line is along bottom edge of box
             {
-                double x_pos = std::min( mouse.x() - mouse.y()/slope, data_xmax );
-                newpos.setX(x_pos);
+                newpos.setX( std::min( mouse.x() - mouse.y()/slope, data_xmax ) );
                 newpos.setY(0);
             }
 
