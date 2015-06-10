@@ -104,7 +104,7 @@ private:
     PersistenceDiagram p_diagram;   //subclass of QGraphicsScene, contains all of the graphics elements for the persistence diagram
     bool persistence_diagram_drawn;
 
-    void update_persistence_diagram();
+    void update_persistence_diagram();  //updates the persistence diagram and barcode after a change in the slice line
 
     Barcode* rescale_barcode_template(BarcodeTemplate &dbc, double angle, double offset);
     double project(xiPoint& pt, double angle, double offset);

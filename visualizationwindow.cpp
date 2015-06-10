@@ -208,6 +208,7 @@ void VisualizationWindow::on_xi1CheckBox_toggled(bool checked)
         slice_diagram.toggle_xi1_points(checked);
 }
 
+//updates the persistence diagram and barcode after a change in the slice line
 void VisualizationWindow::update_persistence_diagram()
 {
     if(persistence_diagram_drawn)
@@ -217,6 +218,7 @@ void VisualizationWindow::update_persistence_diagram()
         Barcode* barcode = rescale_barcode_template(dbc, angle_precise, offset_precise);
 
         //TESTING
+        dbc.print();
         barcode->print();
         double zero_coord = project_zero(angle_precise, offset_precise);
 
@@ -245,12 +247,14 @@ Barcode* VisualizationWindow::rescale_barcode_template(BarcodeTemplate& dbc, dou
         {
             if(it->end >= xi_support.size())    //then endpoint is at infinity
             {
+//                qDebug() << "   ===>>> (" << it->begin << ",inf) |---> (" << birth << ",inf)";
                 bc->add_bar(birth, INFTY, it->multiplicity);
             }
             else    //then bar is finite
             {
                 xiPoint end = xi_support[it->end];
                 double death = project(end, angle, offset);
+//                qDebug() << "   ===>>> (" << it->begin << "," << it->end << ") |---> (" << birth << "," << death << ")";
                 bc->add_bar(birth, death, it->multiplicity);
 
                 //testing
@@ -258,6 +262,8 @@ Barcode* VisualizationWindow::rescale_barcode_template(BarcodeTemplate& dbc, dou
                     qDebug() << "=====>>>>> ERROR: inverted bar (" << birth << "," << death << ")";
             }
         }
+//        else
+//            qDebug() << "   ===>>> (" << it->begin << "," << it->end << ") DOES NOT EXIST IN THIS PROJECTION";
     }
 
     return bc;

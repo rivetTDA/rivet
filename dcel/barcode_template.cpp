@@ -81,7 +81,7 @@ bool BarcodeTemplate::is_empty()
 void BarcodeTemplate::print()
 {
     QDebug qd = qDebug().nospace();
-    qd << "      ";
+    qd << "      barcode template: ";
     for(std::set<BarTemplate>::iterator it = bars.begin(); it != bars.end(); ++it)
     {
         BarTemplate b = *it;

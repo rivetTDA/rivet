@@ -98,7 +98,7 @@ class Mesh
         Halfedge* create_edge_left(Halfedge* edge, Anchor *anchor);    //creates the first pair of Halfedges in an anchor line, anchored on the left edge of the strip
 
         void find_path(std::vector<Halfedge *> &pathvec);   //finds a pseudo-optimal path through all 2-cells of the arrangement
-        void find_subpath(unsigned& cur_node, std::vector< std::set<unsigned> >& adj, std::vector<Halfedge*>& pathvec, bool return_path); //builds the path recursively
+        void find_subpath(unsigned cur_node, std::vector< std::set<unsigned> >& adj, std::vector<Halfedge*>& pathvec, bool return_path); //builds the path recursively
 
         void set_barcode_template(unsigned i, BarcodeTemplate& bt);    //stores (a copy of) the given barcode template in faces[i]; used for re-building the arrangement from a RIVET data file
 

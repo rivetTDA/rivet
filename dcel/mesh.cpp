@@ -646,7 +646,7 @@ void Mesh::find_path(std::vector<Halfedge*>& pathvec)
 
 //recursive method to build part of the path
 //return_path == TRUE iff we want the path to return to the current node after traversing all of its children
-void Mesh::find_subpath(unsigned& cur_node, std::vector< std::set<unsigned> >& adj, std::vector<Halfedge*>& pathvec, bool return_path)
+void Mesh::find_subpath(unsigned cur_node, std::vector< std::set<unsigned> >& adj, std::vector<Halfedge*>& pathvec, bool return_path)
 {
 
     while(!adj[cur_node].empty())   //cur_node still has children to traverse
