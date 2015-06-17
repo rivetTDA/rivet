@@ -20,9 +20,6 @@ public:
     explicit ConfigureDialog(ConfigParameters& params, QWidget *parent = 0);
     ~ConfigureDialog();
 
-signals:
-    void configuration_changed();
-
 private slots:
     void on_cancelButton_clicked();
     void on_okButton_clicked();

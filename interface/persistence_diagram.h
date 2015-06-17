@@ -30,10 +30,11 @@ public:
     void select_dot(PersistenceDot* clicked);   //highlight the specified dot, selected in the persistence diagram, and propagate to the slice diagram
     void deselect_dot();                        //remove selection and propagate to the slice diagram
 
+    void receive_parameter_change();                //updates the diagram after a change in the configuration parameters
+
 public slots:
     void receive_dot_selection(unsigned index);     //highlight the specified dot, which has been selected externally
     void receive_dot_deselection();                 //remove dot highlighting in response to external command
-    void receive_parameter_change();                //updates the diagram after a change in the configuration parameters
 
 signals:
     void persistence_dot_selected(unsigned index);

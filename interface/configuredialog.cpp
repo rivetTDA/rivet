@@ -83,9 +83,6 @@ void ConfigureDialog::on_okButton_clicked()
     config_params.bettiDotRadius = bettiRadius;
     config_params.persistenceDotRadius = perRadius;
 
-    //redraw the diagrams
-    emit configuration_changed();
-
     //close the dialog box
     close();
 }

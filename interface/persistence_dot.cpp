@@ -6,7 +6,8 @@
 #include <QDebug>
 
 
-PersistenceDot::PersistenceDot(PersistenceDiagram *p_diagram, ConfigParameters* params, double unscaled_x, double unscaled_y, double radius, unsigned index) :
+PersistenceDot::PersistenceDot(PersistenceDiagram *p_diagram, ConfigParameters* params, double unscaled_x, double unscaled_y, unsigned multiplicity, double radius, unsigned index) :
+    multiplicity(multiplicity),
     pdgm(p_diagram),
     config_params(params),
     x(unscaled_x), y(unscaled_y),
@@ -45,13 +46,13 @@ void PersistenceDot::paint(QPainter *painter, const QStyleOptionGraphicsItem * /
 void PersistenceDot::select()
 {
     pressed = true;
-    update();
+    update(boundingRect());
 }
 
 void PersistenceDot::deselect()
 {
     pressed = false;
-    update();
+    update(boundingRect());
 }
 
 //returns the unscaled x-coordinate associated with this dot
@@ -76,19 +77,19 @@ unsigned PersistenceDot::get_index()
 void PersistenceDot::set_radius(double r)
 {
     radius = r;
-    update();
+    update(boundingRect());
 }
 
 void PersistenceDot::hoverEnterEvent(QGraphicsSceneHoverEvent * /*unused*/)
 {
     hover = true;
-    update();
+    update(boundingRect());
 }
 
 void PersistenceDot::hoverLeaveEvent(QGraphicsSceneHoverEvent * /*unused*/)
 {
     hover = false;
-    update();
+    update(boundingRect());
 }
 
 void PersistenceDot::mousePressEvent(QGraphicsSceneMouseEvent * /*unused*/)
@@ -106,7 +107,7 @@ void PersistenceDot::mousePressEvent(QGraphicsSceneMouseEvent * /*unused*/)
         pdgm->select_dot(this);
     }
 
-    update();
+    update(boundingRect());
 //    QGraphicsItem::mousePressEvent(event);
 }
 

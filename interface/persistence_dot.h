@@ -12,7 +12,7 @@ class PersistenceDiagram;
 class PersistenceDot : public QGraphicsItem
 {
 public:
-    PersistenceDot(PersistenceDiagram* p_diagram, ConfigParameters* params, double unscaled_x, double unscaled_y, double radius, unsigned index);
+    PersistenceDot(PersistenceDiagram* p_diagram, ConfigParameters* params, double unscaled_x, double unscaled_y, unsigned multiplicity, double radius, unsigned index);
 
     QRectF boundingRect() const;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *);
@@ -25,6 +25,8 @@ public:
     unsigned get_index(); //returns the index of this dot (e.g. to send to the SliceDiagram for highlighting effects)
 
     void set_radius(double r);  //sets a new radius and re-draws the dot
+
+    const unsigned multiplicity;  //number of bars represented by this dot
 
 protected:
     void hoverEnterEvent(QGraphicsSceneHoverEvent *);

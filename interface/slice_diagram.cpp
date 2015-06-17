@@ -239,13 +239,13 @@ void SliceDiagram::redraw_dots()
     std::vector<QGraphicsEllipseItem*>::iterator it1 = xi1_dots.begin();
     for(unsigned i = 0; i < points.size(); i++)
     {
-        if(points[i].zero > 0)
+        if(points[i].zero > 0)  //then draw a xi_0 dot
         {
             double radius = round( config_params->bettiDotRadius*sqrt(points[i].zero) );
             (*it0)->setRect((points[i].x - data_xmin)*scale_x - radius, (points[i].y - data_ymin)*scale_y - radius, 2*radius, 2*radius);
             ++it0;
         }
-        if(points[i].one > 0)  //then draw a red disk
+        if(points[i].one > 0)  //then draw a xi_1 dot
         {
             double radius = round( config_params->bettiDotRadius*sqrt(points[i].one) );
             (*it1)->setRect((points[i].x - data_xmin)*scale_x - radius, (points[i].y - data_ymin)*scale_y - radius, 2*radius, 2*radius);
@@ -326,6 +326,9 @@ void SliceDiagram::update_line(double angle, double offset)
 //updates controls in the VisualizationWindow in response to a change in the line (also update SliceDiagram data values)
 void SliceDiagram::update_window_controls()
 {
+    //refresh the scene to avoid artifacts from old lines, which otherwise can occur when the user moves the line quickly
+    update(sceneRect());    //NOTE: this updates more items than necessary, but that is fine as long as it is fast
+
     //update SliceDiagram data values
     line_vert = slice_line->is_vertical();
     line_slope = slice_line->get_slope()*scale_x/scale_y;   //convert pixel units to data units

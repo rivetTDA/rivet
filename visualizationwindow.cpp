@@ -392,9 +392,16 @@ void VisualizationWindow::on_actionAbout_triggered()
 void VisualizationWindow::on_actionConfigure_triggered()
 {
     configBox = new ConfigureDialog(config_params, this);
-    QObject::connect(configBox, &ConfigureDialog::configuration_changed, &slice_diagram, &SliceDiagram::receive_parameter_change);
-    QObject::connect(configBox, &ConfigureDialog::configuration_changed, &p_diagram, &PersistenceDiagram::receive_parameter_change);
     configBox->exec();
+
+    if(line_selection_ready)
+    {
+        slice_diagram.receive_parameter_change();
+
+        if(persistence_diagram_drawn)
+            p_diagram.receive_parameter_change();
+    }
+
     delete configBox;
 }
 

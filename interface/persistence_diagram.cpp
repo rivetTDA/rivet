@@ -16,7 +16,9 @@ PersistenceDiagram::PersistenceDiagram(ConfigParameters* params, QObject* parent
     QGraphicsScene(parent),
     config_params(params),
     selected(NULL)
-{ }
+{
+    setItemIndexMethod(NoIndex);    //not sure why, but this seems to fix the dot update issue (#7 in the issue tracker)
+}
 
 //simply creates all objects; resize_diagram() handles positioning of objects
 void PersistenceDiagram::create_diagram(QString& filename, int dim)
@@ -182,7 +184,7 @@ void PersistenceDiagram::draw_dots(double zero, Barcode* bc)
             double birth = it->birth - zero_coord;
 
             //create dot object
-            PersistenceDot* dot = new PersistenceDot(this, config_params, birth, it->death, config_params->persistenceDotRadius*sqrt((double) (it->multiplicity)), num_dots);
+            PersistenceDot* dot = new PersistenceDot(this, config_params, birth, it->death, it->multiplicity, config_params->persistenceDotRadius*sqrt((double) (it->multiplicity)), num_dots);
             dot->setToolTip(QString::number(it->multiplicity));
             addItem(dot);
             dots.push_back(dot);
@@ -206,7 +208,7 @@ void PersistenceDiagram::draw_dots(double zero, Barcode* bc)
             double death = it->death - zero_coord;
 
             //create dot object
-            PersistenceDot* dot = new PersistenceDot(this, config_params, birth, death, config_params->persistenceDotRadius*sqrt(it->multiplicity), num_dots);
+            PersistenceDot* dot = new PersistenceDot(this, config_params, birth, death, it->multiplicity, config_params->persistenceDotRadius*sqrt(it->multiplicity), num_dots);
             dot->setToolTip(QString::number(it->multiplicity));
             addItem(dot);
             dots.push_back(dot);
@@ -244,7 +246,8 @@ void PersistenceDiagram::redraw_dots()
     for(std::vector<PersistenceDot*>::iterator it = dots.begin(); it != dots.end(); ++it)
     {
         PersistenceDot* dot = *it;
-        dot->set_radius(config_params->persistenceDotRadius);
+        dot->set_radius( config_params->persistenceDotRadius*sqrt(dot->multiplicity) );
+        //NOTE: PersistenceDot::set_radius() also calls QGraphicsItem::update() to redraw the dots
     }
 }//void redraw_dots()
 
