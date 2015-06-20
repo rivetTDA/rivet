@@ -1033,6 +1033,7 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
 //stores multigrade info for the persistence computations (data structures prepared with respect to a near-vertical line positioned to the right of all \xi support points)
 //  low is true for simplices of dimension hom_dim, false for simplices of dimension hom_dim+1
 //  simplex_order will be filled with a map : dim_index --> order_index for simplices of the given dimension, for use in creating the boundary matrices
+///TODO: MULTIGRADE LISTS OUGHT TO BE IN LEXICOGRAPHICAL ORDER AT THE BEGINNING OF THE PERSISTENCE-UPDATE PROCESS
 void PersistenceUpdater::store_multigrades(IndexMatrix* ind, bool low, std::vector<int>& simplex_order)
 {
     if(mesh->verbosity >= 6) { qDebug() << "STORING MULTIGRADES: low =" << low; }
