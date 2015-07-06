@@ -997,12 +997,12 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
         int step_time = steptimer.elapsed();
         if(swap_estimate < threshold)
         {
-//            qDebug() << "    --> this step took" << step_time << "milliseconds and involved" << swap_counter << "transpositions";
+            qDebug() << "    --> this step took" << step_time << "milliseconds and involved" << swap_counter << "transpositions";
             total_transpositions += swap_counter;
         }
         else
         {
-//            qDebug() << "    --> this step took" << step_time << "milliseconds -- reset matrices to avoid an estimated" << swap_estimate << "transpositions";
+            qDebug() << "    --> this step took" << step_time << "milliseconds -- reset matrices to avoid an estimated" << swap_estimate << "transpositions";
             number_of_resets++;
             total_time_for_resets += step_time;
         }
