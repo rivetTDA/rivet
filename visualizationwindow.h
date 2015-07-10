@@ -22,6 +22,8 @@ class xiPoint;
 
 #include <boost/multiprecision/cpp_int.hpp>
 typedef boost::multiprecision::cpp_rational exact;
+#include "boost/multi_array.hpp"
+typedef boost::multi_array<unsigned, 2> unsigned_matrix;
 
 #include <vector>
 
@@ -85,6 +87,7 @@ private:
     std::vector<double> y_grades;     //floating-point y-coordinates of the grades
     std::vector<exact> y_exact;       //exact (e.g. rational) values of all y-grades, sorted
     std::vector<xiPoint> xi_support;  //stores discrete coordinates of xi support points, with multiplicities
+    unsigned_matrix homology_dimensions;       //stores the dimension of homology at each grade
 
     double angle_precise;       //sufficiently-precise internal value of the slice-line angle in DEGREES, necessary because QDoubleSpinBox truncates this value
     double offset_precise;      //sufficiently-precise internal value of the slice-line offset, necessary because QDoubleSpinBox truncates this value

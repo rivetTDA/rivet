@@ -11,11 +11,11 @@
 #include <QTime>
 
 
-ComputationThread::ComputationThread(int verbosity, InputParameters& params, std::vector<double>& x_grades, std::vector<exact>& x_exact, std::vector<double>& y_grades, std::vector<exact>& y_exact, std::vector<xiPoint>& xi_support, QObject *parent) :
+ComputationThread::ComputationThread(int verbosity, InputParameters& params, std::vector<double>& x_grades, std::vector<exact>& x_exact, std::vector<double>& y_grades, std::vector<exact>& y_exact, std::vector<xiPoint>& xi_support, unsigned_matrix& homology_dimensions, QObject *parent) :
     QThread(parent),
     params(params),
     x_grades(x_grades), x_exact(x_exact), y_grades(y_grades), y_exact(y_exact),
-    xi_support(xi_support),
+    xi_support(xi_support), homology_dimensions(homology_dimensions),
     bifiltration(NULL),
     verbosity(verbosity)
 { }
@@ -81,7 +81,7 @@ void ComputationThread::run()
         MultiBetti mb(bifiltration, params.dim, verbosity);
 
         timer.start();
-        mb.compute_fast(this);
+        mb.compute_fast(this, homology_dimensions);
         qDebug() << "  --> xi_i computation took" << timer.elapsed() << "milliseconds";
 
         //store the xi support points

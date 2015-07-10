@@ -15,6 +15,8 @@ class Mesh;
 
 #include <boost/multiprecision/cpp_int.hpp>
 typedef boost::multiprecision::cpp_rational exact;
+#include "boost/multi_array.hpp"
+typedef boost::multi_array<unsigned, 2> unsigned_matrix;
 
 #include <vector>
 
@@ -26,7 +28,7 @@ class ComputationThread : public QThread
     friend class InputManager;  //so that we don't have to pass all of the data structures from ComputationThread to InputManager
 
     public:
-        ComputationThread(int verbosity, InputParameters& params, std::vector<double>& x_grades, std::vector<exact>& x_exact, std::vector<double>& y_grades, std::vector<exact>& y_exact, std::vector<xiPoint>& xi_support, QObject *parent = 0);
+        ComputationThread(int verbosity, InputParameters& params, std::vector<double>& x_grades, std::vector<exact>& x_exact, std::vector<double>& y_grades, std::vector<exact>& y_exact, std::vector<xiPoint>& xi_support, unsigned_matrix& homology_dimensions, QObject *parent = 0);
         ~ComputationThread();
 
         void compute();
@@ -50,6 +52,8 @@ class ComputationThread : public QThread
         std::vector<exact>& y_exact;
 
         std::vector<xiPoint>& xi_support;
+        unsigned_matrix& homology_dimensions;
+
         SimplexTree* bifiltration;
         Mesh* arrangement;
         std::vector<BarcodeTemplate> barcode_templates; //only used if we read a RIVET data file and need to store the barcode templates before the arrangement is ready

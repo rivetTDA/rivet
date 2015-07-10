@@ -25,10 +25,10 @@ VisualizationWindow::VisualizationWindow(QWidget *parent) :
     data_selected(false),
     input_params(), config_params(),
     ds_dialog(input_params),
-    x_grades(), x_exact(), y_grades(), y_exact(), xi_support(),
+    x_grades(), x_exact(), y_grades(), y_exact(), xi_support(), homology_dimensions(),
     angle_precise(0), offset_precise(0),
-    cthread(verbosity, input_params, x_grades, x_exact, y_grades, y_exact, xi_support),
-    line_selection_ready(false), slice_diagram(&config_params, this), slice_update_lock(false),
+    cthread(verbosity, input_params, x_grades, x_exact, y_grades, y_exact, xi_support, homology_dimensions),
+    line_selection_ready(false), slice_diagram(&config_params, x_grades, y_grades, this), slice_update_lock(false),
     p_diagram(&config_params, this), persistence_diagram_drawn(false)
 {
     ui->setupUi(this);
@@ -95,7 +95,7 @@ void VisualizationWindow::paint_xi_support()
         slice_diagram.add_point(x_grades[it->x], y_grades[it->y], it->zero, it->one);
 
     //create the SliceDiagram
-    slice_diagram.create_diagram(input_params.x_label, input_params.y_label, x_grades.front(), x_grades.back(), y_grades.front(), y_grades.back(), ui->normCoordCheckBox->isChecked());
+    slice_diagram.create_diagram(input_params.x_label, input_params.y_label, x_grades.front(), x_grades.back(), y_grades.front(), y_grades.back(), ui->normCoordCheckBox->isChecked(), homology_dimensions);
 
     //enable control items
     ui->xi0CheckBox->setEnabled(true);
