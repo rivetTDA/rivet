@@ -15,11 +15,12 @@
 #include <sstream>
 
 
-SliceDiagram::SliceDiagram(ConfigParameters* params, QObject* parent) :
+SliceDiagram::SliceDiagram(ConfigParameters* params, std::vector<double>& x_grades, std::vector<double>& y_grades, QObject* parent) :
     QGraphicsScene(parent),
     config_params(params),
     dot_left(), dot_right(), slice_line(),
     selected(-1), NOT_SELECTED(-1),
+    x_grades(x_grades), y_grades(y_grades),
     padding(20),
     epsilon(pow(2,-30)), PI(3.14159265358979323846)
 { }
@@ -36,7 +37,7 @@ void SliceDiagram::add_point(double x_coord, double y_coord, int xi0m, int xi1m)
 }
 
 //NOTE: create_diagram() simply creates all objects; resize_diagram() handles positioning of objects
-void SliceDiagram::create_diagram(QString x_text, QString y_text, double xmin, double xmax, double ymin, double ymax, bool norm_coords)
+void SliceDiagram::create_diagram(QString x_text, QString y_text, double xmin, double xmax, double ymin, double ymax, bool norm_coords, unsigned_matrix& hom_dims)
 {
     //set data-dependent parameters
     data_xmin = xmin;
@@ -53,11 +54,6 @@ void SliceDiagram::create_diagram(QString x_text, QString y_text, double xmin, d
     QBrush xi1brush(config_params->xi1color);
     QPen grayPen(Qt::gray);
     QPen highlighter(QBrush(config_params->persistenceHighlightColor), 6);
-
-    //draw bounds
-    gray_line_vertical = addLine(QLineF(), grayPen); //(diagram_width, 0, diagram_width, diagram_height, grayPen);
-    gray_line_horizontal = addLine(QLineF(), grayPen); //0, diagram_height, diagram_width, diagram_height, grayPen);
-    control_rect = addRect(QRectF(), blackPen);  //0,0,diagram_width + padding,diagram_height + padding, blackPen);
 
     //draw labels
     std::ostringstream s_xmin;
@@ -90,7 +86,33 @@ void SliceDiagram::create_diagram(QString x_text, QString y_text, double xmin, d
     y_label = addSimpleText(y_text);
     y_label->setTransform(QTransform(0, 1, 1, 0, 0, 0));
 
-    //draw points
+    //create rectangles for visualizing homology dimensions
+    //first, find max dimension
+    unsigned max_hom_dim = 0;
+    for(unsigned i = 0; i < x_grades.size(); i++)
+        for(unsigned j = 0; j < y_grades.size(); j++)
+            if(hom_dims[i][j] > max_hom_dim)
+                max_hom_dim = hom_dims[i][j];
+
+    //now create the rectangles
+    hom_dim_rects.resize(boost::extents[x_grades.size()][y_grades.size()]);
+    for(unsigned i = 0; i < x_grades.size(); i++)
+    {
+        for(unsigned j = 0; j < y_grades.size(); j++)
+        {
+            int gray_value = 255 - (hom_dims[i][j]*200)/max_hom_dim;
+            QGraphicsRectItem* item = addRect(QRectF(), Qt::NoPen, QBrush(QColor(gray_value, gray_value, gray_value)));
+            item->setToolTip(QString("dimension = ") + QString::number(hom_dims[i][j]));
+            hom_dim_rects[i][j] = item;
+        }
+    }
+
+    //draw bounds
+    gray_line_vertical = addLine(QLineF(), grayPen); //(diagram_width, 0, diagram_width, diagram_height, grayPen);
+    gray_line_horizontal = addLine(QLineF(), grayPen); //0, diagram_height, diagram_width, diagram_height, grayPen);
+    control_rect = addRect(QRectF(), blackPen);  //0,0,diagram_width + padding,diagram_height + padding, blackPen);
+
+    //create points
     for(unsigned i = 0; i < points.size(); i++)
     {
         if(points[i].zero > 0)  //then draw a xi0 disk
@@ -187,7 +209,10 @@ void SliceDiagram::resize_diagram()
     x_label->setPos((diagram_width - x_label->boundingRect().width())/2, -1*text_padding);
     y_label->setPos(-1*text_padding - y_label->boundingRect().height(), (diagram_height - y_label->boundingRect().width())/2);
 
-    //reposition points
+    //reposition dimension rectangles
+    redraw_dim_rects();
+
+    //reposition xi points
     redraw_dots();
 
     //reposition slice line
@@ -231,6 +256,28 @@ void SliceDiagram::resize_diagram()
     setSceneRect(scene_rect_x, scene_rect_y, scene_rect_w, scene_rect_h);
 }//end resize_diagram()
 
+//redraws the rectangles for the homology dimension visualization
+void SliceDiagram::redraw_dim_rects()
+{
+    for(unsigned i = 0; i < x_grades.size(); i++)
+    {
+        for(unsigned j = 0; j < y_grades.size(); j++)
+        {
+            double left = (x_grades[i] - data_xmin)*scale_x;
+            double right = diagram_width + padding;
+            if(i + 1 < x_grades.size())
+                right = (x_grades[i + 1] - data_xmin)*scale_x + 1;
+
+            double bottom = (y_grades[j] - data_ymin)*scale_y;
+            double top = diagram_height + padding;
+            if(j + 1 < y_grades.size())
+                top = (y_grades[j + 1] - data_ymin)*scale_y + 1;
+
+            hom_dim_rects[i][j]->setRect(left, bottom, right - left, top - bottom);
+        }
+    }
+}//end redraw_dim_rects()
+
 //redraws the support points of the multigraded Betti numbers
 void SliceDiagram::redraw_dots()
 {
@@ -264,6 +311,9 @@ void SliceDiagram::receive_parameter_change()
         (*it)->setBrush(xi0brush);
     for(std::vector<QGraphicsEllipseItem*>::iterator it = xi1_dots.begin(); it != xi1_dots.end(); ++it)
         (*it)->setBrush(xi1brush);
+
+    ///TODO: update homology dimension rectangles -- activate this after adding color selection to the options box
+    /// redraw_dim_rects();
 
     //update sizes of the xi dots
     redraw_dots();

@@ -28,16 +28,19 @@ MultiBetti::MultiBetti(SimplexTree* st, int dim, int v) :
 
 }//end constructor
 
-//computes xi_0 and xi_1 at all multi-indexes in a fast way
-void MultiBetti::compute_fast(ComputationThread* cthread)
+//computes xi_0 and xi_1 at all multi-indexes in a fast way; also stores dimension of homology at each grade in the supplied matrix
+void MultiBetti::compute_fast(ComputationThread* cthread, unsigned_matrix& hom_dims)
 {
+    //ensure hom_dims matrix is the correct size
+    hom_dims.resize(boost::extents[num_x_grades][num_y_grades]);
+
     // STEP 1: compute nullity
-    compute_nullities();
+    compute_nullities(hom_dims);
 
     cthread->setCurrentProgress(20);
 
     // STEP 2: compute rank
-    compute_ranks();
+    compute_ranks(hom_dims);
 
     cthread->setCurrentProgress(40);
 
@@ -52,10 +55,8 @@ void MultiBetti::compute_fast(ComputationThread* cthread)
 }//end compute_fast();
 
 //compute nullities, add to xi matrices
-//TODO: when testing finished, remove print statements
-//TODO: add to xi_1 matrix
 //NOTE: must run this before compute_rank() or compute_alpha()
-void MultiBetti::compute_nullities()
+void MultiBetti::compute_nullities(unsigned_matrix& hom_dims)
 {
     //get data
     MapMatrix* bdry1 = bifiltration->get_boundary_mx(dimension);
@@ -78,6 +79,7 @@ void MultiBetti::compute_nullities()
     //  record data
     nullities[0] = zero_cols;
     xi[0][0][0] = zero_cols;
+    hom_dims[0][0] = zero_cols;
     if(1 < num_x_grades)
         xi[1][0][1] += zero_cols;   //adding nullity(boundary B)
     if(1 < num_y_grades)
@@ -94,6 +96,7 @@ void MultiBetti::compute_nullities()
         //  record data
         nullities[y] = nullities[y-1] + zero_cols;
         xi[0][y][0] = nullities[y];
+        hom_dims[0][y] = nullities[y];
         if(1 < num_x_grades)
             xi[1][y][1] += nullities[y];   //adding nullity(boundary B)
         if(y+1 < num_y_grades)
@@ -115,6 +118,7 @@ void MultiBetti::compute_nullities()
         //  record data
         nullities[0] += zero_cols;
         xi[x][0][0] = nullities[0];
+        hom_dims[x][0] = nullities[0];
         if(x+1 < num_x_grades)
             xi[x+1][0][1] += nullities[0];   //adding nullity(boundary B)
         if(1 < num_y_grades)
@@ -131,6 +135,7 @@ void MultiBetti::compute_nullities()
             //  record data
             nullities[y] = nullities[y-1] + zero_cols;
             xi[x][y][0] = nullities[y];     //adding nullity(boundary D)
+            hom_dims[x][y] = nullities[y];
             if(x+1 < num_x_grades)
                 xi[x+1][y][1] += nullities[y];   //adding nullity(boundary B)
             if(y+1 < num_y_grades)
@@ -143,10 +148,8 @@ void MultiBetti::compute_nullities()
     delete ind1;
 }//end compute_nullities()
 
-//compute nullities, add to xi matrices
-//TODO: add to xi_1 matrix
-//TODO: when testing finished, remove print statements
-void MultiBetti::compute_ranks()
+//compute ranks, add to xi matrices
+void MultiBetti::compute_ranks(unsigned_matrix& hom_dims)
 {
     //get data
     MapMatrix* bdry2 = bifiltration->get_boundary_mx(dimension + 1);
@@ -169,6 +172,7 @@ void MultiBetti::compute_ranks()
     //  record data
     ranks[0] = ind2->get(0,0) + 1 - zero_cols;       //really: (ind2->get(0,0) - (-1)) - zero_cols
     xi[0][0][1] += ranks[0];
+    hom_dims[0][0] -= ranks[0];
 
     //handle the rest of the first column
     for(int y=1; y<num_y_grades; y++)
@@ -181,6 +185,7 @@ void MultiBetti::compute_ranks()
         //  record data
         ranks[y] = ranks[y-1] + (ind2->get(y,0) - ind2->get(y-1,num_x_grades-1) - zero_cols);
         xi[0][y][1] += ranks[y];
+        hom_dims[0][y] -= ranks[y];
     }
 
     //loop through columns after first column
@@ -198,6 +203,7 @@ void MultiBetti::compute_ranks()
         //  record data
         ranks[0] += (ind2->get(0,x) - ind2->get(0,x-1)) - zero_cols;
         xi[x][0][1] += ranks[0];
+        hom_dims[x][0] -= ranks[0];
 
         //now loop through rows after first row
         for(int y=1; y<num_y_grades; y++)
@@ -210,6 +216,7 @@ void MultiBetti::compute_ranks()
             //  record data
             ranks[y] = ranks[y-1] + (ind2->get(y,x) - ind2->get(y-1,num_x_grades-1)) - zero_cols;
             xi[x][y][1] += ranks[y];    //adding rank(boundary D)
+            hom_dims[x][y] -= ranks[y];
         }
     }
 

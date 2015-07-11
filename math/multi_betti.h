@@ -19,6 +19,7 @@ class SimplexTree;
 class xiPoint;
 
 #include <boost/multi_array.hpp>
+typedef boost::multi_array<unsigned, 2> unsigned_matrix;
 
 #include <vector>
 typedef std::vector<int> Vector;
@@ -29,11 +30,12 @@ class MultiBetti
 	public:
         MultiBetti(SimplexTree* st, int dim, int v);		//constructor sets up the data structure but doesn't compute the multi-graded Betti numbers xi_0 and xi_1
 		
-        void compute_fast(ComputationThread *cthread);		//computes xi_0 and xi_1 at all multi-grades in a fast way
+        void compute_fast(ComputationThread *cthread, unsigned_matrix& hom_dims);
+            //computes xi_0 and xi_1 at all multi-grades in a fast way; also stores dimension of homology at each grade in the supplied matrix
 		
         //functions to compute xi_0 and xi_1    ----later, make these private and access them via compute_fast();
-        void compute_nullities();
-        void compute_ranks();
+        void compute_nullities(unsigned_matrix& hom_dims);
+        void compute_ranks(unsigned_matrix& hom_dims);
         void compute_alpha();
         void compute_eta();
 

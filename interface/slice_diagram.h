@@ -11,6 +11,10 @@ class SliceLine;
 #include <QGraphicsScene>
 #include <QtWidgets>
 
+#include "boost/multi_array.hpp"
+typedef boost::multi_array<unsigned, 2> unsigned_matrix;
+typedef boost::multi_array<QGraphicsRectItem*, 2> QGRI_matrix;
+
 #include <list>
 #include <utility>  //for std::pair
 #include <vector>
@@ -23,14 +27,15 @@ class SliceDiagram : public QGraphicsScene
     Q_OBJECT
 
 public:
-    SliceDiagram(ConfigParameters* params, QObject* parent = 0);
+    SliceDiagram(ConfigParameters* params, std::vector<double>& x_grades, std::vector<double>& y_grades, QObject* parent = 0);
     ~SliceDiagram();
 
     void add_point(double x_coord, double y_coord, int xi0m, int xi1m); //receives an xi support point, which will be drawn when create_diagram() is called
 
-    void create_diagram(QString x_text, QString y_text, double xmin, double xmax, double ymin, double ymax, bool norm_coords);  //simply creates all objects; resize_diagram() handles positioning of objects
-    void resize_diagram();  //resizes diagram to fill the QGraphicsView
-    void redraw_dots();     //redraws the support points of the multigraded Betti numbers
+    void create_diagram(QString x_text, QString y_text, double xmin, double xmax, double ymin, double ymax, bool norm_coords, unsigned_matrix& hom_dims);  //simply creates all objects; resize_diagram() handles positioning of objects
+    void resize_diagram();   //resizes diagram to fill the QGraphicsView
+    void redraw_dim_rects(); //redraws the rectangles for the homology dimension visualization
+    void redraw_dots();      //redraws the support points of the multigraded Betti numbers
 
     void update_line(double angle, double offset);  //updates the line, in response to a change in the controls in the VisualizationWindow
     void update_window_controls();   //computes new angle and offset in response to a change in the line, emits signal for the VisualizationWindow
@@ -88,6 +93,8 @@ private:
     std::vector<QGraphicsEllipseItem*> xi1_dots;    //pointers to all xi1 dots
     std::vector< std::list<PersistenceBar*> > bars; //pointers to all bars (in the barcode) -- each element of the vector stores a list of one or more identical bars that correspond to a single dot in the persistence diagram
 
+    QGRI_matrix hom_dim_rects;     //rectangles that plot the homology dimensions <--NEW
+
     unsigned selected;              //index of the class of selected bars
     const unsigned NOT_SELECTED;    //set to max_unsigned
 
@@ -102,7 +109,10 @@ private:
     };
     std::vector<xiFloatingPoint> points;    //point data to be drawn in the slice area
 
+    const std::vector<double>& x_grades;    //NEW -- for dimension visualization
+    const std::vector<double>& y_grades;    // "
 
+    ///TODO: the next four values can be obtained from x_grades and y_grades
     double data_xmin, data_xmax, data_ymin, data_ymax;  //min and max coordinates of the data
     double data_infty;      //data position that is outside of the window, used for drawing bars that extend to infinity
 
