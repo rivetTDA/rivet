@@ -135,9 +135,10 @@ xiSupportMatrix::~xiSupportMatrix()
 //}//end fill()
 
 //stores xi support points in the xiSupportMatrix
-// precondition xi_pts contains the support points in lexicographical order
+// precondition: xi_pts contains the support points in lexicographical order
 void xiSupportMatrix::fill(std::vector<xiPoint>& xi_pts)
 {
+    //store xi support points
     for(unsigned i = 0; i < xi_pts.size(); i++)
     {
         unsigned x = xi_pts[i].x;
@@ -149,6 +150,42 @@ void xiSupportMatrix::fill(std::vector<xiPoint>& xi_pts)
     }
 }//end fill()
 
+//stores points of LUB^{e_0}, where e_0 is the cell corresponding to vertical lines to the right of all support points -- fix for major bug in July 2015
+///  NOTE: DOES NOT UPDATE THE down POINTERS OF xiMatrixEntrys, BUT THIS SHOULD BE OK
+///        LUB^{e_0} points that are not xi support points should be removed before the persistence update process!
+void xiSupportMatrix::store_LUBe0_points()
+{
+    xiMatrixEntry* rightmost = rows[0];
+    for(unsigned i = 1; i < rows.size(); i++)
+    {
+        if(rightmost == NULL)    //then row i is the lowest nonempty row
+            rightmost = rows[i];
+        else if(rows[i] != NULL)   //then see if we need to store a LUB point in row i
+        {
+            if(rows[i]->x < rightmost->x)
+            {
+                xiMatrixEntry* lub_entry = new xiMatrixEntry(i, rightmost->x, -1, NULL, rows[i]);
+                rows[i] = lub_entry;
+            }
+            else if(rows[i]->x > rightmost->x)
+                rightmost = rows[i];
+        }
+    }
+}//end store_LUBe0_points()
+
+//removes points of LUB^{e_0} that are not xi support points
+void xiSupportMatrix::remove_LUBe0_points()
+{
+    for(unsigned i = 1; i < rows.size(); i++)   //all entries in row 0 must be xi support points
+    {
+        if(rows[i] != NULL && rows[i]->index == -1)    //then rightmost entry in row i is a LUB^{e_0} point but not a xi support point
+        {
+            xiMatrixEntry* entry = rows[i];
+            rows[i] = entry->left;
+            delete entry;
+        }
+    }
+}//end remove_LUBe0_points()
 
 //gets a pointer to the rightmost entry in row r; returns NULL if row r is empty
 xiMatrixEntry* xiSupportMatrix::get_row(unsigned r)

@@ -119,8 +119,8 @@ void Mesh::build_arrangement(MultiBetti& mb, std::vector<xiPoint>& xi_pts, Compu
     cthread->setProgressMaximum(path.size());
 
     //finally, we can traverse the path, computing and storing a barcode template in each 2-cell
-    //updater.store_barcodes(path);
-    //updater.store_barcodes_lazy(path);
+    //updater.store_barcodes(path); -- THIS FUNCTION HAS NOT BEEN UPDATED FOR JULY 2015 BUG FIX
+    //updater.store_barcodes_lazy(path); -- THIS FUNCTION HAS NOT BEEN UPDATED FOR JULY 2015 BUG FIX
     updater.store_barcodes_with_reset(path, cthread);
 
 }//end build_arrangement()

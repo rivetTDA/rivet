@@ -38,8 +38,8 @@ class PersistenceUpdater
 
         //functions to compute and store barcode templates in each 2-cell of the mesh
         //there are four options here, and it isn't yet clear which is best
-        void store_barcodes(std::vector<Halfedge *> &path);             //standard algorithm with non-lazy swaps
-        void store_barcodes_lazy(std::vector<Halfedge*>& path);         //uses lazy updates and unsorted "bins" for each row and column
+// MUST BE UPDATED AFTRE JULY 2015 BUG FIX:       void store_barcodes(std::vector<Halfedge *> &path);             //standard algorithm with non-lazy swaps
+// MUST BE UPDATED AFTRE JULY 2015 BUG FIX:       void store_barcodes_lazy(std::vector<Halfedge*>& path);         //uses lazy updates and unsorted "bins" for each row and column
         void store_barcodes_with_reset(std::vector<Halfedge*>& path, ComputationThread* cthread);   //hybrid approach -- for expensive crossings, resets the matrices and does a standard persistence calculation
         void store_barcodes_quicksort(std::vector<Halfedge*>& path);    //hybrid approach -- for expensive crossings, rearranges columns via quicksort and fixes the RU-decomposition globally
 
@@ -68,8 +68,12 @@ class PersistenceUpdater
 
         //stores multigrade info for the persistence computations (data structures prepared with respect to a near-vertical line positioned to the right of all \xi support points)
         //  low is true for simplices of dimension hom_dim, false for simplices of dimension hom_dim+1
+        void store_multigrades(IndexMatrix* ind, bool low);
+
+        //finds the proper order of simplexes for the persistence calculation (with respect to a near-vertical line positioned to the right of all \xi support points)
+        //  low is true for simplices of dimension hom_dim, false for simplices of dimension hom_dim+1
         //  simplex_order will be filled with a map : dim_index --> order_index for simplices of the given dimension
-        void store_multigrades(IndexMatrix* ind, bool low, std::vector<int>& simplex_order);
+        void build_simplex_order(IndexMatrix* ind, bool low, std::vector<int>& simplex_order);
 
         //moves columns from an equivalence class given by xiMatrixEntry* first to their new positions after or among the columns in the equivalence class given by xiMatrixEntry* second
         //  the boolean argument indicates whether an anchor is being crossed from below (or from above)

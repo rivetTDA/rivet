@@ -109,6 +109,7 @@ void PersistenceUpdater::find_anchors()
     }//end row loop
 }//end find_anchors()
 
+/* THE FOLLOWING FUNCTIONS MUST BE UPDATED AFTRE JULY 2015 BUG FIX:
 
 //computes and stores a barcode template in each 2-cell of mesh
 void PersistenceUpdater::store_barcodes(std::vector<Halfedge*>& path)
@@ -760,6 +761,8 @@ void PersistenceUpdater::store_barcodes_lazy(std::vector<Halfedge*>& path)
 
 }//end store_barcodes_lazy()
 
+*/
+
 //computes and stores a barcode template in each 2-cell of mesh
 //resets the matrices and does a standard persistence calculation for expensive crossings
 void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path, ComputationThread* cthread)
@@ -770,17 +773,28 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
 
     timer.start();
 
-    //get multi-grade data in each dimension
+    //store LUB^{e_0} points in xiSupportMatrix -- BUG FIX July 2015
+    xi_matrix.store_LUBe0_points();
+
+    //initialize the map from simplex grades to xi support points
     if(mesh->verbosity >= 6) { qDebug() << "  Mapping low simplices:"; }
     IndexMatrix* ind_low = bifiltration->get_index_mx(dim);    //can we improve this with something more efficient than IndexMatrix?
-    std::vector<int> low_simplex_order;     //this will be a map : dim_index --> order_index for dim-simplices
-    store_multigrades(ind_low, true, low_simplex_order);
-    delete ind_low;
+    store_multigrades(ind_low, true);
 
     if(mesh->verbosity >= 6) { qDebug() << "  Mapping high simplices:"; }
     IndexMatrix* ind_high = bifiltration->get_index_mx(dim + 1);    //again, could be improved?
+    store_multigrades(ind_high, false);
+
+    //BUG FIX July 2015 -- now we can remove LUB^{e^0} points that are not xi support points from xiSupportMatrix
+    xi_matrix.remove_LUBe0_points();
+
+    //get the proper simplex ordering
+    std::vector<int> low_simplex_order;     //this will be a map : dim_index --> order_index for dim-simplices
+    build_simplex_order(ind_low, true, low_simplex_order);
+    delete ind_low;
+
     std::vector<int> high_simplex_order;     //this will be a map : dim_index --> order_index for (dim+1)-simplices
-    store_multigrades(ind_high, false, high_simplex_order);
+    build_simplex_order(ind_high, false, high_simplex_order);
     delete ind_high;
 
     //get boundary matrices (R) and identity matrices (U) for RU-decomposition
@@ -1032,13 +1046,9 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
 
 //stores multigrade info for the persistence computations (data structures prepared with respect to a near-vertical line positioned to the right of all \xi support points)
 //  low is true for simplices of dimension hom_dim, false for simplices of dimension hom_dim+1
-//  simplex_order will be filled with a map : dim_index --> order_index for simplices of the given dimension, for use in creating the boundary matrices
-///TODO: MULTIGRADE LISTS OUGHT TO BE IN LEXICOGRAPHICAL ORDER AT THE BEGINNING OF THE PERSISTENCE-UPDATE PROCESS
-void PersistenceUpdater::store_multigrades(IndexMatrix* ind, bool low, std::vector<int>& simplex_order)
+void PersistenceUpdater::store_multigrades(IndexMatrix* ind, bool low)
 {
     if(mesh->verbosity >= 6) { qDebug() << "STORING MULTIGRADES: low =" << low; }
-
-  //STEP 1: store multigrade data in the xiSupportMatrix
 
     //initialize linked list to track the "frontier"
     typedef std::list<xiMatrixEntry*> Frontier;
@@ -1102,18 +1112,30 @@ void PersistenceUpdater::store_multigrades(IndexMatrix* ind, bool low, std::vect
                     //back up one position, to the last element of the frontier such that (*it)->x >= x
                     --it;
 
-                    //now map the multigrade to the element given by the iterator
-                    (*it)->add_multigrade(x, y, last_col - first_col, last_col, low);
+                    //BUG FIX July 2015 -- if the iterator points to a LUB^{e^0} point that is not an xi_support point, then take the next xi support point to the left
+                    xiMatrixEntry* map_to = *it;
+                    if(map_to->index == -1) //then the entry is not a xi support point
+                    {
+                        map_to = map_to->left;
+                        qDebug() << "   --adjusting lift map for simplices at (" << x << "," << y << ")";
+                    }
 
-                    if(mesh->verbosity >= 6) { qDebug() << "    simplices at (" << x << "," << y << "), in columns" << (first_col + 1) << "to" << last_col << ", mapped to xi support point (" << (*it)->x << ", " << (*it)->y << ")"; }
+                    //now map the multigrade to the xi support entry
+                    map_to->add_multigrade(x, y, last_col - first_col, last_col, low);
+
+                    if(mesh->verbosity >= 6) { qDebug() << "    simplices at (" << x << "," << y << "), in columns" << (first_col + 1) << "to" << last_col << ", mapped to xi support point (" << map_to->x << ", " << map_to->y << ")"; }
                 }
             }
         }//end x loop
     }//end y loop
+}//end store_multigrades()
 
-
-  //STEP 2: update index data for each row in the xiSupportMatrix AND create a map : dim_index --> order_index for all simplices
-
+//finds the proper order of simplexes for the persistence calculation (with respect to a near-vertical line positioned to the right of all \xi support points)
+//  low is true for simplices of dimension hom_dim, false for simplices of dimension hom_dim+1
+//  simplex_order will be filled with a map : dim_index --> order_index for simplices of the given dimension
+///TODO: MULTIGRADE LISTS OUGHT TO BE IN LEXICOGRAPHICAL ORDER AT THE BEGINNING OF THE PERSISTENCE-UPDATE PROCESS
+void PersistenceUpdater::build_simplex_order(IndexMatrix* ind, bool low, std::vector<int>& simplex_order)
+{
     //we will create the map starting by identifying the order index of each simplex, starting with the last simplex
     int o_index = ind->last();
     simplex_order.resize(o_index + 1);
@@ -1200,11 +1222,8 @@ void PersistenceUpdater::store_multigrades(IndexMatrix* ind, bool low, std::vect
             else
                 xi_matrix.get_row_bin(row)->high_index = cur_row->high_index - cur_row->high_class_size;
         }
-
     }//end for(row > 0)
-
-}//end store_multigrades()
-
+}//end build_simplex)order()
 
 //moves columns from an equivalence class given by xiMatrixEntry* first to their new positions after or among the columns in the equivalence class given by xiMatrixEntry* second
 // the boolean argument indicates whether an anchor is being crossed from below (or from above)
