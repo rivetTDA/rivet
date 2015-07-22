@@ -118,13 +118,19 @@ void SliceDiagram::create_diagram(QString x_text, QString y_text, double xmin, d
         if(points[i].zero > 0)  //then draw a xi0 disk
         {
             QGraphicsEllipseItem* item = addEllipse(QRectF(), Qt::NoPen, xi0brush);
-            item->setToolTip(QString("ξ₀(") + QString::number(points[i].x) + ", " + QString::number(points[i].y) +") = " + QString::number(points[i].zero));
+            if(points[i].one == 0)
+                item->setToolTip(QString("ξ₀(") + QString::number(points[i].x) + ", " + QString::number(points[i].y) +") = " + QString::number(points[i].zero));
+            else
+                item->setToolTip(QString("ξ₀(") + QString::number(points[i].x) + ", " + QString::number(points[i].y) +") = " + QString::number(points[i].zero) + QString("; ξ₁(") + QString::number(points[i].x) + ", " + QString::number(points[i].y) +") = " + QString::number(points[i].one));
             xi0_dots.push_back(item);
         }
         if(points[i].one > 0)  //then draw a xi1 disk
         {
             QGraphicsEllipseItem* item = addEllipse(QRectF(), Qt::NoPen, xi1brush);
-            item->setToolTip(QString("ξ₁(") + QString::number(points[i].x) + ", " + QString::number(points[i].y) +") = " + QString::number(points[i].one));
+            if(points[i].zero == 0)
+                item->setToolTip(QString("ξ₁(") + QString::number(points[i].x) + ", " + QString::number(points[i].y) +") = " + QString::number(points[i].one));
+            else
+                item->setToolTip(QString("ξ₀(") + QString::number(points[i].x) + ", " + QString::number(points[i].y) +") = " + QString::number(points[i].zero) + QString("; ξ₁(") + QString::number(points[i].x) + ", " + QString::number(points[i].y) +") = " + QString::number(points[i].one));
             xi1_dots.push_back(item);
         }
     }
