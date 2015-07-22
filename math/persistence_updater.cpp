@@ -109,660 +109,6 @@ void PersistenceUpdater::find_anchors()
     }//end row loop
 }//end find_anchors()
 
-/* THE FOLLOWING FUNCTIONS MUST BE UPDATED AFTRE JULY 2015 BUG FIX:
-
-//computes and stores a barcode template in each 2-cell of mesh
-void PersistenceUpdater::store_barcodes(std::vector<Halfedge*>& path)
-{
-    QTime timer;    //for timing the computations
-
-    // PART 1: GET THE BOUNDARY MATRICES WITH PROPER SIMPLEX ORDERING
-
-    timer.start();
-
-    //get multi-grade data in each dimension
-    if(mesh->verbosity >= 6) { qDebug() << "  Mapping low simplices:"; }
-    IndexMatrix* ind_low = bifiltration->get_index_mx(dim);    //can we improve this with something more efficient than IndexMatrix?
-    std::vector<int> low_simplex_order;     //this will be a map : dim_index --> order_index for dim-simplices
-    store_multigrades(ind_low, true, low_simplex_order);
-    delete ind_low;
-
-    if(mesh->verbosity >= 6) { qDebug() << "  Mapping high simplices:"; }
-    IndexMatrix* ind_high = bifiltration->get_index_mx(dim + 1);    //again, could be improved?
-    std::vector<int> high_simplex_order;     //this will be a map : dim_index --> order_index for (dim+1)-simplices
-    store_multigrades(ind_high, false, high_simplex_order);
-    delete ind_high;
-
-    //get boundary matrices (R) and identity matrices (U) for RU-decomposition
-    MapMatrix_Perm* R_low = bifiltration->get_boundary_mx(low_simplex_order);
-    MapMatrix_Perm* R_high = bifiltration->get_boundary_mx(low_simplex_order, high_simplex_order);
-
-    //print runtime data
-    qDebug() << "  --> computing initial order on simplices and building the boundary matrices took" << timer.elapsed() << "milliseconds";
-
-/// TESTING ONLY - CHECK THAT D=RU
-    if(testing)
-    {
-//        qDebug() << "  Boundary matrix for low simplices:\n";
-//        R_low->print();
-//        qDebug() << "  Boundary matrix for high simplices:\n";
-//        R_high->print();
-
-        D_low = bifiltration->get_boundary_mx(low_simplex_order);
-        D_high = bifiltration->get_boundary_mx(low_simplex_order, high_simplex_order);
-    }
-
-
-  // PART 2: INITIAL PERSISTENCE COMPUTATION (RU-decomposition)
-
-    timer.start();
-
-    MapMatrix_RowPriority_Perm* U_low = R_low->decompose_RU();
-    MapMatrix_RowPriority_Perm* U_high = R_high->decompose_RU();
-
-    qDebug() << "  --> computing the RU decomposition took" << timer.elapsed() << "milliseconds";
-
-    //store the barcode template in the first cell
-    Face* first_cell = mesh->topleft->get_twin()->get_face();
-    store_barcode_template(first_cell, R_low, R_high);
-
-    if(testing)
-    {
-        qDebug() << "Initial persistence computation in cell " << mesh->FID(first_cell);
-//        qDebug() << "  Reduced matrix for low simplices:";
-//        R_low->print();
-//        R_low->check_lows();
-//        qDebug() << "  Matrix U for low simplices:";
-//        U_low->print();
-//        qDebug() << "  Reduced matrix for high simplices:";
-//        R_high->print();
-//        R_high->check_lows();
-//        qDebug() << "  Matrix U for high simplices:";
-//        U_high->print();
-//        qDebug() << "  Low partition: ";
-//        for(std::map<unsigned, xiMatrixEntry*>::iterator it = partition_low.begin(); it != partition_low.end(); ++it)
-//            qDebug() << "     " << it->first << "->" << it->second->index << ", ";
-//        qDebug() << "  High partition: ";
-//        for(std::map<unsigned, xiMatrixEntry*>::iterator it = partition_high.begin(); it != partition_high.end(); ++it)
-//            qDebug() << "     " << it->first << "->" << it->second->index << ", ";
-//        qDebug() << "  Barcode Template: ";
-//        first_cell->get_barcode().print();
-    }
-
-
-  // PART 3: TRAVERSE THE PATH AND DO VINEYARD UPDATES
-
-    qDebug() << "TRAVERSING THE PATH: path has" << path.size() << "steps";
-    timer.start();
-
-    ///TEMPORARY: data structures for analyzing the computation
-    unsigned long total_transpositions = 0;
-//    std::vector<unsigned long> swap_counters(path.size(),0);
-//    std::vector<int> crossing_times(path.size(),0);
-    unsigned long max_swaps = 0;
-    int max_time = 0;
-
-    //traverse the path
-    QTime steptimer;
-    for(unsigned i=0; i<path.size(); i++)
-    {
-        steptimer.start();          //time update at each step of the path
-        unsigned long swap_counter = 0;   //counts number of transpositions at each step
-
-        //determine which anchor is represented by this edge
-        Anchor* cur_anchor = (path[i])->get_anchor();
-
-        qDebug() << "  step" << i << "of path: crossing anchor at ("<< cur_anchor->get_x() << "," << cur_anchor->get_y() << ") into cell" << mesh->FID((path[i])->get_face());
-
-        //get equivalence classes for this anchor
-        xiMatrixEntry* down = cur_anchor->get_down();
-        xiMatrixEntry* left = cur_anchor->get_left();
-
-        //if this is a strict anchor, then swap simplices
-        if(left != NULL) //then this is a strict anchor and some simplices swap
-        {
-            xiMatrixEntry* at_anchor = NULL;   //remains NULL iff this anchor is not supported
-
-            if(down == NULL)    //then this is also a supported anchor
-            {
-                at_anchor = left;
-                down = left->down;
-                left = left->left;
-            }//now down and left are correct (and should not be NULL)
-
-            if(cur_anchor->is_above()) //then anchor is crossed from below to above
-            {
-                if(mesh->verbosity >= 9) { qDebug() << " == strict anchor crossed below to above =="; }
-
-                //pre-move updates to equivalence class info
-                if(at_anchor != NULL)  //this anchor is supported
-                {
-                    left->low_index = at_anchor->low_index - at_anchor->low_count;                //necessary since low_index, low_class_size,
-                    left->low_class_size = at_anchor->low_class_size - at_anchor->low_count;      //  high_index, and high_class_size
-                    left->high_index = at_anchor->high_index - at_anchor->high_count;             //  are only reliable for the head
-                    left->high_class_size = at_anchor->high_class_size - at_anchor->high_count;   //  of each equivalence class
-                    remove_partition_entries(at_anchor);   //this partition might become empty
-                }
-                else    //this anchor is not supported
-                    remove_partition_entries(left);     //this partition will move
-
-                remove_partition_entries(down);         //this partition will move
-
-                //now move the columns
-                swap_counter += move_columns(down, left, true, R_low, U_low, R_high, U_high);
-
-                //post-move updates to equivalance class info
-                if(at_anchor != NULL)  //this anchor is supported
-                {
-                    at_anchor->low_class_size = at_anchor->low_count + down->low_class_size;
-                    at_anchor->high_class_size = at_anchor->high_count + down->high_class_size;
-                    down->low_class_size = -1;  //this xiMatrixEntry is no longer the head of an equivalence class
-                    add_partition_entries(at_anchor);
-                }
-                else    //this anchor is not supported
-                    add_partition_entries(down);
-
-                add_partition_entries(left);
-            }
-            else    //then anchor is crossed from above to below
-            {
-                if(mesh->verbosity >= 9) { qDebug() << " == strict anchor crossed above to below =="; }
-
-                //pre-move updates to equivalence class info
-                if(at_anchor != NULL)
-                {
-                    down->low_index = at_anchor->low_index - at_anchor->low_count;                //necessary since low_index, low_class_size,
-                    down->low_class_size = at_anchor->low_class_size - at_anchor->low_count;      //  high_index, and high_class_size
-                    down->high_index = at_anchor->high_index - at_anchor->high_count;             //  are only reliable for the head
-                    down->high_class_size = at_anchor->high_class_size - at_anchor->high_count;   //  of each equivalence class
-                    remove_partition_entries(at_anchor);   //this partition might become empty
-                }
-                else    //this anchor is not supported
-                    remove_partition_entries(down);     //this partition will move
-
-                remove_partition_entries(left);         //this partition will move
-
-                //now move the columns
-                swap_counter += move_columns(left, down, false, R_low, U_low, R_high, U_high);
-
-                //post-move updates to equivalance class info
-                if(at_anchor != NULL)  //this anchor is supported
-                {
-                    at_anchor->low_class_size = at_anchor->low_count + left->low_class_size;
-                    at_anchor->high_class_size = at_anchor->high_count + left->high_class_size;
-                    left->low_class_size = -1;  //this xiMatrixEntry is no longer the head of an equivalence class
-                    add_partition_entries(at_anchor);
-                }
-                else    //this anchor is not supported
-                    add_partition_entries(left);
-
-                add_partition_entries(down);
-            }
-        }
-        else    //then this is a supported, non-strict anchor, and we just have to split or merge equivalence classes
-        {
-            xiMatrixEntry* at_anchor = down;
-            xiMatrixEntry* generator = at_anchor->down;
-            if(generator == NULL)
-                generator = at_anchor->left;
-
-            if(generator->low_class_size != -1)    //then merge classes
-            {
-                at_anchor->low_class_size = at_anchor->low_count + generator->low_class_size;
-                at_anchor->high_class_size = at_anchor->high_count + generator->high_class_size;
-                generator->low_class_size = -1;    //indicates that this xiMatrixEntry is NOT the head of an equivalence class
-
-                remove_partition_entries(generator);
-                add_partition_entries(at_anchor);  //this is necessary in case the class was previously empty
-            }
-            else    //then split classes
-            {
-                generator->low_index = at_anchor->low_index - at_anchor->low_count;
-                generator->low_class_size = at_anchor->low_class_size - at_anchor->low_count;
-                at_anchor->low_class_size = at_anchor->low_count;
-                generator->high_index = at_anchor->high_index - at_anchor->high_count;
-                generator->high_class_size = at_anchor->high_class_size - at_anchor->high_count;
-                at_anchor->high_class_size = at_anchor->high_count;
-
-                remove_partition_entries(at_anchor);   //this is necessary because the class corresponding
-                add_partition_entries(at_anchor);      //  to at_anchor might have become empty
-                add_partition_entries(generator);
-            }
-        }
-
-        //remember that we have crossed this anchor
-        cur_anchor->toggle();
-
-        //testing
-//        U_high->print_perm();
-//        QDebug qd = qDebug().nospace();
-//        qd << "    Anchors above the current line: ";
-//        for(std::set<Anchor*, Anchor_LeftComparator>::iterator it = mesh->all_anchors.begin(); it != mesh->all_anchors.end(); ++it)
-//            if((*it)->is_above())
-//                qd << "(" << (*it)->get_x() << "," << (*it)->get_y() << ") ";
-
-        //if this cell does not yet have a barcode template, then store it now
-        Face* cur_face = (path[i])->get_face();
-        if(!cur_face->has_been_visited())
-            store_barcode_template(cur_face, R_low, R_high);
-
-        //testing
-        if(testing)
-        {
-//            qDebug() << "  Reduced matrix for low simplices:";
-//            R_low->print();
-//            R_low->check_lows();
-//            qDebug() << "  Matrix U for low simplices:";
-//            U_low->print();
-//            qDebug() << "  Matrix D for low simplices:";
-//            D_low->print();
-//            qDebug() << "  Reduced matrix for high simplices:";
-//            R_high->print();
-//            R_high->check_lows();
-//            qDebug() << "  Matrix U for high simplices:";
-//            U_high->print();
-//            qDebug() << "  Matrix D for high simplices:";
-//            D_high->print();
-//            qDebug() << "  Low partition: ";
-//            for(std::map<unsigned, xiMatrixEntry*>::iterator it = partition_low.begin(); it != partition_low.end(); ++it)
-//                qDebug() << "     " << it->first << "->" << it->second->index << ", ";
-//            qDebug() << "  High partition: ";
-//            for(std::map<unsigned, xiMatrixEntry*>::iterator it = partition_high.begin(); it != partition_high.end(); ++it)
-//                qDebug() << "     " << it->first << "->" << it->second->index << ", ";
-//            qDebug() << "  Barcode Template: ";
-            cur_face->get_barcode().print();
-//            check_low_matrix(R_low, U_low);
-//            check_high_matrix(R_high, U_high);
-        }
-
-        //print runtime data
-        int step_time = steptimer.elapsed();
-        qDebug() << "    --> this step took" << step_time << "milliseconds and involved" << swap_counter << "transpositions";
-
-        //store data for analysis
-        total_transpositions += swap_counter;
-//        swap_counters[i] = swap_counter;
-//        crossing_times[i] = step_time;
-        if(swap_counter > max_swaps)
-            max_swaps = swap_counter;
-        if(step_time > max_time)
-            max_time = step_time;
-
-    }//end path traversal
-
-    //print runtime data
-    qDebug() << "  --> path traversal and persistence updates took" << timer.elapsed() << "milliseconds and involved" << total_transpositions << "transpositions";
-
-    ///TEMPORARY
-//    qDebug() << "DATA: number of transpositions and runtime for each crossing:";
-//    for(unsigned i=0; i<swap_counters.size(); i++)
-//        qDebug().nospace() << swap_counters[i] << ", " << crossing_times[i];
-    qDebug() << "DATA: max number of swaps per crossing:" << max_swaps << "; max time per crossing:" << max_time;
-
-
-  // PART 4: CLEAN UP
-
-    delete R_low;
-    delete R_high;
-    delete U_low;
-    delete U_high;
-
-}//end store_barcodes()
-
-//computes and stores barcode templates using lazy updates
-//uses lazy updates and unsorted "bins" for each row and column
-void PersistenceUpdater::store_barcodes_lazy(std::vector<Halfedge*>& path)
-{
-    QTime timer;    //for timing the computations
-
-    // PART 1: GET THE BOUNDARY MATRICES WITH PROPER SIMPLEX ORDERING
-
-    timer.start();
-
-    //get multi-grade data in each dimension
-    if(mesh->verbosity >= 6) { qDebug() << "  Mapping low simplices:"; }
-    IndexMatrix* ind_low = bifiltration->get_index_mx(dim);    //can we improve this with something more efficient than IndexMatrix?
-    std::vector<int> low_simplex_order;     //this will be a map : dim_index --> order_index for dim-simplices
-    store_multigrades(ind_low, true, low_simplex_order);
-    delete ind_low;
-
-    if(mesh->verbosity >= 6) { qDebug() << "  Mapping high simplices:"; }
-    IndexMatrix* ind_high = bifiltration->get_index_mx(dim + 1);    //again, could be improved?
-    std::vector<int> high_simplex_order;     //this will be a map : dim_index --> order_index for (dim+1)-simplices
-    store_multigrades(ind_high, false, high_simplex_order);
-    delete ind_high;
-
-    //get boundary matrices (R) and identity matrices (U) for RU-decomposition
-    MapMatrix_Perm* R_low = bifiltration->get_boundary_mx(low_simplex_order);
-    MapMatrix_Perm* R_high = bifiltration->get_boundary_mx(low_simplex_order, high_simplex_order);
-
-    //print runtime data
-    qDebug() << "  --> computing initial order on simplices and building the boundary matrices took" << timer.elapsed() << "milliseconds";
-
-/// TESTING ONLY - CHECK THAT D=RU
-    if(testing)
-    {
-//        qDebug() << "  Boundary matrix for low simplices:\n";
-//        R_low->print();
-//        qDebug() << "  Boundary matrix for high simplices:\n";
-//        R_high->print();
-
-        D_low = bifiltration->get_boundary_mx(low_simplex_order);
-        D_high = bifiltration->get_boundary_mx(low_simplex_order, high_simplex_order);
-    }
-
-
-  // PART 2: INITIAL PERSISTENCE COMPUTATION (RU-decomposition)
-
-    timer.start();
-
-    MapMatrix_RowPriority_Perm* U_low = R_low->decompose_RU();
-    MapMatrix_RowPriority_Perm* U_high = R_high->decompose_RU();
-
-    qDebug() << "  --> computing the RU decomposition took" << timer.elapsed() << "milliseconds";
-
-    //store the barcode template in the first cell
-    Face* first_cell = mesh->topleft->get_twin()->get_face();
-    store_barcode_template(first_cell, R_low, R_high);
-
-    if(testing)
-    {
-//        qDebug() << "Initial persistence computation in cell " << mesh->FID(first_cell);
-//        qDebug() << "  Reduced matrix for low simplices:";
-//        R_low->print();
-//        R_low->check_lows();
-//        qDebug() << "  Matrix U for low simplices:";
-//        U_low->print();
-//        qDebug() << "  Reduced matrix for high simplices:";
-//        R_high->print();
-//        R_high->check_lows();
-//        qDebug() << "  Matrix U for high simplices:";
-//        U_high->print();
-//        qDebug() << "  Low partition: ";
-//        for(std::map<unsigned, xiMatrixEntry*>::iterator it = partition_low.begin(); it != partition_low.end(); ++it)
-//            qDebug() << "     " << it->first << "->" << it->second->index << ", ";
-//        qDebug() << "  High partition: ";
-//        for(std::map<unsigned, xiMatrixEntry*>::iterator it = partition_high.begin(); it != partition_high.end(); ++it)
-//            qDebug() << "     " << it->first << "->" << it->second->index << ", ";
-//        qDebug() << "  Barcode Template: ";
-//        first_cell->get_barcode().print();
-    }
-
-
-  // PART 3: TRAVERSE THE PATH AND DO VINEYARD UPDATES
-
-    qDebug() << "TRAVERSING THE PATH USING LAZY UPDATES: path has" << path.size() << "steps";
-    qDebug() << "                          ^^^^^^^^^^^^";
-    timer.start();
-
-    ///TEMPORARY: data structures for analyzing the computation
-    unsigned long total_transpositions = 0;
-//    std::vector<unsigned long> swap_counters(path.size(),0);
-//    std::vector<int> crossing_times(path.size(),0);
-    unsigned long max_swaps = 0;
-    int max_time = 0;
-
-    //traverse the path
-    QTime steptimer;
-    for(unsigned i=0; i<path.size(); i++)
-    {
-        steptimer.start();          //time update at each step of the path
-        unsigned long swap_counter = 0;   //counts number of transpositions at each step
-
-        //determine which anchor is represented by this edge
-        Anchor* cur_anchor = (path[i])->get_anchor();
-
-        qDebug() << "  step" << i << "of path: crossing anchor at ("<< cur_anchor->get_x() << "," << cur_anchor->get_y() << ") into cell" << mesh->FID((path[i])->get_face());
-
-        //get equivalence classes for this anchor
-        xiMatrixEntry* down = cur_anchor->get_down();
-        xiMatrixEntry* left = cur_anchor->get_left();
-
-        //if this is a strict anchor, then swap simplices
-        if(left != NULL) //then this is a strict anchor and some simplices swap
-        {
-            xiMatrixEntry* at_anchor = NULL;   //remains NULL iff this anchor is not supported
-
-            if(down == NULL)    //then this is also a supported anchor
-            {
-                at_anchor = left;
-                down = left->down;
-                left = left->left;
-            }//now down and left are correct (and should not be NULL)
-
-            if(cur_anchor->is_above()) //then anchor is crossed from below to above (prior to swap: down class is first, left class is second)
-            {
-                if(mesh->verbosity >= 9) { qDebug() << " == strict anchor crossed below to above =="; }
-
-                if(at_anchor != NULL)  //this anchor is supported
-                {
-                    //find columns from the row bin that must be mapped to the anchor
-                    swap_counter += move_columns_from_bin_horizontal(xi_matrix.get_row_bin(at_anchor->y), at_anchor, R_low, U_low, R_high, U_high);
-
-                    //update equivalence class info
-                    left->low_index = at_anchor->low_index - at_anchor->low_count;                //necessary since low_index, low_class_size,
-                    left->low_class_size = at_anchor->low_class_size - at_anchor->low_count;      //  high_index, and high_class_size
-                    left->high_index = at_anchor->high_index - at_anchor->high_count;             //  are only reliable for the head
-                    left->high_class_size = at_anchor->high_class_size - at_anchor->high_count;   //  of each equivalence class
-                    remove_partition_entries(at_anchor);   //this block of the partition might become empty
-                }
-                else    //this anchor is not supported
-                    remove_partition_entries(left);     //this block of the partition will move
-
-                remove_partition_entries(down);         //this block of the partition will move
-
-                //now move columns from the down class, either past the left class or into the row bin
-                swap_counter += move_columns_lazy(down, left, true, R_low, U_low, R_high, U_high);
-
-                //post-move updates to equivalance class info
-                if(at_anchor != NULL)  //this anchor is supported
-                {
-                    at_anchor->low_class_size = at_anchor->low_count + down->low_class_size;
-                    at_anchor->high_class_size = at_anchor->high_count + down->high_class_size;
-                    down->low_class_size = -1;  //this xiMatrixEntry is no longer the head of an equivalence class
-                    add_partition_entries(at_anchor);
-                }
-                else    //this anchor is not supported
-                    add_partition_entries(down);
-
-                add_partition_entries(left);
-            }
-            else    //then anchor is crossed from above to below (prior to swap: left class is first, down class is second)
-            {
-                if(mesh->verbosity >= 9) { qDebug() << " == strict anchor crossed above to below ==\n"; }
-
-                if(at_anchor != NULL)   //this anchor is supported
-                {
-                    //find columns from the column bin that must be mapped to the anchor
-                    swap_counter += move_columns_from_bin_vertical(xi_matrix.get_col_bin(at_anchor->x), at_anchor, R_low, U_low, R_high, U_high);
-
-                    //update equivalence class info
-                    down->low_index = at_anchor->low_index - at_anchor->low_count;                //necessary since low_index, low_class_size,
-                    down->low_class_size = at_anchor->low_class_size - at_anchor->low_count;      //  high_index, and high_class_size
-                    down->high_index = at_anchor->high_index - at_anchor->high_count;             //  are only reliable for the head
-                    down->high_class_size = at_anchor->high_class_size - at_anchor->high_count;   //  of each equivalence class
-                    remove_partition_entries(at_anchor);   //this partition might become empty
-                }
-                else    //this anchor is not supported
-                    remove_partition_entries(down);     //this partition will move
-
-                remove_partition_entries(left);         //this partition will move
-
-                //now move the columns
-                swap_counter += move_columns_lazy(left, down, false, R_low, U_low, R_high, U_high);
-
-                //post-move updates to equivalance class info
-                if(at_anchor != NULL)  //this anchor is supported
-                {
-                    at_anchor->low_class_size = at_anchor->low_count + left->low_class_size;
-                    at_anchor->high_class_size = at_anchor->high_count + left->high_class_size;
-                    left->low_class_size = -1;  //this xiMatrixEntry is no longer the head of an equivalence class
-                    add_partition_entries(at_anchor);
-                }
-                else    //this anchor is not supported
-                    add_partition_entries(left);
-
-                add_partition_entries(down);
-            }
-        }
-        else    //then this is a supported, non-strict anchor, and we have to split or merge equivalence classes, but lazy updates might cause some swaps
-        {
-            if(mesh->verbosity >= 9) { qDebug() << " == non-strict anchor crossed =="; }
-
-            xiMatrixEntry* at_anchor = down;
-            xiMatrixEntry* generator = at_anchor->down;
-
-            if(generator != NULL)   //then the class is vertical
-            {
-                if(generator->low_class_size != -1)    //then merge classes
-                {
-                    //map simplices from unsorted bin to generator
-                    at_anchor->move_bin_here( xi_matrix.get_row_bin(at_anchor->y) );    //also updates at_anchor counters
-
-                    //update data structures for merge
-                    at_anchor->low_class_size = at_anchor->low_count + generator->low_class_size;
-                    at_anchor->high_class_size = at_anchor->high_count + generator->high_class_size;
-                    generator->low_class_size = -1;    //indicates that this xiMatrixEntry is NOT the head of an equivalence class
-
-                    remove_partition_entries(generator);
-                    add_partition_entries(at_anchor);  //this is necessary in case the class was previously empty
-                }
-                else    //then split classes
-                {
-                    //find simplices in the unsorted bin that must be mapped to the anchor
-                    swap_counter += move_columns_from_bin_vertical(xi_matrix.get_col_bin(at_anchor->x), at_anchor, R_low, U_low, R_high, U_high);
-
-                    //update data structures for split
-                    generator->low_index = at_anchor->low_index - at_anchor->low_count;
-                    generator->low_class_size = at_anchor->low_class_size - at_anchor->low_count;
-                    at_anchor->low_class_size = at_anchor->low_count;
-                    generator->high_index = at_anchor->high_index - at_anchor->high_count;
-                    generator->high_class_size = at_anchor->high_class_size - at_anchor->high_count;
-                    at_anchor->high_class_size = at_anchor->high_count;
-
-                    xiMatrixEntry* row_bin = xi_matrix.get_row_bin(at_anchor->y);
-                    row_bin->low_index = generator->low_index;
-                    row_bin->high_index = generator->high_index;
-
-                    remove_partition_entries(at_anchor);   //this is necessary because the class corresponding
-                    add_partition_entries(at_anchor);      //  to at_anchor might have become empty
-                    add_partition_entries(generator);
-                }
-            }
-            else    //then the class is horizontal
-            {
-                generator = at_anchor->left;
-
-                if(generator->low_class_size != -1)    //then merge classes
-                {
-                    //map simplices from unsorted bin to generator
-                    at_anchor->move_bin_here( xi_matrix.get_col_bin(at_anchor->x) );
-
-                    //update data structures for merge
-                    at_anchor->low_class_size = at_anchor->low_count + generator->low_class_size;
-                    at_anchor->high_class_size = at_anchor->high_count + generator->high_class_size;
-                    generator->low_class_size = -1;    //indicates that this xiMatrixEntry is NOT the head of an equivalence class
-
-                    remove_partition_entries(generator);
-                    add_partition_entries(at_anchor);  //this is necessary in case the class was previously empty
-                }
-                else    //then split classes
-                {
-                    //find simplices in the unsorted bin that must be mapped to the anchor
-                    swap_counter += move_columns_from_bin_horizontal(xi_matrix.get_row_bin(at_anchor->y), at_anchor, R_low, U_low, R_high, U_high);
-
-                    //update data structures for split
-                    generator->low_index = at_anchor->low_index - at_anchor->low_count;
-                    generator->low_class_size = at_anchor->low_class_size - at_anchor->low_count;
-                    at_anchor->low_class_size = at_anchor->low_count;
-                    generator->high_index = at_anchor->high_index - at_anchor->high_count;
-                    generator->high_class_size = at_anchor->high_class_size - at_anchor->high_count;
-                    at_anchor->high_class_size = at_anchor->high_count;
-
-                    xiMatrixEntry* col_bin = xi_matrix.get_col_bin(at_anchor->x);
-                    col_bin->low_index = generator->low_index;
-                    col_bin->high_index = generator->high_index;
-
-                    remove_partition_entries(at_anchor);   //this is necessary because the class corresponding
-                    add_partition_entries(at_anchor);      //  to at_anchor might have become empty
-                    add_partition_entries(generator);
-                }
-            }
-        }
-
-        //remember that we have crossed this anchor
-        cur_anchor->toggle();
-
-        //if this cell does not yet have a barcode template, then store it now
-        Face* cur_face = (path[i])->get_face();
-        if(!cur_face->has_been_visited())
-            store_barcode_template(cur_face, R_low, R_high);
-
-        //testing
-        if(testing)
-        {
-//            qDebug() << "  Reduced matrix for low simplices:";
-//            R_low->print();
-//            R_low->check_lows();
-//            qDebug() << "  Matrix U for low simplices:";
-//            U_low->print();
-//            qDebug() << "  Matrix D for low simplices:";
-//            D_low->print();
-//            qDebug() << "  Reduced matrix for high simplices:";
-//            R_high->print();
-//            R_high->check_lows();
-//            qDebug() << "  Matrix U for high simplices:";
-//            U_high->print();
-//            qDebug() << "  Matrix D for high simplices:";
-//            D_high->print();
-//            qDebug() << "  Low partition: ";
-//            for(std::map<unsigned, xiMatrixEntry*>::iterator it = partition_low.begin(); it != partition_low.end(); ++it)
-//                qDebug() << "     " << it->first << "->" << it->second->index << ", ";
-//            qDebug() << "  High partition: ";
-//            for(std::map<unsigned, xiMatrixEntry*>::iterator it = partition_high.begin(); it != partition_high.end(); ++it)
-//                qDebug() << "     " << it->first << "->" << it->second->index << ", ";
-//            qDebug() << "  Barcode Template: ";
-//            first_cell->get_barcode().print();
-            check_low_matrix(R_low, U_low);
-            check_high_matrix(R_high, U_high);
-        }
-
-        //print runtime data
-        int step_time = steptimer.elapsed();
-//        qDebug() << "    --> this step took" << step_time << "milliseconds and involved" << swap_counter << "transpositions";
-
-        //store data for analysis
-        total_transpositions += swap_counter;
-//        swap_counters[i] = swap_counter;
-//        crossing_times[i] = step_time;
-        if(swap_counter > max_swaps)
-            max_swaps = swap_counter;
-        if(step_time > max_time)
-            max_time = step_time;
-
-    }//end path traversal
-
-    //print runtime data
-    qDebug() << "  --> path traversal and persistence updates took" << timer.elapsed() << "milliseconds and involved" << total_transpositions << "transpositions";
-
-    ///TEMPORARY
-//    qDebug() << "DATA: number of transpositions and runtime for each crossing:";
-//    for(unsigned i=0; i<swap_counters.size(); i++)
-//        qDebug().nospace() << swap_counters[i] << ", " << crossing_times[i];
-    qDebug() << "DATA: max number of swaps per crossing:" << max_swaps << "; max time per crossing:" << max_time;
-
-
-  // PART 4: CLEAN UP
-
-    delete R_low;
-    delete R_high;
-    delete U_low;
-    delete U_high;
-
-}//end store_barcodes_lazy()
-
-*/
-
 //computes and stores a barcode template in each 2-cell of mesh
 //resets the matrices and does a standard persistence calculation for expensive crossings
 void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path, ComputationThread* cthread)
@@ -841,7 +187,7 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
     store_barcode_template(first_cell, R_low, R_high);
 
     qDebug() << "Initial persistence computation in cell " << mesh->FID(first_cell);
-
+    print_perms(perm_high, inv_perm_high);
 
   // PART 3: TRAVERSE THE PATH AND UPDATE PERSISTENCE AT EACH STEP
 
@@ -885,6 +231,9 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
         {
             xiMatrixEntry* at_anchor = NULL;   //remains NULL iff this anchor is not supported
 
+            std::list<Multigrade*> low_LUB_grades;   //temporarily stores grades that lift to the LUB, for a non-supported anchor
+            std::list<Multigrade*> high_LUB_grades;  //  these lists are part of the July 2015 bug fix
+
             if(down == NULL)    //then this is also a supported anchor
             {
                 at_anchor = left;
@@ -905,7 +254,40 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
                     remove_partition_entries(at_anchor);   //this partition might become empty
                 }
                 else    //this anchor is not supported
+                {
                     remove_partition_entries(left);     //this block of the partition will move
+
+                    //find multigrades associated with xiMatrixEntry left that should lift to the LUB; remove and remember these grades
+                    for(std::list<Multigrade*>::iterator it = left->low_simplices.begin(); it != left->low_simplices.end(); ) //NOTE: iterator advances in loop
+                    {
+                        Multigrade* cur_grade = *it;
+                        if(cur_grade->x > left->x)  //then this Multigrade lifts to the LUB, and should be re-mapped to xiMatrixEntry down
+                        {
+                            left->low_count -= cur_grade->num_cols;
+                            left->low_index -= cur_grade->num_cols;
+                            left->low_class_size -= cur_grade->num_cols;
+                            low_LUB_grades.push_back(cur_grade);
+                            it = left->low_simplices.erase(it); //NOTE: advances the iterator
+                        }
+                        else    //then we found a grade that doesn't lift to the LUB, so quit the loop (since grades are stored in order)
+                            break;
+                    }
+                    for(std::list<Multigrade*>::iterator it = left->high_simplices.begin(); it != left->high_simplices.end(); ) //NOTE: iterator advances in loop
+                    {
+                        Multigrade* cur_grade = *it;
+                        if(cur_grade->x > left->x)  //then this Multigrade lifts to the LUB, and should be re-mapped to xiMatrixEntry down
+                        {
+                            left->high_count -= cur_grade->num_cols;
+                            left->high_index -= cur_grade->num_cols;
+                            left->high_class_size -= cur_grade->num_cols;
+                            high_LUB_grades.push_back(cur_grade);
+                            it = left->high_simplices.erase(it); //NOTE: advances the iterator
+                            qDebug() << "  ====>>>>moving LUB simplices at (" << cur_grade->x << "," << cur_grade->y << ") from left (" << left->x << "," << left->y << ") to down (" << down->x << "," << down->y << ")";
+                        }
+                        else    //then we found a grade that doesn't lift to the LUB, so quit the loop (since grades are stored in order)
+                            break;
+                    }
+                }
 
                 remove_partition_entries(down);         //this block of the partition will move
 
@@ -926,7 +308,29 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
                     add_partition_entries(at_anchor);
                 }
                 else    //this anchor is not supported
+                {
+                    //associate the stored multigrades (that lift to the LUB) with xiMatrixEntry down
+                    for(std::list<Multigrade*>::iterator it = low_LUB_grades.begin(); it != low_LUB_grades.end(); ++it)
+                    {
+                        Multigrade* cur_grade = *it;
+                        ///====>>> QUESTION: DO I NEED TO DO ANY SORTING HERE???
+                        down->insert_multigrade(cur_grade, true);
+                        down->low_count += cur_grade->num_cols;
+                        down->low_index += cur_grade->num_cols;
+                        down->low_class_size += cur_grade->num_cols;
+                    }
+                    for(std::list<Multigrade*>::iterator it = high_LUB_grades.begin(); it != high_LUB_grades.end(); ++it)
+                    {
+                        Multigrade* cur_grade = *it;
+                         ///====>>> QUESTION: DO I NEED TO DO ANY SORTING HERE???
+                        down->insert_multigrade(cur_grade, false);
+                        down->high_count += cur_grade->num_cols;
+                        down->high_index += cur_grade->num_cols;
+                        down->high_class_size += cur_grade->num_cols;
+                    }
+
                     add_partition_entries(down);        //this block of the partition moved
+                }
 
                 add_partition_entries(left);            //this block of the partition moved
             }
@@ -942,7 +346,40 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
                     remove_partition_entries(at_anchor);   //this partition might become empty
                 }
                 else    //this anchor is not supported
+                {
                     remove_partition_entries(down);     //this block of the partition will move
+
+                    //find multigrades associated with xiMatrixEntry down that should lift to the LUB; remove and remember these grades
+                    for(std::list<Multigrade*>::iterator it = down->low_simplices.begin(); it != down->low_simplices.end(); ) //NOTE: iterator advances in loop
+                    {
+                        Multigrade* cur_grade = *it;
+                        if(cur_grade->y > left->y)  //then this Multigrade lifts to the LUB, and should be re-mapped to xiMatrixEntry down
+                        {
+                            down->low_count -= cur_grade->num_cols;
+                            down->low_index -= cur_grade->num_cols;
+                            down->low_class_size -= cur_grade->num_cols;
+                            low_LUB_grades.push_back(cur_grade);
+                            it = down->low_simplices.erase(it); //NOTE: advances the iterator
+                        }
+                        else    //then we found a grade that doesn't lift to the LUB, so quit the loop (since grades are stored in order)
+                            break;
+                    }
+                    for(std::list<Multigrade*>::iterator it = down->high_simplices.begin(); it != down->high_simplices.end(); ) //NOTE: iterator advances in loop
+                    {
+                        Multigrade* cur_grade = *it;
+                        if(cur_grade->y > down->y)  //then this Multigrade lifts to the LUB, and should be re-mapped to xiMatrixEntry down
+                        {
+                            down->high_count -= cur_grade->num_cols;
+                            down->high_index -= cur_grade->num_cols;
+                            down->high_class_size -= cur_grade->num_cols;
+                            high_LUB_grades.push_back(cur_grade);
+                            it = down->high_simplices.erase(it); //NOTE: advances the iterator
+                            qDebug() << "  ====>>>>moving LUB simplices at (" << cur_grade->x << "," << cur_grade->y << ") from down (" << down->x << "," << down->y << ") to left (" << left->x << "," << left->y << ")";
+                        }
+                        else    //then we found a grade that doesn't lift to the LUB, so quit the loop (since grades are stored in order)
+                            break;
+                    }
+                }
 
                 remove_partition_entries(left);         //this block of the partition will move
 
@@ -963,7 +400,29 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
                     add_partition_entries(at_anchor);
                 }
                 else    //this anchor is not supported
+                {
+                    //associate the stored multigrades (that lift to the LUB) with xiMatrixEntry left
+                    for(std::list<Multigrade*>::iterator it = low_LUB_grades.begin(); it != low_LUB_grades.end(); ++it)
+                    {
+                        Multigrade* cur_grade = *it;
+                        ///====>>> QUESTION: DO I NEED TO DO ANY SORTING HERE???
+                        left->insert_multigrade(cur_grade, true);
+                        left->low_count += cur_grade->num_cols;
+                        left->low_index += cur_grade->num_cols;
+                        left->low_class_size += cur_grade->num_cols;
+                    }
+                    for(std::list<Multigrade*>::iterator it = high_LUB_grades.begin(); it != high_LUB_grades.end(); ++it)
+                    {
+                        Multigrade* cur_grade = *it;
+                         ///====>>> QUESTION: DO I NEED TO DO ANY SORTING HERE???
+                        left->insert_multigrade(cur_grade, false);
+                        left->high_count += cur_grade->num_cols;
+                        left->high_index += cur_grade->num_cols;
+                        left->high_class_size += cur_grade->num_cols;
+                    }
+
                     add_partition_entries(left);        //this block of the partition moved
+                }
 
                 add_partition_entries(down);            //this block of the partition moved
             }
@@ -1001,6 +460,10 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
 
         //remember that we have crossed this anchor
         cur_anchor->toggle();
+
+        ///TESTING
+//        print_perms(perm_high, inv_perm_high);
+//        print_high_partition();
 
         //if this cell does not yet have a barcode template, then store it now
         Face* cur_face = (path[i])->get_face();
@@ -1117,7 +580,7 @@ void PersistenceUpdater::store_multigrades(IndexMatrix* ind, bool low)
                     if(map_to->index == -1) //then the entry is not a xi support point
                     {
                         map_to = map_to->left;
-                        qDebug() << "   --adjusting lift map for simplices at (" << x << "," << y << ")";
+                        qDebug() << "   --adjusting lift map for simplices at (" << x << "," << y << "), which now map to xi point at (" << map_to->x << "," << map_to->y << ")";
                     }
 
                     //now map the multigrade to the xi support entry
@@ -1131,9 +594,10 @@ void PersistenceUpdater::store_multigrades(IndexMatrix* ind, bool low)
 }//end store_multigrades()
 
 //finds the proper order of simplexes for the persistence calculation (with respect to a near-vertical line positioned to the right of all \xi support points)
-//  low is true for simplices of dimension hom_dim, false for simplices of dimension hom_dim+1
-//  simplex_order will be filled with a map : dim_index --> order_index for simplices of the given dimension
-///TODO: MULTIGRADE LISTS OUGHT TO BE IN LEXICOGRAPHICAL ORDER AT THE BEGINNING OF THE PERSISTENCE-UPDATE PROCESS
+//  NOTE: within each equivalence class, multigrades will occur in lexicographical order
+//  PARAMETERS:
+//    low is true for simplices of dimension hom_dim, false for simplices of dimension hom_dim+1
+//    simplex_order will be filled with a map : dim_index --> order_index for simplices of the given dimension
 void PersistenceUpdater::build_simplex_order(IndexMatrix* ind, bool low, std::vector<int>& simplex_order)
 {
     //we will create the map starting by identifying the order index of each simplex, starting with the last simplex
@@ -1146,7 +610,7 @@ void PersistenceUpdater::build_simplex_order(IndexMatrix* ind, bool low, std::ve
     for(std::list<Multigrade*>::iterator it = mgrades->begin(); it != mgrades->end(); ++it)
     {
         Multigrade* mg = *it;
-        if(mesh->verbosity >= 6) { qDebug() << "  multigrade (" << mg->x << "," << mg->y << ") at infinity has" << mg->num_cols << "simplices with last index" << mg->simplex_index<< "which will map to order_index" << o_index; }
+        if(mesh->verbosity >= 2) { qDebug() << "  multigrade (" << mg->x << "," << mg->y << ") at infinity has" << mg->num_cols << "simplices with last index" << mg->simplex_index<< "which will map to order_index" << o_index; }
 
         for(unsigned s=0; s < mg->num_cols; s++)  // simplex with dim_index (mg->simplex_index - s) has order_index o_index
         {
@@ -1185,7 +649,7 @@ void PersistenceUpdater::build_simplex_order(IndexMatrix* ind, bool low, std::ve
             for(std::list<Multigrade*>::iterator it = mgrades->begin(); it != mgrades->end(); ++it)
             {
                 Multigrade* mg = *it;
-                if(mesh->verbosity >= 6) { qDebug() << "  multigrade (" << mg->x << "," << mg->y << ") has" << mg->num_cols << "simplices with last dim_index" << mg->simplex_index << "which will map to order_index" << o_index; }
+                if(mesh->verbosity >= 2) { qDebug() << "  multigrade (" << mg->x << "," << mg->y << ") has" << mg->num_cols << "simplices with last dim_index" << mg->simplex_index << "which will map to order_index" << o_index; }
 
                 for(unsigned s=0; s < mg->num_cols; s++)  // simplex with dim_index (mg->simplex_index - s) has order_index o_index
                 {
@@ -1214,171 +678,22 @@ void PersistenceUpdater::build_simplex_order(IndexMatrix* ind, bool low, std::ve
         }
 
         //now store column index in the "unsorted" bin for this row
-        xiMatrixEntry* cur_row = xi_matrix.get_row(row);
-        if(cur_row->low_class_size != -1)
-        {
-            if(low)
-                xi_matrix.get_row_bin(row)->low_index = cur_row->low_index - cur_row->low_class_size;
-            else
-                xi_matrix.get_row_bin(row)->high_index = cur_row->high_index - cur_row->high_class_size;
-        }
+        ///THIS SHOULD BE UNNECESSARY UNLESS WE ARE DOING LAZY UPDATES
+//        xiMatrixEntry* cur_row = xi_matrix.get_row(row);
+//        if(cur_row->low_class_size != -1)
+//        {
+//            if(low)
+//                xi_matrix.get_row_bin(row)->low_index = cur_row->low_index - cur_row->low_class_size;
+//            else
+//                xi_matrix.get_row_bin(row)->high_index = cur_row->high_index - cur_row->high_class_size;
+//        }
     }//end for(row > 0)
-}//end build_simplex)order()
+}//end build_simplex_order()
 
 //moves columns from an equivalence class given by xiMatrixEntry* first to their new positions after or among the columns in the equivalence class given by xiMatrixEntry* second
 // the boolean argument indicates whether an anchor is being crossed from below (or from above)
-unsigned long PersistenceUpdater::move_columns(xiMatrixEntry* first, xiMatrixEntry* second, bool from_below, MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH)
-{
-//    ///DEBUGGING
-//    if(first->low_index + second->low_class_size != second->low_index || first->high_index + second->high_class_size != second->high_index)
-//    {
-//        qDebug() << "  ===>>> ERROR: swapping non-consecutive column blocks!";
-//    }
-
-    //get column indexes (so we know which columns to move)
-    int low_col = first->low_index;   //rightmost column index of low simplices for the equivalence class to move
-    int high_col = first->high_index; //rightmost column index of high simplices for the equivalence class to move
-
-    //set column indexes for the first class to their final position
-    first->low_index = second->low_index;
-    first->high_index = second->high_index;
-
-    //remember the "head" of the first equivalence class, so that we can update its class size
-    xiMatrixEntry* first_head = first;
-
-    //initialize counter
-    unsigned long swap_counter = 0;
-
-    //loop over all xiMatrixEntrys in the first equivalence class
-    while(first != NULL)
-    {
-        //move all "low" simplices for this xiMatrixEntry (start with rightmost column, end with leftmost)
-        std::list<Multigrade*>::iterator it = first->low_simplices.begin();
-        while(it != first->low_simplices.end())
-        {
-            Multigrade* cur_grade = *it;
-
-            if( (from_below && cur_grade->x > second->x) || (!from_below && cur_grade->y > second->y) )
-                //then move columns at cur_grade past columns at xiMatrixEntry second; map F does not change ( F : multigrades --> xiSupportElements )
-            {
-                swap_counter += move_low_columns(low_col, cur_grade->num_cols, second->low_index, RL, UL, RH, UH);
-                second->low_index -= cur_grade->num_cols;
-                ++it;
-            }
-            else    //then move columns at cur_grade to some position in the equivalence class given by xiMatrixEntry second; map F changes
-            {
-                //determine where these columns map to under F
-                xiMatrixEntry* target = second;
-                int target_col = second->low_index - second->low_count;
-                if(from_below)
-                {
-                    while( (target->left != NULL) && (cur_grade->x <= target->left->x) )
-                    {
-                        target = target->left;
-                        target_col -= target->low_count;
-                    }
-                }
-                else
-                {
-                    while( (target->down != NULL) && (cur_grade->y <= target->down->y) )
-                    {
-                        target = target->down;
-                        target_col -= target->low_count;
-                    }
-                }
-
-                //associate cur_grade with target
-                target->insert_multigrade(cur_grade, true);
-                it = first->low_simplices.erase(it);    //NOTE: advances the iterator!!!
-
-                //if target is not the leftmost entry in its equivalence class, then move columns at cur_grade to the block of columns for target
-                if( (from_below && target->left != NULL) || (!from_below && target->down != NULL) )
-                    swap_counter += move_low_columns(low_col, cur_grade->num_cols, target_col, RL, UL, RH, UH);
-                //else, then the columns don't actually have to move
-
-                //update column counts
-                first->low_count -= cur_grade->num_cols;
-                target->low_count += cur_grade->num_cols;
-
-                //update equivalence class sizes
-                first_head->low_class_size -= cur_grade->num_cols;
-                second->low_class_size += cur_grade->num_cols;
-            }
-
-            //update column index
-            low_col -= cur_grade->num_cols;
-        }//end "low" simplex loop
-
-        //move all "high" simplices for this xiMatrixEntry
-        it = first->high_simplices.begin();
-        while(it != first->high_simplices.end())
-        {
-            Multigrade* cur_grade = *it;
-
-            if( (from_below && cur_grade->x > second->x) || (!from_below && cur_grade->y > second->y) )
-                //then move columns at cur_grade past columns at xiMatrixEntry second; map F does not change
-            {
-                swap_counter += move_high_columns(high_col, cur_grade->num_cols, second->high_index, RH, UH);
-                second->high_index -= cur_grade->num_cols;
-                ++it;
-            }
-            else    //then move columns at cur_grade to some position in the equivalence class given by xiMatrixEntry second; map F changes
-            {
-                //determine where these columns map to under F
-                xiMatrixEntry* target = second;
-                int target_col = second->high_index - second->high_count;
-                if(from_below)
-                {
-                    while( (target->left != NULL) && (cur_grade->x <= target->left->x) )
-                    {
-                        target = target->left;
-                        target_col -= target->high_count;
-                    }
-                }
-                else
-                {
-                    while( (target->down != NULL) && (cur_grade->y <= target->down->y) )
-                    {
-                        target = target->down;
-                        target_col -= target->high_count;
-                    }
-                }
-
-                //associate cur_grade with target
-                target->insert_multigrade(cur_grade, false);
-                it = first->high_simplices.erase(it);    //NOTE: advances the iterator!!!
-
-                //if target is not the leftmost entry in its equivalence class, then move columns at cur_grade to the block of columns for target
-                if( (from_below && target->left != NULL) || (!from_below && target->down != NULL) )
-                    swap_counter += move_high_columns(high_col, cur_grade->num_cols, target_col, RH, UH);
-                //else, then the columns don't actually have to move
-
-                //update column counts
-                first->high_count -= cur_grade->num_cols;
-                target->high_count += cur_grade->num_cols;
-
-                //update equivalence class sizes
-                first_head->high_class_size -= cur_grade->num_cols;
-                second->high_class_size += cur_grade->num_cols;
-            }
-
-            //update column index
-            high_col -= cur_grade->num_cols;
-        }//end "high" simplex loop
-
-        //advance to the next xiMatrixEntry in the first equivalence class
-        first = from_below ? first->down : first->left;
-    }//end while
-
-//    ///DEBUGGING
-//    if(second->low_index + first_head->low_class_size != first_head->low_index || second->high_index + first_head->high_class_size != first_head->high_index)
-//    {
-//        qDebug() << "  ===>>> ERROR: swap resulted in non-consecutive column blocks!";
-//    }
-    return swap_counter;
-}//end move_columns()
-
-//another version of move_columns -- this one updates the permutation vectors required for the "reset" approach
+// this version updates the permutation vectors required for the "reset" approach
+//NOTE: this function has been updated for the July 2015 bug fix
 unsigned long PersistenceUpdater::move_columns(xiMatrixEntry* first, xiMatrixEntry* second, bool from_below, MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH, Perm& perm_low, Perm& inv_perm_low, Perm& perm_high, Perm& inv_perm_high)
 {
     ///DEBUGGING
@@ -1395,33 +710,31 @@ unsigned long PersistenceUpdater::move_columns(xiMatrixEntry* first, xiMatrixEnt
     first->low_index = second->low_index;
     first->high_index = second->high_index;
 
-    //remember the "head" of the first equivalence class, so that we can update its class size
-    xiMatrixEntry* first_head = first;
-
     //initialize counter
     unsigned long swap_counter = 0;
 
     //loop over all xiMatrixEntrys in the first equivalence class
-    while(first != NULL)
+    xiMatrixEntry* cur_entry = first;
+    while(cur_entry != NULL)
     {
         //move all "low" simplices for this xiMatrixEntry (start with rightmost column, end with leftmost)
-        std::list<Multigrade*>::iterator it = first->low_simplices.begin();
-        while(it != first->low_simplices.end())
+        for(std::list<Multigrade*>::iterator it = cur_entry->low_simplices.begin(); it != cur_entry->low_simplices.end(); ) //NOTE: iterator advances in loop
         {
             Multigrade* cur_grade = *it;
 
             if( (from_below && cur_grade->x > second->x) || (!from_below && cur_grade->y > second->y) )
-                //then move columns at cur_grade past columns at xiMatrixEntry second; map F does not change ( F : multigrades --> xiSupportElements )
+                //then move columns at cur_grade past columns at xiMatrixEntry second; lift map does not change ( lift : multigrades --> xiSupportElements )
             {
                 swap_counter += move_low_columns(low_col, cur_grade->num_cols, second->low_index, RL, UL, RH, UH, perm_low, inv_perm_low);
                 second->low_index -= cur_grade->num_cols;
                 ++it;
             }
-            else    //then move columns at cur_grade to some position in the equivalence class given by xiMatrixEntry second; map F changes
+            else    //then move columns at cur_grade to some position in the equivalence class given by xiMatrixEntry second; lift map changes
             {
-                //determine where these columns map to under F
                 xiMatrixEntry* target = second;
                 int target_col = second->low_index - second->low_count;
+
+                //re-compute the lift map for cur_grade and find the new position for the columns
                 if(from_below)
                 {
                     while( (target->left != NULL) && (cur_grade->x <= target->left->x) )
@@ -1441,7 +754,7 @@ unsigned long PersistenceUpdater::move_columns(xiMatrixEntry* first, xiMatrixEnt
 
                 //associate cur_grade with target
                 target->insert_multigrade(cur_grade, true);
-                it = first->low_simplices.erase(it);    //NOTE: advances the iterator!!!
+                it = cur_entry->low_simplices.erase(it);    //NOTE: advances the iterator!!!
 
                 //if target is not the leftmost entry in its equivalence class, then move columns at cur_grade to the block of columns for target
                 if( (from_below && target->left != NULL) || (!from_below && target->down != NULL) )
@@ -1449,11 +762,11 @@ unsigned long PersistenceUpdater::move_columns(xiMatrixEntry* first, xiMatrixEnt
                 //else, then the columns don't actually have to move
 
                 //update column counts
-                first->low_count -= cur_grade->num_cols;
+                cur_entry->low_count -= cur_grade->num_cols;
                 target->low_count += cur_grade->num_cols;
 
                 //update equivalence class sizes
-                first_head->low_class_size -= cur_grade->num_cols;
+                first->low_class_size -= cur_grade->num_cols;
                 second->low_class_size += cur_grade->num_cols;
             }
 
@@ -1462,23 +775,25 @@ unsigned long PersistenceUpdater::move_columns(xiMatrixEntry* first, xiMatrixEnt
         }//end "low" simplex loop
 
         //move all "high" simplices for this xiMatrixEntry
-        it = first->high_simplices.begin();
-        while(it != first->high_simplices.end())
+        for(std::list<Multigrade*>::iterator it = cur_entry->high_simplices.begin(); it != cur_entry->high_simplices.end(); ) //NOTE: iterator advances in loop
         {
             Multigrade* cur_grade = *it;
 
+//            qDebug() << "  ====>>>> moving high simplices at grade (" << cur_grade->x << "," << cur_grade->y << ")";
+
             if( (from_below && cur_grade->x > second->x) || (!from_below && cur_grade->y > second->y) )
-                //then move columns at cur_grade past columns at xiMatrixEntry second; map F does not change
+                //then move columns at cur_grade past columns at xiMatrixEntry second; lift map does not change ( lift : multigrades --> xiSupportElements )
             {
                 swap_counter += move_high_columns(high_col, cur_grade->num_cols, second->high_index, RH, UH, perm_high, inv_perm_high);
                 second->high_index -= cur_grade->num_cols;
                 ++it;
             }
-            else    //then move columns at cur_grade to some position in the equivalence class given by xiMatrixEntry second; map F changes
+            else    //then move columns at cur_grade to some position in the equivalence class given by xiMatrixEntry second; lift map changes
             {
-                //determine where these columns map to under F
                 xiMatrixEntry* target = second;
                 int target_col = second->high_index - second->high_count;
+
+                //re-compute the lift map for cur_grade and find the new position for the columns
                 if(from_below)
                 {
                     while( (target->left != NULL) && (cur_grade->x <= target->left->x) )
@@ -1496,9 +811,12 @@ unsigned long PersistenceUpdater::move_columns(xiMatrixEntry* first, xiMatrixEnt
                     }
                 }
 
+                ///TESTING
+//                qDebug() << "====>>>> simplex at (" << cur_grade->x << "," << cur_grade->y << ") now lifts to (" << target->x << "," << target->y << ")";
+
                 //associate cur_grade with target
                 target->insert_multigrade(cur_grade, false);
-                it = first->high_simplices.erase(it);    //NOTE: advances the iterator!!!
+                it = cur_entry->high_simplices.erase(it);    //NOTE: advances the iterator!!!
 
                 //if target is not the leftmost entry in its equivalence class, then move columns at cur_grade to the block of columns for target
                 if( (from_below && target->left != NULL) || (!from_below && target->down != NULL) )
@@ -1506,11 +824,11 @@ unsigned long PersistenceUpdater::move_columns(xiMatrixEntry* first, xiMatrixEnt
                 //else, then the columns don't actually have to move
 
                 //update column counts
-                first->high_count -= cur_grade->num_cols;
+                cur_entry->high_count -= cur_grade->num_cols;
                 target->high_count += cur_grade->num_cols;
 
                 //update equivalence class sizes
-                first_head->high_class_size -= cur_grade->num_cols;
+                first->high_class_size -= cur_grade->num_cols;
                 second->high_class_size += cur_grade->num_cols;
             }
 
@@ -1519,389 +837,19 @@ unsigned long PersistenceUpdater::move_columns(xiMatrixEntry* first, xiMatrixEnt
         }//end "high" simplex loop
 
         //advance to the next xiMatrixEntry in the first equivalence class
-        first = from_below ? first->down : first->left;
+        cur_entry = from_below ? cur_entry->down : cur_entry->left;
     }//end while
-
-    ///DEBUGGING
-    if(second->low_index + first_head->low_class_size != first_head->low_index || second->high_index + first_head->high_class_size != first_head->high_index)
-    {
-        qDebug() << "  ===>>> ERROR: swap resulted in non-consecutive column blocks!";
-    }
-    return swap_counter;
-}//end move_columns()
-
-//for lazy updates -- moves columns from an equivalence class given by xiMatrixEntry* first either past the equivalence class given by xiMatrixEntry* second or into its bin
-//  the boolean argument indicates whether an anchor is being crossed from below (or from above)
-//  returns a count of the number of transpositions performed
-unsigned long PersistenceUpdater::move_columns_lazy(xiMatrixEntry* first, xiMatrixEntry* second, bool from_below, MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH)
-{
-    ///DEBUGGING
-    if(first->low_index + second->low_class_size != second->low_index || first->high_index + second->high_class_size != second->high_index)
-    {
-        qDebug() << "  ===>>> ERROR: swapping non-consecutive column blocks!";
-    }
-
-    //get column indexes (so we know which columns to move)
-    int low_col = first->low_index;   //rightmost column index of low simplices for the equivalence class to move
-    int high_col = first->high_index; //rightmost column index of high simplices for the equivalence class to move
-
-    //set column indexes for the first class to their final positions
-    first->low_index = second->low_index;
-    first->high_index = second->high_index;
-
-    //get the bins
-    xiMatrixEntry* first_bin = from_below ? xi_matrix.get_col_bin(first->x) : xi_matrix.get_row_bin(first->y);
-    xiMatrixEntry* second_bin = from_below ? xi_matrix.get_row_bin(second->y) : xi_matrix.get_col_bin(second->x);
-
-    //initialize counter
-    unsigned long swap_counter = 0;
-
-    //loop over all xiMatrixEntrys in the first equivalence class
-    xiMatrixEntry* cur_entry = first;   //NOTE: THIS IS DIFFERENT (AND CLEARER) THAN IN THE NON-LAZY VERSION
-    while(cur_entry != NULL)
-    {
-        //move all "low" simplices for this xiMatrixEntry (start with rightmost column, end with leftmost)
-        for(std::list<Multigrade*>::iterator it = cur_entry->low_simplices.begin(); it != cur_entry->low_simplices.end(); ) //NOTE: iterator advances in loop
-        {
-            Multigrade* cur_grade = *it;
-
-            if( (from_below && cur_grade->x > second->x) || (!from_below && cur_grade->y > second->y) )
-                //then move columns at cur_grade past columns at xiMatrixEntry second
-            {
-                swap_counter += move_low_columns(low_col, cur_grade->num_cols, second->low_index, RL, UL, RH, UH);
-                second->low_index -= cur_grade->num_cols;
-                second_bin->low_index -= cur_grade->num_cols;
-                ++it;
-            }
-            else    //then columns at cur_grade join the second bin (but they don't have to move)
-            {
-                second_bin->insert_multigrade(cur_grade, true);
-                it = cur_entry->low_simplices.erase(it);    //NOTE: advances the iterator!!!
-                cur_entry->low_count -= cur_grade->num_cols;
-                second_bin->low_count += cur_grade->num_cols;
-                first->low_class_size -= cur_grade->num_cols;
-                second->low_class_size += cur_grade->num_cols;
-            }
-
-            //update column index
-            low_col -= cur_grade->num_cols;
-        }//end "low" simplex loop
-
-        //move all "high" simplices for this xiMatrixEntry (start with rightmost column, end with leftmost)
-        for(std::list<Multigrade*>::iterator it = cur_entry->high_simplices.begin(); it != cur_entry->high_simplices.end(); )   //NOTE: iterator advances in loop
-        {
-            Multigrade* cur_grade = *it;
-
-            if( (from_below && cur_grade->x > second->x) || (!from_below && cur_grade->y > second->y) )
-                //then move columns at cur_grade past columns at xiMatrixEntry second
-            {
-                swap_counter += move_high_columns(high_col, cur_grade->num_cols, second->high_index, RH, UH);
-                second->high_index -= cur_grade->num_cols;
-                second_bin->high_index -= cur_grade->num_cols;
-                ++it;
-            }
-            else    //then columns at cur_grade join the second bin
-            {
-                second_bin->insert_multigrade(cur_grade, false);
-                it = cur_entry->high_simplices.erase(it);    //NOTE: advances the iterator!!!
-                cur_entry->high_count -= cur_grade->num_cols;
-                second_bin->high_count += cur_grade->num_cols;
-                first->high_class_size -= cur_grade->num_cols;
-                second->high_class_size += cur_grade->num_cols;
-            }
-
-            //update column index
-            high_col -= cur_grade->num_cols;
-        }//end "low" simplex loop
-
-        //advance to the next xiMatrixEntry in the first equivalence class
-        if(cur_entry != first_bin)  //then look for the next entry in the equivalence class
-        {
-            xiMatrixEntry* prev_entry = cur_entry;
-            cur_entry = from_below ? cur_entry->down : cur_entry->left;
-
-            if(cur_entry == NULL)   //then there is no next entry, so we must advance to the bin
-            {
-                //if prev_entry is not an anchor, then we must check its other bin and move simplices from it (this corrects for the problem that occurs when crossing a non-anchor xi support point with nonempty bin)
-                xiMatrixEntry* other_direction = from_below ? prev_entry->left : prev_entry->down;
-                if(other_direction == NULL) //then prev_entry is not an anchor
-                {
-                    xiMatrixEntry* other_bin = from_below ? xi_matrix.get_row_bin(prev_entry->y) : xi_matrix.get_col_bin(prev_entry->x);
-                    if(other_bin->low_count > 0 || other_bin->high_count > 0)
-                    {
-//                        qDebug() << "       adjusting bins for (" << prev_entry->x << "," << prev_entry->y << ")";
-                        first_bin->move_bin_here(other_bin);
-                    }
-                }
-
-                //now we can advance to the bin in the correct direction
-                first_bin->low_index = second->low_index;       //set the bin indexes
-                first_bin->high_index = second->high_index;     //  to their new positions
-                cur_entry = first_bin;
-            }
-        }
-        else    //then we just processed the bin, so we are now finished
-            cur_entry = NULL;
-    }//end xiMatrixEntry loop
 
     ///DEBUGGING
     if(second->low_index + first->low_class_size != first->low_index || second->high_index + first->high_class_size != first->high_index)
     {
         qDebug() << "  ===>>> ERROR: swap resulted in non-consecutive column blocks!";
     }
-
     return swap_counter;
-}//end move_columns_lazy()
-
-//for lazy updates -- finds columns in the unsorted bin that should map to the anchor, and moves them
-//  this version is for horizontal classes!
-//  returns a count of the number of transpositions performed
-unsigned long PersistenceUpdater::move_columns_from_bin_horizontal(xiMatrixEntry* bin, xiMatrixEntry* at_anchor, MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH)
-{
-    unsigned threshold = at_anchor->left->x;
-    unsigned long swap_counter = 0;
-
-    //process "low" simplices
-    int col = bin->low_index;
-    for(std::list<Multigrade*>::iterator it = bin->low_simplices.begin(); it != bin->low_simplices.end(); ) //NOTE: iterator advances in loop
-    {
-        if( (*it)->x > threshold )    //then columns at this grade moves
-        {
-            swap_counter += move_low_columns(col, (*it)->num_cols, (at_anchor->low_index - at_anchor->low_count), RL, UL, RH, UH);
-
-            at_anchor->insert_multigrade(*it, true);
-            at_anchor->low_count += (*it)->num_cols;
-            bin->low_count -= (*it)->num_cols;
-            bin->low_index -= (*it)->num_cols;
-            col -= (*it)->num_cols;
-            it = bin->low_simplices.erase(it);  //NOTE: advances the iterator!
-        }
-        else    //then columns at this grade don't move
-        {
-            col -= (*it)->num_cols;
-            ++it;
-        }
-    }
-
-    //process "high" simplices
-    col = bin->high_index;
-    for(std::list<Multigrade*>::iterator it = bin->high_simplices.begin(); it != bin->high_simplices.end(); ) //NOTE: iterator advances in loop
-    {
-        if( (*it)->x > threshold )    //then columns at this grade moves
-        {
-            swap_counter += move_high_columns(col, (*it)->num_cols, (at_anchor->high_index - at_anchor->high_count), RH, UH);
-
-            at_anchor->insert_multigrade(*it, false);
-            at_anchor->high_count += (*it)->num_cols;
-            bin->high_count -= (*it)->num_cols;
-            bin->high_index -= (*it)->num_cols;
-            col -= (*it)->num_cols;
-            it = bin->high_simplices.erase(it);  //NOTE: advances the iterator!
-        }
-        else    //then columns at this grade don't move
-        {
-            col -= (*it)->num_cols;
-            ++it;
-        }
-    }
-
-    return swap_counter;
-}//end move_columns_from_bin_horizontal()
-
-//for lazy updates -- finds columns in the unsorted bin that should map to the anchor, and moves them
-//  this version is for vertical classes!
-//  returns a count of the number of transpositions performed
-unsigned long PersistenceUpdater::move_columns_from_bin_vertical(xiMatrixEntry* bin, xiMatrixEntry* at_anchor, MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH)
-{
-    unsigned threshold = at_anchor->down->y;
-    unsigned long swap_counter = 0;
-
-    //process "low" simplices
-    int col = bin->low_index;
-    for(std::list<Multigrade*>::iterator it = bin->low_simplices.begin(); it != bin->low_simplices.end(); ) //NOTE: iterator advances in loop
-    {
-        if( (*it)->y > threshold )    //then columns at this grade moves
-        {
-            swap_counter += move_low_columns(col, (*it)->num_cols, (at_anchor->low_index - at_anchor->low_count), RL, UL, RH, UH);
-
-            at_anchor->insert_multigrade(*it, true);
-            at_anchor->low_count += (*it)->num_cols;
-            bin->low_count -= (*it)->num_cols;
-            bin->low_index -= (*it)->num_cols;
-            col -= (*it)->num_cols;
-            it = bin->low_simplices.erase(it);  //NOTE: advances the iterator!
-        }
-        else    //then columns at this grade don't move
-        {
-            col -= (*it)->num_cols;
-            ++it;
-        }
-    }
-
-    //process "high" simplices
-    col = bin->high_index;
-    for(std::list<Multigrade*>::iterator it = bin->high_simplices.begin(); it != bin->high_simplices.end(); ) //NOTE: iterator advances in loop
-    {
-        if( (*it)->y > threshold )    //then columns at this grade moves
-        {
-            swap_counter += move_high_columns(col, (*it)->num_cols, (at_anchor->high_index - at_anchor->high_count), RH, UH);
-
-            at_anchor->insert_multigrade(*it, false);
-            at_anchor->high_count += (*it)->num_cols;
-            bin->high_count -= (*it)->num_cols;
-            bin->high_index -= (*it)->num_cols;
-            col -= (*it)->num_cols;
-            it = bin->high_simplices.erase(it);  //NOTE: advances the iterator!
-        }
-        else    //then columns at this grade don't move
-        {
-            col -= (*it)->num_cols;
-            ++it;
-        }
-    }
-
-    return swap_counter;
-}//end move_columns_from_bin_vertical()
+}//end move_columns()
 
 //moves a block of n columns, the rightmost of which is column s, to a new position following column t (NOTE: assumes s <= t)
-unsigned long PersistenceUpdater::move_low_columns(int s, unsigned n, int t, MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH)
-{
-//    qDebug() << "   --Transpositions for low simplices: [" << s << "," << n << "," << t << "]:" << (n*(t-s)) << "total";
-    if(s > t)
-    {
-        qDebug() << "    ===>>> ERROR: illegal column move";
-    }
-
-    for(unsigned c=0; c<n; c++) //move column that starts at s-c
-    {
-        for(int i=s; i<t; i++)
-        {
-            unsigned a = i - c; //TODO: cast i to unsigned???
-            unsigned b = a + 1;
-
-            //we must swap the d-simplices currently corresponding to columns a and b=a+1
-            if(mesh->verbosity >= 9) { qDebug() << "(" << a << "," << b << ")"; }
-
-            bool a_pos = (RL->low(a) == -1);    //true iff simplex corresponding to column a is positive
-            bool b_pos = (RL->low(b) == -1);    //true iff simplex corresponding to column b=a+1 is positive
-
-            if(a_pos)  //simplex a is positive (Vineyards paper - Cases 1 and 4)
-            {
-                if(b_pos)   //simplex b is positive (Case 1)
-                {
-                    //look for columns k and l in RH with low(k)=a, low(l)=b, and RH(a,l)=1 -- if these exist, then we must fix matrix RH following row/column swaps (Case 1.1)
-                    int k = RH->find_low(a);
-                    int l = RH->find_low(b);
-                    bool RHal = (l > -1 && RH->entry(a, l));  //entry (a,l) in matrix RH
-
-                    //ensure that UL[a,b]=0
-                    UL->clear(a, b);
-
-                    //transpose rows and columns (don't need to swap columns of RL, because these columns are zero)
-                    UL->swap_columns(a);
-                    UL->swap_rows(a);
-
-                    //swap rows, and fix RH if necessary
-                    if(k > -1 && RHal)  //case 1.1
-                    {
-                        if(k < l)
-                        {
-                            RH->swap_rows(a, true);  //in this case, low entries change
-                            RH->add_column(k, l);
-                            UH->add_row(l, k);
-                        }
-                        else
-                        {
-                            RH->swap_rows(a, false);  //in this case, low entries do not change
-                            RH->add_column(l, k);
-                            UH->add_row(k, l);
-                        }
-                    }
-                    else
-                        RH->swap_rows(a, !RHal);  //in this case, only necessary to update low entries if RH(a,l)=0 or if column l does not exist
-                }
-                else    //simplex b is negative (Case 4)
-                {
-                    //ensure that UL[a,b]=0
-                    UL->clear(a, b);
-
-                    //transpose rows and columns and update low arrays
-                    RL->swap_columns(a, true);
-                    RH->swap_rows(a, true);
-                    UL->swap_columns(a);
-                    UL->swap_rows(a);
-                }
-            }
-            else    //simplex a is negative (Vineyards paper - Cases 2 and 3)
-            {
-                if(b_pos)   //simplex b is positive (Case 3)
-                {
-                    //look for column l in RH with low(l)=b and RH(a,l)=1
-                    int l = RH->find_low(b);
-                    bool RHal = (l > -1 && RH->entry(a, l));    //entry (a,l) in matrix RH
-
-                    //transpose rows of R; update low array if necessary
-                    RH->swap_rows(a, !RHal);
-
-                    if(UL->entry(a, b))    //case 3.1 -- here, R = RWPW, so no further action required on R
-                    {
-                       UL->add_row(b, a);
-                       UL->swap_rows(a);
-                       UL->add_row(b, a);
-                    }
-                    else    //case 3.2
-                    {
-                        RL->swap_columns(a, true);
-                        UL->swap_rows(a);
-                    }
-                }
-                else    //simplex b is negative (Case 2)
-                {
-                    //transpose rows of R
-                    RH->swap_rows(a, false);   //neither of these rows contain lowest 1's in any column
-
-                    if(UL->entry(a, b)) //case 2.1
-                    {
-                        UL->add_row(b, a);  //so that U will remain upper-triangular
-                        UL->swap_rows(a);   //swap rows of U
-
-                        if(RL->low(a) < RL->low(b)) //case 2.1.1
-                        {
-                            RL->add_column(a, b);       //necessary due to the row addition on U; this doesn't change low entries
-                            RL->swap_columns(a, true);  //now swap columns of R and update low entries
-                        }
-                        else //case 2.1.2
-                        {
-                            RL->add_column(a, b);       //necessary due to the row addition on U; this doesn't change low entries
-                            RL->swap_columns(a, false); //now swap columns of R but DO NOT update low entries
-                            RL->add_column(a, b);       //restore R to reduced form; low entries now same as they were initially
-                            UL->add_row(b, a);          //necessary due to column addition on R
-                        }
-                    }
-                    else    //case 2.2
-                    {
-                        RL->swap_columns(a, true);  //swap columns of R and update low entries
-                        UL->swap_rows(a);           //swap rows of U
-                    }
-                }
-
-                //finally, for cases 2 and 3, transpose columns of U
-                UL->swap_columns(a);
-            }
-
-            /// TESTING ONLY - FOR CHECKING THAT D=RU
-            if(testing)
-            {
-                D_low->swap_columns(a, false);
-                D_high->swap_rows(a, false);
-            }
-        }//end for(i=...)
-    }//end for(c=...)
-
-    return n*(t-s);
-}//end move_low_columns()
-
-//another version of the above -- this one maintains the permutation arrays required for the "reset" approach
+// this version maintains the permutation arrays required for the "reset" approach
 unsigned long PersistenceUpdater::move_low_columns(int s, unsigned n, int t, MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH, Perm& perm_low, Perm& inv_perm_low)
 {
 //    qDebug() << "   --Transpositions for low simplices: [" << s << "," << n << "," << t << "]:" << (n*(t-s)) << "total";
@@ -2050,100 +998,7 @@ unsigned long PersistenceUpdater::move_low_columns(int s, unsigned n, int t, Map
 
 
 //moves a block of n columns, the rightmost of which is column s, to a new position following column t (NOTE: assumes s <= t)
-unsigned long PersistenceUpdater::move_high_columns(int s, unsigned n, int t, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH)
-{
-//    qDebug() << "   --Transpositions for high simplices: [" << s << "," << n << "," << t << "]:" << (n*(t-s)) << "total";
-    if(s > t)
-    {
-        qDebug() << "    ===>>> ERROR: illegal column move";
-    }
-
-    for(unsigned c=0; c<n; c++) //move column that starts at s-c
-    {
-        for(int i=s; i<t; i++)
-        {
-            unsigned a = i - c; //TODO: cast i to unsigned???
-            unsigned b = a + 1;
-
-            //we must swap the (d+1)-simplices currently corresponding to columns a and b=a+1
-//            qDebug() << "(" << a << "," << b << ")";
-
-            bool a_pos = (RH->low(a) == -1);    //true iff simplex corresponding to column a is positive
-            bool b_pos = (RH->low(b) == -1);    //true iff simplex corresponding to column b is positive
-
-            if(a_pos)   //simplex a is positive, so its column is zero, and the fix is easy  (Vineyards paper - Cases 1 and 4)
-            {
-                if(!b_pos)   //only have to swap columns of R if column b is nonzero
-                    RH->swap_columns(a, true);
-
-                //ensure that UL[a,b]=0
-                UH->clear(a, b);
-
-                //transpose rows and columns of U
-                UH->swap_columns(a);
-                UH->swap_rows(a);
-
-                //done -- we don't care about the ROWS corresponding to simplices a and b, because we don't care about the boundaries of (d+2)-simplices
-            }
-            else    //simplex a is negative (Vineyards paper - Cases 2 and 3)
-            {
-                if(b_pos)   //simplex b is positive (Case 3)
-                {
-                    if(UH->entry(a, b))    //case 3.1 -- here, R = RWPW, so no further action required on R
-                    {
-                       UH->add_row(b, a);
-                       UH->swap_rows(a);
-                       UH->add_row(b, a);
-                    }
-                    else    //case 3.2
-                    {
-                        RH->swap_columns(a, true);
-                        UH->swap_rows(a);
-                    }
-                }
-                else    //simplex b is negative (Case 2)
-                {
-                    if(UH->entry(a, b)) //case 2.1
-                    {
-                        UH->add_row(b, a);  //so that U will remain upper-triangular
-                        UH->swap_rows(a);   //swap rows of U
-
-                        if(RH->low(a) < RH->low(b)) //case 2.1.1
-                        {
-                            RH->add_column(a, b);       //necessary due to the row addition on U; this doesn't change low entries
-                            RH->swap_columns(a, true);  //now swap columns of R and update low entries
-                        }
-                        else //case 2.1.2
-                        {
-                            RH->add_column(a, b);       //necessary due to the row addition on U; this doesn't change low entries
-                            RH->swap_columns(a, false); //now swap columns of R but DO NOT update low entries
-                            RH->add_column(a, b);       //restore R to reduced form; low entries now same as they were initially
-                            UH->add_row(b, a);          //necessary due to column addition on R
-                        }
-                    }
-                    else    //case 2.2
-                    {
-                        RH->swap_columns(a, true);  //swap columns and update low entries
-                        UH->swap_rows(a);           //swap rows of U
-                    }
-                }
-
-                //finally, for Cases 2 and 3, transpose columns of U
-                UH->swap_columns(a);
-            }
-
-            /// TESTING ONLY - FOR CHECKING THAT D=RU
-            if(testing)
-            {
-                D_high->swap_columns(a, false);
-            }
-        }//end for(i=...)
-    }//end for(c=...)
-
-    return n*(t-s);
-}//end move_high_columns()
-
-//another version of the above -- this one maintains the permutation arrays required for the "reset" approach
+// this version maintains the permutation arrays required for the "reset" approach
 unsigned long PersistenceUpdater::move_high_columns(int s, unsigned n, int t, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH,  Perm& perm_high, Perm& inv_perm_high)
 {
 //    qDebug() << "   --Transpositions for high simplices: [" << s << "," << n << "," << t << "]:" << (n*(t-s)) << "total";
@@ -2297,7 +1152,7 @@ void PersistenceUpdater::update_order_and_reset_matrices(xiMatrixEntry* first, x
             //remember current position of this grade
             cur_grade->simplex_index = low_col;
 
-            if( (from_below && cur_grade->x > second->x) || (!from_below && cur_grade->y > second->y) )
+            if( (from_below && cur_grade->x > second->x && cur_grade->y <= first->y) || (!from_below && cur_grade->y > second->y && cur_grade->x <= first->x) )
                 //then move columns at cur_grade past columns at xiMatrixEntry second; lift map does not change ( lift : multigrades --> xiSupportElements )
             {
                 second->low_index -= cur_grade->num_cols;
@@ -2305,10 +1160,12 @@ void PersistenceUpdater::update_order_and_reset_matrices(xiMatrixEntry* first, x
             }
             else    //then move columns at cur_grade to some position in the equivalence class given by xiMatrixEntry second; lift map changes
             {
-                //determine the new lift map for these columns
                 xiMatrixEntry* target = second;
                 int target_col = second->low_index - second->low_count;
-                if(from_below)
+
+                //if cur_grade comes before first_head, then cur_grade lifts to the LUB, and the columns should be associated with xiMatrixEntry second
+                //otherwise, we must find re-compute the lift map for cur_grade and find the new position for the columns
+                if(from_below && cur_grade->x <= second->x)
                 {
                     while( (target->left != NULL) && (cur_grade->x <= target->left->x) )
                     {
@@ -2316,7 +1173,7 @@ void PersistenceUpdater::update_order_and_reset_matrices(xiMatrixEntry* first, x
                         target_col -= target->low_count;
                     }
                 }
-                else
+                else if(!from_below && cur_grade->y <= second->y)
                 {
                     while( (target->down != NULL) && (cur_grade->y <= target->down->y) )
                     {
@@ -2350,7 +1207,7 @@ void PersistenceUpdater::update_order_and_reset_matrices(xiMatrixEntry* first, x
             //remember current position of this grade
             cur_grade->simplex_index = high_col;
 
-            if( (from_below && cur_grade->x > second->x) || (!from_below && cur_grade->y > second->y) )
+            if( (from_below && cur_grade->x > second->x && cur_grade->y <= first->y) || (!from_below && cur_grade->y > second->y && cur_grade->x <= first->x) )
                 //then move columns at cur_grade past columns at xiMatrixEntry second; lift map does not change ( lift : multigrades --> xiSupportElements )
             {
                 second->high_index -= cur_grade->num_cols;
@@ -2358,10 +1215,12 @@ void PersistenceUpdater::update_order_and_reset_matrices(xiMatrixEntry* first, x
             }
             else    //then move columns at cur_grade to some position in the equivalence class given by xiMatrixEntry second; lift map changes
             {
-                //determine the new lift map for these columns
                 xiMatrixEntry* target = second;
                 int target_col = second->high_index - second->high_count;
-                if(from_below)
+
+                //if cur_grade comes before first_head, then cur_grade lifts to the LUB, and the columns should be associated with xiMatrixEntry second
+                //otherwise, we must find re-compute the lift map for cur_grade and find the new position for the columns
+                if(from_below && cur_grade->x <= second->x)
                 {
                     while( (target->left != NULL) && (cur_grade->x <= target->left->x) )
                     {
@@ -2369,7 +1228,7 @@ void PersistenceUpdater::update_order_and_reset_matrices(xiMatrixEntry* first, x
                         target_col -= target->high_count;
                     }
                 }
-                else
+                else if(!from_below && cur_grade->y <= second->y)
                 {
                     while( (target->down != NULL) && (cur_grade->y <= target->down->y) )
                     {
@@ -2527,8 +1386,8 @@ void PersistenceUpdater::add_partition_entries(xiMatrixEntry* head)
 /// Is there a better way to handle endpoints at infinity?
 void PersistenceUpdater::store_barcode_template(Face* cell, MapMatrix_Perm* RL, MapMatrix_Perm* RH)
 {
-//    QDebug qd = qDebug().nospace();
-//    qd << "  -----barcode: ";
+    QDebug qd = qDebug().nospace();
+    qd << "  -----barcode: ";
 
     //mark this cell as visited
     cell->mark_as_visited();
@@ -2551,14 +1410,17 @@ void PersistenceUpdater::store_barcode_template(Face* cell, MapMatrix_Perm* RL, 
                 //find index of xi support point corresponding to simplex s
                 unsigned b = ( (partition_high.lower_bound(s) )->second)->index;
 
-//                qd << "(" << c << "," << s << ")-->(" << a << "," << b << ") ";
+
 
                 if(a != b)  //then we have a bar of positive length
+                {
+                    qd << "(" << c << "," << s << ")-->(" << a << "," << b << ") ";
                     dbc.add_bar(a, b);
+                }
             }
             else //then simplex c generates an essential cycle
             {
-//                qd << c << "-->" << a << " ";
+                qd << c << "-->" << a << " ";
 
                 dbc.add_bar(a, -1);     //b = -1 = MAX_UNSIGNED indicates this is an essential cycle
             }
@@ -2617,3 +1479,21 @@ void PersistenceUpdater::check_high_matrix(MapMatrix_Perm* RH, MapMatrix_RowPrio
         qDebug() << "high matrix ok";
 }
 
+void PersistenceUpdater::print_perms(Perm& per, Perm& inv)
+{
+    QDebug qd = qDebug().nospace();
+    qd << "  permutation: ";
+    for(unsigned i=0; i<per.size(); i++)
+        qd << per[i] << " ";
+    qd << "\n  inverse permutation: ";
+    for(unsigned i=0; i<inv.size(); i++)
+        qd << inv[i] << " ";
+}
+
+void PersistenceUpdater::print_high_partition()
+{
+    QDebug qd = qDebug().nospace();
+    qd << "  high partition: ";
+    for(std::map<unsigned, xiMatrixEntry*>::iterator it = partition_high.begin(); it != partition_high.end(); ++it)
+        qd << it->first << "->" << it->second->index << ", ";
+}

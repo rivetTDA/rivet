@@ -37,7 +37,6 @@ class PersistenceUpdater
         void find_anchors(); //computes anchors and stores them in mesh->all_anchors; anchor-lines will be created when mesh->build_interior() is called
 
         //functions to compute and store barcode templates in each 2-cell of the mesh
-        //there are four options here, and it isn't yet clear which is best
 // MUST BE UPDATED AFTRE JULY 2015 BUG FIX:       void store_barcodes(std::vector<Halfedge *> &path);             //standard algorithm with non-lazy swaps
 // MUST BE UPDATED AFTRE JULY 2015 BUG FIX:       void store_barcodes_lazy(std::vector<Halfedge*>& path);         //uses lazy updates and unsorted "bins" for each row and column
         void store_barcodes_with_reset(std::vector<Halfedge*>& path, ComputationThread* cthread);   //hybrid approach -- for expensive crossings, resets the matrices and does a standard persistence calculation
@@ -78,31 +77,14 @@ class PersistenceUpdater
         //moves columns from an equivalence class given by xiMatrixEntry* first to their new positions after or among the columns in the equivalence class given by xiMatrixEntry* second
         //  the boolean argument indicates whether an anchor is being crossed from below (or from above)
         //  returns a count of the number of transpositions performed
-        unsigned long move_columns(xiMatrixEntry* first, xiMatrixEntry* second, bool from_below, MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH);
         unsigned long move_columns(xiMatrixEntry* first, xiMatrixEntry* second, bool from_below, MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH, Perm& perm_low, Perm& inv_perm_low, Perm& perm_high, Perm& inv_perm_high);
 
-        //for lazy updates -- moves columns from an equivalence class given by xiMatrixEntry* first either past the equivalence class given by xiMatrixEntry* second or into its bin
-        //  the boolean argument indicates whether an anchor is being crossed from below (or from above)
-        //  returns a count of the number of transpositions performed
-        unsigned long move_columns_lazy(xiMatrixEntry* first, xiMatrixEntry* second, bool from_below, MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH);
-
-        //for lazy updates -- finds columns in the unsorted bin that should map to the anchor, and moves them
-        //  returns a count of the number of transpositions performed
-        unsigned long move_columns_from_bin_horizontal(xiMatrixEntry* bin, xiMatrixEntry* at_anchor, MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH);   //for horizontal classes
-        unsigned long move_columns_from_bin_vertical(xiMatrixEntry* bin, xiMatrixEntry* at_anchor, MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH);     //for vertical classes
-
         //moves a block of n columns, the rightmost of which is column s, to a new position following column t (NOTE: assumes s <= t)
         //  returns a count of the number of transpositions performed
-        unsigned long move_low_columns(int s, unsigned n, int t, MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH);
         unsigned long move_low_columns(int s, unsigned n, int t, MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH, Perm& perm_low, Perm& inv_perm_low);
-
-        //moves a block of n columns, the rightmost of which is column s, to a new position following column t (NOTE: assumes s <= t)
-        //  returns a count of the number of transpositions performed
-        unsigned long move_high_columns(int s, unsigned n, int t, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH);
         unsigned long move_high_columns(int s, unsigned n, int t, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH, Perm& perm_high, Perm& inv_perm_high);
 
         //swaps two blocks of columns by updating the total order on columns, then rebuilding the matrices and computing a new RU-decomposition
-        ///TODO: FINISH THIS!
         void update_order_and_reset_matrices(xiMatrixEntry* first, xiMatrixEntry* second, bool from_below, MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm*& UL, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm*& UH, MapMatrix_Perm* RL_initial, MapMatrix_Perm* RH_initial, Perm& perm_low, Perm& inv_perm_low, Perm& perm_high, Perm& inv_perm_high);
 
         //swaps two blocks of columns by using a quicksort to update the matrices, then fixing the RU-decomposition (Gaussian elimination on U followed by reduction of R)
@@ -122,6 +104,9 @@ class PersistenceUpdater
         ///TESTING ONLY
         void check_low_matrix(MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL);
         void check_high_matrix(MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH);
+
+        void print_perms(Perm& per, Perm& inv);
+        void print_high_partition();
 
 };
 
