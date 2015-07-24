@@ -75,6 +75,10 @@ void PersistenceUpdater::find_anchors()
             if(row_entry != col_entry)  //then there is a strict, non-supported anchor at (col_entry->x, row_entry->y)
             {
                 mesh->all_anchors.insert(new Anchor(col_entry, row_entry));
+
+                ///TODO: BUG FIX JULY 2015 -- create a xiMatrixEntry for this anchor and add it to the list of xi support points for the VisualizationWindow
+                ///     idea: could wait to build the list of points for VisualizationWindow until after find_anchors() completes, then just run through the xiSupportMatrix one time to build this list and set the index values of each xiMatrixEntry
+
                 if(mesh->verbosity >= 10) { qDebug() << "  anchor (strict, non-supported) found at (" << col_entry->x << "," << row_entry->y << ")"; }
             }
             else    //then row_entry == col_entry, so there might be a supported anchor at (col_entry->x, row_entry->y), or there might be no anchor here
@@ -225,9 +229,6 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
         {
             xiMatrixEntry* at_anchor = NULL;   //remains NULL iff this anchor is not supported
 
-            std::list<Multigrade*> low_LUB_grades;   //temporarily stores grades that lift to the LUB, for a non-supported anchor
-            std::list<Multigrade*> high_LUB_grades;  //  these lists are part of the July 2015 bug fix
-
             if(down == NULL)    //then this is also a supported anchor
             {
                 at_anchor = left;
@@ -250,37 +251,6 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
                 else    //this anchor is not supported
                 {
                     remove_partition_entries(left);     //this block of the partition will move
-
-                    //find multigrades associated with xiMatrixEntry left that should lift to the LUB; remove and remember these grades
-                    for(std::list<Multigrade*>::iterator it = left->low_simplices.begin(); it != left->low_simplices.end(); ) //NOTE: iterator advances in loop
-                    {
-                        Multigrade* cur_grade = *it;
-                        if(cur_grade->x > left->x)  //then this Multigrade lifts to the LUB, and should be re-mapped to xiMatrixEntry down
-                        {
-                            left->low_count -= cur_grade->num_cols;
-                            left->low_index -= cur_grade->num_cols;
-                            left->low_class_size -= cur_grade->num_cols;
-                            low_LUB_grades.push_back(cur_grade);
-                            it = left->low_simplices.erase(it); //NOTE: advances the iterator
-                        }
-                        else    //then we found a grade that doesn't lift to the LUB, so quit the loop (since grades are stored in order)
-                            break;
-                    }
-                    for(std::list<Multigrade*>::iterator it = left->high_simplices.begin(); it != left->high_simplices.end(); ) //NOTE: iterator advances in loop
-                    {
-                        Multigrade* cur_grade = *it;
-                        if(cur_grade->x > left->x)  //then this Multigrade lifts to the LUB, and should be re-mapped to xiMatrixEntry down
-                        {
-                            left->high_count -= cur_grade->num_cols;
-                            left->high_index -= cur_grade->num_cols;
-                            left->high_class_size -= cur_grade->num_cols;
-                            high_LUB_grades.push_back(cur_grade);
-                            it = left->high_simplices.erase(it); //NOTE: advances the iterator
-                            qDebug() << "  ====>>>>moving LUB simplices at (" << cur_grade->x << "," << cur_grade->y << ") from left (" << left->x << "," << left->y << ") to down (" << down->x << "," << down->y << ")";
-                        }
-                        else    //then we found a grade that doesn't lift to the LUB, so quit the loop (since grades are stored in order)
-                            break;
-                    }
                 }
 
                 remove_partition_entries(down);         //this block of the partition will move
@@ -303,26 +273,6 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
                 }
                 else    //this anchor is not supported
                 {
-                    //associate the stored multigrades (that lift to the LUB) with xiMatrixEntry down
-                    for(std::list<Multigrade*>::iterator it = low_LUB_grades.begin(); it != low_LUB_grades.end(); ++it)
-                    {
-                        Multigrade* cur_grade = *it;
-                        ///====>>> QUESTION: DO I NEED TO DO ANY SORTING HERE???
-                        down->insert_multigrade(cur_grade, true);
-                        down->low_count += cur_grade->num_cols;
-                        down->low_index += cur_grade->num_cols;
-                        down->low_class_size += cur_grade->num_cols;
-                    }
-                    for(std::list<Multigrade*>::iterator it = high_LUB_grades.begin(); it != high_LUB_grades.end(); ++it)
-                    {
-                        Multigrade* cur_grade = *it;
-                         ///====>>> QUESTION: DO I NEED TO DO ANY SORTING HERE???
-                        down->insert_multigrade(cur_grade, false);
-                        down->high_count += cur_grade->num_cols;
-                        down->high_index += cur_grade->num_cols;
-                        down->high_class_size += cur_grade->num_cols;
-                    }
-
                     add_partition_entries(down);        //this block of the partition moved
                 }
 
@@ -342,37 +292,6 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
                 else    //this anchor is not supported
                 {
                     remove_partition_entries(down);     //this block of the partition will move
-
-                    //find multigrades associated with xiMatrixEntry down that should lift to the LUB; remove and remember these grades
-                    for(std::list<Multigrade*>::iterator it = down->low_simplices.begin(); it != down->low_simplices.end(); ) //NOTE: iterator advances in loop
-                    {
-                        Multigrade* cur_grade = *it;
-                        if(cur_grade->y > left->y)  //then this Multigrade lifts to the LUB, and should be re-mapped to xiMatrixEntry down
-                        {
-                            down->low_count -= cur_grade->num_cols;
-                            down->low_index -= cur_grade->num_cols;
-                            down->low_class_size -= cur_grade->num_cols;
-                            low_LUB_grades.push_back(cur_grade);
-                            it = down->low_simplices.erase(it); //NOTE: advances the iterator
-                        }
-                        else    //then we found a grade that doesn't lift to the LUB, so quit the loop (since grades are stored in order)
-                            break;
-                    }
-                    for(std::list<Multigrade*>::iterator it = down->high_simplices.begin(); it != down->high_simplices.end(); ) //NOTE: iterator advances in loop
-                    {
-                        Multigrade* cur_grade = *it;
-                        if(cur_grade->y > down->y)  //then this Multigrade lifts to the LUB, and should be re-mapped to xiMatrixEntry down
-                        {
-                            down->high_count -= cur_grade->num_cols;
-                            down->high_index -= cur_grade->num_cols;
-                            down->high_class_size -= cur_grade->num_cols;
-                            high_LUB_grades.push_back(cur_grade);
-                            it = down->high_simplices.erase(it); //NOTE: advances the iterator
-                            qDebug() << "  ====>>>>moving LUB simplices at (" << cur_grade->x << "," << cur_grade->y << ") from down (" << down->x << "," << down->y << ") to left (" << left->x << "," << left->y << ")";
-                        }
-                        else    //then we found a grade that doesn't lift to the LUB, so quit the loop (since grades are stored in order)
-                            break;
-                    }
                 }
 
                 remove_partition_entries(left);         //this block of the partition will move
@@ -395,26 +314,6 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
                 }
                 else    //this anchor is not supported
                 {
-                    //associate the stored multigrades (that lift to the LUB) with xiMatrixEntry left
-                    for(std::list<Multigrade*>::iterator it = low_LUB_grades.begin(); it != low_LUB_grades.end(); ++it)
-                    {
-                        Multigrade* cur_grade = *it;
-                        ///====>>> QUESTION: DO I NEED TO DO ANY SORTING HERE???
-                        left->insert_multigrade(cur_grade, true);
-                        left->low_count += cur_grade->num_cols;
-                        left->low_index += cur_grade->num_cols;
-                        left->low_class_size += cur_grade->num_cols;
-                    }
-                    for(std::list<Multigrade*>::iterator it = high_LUB_grades.begin(); it != high_LUB_grades.end(); ++it)
-                    {
-                        Multigrade* cur_grade = *it;
-                         ///====>>> QUESTION: DO I NEED TO DO ANY SORTING HERE???
-                        left->insert_multigrade(cur_grade, false);
-                        left->high_count += cur_grade->num_cols;
-                        left->high_index += cur_grade->num_cols;
-                        left->high_class_size += cur_grade->num_cols;
-                    }
-
                     add_partition_entries(left);        //this block of the partition moved
                 }
 
