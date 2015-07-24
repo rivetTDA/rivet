@@ -17,7 +17,6 @@ struct xiMatrixEntry
     unsigned x;     //discrete x-grade of this support point
     unsigned y;     //discrete y-grade of this support point
     unsigned index; //index of this support point in the vector of support points stored in VisualizationWindow
-                        // NOTE: set index to -1 iff this point is NOT an xi support point, but rather in the set LUB^{e_0}, as defined by Mike in July 2015
 
     xiMatrixEntry* down;     //pointer to the next support point below this one
     xiMatrixEntry* left;     //pointer to the next support point left of this one
@@ -76,9 +75,6 @@ class xiSupportMatrix
 
         void fill(std::vector<xiPoint>& xi_pts);   //stores xi support points in the xiSupportMatrix
             //precondition: xi_pts contains the support points in lexicographical order
-
-        void store_LUBe0_points();  //stores points of LUB^{e_0}, where e_0 is the cell corresponding to vertical lines to the right of all support points -- fix for major bug in July 2015
-        void remove_LUBe0_points(); //removes points of LUB^{e_0} that are not xi support points
 
         xiMatrixEntry* get_row(unsigned r); //gets a pointer to the rightmost entry in row r; returns NULL if row r is empty
         xiMatrixEntry* get_col(unsigned c); //gets a pointer to the top entry in column c; returns NULL if column c is empty

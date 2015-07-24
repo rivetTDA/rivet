@@ -119,9 +119,6 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
 
     timer.start();
 
-    //store LUB^{e_0} points in xiSupportMatrix -- BUG FIX July 2015
-    xi_matrix.store_LUBe0_points();
-
     //initialize the map from simplex grades to xi support points
     if(mesh->verbosity >= 6) { qDebug() << "  Mapping low simplices:"; }
     IndexMatrix* ind_low = bifiltration->get_index_mx(dim);    //can we improve this with something more efficient than IndexMatrix?
@@ -130,9 +127,6 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
     if(mesh->verbosity >= 6) { qDebug() << "  Mapping high simplices:"; }
     IndexMatrix* ind_high = bifiltration->get_index_mx(dim + 1);    //again, could be improved?
     store_multigrades(ind_high, false);
-
-    //BUG FIX July 2015 -- now we can remove LUB^{e^0} points that are not xi support points from xiSupportMatrix
-    xi_matrix.remove_LUBe0_points();
 
     //get the proper simplex ordering
     std::vector<int> low_simplex_order;     //this will be a map : dim_index --> order_index for dim-simplices
@@ -575,18 +569,10 @@ void PersistenceUpdater::store_multigrades(IndexMatrix* ind, bool low)
                     //back up one position, to the last element of the frontier such that (*it)->x >= x
                     --it;
 
-                    //BUG FIX July 2015 -- if the iterator points to a LUB^{e^0} point that is not an xi_support point, then take the next xi support point to the left
-                    xiMatrixEntry* map_to = *it;
-                    if(map_to->index == -1) //then the entry is not a xi support point
-                    {
-                        map_to = map_to->left;
-                        qDebug() << "   --adjusting lift map for simplices at (" << x << "," << y << "), which now map to xi point at (" << map_to->x << "," << map_to->y << ")";
-                    }
-
                     //now map the multigrade to the xi support entry
-                    map_to->add_multigrade(x, y, last_col - first_col, last_col, low);
+                    (*it)->add_multigrade(x, y, last_col - first_col, last_col, low);
 
-                    if(mesh->verbosity >= 6) { qDebug() << "    simplices at (" << x << "," << y << "), in columns" << (first_col + 1) << "to" << last_col << ", mapped to xi support point (" << map_to->x << ", " << map_to->y << ")"; }
+                    if(mesh->verbosity >= 6) { qDebug() << "    simplices at (" << x << "," << y << "), in columns" << (first_col + 1) << "to" << last_col << ", mapped to xi support point (" << (*it)->x << ", " << (*it)->y << ")"; }
                 }
             }
         }//end x loop
