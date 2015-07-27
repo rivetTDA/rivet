@@ -92,12 +92,12 @@ Mesh::~Mesh()
 void Mesh::build_arrangement(MultiBetti& mb, std::vector<xiPoint>& xi_pts, ComputationThread* cthread)
 {
     QTime timer;    //for timing the computations
-    PersistenceUpdater updater(this, mb.bifiltration, xi_pts);   //PersistenceUpdater object is able to do the calculations necessary for finding anchors and computing barcode templates
 
-    //first, compute anchors and store them in the vector Mesh::all_anchors
+    //first, create PersistenceUpdater
+    //this also finds anchors and stores them in the vector Mesh::all_anchors -- JULY 2015 BUG FIX
     emit cthread->setCurrentProgress(10);
     timer.start();
-    updater.find_anchors();
+    PersistenceUpdater updater(this, mb.bifiltration, xi_pts);   //PersistenceUpdater object is able to do the calculations necessary for finding anchors and computing barcode templates
     qDebug() << "  --> finding anchors took" << timer.elapsed() << "milliseconds";
 
     //now that we have all the anchors, we can build the interior of the arrangement
@@ -134,7 +134,7 @@ void Mesh::build_arrangement(std::vector<xiPoint>& xi_pts, std::vector<BarcodeTe
     //first, compute anchors and store them in the vector Mesh::all_anchors
     emit cthread->setCurrentProgress(10);
     timer.start();
-    updater.find_anchors();
+//    updater.find_anchors(); -- MUST BE UPDATED FOR JULY 2015 BUG FIX!!!
     qDebug() << "  --> finding anchors took" << timer.elapsed() << "milliseconds";
 
     //now that we have all the anchors, we can build the interior of the arrangement
@@ -746,6 +746,12 @@ void Mesh::set_barcode_template(unsigned i, BarcodeTemplate& bt)
 unsigned Mesh::num_faces()
 {
     return faces.size();
+}
+
+//creates a new anchor in the vector all_anchors
+void Mesh::add_anchor(xiMatrixEntry* entry)
+{
+    all_anchors.insert(new Anchor(entry));
 }
 
 //finds the first anchor that intersects the left edge of the arrangement at a point not less than the specified y-coordinate

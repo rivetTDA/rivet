@@ -32,13 +32,16 @@ class PersistenceUpdater
     public:
 
         PersistenceUpdater(Mesh* m, SimplexTree* b, std::vector<xiPoint>& xi_pts);  //constructor for when we must compute all of the barcode templates
+
+// MUST BE UPDATED AFTER JULY 2015 BUG FIX:
         PersistenceUpdater(Mesh* m, std::vector<xiPoint>& xi_pts); //constructor for when we load the pre-computed barcode templates from a RIVET data file
 
-        void find_anchors(); //computes anchors and stores them in mesh->all_anchors; anchor-lines will be created when mesh->build_interior() is called
+//JULY 2015 BUG FIX: the following function is obsolete
+//        void find_anchors(); //computes anchors and stores them in mesh->all_anchors; anchor-lines will be created when mesh->build_interior() is called
 
         //functions to compute and store barcode templates in each 2-cell of the mesh
-// MUST BE UPDATED AFTRE JULY 2015 BUG FIX:       void store_barcodes(std::vector<Halfedge *> &path);             //standard algorithm with non-lazy swaps
-// MUST BE UPDATED AFTRE JULY 2015 BUG FIX:       void store_barcodes_lazy(std::vector<Halfedge*>& path);         //uses lazy updates and unsorted "bins" for each row and column
+// MUST BE UPDATED AFTER JULY 2015 BUG FIX:       void store_barcodes(std::vector<Halfedge *> &path);             //standard algorithm with non-lazy swaps
+// MUST BE UPDATED AFTER JULY 2015 BUG FIX:       void store_barcodes_lazy(std::vector<Halfedge*>& path);         //uses lazy updates and unsorted "bins" for each row and column
         void store_barcodes_with_reset(std::vector<Halfedge*>& path, ComputationThread* cthread);   //hybrid approach -- for expensive crossings, resets the matrices and does a standard persistence calculation
         void store_barcodes_quicksort(std::vector<Halfedge*>& path);    //hybrid approach -- for expensive crossings, rearranges columns via quicksort and fixes the RU-decomposition globally
 

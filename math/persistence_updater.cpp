@@ -5,6 +5,7 @@
 #include "multi_betti.h"
 #include "simplex_tree.h"
 #include "../computationthread.h"
+#include "../dcel/anchor.h"
 #include "../dcel/barcode_template.h"
 #include "../dcel/dcel.h"
 #include "../dcel/mesh.h"
@@ -19,8 +20,9 @@ PersistenceUpdater::PersistenceUpdater(Mesh *m, SimplexTree* b, std::vector<xiPo
     xi_matrix(m->x_grades.size(), m->y_grades.size()),
     testing(false)
 {
-    //fill the xiSupportMatrix with the xi support points
-    xi_matrix.fill(xi_pts);
+    //fill the xiSupportMatrix with the xi support points and anchors -- JULY 2015 BUG FIX
+    //  also stores the anchors in xi_pts and in the Mesh
+    xi_matrix.fill_and_find_anchors(xi_pts, m);
 
     //create partition entries for infinity (which never change)
     unsigned infty = -1;    // = MAX_UNSIGNED, right?
@@ -43,8 +45,9 @@ PersistenceUpdater::PersistenceUpdater(Mesh* m, std::vector<xiPoint>& xi_pts) :
     partition_high.insert( std::pair<unsigned, xiMatrixEntry*>(infty, xi_matrix.get_infinity()) );
 }
 
+//JULY 2015 BUG FIX: the following function is obsolete
 //computes anchors and stores them in mesh->all_anchors; anchor-lines will be created when mesh->build_interior() is called
-void PersistenceUpdater::find_anchors()
+/*void PersistenceUpdater::find_anchors()
 {
     if(mesh->verbosity >= 2) { qDebug() << "FINDING ANCHORS"; }
 
@@ -75,9 +78,6 @@ void PersistenceUpdater::find_anchors()
             if(row_entry != col_entry)  //then there is a strict, non-supported anchor at (col_entry->x, row_entry->y)
             {
                 mesh->all_anchors.insert(new Anchor(col_entry, row_entry));
-
-                ///TODO: BUG FIX JULY 2015 -- create a xiMatrixEntry for this anchor and add it to the list of xi support points for the VisualizationWindow
-                ///     idea: could wait to build the list of points for VisualizationWindow until after find_anchors() completes, then just run through the xiSupportMatrix one time to build this list and set the index values of each xiMatrixEntry
 
                 if(mesh->verbosity >= 10) { qDebug() << "  anchor (strict, non-supported) found at (" << col_entry->x << "," << row_entry->y << ")"; }
             }
@@ -111,7 +111,7 @@ void PersistenceUpdater::find_anchors()
                 ++it;
         }//end column loop
     }//end row loop
-}//end find_anchors()
+}//end find_anchors()*/
 
 //computes and stores a barcode template in each 2-cell of mesh
 //resets the matrices and does a standard persistence calculation for expensive crossings
@@ -217,6 +217,7 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
 
         //determine which anchor is represented by this edge
         Anchor* cur_anchor = (path[i])->get_anchor();
+        xiMatrixEntry* at_anchor = cur_anchor->get_entry();
 
         qDebug() << "  step" << i << "of path: crossing anchor at ("<< cur_anchor->get_x() << "," << cur_anchor->get_y() << ") into cell" << mesh->FID((path[i])->get_face());
 
@@ -225,34 +226,17 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
         xiMatrixEntry* left = cur_anchor->get_left();
 
         //if this is a strict anchor, then swap simplices
-        if(left != NULL) //then this is a strict anchor and some simplices swap
+        if(down != NULL && left != NULL) //then this is a strict anchor and some simplices swap
         {
-            xiMatrixEntry* at_anchor = NULL;   //remains NULL iff this anchor is not supported
-
-            if(down == NULL)    //then this is also a supported anchor
-            {
-                at_anchor = left;
-                down = left->down;
-                left = left->left;
-            }//now down and left are correct (and should not be NULL)
-
             //process the swaps
             if(cur_anchor->is_above()) //then the anchor is crossed from below to above
             {
                 //pre-move updates to equivalence class info
-                if(at_anchor != NULL)  //this anchor is supported
-                {
-                    left->low_index = at_anchor->low_index - at_anchor->low_count;                //necessary since low_index, low_class_size,
-                    left->low_class_size = at_anchor->low_class_size - at_anchor->low_count;      //  high_index, and high_class_size
-                    left->high_index = at_anchor->high_index - at_anchor->high_count;             //  are only reliable for the head
-                    left->high_class_size = at_anchor->high_class_size - at_anchor->high_count;   //  of each equivalence class
-                    remove_partition_entries(at_anchor);   //this partition might become empty
-                }
-                else    //this anchor is not supported
-                {
-                    remove_partition_entries(left);     //this block of the partition will move
-                }
-
+                left->low_index = at_anchor->low_index - at_anchor->low_count;                //necessary since low_index, low_class_size,
+                left->low_class_size = at_anchor->low_class_size - at_anchor->low_count;      //  high_index, and high_class_size
+                left->high_index = at_anchor->high_index - at_anchor->high_count;             //  are only reliable for the head
+                left->high_class_size = at_anchor->high_class_size - at_anchor->high_count;   //  of each equivalence class
+                remove_partition_entries(at_anchor);   //this block of the partition might become empty
                 remove_partition_entries(down);         //this block of the partition will move
 
                 //now permute the columns and fix the RU-decomposition
@@ -264,36 +248,20 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
                     update_order_and_reset_matrices(down, left, true, R_low, U_low, R_high, U_high, R_low_initial, R_high_initial, perm_low, inv_perm_low, perm_high, inv_perm_high);
 
                 //post-move updates to equivalance class info
-                if(at_anchor != NULL)  //this anchor is supported
-                {
-                    at_anchor->low_class_size = at_anchor->low_count + down->low_class_size;
-                    at_anchor->high_class_size = at_anchor->high_count + down->high_class_size;
-                    down->low_class_size = -1;  //this xiMatrixEntry is no longer the head of an equivalence class
-                    add_partition_entries(at_anchor);
-                }
-                else    //this anchor is not supported
-                {
-                    add_partition_entries(down);        //this block of the partition moved
-                }
-
+                at_anchor->low_class_size = at_anchor->low_count + down->low_class_size;
+                at_anchor->high_class_size = at_anchor->high_count + down->high_class_size;
+                down->low_class_size = -1;  //this xiMatrixEntry is no longer the head of an equivalence class
+                add_partition_entries(at_anchor);      //this block of the partition might have previously been empty
                 add_partition_entries(left);            //this block of the partition moved
             }
             else    //then anchor is crossed from above to below
             {
                 //pre-move updates to equivalence class info
-                if(at_anchor != NULL)
-                {
-                    down->low_index = at_anchor->low_index - at_anchor->low_count;                //necessary since low_index, low_class_size,
-                    down->low_class_size = at_anchor->low_class_size - at_anchor->low_count;      //  high_index, and high_class_size
-                    down->high_index = at_anchor->high_index - at_anchor->high_count;             //  are only reliable for the head
-                    down->high_class_size = at_anchor->high_class_size - at_anchor->high_count;   //  of each equivalence class
-                    remove_partition_entries(at_anchor);   //this partition might become empty
-                }
-                else    //this anchor is not supported
-                {
-                    remove_partition_entries(down);     //this block of the partition will move
-                }
-
+                down->low_index = at_anchor->low_index - at_anchor->low_count;                //necessary since low_index, low_class_size,
+                down->low_class_size = at_anchor->low_class_size - at_anchor->low_count;      //  high_index, and high_class_size
+                down->high_index = at_anchor->high_index - at_anchor->high_count;             //  are only reliable for the head
+                down->high_class_size = at_anchor->high_class_size - at_anchor->high_count;   //  of each equivalence class
+                remove_partition_entries(at_anchor);   //this block of the partition might become empty
                 remove_partition_entries(left);         //this block of the partition will move
 
                 //now permute the columns and fix the RU-decomposition
@@ -305,24 +273,15 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
                     update_order_and_reset_matrices(left, down, false, R_low, U_low, R_high, U_high, R_low_initial, R_high_initial, perm_low, inv_perm_low, perm_high, inv_perm_high);
 
                 //post-move updates to equivalance class info
-                if(at_anchor != NULL)  //this anchor is supported
-                {
-                    at_anchor->low_class_size = at_anchor->low_count + left->low_class_size;
-                    at_anchor->high_class_size = at_anchor->high_count + left->high_class_size;
-                    left->low_class_size = -1;  //this xiMatrixEntry is no longer the head of an equivalence class
-                    add_partition_entries(at_anchor);
-                }
-                else    //this anchor is not supported
-                {
-                    add_partition_entries(left);        //this block of the partition moved
-                }
-
+                at_anchor->low_class_size = at_anchor->low_count + left->low_class_size;
+                at_anchor->high_class_size = at_anchor->high_count + left->high_class_size;
+                left->low_class_size = -1;  //this xiMatrixEntry is no longer the head of an equivalence class
+                add_partition_entries(at_anchor);      //this block of the partition might have previously been empty
                 add_partition_entries(down);            //this block of the partition moved
             }
         }
         else    //then this is a supported, non-strict anchor, and we just have to split or merge equivalence classes
         {
-            xiMatrixEntry* at_anchor = down;
             xiMatrixEntry* generator = at_anchor->down;
             if(generator == NULL)
                 generator = at_anchor->left;
@@ -346,7 +305,7 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
                 at_anchor->high_class_size = at_anchor->high_count;
 
                 remove_partition_entries(at_anchor);   //this is necessary because the class corresponding
-                add_partition_entries(at_anchor);      //  to at_anchor might have become empty
+                add_partition_entries(at_anchor);      //  to cur_anchor might have become empty
                 add_partition_entries(generator);
             }
         }
@@ -471,7 +430,7 @@ void PersistenceUpdater::store_multigrades(IndexMatrix* ind, bool low)
                     //now map the multigrade to the xi support entry
                     (*it)->add_multigrade(x, y, last_col - first_col, last_col, low);
 
-                    if(mesh->verbosity >= 6) { qDebug() << "    simplices at (" << x << "," << y << "), in columns" << (first_col + 1) << "to" << last_col << ", mapped to xi support point (" << (*it)->x << ", " << (*it)->y << ")"; }
+                    if(mesh->verbosity >= 6) { qDebug() << "    simplices at (" << x << "," << y << "), in columns" << (first_col + 1) << "to" << last_col << ", mapped to xiMatrixEntry at (" << (*it)->x << ", " << (*it)->y << ")"; }
                 }
             }
         }//end x loop
@@ -1294,8 +1253,6 @@ void PersistenceUpdater::store_barcode_template(Face* cell, MapMatrix_Perm* RL, 
             {
                 //find index of xi support point corresponding to simplex s
                 unsigned b = ( (partition_high.lower_bound(s) )->second)->index;
-
-
 
                 if(a != b)  //then we have a bar of positive length
                 {

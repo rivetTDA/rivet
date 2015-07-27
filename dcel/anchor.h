@@ -16,8 +16,10 @@ struct xiMatrixEntry;
 class Anchor
 {
     public:
-        Anchor(xiMatrixEntry* down, xiMatrixEntry* left);  //constructor for a strict Anchor, requires pointers to the "generators" of the anchor
-        Anchor(xiMatrixEntry* point, bool strong);         //constructor for a supported Anchor, requires pointer to the xi support point at the anchor and a bool indicating whether this anchor is strict (i.e. whether xi support points exist both left and down)
+        //JULY 2015 BUG FIX:
+//        Anchor(xiMatrixEntry* down, xiMatrixEntry* left);  //constructor for a strict Anchor, requires pointers to the "generators" of the anchor
+//        Anchor(xiMatrixEntry* point, bool strong);         //constructor for a supported Anchor, requires pointer to the xi support point at the anchor and a bool indicating whether this anchor is strict (i.e. whether xi support points exist both left and down)
+        Anchor(xiMatrixEntry* e);                   //default constructor
         Anchor(unsigned x, unsigned y);                    //constructor, requires only x- and y-coordinates
         Anchor(const Anchor& other);                       //copy constructor
 
@@ -38,15 +40,19 @@ class Anchor
         bool is_above();       //returns true iff this Anchor is above the current slice line, used for the vineyard-update process of storing persistence data in cells of the arrangement
         void toggle();         //toggles above/below state of this Anchor; called whever the slice line crosses this Anchor in the vineyard-update process of storing persistence data
 
-        xiMatrixEntry* get_down();  //accessor
-        xiMatrixEntry* get_left();  //accessor
+        xiMatrixEntry* get_entry(); //accessor -- JULY 2015 BUG FIX:
+        xiMatrixEntry* get_down();  //accessor -- unnecessary now
+        xiMatrixEntry* get_left();  //accessor -- unnecessary now
 
     private:
         unsigned x_coord;	//discrete x-coordinate (e.g. time) of multi-index
         unsigned y_coord;	//discrete y-coordinate (e.g. distance) of multi-inded
 
-        xiMatrixEntry* down;    //generator of this anchor located below the anchor
-        xiMatrixEntry* left;    //generator of this anchor located left of the anchor
+        //JULY 2015 BUG FIX:
+        xiMatrixEntry* entry;   //xiMatrixEntry at the position of this anchor
+
+//        xiMatrixEntry* down;    //generator of this anchor located below the anchor
+//        xiMatrixEntry* left;    //generator of this anchor located left of the anchor
             //NOTE: if the anchor is both strict and supported, then down is NULL and left points to the xiMatrixEntry at the anchor coordinates
             //      if the anchor is not strict (but supported), then left is NULL and down points to the xiMatrixEntry at the anchor coordinates
 
