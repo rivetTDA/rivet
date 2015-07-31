@@ -168,7 +168,7 @@ void xiSupportMatrix::fill_and_find_anchors(std::vector<xiPoint>& xi_pts, Mesh* 
 {
     unsigned next_xi_pt = 0;    //tracks the index of the next xi support point to insert
 
-    //loop over all entries in lexicographical order
+    //loop over all grades in lexicographical order
     for(unsigned i = 0; i < columns.size(); i++)
     {
         for(unsigned j = 0; j < rows.size(); j++)
@@ -196,7 +196,7 @@ void xiSupportMatrix::fill_and_find_anchors(std::vector<xiPoint>& xi_pts, Mesh* 
                 rows[j] = new_entry;
                 next_xi_pt++;
 
-                //if this is an anchor, send it to the Mesh
+                //if this is also an anchor, send it to the Mesh
                 if(anchor)
                     mesh->add_anchor(new_entry);
             }
@@ -217,29 +217,6 @@ void xiSupportMatrix::fill_and_find_anchors(std::vector<xiPoint>& xi_pts, Mesh* 
                 //send this anchor to the Mesh
                 mesh->add_anchor(new_entry);
             }
-
-
-//            if(xi_pt || anchor)
-//            {
-//                qDebug() << "  creating xiMatrixEntry" << entry_index << "at (" << i << "," << j << "); xi_pt =" << xi_pt << "; anchor =" << anchor;
-
-//                xiMatrixEntry* new_entry = new xiMatrixEntry(i, j, entry_index, anchor, columns[i], rows[j]);
-//                columns[i] = new_entry;
-//                rows[j] = new_entry;
-
-//                //update indexes
-//                entry_index++;
-//                if(xi_pt)
-//                    next_xi_pt++;
-
-//                //if this is an anchor but not an xi support point, add it to xi_pts
-//                if(!xi_pt)
-//                    xi_pts.push_back( xiPoint(i, j, 0, 0) );
-
-//                //if this is an anchor, send it to the Mesh
-//                if(anchor)
-//                    mesh->add_anchor(new_entry);
-//            }
         }
     }
 }//end fill_and_find_anchors()
