@@ -5,6 +5,7 @@
 class MultiBetti;
 struct Multigrade;
 class xiPoint;
+class Mesh;
 
 #include <list>
 #include <vector>
@@ -17,6 +18,8 @@ struct xiMatrixEntry
     unsigned x;     //discrete x-grade of this support point
     unsigned y;     //discrete y-grade of this support point
     unsigned index; //index of this support point in the vector of support points stored in VisualizationWindow
+
+    bool is_anchor; //JULY 2015 BUG FIX: indicates whether or not there is an anchor at the coordinates of this matrix entry
 
     xiMatrixEntry* down;     //pointer to the next support point below this one
     xiMatrixEntry* left;     //pointer to the next support point left of this one
@@ -39,6 +42,8 @@ struct xiMatrixEntry
   //functions
     xiMatrixEntry();    //empty constructor, e.g. for the entry representing infinity
     xiMatrixEntry(unsigned x, unsigned y, unsigned i, xiMatrixEntry* d, xiMatrixEntry* l);  //regular constructor
+
+    xiMatrixEntry(unsigned x, unsigned y, unsigned i, bool a, xiMatrixEntry* d, xiMatrixEntry* l);  //JULY 2015 BUG FIX: new constructor
 
     void add_multigrade(unsigned x, unsigned y, unsigned num_cols, int index, bool low);  //associates a (new) multigrades to this xi entry
         //the "low" argument is true if this multigrade is for low_simplices, and false if it is for high_simplices
@@ -73,7 +78,12 @@ class xiSupportMatrix
 
 ///DEPRECATED    void fill(MultiBetti& mb, std::vector<xiPoint>& xi_pts); //stores xi support points from MultiBetti in the xiSupportMatrix and in the supplied vector
 
-        void fill(std::vector<xiPoint>& xi_pts); //stores xi support points in the xiSupportMatrix; precondition xi_pts contains the support points in lexicographical order
+        void fill(std::vector<xiPoint>& xi_pts);   //stores xi support points in the xiSupportMatrix
+            //precondition: xi_pts contains the support points in lexicographical order
+
+        void fill_and_find_anchors(std::vector<xiPoint>& xi_pts, Mesh* mesh);   //stores xi support points in the xiSupportMatrix
+            //also finds anchors, which are stored both in the matrix and in the vector xi_pts
+            //precondition: xi_pts contains the support points in lexicographical order
 
         xiMatrixEntry* get_row(unsigned r); //gets a pointer to the rightmost entry in row r; returns NULL if row r is empty
         xiMatrixEntry* get_col(unsigned c); //gets a pointer to the top entry in column c; returns NULL if column c is empty
