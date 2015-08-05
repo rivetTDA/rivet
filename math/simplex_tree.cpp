@@ -155,7 +155,7 @@ void SimplexTree::build_VR_complex(std::vector<unsigned>& times, std::vector<uns
     unsigned gic=0;	//global index counter
     for(unsigned i=0; i<times.size(); i++)
 	{
-        if(times[i] > 4) continue;    ///ONLY FOR DEBUGGING
+//        if(times[i] > 11) continue;    ///ONLY FOR DEBUGGING
 
         //create the node and add it as a child of root
         STNode* node = new STNode(i, root, times[i], 0, gic);			//delete later!
@@ -179,7 +179,7 @@ void SimplexTree::build_VR_subtree(std::vector<unsigned>& times, std::vector<uns
     //loop through all points that could be children of this node
     for(unsigned j=parent_indexes.back()+1; j<times.size(); j++)
 	{
-        if(times[j] > 4) continue;    ///ONLY FOR DEBUGGING
+//        if(times[j] > 11) continue;    ///ONLY FOR DEBUGGING
 
         //look up distances from point j to each of its parents
 		//distance index is maximum of prev_distance and each of these distances

@@ -185,7 +185,8 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
     store_barcode_template(first_cell, R_low, R_high);
 
     qDebug() << "Initial persistence computation in cell " << mesh->FID(first_cell);
-    print_perms(perm_high, inv_perm_high);
+//    print_perms(perm_high, inv_perm_high);
+
 
   // PART 3: TRAVERSE THE PATH AND UPDATE PERSISTENCE AT EACH STEP
 
@@ -1230,8 +1231,8 @@ void PersistenceUpdater::add_partition_entries(xiMatrixEntry* head)
 /// Is there a better way to handle endpoints at infinity?
 void PersistenceUpdater::store_barcode_template(Face* cell, MapMatrix_Perm* RL, MapMatrix_Perm* RH)
 {
-    QDebug qd = qDebug().nospace();
-    qd << "  -----barcode: ";
+//    QDebug qd = qDebug().nospace();
+//    qd << "  -----barcode: ";
 
     //mark this cell as visited
     cell->mark_as_visited();
@@ -1256,13 +1257,13 @@ void PersistenceUpdater::store_barcode_template(Face* cell, MapMatrix_Perm* RL, 
 
                 if(a != b)  //then we have a bar of positive length
                 {
-                    qd << "(" << c << "," << s << ")-->(" << a << "," << b << ") ";
+//                    qd << "(" << c << "," << s << ")-->(" << a << "," << b << ") ";
                     dbc.add_bar(a, b);
                 }
             }
             else //then simplex c generates an essential cycle
             {
-                qd << c << "-->" << a << " ";
+//                qd << c << "-->" << a << " ";
 
                 dbc.add_bar(a, -1);     //b = -1 = MAX_UNSIGNED indicates this is an essential cycle
             }
