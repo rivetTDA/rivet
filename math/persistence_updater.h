@@ -33,17 +33,12 @@ class PersistenceUpdater
 
         PersistenceUpdater(Mesh* m, SimplexTree* b, std::vector<xiPoint>& xi_pts);  //constructor for when we must compute all of the barcode templates
 
-// MUST BE UPDATED AFTER JULY 2015 BUG FIX:
+///TODO: MUST BE UPDATED AFTER JULY 2015 BUG FIX:
         PersistenceUpdater(Mesh* m, std::vector<xiPoint>& xi_pts); //constructor for when we load the pre-computed barcode templates from a RIVET data file
 
-//JULY 2015 BUG FIX: the following function is obsolete
-//        void find_anchors(); //computes anchors and stores them in mesh->all_anchors; anchor-lines will be created when mesh->build_interior() is called
-
         //functions to compute and store barcode templates in each 2-cell of the mesh
-// MUST BE UPDATED AFTER JULY 2015 BUG FIX:       void store_barcodes(std::vector<Halfedge *> &path);             //standard algorithm with non-lazy swaps
-// MUST BE UPDATED AFTER JULY 2015 BUG FIX:       void store_barcodes_lazy(std::vector<Halfedge*>& path);         //uses lazy updates and unsorted "bins" for each row and column
         void store_barcodes_with_reset(std::vector<Halfedge*>& path, ComputationThread* cthread);   //hybrid approach -- for expensive crossings, resets the matrices and does a standard persistence calculation
-        void store_barcodes_quicksort(std::vector<Halfedge*>& path);    //hybrid approach -- for expensive crossings, rearranges columns via quicksort and fixes the RU-decomposition globally
+        void store_barcodes_quicksort(std::vector<Halfedge*>& path);    ///TODO -- for expensive crossings, rearranges columns via quicksort and fixes the RU-decomposition globally
 
 
     private:
@@ -55,9 +50,19 @@ class PersistenceUpdater
 
         xiSupportMatrix xi_matrix;   //sparse matrix to hold xi support points -- used for finding anchors (to build the arrangement) and tracking simplices during the vineyard updates (when computing barcodes to store in the arrangement)
 
-        std::map<unsigned, xiMatrixEntry*> partition_low;   //map from "low" columns to equivalence-class representatives -- implicitly stores the partition of the set of \xi support points
-        std::map<unsigned, xiMatrixEntry*> partition_high;  //map from "high" columns to equivalence-class representatives -- implicitly stores the partition of the set of \xi support points
-            ///IDEA: maybe the above should be called "block_lift" instead of "partition" since this would be more consistent with the paper
+        std::map<unsigned, xiMatrixEntry*> lift_low;   //map from "low" columns to xiMatrixEntrys
+        std::map<unsigned, xiMatrixEntry*> lift_high;  //map from "high" columns to xiMatrixEntrys
+
+        MapMatrix_Perm* R_low;               //boundary matrix for "low" simplices
+        MapMatrix_Perm* R_high;              //boundary matrix for "high" simplices
+        MapMatrix_RowPriority_Perm* U_low;   //upper-trianglular matrix that records the reductions for R_low
+        MapMatrix_RowPriority_Perm* U_high;  //upper-trianglular matrix that records the reductions for R_high
+
+        ///TODO: is there a way to avoid maintaining the following permutation vectors?
+        std::vector<unsigned> perm_low;      //map from column index at initial cell to column index at current cell
+        std::vector<unsigned> inv_perm_low;  //inverse of the previous map
+        std::vector<unsigned> perm_high;     //map from column index at initial cell to column index at current cell
+        std::vector<unsigned> inv_perm_high; //inverse of the previous map
 
         ///TESTING ONLY
         bool testing;
@@ -78,7 +83,8 @@ class PersistenceUpdater
         void build_simplex_order(IndexMatrix* ind, bool low, std::vector<int>& simplex_order);
 
         //moves grades associated with xiMatrixEntry greater, that come before xiMatrixEntry lesser in R^2, so that they become associated with lesser
-        void split_grade_lists(xiMatrixEntry* greater, xiMatrixEntry* lesser, bool horizontal);
+        //   horiz is true iff greater and lesser are on the same horizontal line (i.e., they share the same y-coordinate)
+        void split_grade_lists(xiMatrixEntry* greater, xiMatrixEntry* lesser, bool horiz);
 
         //moves all grades associated with xiMatrixEntry lesser so that they become associated with xiMatrixEntry greater
         void merge_grade_lists(xiMatrixEntry* greater, xiMatrixEntry* lesser);
@@ -86,19 +92,19 @@ class PersistenceUpdater
         //moves columns from an equivalence class given by xiMatrixEntry* first to their new positions after or among the columns in the equivalence class given by xiMatrixEntry* second
         //  the boolean argument indicates whether an anchor is being crossed from below (or from above)
         //  returns a count of the number of transpositions performed
-        unsigned long move_columns(xiMatrixEntry* first, xiMatrixEntry* second, bool from_below, MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH, Perm& perm_low, Perm& inv_perm_low, Perm& perm_high, Perm& inv_perm_high);
+        unsigned long move_columns(xiMatrixEntry* first, xiMatrixEntry* second, bool from_below);
 
         //moves a block of n columns, the rightmost of which is column s, to a new position following column t (NOTE: assumes s <= t)
         //  returns a count of the number of transpositions performed
-        unsigned long move_low_columns(int s, unsigned n, int t, MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH, Perm& perm_low, Perm& inv_perm_low);
-        unsigned long move_high_columns(int s, unsigned n, int t, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH, Perm& perm_high, Perm& inv_perm_high);
+        unsigned long move_low_columns(int s, unsigned n, int t);
+        unsigned long move_high_columns(int s, unsigned n, int t);
 
         //swaps two blocks of columns by updating the total order on columns, then rebuilding the matrices and computing a new RU-decomposition
-        void update_order_and_reset_matrices(xiMatrixEntry* first, xiMatrixEntry* second, bool from_below, MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm*& UL, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm*& UH, MapMatrix_Perm* RL_initial, MapMatrix_Perm* RH_initial, Perm& perm_low, Perm& inv_perm_low, Perm& perm_high, Perm& inv_perm_high);
+        void update_order_and_reset_matrices(xiMatrixEntry* first, xiMatrixEntry* second, bool from_below, MapMatrix_Perm* RL_initial, MapMatrix_Perm* RH_initial);
 
         //swaps two blocks of columns by using a quicksort to update the matrices, then fixing the RU-decomposition (Gaussian elimination on U followed by reduction of R)
         ///TODO: IMPLEMENT THIS!
-        void quicksort_and_reduce(xiMatrixEntry* first, xiMatrixEntry* second, bool from_below, MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH);
+        void quicksort_and_reduce(xiMatrixEntry* first, xiMatrixEntry* second, bool from_below);
 
         //removes entries corresponding to xiMatrixEntry head from partition_low and partition_high
         void remove_partition_entries(xiMatrixEntry* head);
@@ -108,7 +114,7 @@ class PersistenceUpdater
 
         //stores a barcode template in a 2-cell of the arrangement
         ///TODO: IMPROVE THIS -- track most recent barcode at the simplicial level and re-examine only the necessary columns!!!
-        void store_barcode_template(Face* cell, MapMatrix_Perm* RL, MapMatrix_Perm* RH);
+        void store_barcode_template(Face* cell);
 
         ///TESTING ONLY
         void check_low_matrix(MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL);
