@@ -365,7 +365,7 @@ void PersistenceUpdater::build_simplex_order(IndexMatrix* ind, bool low, std::ve
     for(std::list<Multigrade*>::iterator it = mgrades->begin(); it != mgrades->end(); ++it)
     {
         Multigrade* mg = *it;
-        if(mesh->verbosity >= 2) { qDebug() << "  multigrade (" << mg->x << "," << mg->y << ") at infinity has" << mg->num_cols << "simplices with last index" << mg->simplex_index<< "which will map to order_index" << o_index; }
+        if(mesh->verbosity >= 6) { qDebug() << "  multigrade (" << mg->x << "," << mg->y << ") at infinity has" << mg->num_cols << "simplices with last index" << mg->simplex_index<< "which will map to order_index" << o_index; }
 
         for(unsigned s=0; s < mg->num_cols; s++)  // simplex with dim_index (mg->simplex_index - s) has order_index o_index
         {
@@ -397,7 +397,7 @@ void PersistenceUpdater::build_simplex_order(IndexMatrix* ind, bool low, std::ve
         for(std::list<Multigrade*>::iterator it = mgrades->begin(); it != mgrades->end(); ++it)
         {
             Multigrade* mg = *it;
-            if(mesh->verbosity >= 2) { qDebug() << "  multigrade (" << mg->x << "," << mg->y << ") has" << mg->num_cols << "simplices with last dim_index" << mg->simplex_index << "which will map to order_index" << o_index; }
+            if(mesh->verbosity >= 6) { qDebug() << "  multigrade (" << mg->x << "," << mg->y << ") has" << mg->num_cols << "simplices with last dim_index" << mg->simplex_index << "which will map to order_index" << o_index; }
 
             for(unsigned s=0; s < mg->num_cols; s++)  // simplex with dim_index (mg->simplex_index - s) has order_index o_index
             {
