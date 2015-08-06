@@ -15,19 +15,19 @@
 xiMatrixEntry::xiMatrixEntry() :
     x(-1), y(-1), index(-1),    //sets these items to MAX_UNSIGNED, right?
     down(NULL), left(NULL),
-    low_count(0), high_count(0), low_class_size(-1), high_class_size(0), low_index(0), high_index(0)
+    low_count(0), high_count(0), low_index(0), high_index(0)
 { }
 
 //regular constructor
 xiMatrixEntry::xiMatrixEntry(unsigned x, unsigned y, unsigned i, xiMatrixEntry* d, xiMatrixEntry* l) :
     x(x), y(y), index(i), down(d), left(l),
-    low_count(0), high_count(0), low_class_size(-1), high_class_size(0), low_index(0), high_index(0)
+    low_count(0), high_count(0), low_index(0), high_index(0)
 { }
 
 //JULY 2015 BUG FIX: new constructor
 xiMatrixEntry::xiMatrixEntry(unsigned x, unsigned y, unsigned i, bool a, xiMatrixEntry* d, xiMatrixEntry* l) :
     x(x), y(y), index(i), is_anchor(a), down(d), left(l),
-    low_count(0), high_count(0), low_class_size(-1), high_class_size(0), low_index(0), high_index(0)
+    low_count(0), high_count(0), low_index(0), high_index(0)
 { }
 
 //associates a multigrades to this xi entry
@@ -53,27 +53,6 @@ void xiMatrixEntry::insert_multigrade(Multigrade* mg, bool low)
         low_simplices.push_back(mg);
     else
         high_simplices.push_back(mg);
-}
-
-//moves all Multigrades from bin to this entry
-//  for use when merging two classes during lazy updates
-void xiMatrixEntry::move_bin_here(xiMatrixEntry* bin)
-{
-    //move low simplices
-    for(std::list<Multigrade*>::iterator it = bin->low_simplices.begin(); it != bin->low_simplices.end(); ++it)
-        low_simplices.push_back(*it);
-    bin->low_simplices.clear();
-
-    //move high simplices
-    for(std::list<Multigrade*>::iterator it = bin->high_simplices.begin(); it != bin->high_simplices.end(); ++it)
-        high_simplices.push_back(*it);
-    bin->high_simplices.clear();
-
-    //update counters
-    low_count += bin->low_count;
-    bin->low_count = 0;
-    high_count += bin->high_count;
-    bin->high_count = 0;
 }
 
 
@@ -162,8 +141,7 @@ void xiSupportMatrix::fill(std::vector<xiPoint>& xi_pts)
 //  also finds anchors, which are stored in the matrix, the vector xi_pts, AND in the Mesh
 //  precondition: xi_pts contains the support points in lexicographical order
 ///NOTE: WRITTEN FOR JULY 2015 BUG FIX
-///      Runtime complexity of this function is O(n_x * n_y), but we can probably do better.
-///      However, this fuction probably will be replaced when we implement the revised algorithm for tracking the LUBs.
+///      Runtime complexity of this function is O(n_x * n_y). We can probably do better, but it probably doesn't matter.
 void xiSupportMatrix::fill_and_find_anchors(std::vector<xiPoint>& xi_pts, Mesh* mesh)
 {
     unsigned next_xi_pt = 0;    //tracks the index of the next xi support point to insert

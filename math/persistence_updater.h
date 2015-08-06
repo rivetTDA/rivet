@@ -77,6 +77,12 @@ class PersistenceUpdater
         //  simplex_order will be filled with a map : dim_index --> order_index for simplices of the given dimension
         void build_simplex_order(IndexMatrix* ind, bool low, std::vector<int>& simplex_order);
 
+        //moves grades associated with xiMatrixEntry greater, that come before xiMatrixEntry lesser in R^2, so that they become associated with lesser
+        void split_grade_lists(xiMatrixEntry* greater, xiMatrixEntry* lesser, bool horizontal);
+
+        //moves all grades associated with xiMatrixEntry lesser so that they become associated with xiMatrixEntry greater
+        void merge_grade_lists(xiMatrixEntry* greater, xiMatrixEntry* lesser);
+
         //moves columns from an equivalence class given by xiMatrixEntry* first to their new positions after or among the columns in the equivalence class given by xiMatrixEntry* second
         //  the boolean argument indicates whether an anchor is being crossed from below (or from above)
         //  returns a count of the number of transpositions performed

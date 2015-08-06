@@ -27,17 +27,11 @@ struct xiMatrixEntry
     std::list<Multigrade*> low_simplices;     //associated multigrades for simplices of lower dimension
     std::list<Multigrade*> high_simplices;    //associated multigrades for simplices of higher dimension
 
-    ///TODO: THINK ABOUT THE FOLLOWING VARIABLES -- IS THERE A BETTER WAY TO STORE THIS INFO?
-    unsigned low_count;     //number of columns in matrix of simplices of lower dimension that are mapped to this xiMatrixEntry (does not depend on whether this entry is the head of an equivalence class)
-    unsigned high_count;    //number of columns in matrix of simplices of higher dimension that are mapped to this xiMatrixEntry (does not depend on whether this entry is the head of an equivalence class)
-
-    //DEFINITION: this entry is the "head" of its equivalence class if it is the rightmost entry in a horizontal equivalence class or the topmost entry in a vertical equivalence class
-    //  NOTE: this entry is the head of its class iff low_class_size is nonnegative
-    int low_class_size;     //if(head of class), then low_class_size stores the TOTAL number of simplices of lower dimension that are mapped to this equivalence class; otherwise low_class_size is -1
-    int high_class_size;    //if(head of class), then high_class_size stores the TOTAL number of simplices of higher dimension that are mapped to this equivalence class; otherwise high_class_size is arbitrary and UNRELIABLE
-    int low_index;     //if(head_of_class) then low_index is the index of rightmost column in matrix of simplices of lower dimension that is mapped to this equivalence class; otherwise, low_index is arbitrary and UNRELIABLE
-    int high_index;    //if(head_of_class) then high_index is the index of rightmost column in matrix of simplices of higher dimension that is mapped to this equivalence class; otherwise, low_index is arbitrary and UNRELIABLE
-        //NOTE: if there are no low (resp. high) columns mapped to this xiMatrixEntry, then low_index (resp. high_index) is the index of the column just left of where such columns would appear (could be -1)
+    unsigned low_count;     //number of columns in matrix of simplices of lower dimension that are mapped to this xiMatrixEntry
+    unsigned high_count;    //number of columns in matrix of simplices of higher dimension that are mapped to this xiMatrixEntry
+    int low_index;          //index of rightmost column in matrix of simplices of lower dimension that is mapped to this xiMatrixEntry
+    int high_index;         //index of rightmost column in matrix of simplices of higher dimension that is mapped to this xiMatrixEntry
+        //NOTE: if xiMatrixEntry is a LUB-index but there are no low (resp. high) columns mapped to it, then low_index (resp. high_index) is the index of the column just left of where such columns would appear (could be -1)
 
   //functions
     xiMatrixEntry();    //empty constructor, e.g. for the entry representing infinity
@@ -49,8 +43,6 @@ struct xiMatrixEntry
         //the "low" argument is true if this multigrade is for low_simplices, and false if it is for high_simplices
 
     void insert_multigrade(Multigrade* mg, bool low);  //inserts a Multigrade at the end of the list for the given dimension; does not update column counts!
-
-    void move_bin_here(xiMatrixEntry* bin); //for lazy updates -- moves all Multigrades from bin to this entry; updates column counts
 };
 
 

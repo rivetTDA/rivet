@@ -119,11 +119,11 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
 {
     QTime timer;    //for timing the computations
 
-    // PART 1: GET THE BOUNDARY MATRICES WITH PROPER SIMPLEX ORDERING
+  // PART 1: GET THE BOUNDARY MATRICES WITH PROPER SIMPLEX ORDERING
 
     timer.start();
 
-    //initialize the map from simplex grades to xi support points
+    //initialize the lift map from simplex grades to LUB-indexes
     if(mesh->verbosity >= 6) { qDebug() << "  Mapping low simplices:"; }
     IndexMatrix* ind_low = bifiltration->get_index_mx(dim);    //can we improve this with something more efficient than IndexMatrix?
     store_multigrades(ind_low, true);
@@ -232,13 +232,9 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
             //process the swaps
             if(cur_anchor->is_above()) //then the anchor is crossed from below to above
             {
-                //pre-move updates to equivalence class info
-                left->low_index = at_anchor->low_index - at_anchor->low_count;                //necessary since low_index, low_class_size,
-                left->low_class_size = at_anchor->low_class_size - at_anchor->low_count;      //  high_index, and high_class_size
-                left->high_index = at_anchor->high_index - at_anchor->high_count;             //  are only reliable for the head
-                left->high_class_size = at_anchor->high_class_size - at_anchor->high_count;   //  of each equivalence class
-                remove_partition_entries(at_anchor);   //this block of the partition might become empty
-                remove_partition_entries(down);         //this block of the partition will move
+                remove_partition_entries(at_anchor);        //this block of the partition might become empty
+                remove_partition_entries(down);             //this block of the partition will move
+                split_grade_lists(at_anchor, left, true);   //move grades that come before left from anchor to left
 
                 //now permute the columns and fix the RU-decomposition
                 swap_estimate = static_cast<unsigned long>(left->low_class_size) * static_cast<unsigned long>(down->low_class_size)
@@ -249,21 +245,16 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
                     update_order_and_reset_matrices(down, left, true, R_low, U_low, R_high, U_high, R_low_initial, R_high_initial, perm_low, inv_perm_low, perm_high, inv_perm_high);
 
                 //post-move updates to equivalance class info
-                at_anchor->low_class_size = at_anchor->low_count + down->low_class_size;
-                at_anchor->high_class_size = at_anchor->high_count + down->high_class_size;
-                down->low_class_size = -1;  //this xiMatrixEntry is no longer the head of an equivalence class
-                add_partition_entries(at_anchor);      //this block of the partition might have previously been empty
+                merge_grade_lists(at_anchor, down);     //move all grades from down to anchor
+                add_partition_entries(at_anchor);       //this block of the partition might have previously been empty
                 add_partition_entries(left);            //this block of the partition moved
             }
             else    //then anchor is crossed from above to below
             {
                 //pre-move updates to equivalence class info
-                down->low_index = at_anchor->low_index - at_anchor->low_count;                //necessary since low_index, low_class_size,
-                down->low_class_size = at_anchor->low_class_size - at_anchor->low_count;      //  high_index, and high_class_size
-                down->high_index = at_anchor->high_index - at_anchor->high_count;             //  are only reliable for the head
-                down->high_class_size = at_anchor->high_class_size - at_anchor->high_count;   //  of each equivalence class
-                remove_partition_entries(at_anchor);   //this block of the partition might become empty
-                remove_partition_entries(left);         //this block of the partition will move
+                remove_partition_entries(at_anchor);        //this block of the partition might become empty
+                remove_partition_entries(left);             //this block of the partition will move
+                split_grade_lists(at_anchor, down, false);  //move grades that come before down from anchor to down
 
                 //now permute the columns and fix the RU-decomposition
                 swap_estimate = static_cast<unsigned long>(left->low_class_size) * static_cast<unsigned long>(down->low_class_size)
@@ -274,39 +265,29 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
                     update_order_and_reset_matrices(left, down, false, R_low, U_low, R_high, U_high, R_low_initial, R_high_initial, perm_low, inv_perm_low, perm_high, inv_perm_high);
 
                 //post-move updates to equivalance class info
-                at_anchor->low_class_size = at_anchor->low_count + left->low_class_size;
-                at_anchor->high_class_size = at_anchor->high_count + left->high_class_size;
-                left->low_class_size = -1;  //this xiMatrixEntry is no longer the head of an equivalence class
-                add_partition_entries(at_anchor);      //this block of the partition might have previously been empty
+                merge_grade_lists(at_anchor, left);     //move all grades from down to anchor
+                add_partition_entries(at_anchor);       //this block of the partition might have previously been empty
                 add_partition_entries(down);            //this block of the partition moved
             }
         }
-        else    //then this is a supported, non-strict anchor, and we just have to split or merge equivalence classes
+        else    //this is a non-strict anchor, and we just have to split or merge equivalence classes
         {
             xiMatrixEntry* generator = at_anchor->down;
             if(generator == NULL)
                 generator = at_anchor->left;
 
-            if(generator->low_class_size != -1)    //then merge classes
+            if((cur_anchor->is_above() && generator == at_anchor->down) || (!cur_anchor->is_above() && generator == at_anchor->left))
+                //then merge classes
             {
-                at_anchor->low_class_size = at_anchor->low_count + generator->low_class_size;
-                at_anchor->high_class_size = at_anchor->high_count + generator->high_class_size;
-                generator->low_class_size = -1;    //indicates that this xiMatrixEntry is NOT the head of an equivalence class
-
                 remove_partition_entries(generator);
+                merge_grade_lists(at_anchor, generator);
                 add_partition_entries(at_anchor);  //this is necessary in case the class was previously empty
             }
             else    //then split classes
             {
-                generator->low_index = at_anchor->low_index - at_anchor->low_count;
-                generator->low_class_size = at_anchor->low_class_size - at_anchor->low_count;
-                at_anchor->low_class_size = at_anchor->low_count;
-                generator->high_index = at_anchor->high_index - at_anchor->high_count;
-                generator->high_class_size = at_anchor->high_class_size - at_anchor->high_count;
-                at_anchor->high_class_size = at_anchor->high_count;
-
                 remove_partition_entries(at_anchor);   //this is necessary because the class corresponding
-                add_partition_entries(at_anchor);      //  to cur_anchor might have become empty
+                split_grade_lists(at_anchor, generator, (at_anchor->y == generator->y));
+                add_partition_entries(at_anchor);      //  to at_anchor might have become empty
                 add_partition_entries(generator);
             }
         }
@@ -361,7 +342,9 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
 
 
 //stores multigrade info for the persistence computations (data structures prepared with respect to a near-vertical line positioned to the right of all \xi support points)
+//  that is, this function creates the level sets of the lift map
 //  low is true for simplices of dimension hom_dim, false for simplices of dimension hom_dim+1
+//NOTE: this function has been updated for the new (unfactored) lift map of August 2015
 void PersistenceUpdater::store_multigrades(IndexMatrix* ind, bool low)
 {
     if(mesh->verbosity >= 6) { qDebug() << "STORING MULTIGRADES: low =" << low; }
@@ -373,28 +356,22 @@ void PersistenceUpdater::store_multigrades(IndexMatrix* ind, bool low)
     //loop through rows of xiSupportMatrix, from top to bottom
     for(unsigned y = ind->height(); y-- > 0; )  //y counts down from (ind->height() - 1) to 0
     {
-        //update the frontier for row y
+        //update the frontier for row y:
+        //  if the last element of frontier has the same x-coord as cur, then replace that element with cur
+        //  otherwise, append cur to the end of frontier
         xiMatrixEntry* cur = xi_matrix.get_row(y);
         if(cur != NULL)
         {
-            //advance an iterator to the first entry that is not right of cur
-            Frontier::iterator it = frontier.begin();
-            while( it != frontier.end() && (*it)->x > cur->x )
-                ++it;
-
-            //erase any entries from this position to the end of the frontier
-            frontier.erase(it, frontier.end());
-
-            //insert cur at the end of the frontier
-            frontier.push_back(cur);
-
-            //now add all other non-null entries in this row to the frontier
-            cur = cur->left;
-            while(cur != NULL)
+            Frontier::iterator it = frontier.end();  //the past-the-end element of frontier
+            if(it != frontier.begin())  //then the frontier is not empty
             {
-                frontier.push_back(cur);
-                cur = cur->left;
+                --it;  //the last element of frontier
+                if((*it)->x == cur->x)  //then erase the last element of frontier
+                    frontier.erase(it);
             }
+
+            //append cur to the end of the frontier
+            frontier.push_back(cur);
         }
 
         //store all multigrades and simplices whose y-grade is y
@@ -464,92 +441,129 @@ void PersistenceUpdater::build_simplex_order(IndexMatrix* ind, bool low, std::ve
         }
     }
 
-    //now loop over all xiMatrixEntries in backwards colex order
+    //consider the rightmost xiMatrixEntry in each row
     for(unsigned row = xi_matrix.height(); row-- > 0; )  //row counts down from (xi_matrix->height() - 1) to 0
     {
         cur = xi_matrix.get_row(row);
         if(cur == NULL)
             continue;
 
-        //if we get here, the current row is nonempty, so it forms an equivalence class in the partition
-        if(cur->low_class_size == -1)
-            cur->low_class_size = 0;
+        if(mesh->verbosity >= 6) { qDebug() << "----xiMatrixEntry (" << cur->x << "," << cur->y << ")"; }
 
         //store index of rightmost column that is mapped to this equivalence class
         int* cur_ind = (low) ? &(cur->low_index) : &(cur->high_index);
         *cur_ind = o_index;
 
-        //consider all xiMatrixEntries in this row
-        while(cur != NULL)
+        //get the multigrade list for this xiMatrixEntry
+        mgrades = (low) ? &(cur->low_simplices) : &(cur->high_simplices);
+
+        //sort the multigrades in lexicographical order
+        mgrades->sort(Multigrade::LexComparator);
+
+        //store map values for all simplices at these multigrades
+        for(std::list<Multigrade*>::iterator it = mgrades->begin(); it != mgrades->end(); ++it)
         {
-            if(mesh->verbosity >= 6) { qDebug() << "----xiMatrixEntry (" << cur->x << "," << cur->y << ")"; }
+            Multigrade* mg = *it;
+            if(mesh->verbosity >= 2) { qDebug() << "  multigrade (" << mg->x << "," << mg->y << ") has" << mg->num_cols << "simplices with last dim_index" << mg->simplex_index << "which will map to order_index" << o_index; }
 
-            //get the multigrade list for this xiMatrixEntry
-            mgrades = (low) ? &(cur->low_simplices) : &(cur->high_simplices);
-
-            //sort the multigrades in lexicographical order
-            mgrades->sort(Multigrade::LexComparator);
-
-            //store map values for all simplices at these multigrades
-            for(std::list<Multigrade*>::iterator it = mgrades->begin(); it != mgrades->end(); ++it)
+            for(unsigned s=0; s < mg->num_cols; s++)  // simplex with dim_index (mg->simplex_index - s) has order_index o_index
             {
-                Multigrade* mg = *it;
-                if(mesh->verbosity >= 2) { qDebug() << "  multigrade (" << mg->x << "," << mg->y << ") has" << mg->num_cols << "simplices with last dim_index" << mg->simplex_index << "which will map to order_index" << o_index; }
-
-                for(unsigned s=0; s < mg->num_cols; s++)  // simplex with dim_index (mg->simplex_index - s) has order_index o_index
-                {
-                    simplex_order[mg->simplex_index - s] = o_index;
-                    o_index--;
-                }
+                simplex_order[mg->simplex_index - s] = o_index;
+                o_index--;
             }
-
-            //move to the next xiMatrixEntry in this row
-            cur = cur->left;
         }
 
         //if any simplices of the specified dimension were mapped to this equivalence class, then store information about this class
         if(*cur_ind != o_index)
         {
             if(low)
-            {
-                xi_matrix.get_row(row)->low_class_size = *cur_ind - o_index;
                 partition_low.insert( std::pair<unsigned, xiMatrixEntry*>(*cur_ind, xi_matrix.get_row(row)) );
-            }
             else
-            {
-                xi_matrix.get_row(row)->high_class_size = *cur_ind - o_index;
                 partition_high.insert( std::pair<unsigned, xiMatrixEntry*>(*cur_ind, xi_matrix.get_row(row)) );
-            }
         }
-
-        //now store column index in the "unsorted" bin for this row
-        ///THIS SHOULD BE UNNECESSARY UNLESS WE ARE DOING LAZY UPDATES
-//        xiMatrixEntry* cur_row = xi_matrix.get_row(row);
-//        if(cur_row->low_class_size != -1)
-//        {
-//            if(low)
-//                xi_matrix.get_row_bin(row)->low_index = cur_row->low_index - cur_row->low_class_size;
-//            else
-//                xi_matrix.get_row_bin(row)->high_index = cur_row->high_index - cur_row->high_class_size;
-//        }
     }//end for(row > 0)
 }//end build_simplex_order()
+
+//moves grades associated with xiMatrixEntry greater, that come before xiMatrixEntry lesser in R^2, so that they become associated with lesser
+//  precondition: no grades lift to lesser (it has empty level sets under the lift map)
+void PersistenceUpdater::split_grade_lists(xiMatrixEntry* greater, xiMatrixEntry* lesser, bool horizontal)
+{
+    //low simplices
+    int low_col = greater->low_index;
+    int cur_col = low_col;
+    lesser->low_simplices = greater->low_simplices; //we assume that all grades lift to lesser, so that we can move columns from left to right
+    greater->low_simplices.clear();
+    for(std::list<Multigrade*>::iterator it = lesser->low_simplices.begin(); it != lesser->low_simplices.end(); ) //NOTE: iterator advances in loop
+    {
+        Multigrade* cur_grade = *it;
+        if((horizontal && cur_grade->x > lesser->x) || (!horizontal && cur_grade->y > lesser->y))   //then this grade lifts to greater
+        {
+            ///TODO: move columns for cur_grade from cur_col to low_col
+
+            low_col -= cur_grade->num_cols;
+            greater->low_simplices.push_back(cur_grade);
+            it = lesser->low_simplices.erase(it);   //NOTE: advances the iterator
+        }
+        else    //then this grade lifts to lesser
+        {
+            ///TODO: update lift map
+        }
+
+        cur_col -= cur_grade->num_cols;
+    }
+    lesser->low_index = low_col;
+    lesser->low_count = low_col - cur_col;  ///TODO: CHECK THESE!!!
+    greater->low_count = greater->low_index - lesser->low_index;
+
+    //high simplices
+    ////TODO: FIX THIS!!!!!
+//    num_unmoved = 0;
+//    it = greater->high_simplices.begin();
+//    while(it != greater->high_simplices.end())
+//    {
+//        if((horizontal && (*it)->x > lesser->x) || (!horizontal && (*it)->y > lesser->y))   //then this grade stays with greater
+//        {
+//            num_unmoved += (*it)->num_cols;
+//            ++it;
+//        }
+//        else    //then we found the first grade that gets moved to lesser
+//            break;
+//    }
+//    lesser->high_simplices.splice(lesser->high_simplices.begin(), greater->high_simplices, it, greater->high_simplices.end());
+//    lesser->high_count = greater->high_count - num_unmoved;
+//    lesser->high_index = greater->high_index - num_unmoved;
+    greater->high_count = num_unmoved;
+}//end split_grade_lists()
+
+//moves all grades associated with xiMatrixEntry lesser so that they become associated with xiMatrixEntry greater
+void PersistenceUpdater::merge_grade_lists(xiMatrixEntry* greater, xiMatrixEntry* lesser)
+{
+    //low simplices
+    greater->low_simplices.splice(greater->low_simplices.end(), lesser->low_simplices);
+    greater->low_count += lesser->low_count;
+    lesser->low_count = 0;
+
+    //high simplices
+    greater->high_simplices.splice(greater->high_simplices.end(), lesser->high_simplices);
+    greater->high_count += lesser->high_count;
+    lesser->high_count = 0;
+}//end merge_grade_lists()
 
 //moves columns from an equivalence class given by xiMatrixEntry* first to their new positions after or among the columns in the equivalence class given by xiMatrixEntry* second
 // the boolean argument indicates whether an anchor is being crossed from below (or from above)
 // this version updates the permutation vectors required for the "reset" approach
-//NOTE: this function has been updated for the July 2015 bug fix
+///NOTE: this function has been updated for the July/August 2015 bug fix
 unsigned long PersistenceUpdater::move_columns(xiMatrixEntry* first, xiMatrixEntry* second, bool from_below, MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL, MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH, Perm& perm_low, Perm& inv_perm_low, Perm& perm_high, Perm& inv_perm_high)
 {
     ///DEBUGGING
-    if(first->low_index + second->low_class_size != second->low_index || first->high_index + second->high_class_size != second->high_index)
+    if(first->low_index + second->low_count != second->low_index || first->high_index + second->high_count != second->high_index)
     {
         qDebug() << "  ===>>> ERROR: swapping non-consecutive column blocks!";
     }
 
     //get column indexes (so we know which columns to move)
-    int low_col = first->low_index;   //rightmost column index of low simplices for the equivalence class to move
-    int high_col = first->high_index; //rightmost column index of high simplices for the equivalence class to move
+    int low_col = first->low_index;   //rightmost column index of low simplices for the block that moves
+    int high_col = first->high_index; //rightmost column index of high simplices for the block that moves
 
     //set column indexes for the first class to their final position
     first->low_index = second->low_index;
@@ -558,135 +572,66 @@ unsigned long PersistenceUpdater::move_columns(xiMatrixEntry* first, xiMatrixEnt
     //initialize counter
     unsigned long swap_counter = 0;
 
-    //loop over all xiMatrixEntrys in the first equivalence class
-    xiMatrixEntry* cur_entry = first;
-    while(cur_entry != NULL)
+    //move all "low" simplices for xiMatrixEntry first (start with rightmost column, end with leftmost)
+    for(std::list<Multigrade*>::iterator it = first->low_simplices.begin(); it != first->low_simplices.end(); ) //NOTE: iterator advances in loop
     {
-        //move all "low" simplices for this xiMatrixEntry (start with rightmost column, end with leftmost)
-        for(std::list<Multigrade*>::iterator it = cur_entry->low_simplices.begin(); it != cur_entry->low_simplices.end(); ) //NOTE: iterator advances in loop
+        Multigrade* cur_grade = *it;
+
+        if( (from_below && cur_grade->x > second->x) || (!from_below && cur_grade->y > second->y) )
+            //then move columns at cur_grade past columns at xiMatrixEntry second; lift map does not change ( lift : multigrades --> xiSupportElements )
         {
-            Multigrade* cur_grade = *it;
-
-            if( (from_below && cur_grade->x > second->x) || (!from_below && cur_grade->y > second->y) )
-                //then move columns at cur_grade past columns at xiMatrixEntry second; lift map does not change ( lift : multigrades --> xiSupportElements )
-            {
-                swap_counter += move_low_columns(low_col, cur_grade->num_cols, second->low_index, RL, UL, RH, UH, perm_low, inv_perm_low);
-                second->low_index -= cur_grade->num_cols;
-                ++it;
-            }
-            else    //then move columns at cur_grade to some position in the equivalence class given by xiMatrixEntry second; lift map changes
-            {
-                xiMatrixEntry* target = second;
-                int target_col = second->low_index - second->low_count;
-
-                //re-compute the lift map for cur_grade and find the new position for the columns
-                if(from_below)
-                {
-                    while( (target->left != NULL) && (cur_grade->x <= target->left->x) )
-                    {
-                        target = target->left;
-                        target_col -= target->low_count;
-                    }
-                }
-                else
-                {
-                    while( (target->down != NULL) && (cur_grade->y <= target->down->y) )
-                    {
-                        target = target->down;
-                        target_col -= target->low_count;
-                    }
-                }
-
-                //associate cur_grade with target
-                target->insert_multigrade(cur_grade, true);
-                it = cur_entry->low_simplices.erase(it);    //NOTE: advances the iterator!!!
-
-                //if target is not the leftmost entry in its equivalence class, then move columns at cur_grade to the block of columns for target
-                if( (from_below && target->left != NULL) || (!from_below && target->down != NULL) )
-                    swap_counter += move_low_columns(low_col, cur_grade->num_cols, target_col, RL, UL, RH, UH, perm_low, inv_perm_low);
-                //else, then the columns don't actually have to move
-
-                //update column counts
-                cur_entry->low_count -= cur_grade->num_cols;
-                target->low_count += cur_grade->num_cols;
-
-                //update equivalence class sizes
-                first->low_class_size -= cur_grade->num_cols;
-                second->low_class_size += cur_grade->num_cols;
-            }
-
-            //update column index
-            low_col -= cur_grade->num_cols;
-        }//end "low" simplex loop
-
-        //move all "high" simplices for this xiMatrixEntry
-        for(std::list<Multigrade*>::iterator it = cur_entry->high_simplices.begin(); it != cur_entry->high_simplices.end(); ) //NOTE: iterator advances in loop
+            swap_counter += move_low_columns(low_col, cur_grade->num_cols, second->low_index, RL, UL, RH, UH, perm_low, inv_perm_low);
+            second->low_index -= cur_grade->num_cols;
+            ++it;
+        }
+        else    //then cur_grade now lifts to xiMatrixEntry second; columns don't move
         {
-            Multigrade* cur_grade = *it;
+            //associate cur_grade with second
+            second->insert_multigrade(cur_grade, true);
+            it = first->low_simplices.erase(it);    //NOTE: advances the iterator!!!
 
-//            qDebug() << "  ====>>>> moving high simplices at grade (" << cur_grade->x << "," << cur_grade->y << ")";
+            //update column counts
+            first->low_count -= cur_grade->num_cols;
+            second->low_count += cur_grade->num_cols;
+        }
 
-            if( (from_below && cur_grade->x > second->x) || (!from_below && cur_grade->y > second->y) )
-                //then move columns at cur_grade past columns at xiMatrixEntry second; lift map does not change ( lift : multigrades --> xiSupportElements )
-            {
-                swap_counter += move_high_columns(high_col, cur_grade->num_cols, second->high_index, RH, UH, perm_high, inv_perm_high);
-                second->high_index -= cur_grade->num_cols;
-                ++it;
-            }
-            else    //then move columns at cur_grade to some position in the equivalence class given by xiMatrixEntry second; lift map changes
-            {
-                xiMatrixEntry* target = second;
-                int target_col = second->high_index - second->high_count;
+        //update column index
+        low_col -= cur_grade->num_cols;
+    }//end "low" simplex loop
 
-                //re-compute the lift map for cur_grade and find the new position for the columns
-                if(from_below)
-                {
-                    while( (target->left != NULL) && (cur_grade->x <= target->left->x) )
-                    {
-                        target = target->left;
-                        target_col -= target->high_count;
-                    }
-                }
-                else
-                {
-                    while( (target->down != NULL) && (cur_grade->y <= target->down->y) )
-                    {
-                        target = target->down;
-                        target_col -= target->high_count;
-                    }
-                }
+    //move all "high" simplices for xiMatrixEntry first (start with rightmost column, end with leftmost)
+    for(std::list<Multigrade*>::iterator it = first->high_simplices.begin(); it != first->high_simplices.end(); ) //NOTE: iterator advances in loop
+    {
+        Multigrade* cur_grade = *it;
 
-                ///TESTING
-//                qDebug() << "====>>>> simplex at (" << cur_grade->x << "," << cur_grade->y << ") now lifts to (" << target->x << "," << target->y << ")";
+//        qDebug() << "  ====>>>> moving high simplices at grade (" << cur_grade->x << "," << cur_grade->y << ")";
 
-                //associate cur_grade with target
-                target->insert_multigrade(cur_grade, false);
-                it = cur_entry->high_simplices.erase(it);    //NOTE: advances the iterator!!!
+        if( (from_below && cur_grade->x > second->x) || (!from_below && cur_grade->y > second->y) )
+            //then move columns at cur_grade past columns at xiMatrixEntry second; lift map does not change ( lift : multigrades --> xiSupportElements )
+        {
+            swap_counter += move_high_columns(high_col, cur_grade->num_cols, second->high_index, RH, UH, perm_high, inv_perm_high);
+            second->high_index -= cur_grade->num_cols;
+            ++it;
+        }
+        else    //then cur_grade now lifts to xiMatrixEntry second; columns don't move
+        {
+//            qDebug() << "====>>>> simplex at (" << cur_grade->x << "," << cur_grade->y << ") now lifts to (" << second->x << "," << second->y << ")";
 
-                //if target is not the leftmost entry in its equivalence class, then move columns at cur_grade to the block of columns for target
-                if( (from_below && target->left != NULL) || (!from_below && target->down != NULL) )
-                    swap_counter += move_high_columns(high_col, cur_grade->num_cols, target_col, RH, UH, perm_high, inv_perm_high);
-                //else, then the columns don't actually have to move
+            //associate cur_grade with second
+            second->insert_multigrade(cur_grade, false);
+            it = first->high_simplices.erase(it);    //NOTE: advances the iterator!!!
 
-                //update column counts
-                cur_entry->high_count -= cur_grade->num_cols;
-                target->high_count += cur_grade->num_cols;
+            //update column counts
+            first->high_count -= cur_grade->num_cols;
+            second->high_count += cur_grade->num_cols;
+        }
 
-                //update equivalence class sizes
-                first->high_class_size -= cur_grade->num_cols;
-                second->high_class_size += cur_grade->num_cols;
-            }
-
-            //update column index
-            high_col -= cur_grade->num_cols;
-        }//end "high" simplex loop
-
-        //advance to the next xiMatrixEntry in the first equivalence class
-        cur_entry = from_below ? cur_entry->down : cur_entry->left;
-    }//end while
+        //update column index
+        high_col -= cur_grade->num_cols;
+    }//end "high" simplex loop
 
     ///DEBUGGING
-    if(second->low_index + first->low_class_size != first->low_index || second->high_index + first->high_class_size != first->high_index)
+    if(second->low_index + first->low_count != first->low_index || second->high_index + first->high_count != first->high_index)
     {
         qDebug() << "  ===>>> ERROR: swap resulted in non-consecutive column blocks!";
     }
