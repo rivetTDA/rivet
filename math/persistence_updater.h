@@ -106,11 +106,11 @@ class PersistenceUpdater
         ///TODO: IMPLEMENT THIS!
         void quicksort_and_reduce(xiMatrixEntry* first, xiMatrixEntry* second, bool from_below);
 
-        //removes entries corresponding to xiMatrixEntry head from partition_low and partition_high
-        void remove_partition_entries(xiMatrixEntry* head);
+        //removes entries corresponding to an xiMatrixEntry from lift_low and lift_high
+        void remove_lift_entries(xiMatrixEntry* entry);
 
-        //if the equivalence class corresponding to xiMatrixEntry head has nonempty sets of "low" or "high" simplices, then this function creates the appropriate entries in partition_low and partition_high
-        void add_partition_entries(xiMatrixEntry* head);
+        //creates the appropriate entries in lift_low and lift_high for an xiMatrixEntry with nonempty sets of "low" or "high" simplices
+        void add_lift_entries(xiMatrixEntry* entry);
 
         //stores a barcode template in a 2-cell of the arrangement
         ///TODO: IMPROVE THIS -- track most recent barcode at the simplicial level and re-examine only the necessary columns!!!

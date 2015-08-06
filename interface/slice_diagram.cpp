@@ -93,6 +93,8 @@ void SliceDiagram::create_diagram(QString x_text, QString y_text, double xmin, d
         for(unsigned j = 0; j < y_grades.size(); j++)
             if(hom_dims[i][j] > max_hom_dim)
                 max_hom_dim = hom_dims[i][j];
+    if(max_hom_dim == 0)
+        max_hom_dim = 1;
 
     //now create the rectangles
     hom_dim_rects.resize(boost::extents[x_grades.size()][y_grades.size()]);

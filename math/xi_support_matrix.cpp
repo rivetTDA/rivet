@@ -153,7 +153,7 @@ void xiSupportMatrix::fill_and_find_anchors(std::vector<xiPoint>& xi_pts, Mesh* 
         {
             //see if the next xi support point is in position (i,j)
             bool xi_pt = false;
-            if(xi_pts[next_xi_pt].x == i && xi_pts[next_xi_pt].y == j)
+            if(xi_pts.size() > next_xi_pt && xi_pts[next_xi_pt].x == i && xi_pts[next_xi_pt].y == j)
                 xi_pt = true;
 
             //see if there is an anchor at position (i,j)

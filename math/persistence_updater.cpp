@@ -165,13 +165,13 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
             //process the swaps
             if(cur_anchor->is_above()) //then the anchor is crossed from below to above
             {
-                remove_partition_entries(at_anchor);        //this block of the partition might become empty
-                remove_partition_entries(down);             //this block of the partition will move
+                remove_lift_entries(at_anchor);        //this block of the partition might become empty
+                remove_lift_entries(down);             //this block of the partition will move
                 split_grade_lists(at_anchor, left, true);   //move grades that come before left from anchor to left
 
                 //now permute the columns and fix the RU-decomposition
-                swap_estimate = static_cast<unsigned long>(left->low_class_size) * static_cast<unsigned long>(down->low_class_size)
-                        + static_cast<unsigned long>(left->high_class_size) * static_cast<unsigned long>(down->high_class_size);
+                swap_estimate = static_cast<unsigned long>(left->low_count) * static_cast<unsigned long>(down->low_count)
+                        + static_cast<unsigned long>(left->high_count) * static_cast<unsigned long>(down->high_count);
                 if(swap_estimate < threshold)
                     swap_counter += move_columns(down, left, true);
                 else
@@ -179,19 +179,19 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
 
                 //post-move updates to equivalance class info
                 merge_grade_lists(at_anchor, down);     //move all grades from down to anchor
-                add_partition_entries(at_anchor);       //this block of the partition might have previously been empty
-                add_partition_entries(left);            //this block of the partition moved
+                add_lift_entries(at_anchor);       //this block of the partition might have previously been empty
+                add_lift_entries(left);            //this block of the partition moved
             }
             else    //then anchor is crossed from above to below
             {
                 //pre-move updates to equivalence class info
-                remove_partition_entries(at_anchor);        //this block of the partition might become empty
-                remove_partition_entries(left);             //this block of the partition will move
+                remove_lift_entries(at_anchor);        //this block of the partition might become empty
+                remove_lift_entries(left);             //this block of the partition will move
                 split_grade_lists(at_anchor, down, false);  //move grades that come before down from anchor to down
 
                 //now permute the columns and fix the RU-decomposition
-                swap_estimate = static_cast<unsigned long>(left->low_class_size) * static_cast<unsigned long>(down->low_class_size)
-                        + static_cast<unsigned long>(left->high_class_size) * static_cast<unsigned long>(down->high_class_size);
+                swap_estimate = static_cast<unsigned long>(left->low_count) * static_cast<unsigned long>(down->low_count)
+                        + static_cast<unsigned long>(left->high_count) * static_cast<unsigned long>(down->high_count);
                 if(swap_estimate < threshold)
                     swap_counter += move_columns(left, down, false);
                 else
@@ -199,8 +199,8 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
 
                 //post-move updates to equivalance class info
                 merge_grade_lists(at_anchor, left);     //move all grades from down to anchor
-                add_partition_entries(at_anchor);       //this block of the partition might have previously been empty
-                add_partition_entries(down);            //this block of the partition moved
+                add_lift_entries(at_anchor);       //this block of the partition might have previously been empty
+                add_lift_entries(down);            //this block of the partition moved
             }
         }
         else    //this is a non-strict anchor, and we just have to split or merge equivalence classes
@@ -212,16 +212,16 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
             if((cur_anchor->is_above() && generator == at_anchor->down) || (!cur_anchor->is_above() && generator == at_anchor->left))
                 //then merge classes
             {
-                remove_partition_entries(generator);
+                remove_lift_entries(generator);
                 merge_grade_lists(at_anchor, generator);
-                add_partition_entries(at_anchor);  //this is necessary in case the class was previously empty
+                add_lift_entries(at_anchor);  //this is necessary in case the class was previously empty
             }
             else    //then split classes
             {
-                remove_partition_entries(at_anchor);   //this is necessary because the class corresponding
+                remove_lift_entries(at_anchor);   //this is necessary because the class corresponding
                 split_grade_lists(at_anchor, generator, (at_anchor->y == generator->y));
-                add_partition_entries(at_anchor);      //  to at_anchor might have become empty
-                add_partition_entries(generator);
+                add_lift_entries(at_anchor);      //  to at_anchor might have become empty
+                add_lift_entries(generator);
             }
         }
 
@@ -438,10 +438,8 @@ void PersistenceUpdater::split_grade_lists(xiMatrixEntry* greater, xiMatrixEntry
             gr_col -= cur_grade->num_cols;
         }
         else    //then this grade lifts to lesser, so update lift map, but no need to move columns
-        {
-            lesser->insert_multigrade(cur_grade, true);
             lesser->low_simplices.push_back(cur_grade);
-        }
+
         cur_col -= cur_grade->num_cols;
     }
     lesser->low_index = gr_col;
@@ -465,10 +463,8 @@ void PersistenceUpdater::split_grade_lists(xiMatrixEntry* greater, xiMatrixEntry
             gr_col -= cur_grade->num_cols;
         }
         else    //then this grade lifts to lesser, so update lift map, but no need to move columns
-        {
-            lesser->insert_multigrade(cur_grade, false);
             lesser->high_simplices.push_back(cur_grade);
-        }
+
         cur_col -= cur_grade->num_cols;
     }
     lesser->high_index = gr_col;
@@ -922,7 +918,7 @@ void PersistenceUpdater::update_order_and_reset_matrices(xiMatrixEntry* first, x
   //STEP 2: traverse grades (backwards) in the new order and update the permutation vectors to reflect the new order on matrix columns
 
     //temporary data structures
-    cur_entry = first;
+    xiMatrixEntry* cur_entry = first;
     low_col = first->low_index;
     high_col = first->high_index;
 
@@ -1003,35 +999,35 @@ void PersistenceUpdater::quicksort_and_reduce(xiMatrixEntry* first, xiMatrixEntr
 }//end quicksort_and_reduce()
 
 //removes entries corresponding to xiMatrixEntry head from lift_low and lift_high
-void PersistenceUpdater::remove_partition_entries(xiMatrixEntry* head)
+void PersistenceUpdater::remove_lift_entries(xiMatrixEntry* entry)
 {
-    if(mesh->verbosity >= 9) { qDebug() << "    ----removing partition entries for xiMatrixEntry" << head->index << "(" << head->low_index << ";" << head->high_index << ")"; }
+    if(mesh->verbosity >= 9) { qDebug() << "    ----removing partition entries for xiMatrixEntry" << entry->index << "(" << entry->low_index << ";" << entry->high_index << ")"; }
 
     //low simplices
-    std::map<unsigned, xiMatrixEntry*>::iterator it1 = lift_low.find(head->low_index);
-    if(it1 != lift_low.end() && it1->second == head)
+    std::map<unsigned, xiMatrixEntry*>::iterator it1 = lift_low.find(entry->low_index);
+    if(it1 != lift_low.end() && it1->second == entry)
         lift_low.erase(it1);
 
     //high simplices
-    std::map<unsigned, xiMatrixEntry*>::iterator it2 = lift_high.find(head->high_index);
-    if(it2 != lift_high.end() && it2->second == head)
+    std::map<unsigned, xiMatrixEntry*>::iterator it2 = lift_high.find(entry->high_index);
+    if(it2 != lift_high.end() && it2->second == entry)
         lift_high.erase(it2);
 
-}//end remove_partition_entries()
+}//end remove_lift_entries()
 
 //if the equivalence class corresponding to xiMatrixEntry head has nonempty sets of "low" or "high" simplices, then this function creates the appropriate entries in lift_low and lift_high
-void PersistenceUpdater::add_partition_entries(xiMatrixEntry* head)
+void PersistenceUpdater::add_lift_entries(xiMatrixEntry* entry)
 {
-    if(mesh->verbosity >= 9) { qDebug() << "    ----adding partition entries for xiMatrixEntry" << head->index << "(" << head->low_index << ";" << head->high_index << ")"; }
+    if(mesh->verbosity >= 9) { qDebug() << "    ----adding partition entries for xiMatrixEntry" << entry->index << "(" << entry->low_index << ";" << entry->high_index << ")"; }
 
     //low simplices
-    if(head->low_class_size > 0)
-        lift_low.insert( std::pair<unsigned, xiMatrixEntry*>(head->low_index, head) );
+    if(entry->low_count > 0)
+        lift_low.insert( std::pair<unsigned, xiMatrixEntry*>(entry->low_index, entry) );
 
     //high simplices
-    if(head->high_class_size > 0)
-        lift_high.insert( std::pair<unsigned, xiMatrixEntry*>(head->high_index, head) );
-}//end add_partition_entries()
+    if(entry->high_count > 0)
+        lift_high.insert( std::pair<unsigned, xiMatrixEntry*>(entry->high_index, entry) );
+}//end add_lift_entries()
 
 //stores a barcode template in a 2-cell of the arrangement
 ///TODO: IMPROVE THIS!!! (store previous barcode at the simplicial level, and only examine columns that were modified in the recent update)
