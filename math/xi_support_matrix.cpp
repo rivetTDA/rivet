@@ -24,12 +24,6 @@ xiMatrixEntry::xiMatrixEntry(unsigned x, unsigned y, unsigned i, xiMatrixEntry* 
     low_count(0), high_count(0), low_index(0), high_index(0)
 { }
 
-//JULY 2015 BUG FIX: new constructor
-xiMatrixEntry::xiMatrixEntry(unsigned x, unsigned y, unsigned i, bool a, xiMatrixEntry* d, xiMatrixEntry* l) :
-    x(x), y(y), index(i), is_anchor(a), down(d), left(l),
-    low_count(0), high_count(0), low_index(0), high_index(0)
-{ }
-
 //associates a multigrades to this xi entry
 //the "low" argument is true if this multigrade is for low_simplices, and false if it is for high_simplices
 void xiMatrixEntry::add_multigrade(unsigned x, unsigned y, unsigned num_cols, int index, bool low)
@@ -142,7 +136,7 @@ void xiSupportMatrix::fill_and_find_anchors(std::vector<xiPoint>& xi_pts, Mesh* 
 //                qDebug() << "  creating xiMatrixEntry at (" << i << "," << j << ") for xi point" << next_xi_pt;
 
                 //create a new xiMatrixEntry
-                xiMatrixEntry* new_entry = new xiMatrixEntry(i, j, next_xi_pt, anchor, columns[i], rows[j]);
+                xiMatrixEntry* new_entry = new xiMatrixEntry(i, j, next_xi_pt, columns[i], rows[j]);
                 columns[i] = new_entry;
                 rows[j] = new_entry;
                 next_xi_pt++;
@@ -158,7 +152,7 @@ void xiSupportMatrix::fill_and_find_anchors(std::vector<xiPoint>& xi_pts, Mesh* 
 
 //                qDebug() << "  creating xiMatrixEntry at (" << i << "," << j << ") for an anchor; index =" << entry_index;
 
-                xiMatrixEntry* new_entry = new xiMatrixEntry(i, j, entry_index, anchor, columns[i], rows[j]);
+                xiMatrixEntry* new_entry = new xiMatrixEntry(i, j, entry_index, columns[i], rows[j]);
                 columns[i] = new_entry;
                 rows[j] = new_entry;
 
