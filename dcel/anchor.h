@@ -16,20 +16,17 @@ struct xiMatrixEntry;
 class Anchor
 {
     public:
-        //JULY 2015 BUG FIX:
-//        Anchor(xiMatrixEntry* down, xiMatrixEntry* left);  //constructor for a strict Anchor, requires pointers to the "generators" of the anchor
-//        Anchor(xiMatrixEntry* point, bool strong);         //constructor for a supported Anchor, requires pointer to the xi support point at the anchor and a bool indicating whether this anchor is strict (i.e. whether xi support points exist both left and down)
-        Anchor(xiMatrixEntry* e);                   //default constructor
-        Anchor(unsigned x, unsigned y);                    //constructor, requires only x- and y-coordinates
-        Anchor(const Anchor& other);                       //copy constructor
+        Anchor(xiMatrixEntry* e);           //default constructor
+        Anchor(unsigned x, unsigned y);     //constructor, requires only x- and y-coordinates
+        Anchor(const Anchor& other);        //copy constructor
 
         Anchor& operator= (const Anchor& other);	//assignment operator
         bool operator== (const Anchor& other) const;	//equality operator
 
         bool comparable(Anchor* other) const;   //tests whether two Anchors are (strongly) comparable
 
-        unsigned get_x() const;		//get the discrete x-coordinate (e.g. time index) of the multi-index
-        unsigned get_y() const;		//get the discrete y-coordinate (e.g. distance index) of the multi-index
+        unsigned get_x() const;		//get the discrete x-coordinate
+        unsigned get_y() const;		//get the discrete y-coordinate
 
         void set_line(Halfedge* e);	//set the pointer to the line corresponding to this Anchor in the arrangement
         Halfedge* get_line() const;		//get the pointer to the line corresponding to this Anchor in the arrangement
@@ -40,21 +37,13 @@ class Anchor
         bool is_above();       //returns true iff this Anchor is above the current slice line, used for the vineyard-update process of storing persistence data in cells of the arrangement
         void toggle();         //toggles above/below state of this Anchor; called whever the slice line crosses this Anchor in the vineyard-update process of storing persistence data
 
-        xiMatrixEntry* get_entry(); //accessor -- JULY 2015 BUG FIX:
-        xiMatrixEntry* get_down();  //accessor -- unnecessary now
-        xiMatrixEntry* get_left();  //accessor -- unnecessary now
+        xiMatrixEntry* get_entry(); //accessor
 
     private:
-        unsigned x_coord;	//discrete x-coordinate (e.g. time) of multi-index
-        unsigned y_coord;	//discrete y-coordinate (e.g. distance) of multi-inded
+        unsigned x_coord;	//discrete x-coordinate
+        unsigned y_coord;	//discrete y-coordinate
 
-        //JULY 2015 BUG FIX:
         xiMatrixEntry* entry;   //xiMatrixEntry at the position of this anchor
-
-//        xiMatrixEntry* down;    //generator of this anchor located below the anchor
-//        xiMatrixEntry* left;    //generator of this anchor located left of the anchor
-            //NOTE: if the anchor is both strict and supported, then down is NULL and left points to the xiMatrixEntry at the anchor coordinates
-            //      if the anchor is not strict (but supported), then left is NULL and down points to the xiMatrixEntry at the anchor coordinates
 
         Halfedge* dual_line;    //pointer to left-most halfedge corresponding to this Anchor in the arrangement
         unsigned position;      //relative position of Anchor line at sweep line, used for Bentley-Ottmann DCEL construction algorithm
