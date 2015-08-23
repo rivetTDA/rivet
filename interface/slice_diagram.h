@@ -30,7 +30,7 @@ public:
     SliceDiagram(ConfigParameters* params, std::vector<double>& x_grades, std::vector<double>& y_grades, QObject* parent = 0);
     ~SliceDiagram();
 
-    void add_point(double x_coord, double y_coord, int xi0m, int xi1m); //receives an xi support point, which will be drawn when create_diagram() is called
+    void add_point(double x_coord, double y_coord, int xi0m, int xi1m, int xi2m); //receives an xi support point, which will be drawn when create_diagram() is called
 
     void create_diagram(QString x_text, QString y_text, double xmin, double xmax, double ymin, double ymax, bool norm_coords, unsigned_matrix& hom_dims);  //simply creates all objects; resize_diagram() handles positioning of objects
     void resize_diagram();   //resizes diagram to fill the QGraphicsView
@@ -50,6 +50,7 @@ public:
 
     void toggle_xi0_points(bool show);  //if "show" is true, then xi_0 support points are drawn; otherwise, they are hidden
     void toggle_xi1_points(bool show);  //if "show" is true, then xi_1 support points are drawn; otherwise, they are hidden
+    void toggle_xi2_points(bool show);  //if "show" is true, then xi_2 support points are drawn; otherwise, they are hidden
     void toggle_barcode(bool show);     //if "show" is true, then barcode is drawn; otherwise, it is hidden
     void set_normalized_coords(bool toggle);    //toggles whether the diagram is drawn to scale or fills the window
 
@@ -91,6 +92,7 @@ private:
 
     std::vector<QGraphicsEllipseItem*> xi0_dots;    //pointers to all xi0 dots
     std::vector<QGraphicsEllipseItem*> xi1_dots;    //pointers to all xi1 dots
+    std::vector<QGraphicsEllipseItem*> xi2_dots;    //pointers to all xi2 dots
     std::vector< std::list<PersistenceBar*> > bars; //pointers to all bars (in the barcode) -- each element of the vector stores a list of one or more identical bars that correspond to a single dot in the persistence diagram
 
     QGRI_matrix hom_dim_rects;     //rectangles that plot the homology dimensions <--NEW
@@ -102,9 +104,9 @@ private:
     struct xiFloatingPoint  ///TODO: is this a good design? consider how to most efficiently store the points
     {
         double x, y;    //floating-point coordinates
-        int zero, one;  //multiplicity of xi_0 and xi_1 at this point
+        int zero, one, two;  //multiplicity of xi_0, xi_1, xi_2 at this point
 
-        xiFloatingPoint(double xc, double yc, int m0, int m1) : x(xc), y(yc), zero(m0), one(m1)
+        xiFloatingPoint(double xc, double yc, int m0, int m1, int m2) : x(xc), y(yc), zero(m0), one(m1), two(m2)
         { }
     };
     std::vector<xiFloatingPoint> points;    //point data to be drawn in the slice area

@@ -269,6 +269,16 @@
             </property>
            </widget>
           </item>
+          <item>
+           <widget class="QCheckBox" name="xi2CheckBox">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="text">
+             <string>Show ξ₂ points</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </item>
         <item>
@@ -343,7 +353,7 @@
      <x>0</x>
      <y>0</y>
      <width>1000</width>
-     <height>25</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuMain_Window">

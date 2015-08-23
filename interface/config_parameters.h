@@ -8,6 +8,7 @@ struct ConfigParameters {
   //colors
     QColor xi0color;
     QColor xi1color;
+    QColor xi2color;
     QColor persistenceColor;
     QColor persistenceHighlightColor;
     QColor sliceLineColor;

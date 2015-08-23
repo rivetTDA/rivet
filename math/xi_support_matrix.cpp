@@ -157,7 +157,7 @@ void xiSupportMatrix::fill_and_find_anchors(std::vector<xiPoint>& xi_pts, Mesh* 
                 rows[j] = new_entry;
 
                 //add this point to xi_pts
-                xi_pts.push_back( xiPoint(i, j, 0, 0) );
+                xi_pts.push_back( xiPoint(i, j, 0, 0, 0) );
 
                 //send this anchor to the Mesh
                 mesh->add_anchor(new_entry);

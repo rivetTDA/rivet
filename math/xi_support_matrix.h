@@ -19,8 +19,6 @@ struct xiMatrixEntry
     unsigned y;     //discrete y-grade of this support point
     unsigned index; //index of this support point in the vector of support points stored in VisualizationWindow
 
-//    bool is_anchor; //JULY 2015 BUG FIX: indicates whether or not there is an anchor at the coordinates of this matrix entry
-
     xiMatrixEntry* down;     //pointer to the next support point below this one
     xiMatrixEntry* left;     //pointer to the next support point left of this one
 

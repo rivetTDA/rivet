@@ -92,7 +92,7 @@ void VisualizationWindow::paint_xi_support()
 {
     //send xi support points to the SliceDiagram
     for(std::vector<xiPoint>::iterator it = xi_support.begin(); it != xi_support.end(); ++it)
-        slice_diagram.add_point(x_grades[it->x], y_grades[it->y], it->zero, it->one);
+        slice_diagram.add_point(x_grades[it->x], y_grades[it->y], it->zero, it->one, it->two);
 
     //create the SliceDiagram
     slice_diagram.create_diagram(input_params.x_label, input_params.y_label, x_grades.front(), x_grades.back(), y_grades.front(), y_grades.back(), ui->normCoordCheckBox->isChecked(), homology_dimensions);
@@ -100,6 +100,7 @@ void VisualizationWindow::paint_xi_support()
     //enable control items
     ui->xi0CheckBox->setEnabled(true);
     ui->xi1CheckBox->setEnabled(true);
+    ui->xi2CheckBox->setEnabled(true);
     ui->normCoordCheckBox->setEnabled(true);
     ui->angleLabel->setEnabled(true);
     ui->angleDoubleSpinBox->setEnabled(true);
@@ -206,6 +207,12 @@ void VisualizationWindow::on_xi1CheckBox_toggled(bool checked)
 {
     if(line_selection_ready)
         slice_diagram.toggle_xi1_points(checked);
+}
+
+void VisualizationWindow::on_xi2CheckBox_toggled(bool checked)
+{
+    if(line_selection_ready)
+        slice_diagram.toggle_xi2_points(checked);
 }
 
 //updates the persistence diagram and barcode after a change in the slice line
