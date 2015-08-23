@@ -98,6 +98,7 @@ void VisualizationWindow::paint_xi_support()
     slice_diagram.create_diagram(input_params.x_label, input_params.y_label, x_grades.front(), x_grades.back(), y_grades.front(), y_grades.back(), ui->normCoordCheckBox->isChecked(), homology_dimensions);
 
     //enable control items
+    ui->BettiLabel->setEnabled(true);
     ui->xi0CheckBox->setEnabled(true);
     ui->xi1CheckBox->setEnabled(true);
     ui->xi2CheckBox->setEnabled(true);

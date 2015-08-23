@@ -119,21 +119,7 @@ void SliceDiagram::create_diagram(QString x_text, QString y_text, double xmin, d
     for(unsigned i = 0; i < points.size(); i++)
     {
         //build tooltip string
-        QString tooltip;
-        if(points[i].zero > 0)
-            tooltip = QString("ξ₀(") + QString::number(points[i].x) + ", " + QString::number(points[i].y) +") = " + QString::number(points[i].zero);
-        if(points[i].one > 0)
-        {
-            if(!tooltip.isEmpty())
-                tooltip += QString("; ");
-            tooltip += QString("ξ₁(") + QString::number(points[i].x) + ", " + QString::number(points[i].y) +") = " + QString::number(points[i].one);
-        }
-        if(points[i].two > 0)
-        {
-            if(!tooltip.isEmpty())
-                tooltip += QString("; ");
-            tooltip += QString("ξ₂(") + QString::number(points[i].x) + ", " + QString::number(points[i].y) +") = " + QString::number(points[i].two);
-        }
+        QString tooltip = QString("Betti(")+ QString::number(points[i].x) + ", " + QString::number(points[i].y) + ") = (" + QString::number(points[i].zero) + ", " + QString::number(points[i].one) + ", " + QString::number(points[i].two) + ")";
 
         //create graphics items
         if(points[i].zero > 0)  //then draw a xi0 disk
