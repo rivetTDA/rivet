@@ -156,8 +156,8 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
         qDebug() << "  step" << i << "of path: crossing anchor at ("<< cur_anchor->get_x() << "," << cur_anchor->get_y() << ") into cell" << mesh->FID((path[i])->get_face());
 
         //get equivalence classes for this anchor
-        xiMatrixEntry* down = cur_anchor->get_down();
-        xiMatrixEntry* left = cur_anchor->get_left();
+        xiMatrixEntry* down = at_anchor->down;
+        xiMatrixEntry* left = at_anchor->left;
 
         //if this is a strict anchor, then swap simplices
         if(down != NULL && left != NULL) //then this is a strict anchor and some simplices swap
