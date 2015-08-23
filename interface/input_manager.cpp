@@ -435,7 +435,7 @@ void InputManager::read_RIVET_data(FileInputReader& reader)
         unsigned y = line.at(1).toUInt();
         int zero = line.at(2).toInt();
         int one = line.at(3).toInt();
-        int two = 0;    ///TODO: FIX THIS -- READ xi_2 FROM FILE <<<<<<<<<<<<
+        int two = line.at(4).toInt();
         cthread->xi_support.push_back(xiPoint(x, y, zero, one, two));
         line = reader.next_line();
     }

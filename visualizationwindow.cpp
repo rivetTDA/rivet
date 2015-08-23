@@ -482,7 +482,8 @@ void VisualizationWindow::on_actionSave_triggered()
             for(std::vector<xiPoint>::iterator it = xi_support.begin(); it != xi_support.end(); ++it)
             {
                 xiPoint p = *it;
-                stream << p.x << " " << p.y << " " << p.zero << " " << p.one << endl;
+                if(p.zero > 0 || p.one > 0 || p.two > 0)    //necessary because the vector xi_support also stores anchors (template points) that are not xi support points
+                    stream << p.x << " " << p.y << " " << p.zero << " " << p.one << " " << p.two << endl;
             }
             stream << endl;
 

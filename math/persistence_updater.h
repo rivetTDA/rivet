@@ -33,7 +33,6 @@ class PersistenceUpdater
 
         PersistenceUpdater(Mesh* m, SimplexTree* b, std::vector<xiPoint>& xi_pts);  //constructor for when we must compute all of the barcode templates
 
-///TODO: MUST BE UPDATED AFTER JULY 2015 BUG FIX:
         PersistenceUpdater(Mesh* m, std::vector<xiPoint>& xi_pts); //constructor for when we load the pre-computed barcode templates from a RIVET data file
 
         //functions to compute and store barcode templates in each 2-cell of the mesh

@@ -129,12 +129,11 @@ void Mesh::build_arrangement(MultiBetti& mb, std::vector<xiPoint>& xi_pts, Compu
 void Mesh::build_arrangement(std::vector<xiPoint>& xi_pts, std::vector<BarcodeTemplate>& barcode_templates, ComputationThread* cthread)
 {
     QTime timer;
-    PersistenceUpdater updater(this, xi_pts);
 
     //first, compute anchors and store them in the vector Mesh::all_anchors
     emit cthread->setCurrentProgress(10);
     timer.start();
-//    updater.find_anchors(); -- MUST BE UPDATED FOR JULY 2015 BUG FIX!!!
+    PersistenceUpdater updater(this, xi_pts);   //we only use the PersistenceUpdater to find and store the anchors
     qDebug() << "  --> finding anchors took" << timer.elapsed() << "milliseconds";
 
     //now that we have all the anchors, we can build the interior of the arrangement

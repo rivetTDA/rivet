@@ -91,6 +91,7 @@ xiSupportMatrix::~xiSupportMatrix()
 
 //stores xi support points in the xiSupportMatrix
 // precondition: xi_pts contains the support points in lexicographical order
+/*
 void xiSupportMatrix::fill(std::vector<xiPoint>& xi_pts)
 {
     for(unsigned i = 0; i < xi_pts.size(); i++)
@@ -103,6 +104,7 @@ void xiSupportMatrix::fill(std::vector<xiPoint>& xi_pts)
         rows[y] = cur_entry;
     }
 }//end fill()
+*/
 
 //stores the supplied xi support points in the xiSupportMatrix
 //  also finds anchors, which are stored in the matrix, the vector xi_pts, AND in the Mesh

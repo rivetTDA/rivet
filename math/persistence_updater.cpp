@@ -37,7 +37,7 @@ PersistenceUpdater::PersistenceUpdater(Mesh* m, std::vector<xiPoint>& xi_pts) :
     testing(false)
 {
     //fill the xiSupportMatrix with the xi support points
-    xi_matrix.fill(xi_pts);
+    xi_matrix.fill_and_find_anchors(xi_pts, m);
 
     //create partition entries for infinity (which never change)
     unsigned infty = -1;    // = MAX_UNSIGNED
