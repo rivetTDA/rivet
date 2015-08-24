@@ -32,7 +32,7 @@ struct xiMatrixEntry
         //NOTE: if xiMatrixEntry is a LUB-index but there are no low (resp. high) columns mapped to it, then low_index (resp. high_index) is the index of the column just left of where such columns would appear (could be -1)
 
   //functions
-    xiMatrixEntry();    //empty constructor, e.g. for the entry representing infinity
+    xiMatrixEntry();    //empty constructor
     xiMatrixEntry(unsigned x, unsigned y, unsigned i, xiMatrixEntry* d, xiMatrixEntry* l);  //regular constructor
 
     void add_multigrade(unsigned x, unsigned y, unsigned num_cols, int index, bool low);  //associates a (new) multigrades to this xi entry
@@ -64,31 +64,18 @@ class xiSupportMatrix
         xiSupportMatrix(unsigned width, unsigned height);   //constructor
         ~xiSupportMatrix();     //destructor
 
-//DEPRECATED!!!        void fill(std::vector<xiPoint>& xi_pts);   //stores xi support points in the xiSupportMatrix
-            //precondition: xi_pts contains the support points in lexicographical order
-
         void fill_and_find_anchors(std::vector<xiPoint>& xi_pts, Mesh* mesh);   //stores xi support points in the xiSupportMatrix
             //also finds anchors, which are stored both in the matrix and in the vector xi_pts
             //precondition: xi_pts contains the support points in lexicographical order
 
         xiMatrixEntry* get_row(unsigned r); //gets a pointer to the rightmost entry in row r; returns NULL if row r is empty
         xiMatrixEntry* get_col(unsigned c); //gets a pointer to the top entry in column c; returns NULL if column c is empty
-        xiMatrixEntry* get_infinity();      //gets a pointer to the infinity entry
 
         unsigned height();  //retuns the number of rows;
-
-        //the following are only necessary for lazy updates
-        xiMatrixEntry* get_row_bin(unsigned r); //gets a pointer to the "bin" of unsorted grades for row r
-        xiMatrixEntry* get_col_bin(unsigned c); //gets a pointer to the "bin" of unsorted grades for column c
 
     private:
         std::vector<xiMatrixEntry*> columns;
         std::vector<xiMatrixEntry*> rows;
-        xiMatrixEntry infinity;
-
-        //the following are only necessary for lazy updates
-        std::vector<xiMatrixEntry> col_bins;
-        std::vector<xiMatrixEntry> row_bins;
 };
 
 #endif // XI_SUPPORT_MATRIX_H

@@ -79,7 +79,9 @@ class PersistenceUpdater
         //finds the proper order of simplexes for the persistence calculation (with respect to a near-vertical line positioned to the right of all \xi support points)
         //  low is true for simplices of dimension hom_dim, false for simplices of dimension hom_dim+1
         //  simplex_order will be filled with a map : dim_index --> order_index for simplices of the given dimension
-        void build_simplex_order(IndexMatrix* ind, bool low, std::vector<int>& simplex_order);
+        //  NOTE: If a simplex with dim_index i does not appear in the order (i.e. its grade is not less than the LUB of all xi support points), then simplex_order[i] = -1.
+        //  returns the number of simplices in the order
+        unsigned build_simplex_order(IndexMatrix* ind, bool low, std::vector<int>& simplex_order);
 
         //moves grades associated with xiMatrixEntry greater, that come before xiMatrixEntry lesser in R^2, so that they become associated with lesser
         //   horiz is true iff greater and lesser are on the same horizontal line (i.e., they share the same y-coordinate)

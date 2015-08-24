@@ -70,8 +70,7 @@ bool Multigrade::LexComparator(const Multigrade* first, const Multigrade* second
 
 //constructor for xiSupportMatrix
 xiSupportMatrix::xiSupportMatrix(unsigned width, unsigned height) :
-    columns(width), rows(height), infinity(),
-    col_bins(width), row_bins(height)
+    columns(width), rows(height)
 { }
 
 //destructor
@@ -88,23 +87,6 @@ xiSupportMatrix::~xiSupportMatrix()
         }
     }
 }
-
-//stores xi support points in the xiSupportMatrix
-// precondition: xi_pts contains the support points in lexicographical order
-/*
-void xiSupportMatrix::fill(std::vector<xiPoint>& xi_pts)
-{
-    for(unsigned i = 0; i < xi_pts.size(); i++)
-    {
-        unsigned x = xi_pts[i].x;
-        unsigned y = xi_pts[i].y;
-
-        xiMatrixEntry* cur_entry = new xiMatrixEntry(x, y, i, columns[x], rows[y]);
-        columns[x] = cur_entry;
-        rows[y] = cur_entry;
-    }
-}//end fill()
-*/
 
 //stores the supplied xi support points in the xiSupportMatrix
 //  also finds anchors, which are stored in the matrix, the vector xi_pts, AND in the Mesh
@@ -180,26 +162,8 @@ xiMatrixEntry* xiSupportMatrix::get_col(unsigned c)
     return columns[c];
 }
 
-//gets a pointer to the infinity entry
-xiMatrixEntry* xiSupportMatrix::get_infinity()
-{
-    return &infinity;
-}
-
 //retuns the number of rows
 unsigned xiSupportMatrix::height()
 {
     return rows.size();
-}
-
-//gets a pointer to the "bin" of unsorted grades for row r
-xiMatrixEntry* xiSupportMatrix::get_row_bin(unsigned r)
-{
-    return &row_bins[r];
-}
-
-//gets a pointer to the "bin" of unsorted grades for column c
-xiMatrixEntry* xiSupportMatrix::get_col_bin(unsigned c)
-{
-    return &col_bins[c];
 }
