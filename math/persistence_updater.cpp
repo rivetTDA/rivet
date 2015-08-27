@@ -11,7 +11,7 @@
 #include "../dcel/mesh.h"
 
 #include <QDebug>
-#include <QTime>
+#include <QTime>    //NOTE: QTime::elapsed() wraps to zero 24 hours after the last call to start() or restart()
 
 
 //constructor for when we must compute all of the barcode templates
@@ -101,7 +101,8 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
     U_low = R_low->decompose_RU();
     U_high = R_high->decompose_RU();
 
-    qDebug() << "  --> computing the RU decomposition took" << timer.elapsed() << "milliseconds";
+    int time_for_initial_decomp = timer.elapsed();
+    qDebug() << "  --> computing the RU decomposition took" << time_for_initial_decomp << "milliseconds";
 
     //store the barcode template in the first cell
     Face* first_cell = mesh->topleft->get_twin()->get_face();
@@ -116,17 +117,18 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
     qDebug() << "TRAVERSING THE PATH USING THE RESET ALGORITHM: path has" << path.size() << "steps";
     qDebug() << "                              ^^^^^^^^^^^^^^^";
 
-    ///TODO: set the threshold dynamically
-    unsigned long threshold = 800000;     //if the number of swaps might exceed this threshold, then do a persistence calculation from scratch
+    ///TODO: choose the initial value of the threshold intelligently
+    unsigned long threshold = 500000;     //if the number of swaps might exceed this threshold, then do a persistence calculation from scratch
     unsigned long swap_estimate = 0;
     qDebug() << "reset threshold set to" << threshold;
 
     timer.start();
 
-    ///TEMPORARY: data structures for analyzing the computation
+    //data structures for analyzing the computation
     unsigned long total_transpositions = 0;
-    unsigned number_of_resets = 0;
-    unsigned total_time_for_resets = 0;
+    unsigned total_time_for_transpositions = 0; //NEW
+    unsigned number_of_resets = 1;  //we count the initial RU-decomposition as the first reset
+    unsigned total_time_for_resets = time_for_initial_decomp;
     int max_time = 0;
 
     //traverse the path
@@ -233,6 +235,7 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
         {
             qDebug() << "    --> this step took" << step_time << "milliseconds and involved" << swap_counter << "transpositions";
             total_transpositions += swap_counter;
+            total_time_for_transpositions += step_time;
         }
         else
         {
@@ -243,6 +246,14 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
 
         if(step_time > max_time)
             max_time = step_time;
+
+        //update the treshold
+        if(total_time_for_transpositions > 0 && total_transpositions > total_time_for_transpositions)
+        {
+            ///TODO: integer division OK here???
+            threshold = (total_transpositions/total_time_for_transpositions)*(total_time_for_resets/number_of_resets);
+            qDebug() << "       new threshold:" << threshold;
+        }
     }//end path traversal
 
     //print runtime data
