@@ -34,6 +34,7 @@ struct xiMatrixEntry
   //functions
     xiMatrixEntry();    //empty constructor
     xiMatrixEntry(unsigned x, unsigned y, unsigned i, xiMatrixEntry* d, xiMatrixEntry* l);  //regular constructor
+    xiMatrixEntry(unsigned x, unsigned y);      //constructor for temporary entries used in counting switches
 
     void add_multigrade(unsigned x, unsigned y, unsigned num_cols, int index, bool low);  //associates a (new) multigrades to this xi entry
         //the "low" argument is true if this multigrade is for low_simplices, and false if it is for high_simplices
@@ -72,6 +73,8 @@ class xiSupportMatrix
         xiMatrixEntry* get_col(unsigned c); //gets a pointer to the top entry in column c; returns NULL if column c is empty
 
         unsigned height();  //retuns the number of rows;
+
+        void clear_grade_lists();   //clears the level set lists for all entries in the matrix
 
     private:
         std::vector<xiMatrixEntry*> columns;

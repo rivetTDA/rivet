@@ -93,3 +93,12 @@ xiMatrixEntry* Anchor::get_entry()
     return entry;
 }
 
+void Anchor::set_weight(unsigned long w)
+{
+    weight = w;
+}
+
+unsigned long Anchor::get_weight()
+{
+    return weight;
+}

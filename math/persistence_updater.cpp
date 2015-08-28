@@ -159,7 +159,7 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
             {
                 remove_lift_entries(at_anchor);        //this block of the partition might become empty
                 remove_lift_entries(down);             //this block of the partition will move
-                split_grade_lists(at_anchor, left, true);   //move grades that come before left from anchor to left
+                swap_counter += split_grade_lists(at_anchor, left, true);   //move grades that come before left from anchor to left
 
                 //now permute the columns and fix the RU-decomposition
                 swap_estimate = static_cast<unsigned long>(left->low_count) * static_cast<unsigned long>(down->low_count)
@@ -179,7 +179,7 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
                 //pre-move updates to equivalence class info
                 remove_lift_entries(at_anchor);        //this block of the partition might become empty
                 remove_lift_entries(left);             //this block of the partition will move
-                split_grade_lists(at_anchor, down, false);  //move grades that come before down from anchor to down
+                swap_counter += split_grade_lists(at_anchor, down, false);  //move grades that come before down from anchor to down
 
                 //now permute the columns and fix the RU-decomposition
                 swap_estimate = static_cast<unsigned long>(left->low_count) * static_cast<unsigned long>(down->low_count)
@@ -211,7 +211,7 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
             else    //then split classes
             {
                 remove_lift_entries(at_anchor);   //this is necessary because the class corresponding
-                split_grade_lists(at_anchor, generator, (at_anchor->y == generator->y));
+                swap_counter += split_grade_lists(at_anchor, generator, (at_anchor->y == generator->y));
                 add_lift_entries(at_anchor);      //  to at_anchor might have become empty
                 add_lift_entries(generator);
             }
@@ -274,6 +274,71 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
 
 }//end store_barcodes_with_reset()
 
+//function to set the "edge weights" for each anchor line
+void PersistenceUpdater::set_anchor_weights(std::vector<Halfedge*>& path)
+{
+  // PART 1: GET THE PROPER SIMPLEX ORDERING
+
+    //initialize the lift map from simplex grades to LUB-indexes
+    if(mesh->verbosity >= 6) { qDebug() << "  Mapping low simplices:"; }
+    IndexMatrix* ind_low = bifiltration->get_index_mx(dim);    //can we improve this with something more efficient than IndexMatrix?
+    store_multigrades(ind_low, true);
+    delete ind_low;
+
+    if(mesh->verbosity >= 6) { qDebug() << "  Mapping high simplices:"; }
+    IndexMatrix* ind_high = bifiltration->get_index_mx(dim + 1);    //again, could be improved?
+    store_multigrades(ind_high, false);
+    delete ind_high;
+
+
+  // PART 2: TRAVERSE THE PATH AND COUNT SWITCHES & SEPARATIONS AT EACH STEP
+
+    for(unsigned i=0; i<path.size(); i++)
+    {
+      unsigned long switches = 0;
+      unsigned long separations = 0;
+
+      //determine which anchor is represented by this edge
+      Anchor* cur_anchor = (path[i])->get_anchor();
+      xiMatrixEntry* at_anchor = cur_anchor->get_entry();
+
+      qDebug() << "  step" << i << "of the short path: crossing anchor at ("<< cur_anchor->get_x() << "," << cur_anchor->get_y() << ") into cell" << mesh->FID((path[i])->get_face());
+
+      //if this is a strict anchor, then there can be switches and separations
+      if(at_anchor->down != NULL && at_anchor->left != NULL) //then this is a strict anchor
+      {
+          count_switches_and_separations(at_anchor, cur_anchor->is_above(), switches, separations);
+      }
+      else    //this is a non-strict anchor, so there can be separations but not switches
+      {
+          xiMatrixEntry* generator = (at_anchor->down != NULL) ? at_anchor->down : at_anchor->left;
+
+          if((cur_anchor->is_above() && generator == at_anchor->down) || (!cur_anchor->is_above() && generator == at_anchor->left))
+              //then merge classes
+          {
+              separations += generator->low_count * at_anchor->low_count + generator->high_count * at_anchor->high_count;
+              merge_grade_lists(at_anchor, generator);
+          }
+          else    //then split classes
+          {
+              do_separations(at_anchor, generator, (at_anchor->y == generator->y));
+              separations += generator->low_count * at_anchor->low_count + generator->high_count * at_anchor->high_count;
+          }
+      }
+
+      //store data
+      cur_anchor->set_weight(switches + separations/4);     //we expect that each separation produces a transposition about 25% of the time
+
+      qDebug() << "     edge weight:" << cur_anchor->get_weight() << "; (" << switches << "," << separations << ")";
+
+    }//end path traversal
+}//end set_anchor_weights()
+
+//function to clear the levelset lists -- e.g., following the edge-weight calculation
+void PersistenceUpdater::clear_levelsets()
+{
+    xi_matrix.clear_grade_lists();
+}
 
 //stores multigrade info for the persistence computations (data structures prepared with respect to a near-vertical line positioned to the right of all \xi support points)
 //  that is, this function creates the level sets of the lift map
@@ -418,8 +483,10 @@ unsigned PersistenceUpdater::build_simplex_order(IndexMatrix* ind, bool low, std
 
 //moves grades associated with xiMatrixEntry greater, that come before xiMatrixEntry lesser in R^2, so that they become associated with lesser
 //  precondition: no grades lift to lesser (it has empty level sets under the lift map)
-void PersistenceUpdater::split_grade_lists(xiMatrixEntry* greater, xiMatrixEntry* lesser, bool horiz)
+unsigned long PersistenceUpdater::split_grade_lists(xiMatrixEntry* greater, xiMatrixEntry* lesser, bool horiz)
 {
+    unsigned long swap_counter = 0;
+
     //low simplices
     int gr_col = greater->low_index;
     int cur_col = gr_col;
@@ -431,7 +498,7 @@ void PersistenceUpdater::split_grade_lists(xiMatrixEntry* greater, xiMatrixEntry
         if((horiz && cur_grade->x > lesser->x) || (!horiz && cur_grade->y > lesser->y))  //then this grade lifts to greater, so move columns to the right
         {
             if(cur_col != gr_col)   //then we must move the columns
-                move_low_columns(cur_col, cur_grade->num_cols, gr_col);
+                swap_counter += move_low_columns(cur_col, cur_grade->num_cols, gr_col);
 
             greater->low_simplices.push_back(cur_grade);
             gr_col -= cur_grade->num_cols;
@@ -456,7 +523,7 @@ void PersistenceUpdater::split_grade_lists(xiMatrixEntry* greater, xiMatrixEntry
         if((horiz && cur_grade->x > lesser->x) || (!horiz && cur_grade->y > lesser->y))  //then this grade lifts to greater, so move columns to the right
         {
             if(cur_col != gr_col)   //then we must move the columns
-                move_high_columns(cur_col, cur_grade->num_cols, gr_col);
+                swap_counter += move_high_columns(cur_col, cur_grade->num_cols, gr_col);
 
             greater->high_simplices.push_back(cur_grade);
             gr_col -= cur_grade->num_cols;
@@ -469,6 +536,8 @@ void PersistenceUpdater::split_grade_lists(xiMatrixEntry* greater, xiMatrixEntry
     lesser->high_index = gr_col;
     lesser->high_count = gr_col - cur_col;
     greater->high_count = greater->high_index - lesser->high_index;
+
+    return swap_counter;
 }//end split_grade_lists()
 
 //moves all grades associated with xiMatrixEntry lesser so that they become associated with xiMatrixEntry greater
@@ -979,6 +1048,84 @@ void PersistenceUpdater::update_order_and_reset_matrices(xiMatrixEntry* first, x
     U_high = R_high->decompose_RU();
 
 }//end update_order_and_reset_matrices()
+
+//swaps two blocks of simplices in the total order, and returns the number of transpositions that would be performed on the matrix columns if we were doing vineyard updates
+void PersistenceUpdater::count_switches_and_separations(xiMatrixEntry* at_anchor, bool from_below, unsigned long& switches, unsigned long& seps)
+{
+    //identify entries
+    xiMatrixEntry* first = from_below ? at_anchor->down : at_anchor->left;
+    xiMatrixEntry* second = from_below ? at_anchor->left : at_anchor->down;
+    xiMatrixEntry* temp = new xiMatrixEntry(at_anchor->left->x, at_anchor->down->y); //temporary entry for holding grades that come before BOTH first and second
+
+    //separate out the grades that lift to anchor from those that lift to second
+    do_separations(at_anchor, second, from_below);
+    seps += second->low_count * at_anchor->low_count + second->high_count * at_anchor->high_count;
+    do_separations(first, temp, from_below);
+    seps += temp->low_count * first->low_count + temp->high_count * first->high_count;
+
+    //count switches
+    int i = first->low_index;
+    first->low_index = second->low_index;
+    second->low_index = i;
+    i = first->high_index;
+    first->high_index = second->high_index;
+    second->high_index = i;
+    switches += first->low_count * second->low_count + first->high_count * second->high_count;
+
+    //count final separations
+    seps += first->low_count * at_anchor->low_count + first->high_count * at_anchor->high_count;
+    merge_grade_lists(at_anchor, first);
+    seps += temp->low_count * second->low_count + temp->high_count * second->high_count;
+    merge_grade_lists(second, temp);
+}//end count_switches_and_separations()
+
+//used by the previous function to split grade lists at each anchor crossing
+void PersistenceUpdater::do_separations(xiMatrixEntry* greater, xiMatrixEntry* lesser, bool horiz)
+{
+    //first, low simpilicse
+    int gr_col = greater->low_index;
+    int cur_col = gr_col;
+    std::list<Multigrade*> grades = greater->low_simplices;
+    greater->low_simplices.clear();       ///this isn't so efficient...
+    for(std::list<Multigrade*>::iterator it = grades.begin(); it != grades.end(); ++it)
+    {
+        Multigrade* cur_grade = *it;
+        if((horiz && cur_grade->x > lesser->x) || (!horiz && cur_grade->y > lesser->y))  //then this grade lifts to greater
+        {
+            greater->low_simplices.push_back(cur_grade);
+            gr_col -= cur_grade->num_cols;
+        }
+        else    //then this grade lifts to second
+            lesser->low_simplices.push_back(cur_grade);
+
+        cur_col -= cur_grade->num_cols;
+    }
+    lesser->low_index = gr_col;
+    lesser->low_count = gr_col - cur_col;
+    greater->low_count = greater->low_index - lesser->low_index;
+
+    //now high simplices
+    gr_col = greater->high_index;
+    cur_col = gr_col;
+    std::list<Multigrade*> grades_h = greater->high_simplices;
+    greater->high_simplices.clear();       ///this isn't so efficient...
+    for(std::list<Multigrade*>::iterator it = grades_h.begin(); it != grades_h.end(); ++it)
+    {
+        Multigrade* cur_grade = *it;
+        if((horiz && cur_grade->x > lesser->x) || (!horiz && cur_grade->y > lesser->y))  //then this grade lifts to greater
+        {
+            greater->high_simplices.push_back(cur_grade);
+            gr_col -= cur_grade->num_cols;
+        }
+        else    //then this grade lifts to second
+            lesser->high_simplices.push_back(cur_grade);
+
+        cur_col -= cur_grade->num_cols;
+    }
+    lesser->high_index = gr_col;
+    lesser->high_count = gr_col - cur_col;
+    greater->high_count = greater->high_index - lesser->high_index;
+}//end do_separations
 
 //swaps two blocks of columns by using a quicksort to update the matrices, then fixing the RU-decomposition (Gaussian elimination on U followed by reduction of R)
 void PersistenceUpdater::quicksort_and_reduce(xiMatrixEntry* first, xiMatrixEntry* second, bool from_below)

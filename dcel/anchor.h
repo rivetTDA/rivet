@@ -39,6 +39,9 @@ class Anchor
 
         xiMatrixEntry* get_entry(); //accessor
 
+        void set_weight(unsigned long w);   //sets the estimate of the cost of updating the RU-decomposition when crossing this anchor
+        unsigned long get_weight();         //returns estimate of the cost of updating the RU-decomposition when crossing this anchor
+
     private:
         unsigned x_coord;	//discrete x-coordinate
         unsigned y_coord;	//discrete y-coordinate
@@ -48,6 +51,7 @@ class Anchor
         Halfedge* dual_line;    //pointer to left-most halfedge corresponding to this Anchor in the arrangement
         unsigned position;      //relative position of Anchor line at sweep line, used for Bentley-Ottmann DCEL construction algorithm
         bool above_line;        //true iff this Anchor is above the current slice line, used for the vineyard-update process of storing persistence data in cells of the arrangement
+        unsigned long weight;   //estimate of the cost of updating the RU-decomposition when crossing this anchor
 };
 
 

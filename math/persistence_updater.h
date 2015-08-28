@@ -39,6 +39,11 @@ class PersistenceUpdater
         void store_barcodes_with_reset(std::vector<Halfedge*>& path, ComputationThread* cthread);   //hybrid approach -- for expensive crossings, resets the matrices and does a standard persistence calculation
         void store_barcodes_quicksort(std::vector<Halfedge*>& path);    ///TODO -- for expensive crossings, rearranges columns via quicksort and fixes the RU-decomposition globally
 
+        //function to set the "edge weights" for each anchor line
+        void set_anchor_weights(std::vector<Halfedge*>& path);
+
+        //function to clear the levelset lists -- e.g., following the edge-weight calculation
+        void clear_levelsets();
 
     private:
       //data structures
@@ -85,7 +90,8 @@ class PersistenceUpdater
 
         //moves grades associated with xiMatrixEntry greater, that come before xiMatrixEntry lesser in R^2, so that they become associated with lesser
         //   horiz is true iff greater and lesser are on the same horizontal line (i.e., they share the same y-coordinate)
-        void split_grade_lists(xiMatrixEntry* greater, xiMatrixEntry* lesser, bool horiz);
+        //   returns a count of the number transpositions performed
+        unsigned long split_grade_lists(xiMatrixEntry* greater, xiMatrixEntry* lesser, bool horiz);
 
         //moves all grades associated with xiMatrixEntry lesser so that they become associated with xiMatrixEntry greater
         void merge_grade_lists(xiMatrixEntry* greater, xiMatrixEntry* lesser);
@@ -102,6 +108,12 @@ class PersistenceUpdater
 
         //swaps two blocks of columns by updating the total order on columns, then rebuilding the matrices and computing a new RU-decomposition
         void update_order_and_reset_matrices(xiMatrixEntry* first, xiMatrixEntry* second, bool from_below, MapMatrix_Perm* RL_initial, MapMatrix_Perm* RH_initial);
+
+        //swaps two blocks of simplices in the total order, and counts switches and separations
+        void count_switches_and_separations(xiMatrixEntry* at_anchor, bool from_below, unsigned long &switches, unsigned long &seps);
+
+        //used by the previous function to split grade lists at each anchor crossing
+        void do_separations(xiMatrixEntry* greater, xiMatrixEntry* lesser, bool horiz);
 
         //swaps two blocks of columns by using a quicksort to update the matrices, then fixing the RU-decomposition (Gaussian elimination on U followed by reduction of R)
         ///TODO: IMPLEMENT THIS!

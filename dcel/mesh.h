@@ -10,11 +10,12 @@
 
 //forward declarations
 class BarcodeTemplate;
+class ComputationThread;
 class Face;
 class Halfedge;
-class Vertex;
 class MultiBetti;
-class ComputationThread;
+class PersistenceUpdater;
+class Vertex;
 
 #include "anchor.h"
 #include "../math/xi_point.h"
@@ -37,12 +38,10 @@ class Mesh
 		
         ~Mesh();	//destructor: deletes all cells and anchors --- CHECK THIS!!!
 		
-        ///TODO: UPDATE THE FOLLOWING
         void build_arrangement(MultiBetti& mb, std::vector<xiPoint>& xi_pts, ComputationThread* cthread);
             //builds the DCEL arrangement, and computes and stores persistence data
             //also stores ordered list of xi support points in the supplied vector
 
-        ///NEW:
         void build_arrangement(std::vector<xiPoint>& xi_pts, std::vector<BarcodeTemplate>& barcode_templates, ComputationThread *cthread);
             //builds the DCEL arrangement from the supplied xi support points, but does NOT compute persistence data
 
@@ -84,6 +83,7 @@ class Mesh
         std::set<Anchor*, Anchor_LeftComparator> all_anchors;	//set of Anchors that are represented in the mesh, ordered by position of curve along left side of the arrangement, from bottom to top
 		
         Halfedge* topleft;			//pointer to Halfedge that points down from top left corner (0,infty)
+        Halfedge* topright;         //pointer to Halfedge that points down from the top right corner (infty,infty)
         Halfedge* bottomleft;       //pointer to Halfedge that points up from bottom left corner (0,-infty)
         Halfedge* bottomright;      //pointer to Halfedge that points up from bottom right corner (infty,-infty)
 		
@@ -99,6 +99,8 @@ class Mesh
 
         Halfedge* insert_vertex(Halfedge* edge, double x, double y);	//inserts a new vertex on the specified edge, with the specified coordinates, and updates all relevant pointers
         Halfedge* create_edge_left(Halfedge* edge, Anchor *anchor);    //creates the first pair of Halfedges in an anchor line, anchored on the left edge of the strip
+
+        void find_edge_weights(PersistenceUpdater& updater);    //computes and stores the edge weight for each anchor line
 
         void find_path(std::vector<Halfedge *> &pathvec);   //finds a pseudo-optimal path through all 2-cells of the arrangement
         void find_subpath(unsigned cur_node, std::vector< std::set<unsigned> >& adj, std::vector<Halfedge*>& pathvec, bool return_path); //builds the path recursively

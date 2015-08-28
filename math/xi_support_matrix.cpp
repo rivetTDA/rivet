@@ -11,7 +11,7 @@
 
 /********** xiMatrixEntry **********/
 
-//empty constructor, e.g. for the entry representing infinity
+//empty constructor
 xiMatrixEntry::xiMatrixEntry() :
     x(-1), y(-1), index(-1),    //sets these items to MAX_UNSIGNED, right?
     down(NULL), left(NULL),
@@ -21,6 +21,12 @@ xiMatrixEntry::xiMatrixEntry() :
 //regular constructor
 xiMatrixEntry::xiMatrixEntry(unsigned x, unsigned y, unsigned i, xiMatrixEntry* d, xiMatrixEntry* l) :
     x(x), y(y), index(i), down(d), left(l),
+    low_count(0), high_count(0), low_index(0), high_index(0)
+{ }
+
+//constructor for temporary entries used in counting switches
+xiMatrixEntry::xiMatrixEntry(unsigned x, unsigned y) :
+    x(x), y(y), down(NULL), left(NULL),
     low_count(0), high_count(0), low_index(0), high_index(0)
 { }
 
@@ -166,4 +172,23 @@ xiMatrixEntry* xiSupportMatrix::get_col(unsigned c)
 unsigned xiSupportMatrix::height()
 {
     return rows.size();
+}
+
+//clears the level set lists for all entries in the matrix
+void xiSupportMatrix::clear_grade_lists()
+{
+    for(unsigned i = 0; i < columns.size(); i++)
+    {
+        xiMatrixEntry* cur_entry = columns[i];
+        while(cur_entry != NULL)
+        {
+            cur_entry->low_simplices.clear();
+            cur_entry->high_simplices.clear();
+            cur_entry->low_count = 0;
+            cur_entry->high_count = 0;
+            cur_entry->low_index = 0;
+            cur_entry->high_index = 0;
+            cur_entry = cur_entry->down;
+        }
+    }
 }
