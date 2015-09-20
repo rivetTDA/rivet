@@ -258,17 +258,23 @@ MapMatrix* SimplexTree::get_boundary_mx(int dim)
 }//end get_boundary_mx(int)
 
 //returns a boundary matrix for hom_dim-simplices with columns in a specified order -- for vineyard-update algorithm
-MapMatrix_Perm* SimplexTree::get_boundary_mx(std::vector<int>& coface_order)
+//    simplex_order is a map : dim_index --> order_index for simplices of the given dimension
+//        if simplex_order[i] == -1, then simplex with dim_index i is NOT represented in the boundary matrix
+//    num_simplices is the number of simplices in the order (i.e., the number of entries in the vector that are NOT -1)
+MapMatrix_Perm* SimplexTree::get_boundary_mx(std::vector<int>& coface_order, unsigned num_simplices)
 {
     //create the matrix
-    MapMatrix_Perm* mat = new MapMatrix_Perm(ordered_low_simplices.size(), ordered_simplices.size());
+    MapMatrix_Perm* mat = new MapMatrix_Perm(ordered_low_simplices.size(), num_simplices);
 
     //loop through all simplices, writing columns to the matrix
     int dim_index = 0;  //tracks our position in the list of hom_dim-simplices
     for(SimplexSet::iterator it=ordered_simplices.begin(); it!=ordered_simplices.end(); ++it)
     {
         int order_index = coface_order[dim_index];  //index of the matrix column which will store the boundary of this simplex
-        write_boundary_column(mat, *it, order_index, 0);
+        if(order_index != -1)
+        {
+            write_boundary_column(mat, *it, order_index, 0);
+        }
 
         dim_index++; //increment the column counter
     }
@@ -278,39 +284,44 @@ MapMatrix_Perm* SimplexTree::get_boundary_mx(std::vector<int>& coface_order)
 }//end get_boundary_mx(int, vector<int>)
 
 //returns a boundary matrix for (hom_dim+1)-simplices with columns and rows a specified orders -- for vineyard-update algorithm
-MapMatrix_Perm *SimplexTree::get_boundary_mx(std::vector<int>& face_order, std::vector<int>& coface_order)
+//  PARAMETERS:
+//    each vector is a map : dim_index --> order_index for simplices of the given dimension
+//        if order[i] == -1, then simplex with dim_index i is NOT represented in the boundary matrix
+//    each unsigned is the number of simplices in the corresponding order (i.e., the number of entries in the vector that are NOT -1)
+MapMatrix_Perm *SimplexTree::get_boundary_mx(std::vector<int>& face_order, unsigned num_faces, std::vector<int>& coface_order, unsigned num_cofaces)
 {
     //create the matrix
-    MapMatrix_Perm* mat = new MapMatrix_Perm(ordered_simplices.size(), ordered_high_simplices.size());
+    MapMatrix_Perm* mat = new MapMatrix_Perm(num_faces, num_cofaces);
 
     //loop through all simplices, writing columns to the matrix
     int dim_index = 0;  //tracks our position in the list of (hom_dim+1)-simplices
     for(SimplexSet::iterator it=ordered_high_simplices.begin(); it!=ordered_high_simplices.end(); ++it)
     {
         int order_index = coface_order[dim_index];  //index of the matrix column which will store the boundary of this simplex
-
-        //get vertex list for this simplex
-        std::vector<int> verts = find_vertices((*it)->global_index());
-
-        //find all facets of this simplex
-        for(unsigned k=0; k<verts.size(); k++)       ///TODO: optimize! make this faster!
+        if(order_index != -1)
         {
-            //facet vertices are all vertices in verts[] except verts[k]
-            std::vector<int> facet;
-            for(unsigned l=0; l<verts.size(); l++)
-                if(l != k)
-                    facet.push_back(verts[l]);
+            //get vertex list for this simplex
+            std::vector<int> verts = find_vertices((*it)->global_index());
 
-            //look up order index of the facet
-            STNode* facet_node = find_simplex(facet);
-            if(facet_node == NULL)
-                throw std::runtime_error("facet simplex not found");
-            int facet_order_index = face_order[facet_node->dim_index()];
+            //find all facets of this simplex
+            for(unsigned k=0; k<verts.size(); k++)       ///TODO: optimize! make this faster!
+            {
+                //facet vertices are all vertices in verts[] except verts[k]
+                std::vector<int> facet;
+                for(unsigned l=0; l<verts.size(); l++)
+                    if(l != k)
+                        facet.push_back(verts[l]);
 
-            //for this boundary simplex, enter "1" in the appropriate cell in the matrix
-            mat->set(facet_order_index, order_index);
+                //look up order index of the facet
+                STNode* facet_node = find_simplex(facet);
+                if(facet_node == NULL)
+                    throw std::runtime_error("facet simplex not found");
+                int facet_order_index = face_order[facet_node->dim_index()];
+
+                //for this boundary simplex, enter "1" in the appropriate cell in the matrix
+                mat->set(facet_order_index, order_index);
+            }
         }
-
         dim_index++; //increment the column counter
     }
 

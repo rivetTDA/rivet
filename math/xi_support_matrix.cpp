@@ -11,23 +11,23 @@
 
 /********** xiMatrixEntry **********/
 
-//empty constructor, e.g. for the entry representing infinity
+//empty constructor
 xiMatrixEntry::xiMatrixEntry() :
     x(-1), y(-1), index(-1),    //sets these items to MAX_UNSIGNED, right?
     down(NULL), left(NULL),
-    low_count(0), high_count(0), low_class_size(-1), high_class_size(0), low_index(0), high_index(0)
+    low_count(0), high_count(0), low_index(0), high_index(0)
 { }
 
 //regular constructor
 xiMatrixEntry::xiMatrixEntry(unsigned x, unsigned y, unsigned i, xiMatrixEntry* d, xiMatrixEntry* l) :
     x(x), y(y), index(i), down(d), left(l),
-    low_count(0), high_count(0), low_class_size(-1), high_class_size(0), low_index(0), high_index(0)
+    low_count(0), high_count(0), low_index(0), high_index(0)
 { }
 
-//JULY 2015 BUG FIX: new constructor
-xiMatrixEntry::xiMatrixEntry(unsigned x, unsigned y, unsigned i, bool a, xiMatrixEntry* d, xiMatrixEntry* l) :
-    x(x), y(y), index(i), is_anchor(a), down(d), left(l),
-    low_count(0), high_count(0), low_class_size(-1), high_class_size(0), low_index(0), high_index(0)
+//constructor for temporary entries used in counting switches
+xiMatrixEntry::xiMatrixEntry(unsigned x, unsigned y) :
+    x(x), y(y), down(NULL), left(NULL),
+    low_count(0), high_count(0), low_index(0), high_index(0)
 { }
 
 //associates a multigrades to this xi entry
@@ -55,27 +55,6 @@ void xiMatrixEntry::insert_multigrade(Multigrade* mg, bool low)
         high_simplices.push_back(mg);
 }
 
-//moves all Multigrades from bin to this entry
-//  for use when merging two classes during lazy updates
-void xiMatrixEntry::move_bin_here(xiMatrixEntry* bin)
-{
-    //move low simplices
-    for(std::list<Multigrade*>::iterator it = bin->low_simplices.begin(); it != bin->low_simplices.end(); ++it)
-        low_simplices.push_back(*it);
-    bin->low_simplices.clear();
-
-    //move high simplices
-    for(std::list<Multigrade*>::iterator it = bin->high_simplices.begin(); it != bin->high_simplices.end(); ++it)
-        high_simplices.push_back(*it);
-    bin->high_simplices.clear();
-
-    //update counters
-    low_count += bin->low_count;
-    bin->low_count = 0;
-    high_count += bin->high_count;
-    bin->high_count = 0;
-}
-
 
 /********** Multigrade **********/
 
@@ -97,8 +76,7 @@ bool Multigrade::LexComparator(const Multigrade* first, const Multigrade* second
 
 //constructor for xiSupportMatrix
 xiSupportMatrix::xiSupportMatrix(unsigned width, unsigned height) :
-    columns(width), rows(height), infinity(),
-    col_bins(width), row_bins(height)
+    columns(width), rows(height)
 { }
 
 //destructor
@@ -116,54 +94,11 @@ xiSupportMatrix::~xiSupportMatrix()
     }
 }
 
-//stores xi support points from MultiBetti in the xiSupportMatrix and in the supplied vector
-///TODO: DEPRECATED
-//void xiSupportMatrix::fill(MultiBetti& mb, std::vector<xiPoint>& xi_pts)
-//{
-//    unsigned num_xi_pts = 0;
-
-//    for(unsigned i=0; i<columns.size(); i++)
-//    {
-//        for(unsigned j=0; j<rows.size(); j++)
-//        {
-//            if(mb.xi0(i,j) != 0 || mb.xi1(i,j) != 0)    //then we have found an xi support point
-//            {
-//                //add this point to the vector -- THIS IS NOW DONE IN MultiBetti::store_support_points()
-////                xi_pts.push_back( xiPoint(i, j, mb.xi0(i,j), mb.xi1(i,j)) );   //index in the vector is num_xi_pts
-
-//                //add this point to the sparse matrix
-//                xiMatrixEntry* cur_entry = new xiMatrixEntry(i, j, num_xi_pts, columns[i], rows[j]);
-//                columns[i] = cur_entry;
-//                rows[j] = cur_entry;
-
-//                //increment the index
-//                num_xi_pts++;
-//            }
-//        }
-//    }
-//}//end fill()
-
-//stores xi support points in the xiSupportMatrix
-// precondition: xi_pts contains the support points in lexicographical order
-void xiSupportMatrix::fill(std::vector<xiPoint>& xi_pts)
-{
-    for(unsigned i = 0; i < xi_pts.size(); i++)
-    {
-        unsigned x = xi_pts[i].x;
-        unsigned y = xi_pts[i].y;
-
-        xiMatrixEntry* cur_entry = new xiMatrixEntry(x, y, i, columns[x], rows[y]);
-        columns[x] = cur_entry;
-        rows[y] = cur_entry;
-    }
-}//end fill()
-
 //stores the supplied xi support points in the xiSupportMatrix
 //  also finds anchors, which are stored in the matrix, the vector xi_pts, AND in the Mesh
 //  precondition: xi_pts contains the support points in lexicographical order
 ///NOTE: WRITTEN FOR JULY 2015 BUG FIX
-///      Runtime complexity of this function is O(n_x * n_y), but we can probably do better.
-///      However, this fuction probably will be replaced when we implement the revised algorithm for tracking the LUBs.
+///      Runtime complexity of this function is O(n_x * n_y). We can probably do better, but it probably doesn't matter.
 void xiSupportMatrix::fill_and_find_anchors(std::vector<xiPoint>& xi_pts, Mesh* mesh)
 {
     unsigned next_xi_pt = 0;    //tracks the index of the next xi support point to insert
@@ -175,7 +110,7 @@ void xiSupportMatrix::fill_and_find_anchors(std::vector<xiPoint>& xi_pts, Mesh* 
         {
             //see if the next xi support point is in position (i,j)
             bool xi_pt = false;
-            if(xi_pts[next_xi_pt].x == i && xi_pts[next_xi_pt].y == j)
+            if(xi_pts.size() > next_xi_pt && xi_pts[next_xi_pt].x == i && xi_pts[next_xi_pt].y == j)
                 xi_pt = true;
 
             //see if there is an anchor at position (i,j)
@@ -188,10 +123,10 @@ void xiSupportMatrix::fill_and_find_anchors(std::vector<xiPoint>& xi_pts, Mesh* 
             //insert a new xiMatrixEntry
             if(xi_pt)
             {
-                qDebug() << "  creating xiMatrixEntry at (" << i << "," << j << ") for xi point" << next_xi_pt;
+//                qDebug() << "  creating xiMatrixEntry at (" << i << "," << j << ") for xi point" << next_xi_pt;
 
                 //create a new xiMatrixEntry
-                xiMatrixEntry* new_entry = new xiMatrixEntry(i, j, next_xi_pt, anchor, columns[i], rows[j]);
+                xiMatrixEntry* new_entry = new xiMatrixEntry(i, j, next_xi_pt, columns[i], rows[j]);
                 columns[i] = new_entry;
                 rows[j] = new_entry;
                 next_xi_pt++;
@@ -205,14 +140,14 @@ void xiSupportMatrix::fill_and_find_anchors(std::vector<xiPoint>& xi_pts, Mesh* 
                 //create a new xiMatrixEntry
                 unsigned entry_index = xi_pts.size();
 
-                qDebug() << "  creating xiMatrixEntry at (" << i << "," << j << ") for an anchor; index =" << entry_index;
+//                qDebug() << "  creating xiMatrixEntry at (" << i << "," << j << ") for an anchor; index =" << entry_index;
 
-                xiMatrixEntry* new_entry = new xiMatrixEntry(i, j, entry_index, anchor, columns[i], rows[j]);
+                xiMatrixEntry* new_entry = new xiMatrixEntry(i, j, entry_index, columns[i], rows[j]);
                 columns[i] = new_entry;
                 rows[j] = new_entry;
 
                 //add this point to xi_pts
-                xi_pts.push_back( xiPoint(i, j, 0, 0) );
+                xi_pts.push_back( xiPoint(i, j, 0, 0, 0) );
 
                 //send this anchor to the Mesh
                 mesh->add_anchor(new_entry);
@@ -233,26 +168,27 @@ xiMatrixEntry* xiSupportMatrix::get_col(unsigned c)
     return columns[c];
 }
 
-//gets a pointer to the infinity entry
-xiMatrixEntry* xiSupportMatrix::get_infinity()
-{
-    return &infinity;
-}
-
 //retuns the number of rows
 unsigned xiSupportMatrix::height()
 {
     return rows.size();
 }
 
-//gets a pointer to the "bin" of unsorted grades for row r
-xiMatrixEntry* xiSupportMatrix::get_row_bin(unsigned r)
+//clears the level set lists for all entries in the matrix
+void xiSupportMatrix::clear_grade_lists()
 {
-    return &row_bins[r];
-}
-
-//gets a pointer to the "bin" of unsorted grades for column c
-xiMatrixEntry* xiSupportMatrix::get_col_bin(unsigned c)
-{
-    return &col_bins[c];
+    for(unsigned i = 0; i < columns.size(); i++)
+    {
+        xiMatrixEntry* cur_entry = columns[i];
+        while(cur_entry != NULL)
+        {
+            cur_entry->low_simplices.clear();
+            cur_entry->high_simplices.clear();
+            cur_entry->low_count = 0;
+            cur_entry->high_count = 0;
+            cur_entry->low_index = 0;
+            cur_entry->high_index = 0;
+            cur_entry = cur_entry->down;
+        }
+    }
 }

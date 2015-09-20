@@ -11,7 +11,7 @@ ConfigureDialog::ConfigureDialog(ConfigParameters& params, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::ConfigureDialog),
     config_params(params),
-    xi0col(config_params.xi0color), xi1col(config_params.xi1color),
+    xi0col(config_params.xi0color), xi1col(config_params.xi1color), xi2col(config_params.xi2color),
     perCol(config_params.persistenceColor), perHiCol(config_params.persistenceHighlightColor),
     lineCol(config_params.sliceLineColor), lineHiCol(config_params.sliceLineHighlightColor),
     bettiRadius(config_params.bettiDotRadius), perRadius(config_params.persistenceDotRadius)
@@ -30,6 +30,12 @@ ConfigureDialog::ConfigureDialog(ConfigParameters& params, QWidget *parent) :
     ui->xi1colorButton->setAutoFillBackground(true);
     ui->xi1colorButton->setFlat(true);
     ui->xi1spinBox->setValue(xi1col.alpha());
+
+    qss = QString("border: none; outline: none; background-color: %1;").arg(xi2col.name());
+    ui->xi2colorButton->setStyleSheet(qss);
+    ui->xi2colorButton->setAutoFillBackground(true);
+    ui->xi2colorButton->setFlat(true);
+    ui->xi2spinBox->setValue(xi2col.alpha());
 
     qss = QString("border: none; outline: none; background-color: %1;").arg(perCol.name());
     ui->persistenceColorButton->setStyleSheet(qss);
@@ -76,6 +82,7 @@ void ConfigureDialog::on_okButton_clicked()
     //update config_params to the selected parameters
     config_params.xi0color = xi0col;
     config_params.xi1color = xi1col;
+    config_params.xi2color = xi2col;
     config_params.persistenceColor = perCol;
     config_params.persistenceHighlightColor = perHiCol;
     config_params.sliceLineColor = lineCol;
@@ -114,6 +121,21 @@ void ConfigureDialog::on_xi1colorButton_clicked()
         ui->xi1colorButton->setStyleSheet(qss);
         ui->xi1colorButton->setAutoFillBackground(true);
         ui->xi1colorButton->setFlat(true);
+    }
+}
+
+void ConfigureDialog::on_xi2colorButton_clicked()
+{
+    QColor color = QColorDialog::getColor(config_params.xi2color, this);
+
+    if(color.isValid())
+    {
+        xi2col = color;
+        xi2col.setAlpha(ui->xi2spinBox->value());
+        QString qss = QString("border: none; outline: none; background-color: %1;").arg(color.name());
+        ui->xi2colorButton->setStyleSheet(qss);
+        ui->xi2colorButton->setAutoFillBackground(true);
+        ui->xi2colorButton->setFlat(true);
     }
 }
 
@@ -188,6 +210,11 @@ void ConfigureDialog::on_xi1spinBox_valueChanged(int arg1)
     xi1col.setAlpha(arg1);
 }
 
+void ConfigureDialog::on_xi2spinBox_valueChanged(int arg1)
+{
+    xi2col.setAlpha(arg1);
+}
+
 void ConfigureDialog::on_persistenceSpinBox_valueChanged(int arg1)
 {
     perCol.setAlpha(arg1);
@@ -221,6 +248,11 @@ void ConfigureDialog::on_defaultColorsButton_clicked()
     qss = QString("border: none; outline: none; background-color: %1;").arg(xi1col.name());
     ui->xi1colorButton->setStyleSheet(qss);
     ui->xi1spinBox->setValue(xi1col.alpha());
+
+    xi2col = defaults.xi2color;
+    qss = QString("border: none; outline: none; background-color: %1;").arg(xi2col.name());
+    ui->xi2colorButton->setStyleSheet(qss);
+    ui->xi2spinBox->setValue(xi2col.alpha());
 
     perCol = defaults.persistenceColor;
     qss = QString("border: none; outline: none; background-color: %1;").arg(perCol.name());

@@ -39,6 +39,8 @@ class MultiBetti
         void compute_alpha();
         void compute_eta();
 
+        void compute_xi2(unsigned_matrix& hom_dims);    //computes xi_2 from the values of xi_0, xi_1 and the dimensions
+
         int xi0(unsigned x, unsigned y);		//returns xi_0 at the specified (discrete) multi-grade
         int xi1(unsigned x, unsigned y);		//returns xi_1 at the specified (discrete) multi-grade
 

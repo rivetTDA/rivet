@@ -43,7 +43,8 @@ Mesh::Mesh(const std::vector<double> &xg, const std::vector<exact> &xe, const st
         halfedges[2*i+1]->set_twin( halfedges[2*i] );
     }
 
-    topleft = halfedges[7];	//remember this halfedge to make curve insertion easier
+    topleft = halfedges[7];     //remember this halfedge to make curve insertion easier
+    topright = halfedges[2];    //remember this halfedge for starting the path that we use to find edge weights
     bottomleft = halfedges[6];  //remember these halfedges
     bottomright = halfedges[3]; //    for the Bentley-Ottmann algorithm
 
@@ -107,6 +108,12 @@ void Mesh::build_arrangement(MultiBetti& mb, std::vector<xiPoint>& xi_pts, Compu
     qDebug() << "  --> building the interior of the line arrangement took" << timer.elapsed() << "milliseconds";
     print_stats();
 
+    //compute the edge weights
+    emit cthread->setCurrentProgress(50);
+    timer.start();
+    find_edge_weights(updater);
+    qDebug() << "  --> computing the edge weights took" << timer.elapsed() << "milliseconds";
+
     //now that the arrangement is constructed, we can find a path -- NOTE: path starts with a (near-vertical) line to the right of all multigrades
     emit cthread->setCurrentProgress(75);
     std::vector<Halfedge*> path;
@@ -119,8 +126,6 @@ void Mesh::build_arrangement(MultiBetti& mb, std::vector<xiPoint>& xi_pts, Compu
     cthread->setProgressMaximum(path.size());
 
     //finally, we can traverse the path, computing and storing a barcode template in each 2-cell
-    //updater.store_barcodes(path); -- THIS FUNCTION HAS NOT BEEN UPDATED FOR JULY 2015 BUG FIX
-    //updater.store_barcodes_lazy(path); -- THIS FUNCTION HAS NOT BEEN UPDATED FOR JULY 2015 BUG FIX
     updater.store_barcodes_with_reset(path, cthread);
 
 }//end build_arrangement()
@@ -129,12 +134,11 @@ void Mesh::build_arrangement(MultiBetti& mb, std::vector<xiPoint>& xi_pts, Compu
 void Mesh::build_arrangement(std::vector<xiPoint>& xi_pts, std::vector<BarcodeTemplate>& barcode_templates, ComputationThread* cthread)
 {
     QTime timer;
-    PersistenceUpdater updater(this, xi_pts);
 
     //first, compute anchors and store them in the vector Mesh::all_anchors
     emit cthread->setCurrentProgress(10);
     timer.start();
-//    updater.find_anchors(); -- MUST BE UPDATED FOR JULY 2015 BUG FIX!!!
+    PersistenceUpdater updater(this, xi_pts);   //we only use the PersistenceUpdater to find and store the anchors
     qDebug() << "  --> finding anchors took" << timer.elapsed() << "milliseconds";
 
     //now that we have all the anchors, we can build the interior of the arrangement
@@ -525,6 +529,34 @@ Halfedge* Mesh::create_edge_left(Halfedge* edge, Anchor* anchor)
     return new_edge;
 }//end create_edge_left()
 
+//computes and stores the edge weight for each anchor line
+void Mesh::find_edge_weights(PersistenceUpdater& updater)
+{
+    qDebug() << " FINDING EDGE WEIGHTS:";
+
+    std::vector<Halfedge*> pathvec;
+    Halfedge* cur_edge = topright;
+
+    //find a path across all anchor lines
+    while(cur_edge->get_twin() != bottomright)  //then there is another vertex to consider on the right edge
+    {
+        cur_edge = cur_edge->get_next();
+        while(cur_edge->get_twin()->get_face() != NULL) //then we have another edge crossing to append to the path
+        {
+            cur_edge = cur_edge->get_twin();
+            pathvec.push_back(cur_edge);
+            cur_edge = cur_edge->get_next();
+        }
+    }
+
+    //run the "main algorithm" without any matrices
+    updater.set_anchor_weights(pathvec);
+
+    //reset the PersistenceUpdater to its state at the beginning of this function
+    updater.clear_levelsets();
+
+}//end set_edge_weights()
+
 //finds a pseudo-optimal path through all 2-cells of the arrangement
 // path consists of a vector of Halfedges
 // at each step of the path, the Halfedge points to the Anchor being crossed and the 2-cell (Face) being entered
@@ -560,12 +592,7 @@ void Mesh::find_path(std::vector<Halfedge*>& pathvec)
                 //if i < j, then create an (undirected) edge between these faces
                 if(i < j)
                 {
-                    ///TODO: IMPROVE THE EDGE WEIGHTS
-                    /// currently, the edge weight is the product of the discrete coordinates of the anchor
-                    /// this is the simplest, possibly reasonable edge weighting scheme I could think of
-                    unsigned edge_weight = (current->get_anchor()->get_x())*(current->get_anchor()->get_y());
-
-                    boost::add_edge(i, j, edge_weight, dual_graph);
+                    boost::add_edge(i, j, current->get_anchor()->get_weight(), dual_graph);
                 }
             }
             //move to the next neighbor

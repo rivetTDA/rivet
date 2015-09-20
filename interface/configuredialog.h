@@ -26,6 +26,7 @@ private slots:
 
     void on_xi0colorButton_clicked();
     void on_xi1colorButton_clicked();
+    void on_xi2colorButton_clicked();
     void on_persistenceColorButton_clicked();
     void on_persistenceHighlightColorButton_clicked();
     void on_lineColorButton_clicked();
@@ -34,6 +35,7 @@ private slots:
 
     void on_xi0spinBox_valueChanged(int arg1);
     void on_xi1spinBox_valueChanged(int arg1);
+    void on_xi2spinBox_valueChanged(int arg1);
     void on_persistenceSpinBox_valueChanged(int arg1);
     void on_persistenceHighlightSpinBox_valueChanged(int arg1);
     void on_lineSpinBox_valueChanged(int arg1);
@@ -53,6 +55,7 @@ private:
     //data structures to store selected configuration until user clicks the OK button
     QColor xi0col;
     QColor xi1col;
+    QColor xi2col;
     QColor perCol;
     QColor perHiCol;
     QColor lineCol;

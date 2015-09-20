@@ -59,6 +59,8 @@ class ComputationThread : public QThread
         std::vector<BarcodeTemplate> barcode_templates; //only used if we read a RIVET data file and need to store the barcode templates before the arrangement is ready
 
         const int verbosity;
+
+        void find_dimensions();  //computes homology dimensions from the graded Betti numbers (used when data comes from a pre-computed RIVET file)
 };
 
 #endif // COMPUTATIONTHREAD_H

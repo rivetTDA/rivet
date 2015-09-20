@@ -31,9 +31,9 @@ SliceDiagram::~SliceDiagram()
 }
 
 //receives an xi support point, which will be drawn when create_diagram() is called
-void SliceDiagram::add_point(double x_coord, double y_coord, int xi0m, int xi1m)
+void SliceDiagram::add_point(double x_coord, double y_coord, int xi0m, int xi1m, int xi2m)
 {
-    points.push_back(xiFloatingPoint(x_coord, y_coord, xi0m, xi1m));
+    points.push_back(xiFloatingPoint(x_coord, y_coord, xi0m, xi1m, xi2m));
 }
 
 //NOTE: create_diagram() simply creates all objects; resize_diagram() handles positioning of objects
@@ -52,6 +52,7 @@ void SliceDiagram::create_diagram(QString x_text, QString y_text, double xmin, d
     blackPen.setWidth(2);
     QBrush xi0brush(config_params->xi0color);
     QBrush xi1brush(config_params->xi1color);
+    QBrush xi2brush(config_params->xi2color);
     QPen grayPen(Qt::gray);
     QPen highlighter(QBrush(config_params->persistenceHighlightColor), 6);
 
@@ -93,6 +94,8 @@ void SliceDiagram::create_diagram(QString x_text, QString y_text, double xmin, d
         for(unsigned j = 0; j < y_grades.size(); j++)
             if(hom_dims[i][j] > max_hom_dim)
                 max_hom_dim = hom_dims[i][j];
+    if(max_hom_dim == 0)
+        max_hom_dim = 1;
 
     //now create the rectangles
     hom_dim_rects.resize(boost::extents[x_grades.size()][y_grades.size()]);
@@ -115,23 +118,28 @@ void SliceDiagram::create_diagram(QString x_text, QString y_text, double xmin, d
     //create points
     for(unsigned i = 0; i < points.size(); i++)
     {
+        //build tooltip string
+        QString tooltip = QString("Betti(")+ QString::number(points[i].x) + ", " + QString::number(points[i].y) + ") = (" + QString::number(points[i].zero) + ", " + QString::number(points[i].one) + ", " + QString::number(points[i].two) + ")";
+
+        //create graphics items
         if(points[i].zero > 0)  //then draw a xi0 disk
         {
             QGraphicsEllipseItem* item = addEllipse(QRectF(), Qt::NoPen, xi0brush);
-            if(points[i].one == 0)
-                item->setToolTip(QString("ξ₀(") + QString::number(points[i].x) + ", " + QString::number(points[i].y) +") = " + QString::number(points[i].zero));
-            else
-                item->setToolTip(QString("ξ₀(") + QString::number(points[i].x) + ", " + QString::number(points[i].y) +") = " + QString::number(points[i].zero) + QString("; ξ₁(") + QString::number(points[i].x) + ", " + QString::number(points[i].y) +") = " + QString::number(points[i].one));
+            item->setToolTip(tooltip);
             xi0_dots.push_back(item);
         }
         if(points[i].one > 0)  //then draw a xi1 disk
         {
             QGraphicsEllipseItem* item = addEllipse(QRectF(), Qt::NoPen, xi1brush);
-            if(points[i].zero == 0)
-                item->setToolTip(QString("ξ₁(") + QString::number(points[i].x) + ", " + QString::number(points[i].y) +") = " + QString::number(points[i].one));
-            else
-                item->setToolTip(QString("ξ₀(") + QString::number(points[i].x) + ", " + QString::number(points[i].y) +") = " + QString::number(points[i].zero) + QString("; ξ₁(") + QString::number(points[i].x) + ", " + QString::number(points[i].y) +") = " + QString::number(points[i].one));
+            item->setToolTip(tooltip);
             xi1_dots.push_back(item);
+        }
+        if(points[i].two > 0)   //then draw a xi2 disk
+        {
+            QGraphicsEllipseItem* item = addEllipse(QRectF(), Qt::NoPen, xi2brush);
+            item->setToolTip(tooltip);
+            item->setVisible(false);    //NOTE: xi_2 dots are not shown initially
+            xi2_dots.push_back(item);
         }
     }
 
@@ -290,6 +298,7 @@ void SliceDiagram::redraw_dots()
     //NOTE: this should be fine, but if it is too slow, we could store the radius of each dot so that we don't have to compute it on each resize
     std::vector<QGraphicsEllipseItem*>::iterator it0 = xi0_dots.begin();
     std::vector<QGraphicsEllipseItem*>::iterator it1 = xi1_dots.begin();
+    std::vector<QGraphicsEllipseItem*>::iterator it2 = xi2_dots.begin();
     for(unsigned i = 0; i < points.size(); i++)
     {
         if(points[i].zero > 0)  //then draw a xi_0 dot
@@ -304,6 +313,12 @@ void SliceDiagram::redraw_dots()
             (*it1)->setRect((points[i].x - data_xmin)*scale_x - radius, (points[i].y - data_ymin)*scale_y - radius, 2*radius, 2*radius);
             ++it1;
         }
+        if(points[i].two > 0)  //then draw a xi_2 dot
+        {
+            double radius = round( config_params->bettiDotRadius*sqrt(points[i].two) );
+            (*it2)->setRect((points[i].x - data_xmin)*scale_x - radius, (points[i].y - data_ymin)*scale_y - radius, 2*radius, 2*radius);
+            ++it2;
+        }
     }
 }//end redraw_dots()
 
@@ -313,10 +328,13 @@ void SliceDiagram::receive_parameter_change()
     //update colors of the xi dots (necessary because I didn't override their paint() function)
     QBrush xi0brush(config_params->xi0color);
     QBrush xi1brush(config_params->xi1color);
+    QBrush xi2brush(config_params->xi2color);
     for(std::vector<QGraphicsEllipseItem*>::iterator it = xi0_dots.begin(); it != xi0_dots.end(); ++it)
         (*it)->setBrush(xi0brush);
     for(std::vector<QGraphicsEllipseItem*>::iterator it = xi1_dots.begin(); it != xi1_dots.end(); ++it)
         (*it)->setBrush(xi1brush);
+    for(std::vector<QGraphicsEllipseItem*>::iterator it = xi2_dots.begin(); it != xi2_dots.end(); ++it)
+        (*it)->setBrush(xi2brush);
 
     ///TODO: update homology dimension rectangles -- activate this after adding color selection to the options box
     /// redraw_dim_rects();
@@ -620,6 +638,13 @@ void SliceDiagram::toggle_xi0_points(bool show)
 void SliceDiagram::toggle_xi1_points(bool show)
 {
     for(std::vector<QGraphicsEllipseItem*>::iterator it = xi1_dots.begin(); it != xi1_dots.end(); ++it)
+        (*it)->setVisible(show);
+}
+
+//if "show" is true, then xi_2 support points are drawn; otherwise, they are hidden
+void SliceDiagram::toggle_xi2_points(bool show)
+{
+    for(std::vector<QGraphicsEllipseItem*>::iterator it = xi2_dots.begin(); it != xi2_dots.end(); ++it)
         (*it)->setVisible(show);
 }
 

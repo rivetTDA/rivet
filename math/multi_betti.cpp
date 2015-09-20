@@ -24,7 +24,7 @@ MultiBetti::MultiBetti(SimplexTree* st, int dim, int v) :
 	//ensure that xi matrix is the correct size
     num_x_grades = bifiltration->num_x_grades();
     num_y_grades = bifiltration->num_y_grades();
-    xi.resize(boost::extents[num_x_grades][num_y_grades][2]);
+    xi.resize(boost::extents[num_x_grades][num_y_grades][3]);
 
 }//end constructor
 
@@ -51,6 +51,11 @@ void MultiBetti::compute_fast(ComputationThread* cthread, unsigned_matrix& hom_d
 
     // STEP 4: compute eta (concludes computation of xi_1)
     compute_eta();
+
+    cthread->setCurrentProgress(95);
+
+    // STEP 5: compute xi_2 from the values of xi_0, xi_1, and the dimensions
+    compute_xi2(hom_dims);
 
 }//end compute_fast();
 
@@ -268,8 +273,6 @@ struct ColumnList {
 
 
 //compute alpha, add to xi matrices
-//TODO: add to xi_1 matrix
-//TODO: when testing finished, remove print statements
 void MultiBetti::compute_alpha()
 {
     //get data
@@ -373,8 +376,6 @@ void MultiBetti::compute_alpha()
 }//end compute_alpha()
 
 //compute eta, add to xi matrices
-//TODO: add to xi_1 matrix
-//TODO: when testing finished, remove print statements
 void MultiBetti::compute_eta()
 {
     //get data
@@ -469,6 +470,36 @@ void MultiBetti::compute_eta()
     delete bdry_bc;
     delete ind_bc;
 }//end compute_eta()
+
+//computes xi_2 from the values of xi_0, xi_1 and the dimensions
+void MultiBetti::compute_xi2(unsigned_matrix& hom_dims)
+{
+    //calculate xi_2 at (0,0)
+    int row_sum = xi[0][0][0] - xi[0][0][1];
+    xi[0][0][2] = hom_dims[0][0] - row_sum;
+
+    //calculate xi_2 at (x,0) for x > 0
+    for(unsigned x = 1; x < num_x_grades; x++)
+    {
+        row_sum += xi[x-1][0][2] + xi[x][0][0] - xi[x][0][1];
+        xi[x][0][2] = hom_dims[x][0] - row_sum;
+    }
+
+    //calcuate xi_2 at (x,y) for y > 0
+    for(unsigned y = 1; y < num_y_grades; y++)
+    {
+        //calculate xi_2 at (0,y)
+        row_sum = xi[0][y][0] - xi[0][y][1];
+        xi[0][y][2] = hom_dims[0][y] - (hom_dims[0][y-1] + row_sum);
+
+        //calculate xi_2 at (x,y) for x > 0 and y > 0
+        for(unsigned x = 1; x < num_x_grades; x++)
+        {
+            row_sum += xi[x-1][y][2] + xi[x][y][0] - xi[x][y][1];
+            xi[x][y][2] = hom_dims[x][y] - (hom_dims[x][y-1] + row_sum);
+        }
+    }
+}//end compute_xi2()
 
 
 //reduce matrix: perform column operations from first_col to last_col, inclusive
@@ -649,9 +680,10 @@ void MultiBetti::store_support_points(std::vector<xiPoint>& xi_supp)
         {
             int xi0 = xi[i][j][0];
             int xi1 = xi[i][j][1];
+            int xi2 = xi[i][j][2];
 
-            if(xi0 != 0 || xi1 != 0)    //then we have found an xi support point
-                xi_supp.push_back( xiPoint(i, j, xi0, xi1) );
+            if(xi0 != 0 || xi1 != 0 || xi2 != 0)    //then we have found an xi support point
+                xi_supp.push_back( xiPoint(i, j, xi0, xi1, xi2) );
         }
     }
 }

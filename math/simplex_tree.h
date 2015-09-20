@@ -76,8 +76,8 @@ class SimplexTree {
         void update_dim_indexes();              //updates the dimension indexes (reverse-lexicographical multi-grade order) for simplices of dimension (hom_dim-1), hom_dim, and (hom_dim+1)
 
         MapMatrix* get_boundary_mx(int dim);    //returns a matrix of boundary information for simplices
-        MapMatrix_Perm* get_boundary_mx(std::vector<int>& coface_order);    //returns a boundary matrix for hom_dim-simplices with columns in a specified order -- for vineyard-update algorithm
-        MapMatrix_Perm* get_boundary_mx(std::vector<int>& face_order, std::vector<int>& coface_order);    //returns a boundary matrix for (hom_dim+1)-simplices with columns and rows a specified orders -- for vineyard-update algorithm
+        MapMatrix_Perm* get_boundary_mx(std::vector<int>& coface_order, unsigned num_simplices);    //returns a boundary matrix for hom_dim-simplices with columns in a specified order -- for vineyard-update algorithm
+        MapMatrix_Perm* get_boundary_mx(std::vector<int>& face_order, unsigned num_faces, std::vector<int>& coface_order, unsigned num_cofaces);    //returns a boundary matrix for (hom_dim+1)-simplices with columns and rows a specified orders -- for vineyard-update algorithm
 
         DirectSumMatrices get_merge_mxs();      //returns matrices for the merge map [B+C,D], the boundary map B+C, and the multi-grade information
         DirectSumMatrices get_split_mxs();      //returns matrices for the split map [A,B+C], the boundary map B+C, and the multi-grade information

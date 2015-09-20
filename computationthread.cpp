@@ -111,9 +111,12 @@ void ComputationThread::run()
     }
     else    //then the user selected a RIVET file with pre-computed persistence information, and we just need to re-build the arrangement
     {
-      //STAGE 3: MULTIGRADED BETTI NUMBERS ALREADY COMPUTED
+      //STAGE 3: MULTIGRADED BETTI NUMBERS ALREADY COMPUTED, BUT MUST COMPUTE THE DIMENSIONS
+
+        find_dimensions();      //compute the homology dimensions at each grade from the graded Betti numbers
 
         if(verbosity >= 2) { qDebug() << "INPUT FINISHED: xi support points ready"; }
+
         emit xiSupportReady();          //signal that xi support points are ready for visualization
         emit advanceProgressStage();    //update progress box to stage 4
 
@@ -133,3 +136,40 @@ void ComputationThread::run()
         emit arrangementReady(arrangement);
     }
 }//end run()
+
+//computes homology dimensions from the graded Betti numbers (used when data comes from a pre-computed RIVET file)
+void ComputationThread::find_dimensions()
+{
+    homology_dimensions.resize(boost::extents[x_grades.size()][y_grades.size()]);
+    std::vector<xiPoint>::iterator it = xi_support.begin();
+    int col_sum = 0;
+
+    //compute dimensions at (0,y)
+    for(unsigned y = 0; y < y_grades.size(); y++)
+    {
+        if(it != xi_support.end() && it->x == 0 && it->y == y)
+        {
+            col_sum += it->zero - it->one + it->two;
+            ++it;
+        }
+
+        homology_dimensions[0][y] = col_sum;
+    }
+
+    //compute dimensions at (x,y) for x > 0
+    for(unsigned x = 1; x < x_grades.size(); x++)
+    {
+        col_sum = 0;
+
+        for(unsigned y = 0; y < y_grades.size(); y++)
+        {
+            if(it != xi_support.end() && it->x == x && it->y == y)
+            {
+                col_sum += it->zero - it->one + it->two;
+                ++it;
+            }
+
+            homology_dimensions[x][y] = homology_dimensions[x-1][y] + col_sum;
+        }
+    }
+}//end find_dimensions()

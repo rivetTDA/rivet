@@ -58,6 +58,7 @@ private slots:
     void on_offsetSpinBox_valueChanged(double arg1);
     void on_xi0CheckBox_toggled(bool checked);
     void on_xi1CheckBox_toggled(bool checked);
+    void on_xi2CheckBox_toggled(bool checked);
     void on_normCoordCheckBox_clicked(bool checked);
     void on_barcodeCheckBox_clicked(bool checked);
 
