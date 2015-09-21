@@ -119,7 +119,6 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
 
     ///TODO: choose the initial value of the threshold intelligently
     unsigned long threshold = 500000;     //if the number of swaps might exceed this threshold, then do a persistence calculation from scratch
-    unsigned long swap_estimate = 0;
     qDebug() << "reset threshold set to" << threshold;
 
     timer.start();
@@ -138,14 +137,12 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
         cthread->setCurrentProgress(i);    //update progress bar
 
         steptimer.start();                //time update at each step of the path
-        unsigned long swap_counter = 0;   //counts number of transpositions at each step
-        swap_estimate = 0;
+        unsigned long num_trans = 0;      //count of how many transpositions we will have to do if we do vineyard updates
+        unsigned long swap_counter = 0;   //count of how many transpositions we actually do
 
         //determine which anchor is represented by this edge
         Anchor* cur_anchor = (path[i])->get_anchor();
         xiMatrixEntry* at_anchor = cur_anchor->get_entry();
-
-        qDebug() << "  step" << i << "of path: crossing anchor at ("<< cur_anchor->get_x() << "," << cur_anchor->get_y() << ") into cell" << mesh->FID((path[i])->get_face());
 
         //get equivalence classes for this anchor
         xiMatrixEntry* down = at_anchor->down;
@@ -154,55 +151,64 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
         //if this is a strict anchor, then swap simplices
         if(down != NULL && left != NULL) //then this is a strict anchor and some simplices swap
         {
-            //process the swaps
+            qDebug().nospace() << "  step " << i << " of path: crossing (strict) anchor at ("<< cur_anchor->get_x() << ", " << cur_anchor->get_y() << ") into cell " << mesh->FID((path[i])->get_face()) << "; edge weight: " << cur_anchor->get_weight();
+
+            //find out how many transpositions we will have to process if we do vineyard updates
+            num_trans = count_transpositions(at_anchor, cur_anchor->is_above());
+
             if(cur_anchor->is_above()) //then the anchor is crossed from below to above
             {
                 remove_lift_entries(at_anchor);        //this block of the partition might become empty
                 remove_lift_entries(down);             //this block of the partition will move
-                swap_counter += split_grade_lists(at_anchor, left, true);   //move grades that come before left from anchor to left
 
-                //now permute the columns and fix the RU-decomposition
-                swap_estimate = static_cast<unsigned long>(left->low_count) * static_cast<unsigned long>(down->low_count)
-                        + static_cast<unsigned long>(left->high_count) * static_cast<unsigned long>(down->high_count);
-                if(swap_estimate < threshold)
-                    swap_counter += move_columns(down, left, true);
-                else
-                    update_order_and_reset_matrices(down, left, true, R_low_initial, R_high_initial);
+                if(num_trans < threshold)   //then do vineyard updates
+                {
+                    swap_counter += split_grade_lists(at_anchor, left, true);   //move grades that come before left from anchor to left -- vineyard updates
+                    swap_counter += move_columns(down, left, true);             //swaps blocks of columns at down and at left -- vineyard updates
+                }
+                else    //then reset the matrices
+                {
+                    do_separations(at_anchor, left, true);   //only updates the xiSupportMatrix; no vineyard updates
+                    ///ERROR: PERMUTATION VECTORS ARE NOW INCORRECT!!!
+                    update_order_and_reset_matrices(down, left, true, R_low_initial, R_high_initial);   //recompute the RU-decomposition
+                }
 
-                //post-move updates to equivalance class info
                 merge_grade_lists(at_anchor, down);     //move all grades from down to anchor
                 add_lift_entries(at_anchor);       //this block of the partition might have previously been empty
                 add_lift_entries(left);            //this block of the partition moved
             }
             else    //then anchor is crossed from above to below
             {
-                //pre-move updates to equivalence class info
                 remove_lift_entries(at_anchor);        //this block of the partition might become empty
                 remove_lift_entries(left);             //this block of the partition will move
-                swap_counter += split_grade_lists(at_anchor, down, false);  //move grades that come before down from anchor to down
 
-                //now permute the columns and fix the RU-decomposition
-                swap_estimate = static_cast<unsigned long>(left->low_count) * static_cast<unsigned long>(down->low_count)
-                        + static_cast<unsigned long>(left->high_count) * static_cast<unsigned long>(down->high_count);
-                if(swap_estimate < threshold)
-                    swap_counter += move_columns(left, down, false);
-                else
-                    update_order_and_reset_matrices(left, down, false, R_low_initial, R_high_initial);
+                if(num_trans < threshold)   //then do vineyard updates
+                {
+                    swap_counter += split_grade_lists(at_anchor, down, false);   //move grades that come before left from anchor to left -- vineyard updates
+                    swap_counter += move_columns(left, down, false);             //swaps blocks of columns at down and at left -- vineyard updates
+                }
+                else    //then reset the matrices
+                {
+                    do_separations(at_anchor, down, false);  //only updates the xiSupportMatrix; no vineyard updates
+                    ///ERROR: PERMUTATION VECTORS ARE NOW INCORRECT!!!
+                    update_order_and_reset_matrices(left, down, false, R_low_initial, R_high_initial);  //recompute the RU-decomposition
+                }
 
-                //post-move updates to equivalance class info
                 merge_grade_lists(at_anchor, left);     //move all grades from down to anchor
                 add_lift_entries(at_anchor);       //this block of the partition might have previously been empty
                 add_lift_entries(down);            //this block of the partition moved
-            }
+           }
         }
         else    //this is a non-strict anchor, and we just have to split or merge equivalence classes
         {
+            qDebug().nospace() << "  step " << i << " of path: crossing (non-strict) anchor at ("<< cur_anchor->get_x() << ", " << cur_anchor->get_y() << ") into cell " << mesh->FID((path[i])->get_face()) << "; edge weight: " << cur_anchor->get_weight();
+
             xiMatrixEntry* generator = at_anchor->down;
             if(generator == NULL)
                 generator = at_anchor->left;
 
             if((cur_anchor->is_above() && generator == at_anchor->down) || (!cur_anchor->is_above() && generator == at_anchor->left))
-                //then merge classes
+                //then merge classes -- there will never be any transpositions in this case
             {
                 remove_lift_entries(generator);
                 merge_grade_lists(at_anchor, generator);
@@ -210,9 +216,24 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
             }
             else    //then split classes
             {
-                remove_lift_entries(at_anchor);   //this is necessary because the class corresponding
-                swap_counter += split_grade_lists(at_anchor, generator, (at_anchor->y == generator->y));
-                add_lift_entries(at_anchor);      //  to at_anchor might have become empty
+                //find out how many transpositions we will have to process if we do vineyard updates
+                unsigned junk = 0;
+                bool horiz = (generator == at_anchor->left);
+                count_transpositions_from_separations(at_anchor, generator, horiz, true, num_trans, junk);
+                count_transpositions_from_separations(at_anchor, generator, horiz, false, num_trans, junk);
+
+                //now do the updates
+                remove_lift_entries(at_anchor);   //this is necessary because the class corresponding to at_anchor might become empty
+
+                if(num_trans < threshold)   //then do vineyard updates
+                    swap_counter += split_grade_lists(at_anchor, generator, horiz);
+                else    //then reset the matrices
+                {
+                    do_separations(at_anchor, generator, horiz);   //only updates the xiSupportMatrix; no vineyard updates
+                    update_order_and_reset_matrices(at_anchor, generator, R_low_initial, R_high_initial);   //recompute the RU-decomposition
+                }
+
+                add_lift_entries(at_anchor);
                 add_lift_entries(generator);
             }
         }
@@ -230,16 +251,21 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
             store_barcode_template(cur_face);
 
         //print/store data for analysis
-        int step_time = steptimer.elapsed();
-        if(swap_estimate < threshold)
+        int step_time = steptimer.elapsed();        
+
+        if(num_trans < threshold)   //then we did vineyard-updates
         {
-            qDebug() << "    --> this step took" << step_time << "milliseconds and involved" << swap_counter << "transpositions";
+            qDebug() << "    --> this step took" << step_time << "milliseconds and involved" << swap_counter << "transpositions; estimate was" << num_trans;
+            if(swap_counter != num_trans)
+                qDebug() << "    ========>>> ERROR: transposition count doesn't match estimate!";
             total_transpositions += swap_counter;
             total_time_for_transpositions += step_time;
         }
         else
         {
-            qDebug() << "    --> this step took" << step_time << "milliseconds -- reset matrices to avoid an estimated" << swap_estimate << "transpositions";
+            qDebug() << "    --> this step took" << step_time << "milliseconds; reset matrices to avoid" << num_trans << "transpositions";
+            if(swap_counter > 0)
+                qDebug() << "    ========>>> ERROR: swaps occurred on a matrix reset!";
             number_of_resets++;
             total_time_for_resets += step_time;
         }
@@ -250,8 +276,7 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
         //update the treshold
         if(total_time_for_transpositions > 0 && total_transpositions > total_time_for_transpositions)
         {
-            ///TODO: integer division OK here???
-            threshold = (total_transpositions/total_time_for_transpositions)*(total_time_for_resets/number_of_resets);
+            threshold = (unsigned long) ((double) total_transpositions / (double) total_time_for_transpositions)*(total_time_for_resets/number_of_resets);
             qDebug() << "       new threshold:" << threshold;
         }
     }//end path traversal
@@ -480,6 +505,62 @@ unsigned PersistenceUpdater::build_simplex_order(IndexMatrix* ind, bool low, std
 
     return num_simplices;
 }//end build_simplex_order()
+
+//counts the number of transpositions that will happen if we cross an anchor and do vineyeard-updates
+//this function DOES NOT MODIFY the xiSupportMatrix
+unsigned long PersistenceUpdater::count_transpositions(xiMatrixEntry* anchor, bool from_below)
+{
+    //identify entries
+    xiMatrixEntry* first = from_below ? anchor->down : anchor->left;
+    xiMatrixEntry* second = from_below ? anchor->left : anchor->down;
+    xiMatrixEntry* temp = new xiMatrixEntry(anchor->left->x, anchor->down->y);
+
+    //counters
+    unsigned long count = 0;
+    unsigned first_simplices_low = 0;
+    unsigned first_simplices_high = 0;
+    unsigned second_simplices_low = 0;
+    unsigned second_simplices_high = 0;
+
+    //count transpositions that occur when we separate out the grades that lift to the anchor from those that lift to second
+    count_transpositions_from_separations(anchor, second, from_below, true, count, second_simplices_low);
+    count_transpositions_from_separations(anchor, second, from_below, false, count, second_simplices_high);
+
+    //count transpositions that occur when we separate out the grades that lift to GLB(first, second) from those that lift to first
+    unsigned temp_simplices = 0;
+    count_transpositions_from_separations(first, temp, from_below, true, count, temp_simplices);
+    first_simplices_low = first->low_count - temp_simplices;
+    temp_simplices = 0;
+    count_transpositions_from_separations(first, temp, from_below, false, count, temp_simplices);
+    first_simplices_high = first->high_count - temp_simplices;
+
+    //count switches
+    count += ((unsigned long) first_simplices_low) * ((unsigned long) second_simplices_low);
+    count += ((unsigned long) first_simplices_high) * ((unsigned long) second_simplices_high);
+
+    return count;
+}//end count_transpositions()
+
+//counts the number of transpositions that result from separations
+//this function DOES NOT MODIFY the xiSupportMatrix
+void PersistenceUpdater::count_transpositions_from_separations(xiMatrixEntry* greater, xiMatrixEntry* lesser, bool horiz, bool low, unsigned long& count_trans, unsigned& count_lesser)
+{
+    int gr_col = greater->low_index;
+    int cur_col = gr_col;
+    std::list<Multigrade*> grades = low ? greater->low_simplices : greater->high_simplices;
+    for(std::list<Multigrade*>::iterator it = grades.begin(); it != grades.end(); ++it)
+    {
+        Multigrade* cur_grade = *it;
+        if((horiz && cur_grade->x > lesser->x) || (!horiz && cur_grade->y > lesser->y))   //then there will be transpositions from separations
+        {
+            count_trans += cur_grade->num_cols * (gr_col - cur_col);
+            gr_col -= cur_grade->num_cols;
+        }
+        else
+            count_lesser += cur_grade->num_cols;
+        cur_col -= cur_grade->num_cols;
+    }
+}//end count_transpositions_from_separations()
 
 //moves grades associated with xiMatrixEntry greater, that come before xiMatrixEntry lesser in R^2, so that they become associated with lesser
 //  precondition: no grades lift to lesser (it has empty level sets under the lift map)
@@ -1041,6 +1122,25 @@ void PersistenceUpdater::update_order_and_reset_matrices(xiMatrixEntry* first, x
 
   //STEP 4: compute the new RU-decomposition
 
+    ///TODO: should I avoid deleting and reallocating matrix U?
+    delete U_low;
+    U_low = R_low->decompose_RU();
+    delete U_high;
+    U_high = R_high->decompose_RU();
+
+}//end update_order_and_reset_matrices()
+
+//updates the total order on columns, rebuilds the matrices, and computing a new RU-decomposition for a NON-STRICT anchor
+void PersistenceUpdater::update_order_and_reset_matrices(xiMatrixEntry* anchor, xiMatrixEntry* generator, MapMatrix_Perm* RL_initial, MapMatrix_Perm* RH_initial)
+{
+    //anything to do here?????
+    //anchor and generator?????
+
+    //re-build the matrix R based on the new order
+    R_low->rebuild(RL_initial, perm_low);
+    R_high->rebuild(RH_initial, perm_high, perm_low);
+
+    //compute the new RU-decomposition
     ///TODO: should I avoid deleting and reallocating matrix U?
     delete U_low;
     U_low = R_low->decompose_RU();

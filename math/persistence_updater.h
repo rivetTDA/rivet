@@ -88,6 +88,12 @@ class PersistenceUpdater
         //  returns the number of simplices in the order
         unsigned build_simplex_order(IndexMatrix* ind, bool low, std::vector<int>& simplex_order);
 
+        //counts the number of transpositions that will happen if we cross an anchor and do vineyeard-updates
+        unsigned long count_transpositions(xiMatrixEntry* at_anchor, bool from_below);
+
+        //counts the number of transpositions that result from separations; used in the above function
+        void count_transpositions_from_separations(xiMatrixEntry* greater, xiMatrixEntry* lesser, bool horiz, bool low, unsigned long& count_trans, unsigned& count_lesser);
+
         //moves grades associated with xiMatrixEntry greater, that come before xiMatrixEntry lesser in R^2, so that they become associated with lesser
         //   horiz is true iff greater and lesser are on the same horizontal line (i.e., they share the same y-coordinate)
         //   returns a count of the number transpositions performed
@@ -108,6 +114,9 @@ class PersistenceUpdater
 
         //swaps two blocks of columns by updating the total order on columns, then rebuilding the matrices and computing a new RU-decomposition
         void update_order_and_reset_matrices(xiMatrixEntry* first, xiMatrixEntry* second, bool from_below, MapMatrix_Perm* RL_initial, MapMatrix_Perm* RH_initial);
+
+        //updates the total order on columns, rebuilds the matrices, and computing a new RU-decomposition for a NON-STRICT anchor
+        void update_order_and_reset_matrices(xiMatrixEntry* anchor, xiMatrixEntry* generator, MapMatrix_Perm* RL_initial, MapMatrix_Perm* RH_initial);
 
         //swaps two blocks of simplices in the total order, and counts switches and separations
         void count_switches_and_separations(xiMatrixEntry* at_anchor, bool from_below, unsigned long &switches, unsigned long &seps);
