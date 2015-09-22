@@ -168,8 +168,7 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
                 }
                 else    //then reset the matrices
                 {
-                    do_separations(at_anchor, left, true);   //only updates the xiSupportMatrix; no vineyard updates
-                    ///ERROR: PERMUTATION VECTORS ARE NOW INCORRECT!!!
+                    split_grade_lists_no_vineyards(at_anchor, left, true);   //only updates the xiSupportMatrix and permutation vectors; no vineyard updates
                     update_order_and_reset_matrices(down, left, true, R_low_initial, R_high_initial);   //recompute the RU-decomposition
                 }
 
@@ -189,8 +188,7 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
                 }
                 else    //then reset the matrices
                 {
-                    do_separations(at_anchor, down, false);  //only updates the xiSupportMatrix; no vineyard updates
-                    ///ERROR: PERMUTATION VECTORS ARE NOW INCORRECT!!!
+                    split_grade_lists_no_vineyards(at_anchor, down, false);  //only updates the xiSupportMatrix and permutation vectors; no vineyard updates
                     update_order_and_reset_matrices(left, down, false, R_low_initial, R_high_initial);  //recompute the RU-decomposition
                 }
 
@@ -229,7 +227,7 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
                     swap_counter += split_grade_lists(at_anchor, generator, horiz);
                 else    //then reset the matrices
                 {
-                    do_separations(at_anchor, generator, horiz);   //only updates the xiSupportMatrix; no vineyard updates
+                    split_grade_lists_no_vineyards(at_anchor, generator, horiz);   //only updates the xiSupportMatrix; no vineyard updates
                     update_order_and_reset_matrices(at_anchor, generator, R_low_initial, R_high_initial);   //recompute the RU-decomposition
                 }
 
@@ -620,6 +618,108 @@ unsigned long PersistenceUpdater::split_grade_lists(xiMatrixEntry* greater, xiMa
 
     return swap_counter;
 }//end split_grade_lists()
+
+//splits grade lists and updates the permutation vectors, but does NOT do vineyard updates
+void PersistenceUpdater::split_grade_lists_no_vineyards(xiMatrixEntry* greater, xiMatrixEntry* lesser, bool horiz)
+{
+  //STEP 1: update the lift map for all multigrades and store the current column index for each multigrade
+
+    //first, low simpilices
+    int gr_col = greater->low_index;
+    int cur_col = gr_col;
+    std::list<Multigrade*> grades = greater->low_simplices;
+    greater->low_simplices.clear();       ///this isn't so efficient...
+    for(std::list<Multigrade*>::iterator it = grades.begin(); it != grades.end(); ++it)
+    {
+        Multigrade* cur_grade = *it;
+        cur_grade->simplex_index = cur_col;
+        if((horiz && cur_grade->x > lesser->x) || (!horiz && cur_grade->y > lesser->y))  //then this grade lifts to greater
+        {
+            greater->low_simplices.push_back(cur_grade);
+            gr_col -= cur_grade->num_cols;
+        }
+        else    //then this grade lifts to lesser
+            lesser->low_simplices.push_back(cur_grade);
+
+        cur_col -= cur_grade->num_cols;
+    }
+    lesser->low_index = gr_col;
+    lesser->low_count = gr_col - cur_col;
+    greater->low_count = greater->low_index - lesser->low_index;
+
+    //now high simplices
+    gr_col = greater->high_index;
+    cur_col = gr_col;
+    std::list<Multigrade*> grades_h = greater->high_simplices;
+    greater->high_simplices.clear();       ///this isn't so efficient...
+    for(std::list<Multigrade*>::iterator it = grades_h.begin(); it != grades_h.end(); ++it)
+    {
+        Multigrade* cur_grade = *it;
+        cur_grade->simplex_index = cur_col;
+        if((horiz && cur_grade->x > lesser->x) || (!horiz && cur_grade->y > lesser->y))  //then this grade lifts to greater
+        {
+            greater->high_simplices.push_back(cur_grade);
+            gr_col -= cur_grade->num_cols;
+        }
+        else    //then this grade lifts to lesser
+            lesser->high_simplices.push_back(cur_grade);
+
+        cur_col -= cur_grade->num_cols;
+    }
+    lesser->high_index = gr_col;
+    lesser->high_count = gr_col - cur_col;
+    greater->high_count = greater->high_index - lesser->high_index;
+
+  //STEP 2: traverse grades (backwards) in the new order and update the permutation vectors to reflect the new order on matrix columns
+
+    //temporary data structures
+    xiMatrixEntry* cur_entry = greater;
+    int low_col = cur_entry->low_index;
+    int high_col = cur_entry->high_index;
+
+    //loop over xiMatrixEntrys
+    while(true) //loop ends with break statement
+    {
+        //update positions of "low" simplices for this entry
+        for(std::list<Multigrade*>::iterator it = cur_entry->low_simplices.begin(); it != cur_entry->low_simplices.end(); ++it)
+        {
+            Multigrade* cur_grade = *it;
+            for(unsigned i=0; i<cur_grade->num_cols; i++)
+            {
+                //column currently in position (cur_grade->simplex_index - i) has new position low_col
+                unsigned original_position = inv_perm_low[cur_grade->simplex_index - i];
+                perm_low[original_position] = low_col;
+                low_col--;
+            }
+        }
+
+        //update positions of "high" simplices for this entry
+        for(std::list<Multigrade*>::iterator it = cur_entry->high_simplices.begin(); it != cur_entry->high_simplices.end(); ++it)
+        {
+            Multigrade* cur_grade = *it;
+            for(unsigned i=0; i<cur_grade->num_cols; i++)
+            {
+                //column currently in position (cur_grade->simplex_index - i) has new position high_col
+                unsigned original_position = inv_perm_high[cur_grade->simplex_index - i];
+                perm_high[original_position] = high_col;
+                high_col--;
+            }
+        }
+
+        //move to next entry
+        if(cur_entry == greater)
+            cur_entry = lesser;
+        else
+            break;
+    }//end while
+
+    //fix inverse permutation vectors -- is there a better way to do this?
+    for(unsigned i=0; i < perm_low.size(); i++)
+        inv_perm_low[perm_low[i]] = i;
+    for(unsigned i=0; i < perm_high.size(); i++)
+        inv_perm_high[perm_high[i]] = i;
+
+}//end split_grade_lists_no_vineyards()
 
 //moves all grades associated with xiMatrixEntry lesser so that they become associated with xiMatrixEntry greater
 void PersistenceUpdater::merge_grade_lists(xiMatrixEntry* greater, xiMatrixEntry* lesser)
@@ -1071,7 +1171,7 @@ void PersistenceUpdater::update_order_and_reset_matrices(xiMatrixEntry* first, x
     low_col = first->low_index;
     high_col = first->high_index;
 
-    //loop over xiMatrixEntrys that have simplices which move
+    //loop over xiMatrixEntrys
     while(first != second)
     {
         //update positions of "low" simplices for this entry
@@ -1195,7 +1295,7 @@ void PersistenceUpdater::do_separations(xiMatrixEntry* greater, xiMatrixEntry* l
             greater->low_simplices.push_back(cur_grade);
             gr_col -= cur_grade->num_cols;
         }
-        else    //then this grade lifts to second
+        else    //then this grade lifts to lesser
             lesser->low_simplices.push_back(cur_grade);
 
         cur_col -= cur_grade->num_cols;
@@ -1217,7 +1317,7 @@ void PersistenceUpdater::do_separations(xiMatrixEntry* greater, xiMatrixEntry* l
             greater->high_simplices.push_back(cur_grade);
             gr_col -= cur_grade->num_cols;
         }
-        else    //then this grade lifts to second
+        else    //then this grade lifts to lesser
             lesser->high_simplices.push_back(cur_grade);
 
         cur_col -= cur_grade->num_cols;

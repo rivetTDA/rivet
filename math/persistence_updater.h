@@ -99,6 +99,9 @@ class PersistenceUpdater
         //   returns a count of the number transpositions performed
         unsigned long split_grade_lists(xiMatrixEntry* greater, xiMatrixEntry* lesser, bool horiz);
 
+        //splits grade lists and updates the permutation vectors, but does NOT do vineyard updates
+        void split_grade_lists_no_vineyards(xiMatrixEntry* greater, xiMatrixEntry* lesser, bool horiz);
+
         //moves all grades associated with xiMatrixEntry lesser so that they become associated with xiMatrixEntry greater
         void merge_grade_lists(xiMatrixEntry* greater, xiMatrixEntry* lesser);
 
