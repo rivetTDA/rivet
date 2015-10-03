@@ -13,6 +13,8 @@
 #include <QDebug>
 #include <QTime>    //NOTE: QTime::elapsed() wraps to zero 24 hours after the last call to start() or restart()
 
+#include <stdlib.h> //for rand()
+
 
 //constructor for when we must compute all of the barcode templates
 PersistenceUpdater::PersistenceUpdater(Mesh *m, SimplexTree* b, std::vector<xiPoint> &xi_pts) :
@@ -117,9 +119,9 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
     qDebug() << "TRAVERSING THE PATH USING THE RESET ALGORITHM: path has" << path.size() << "steps";
     qDebug() << "                              ^^^^^^^^^^^^^^^";
 
-    ///TODO: choose the initial value of the threshold intelligently
-    unsigned long threshold = 500000;     //if the number of swaps might exceed this threshold, then do a persistence calculation from scratch
-    qDebug() << "reset threshold set to" << threshold;
+    // choose the initial value of the threshold intelligently
+    unsigned long threshold = choose_initial_threshold(time_for_initial_decomp);   //if the number of swaps might exceed this threshold, then do a persistence calculation from scratch
+    qDebug() << "initial reset threshold set to" << threshold;
 
     timer.start();
 
@@ -838,11 +840,8 @@ unsigned long PersistenceUpdater::move_low_columns(int s, unsigned n, int t)
     {
         for(int i=s; i<t; i++)
         {
-            unsigned a = i - c; //TODO: cast i to unsigned???
+            unsigned a = i - c;
             unsigned b = a + 1;
-
-            //we must swap the d-simplices currently corresponding to columns a and b=a+1
-            if(mesh->verbosity >= 9) { qDebug() << "(" << a << "," << b << ")"; }
 
             //update the permutation vectors
             unsigned s = inv_perm_low[a];
@@ -853,112 +852,7 @@ unsigned long PersistenceUpdater::move_low_columns(int s, unsigned n, int t)
             perm_low[s] = b;
 
             //now for the vineyards algorithm
-            bool a_pos = (R_low->low(a) == -1);    //true iff simplex corresponding to column a is positive
-            bool b_pos = (R_low->low(b) == -1);    //true iff simplex corresponding to column b=a+1 is positive
-
-            if(a_pos)  //simplex a is positive (Vineyards paper - Cases 1 and 4)
-            {
-                if(b_pos)   //simplex b is positive (Case 1)
-                {
-                    //look for columns k and l in RH with low(k)=a, low(l)=b, and RH(a,l)=1 -- if these exist, then we must fix matrix RH following row/column swaps (Case 1.1)
-                    int k = R_high->find_low(a);
-                    int l = R_high->find_low(b);
-                    bool RHal = (l > -1 && R_high->entry(a, l));  //entry (a,l) in matrix RH
-
-                    //ensure that UL[a,b]=0
-                    U_low->clear(a, b);
-
-                    //transpose rows and columns (don't need to swap columns of RL, because these columns are zero)
-                    U_low->swap_columns(a);
-                    U_low->swap_rows(a);
-
-                    //swap rows, and fix RH if necessary
-                    if(k > -1 && RHal)  //case 1.1
-                    {
-                        if(k < l)
-                        {
-                            R_high->swap_rows(a, true);  //in this case, low entries change
-                            R_high->add_column(k, l);
-                            U_high->add_row(l, k);
-                        }
-                        else
-                        {
-                            R_high->swap_rows(a, false);  //in this case, low entries do not change
-                            R_high->add_column(l, k);
-                            U_high->add_row(k, l);
-                        }
-                    }
-                    else
-                        R_high->swap_rows(a, !RHal);  //in this case, only necessary to update low entries if RH(a,l)=0 or if column l does not exist
-                }
-                else    //simplex b is negative (Case 4)
-                {
-                    //ensure that UL[a,b]=0
-                    U_low->clear(a, b);
-
-                    //transpose rows and columns and update low arrays
-                    R_low->swap_columns(a, true);
-                    R_high->swap_rows(a, true);
-                    U_low->swap_columns(a);
-                    U_low->swap_rows(a);
-                }
-            }
-            else    //simplex a is negative (Vineyards paper - Cases 2 and 3)
-            {
-                if(b_pos)   //simplex b is positive (Case 3)
-                {
-                    //look for column l in RH with low(l)=b and RH(a,l)=1
-                    int l = R_high->find_low(b);
-                    bool RHal = (l > -1 && R_high->entry(a, l));    //entry (a,l) in matrix RH
-
-                    //transpose rows of R; update low array if necessary
-                    R_high->swap_rows(a, !RHal);
-
-                    if(U_low->entry(a, b))    //case 3.1 -- here, R = RWPW, so no further action required on R
-                    {
-                       U_low->add_row(b, a);
-                       U_low->swap_rows(a);
-                       U_low->add_row(b, a);
-                    }
-                    else    //case 3.2
-                    {
-                        R_low->swap_columns(a, true);
-                        U_low->swap_rows(a);
-                    }
-                }
-                else    //simplex b is negative (Case 2)
-                {
-                    //transpose rows of R
-                    R_high->swap_rows(a, false);   //neither of these rows contain lowest 1's in any column
-
-                    if(U_low->entry(a, b)) //case 2.1
-                    {
-                        U_low->add_row(b, a);  //so that U will remain upper-triangular
-                        U_low->swap_rows(a);   //swap rows of U
-
-                        if(R_low->low(a) < R_low->low(b)) //case 2.1.1
-                        {
-                            R_low->add_column(a, b);       //necessary due to the row addition on U; this doesn't change low entries
-                            R_low->swap_columns(a, true);  //now swap columns of R and update low entries
-                        }
-                        else //case 2.1.2
-                        {
-                            R_low->add_column(a, b);       //necessary due to the row addition on U; this doesn't change low entries
-                            R_low->swap_columns(a, false); //now swap columns of R but DO NOT update low entries
-                            R_low->add_column(a, b);       //restore R to reduced form; low entries now same as they were initially
-                            U_low->add_row(b, a);          //necessary due to column addition on R
-                        }
-                    }
-                    else    //case 2.2
-                    {
-                        R_low->swap_columns(a, true);  //swap columns of R and update low entries
-                        U_low->swap_rows(a);           //swap rows of U
-                    }
-                }
-
-                //finally, for cases 2 and 3, transpose columns of U
-                U_low->swap_columns(a);
-            }
+            vineyard_update_low(a);
 
             /// TESTING ONLY - FOR CHECKING THAT D=RU
             if(testing)
@@ -987,14 +881,8 @@ unsigned long PersistenceUpdater::move_high_columns(int s, unsigned n, int t)
     {
         for(int i=s; i<t; i++)
         {
-            unsigned a = i - c; //TODO: cast i to unsigned???
+            unsigned a = i - c;
             unsigned b = a + 1;
-
-            //we must swap the (d+1)-simplices currently corresponding to columns a and b=a+1
-//            qDebug() << "(" << a << "," << b << ")";
-
-            bool a_pos = (R_high->low(a) == -1);    //true iff simplex corresponding to column a is positive
-            bool b_pos = (R_high->low(b) == -1);    //true iff simplex corresponding to column b is positive
 
             //update the permutation vectors
             unsigned s = inv_perm_high[a];
@@ -1005,66 +893,7 @@ unsigned long PersistenceUpdater::move_high_columns(int s, unsigned n, int t)
             perm_high[s] = b;
 
             //now for the vineyards algorithm
-            if(a_pos)   //simplex a is positive, so its column is zero, and the fix is easy  (Vineyards paper - Cases 1 and 4)
-            {
-                if(!b_pos)   //only have to swap columns of R if column b is nonzero
-                    R_high->swap_columns(a, true);
-
-                //ensure that UL[a,b]=0
-                U_high->clear(a, b);
-
-                //transpose rows and columns of U
-                U_high->swap_columns(a);
-                U_high->swap_rows(a);
-
-                //done -- we don't care about the ROWS corresponding to simplices a and b, because we don't care about the boundaries of (d+2)-simplices
-            }
-            else    //simplex a is negative (Vineyards paper - Cases 2 and 3)
-            {
-                if(b_pos)   //simplex b is positive (Case 3)
-                {
-                    if(U_high->entry(a, b))    //case 3.1 -- here, R = RWPW, so no further action required on R
-                    {
-                       U_high->add_row(b, a);
-                       U_high->swap_rows(a);
-                       U_high->add_row(b, a);
-                    }
-                    else    //case 3.2
-                    {
-                        R_high->swap_columns(a, true);
-                        U_high->swap_rows(a);
-                    }
-                }
-                else    //simplex b is negative (Case 2)
-                {
-                    if(U_high->entry(a, b)) //case 2.1
-                    {
-                        U_high->add_row(b, a);  //so that U will remain upper-triangular
-                        U_high->swap_rows(a);   //swap rows of U
-
-                        if(R_high->low(a) < R_high->low(b)) //case 2.1.1
-                        {
-                            R_high->add_column(a, b);       //necessary due to the row addition on U; this doesn't change low entries
-                            R_high->swap_columns(a, true);  //now swap columns of R and update low entries
-                        }
-                        else //case 2.1.2
-                        {
-                            R_high->add_column(a, b);       //necessary due to the row addition on U; this doesn't change low entries
-                            R_high->swap_columns(a, false); //now swap columns of R but DO NOT update low entries
-                            R_high->add_column(a, b);       //restore R to reduced form; low entries now same as they were initially
-                            U_high->add_row(b, a);          //necessary due to column addition on R
-                        }
-                    }
-                    else    //case 2.2
-                    {
-                        R_high->swap_columns(a, true);  //swap columns and update low entries
-                        U_high->swap_rows(a);           //swap rows of U
-                    }
-                }
-
-                //finally, for Cases 2 and 3, transpose columns of U
-                U_high->swap_columns(a);
-            }
+            vineyard_update_high(a);
 
             /// TESTING ONLY - FOR CHECKING THAT D=RU
             if(testing)
@@ -1076,6 +905,192 @@ unsigned long PersistenceUpdater::move_high_columns(int s, unsigned n, int t)
 
     return n*(t-s);
 }//end move_high_columns()
+
+//performs a vineyard update corresponding to the transposition of columns a and (a + 1)
+//  for LOW simplices
+void PersistenceUpdater::vineyard_update_low(unsigned a)
+{
+    unsigned b = a + 1;
+
+    bool a_pos = (R_low->low(a) == -1);    //true iff simplex corresponding to column a is positive
+    bool b_pos = (R_low->low(b) == -1);    //true iff simplex corresponding to column b=a+1 is positive
+
+    if(a_pos)  //simplex a is positive (Vineyards paper - Cases 1 and 4)
+    {
+        if(b_pos)   //simplex b is positive (Case 1)
+        {
+            //look for columns k and l in RH with low(k)=a, low(l)=b, and RH(a,l)=1 -- if these exist, then we must fix matrix RH following row/column swaps (Case 1.1)
+            int k = R_high->find_low(a);
+            int l = R_high->find_low(b);
+            bool RHal = (l > -1 && R_high->entry(a, l));  //entry (a,l) in matrix RH
+
+            //ensure that UL[a,b]=0
+            U_low->clear(a, b);
+
+            //transpose rows and columns (don't need to swap columns of RL, because these columns are zero)
+            U_low->swap_columns(a);
+            U_low->swap_rows(a);
+
+            //swap rows, and fix RH if necessary
+            if(k > -1 && RHal)  //case 1.1
+            {
+                if(k < l)
+                {
+                    R_high->swap_rows(a, true);  //in this case, low entries change
+                    R_high->add_column(k, l);
+                    U_high->add_row(l, k);
+                }
+                else
+                {
+                    R_high->swap_rows(a, false);  //in this case, low entries do not change
+                    R_high->add_column(l, k);
+                    U_high->add_row(k, l);
+                }
+            }
+            else
+                R_high->swap_rows(a, !RHal);  //in this case, only necessary to update low entries if RH(a,l)=0 or if column l does not exist
+        }
+        else    //simplex b is negative (Case 4)
+        {
+            //ensure that UL[a,b]=0
+            U_low->clear(a, b);
+
+            //transpose rows and columns and update low arrays
+            R_low->swap_columns(a, true);
+            R_high->swap_rows(a, true);
+            U_low->swap_columns(a);
+            U_low->swap_rows(a);
+        }
+    }
+    else    //simplex a is negative (Vineyards paper - Cases 2 and 3)
+    {
+        if(b_pos)   //simplex b is positive (Case 3)
+        {
+            //look for column l in RH with low(l)=b and RH(a,l)=1
+            int l = R_high->find_low(b);
+            bool RHal = (l > -1 && R_high->entry(a, l));    //entry (a,l) in matrix RH
+
+            //transpose rows of R; update low array if necessary
+            R_high->swap_rows(a, !RHal);
+
+            if(U_low->entry(a, b))    //case 3.1 -- here, R = RWPW, so no further action required on R
+            {
+               U_low->add_row(b, a);
+               U_low->swap_rows(a);
+               U_low->add_row(b, a);
+            }
+            else    //case 3.2
+            {
+                R_low->swap_columns(a, true);
+                U_low->swap_rows(a);
+            }
+        }
+        else    //simplex b is negative (Case 2)
+        {
+            //transpose rows of R
+            R_high->swap_rows(a, false);   //neither of these rows contain lowest 1's in any column
+
+            if(U_low->entry(a, b)) //case 2.1
+            {
+                U_low->add_row(b, a);  //so that U will remain upper-triangular
+                U_low->swap_rows(a);   //swap rows of U
+
+                if(R_low->low(a) < R_low->low(b)) //case 2.1.1
+                {
+                    R_low->add_column(a, b);       //necessary due to the row addition on U; this doesn't change low entries
+                    R_low->swap_columns(a, true);  //now swap columns of R and update low entries
+                }
+                else //case 2.1.2
+                {
+                    R_low->add_column(a, b);       //necessary due to the row addition on U; this doesn't change low entries
+                    R_low->swap_columns(a, false); //now swap columns of R but DO NOT update low entries
+                    R_low->add_column(a, b);       //restore R to reduced form; low entries now same as they were initially
+                    U_low->add_row(b, a);          //necessary due to column addition on R
+                }
+            }
+            else    //case 2.2
+            {
+                R_low->swap_columns(a, true);  //swap columns of R and update low entries
+                U_low->swap_rows(a);           //swap rows of U
+            }
+        }
+
+        //finally, for cases 2 and 3, transpose columns of U
+        U_low->swap_columns(a);
+    }
+}//end vineyard_update_low()
+
+//performs a vineyard update corresponding to the transposition of columns a and (a + 1)
+//  for HIGH simplices
+void PersistenceUpdater::vineyard_update_high(unsigned a)
+{
+    unsigned b = a + 1;
+
+    bool a_pos = (R_high->low(a) == -1);    //true iff simplex corresponding to column a is positive
+    bool b_pos = (R_high->low(b) == -1);    //true iff simplex corresponding to column b is positive
+
+    if(a_pos)   //simplex a is positive, so its column is zero, and the fix is easy  (Vineyards paper - Cases 1 and 4)
+    {
+        if(!b_pos)   //only have to swap columns of R if column b is nonzero
+            R_high->swap_columns(a, true);
+
+        //ensure that UL[a,b]=0
+        U_high->clear(a, b);
+
+        //transpose rows and columns of U
+        U_high->swap_columns(a);
+        U_high->swap_rows(a);
+
+        //done -- we don't care about the ROWS corresponding to simplices a and b, because we don't care about the boundaries of (d+2)-simplices
+    }
+    else    //simplex a is negative (Vineyards paper - Cases 2 and 3)
+    {
+        if(b_pos)   //simplex b is positive (Case 3)
+        {
+            if(U_high->entry(a, b))    //case 3.1 -- here, R = RWPW, so no further action required on R
+            {
+               U_high->add_row(b, a);
+               U_high->swap_rows(a);
+               U_high->add_row(b, a);
+            }
+            else    //case 3.2
+            {
+                R_high->swap_columns(a, true);
+                U_high->swap_rows(a);
+            }
+        }
+        else    //simplex b is negative (Case 2)
+        {
+            if(U_high->entry(a, b)) //case 2.1
+            {
+                U_high->add_row(b, a);  //so that U will remain upper-triangular
+                U_high->swap_rows(a);   //swap rows of U
+
+                if(R_high->low(a) < R_high->low(b)) //case 2.1.1
+                {
+                    R_high->add_column(a, b);       //necessary due to the row addition on U; this doesn't change low entries
+                    R_high->swap_columns(a, true);  //now swap columns of R and update low entries
+                }
+                else //case 2.1.2
+                {
+                    R_high->add_column(a, b);       //necessary due to the row addition on U; this doesn't change low entries
+                    R_high->swap_columns(a, false); //now swap columns of R but DO NOT update low entries
+                    R_high->add_column(a, b);       //restore R to reduced form; low entries now same as they were initially
+                    U_high->add_row(b, a);          //necessary due to column addition on R
+                }
+            }
+            else    //case 2.2
+            {
+                R_high->swap_columns(a, true);  //swap columns and update low entries
+                U_high->swap_rows(a);           //swap rows of U
+            }
+        }
+
+        //finally, for Cases 2 and 3, transpose columns of U
+        U_high->swap_columns(a);
+    }
+}//end vineyard update_high()
+
 
 //swaps two blocks of columns by updating the total order on columns, then rebuilding the matrices and computing a new RU-decomposition
 void PersistenceUpdater::update_order_and_reset_matrices(xiMatrixEntry* first, xiMatrixEntry* second, bool from_below, MapMatrix_Perm* RL_initial, MapMatrix_Perm* RH_initial)
@@ -1423,6 +1438,88 @@ void PersistenceUpdater::store_barcode_template(Face* cell)
         }
     }
 }//end store_barcode_template()
+
+//chooses an initial threshold by timing vineyard updates corresponding to random transpositions
+unsigned long PersistenceUpdater::choose_initial_threshold(int time_for_initial_decomp)
+{
+    qDebug() << "RANDOM VINEYARD UPDATES TO CHOOSE THE INITIAL THRESHOLD";
+
+    //make a copy of the matrices
+    MapMatrix_Perm* R_low_copy = new MapMatrix_Perm(*R_low);
+    MapMatrix_Perm* R_high_copy = new MapMatrix_Perm(*R_high);
+    MapMatrix_RowPriority_Perm* U_low_copy = new MapMatrix_RowPriority_Perm(*U_low);
+    MapMatrix_RowPriority_Perm* U_high_copy = new MapMatrix_RowPriority_Perm(*U_high);
+
+    //other data structures
+    int num_cols = R_low->width() + R_high->width();
+    std::list<int> trans_list;
+
+    //avoid trivial cases
+    if(num_cols <= 3)   //need either the low or high matrix to have at least 2 columns
+        return 1000;
+
+    //determine the time for which we will do transpositions
+    int trans_time = time_for_initial_decomp / 20;
+    if(trans_time < 100)
+        trans_time = 100;   //run for at least 100 milliseconds
+
+    //start the timer
+    QTime timer;
+    timer.start();
+
+    //do transpositions
+    qDebug() << "  -->Doing some random vineyard updates...";
+    while(timer.elapsed() < trans_time || trans_list.size() == 0)   //do a transposition
+    {
+        int rand_col = rand() % (num_cols - 1);   //random integer in {0, 1, ..., num_cols - 2}
+
+        if(rand_col + 1 < R_low->width()) //then transpose LOW columns rand_col and (rand_col + 1)
+        {
+            vineyard_update_low(rand_col);
+            trans_list.push_back(rand_col);
+        }
+        else if(R_low->width() <= rand_col) //then transpose HIGH columns rand_col and (rand_col + 1)
+        {
+            vineyard_update_high(rand_col - R_low->width());
+            trans_list.push_back(rand_col);
+        }
+        //note that if (rand_col + 1 == R_low->width()), then we don't do anything, since rand_col is a "low" simplex but rand_col + 1 is a "high" simplex, and these cannot swap
+    }
+
+    //do the inverse transpositions
+    qDebug() << "  -->Undoing the random vineyard updates...";
+    for(std::list<int>::reverse_iterator rit = trans_list.rbegin(); rit != trans_list.rend(); ++rit)
+    {
+        int col = *rit;
+        if(col < R_low->width())
+        {
+            vineyard_update_low(col);
+        }
+        else
+        {
+            vineyard_update_high(col - R_low->width());
+        }
+    }
+
+    //record the time
+    trans_time = timer.elapsed();
+
+    qDebug() << "  -->Did" << (2*trans_list.size()) << "vineyard updates in" << trans_time << "milliseconds.";
+
+    //restore the matrices to the copies made at the beginning of this function
+    ///TODO: is this good style?
+    delete R_low;
+    R_low = R_low_copy;
+    delete R_high;
+    R_high = R_high_copy;
+    delete U_low;
+    U_low = U_low_copy;
+    delete U_high;
+    U_high = U_high_copy;
+
+    //return the threshold
+    return (unsigned long) (((double) (2*trans_list.size()) / (double) trans_time) * time_for_initial_decomp);
+}//end choose_initial_threshold()
 
 
 ///TESTING ONLY

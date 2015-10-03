@@ -115,6 +115,10 @@ class PersistenceUpdater
         unsigned long move_low_columns(int s, unsigned n, int t);
         unsigned long move_high_columns(int s, unsigned n, int t);
 
+        //performs a vineyard update corresponding to the transposition of columns a and (a + 1)
+        void vineyard_update_low(unsigned a);
+        void vineyard_update_high(unsigned a);
+
         //swaps two blocks of columns by updating the total order on columns, then rebuilding the matrices and computing a new RU-decomposition
         void update_order_and_reset_matrices(xiMatrixEntry* first, xiMatrixEntry* second, bool from_below, MapMatrix_Perm* RL_initial, MapMatrix_Perm* RH_initial);
 
@@ -140,6 +144,9 @@ class PersistenceUpdater
         //stores a barcode template in a 2-cell of the arrangement
         ///TODO: IMPROVE THIS -- track most recent barcode at the simplicial level and re-examine only the necessary columns!!!
         void store_barcode_template(Face* cell);
+
+        //chooses an initial threshold by timing vineyard updates corresponding to random transpositions
+        unsigned long choose_initial_threshold(int time_for_initial_decomp);
 
         ///TESTING ONLY
         void check_low_matrix(MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL);

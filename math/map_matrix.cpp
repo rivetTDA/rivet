@@ -933,6 +933,34 @@ MapMatrix_RowPriority_Perm::MapMatrix_RowPriority_Perm(unsigned size) :
     }
 }
 
+//copy constructor
+MapMatrix_RowPriority_Perm::MapMatrix_RowPriority_Perm(const MapMatrix_RowPriority_Perm& other) :
+    MapMatrix_Base(other.height()),
+    perm(other.perm), mrep(other.mrep)
+{
+    //copy all matrix entries
+    for(unsigned j=0; j<other.height(); j++)
+    {
+        MapMatrixNode* other_node = other.columns[j];
+        if(other_node != NULL)
+        {
+            //create the first node in this column
+            MapMatrixNode* cur_node = new MapMatrixNode(other_node->get_row());
+            columns[j] = cur_node;
+
+            //create all other nodes in this column
+            other_node = other_node->get_next();
+            while(other_node != NULL)
+            {
+                MapMatrixNode* new_node = new MapMatrixNode(other_node->get_row());
+                cur_node->set_next(new_node);
+                cur_node = new_node;
+                other_node = other_node->get_next();
+            }
+        }
+    }
+}
+
 MapMatrix_RowPriority_Perm::~MapMatrix_RowPriority_Perm()
 { }
 

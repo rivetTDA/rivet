@@ -131,6 +131,7 @@ class MapMatrix_RowPriority_Perm: public MapMatrix_Base
 {
     public:
         MapMatrix_RowPriority_Perm(unsigned size);   //constructs the identity matrix of specified size
+        MapMatrix_RowPriority_Perm(const MapMatrix_RowPriority_Perm& other);    //copy constructor
         ~MapMatrix_RowPriority_Perm();
 
         unsigned width() const;				//returns the number of columns in the matrix
