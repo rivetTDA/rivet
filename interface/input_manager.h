@@ -25,6 +25,7 @@ typedef boost::multiprecision::cpp_rational exact;
 
 #include <math.h>
 #include <set>
+#include <sstream>
 #include <vector>
 
 
@@ -118,27 +119,32 @@ class InputManager
 exact str_to_exact(std::string str);
 
 //a struct to store exact coordinates of a point, along with a "birth time"
-struct ExactPoint {
+struct DataPoint {
 
-    std::vector<exact> coords;
+    std::vector<double> coords;
     exact birth;
 
-    ExactPoint(std::vector<std::string>& strs)   //first (size - 1) elements of vector are coordinates, last element is birth time
+    DataPoint(std::vector<std::string>& strs)   //first (size - 1) elements of vector are coordinates, last element is birth time
     {
         coords.reserve(strs.size() - 1);
 
         for(unsigned i=0; i < strs.size() - 1; i++)
-            coords.push_back(str_to_exact(strs[i]));
+        {
+            int value;
+            std::stringstream convert(strs[i]);
+            convert >> value;
+            coords.push_back(value);
+        }
 
         birth = str_to_exact(strs.back());
     }
 
-    ExactPoint(QStringList& list)   //first (size - 1) strings are coordinates, last string is "birth time"
+    DataPoint(QStringList& list)   //first (size - 1) strings are coordinates, last string is "birth time"
     {
         coords.reserve(list.size() - 1);
 
         for(int i = 0; i < list.size() - 1; i++)
-            coords.push_back(str_to_exact(list.at(i).toStdString()));
+            coords.push_back(list.at(i).toDouble());
 
         birth = str_to_exact(list.back().toStdString());
     }

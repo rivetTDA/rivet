@@ -10,6 +10,7 @@
 
 #include <QDebug>
 #include <QString>
+#include <QTime>
 
 #include <boost/algorithm/string.hpp>
 
@@ -136,7 +137,7 @@ void InputManager::start()
 void InputManager::read_point_cloud(FileInputReader& reader)
 {
     if(verbosity >= 2) { qDebug() << "  Found a point cloud file."; }
-	
+
   // STEP 1: read data file and store exact (rational) values
 
     //read dimension of the points from the first line of the file
@@ -153,11 +154,11 @@ void InputManager::read_point_cloud(FileInputReader& reader)
     }
 
     //read points
-    std::vector<ExactPoint> points;
+    std::vector<DataPoint> points;
     while( reader.has_next() )
     {
         QStringList tokens = reader.next_line();
-        ExactPoint p(tokens);
+        DataPoint p(tokens);
         points.push_back(p);
     }
 
@@ -186,16 +187,15 @@ void InputManager::read_point_cloud(FileInputReader& reader)
         //remember that point i has this birth time value
         (*(ret.first))->indexes.push_back(i);
 
-        //compute distances from this point to all following points
+        //compute (approximate) distances from this point to all following points
         for(unsigned j=i+1; j<num_points; j++)
         {
-            //compute distance squared between points[i] and points[j]
-            exact dist_squared(0);
+            //compute (approximate) distance squared between points[i] and points[j]
+            double fp_dist_squared = 0;
             for(int k=0; k < dimension; k++)
-                dist_squared += (points[i].coords[k] - points[j].coords[k])*(points[i].coords[k] - points[j].coords[k]);
+                fp_dist_squared += (points[i].coords[k] - points[j].coords[k])*(points[i].coords[k] - points[j].coords[k]);
 
-            //find an approximate square root of the exact dist_squared, and store it as an exact value
-            double fp_dist_squared = numerator(dist_squared).convert_to<double>() / denominator(dist_squared).convert_to<double>();
+            //find an approximate square root of dist_squared, and store it as an exact value
             exact cur_dist(0);
             if(fp_dist_squared > 0)
                 cur_dist = approx( sqrt(fp_dist_squared) ); //OK for now...
@@ -516,7 +516,7 @@ void InputManager::build_grade_vectors(ExactSet& value_set, std::vector<unsigned
 // precondition: x > 0
 exact InputManager::approx(double x)
 {
-    int d = 5;	//desired number of significant digits
+    int d = 10;	//desired number of significant digits
     int log = (int) floor( log10(x) ) + 1;
 
     if(log >= d)
