@@ -564,7 +564,7 @@ void Mesh::find_path(std::vector<Halfedge*>& pathvec)
 {
   // PART 1: BUILD THE DUAL GRAPH OF THE ARRANGEMENT
 
-    typedef boost::property<boost::edge_weight_t, int> EdgeWeightProperty;
+    typedef boost::property<boost::edge_weight_t, unsigned long> EdgeWeightProperty;
     typedef boost::adjacency_list< boost::vecS, boost::vecS, boost::undirectedS,
                                    boost::no_property, EdgeWeightProperty > Graph;  //TODO: probably listS is a better choice than vecS, but I don't know how to make the adjacency_list work with listS
     Graph dual_graph;
@@ -603,12 +603,12 @@ void Mesh::find_path(std::vector<Halfedge*>& pathvec)
     //TESTING -- print the edges in the dual graph
     if(verbosity >= 10)
     {
-        QDebug qd = qDebug().nospace();
-        qd << "EDGES IN THE DUAL GRAPH OF THE ARRANGEMENT: ";
+//        QDebug qd = qDebug().nospace();
+        qDebug() << "EDGES IN THE DUAL GRAPH OF THE ARRANGEMENT: ";
         typedef boost::graph_traits<Graph>::edge_iterator edge_iterator;
         std::pair<edge_iterator, edge_iterator> ei = boost::edges(dual_graph);
         for(edge_iterator it = ei.first; it != ei.second; ++it)
-            qd << "  (" << boost::source(*it, dual_graph) << ", " << boost::target(*it, dual_graph) << "), ";
+            qDebug().nospace() << "  (" << boost::source(*it, dual_graph) << "\t, " << boost::target(*it, dual_graph) << "\t) \tweight = " << boost::get(boost::edge_weight_t(), dual_graph, *it);
     }
 
 
@@ -620,10 +620,10 @@ void Mesh::find_path(std::vector<Halfedge*>& pathvec)
 
     if(verbosity >= 10)
     {
-        QDebug qd = qDebug().nospace();
-        qd << "num MST edges: " << spanning_tree_edges.size() << "\n";
+//        QDebug qd = qDebug().nospace();
+        qDebug() << "num MST edges: " << spanning_tree_edges.size() << "\n";
         for(unsigned i=0; i<spanning_tree_edges.size(); i++)
-            qd << "  (" << boost::source(spanning_tree_edges[i], dual_graph) << ", " << boost::target(spanning_tree_edges[i], dual_graph) << "), ";
+            qDebug().nospace() << "  (" << boost::source(spanning_tree_edges[i], dual_graph) << "\t, " << boost::target(spanning_tree_edges[i], dual_graph) << "\t) \tweight = " << boost::get(boost::edge_weight_t(), dual_graph, spanning_tree_edges[i]);
     }
 
 //  // PART 2-ALTERNATE: FIND A HAMILTONIAN TOUR
