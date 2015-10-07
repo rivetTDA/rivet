@@ -516,13 +516,13 @@ void InputManager::build_grade_vectors(ExactSet& value_set, std::vector<unsigned
 // precondition: x > 0
 exact InputManager::approx(double x)
 {
-    int d = 10;	//desired number of significant digits
+    int d = 7;	//desired number of significant digits
     int log = (int) floor( log10(x) ) + 1;
 
     if(log >= d)
         return exact( (int) floor(x) );
 
-    int denom = pow(10, d-log);
-    return exact( (int) floor(x*denom), denom);
+    long denom = pow(10, d-log);
+    return exact( (long) floor(x*denom), denom);
 }
 
