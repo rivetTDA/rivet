@@ -15,7 +15,9 @@
 #include <boost/algorithm/string.hpp>
 
 #include <algorithm>
+#include <set>
 #include <sstream>
+#include <vector>
 
 
 //epsilon value for use in comparisons
@@ -136,13 +138,12 @@ void InputManager::start()
 //  constructs a simplex tree representing the bifiltered Vietoris-Rips complex
 void InputManager::read_point_cloud(FileInputReader& reader)
 {
-    if(verbosity >= 2) { qDebug() << "  Found a point cloud file."; }
+    if(verbosity >= 6) { qDebug() << "  Found a point cloud file."; }
 
   // STEP 1: read data file and store exact (rational) values
 
     //read dimension of the points from the first line of the file
     int dimension = reader.next_line().first().toInt();
-    if(verbosity >= 4) { qDebug() << "  dimension of data:" << dimension << "; max dimension of simplices: " << (hom_dim + 1); }
 
     //read maximum distance for edges in Vietoris-Rips complex
     exact max_dist = str_to_exact(reader.next_line().first().toStdString());  ///TODO: don't convert to std::string
@@ -150,7 +151,7 @@ void InputManager::read_point_cloud(FileInputReader& reader)
     {
         std::ostringstream oss;
         oss << max_dist;
-        qDebug().noquote() << "  maximum distance:" << QString::fromStdString(oss.str());
+        qDebug() << "  maximum distance:" << QString::fromStdString(oss.str());
     }
 
     //read points
@@ -162,12 +163,12 @@ void InputManager::read_point_cloud(FileInputReader& reader)
         points.push_back(p);
     }
 
-    if(verbosity >= 4) { qDebug() << "  read " << points.size() << " points; input finished"; }
+    if(verbosity >= 4) { qDebug() << "  read" << points.size() << "points; input finished"; }
 
 
   // STEP 2: compute distance matrix, and create ordered lists of all unique distance and time values
 
-    if(verbosity >= 2) { qDebug() << "BUILDING DISTANCE AND TIME LISTS"; }
+    if(verbosity >= 6) { qDebug() << "BUILDING DISTANCE AND TIME LISTS"; }
     cthread->advanceProgressStage();
 
     unsigned num_points = points.size();
@@ -235,7 +236,7 @@ void InputManager::read_point_cloud(FileInputReader& reader)
     //  2. a list of k(k-1)/2 discrete distances
     //  3. max dimension of simplices to construct, which is one more than the dimension of homology to be computed
 
-    if(verbosity >= 2) { qDebug() << "BUILDING VIETORIS-RIPS BIFILTRATION"; }
+    if(verbosity >= 6) { qDebug() << "BUILDING VIETORIS-RIPS BIFILTRATION"; }
 
     simplex_tree->build_VR_complex(time_indexes, dist_indexes, x_grades.size(), y_grades.size());
 
@@ -277,7 +278,7 @@ void InputManager::read_discrete_metric_space(FileInputReader& reader)
     {
         std::ostringstream oss;
         oss << max_dist;
-        qDebug().noquote() << "  maximum distance:" << QString::fromStdString(oss.str());
+        qDebug() << "  maximum distance:" << QString::fromStdString(oss.str());
     }
 
     //prepare data structures
@@ -360,42 +361,86 @@ void InputManager::read_discrete_metric_space(FileInputReader& reader)
 //reads a bifiltration and constructs a simplex tree
 void InputManager::read_bifiltration(FileInputReader& reader)
 {
-    if(verbosity >= 2) { qDebug() << "  Found a bifiltration file. CANNOT CURRENTLY READ BIFILTRATION FILES!\n"; }
-/* THIS MUST BE UPDATED!!!
-	//prepare (temporary) data structures
-	std::string line;		//string to hold one line of input
-	
+    if(verbosity >= 2) { qDebug() << "  Found a bifiltration file.\n"; }
+
+    //temporary data structures to store grades
+    ExactSet x_set; //stores all unique x-alues; must DELETE all elements later!
+    ExactSet y_set; //stores all unique x-alues; must DELETE all elements later!
+    std::pair<ExactSet::iterator, bool> ret;    //for return value upon insert()
+
 	//read simplices
-	while( std::getline(infile,line) )
+    unsigned num_simplices = 0;
+    while( reader.has_next() )
 	{
-		std::istringstream iss(line);
+        QStringList tokens = reader.next_line();
 		
 		//read dimension of simplex
-		int dim;
-		iss >> dim;
+        int dim = tokens.at(0).toInt();
 		
-		//read vertices
-		std::vector<int> verts;
-		for(int i=0; i<=dim; i++)
-		{
-			int v;
-			iss >> v;
-			verts.push_back(v);
-		}
-		
-		//read multi-index
-		int time, dist;
-		iss >> time;
-		iss >> dist;
-		
-		//add the simplex to the simplex tree
-		simplex_tree.add_simplex(verts, time, dist);
+        if(dim <= hom_dim + 1)  //then read the simplex
+        {
+            //read vertices
+            std::vector<int> verts;
+            for(int i = 0; i <= dim; i++)
+            {
+                int v = tokens.at(i + 1).toInt();
+                verts.push_back(v);
+            }
+
+            //read multigrade and remember that it corresponds to this simplex
+            ret = x_set.insert(new ExactValue( str_to_exact(tokens.at(dim + 2).toStdString()) ));  ///TODO: don't convert to std::string
+            (*(ret.first))->indexes.push_back(num_simplices);
+            ret = y_set.insert(new ExactValue( str_to_exact(tokens.at(dim + 3).toStdString()) ));  ///TODO: don't convert to std::string
+            (*(ret.first))->indexes.push_back(num_simplices);
+
+            //add the simplex to the simplex tree
+            simplex_tree->add_simplex(verts, num_simplices, num_simplices);  //multigrade to be set later!
+                ///TODO: FIX THE ABOVE FUNCTION!!!
+            num_simplices++;
+        }
 	}
 
+    //build vectors of discrete grades, using bins
+    unsigned max_unsigned = std::numeric_limits<unsigned>::max();
+    std::vector<unsigned> x_indexes(num_simplices, max_unsigned);   //x_indexes[i] gives the discrete x-index for simplex i in the input order
+    std::vector<unsigned> y_indexes(num_simplices, max_unsigned);   //y_indexes[i] gives the discrete y-index for simplex i in the input order
+
+    build_grade_vectors(x_set, x_indexes, x_grades, x_exact, input_params.x_bins);
+    build_grade_vectors(y_set, y_indexes, y_grades, y_exact, input_params.y_bins);
+
+//TESTING
+//    qDebug() << "x-grades sorted order:";
+//    for(ExactSet::iterator it = x_set.begin(); it != x_set.end(); ++it)
+//    {
+//        std::ostringstream oss;
+//        oss << (*it)->exact_value << " = " << (*it)->double_value;
+//        qDebug() << "   " << QString::fromStdString(oss.str());
+//    }
+//    qDebug() << "x-index vector:";
+//    for(std::vector<unsigned>::iterator it = x_indexes.begin(); it != x_indexes.end(); ++it)
+//        qDebug() << "   " << *it;
+
+    //update simplex tree nodes
+    simplex_tree->update_xy_indexes(x_indexes, y_indexes, x_grades.size(), y_grades.size());
+
     //compute indexes
-    simplex_tree.update_global_indexes();
-    simplex_tree.update_dim_indexes();
-*/
+    simplex_tree->update_global_indexes();
+    simplex_tree->update_dim_indexes();
+
+    //TESTING
+//    simplex_tree->print();
+
+    //clean up
+    for(ExactSet::iterator it = x_set.begin(); it != x_set.end(); ++it)
+    {
+        ExactValue* p = *it;
+        delete p;
+    }
+    for(ExactSet::iterator it = y_set.begin(); it != y_set.end(); ++it)
+    {
+        ExactValue* p = *it;
+        delete p;
+    }
 }//end read_bifiltration()
 
 //reads a file of previously-computed data from RIVET
@@ -463,7 +508,7 @@ void InputManager::read_RIVET_data(FileInputReader& reader)
     }
 }//end read_RIVET_data()
 
-//converts an ExactSets of values to the vectors of discrete values that SimplexTree uses to build the bifiltration, and also builds the grade vectors (floating-point and exact)
+//converts an ExactSet of values to the vectors of discrete values that SimplexTree uses to build the bifiltration, and also builds the grade vectors (floating-point and exact)
 void InputManager::build_grade_vectors(ExactSet& value_set, std::vector<unsigned>& discrete_indexes, std::vector<double>& grades_fp, std::vector<exact>& grades_exact, unsigned num_bins)
 {
     if(num_bins == 0 || num_bins >= value_set.size())    //then don't use bins

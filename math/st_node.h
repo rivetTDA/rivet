@@ -25,8 +25,10 @@ class STNode {
 		int get_vertex();			//returns the vertex index
 		STNode get_parent();			//returns a pointer to the parent node
 
-        int grade_x() const;      //returns the first component of the multi-grade for this simplex
-        int grade_y() const;      //returns the second component of the multi-grade for this simplex
+        void set_x(int x);      //sets the first component of the multigrade for this simplex
+        int grade_x() const;    //returns the first component of the multigrade for this simplex
+        void set_y(int y);      //sets the second component of the multigrade for this simplex
+        int grade_y() const;    //returns the second component of the multigrade for this simplex
 
         void set_global_index(int i);	//sets the global index for the simplex represented by this node
         int global_index();			//returns the global index for the simplex represented by this node
@@ -37,6 +39,9 @@ class STNode {
 		void append_child(STNode*);		//appends a new child to this node; should only be called if vertex index of child is greater than vertex indexes of all other children
         STNode* add_child(int v, int x, int y);			//creates a new child node with given parameters and returns a pointer to the new node; if child with given vertex index already exists, then returns pointer to this node; NOTE: global indexes must be re-computed after calling this function
 		std::vector<STNode*> get_children();		//returns a vector of pointers to children nodes
+
+        //TESTING
+        void print();
 		
 private:
 		int vertex;			//the index of the vertex represented by this node

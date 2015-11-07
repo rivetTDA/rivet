@@ -12,6 +12,7 @@
 
 #include <limits>   //std::numeric_limits
 #include <stdexcept>
+#include <iostream>  //for std::cout, for testing only
 
 
 //SimplexTree constructor; requires dimension of homology to be computed and verbosity parameter
@@ -27,53 +28,62 @@ SimplexTree::~SimplexTree()
 
 //adds a simplex (including all of its faces) to the SimplexTree
 //if simplex or any of its faces already exist, they are not re-added
-//WARNING: doesn't update global indexes or dimension indexes!!!
-/* THIS FUNCTION NO LONGER WORKS AND MUST BE UPDATED!!!
-void SimplexTree::add_simplex(std::vector<int> & vertices, int x, int y)
+//WARNING: doesn't update global data structures (e.g. dimension indexes or global indexes)
+//also, could be made more efficient
+void SimplexTree::add_simplex(std::vector<int>& vertices, int x, int y)
 {
-	//add the simplex and all of its faces
-    add_faces(vertices, x, y);
-	
-    //update grade_x_values (this is sort of a hack; the grade_x_values structure could be improved)
-    for(int i = grade_x_values.size(); i <= x; i++)
-        grade_x_values.push_back(i);
+    //make sure vertices are sorted
+    std::sort(vertices.begin(), vertices.end());
 
-    //update grade_y_values
-    for(int i = grade_y_values.size(); i <= y; i++)
-        grade_y_values.push_back(i);
-	
-    //update global indexes  ---- IS THIS INEFFICIENT???
-//	update_global_indexes();
-}//end add_simplex()*/
+    //add the simplex and all of its faces
+    add_faces(root, vertices, x, y);
+}//end add_simplex()
 
 //recursively adds faces of a simplex to the SimplexTree
-//WARNING: doesn't update global data structures (grade_x_values, grade_y_values, or global indexes), so should only be called from add_simplex()
-void SimplexTree::add_faces(std::vector<int> & vertices, int x, int y)
+void SimplexTree::add_faces(STNode* node, std::vector<int>& vertices, int x, int y)
 {
-	//loop through vertices, adding them if necessary to the SimplexTree
-    STNode* node = root;
-    for(unsigned i=0; i<vertices.size(); i++)
+    //ensure that the vertices are children of the node
+    for(unsigned i = 0; i < vertices.size(); i++)
 	{
-        node = (*node).add_child(vertices[i], x, y);	//if a child with specified vertex index already exists, then nothing is added, but that child is returned
-	}
-	
-	//ensure that the other faces of this simplex are in the tree
-    for(unsigned i=0; i<vertices.size()-1; i++) // -1 is because we already know that the face consisting of all the vertices except for the last one is in the SimplexTree
-	{
-		//form vector consisting of all the vertices except for vertices[i]
-		std::vector<int> facet;
-        for(unsigned k=0; k<vertices.size(); k++)
-		{
-			if(k != i)
-				facet.push_back(vertices[k]);
-		}
+        STNode* child = node->add_child(vertices[i], x, y);	//if a child with specified vertex index already exists, then nothing is added, but that child is returned
+
+        //form vector consisting of all the vertices except for vertices[i]
+        std::vector<int> face;
+        for(unsigned k = i + 1; k < vertices.size(); k++)
+                face.push_back(vertices[k]);
 		
-		//ensure that facet is a simplex in SimplexTree
-        add_faces(facet, x, y);
+        //add the face simplex to the SimplexTree
+        add_faces(child, face, x, y);
 	}
 }//end add_faces()
 
+//updates multigrades; for use when building simplexTree from a bifiltration file
+void SimplexTree::update_xy_indexes(std::vector<unsigned>& x_ind, std::vector<unsigned>& y_ind, unsigned num_x, unsigned num_y)
+{
+    //store the number of grades
+    x_grades = num_x;
+    y_grades = num_y;
 
+    //now update the indexes
+    update_xy_indexes_recursively(root, x_ind, y_ind);
+}//end update_xy_indexes();
+
+//updates multigrades recursively
+void SimplexTree::update_xy_indexes_recursively(STNode* node, std::vector<unsigned>& x_ind, std::vector<unsigned>& y_ind)
+{
+    //loop through children of current node
+    std::vector<STNode*> kids = node->get_children();
+    for(unsigned i=0; i<kids.size(); i++)
+    {
+        //update multigrade of this child
+        STNode* cur = kids[i];
+        cur->set_x(x_ind[cur->grade_x()]);
+        cur->set_y(y_ind[cur->grade_y()]);
+
+        //move on to its children
+        update_xy_indexes_recursively(cur, x_ind, y_ind);
+    }
+}//end update_xy_indexes_recursively();
 
 //updates the global indexes of all simplices in this simplex tree
 void SimplexTree::update_global_indexes()
@@ -774,3 +784,22 @@ int SimplexTree::get_num_simplices()
     return node->global_index() + 1;
 }
 
+// TESTING -- RECURSIVELY PRINT TREE
+void SimplexTree::print()
+{
+    print_subtree(root, 1);
+
+}
+
+void SimplexTree::print_subtree(STNode* node, int indent)
+{
+    //print current node
+    for(int i=0; i<indent; i++)
+        std::cout << "  ";
+    node->print();
+
+    //print children nodes
+    std::vector<STNode*> kids = node->get_children();
+    for(int i=0; i<kids.size(); i++)
+        print_subtree(kids[i], indent+1);
+}

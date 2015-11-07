@@ -1,5 +1,8 @@
 FORMAT OF DATA FILES
 
+NOTE: RIVET ignores blank lines and lines that begin with a # symbol.
+
+
 I. Point Cloud (for constructing a Vietoris-Rips complex)
 
 	First line:	the word "points"
@@ -20,9 +23,8 @@ II. Distance Matrix with a Real-valued Function
 
 III. Bifiltration 
 
-	NOT CURRENTLY WORKING!!!
-
 	(Here we consider a bifiltration to be abstract, without geometric coordinates.)
+
 	REQUIREMENTS:
 		vertices are labeled 0, 1, 2, ..., N
 		times and distances are nonnegative integers (preferably 0, 1, ..., max_time and 0, 1, ..., max_dist, respectively)
@@ -36,8 +38,6 @@ III. Bifiltration
 				next n+1 numbers (integers) give the vertices of the simplex
 				next number (decimal) gives the time at which the simplex appears
 				final number (decimal) gives the distance at which the simplex appears
-	
-	CAUTION: THE PROGRAM MIGHT NOT HANDLE NON-INTEGER MULTI-INDEXES YET!
 	
 
 

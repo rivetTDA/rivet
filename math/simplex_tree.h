@@ -70,8 +70,12 @@ class SimplexTree {
                     //NOTE: automatically computes global indexes and dimension indexes
                     //CONVENTION: the x-coordinate is "birth time" for points and the y-coordinate is "distance" between points
 
- //UPDATE THIS:       void add_simplex(std::vector<int> & vertices, int x, int y);	//adds a simplex (and its faces) to the SimplexTree; multi-grade is (x,y)
+        void add_simplex(std::vector<int>& vertices, int x, int y);	//adds a simplex (and its faces) to the SimplexTree; multi-grade is (x,y); WARNING: doesn't update global data structures (e.g. global indexes)
 		
+        void update_xy_indexes(std::vector<unsigned>& x_ind, std::vector<unsigned>& y_ind, unsigned num_x, unsigned num_y);
+                    //updates multigrades; for use when building simplexTree from a bifiltration file
+                    //also requires the number of x- and y-grades that exist in the bifiltration
+
         void update_global_indexes();			//updates the global indexes of all simplices in this simplex tree
         void update_dim_indexes();              //updates the dimension indexes (reverse-lexicographical multi-grade order) for simplices of dimension (hom_dim-1), hom_dim, and (hom_dim+1)
 
@@ -102,6 +106,10 @@ class SimplexTree {
         const int hom_dim;      //the dimension of homology to be computed; max dimension of simplices is one more than this
         const int verbosity;	//controls display of output, for debugging
 
+        //TESTING
+        void print();
+        void print_subtree(STNode *node, int indent);
+
 	private:
         STNode* root;		//root node of the simplex tree
 
@@ -114,8 +122,10 @@ class SimplexTree {
 
         void build_VR_subtree(std::vector<unsigned>& times, std::vector<unsigned>& distances, STNode &parent, std::vector<unsigned> &parent_indexes, unsigned prev_time, unsigned prev_dist, unsigned cur_dim, unsigned& gic);	//recursive function used in build_VR_complex()
 
-        void add_faces(std::vector<int> & vertices, int x, int y);	//recursively adds faces of a simplex to the SimplexTree; WARNING: doesn't update global data structures (time_list, dist_list, or global indexes), so should only be called from add_simplex()
+        void add_faces(STNode* node, std::vector<int>& vertices, int x, int y);	//recursively adds faces of a simplex to the SimplexTree; WARNING: doesn't update global data structures (e.g. global indexes)
 		
+        void update_xy_indexes_recursively(STNode* node, std::vector<unsigned>& x_ind, std::vector<unsigned>& y_ind);   //updates multigrades recursively
+
         void update_gi_recursively(STNode* node, int &gic); 		//recursively update global indexes of simplices
 		
         void build_dim_lists_recursively(STNode* node, int cur_dim, int hom_dim);        //recursively build lists to determine dimension indexes

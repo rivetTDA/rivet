@@ -5,6 +5,7 @@
 #include "st_node.h"
 
 #include <cstddef>  //for NULL keyword
+#include <iostream>  //for std::cout, for testing only
 
 //constructor for empty node
 STNode::STNode() :
@@ -36,13 +37,25 @@ STNode STNode::get_parent()
 	return *parent;
 }
 
-//returns the first component of the multi-grade for this simplex
+//sets the first component of the multigrade for this simplex
+void STNode::set_x(int x)
+{
+    mg_x = x;
+}
+
+//returns the first component of the multigrade for this simplex
 int STNode::grade_x() const
 {
     return mg_x;
 }
 
-//returns the second component of the multi-grade for this simplex
+//sets the second component of the multigrade for this simplex
+void STNode::set_y(int y)
+{
+    mg_y = y;
+}
+
+//returns the second component of the multigrade for this simplex
 int STNode::grade_y() const
 {
     return mg_y;
@@ -122,5 +135,23 @@ std::vector<STNode*> STNode::get_children()
 	return children;
 }
 
+//TESTING
+void STNode::print()
+{
+    std::cout << "NODE: vertex " << vertex <<  "; global index: " << g_index << "; dim index: " << d_index << "; multi-index: (" << mg_x << ", " << mg_y << "); parent: ";
+    if(parent)
+        std::cout << (*parent).get_vertex() << "; ";
+    else
+        std::cout << "NULL; ";
+    std::cout << "children: ";
+    if(children.size() == 0)
 
-
+        std::cout << "NONE";
+    for(int i=0; i<children.size(); i++)
+    {
+        if(i>0)
+            std::cout << ", ";
+        std::cout << (*children[i]).get_vertex();
+    }
+    std::cout << "\n";
+}
