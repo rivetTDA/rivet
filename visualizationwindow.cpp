@@ -5,13 +5,13 @@
 #include "dcel/mesh.h"
 #include "interface/barcode.h"
 #include "interface/config_parameters.h"
+#include "interface/file_writer.h"
 
 #include <QDateTime>
 #include <QDebug>
 #include <QFile>
 #include <QFileDialog>
 #include <QMessageBox>
-#include <QTextStream>
 #include <QTime>
 
 #include <algorithm>
@@ -121,8 +121,6 @@ void VisualizationWindow::paint_xi_support()
 //this slot is signaled when the agumented arrangement is ready
 void VisualizationWindow::augmented_arrangement_ready(Mesh* arrangement)
 {
-    qDebug() << "VisualizationWindow::augmented_arrangement_ready()";
-
     //receive the arrangement
     this->arrangement = arrangement;
 
@@ -156,6 +154,10 @@ void VisualizationWindow::augmented_arrangement_ready(Mesh* arrangement)
     if(verbosity >= 2) { qDebug() << "COMPUTATION FINISHED; READY FOR INTERACTIVITY."; }
     persistence_diagram_drawn = true;
     ui->statusBar->showMessage("ready for interactive barcode exploration");
+
+    //if an output file has been specified, then save the arrangement
+    if(!input_params.outputFile.isEmpty())
+        save_arrangement(input_params.outputFile);
 
 }//end augmented_arrangement_ready()
 
@@ -441,89 +443,28 @@ void VisualizationWindow::on_actionSave_triggered()
     QString fileName= QFileDialog::getSaveFileName(this, "Save computed data", QCoreApplication::applicationDirPath(), "Text File (*.txt)");
     if (!fileName.isNull())
     {
-        QFile file(fileName);
-        if(file.open(QIODevice::ReadWrite | QIODevice::Truncate))
-        {
-            QTextStream stream(&file);
-
-            //write header info, in comment form
-            stream << "# augmented arrangement data" << endl;
-            stream << "# computed by RIVET from the input file " << input_params.fileName << endl;
-            stream << "# homology dimension: " << input_params.dim << endl;
-            stream << "# bins: " << input_params.x_bins << " " << input_params.y_bins << endl;
-            stream << "# file created at: " << QDateTime::currentDateTime().toString() << endl << endl;
-
-            //write parameters
-            stream << "RIVET_0" << endl;
-            stream << input_params.dim << endl;
-            stream << input_params.x_label << endl;
-            stream << input_params.y_label << endl << endl;
-
-            //write x-grades
-            stream << "x-grades" << endl;
-            for(std::vector<exact>::iterator it = x_exact.begin(); it != x_exact.end(); ++it)
-            {
-                std::ostringstream oss;
-                oss << *it;
-                stream << QString::fromStdString(oss.str()) << endl;
-            }
-            stream << endl;
-
-            //write y-grades
-            stream << "y-grades" << endl;
-            for(std::vector<exact>::iterator it = y_exact.begin(); it != y_exact.end(); ++it)
-            {
-                std::ostringstream oss;
-                oss << *it;
-                stream << QString::fromStdString(oss.str()) << endl;
-            }
-            stream << endl;
-
-            //write values of the multigraded Betti numbers
-            stream << "xi values" << endl;
-            for(std::vector<xiPoint>::iterator it = xi_support.begin(); it != xi_support.end(); ++it)
-            {
-                xiPoint p = *it;
-                if(p.zero > 0 || p.one > 0 || p.two > 0)    //necessary because the vector xi_support also stores anchors (template points) that are not xi support points
-                    stream << p.x << " " << p.y << " " << p.zero << " " << p.one << " " << p.two << endl;
-            }
-            stream << endl;
-
-            //write barcode templates
-            stream << "barcode templates" << endl;
-            for(unsigned i = 0; i < arrangement->num_faces(); i++)
-            {
-                BarcodeTemplate& bc = arrangement->get_barcode_template(i);
-                if(bc.is_empty())
-                {
-                    stream << "-";  //this denotes an empty barcode (necessary because FileInputReader ignores white space)
-                }
-                else
-                {
-                    for(std::set<BarTemplate>::iterator it = bc.begin(); it != bc.end(); ++it)
-                    {
-                        stream << it->begin << ",";
-                        if(it->end == (unsigned) -1)    //then the bar ends at infinity, but we just write "i"
-                            stream << "i";
-                        else
-                            stream << it->end;
-                        stream << "," << it->multiplicity << " ";
-                    }
-                }
-                stream << endl;
-            }
-
-            file.close();   //close the file -- this might not be necessary
-        }
-        else
-        {
-            QMessageBox errorBox(QMessageBox::Warning, "Error", "Unable to write file.");
-            errorBox.exec();
-        }
-
+        save_arrangement(fileName);
     }
     ///TODO: error handling?
 }//end on_actionSave_triggered()
+
+void VisualizationWindow::save_arrangement(QString& filename)
+{
+    QFile file(filename);
+    if(file.open(QIODevice::ReadWrite | QIODevice::Truncate))
+    {
+        qDebug() << "Writing file:" << filename;
+
+        FileWriter fw(input_params, arrangement, x_exact, y_exact, xi_support);
+        fw.write_augmented_arrangement(file);
+    }
+    else
+    {
+        QMessageBox errorBox(QMessageBox::Warning, "Error", QString("Unable to write file: ").append(filename));
+        errorBox.exec();
+    }
+    ///TODO: error handling?
+}//end save_arrangement()
 
 void VisualizationWindow::on_actionOpen_triggered()
 {
