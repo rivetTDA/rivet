@@ -398,7 +398,6 @@ void InputManager::read_bifiltration(FileInputReader& reader)
         (*(ret.first))->indexes.push_back(num_simplices);
 
         //add the simplex to the simplex tree
-        qDebug() << "Adding a simplex of dimension" << dim;
         simplex_tree->add_simplex(verts, num_simplices, num_simplices);  //multigrade to be set later!
             ///TODO: FIX THE ABOVE FUNCTION!!!
         num_simplices++;

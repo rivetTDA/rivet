@@ -18,12 +18,12 @@
 #include <sstream>
 
 
-VisualizationWindow::VisualizationWindow(QWidget *parent) :
-    QMainWindow(parent),
+VisualizationWindow::VisualizationWindow(InputParameters& params) :
+    QMainWindow(),
     ui(new Ui::VisualizationWindow),
-    verbosity(5), INFTY(std::numeric_limits<double>::infinity()), PI(3.14159265358979323846),
+    verbosity(params.verbosity), INFTY(std::numeric_limits<double>::infinity()), PI(3.14159265358979323846),
     data_selected(false),
-    input_params(), config_params(),
+    input_params(params), config_params(),
     ds_dialog(input_params),
     x_grades(), x_exact(), y_grades(), y_exact(), xi_support(), homology_dimensions(),
     angle_precise(0), offset_precise(0),
@@ -353,9 +353,10 @@ void VisualizationWindow::set_line_parameters(double angle, double offset)
 
 void VisualizationWindow::showEvent(QShowEvent* event)
 {
+    qDebug() << "in VisualizationWindow::showEvent()";
+    QMainWindow::showEvent(event);
     if(!data_selected)
     {
-        QMainWindow::showEvent(event);
         ds_dialog.exec();               //show the DataSelectDialog box and blocks until the dialog is closed
     }
 }
