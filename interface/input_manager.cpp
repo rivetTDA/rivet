@@ -193,7 +193,7 @@ void InputManager::read_point_cloud(FileInputReader& reader)
 
     //read points
     std::vector<DataPoint> points;
-    while( reader.has_next() )
+    while( reader.has_next_line() )
     {
         QStringList tokens = reader.next_line();
         if (tokens.size() != dimension + 1 )
@@ -345,12 +345,18 @@ void InputManager::read_discrete_metric_space(FileInputReader& reader)
         //read distances from this point to all following points
         if(i < num_points - 1)  //then there is at least one point after point i, and there should be another line to read
         {
-            line = reader.next_line();
+//            line = reader.next_line();
 
             for(unsigned j = i+1; j < num_points; j++)
             {
                 //read distance between points i and j
-                exact cur_dist = str_to_exact(line.at(j-(i+1)).toStdString());
+                if(!reader.has_next_token())
+                    qDebug() << "ERROR: no distance between points" << i << "and" << j;
+
+                QString str = reader.next_token();
+                qDebug() << str;
+
+                exact cur_dist = str_to_exact(str.toStdString());
 
                 if( cur_dist <= max_dist )  //then this distance is allowed
                 {
@@ -414,34 +420,31 @@ void InputManager::read_bifiltration(FileInputReader& reader)
 
 	//read simplices
     unsigned num_simplices = 0;
-    while( reader.has_next() )
+    while( reader.has_next_line() )
 	{
         QStringList tokens = reader.next_line();
 
 		//read dimension of simplex
-        int dim = tokens.at(0).toInt();
+        int dim = tokens.size() - 3; //-3 because a n-simplex has (n+1) vertices, and the line also contains two grade values
 
-        if(dim <= hom_dim + 1)  //then read the simplex
+        //read vertices
+        std::vector<int> verts;
+        for(int i = 0; i <= dim; i++)
         {
-            //read vertices
-            std::vector<int> verts;
-            for(int i = 0; i <= dim; i++)
-            {
-                int v = tokens.at(i + 1).toInt();
-                verts.push_back(v);
-            }
-
-            //read multigrade and remember that it corresponds to this simplex
-            ret = x_set.insert(new ExactValue( str_to_exact(tokens.at(dim + 2).toStdString()) ));  ///TODO: don't convert to std::string
-            (*(ret.first))->indexes.push_back(num_simplices);
-            ret = y_set.insert(new ExactValue( str_to_exact(tokens.at(dim + 3).toStdString()) ));  ///TODO: don't convert to std::string
-            (*(ret.first))->indexes.push_back(num_simplices);
-
-            //add the simplex to the simplex tree
-            simplex_tree->add_simplex(verts, num_simplices, num_simplices);  //multigrade to be set later!
-                ///TODO: FIX THE ABOVE FUNCTION!!!
-            num_simplices++;
+            int v = tokens.at(i).toInt();
+            verts.push_back(v);
         }
+
+        //read multigrade and remember that it corresponds to this simplex
+        ret = x_set.insert(new ExactValue( str_to_exact(tokens.at(dim + 1).toStdString()) ));  ///TODO: don't convert to std::string
+        (*(ret.first))->indexes.push_back(num_simplices);
+        ret = y_set.insert(new ExactValue( str_to_exact(tokens.at(dim + 2).toStdString()) ));  ///TODO: don't convert to std::string
+        (*(ret.first))->indexes.push_back(num_simplices);
+
+        //add the simplex to the simplex tree
+        simplex_tree->add_simplex(verts, num_simplices, num_simplices);  //multigrade to be set later!
+            ///TODO: FIX THE ABOVE FUNCTION!!!
+        num_simplices++;
 	}
 
     //build vectors of discrete grades, using bins
@@ -531,7 +534,7 @@ void InputManager::read_RIVET_data(FileInputReader& reader)
 
     //read barcode templates
     //  NOTE: the current line says "barcode templates"
-    while(reader.has_next())
+    while(reader.has_next_line())
     {
         line = reader.next_line();
         cthread->barcode_templates.push_back(BarcodeTemplate());    //create a new BarcodeTemplate

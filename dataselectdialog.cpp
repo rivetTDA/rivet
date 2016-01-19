@@ -18,6 +18,17 @@ DataSelectDialog::DataSelectDialog(InputParameters& params, QWidget *parent) :
 
     ui->xbinSpinBox->setSpecialValueText(tr("No bins"));
     ui->ybinSpinBox->setSpecialValueText(tr("No bins"));
+
+    //set initial values
+    if(!params.fileName.isEmpty())
+        detect_file_type();
+    ui->homDimSpinBox->setValue(params.dim);
+    ui->xbinSpinBox->setValue(params.x_bins);
+    ui->ybinSpinBox->setValue(params.y_bins);
+    if(!params.x_label.isEmpty())
+        ui->xlabelBox->setText(params.x_label);
+    if(!params.y_label.isEmpty())
+        ui->ylabelBox->setText(params.y_label);
 }
 
 DataSelectDialog::~DataSelectDialog()
@@ -43,22 +54,6 @@ void DataSelectDialog::on_computeButton_clicked()
     close();
 }
 
-
-//THE FOLLOWING ARE FOR TESTING ONLY
-//void DataSelectDialog::on_shortcutButton1_clicked()
-//{
-//    params.fileName = "/ima/home/mlwright/Repos/RIVET/data/sample3.txt";
-//    ui->computeButton->setEnabled(true);
-//}
-
-//void DataSelectDialog::on_shortcutButton2_clicked()
-//{
-//    params.fileName = "/ima/home/mlwright/Repos/RIVET/data/circle_data_240pts_inv_density.txt";
-//    ui->homDimSpinBox->setValue(1);
-//    ui->computeButton->setEnabled(true);
-//    ui->xlabelBox->setText("codensity");
-//}
-
 void DataSelectDialog::on_openFileButton_clicked()
 {
     //prompt user to select a file
@@ -67,55 +62,59 @@ void DataSelectDialog::on_openFileButton_clicked()
     if(!selected_file.isNull())
     {
         params.fileName = selected_file;
-        QFile infile(params.fileName);
-        if(infile.open(QIODevice::ReadOnly | QIODevice::Text))
+        detect_file_type();
+    }
+}//end on_openFileButton_clicked()
+
+void DataSelectDialog::detect_file_type()
+{
+    QFile infile(params.fileName);
+    if(infile.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        FileInputReader reader(infile);
+
+        //attempt to determine the file type
+        QString filetype = reader.next_line().first(); ///TODO: error handling?
+
+        if(filetype == QString("points"))
         {
-            FileInputReader reader(infile);
-
-            //attempt to determine the file type
-            QString filetype = reader.next_line().first(); ///TODO: error handling?
-
-            if(filetype == QString("points"))
-            {
-                ui->fileTypeLabel->setText("This file appears to contain point-cloud data.");
-                raw_data_file_selected(infile);
-            }
-            else if(filetype == QString("metric"))
-            {
-                ui->fileTypeLabel->setText("This file appears to contain metric data.");
-                raw_data_file_selected(infile);
-            }
-            else if(filetype == QString("bifiltration"))
-            {
-                ui->fileTypeLabel->setText("This file appears to contain bifiltration data.");
-                raw_data_file_selected(infile);
-            }
-            else if(filetype == QString("RIVET_0"))
-            {
-                ui->fileTypeLabel->setText("This file appears to contain pre-computed RIVET data.");
-                QFileInfo fileInfo(infile);
-                params.shortName = fileInfo.fileName();
-                ui->fileLabel->setText("Selected file: " + params.shortName);
-                params.raw_data = false;
-                ui->parameterFrame->setEnabled(false);
-                ui->computeButton->setEnabled(true);
-            }
-            else    //unrecognized file type
-            {
-                ui->fileTypeLabel->setText("File type not recognized.");
-                ui->parameterFrame->setEnabled(false);
-                ui->computeButton->setEnabled(false);
-            }
+            ui->fileTypeLabel->setText("This file appears to contain point-cloud data.");
+            raw_data_file_selected(infile);
         }
-        else    //error: unable to read file
+        else if(filetype == QString("metric"))
         {
-            ui->fileTypeLabel->setText("Unable to read file.");
+            ui->fileTypeLabel->setText("This file appears to contain metric data.");
+            raw_data_file_selected(infile);
+        }
+        else if(filetype == QString("bifiltration"))
+        {
+            ui->fileTypeLabel->setText("This file appears to contain bifiltration data.");
+            raw_data_file_selected(infile);
+        }
+        else if(filetype == QString("RIVET_0"))
+        {
+            ui->fileTypeLabel->setText("This file appears to contain pre-computed RIVET data.");
+            QFileInfo fileInfo(infile);
+            params.shortName = fileInfo.fileName();
+            ui->fileLabel->setText("Selected file: " + params.shortName);
+            params.raw_data = false;
+            ui->parameterFrame->setEnabled(false);
+            ui->computeButton->setEnabled(true);
+        }
+        else    //unrecognized file type
+        {
+            ui->fileTypeLabel->setText("File type not recognized.");
             ui->parameterFrame->setEnabled(false);
             ui->computeButton->setEnabled(false);
         }
     }
-
-}//end on_openFileButton_clicked()
+    else    //error: unable to read file
+    {
+        ui->fileTypeLabel->setText("Unable to read file.");
+        ui->parameterFrame->setEnabled(false);
+        ui->computeButton->setEnabled(false);
+    }
+}//end detect_file_type()
 
 void DataSelectDialog::raw_data_file_selected(const QFile& file)
 {

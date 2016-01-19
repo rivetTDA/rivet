@@ -30,6 +30,7 @@ SimplexTree::~SimplexTree()
 //if simplex or any of its faces already exist, they are not re-added
 //WARNING: doesn't update global data structures (e.g. dimension indexes or global indexes)
 //also, could be made more efficient
+//also, we don't need to add simplexes of dimension greater than hom_dim+1
 void SimplexTree::add_simplex(std::vector<int>& vertices, int x, int y)
 {
     //make sure vertices are sorted

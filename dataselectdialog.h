@@ -41,6 +41,7 @@ private:
 
     InputParameters& params;
 
+    void detect_file_type();
     void raw_data_file_selected(const QFile& file);
 };
 

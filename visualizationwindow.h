@@ -38,10 +38,9 @@ class VisualizationWindow : public QMainWindow
     Q_OBJECT
     
 public:
-    explicit VisualizationWindow(QWidget *parent = 0);
+    explicit VisualizationWindow(InputParameters& params);
     ~VisualizationWindow();
 
-    void start_computation(); //begins the computation pipeline
 
 protected:
     void showEvent(QShowEvent* event);      //shows the DataSelectDialog and blocks until it is closed
@@ -49,6 +48,7 @@ protected:
     void closeEvent(QCloseEvent* event);
     
 public slots:
+    void start_computation(); //begins the computation pipeline
     void paint_xi_support();
     void augmented_arrangement_ready(Mesh* arrangement);
     void set_line_parameters(double angle, double offset);
@@ -79,7 +79,7 @@ private:
     const double PI;
 
     bool data_selected;               //false until user selects data, then true
-    InputParameters input_params;     //parameters set by the user via the DataSelectDialog
+    InputParameters& input_params;     //parameters set by the user via the DataSelectDialog
     ConfigParameters config_params;   //parameters that control the visualization
     DataSelectDialog ds_dialog;       //dialog box that gets the input parameters
 
@@ -118,6 +118,8 @@ private:
     double project_zero(double angle, double offset);
 
     //other items
+    void save_arrangement(QString& filename);
+
     AboutMessageBox aboutBox;       //which is better for these dialog boxes
     ConfigureDialog* configBox;     // -- pointer or no pointer?
 };
