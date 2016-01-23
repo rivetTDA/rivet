@@ -23,11 +23,23 @@
 //epsilon value for use in comparisons
 double ExactValue::epsilon = pow(2,-30);
 
+// function for determining whether or not a string is a number
+bool is_number(const std::string& s)
+{
+    std::string::const_iterator it = s.begin();
+    while (it != s.end() && (std::isdigit(*it) || *it =='.')) ++it;
+    return !s.empty() && it == s.end();
+}
 
 //helper function to convert a string to an exact (rational)
 //accepts string such as "12.34", "765", and "-10.8421"
 exact str_to_exact(std::string str)
 {
+    if(!is_number(str)){
+    	QString qstr = QString::fromUtf8(str.c_str());
+  	 	qDebug()<<"Error: "<<qstr<<" is not a number"<<endl;
+    	return 0;
+    }
     exact r;
 
     //find decimal point, if it exists
@@ -100,7 +112,7 @@ void InputManager::start()
 
         //determine what type of file it is
         QString filetype = reader.next_line().first();  ///TODO: error handling -- the file must have at least one line with non-whitespace characters
-		
+
 		//call appropriate handler function
         if(filetype == QString("points"))
 		{
@@ -129,7 +141,7 @@ void InputManager::start()
         qDebug() << "Error: Unable to open file: " << input_params.fileName;
 		throw std::exception();
 	}
-	
+
 }//end start()
 
 
@@ -143,10 +155,35 @@ void InputManager::read_point_cloud(FileInputReader& reader)
   // STEP 1: read data file and store exact (rational) values
 
     //read dimension of the points from the first line of the file
-    int dimension = reader.next_line().first().toInt();
+    QStringList dimension_line = reader.next_line();
+    if (dimension_line.size() != 1)
+    {
+    	qDebug() << "There was more than one value in the expected dimension line.  There may be a problem with your input file.  " << endl;
+    }
+    int dimension = dimension_line.first().toInt();
+
+    //check for invalid input
+    if (dimension == 0)
+    {
+    	qDebug() << "An invalid input was received for the dimension." << endl;
+    	// throw an exception
+    }
 
     //read maximum distance for edges in Vietoris-Rips complex
-    exact max_dist = str_to_exact(reader.next_line().first().toStdString());  ///TODO: don't convert to std::string
+    QStringList distance_line = reader.next_line();
+    if (distance_line.size() != 1)
+    {
+    	qDebug() << "There was more than one value in the expected distance line.  There may be a problem with your input file.  " << endl;
+    }
+
+    exact max_dist = str_to_exact(distance_line.first().toStdString());  ///TODO: don't convert to std::string
+    if (max_dist == 0)
+    {
+    	qDebug() << "An invalid input was received for the max distance." << endl;
+    	// throw an exception
+    }
+
+
     if(verbosity >= 4)
     {
         std::ostringstream oss;
@@ -159,6 +196,13 @@ void InputManager::read_point_cloud(FileInputReader& reader)
     while( reader.has_next_line() )
     {
         QStringList tokens = reader.next_line();
+        if (tokens.size() != dimension + 1 )
+        {
+        	// TODO: need a check for characters in the point data
+        	// look up qexception object
+        	// handle in dataselectDialogue
+        	continue;
+        }
         DataPoint p(tokens);
         points.push_back(p);
     }
@@ -379,10 +423,10 @@ void InputManager::read_bifiltration(FileInputReader& reader)
     while( reader.has_next_line() )
 	{
         QStringList tokens = reader.next_line();
-		
+
 		//read dimension of simplex
         int dim = tokens.size() - 3; //-3 because a n-simplex has (n+1) vertices, and the line also contains two grade values
-		
+
         //read vertices
         std::vector<int> verts;
         for(int i = 0; i <= dim; i++)
