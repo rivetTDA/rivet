@@ -4,6 +4,7 @@ points
 
 2
 4.5
+birth time
 
 #now the data
 1 2 1

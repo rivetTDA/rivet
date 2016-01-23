@@ -19,11 +19,11 @@ void FileInputReader::find_next_line()
     while( !in.atEnd() && !next_line_found )
     {
         next_line_string = in.readLine().trimmed();
-        if( line.isEmpty() || line.at(0) == comment)    //then skip this line
+        if( next_line_string.isEmpty() || next_line_string.at(0) == comment)    //then skip this line
             continue;
         //else -- found a nonempty next line
         next_line_found = true;
-        next_line_tokens = line.split(QRegExp("\\s+"));
+        next_line_tokens = next_line_string.split(QRegExp("\\s+"));
         next_list_position = 0;
     }
 }

@@ -191,6 +191,12 @@ void InputManager::read_point_cloud(FileInputReader& reader)
         qDebug() << "  maximum distance:" << QString::fromStdString(oss.str());
     }
 
+    //read label for x-axis
+    input_params.x_label = reader.next_line_str();
+
+    //set label for y-axis to "distance"
+    input_params.y_label = QString("distance");
+
     //read points
     std::vector<DataPoint> points;
     while( reader.has_next_line() )
