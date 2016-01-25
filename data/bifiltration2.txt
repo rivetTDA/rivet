@@ -1,3 +1,5 @@
 bifiltration
+x-axis label
+y-axis label
 0 1 2 0 2
 0 1 2 3 1 4

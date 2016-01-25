@@ -310,6 +310,10 @@ void InputManager::read_discrete_metric_space(FileInputReader& reader)
 
   // STEP 1: read data file and store exact (rational) values of the function for each point
 
+    //first read the label for x-axis
+    input_params.x_label = reader.next_line_str();
+
+    //now read the values
     QStringList line = reader.next_line();
     std::vector<exact> values;
     values.reserve(line.size());
@@ -321,6 +325,9 @@ void InputManager::read_discrete_metric_space(FileInputReader& reader)
 
 
   // STEP 2: read data file and store exact (rational) values for all distances
+
+    //first read the label for y-axis
+    input_params.y_label = reader.next_line_str();
 
     //read the maximum length of edges to construct
     exact max_dist = str_to_exact(reader.next_line().first().toStdString());  ///TODO: don't convert to std::string
@@ -418,6 +425,12 @@ void InputManager::read_discrete_metric_space(FileInputReader& reader)
 void InputManager::read_bifiltration(FileInputReader& reader)
 {
     if(verbosity >= 2) { qDebug() << "  Found a bifiltration file.\n"; }
+
+    //read the label for x-axis
+    input_params.x_label = reader.next_line_str();
+
+    //read the label for y-axis
+    input_params.y_label = reader.next_line_str();
 
     //temporary data structures to store grades
     ExactSet x_set; //stores all unique x-alues; must DELETE all elements later!

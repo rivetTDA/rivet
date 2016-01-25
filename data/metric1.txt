@@ -1,6 +1,12 @@
 metric
+#x-axis label
+function values
+
 #function values for five points
 0 1 0.5 1 0.7
+
+#y-axis label
+distance
 
 #max distance to be a 1-simplex
 3
