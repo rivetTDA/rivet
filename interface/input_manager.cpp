@@ -493,9 +493,6 @@ void InputManager::read_bifiltration(FileInputReader& reader)
     simplex_tree->update_global_indexes();
     simplex_tree->update_dim_indexes();
 
-    //TESTING
-//    simplex_tree->print();
-
     //clean up
     for(ExactSet::iterator it = x_set.begin(); it != x_set.end(); ++it)
     {
@@ -514,8 +511,8 @@ void InputManager::read_RIVET_data(FileInputReader& reader)
 {
     //read parameters
     cthread->params.dim = reader.next_line().first().toInt();
-    cthread->params.x_label = reader.next_line().first();
-    cthread->params.y_label = reader.next_line().first();
+    cthread->params.x_label = reader.next_line_str();
+    cthread->params.y_label = reader.next_line_str();
 
     //read x-grades
     reader.next_line();  //this line should say "x-grades"

@@ -3,8 +3,11 @@
 
 struct ConfigParameters;
 
+#include "input_parameters.h"
+
 #include <QDialog>
 #include <QColor>
+#include <QString>
 
 
 namespace Ui {
@@ -17,7 +20,7 @@ class ConfigureDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit ConfigureDialog(ConfigParameters& params, QWidget *parent = 0);
+    explicit ConfigureDialog(ConfigParameters& c_params, InputParameters& i_params, QWidget *parent = 0);
     ~ConfigureDialog();
 
 private slots:
@@ -48,9 +51,14 @@ private slots:
 
     void on_defaultSizesButton_clicked();
 
+    void on_xaxisText_editingFinished();
+
+    void on_yaxisText_editingFinished();
+
 private:
     Ui::ConfigureDialog *ui;
     ConfigParameters& config_params;
+    InputParameters& input_params;
 
     //data structures to store selected configuration until user clicks the OK button
     QColor xi0col;
@@ -62,6 +70,8 @@ private:
     QColor lineHiCol;
     int bettiRadius;
     int perRadius;
+    QString xlabel;
+    QString ylabel;
 };
 
 #endif // CONFIGUREDIALOG_H

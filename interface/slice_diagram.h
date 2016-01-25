@@ -58,7 +58,7 @@ public:
     double get_pd_scale();      //gets the number of pixels per unit, for the persistence diagram
     double get_zero();          //gets the coordinate on the slice line which we consider "zero" for the persistence diagram
 
-    void receive_parameter_change();            //updates the diagram after a change in configuration parameters
+    void receive_parameter_change(QString& xtext, QString& ytext);            //updates the diagram after a change in configuration parameters
 
 public slots:
     void receive_bar_selection(unsigned index); //highlight the specified class of bars, which has been selected externally

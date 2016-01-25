@@ -402,12 +402,12 @@ void VisualizationWindow::on_actionAbout_triggered()
 
 void VisualizationWindow::on_actionConfigure_triggered()
 {
-    configBox = new ConfigureDialog(config_params, this);
+    configBox = new ConfigureDialog(config_params, input_params, this);
     configBox->exec();
 
     if(line_selection_ready)
     {
-        slice_diagram.receive_parameter_change();
+        slice_diagram.receive_parameter_change(input_params.x_label, input_params.y_label);
 
         if(persistence_diagram_drawn)
             p_diagram.receive_parameter_change();

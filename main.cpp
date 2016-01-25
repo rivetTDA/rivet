@@ -49,14 +49,8 @@ int main(int argc, char *argv[])
     QCommandLineOption xbinOption(QStringList() << "x" << "xbins", QCoreApplication::translate("main", "Number of bins in the x-direction."), QCoreApplication::translate("main", "integer"), "0");
     parser.addOption(xbinOption);
 
-    QCommandLineOption xlabelOption(QStringList() << "X" << "xlabel", QCoreApplication::translate("main", "Label for the x-axis."), QCoreApplication::translate("main", "label"), "x-label");
-    parser.addOption(xlabelOption);
-
     QCommandLineOption ybinOption(QStringList() << "y" << "ybins", QCoreApplication::translate("main", "Number of bins in the y-direction."), QCoreApplication::translate("main", "integer"), "0");
     parser.addOption(ybinOption);
-
-    QCommandLineOption ylabelOption(QStringList() << "Y" << "ylabel", QCoreApplication::translate("main", "Label for the y-axis."), QCoreApplication::translate("main", "label"), "y-label");
-    parser.addOption(ylabelOption);
 
     //parse the command line options
     parser.process(*app);
@@ -69,8 +63,6 @@ int main(int argc, char *argv[])
     params.verbosity = parser.value(verbosityOption).toInt();
     params.x_bins = parser.value(xbinOption).toInt();
     params.y_bins = parser.value(ybinOption).toInt();
-    params.x_label = parser.value(xlabelOption);
-    params.y_label = parser.value(ylabelOption);
 
     //now run RIVET
     if (qobject_cast<QApplication *>(app.data()))   // start GUI version

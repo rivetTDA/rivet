@@ -7,14 +7,15 @@
 #include <QDebug>
 
 
-ConfigureDialog::ConfigureDialog(ConfigParameters& params, QWidget *parent) :
+ConfigureDialog::ConfigureDialog(ConfigParameters& c_params, InputParameters& i_params, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::ConfigureDialog),
-    config_params(params),
+    config_params(c_params), input_params(i_params),
     xi0col(config_params.xi0color), xi1col(config_params.xi1color), xi2col(config_params.xi2color),
     perCol(config_params.persistenceColor), perHiCol(config_params.persistenceHighlightColor),
     lineCol(config_params.sliceLineColor), lineHiCol(config_params.sliceLineHighlightColor),
-    bettiRadius(config_params.bettiDotRadius), perRadius(config_params.persistenceDotRadius)
+    bettiRadius(config_params.bettiDotRadius), perRadius(config_params.persistenceDotRadius),
+    xlabel(input_params.x_label), ylabel(input_params.y_label)
 {
     ui->setupUi(this);
 
@@ -65,6 +66,10 @@ ConfigureDialog::ConfigureDialog(ConfigParameters& params, QWidget *parent) :
     ui->bettiDotSpinBox->setValue(bettiRadius);
     ui->persistenceDotSpinBox->setValue(perRadius);
 
+  //set labels to current labels
+    ui->xaxisText->setText(input_params.x_label);
+    ui->yaxisText->setText(input_params.y_label);
+
 }//end constructor
 
 ConfigureDialog::~ConfigureDialog()
@@ -89,6 +94,10 @@ void ConfigureDialog::on_okButton_clicked()
     config_params.sliceLineHighlightColor = lineHiCol;
     config_params.bettiDotRadius = bettiRadius;
     config_params.persistenceDotRadius = perRadius;
+
+    //update axis labels in input_params
+    input_params.x_label = xlabel;
+    input_params.y_label = ylabel;
 
     //close the dialog box
     close();
@@ -294,4 +303,14 @@ void ConfigureDialog::on_defaultSizesButton_clicked()
 
     perRadius = defaults.persistenceDotRadius;
     ui->persistenceDotSpinBox->setValue(perRadius);
+}
+
+void ConfigureDialog::on_xaxisText_editingFinished()
+{
+    xlabel = ui->xaxisText->text();
+}
+
+void ConfigureDialog::on_yaxisText_editingFinished()
+{
+    ylabel = ui->yaxisText->text();
 }

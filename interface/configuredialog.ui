@@ -48,7 +48,7 @@
        <x>20</x>
        <y>30</y>
        <width>401</width>
-       <height>231</height>
+       <height>250</height>
       </rect>
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
@@ -427,7 +427,7 @@
      </property>
     </widget>
    </widget>
-   <widget class="QWidget" name="tab">
+   <widget class="QWidget" name="sizesTab">
     <attribute name="title">
      <string>Sizes</string>
     </attribute>
@@ -510,10 +510,75 @@
      </property>
     </widget>
    </widget>
-   <widget class="QWidget" name="tab_2">
+   <widget class="QWidget" name="labelsTab">
     <attribute name="title">
-     <string>Other</string>
+     <string>Labels</string>
     </attribute>
+    <widget class="QLabel" name="axisLabelLabel">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>10</y>
+       <width>261</width>
+       <height>17</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Line Selection Window Axis Labels</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="xaxisLabel">
+     <property name="geometry">
+      <rect>
+       <x>30</x>
+       <y>40</y>
+       <width>67</width>
+       <height>17</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>x-axis:</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="yaxisLabel">
+     <property name="geometry">
+      <rect>
+       <x>30</x>
+       <y>70</y>
+       <width>67</width>
+       <height>17</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>y-axis:</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="xaxisText">
+     <property name="geometry">
+      <rect>
+       <x>80</x>
+       <y>35</y>
+       <width>251</width>
+       <height>27</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="yaxisText">
+     <property name="geometry">
+      <rect>
+       <x>80</x>
+       <y>65</y>
+       <width>251</width>
+       <height>27</height>
+      </rect>
+     </property>
+    </widget>
    </widget>
   </widget>
   <widget class="QPushButton" name="okButton">
@@ -552,6 +617,8 @@
   <tabstop>xi0spinBox</tabstop>
   <tabstop>xi1colorButton</tabstop>
   <tabstop>xi1spinBox</tabstop>
+  <tabstop>xi2colorButton</tabstop>
+  <tabstop>xi2spinBox</tabstop>
   <tabstop>persistenceColorButton</tabstop>
   <tabstop>persistenceSpinBox</tabstop>
   <tabstop>persistenceHighlightColorButton</tabstop>
@@ -560,6 +627,12 @@
   <tabstop>lineSpinBox</tabstop>
   <tabstop>lineHighlightColorButton</tabstop>
   <tabstop>lineHighlightSpinBox</tabstop>
+  <tabstop>defaultColorsButton</tabstop>
+  <tabstop>bettiDotSpinBox</tabstop>
+  <tabstop>persistenceDotSpinBox</tabstop>
+  <tabstop>defaultSizesButton</tabstop>
+  <tabstop>xaxisText</tabstop>
+  <tabstop>yaxisText</tabstop>
   <tabstop>cancelButton</tabstop>
   <tabstop>okButton</tabstop>
  </tabstops>

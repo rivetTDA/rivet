@@ -25,10 +25,6 @@ DataSelectDialog::DataSelectDialog(InputParameters& params, QWidget *parent) :
     ui->homDimSpinBox->setValue(params.dim);
     ui->xbinSpinBox->setValue(params.x_bins);
     ui->ybinSpinBox->setValue(params.y_bins);
-    if(!params.x_label.isEmpty())
-        ui->xlabelBox->setText(params.x_label);
-    if(!params.y_label.isEmpty())
-        ui->ylabelBox->setText(params.y_label);
 }
 
 DataSelectDialog::~DataSelectDialog()
@@ -46,8 +42,6 @@ void DataSelectDialog::on_computeButton_clicked()
     params.dim = ui->homDimSpinBox->value();
     params.x_bins = ui->xbinSpinBox->value();
     params.y_bins = ui->ybinSpinBox->value();
-    params.x_label = ui->xlabelBox->text();
-    params.y_label = ui->ylabelBox->text();
 
     emit dataSelected();
 

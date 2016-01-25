@@ -323,7 +323,7 @@ void SliceDiagram::redraw_dots()
 }//end redraw_dots()
 
 //updates the diagram after a change in configuration parameters
-void SliceDiagram::receive_parameter_change()
+void SliceDiagram::receive_parameter_change(QString& xtext, QString& ytext)
 {
     //update colors of the xi dots (necessary because I didn't override their paint() function)
     QBrush xi0brush(config_params->xi0color);
@@ -336,15 +336,17 @@ void SliceDiagram::receive_parameter_change()
     for(std::vector<QGraphicsEllipseItem*>::iterator it = xi2_dots.begin(); it != xi2_dots.end(); ++it)
         (*it)->setBrush(xi2brush);
 
-    ///TODO: update homology dimension rectangles -- activate this after adding color selection to the options box
-    /// redraw_dim_rects();
-
-    //update sizes of the xi dots
-    redraw_dots();
-
     //update the slice line highlight
     QPen highlighter(QBrush(config_params->persistenceHighlightColor), 6);
     highlight_line->setPen(highlighter);
+
+    //update axis labels
+    x_label->setText(xtext);
+    y_label->setText(ytext);
+
+    //update distram
+    resize_diagram();
+
 }//end update_diagram()
 
 //updates the line, in response to a change in the controls in the VisualizationWindow
