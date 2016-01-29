@@ -62,14 +62,14 @@ void ProgressDialog::updateProgress(unsigned current)
 
 void ProgressDialog::setComputationFinished()
 {
-    qDebug() << "ProgressDialog::setComputationFinished()";
+//    qDebug() << "ProgressDialog::setComputationFinished()";
     computation_finished = true;
     close();
 }
 
 void ProgressDialog::closeEvent(QCloseEvent *event)
 {
-    qDebug() << "ProgressDialog::closeEvent()";
+//    qDebug() << "ProgressDialog::closeEvent()";
     if(!computation_finished)
         event->ignore();
     else
@@ -101,5 +101,6 @@ void ProgressDialog::on_stopButton_clicked()
         computation_finished = true;
         close();
         qDebug() << "COMPUTATION INTERRUPTED BY USER";
+        qobject_cast<QWidget *>(this->parent())->close();
     }
 }

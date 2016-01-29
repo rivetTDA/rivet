@@ -28,6 +28,7 @@ VisualizationWindow::VisualizationWindow(InputParameters& params) :
     x_grades(), x_exact(), y_grades(), y_exact(), xi_support(), homology_dimensions(),
     angle_precise(0), offset_precise(0),
     cthread(verbosity, input_params, x_grades, x_exact, y_grades, y_exact, xi_support, homology_dimensions),
+    prog_dialog(this),
     line_selection_ready(false), slice_diagram(&config_params, x_grades, y_grades, this), slice_update_lock(false),
     p_diagram(&config_params, this), persistence_diagram_drawn(false)
 {
