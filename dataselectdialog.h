@@ -43,6 +43,8 @@ private:
 
     void detect_file_type();
     void raw_data_file_selected(const QFile& file);
+
+    bool data_selected;     //false until user clicks "compute" button
 };
 
 #endif // DATASELECTDIALOG_H

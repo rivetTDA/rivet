@@ -79,7 +79,8 @@ private:
     const double PI;
 
     bool data_selected;               //false until user selects data, then true
-    InputParameters& input_params;     //parameters set by the user via the DataSelectDialog
+    bool unsaved_data;                //false until augmented arrangement is computed, then true until user saves the augmented arrangement
+    InputParameters& input_params;    //parameters set by the user via the DataSelectDialog
     ConfigParameters config_params;   //parameters that control the visualization
     DataSelectDialog ds_dialog;       //dialog box that gets the input parameters
 

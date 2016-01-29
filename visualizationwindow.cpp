@@ -22,9 +22,9 @@ VisualizationWindow::VisualizationWindow(InputParameters& params) :
     QMainWindow(),
     ui(new Ui::VisualizationWindow),
     verbosity(params.verbosity), INFTY(std::numeric_limits<double>::infinity()), PI(3.14159265358979323846),
-    data_selected(false),
+    data_selected(false), unsaved_data(false),
     input_params(params), config_params(),
-    ds_dialog(input_params),
+    ds_dialog(input_params, this),
     x_grades(), x_exact(), y_grades(), y_exact(), xi_support(), homology_dimensions(),
     angle_precise(0), offset_precise(0),
     cthread(verbosity, input_params, x_grades, x_exact, y_grades, y_exact, xi_support, homology_dimensions),
@@ -158,6 +158,8 @@ void VisualizationWindow::augmented_arrangement_ready(Mesh* arrangement)
     //if an output file has been specified, then save the arrangement
     if(!input_params.outputFile.isEmpty())
         save_arrangement(input_params.outputFile);
+    else if(input_params.raw_data)
+        unsaved_data = true;
 
 }//end augmented_arrangement_ready()
 
@@ -257,7 +259,7 @@ Barcode* VisualizationWindow::rescale_barcode_template(BarcodeTemplate& dbc, dou
         {
             if(it->end >= xi_support.size())    //then endpoint is at infinity
             {
-//                qDebug() << "   ===>>> (" << it->begin << ",inf) |---> (" << birth << ",inf)";
+//                qDebug() << "   ===>   (" << it->begin << ", inf) |---> (" << birth << ", inf)";
                 bc->add_bar(birth, INFTY, it->multiplicity);
             }
             else    //then bar is finite
@@ -355,11 +357,10 @@ void VisualizationWindow::set_line_parameters(double angle, double offset)
 
 void VisualizationWindow::showEvent(QShowEvent* event)
 {
-    qDebug() << "in VisualizationWindow::showEvent()";
     QMainWindow::showEvent(event);
     if(!data_selected)
     {
-        ds_dialog.exec();               //show the DataSelectDialog box and blocks until the dialog is closed
+        ds_dialog.show();
     }
 }
 
@@ -377,16 +378,23 @@ void VisualizationWindow::resizeEvent(QResizeEvent* /*unused*/)
 
 void VisualizationWindow::closeEvent(QCloseEvent* event)
 {
-    QMessageBox::StandardButton reallyExit;
-    reallyExit = QMessageBox::question(this, "Exit?", "Are you sure you want to exit? All unsaved data will be lost!", QMessageBox::Yes|QMessageBox::No);
-
-    if(reallyExit == QMessageBox::Yes)
+    if(unsaved_data)
     {
-        event->accept();
-        qDebug() << "User has closed RIVET.";
+        QMessageBox::StandardButton reallyExit;
+        reallyExit = QMessageBox::question(this, "Exit?", "Are you sure you want to exit? Your augmented arrangement has not been saved and will be lost!", QMessageBox::Yes|QMessageBox::No);
+
+        if(reallyExit == QMessageBox::Yes)
+        {
+            event->accept();
+    //        qDebug() << "User has closed RIVET.";
+        }
+        else
+            event->ignore();
     }
     else
-        event->ignore();
+    {
+        event->accept();
+    }
 }
 
 
@@ -457,6 +465,8 @@ void VisualizationWindow::save_arrangement(QString& filename)
 
         FileWriter fw(input_params, arrangement, x_exact, y_exact, xi_support);
         fw.write_augmented_arrangement(file);
+
+        unsaved_data = false;
     }
     else
     {

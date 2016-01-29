@@ -466,6 +466,8 @@ void InputManager::read_bifiltration(FileInputReader& reader)
         num_simplices++;
 	}
 
+    cthread->advanceProgressStage();    //advance progress box to stage 2: building bifiltration
+
     //build vectors of discrete grades, using bins
     unsigned max_unsigned = std::numeric_limits<unsigned>::max();
     std::vector<unsigned> x_indexes(num_simplices, max_unsigned);   //x_indexes[i] gives the discrete x-index for simplex i in the input order
@@ -569,6 +571,10 @@ void InputManager::read_RIVET_data(FileInputReader& reader)
             }
         }
     }
+
+    ///TODO: maybe make a different progress box for RIVET input???
+    cthread->advanceProgressStage();    //advance progress box to stage 2: building bifiltration
+
 }//end read_RIVET_data()
 
 //converts an ExactSet of values to the vectors of discrete values that SimplexTree uses to build the bifiltration, and also builds the grade vectors (floating-point and exact)

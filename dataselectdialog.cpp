@@ -12,7 +12,8 @@
 DataSelectDialog::DataSelectDialog(InputParameters& params, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::DataSelectDialog),
-    params(params)
+    params(params),
+    data_selected(false)
 {
     ui->setupUi(this);
 
@@ -35,6 +36,9 @@ DataSelectDialog::~DataSelectDialog()
 void DataSelectDialog::closeEvent(QCloseEvent* event)
 {
     event->accept();
+
+    if(!data_selected)
+        qobject_cast<QWidget *>(this->parent())->close();
 }
 
 void DataSelectDialog::on_computeButton_clicked()
@@ -42,6 +46,8 @@ void DataSelectDialog::on_computeButton_clicked()
     params.dim = ui->homDimSpinBox->value();
     params.x_bins = ui->xbinSpinBox->value();
     params.y_bins = ui->ybinSpinBox->value();
+
+    data_selected = true;
 
     emit dataSelected();
 
