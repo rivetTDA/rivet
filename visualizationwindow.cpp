@@ -1,6 +1,7 @@
 #include "visualizationwindow.h"
 #include "ui_visualizationwindow.h"
 
+#include "exception.h"
 #include "dcel/barcode_template.h"
 #include "dcel/mesh.h"
 #include "interface/barcode.h"
@@ -84,7 +85,14 @@ void VisualizationWindow::start_computation()
     prog_dialog.raise();
 
     //start the computation in a new thread
-    cthread.compute();
+    try
+    {
+        cthread.compute();
+    }
+    catch(Exception& except)
+    {
+        qDebug() << "Exception caught in VisualizationWindow::start_computation: " << except.get_error_string();
+    }
 
 }//end start_computation()
 

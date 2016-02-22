@@ -7,6 +7,7 @@
 #include "file_input_reader.h"
 #include "input_parameters.h"
 #include "../math/simplex_tree.h"
+#include "exception.h"
 
 #include <QDebug>
 #include <QString>
@@ -23,23 +24,24 @@
 //epsilon value for use in comparisons
 double ExactValue::epsilon = pow(2,-30);
 
-// function for determining whether or not a string is a number
-bool is_number(const std::string& s)
-{
-    std::string::const_iterator it = s.begin();
-    while (it != s.end() && (std::isdigit(*it) || *it =='.')) ++it;
-    return !s.empty() && it == s.end();
-}
 
 //helper function to convert a string to an exact (rational)
 //accepts string such as "12.34", "765", and "-10.8421"
 exact str_to_exact(std::string str)
 {
-    if(!is_number(str)){
-    	QString qstr = QString::fromUtf8(str.c_str());
-  	 	qDebug()<<"Error: "<<qstr<<" is not a number"<<endl;
-    	return 0;
+    QString qstr = QString::fromUtf8(str.c_str());
+
+    //make sure str represents a number
+    bool isDouble;
+    qstr.toDouble(&isDouble);
+    if(!isDouble)
+    {
+        QString err_str("Error: In input file, " + qstr + " is not a number.");
+        qDebug() << err_str << endl;
+        throw Exception(err_str);
     }
+
+    //now convert str to an exact value
     exact r;
 
     //find decimal point, if it exists
@@ -179,10 +181,9 @@ void InputManager::read_point_cloud(FileInputReader& reader)
     exact max_dist = str_to_exact(distance_line.first().toStdString());  ///TODO: don't convert to std::string
     if (max_dist == 0)
     {
-    	qDebug() << "An invalid input was received for the max distance." << endl;
-    	// throw an exception
+        qDebug() << "An invalid input was received for the max distance." << endl;
+        // throw an exception
     }
-
 
     if(verbosity >= 4)
     {
