@@ -116,28 +116,13 @@ class InputManager
 };
 
 //helper function for converting a string to an exact value
-exact str_to_exact(std::string str);
+exact str_to_exact(QString str);
 
-//a struct to store exact coordinates of a point, along with a "birth time"
+//a struct to store coordinates of a point, along with a "birth time"
 struct DataPoint {
 
     std::vector<double> coords;
     exact birth;
-
-    DataPoint(std::vector<std::string>& strs)   //first (size - 1) elements of vector are coordinates, last element is birth time
-    {
-        coords.reserve(strs.size() - 1);
-
-        for(unsigned i=0; i < strs.size() - 1; i++)
-        {
-            int value;
-            std::stringstream convert(strs[i]);
-            convert >> value;
-            coords.push_back(value);
-        }
-
-        birth = str_to_exact(strs.back());
-    }
 
     DataPoint(QStringList& list)   //first (size - 1) strings are coordinates, last string is "birth time"
     {
@@ -146,10 +131,8 @@ struct DataPoint {
         for(int i = 0; i < list.size() - 1; i++)
             coords.push_back(list.at(i).toDouble());
 
-        birth = str_to_exact(list.back().toStdString());
+        birth = str_to_exact(list.back());
     }
-
-
 };
 
 

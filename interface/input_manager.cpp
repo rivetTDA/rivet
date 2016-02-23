@@ -27,16 +27,14 @@ double ExactValue::epsilon = pow(2,-30);
 
 //helper function to convert a string to an exact (rational)
 //accepts string such as "12.34", "765", and "-10.8421"
-exact str_to_exact(std::string str)
+exact str_to_exact(QString str)
 {
-    QString qstr = QString::fromUtf8(str.c_str());
-
     //make sure str represents a number
     bool isDouble;
-    qstr.toDouble(&isDouble);
+    str.toDouble(&isDouble);
     if(!isDouble)
     {
-        QString err_str("Error: In input file, " + qstr + " is not a number.");
+        QString err_str("Error: In input file, " + str + " is not a number.");
         qDebug() << err_str << endl;
         throw Exception(err_str);
     }
@@ -45,29 +43,30 @@ exact str_to_exact(std::string str)
     exact r;
 
     //find decimal point, if it exists
-    std::string::size_type dec = str.find(".");
+    QStringList parts = str.split(".");
+//    int dec = str.indexOf(".");
 
-    if(dec == std::string::npos)	//then decimal point not found
+    if(parts.size() == 1)	//then decimal point not found
     {
-        r = exact(str);
+        r = exact(str.toStdString());
     }
-    else	//then decimal point found
+    else if(parts.size() == 2)	//then decimal point found
     {
         //get whole part and fractional part
-        std::string whole = str.substr(0,dec);
-        std::string frac = str.substr(dec+1);
+        QString& whole = parts.first();
+        QString& frac = parts.last();
         unsigned exp = frac.length();
 
         //test for negative, and remove minus sign character
         bool neg = false;
-        if(whole.length() > 0 && whole[0] == '-')
+        if(whole.length() > 0 && whole.at(0) == '-')
         {
             neg = true;
-            whole.erase(0, 1);
+            whole.remove(0, 1);
         }
 
         //remove leading zeros (otherwise, c++ thinks we are using octal numbers)
-        std::string num_str = whole + frac;
+        std::string num_str = whole.toStdString() + frac.toStdString();
         boost::algorithm::trim_left_if(num_str, boost::is_any_of("0"));
 
         //now it is safe to convert to rational
@@ -80,6 +79,12 @@ exact str_to_exact(std::string str)
         r = exact(num, denom);
         if(neg)
             r = -1*r;
+    }
+    else    //error
+    {
+        QString err_str("Error: In input file, too many decimal points in " + str + ".");
+        qDebug() << err_str << endl;
+        throw Exception(err_str);
     }
     return r;
 }
@@ -178,7 +183,7 @@ void InputManager::read_point_cloud(FileInputReader& reader)
     	qDebug() << "There was more than one value in the expected distance line.  There may be a problem with your input file.  " << endl;
     }
 
-    exact max_dist = str_to_exact(distance_line.first().toStdString());  ///TODO: don't convert to std::string
+    exact max_dist = str_to_exact(distance_line.first());
     if (max_dist == 0)
     {
         qDebug() << "An invalid input was received for the max distance." << endl;
@@ -321,7 +326,7 @@ void InputManager::read_discrete_metric_space(FileInputReader& reader)
 
     for(int i = 0; i < line.size(); i++)
     {
-        values.push_back(str_to_exact(line.at(i).toStdString()));
+        values.push_back(str_to_exact(line.at(i)));
     }
 
 
@@ -331,7 +336,7 @@ void InputManager::read_discrete_metric_space(FileInputReader& reader)
     input_params.y_label = reader.next_line_str();
 
     //read the maximum length of edges to construct
-    exact max_dist = str_to_exact(reader.next_line().first().toStdString());  ///TODO: don't convert to std::string
+    exact max_dist = str_to_exact(reader.next_line().first());
     if(verbosity >= 4)
     {
         std::ostringstream oss;
@@ -370,7 +375,7 @@ void InputManager::read_discrete_metric_space(FileInputReader& reader)
                 QString str = reader.next_token();
                 qDebug() << str;
 
-                exact cur_dist = str_to_exact(str.toStdString());
+                exact cur_dist = str_to_exact(str);
 
                 if( cur_dist <= max_dist )  //then this distance is allowed
                 {
@@ -456,9 +461,9 @@ void InputManager::read_bifiltration(FileInputReader& reader)
         }
 
         //read multigrade and remember that it corresponds to this simplex
-        ret = x_set.insert(new ExactValue( str_to_exact(tokens.at(dim + 1).toStdString()) ));  ///TODO: don't convert to std::string
+        ret = x_set.insert(new ExactValue( str_to_exact(tokens.at(dim + 1)) ));
         (*(ret.first))->indexes.push_back(num_simplices);
-        ret = y_set.insert(new ExactValue( str_to_exact(tokens.at(dim + 2).toStdString()) ));  ///TODO: don't convert to std::string
+        ret = y_set.insert(new ExactValue( str_to_exact(tokens.at(dim + 2)) ));
         (*(ret.first))->indexes.push_back(num_simplices);
 
         //add the simplex to the simplex tree
