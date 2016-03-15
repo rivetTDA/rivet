@@ -4,6 +4,13 @@
 #
 #-------------------------------------------------
 
+macx {
+  QMAKE_CXXFLAGS+="-g -gdwarf-2"
+  QMAKE_POST_LINK='/usr/bin/dsymutil RIVET.app/Contents/MacOS/RIVET -o RIVET.app/Contents/MacOS/RIVET.dsym'
+}
+
+CONFIG += c++11
+
 QT       += core gui \
 		widgets
 
