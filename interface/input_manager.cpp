@@ -611,7 +611,7 @@ void InputManager::build_grade_vectors(ExactSet& value_set, std::vector<unsigned
         ExactSet::iterator it = value_set.begin();
         for(unsigned c = 0; c < num_bins; c++)    //loop through all bins
         {
-            ExactValue cur_bin( min + (c+1)*bin_size );    //store the bin value (i.e. the right endpoint of the bin interval)
+          ExactValue cur_bin(static_cast<exact>(min + (c+1)*bin_size ));    //store the bin value (i.e. the right endpoint of the bin interval)
             grades_fp.push_back(cur_bin.double_value);
             grades_exact.push_back(cur_bin.exact_value);
 
