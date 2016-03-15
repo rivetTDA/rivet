@@ -130,7 +130,7 @@ STNode* STNode::add_child(int v, int x, int y)
 
 
 //returns a vector of pointers to children nodes
-std::vector<STNode*> STNode::get_children()
+std::vector<STNode*> &STNode::get_children()
 {
 	return children;
 }

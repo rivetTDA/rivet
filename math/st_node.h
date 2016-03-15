@@ -38,7 +38,7 @@ class STNode {
 		
 		void append_child(STNode*);		//appends a new child to this node; should only be called if vertex index of child is greater than vertex indexes of all other children
         STNode* add_child(int v, int x, int y);			//creates a new child node with given parameters and returns a pointer to the new node; if child with given vertex index already exists, then returns pointer to this node; NOTE: global indexes must be re-computed after calling this function
-		std::vector<STNode*> get_children();		//returns a vector of pointers to children nodes
+		std::vector<STNode*> &get_children();		//returns a vector of pointers to children nodes
 
         //TESTING
         void print();

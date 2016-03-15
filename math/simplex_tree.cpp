@@ -662,41 +662,53 @@ void SimplexTree::find_vertices_recursively(std::vector<int> &vertices, STNode* 
 //given a sorted vector of vertex indexes, return a pointer to the node representing the corresponding simplex
 STNode* SimplexTree::find_simplex(std::vector<int>& vertices)
 {
-    //start at the root node
-    STNode* node = root;
+  size_t size = vertices.size();
+  if (size == 0)
+    return root;
 
-    //search the vector of children nodes for each vertex
-    for(unsigned i=0; i<vertices.size(); i++)
-    {
-        std::vector<STNode*> kids = node->get_children();
-        //binary search for vertices[i]
-        int key = vertices[i];
-        int min = 0;
-        int max = kids.size() - 1;
-        int mid;
-        STNode * test = nullptr;
-        while(max >= min)
-        {
-            mid = (min+max)/2;
-            test = kids[mid];
-            int vertex = test -> get_vertex();
+  //First node can be indexed directly from the root:
+  STNode* node = root->get_children()[vertices[0]];
 
-            if( vertex == key ) {
-              node = test;
-              break;	//found it at kids[mid]
-            }
-            else if ( vertex < key )
-                min = mid + 1;
-            else
-                max = mid - 1;
-        }
-
-        if(max < min)	//didn't find it
-            return nullptr;
-    }
+  //search the vector of children nodes for each vertex
+  //starting from index 1
+  for(unsigned i=1; i<size && nullptr != node; i++)
+  {
+      std::vector<STNode*> &kids = node->get_children();
+      int key = vertices[i];
+      node = SimplexTree::find_in_vector(key, kids);
+  }
 
     //return global index
     return node;
+}
+
+//search for STNode with vertex == key
+STNode * SimplexTree::find_in_vector(int key, std::vector<STNode*> kids) {
+  //These are quite small, not worth binary searching through.
+  for(STNode *node : kids) {
+    if (node->get_vertex() == key)
+      return node;
+  }
+  return nullptr;
+  // int min = 0;
+  // int max = kids.size() - 1;
+  // int mid;
+  // STNode * test = nullptr;
+  // while(max >= min)
+  // {
+  //   mid = (min+max)/2;
+  //   test = kids[mid];
+  //   int vertex = test -> get_vertex();
+
+  //   if( vertex == key ) {
+  //     return test; //found it at kids[mid]
+  //   }
+  //   else if ( vertex < key )
+  //     min = mid + 1;
+  //   else
+  //     max = mid - 1;
+  // }
+  // return nullptr;
 }
 
 //returns the (time, dist) multi-index of the simplex with given global simplex index
