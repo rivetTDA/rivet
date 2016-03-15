@@ -664,34 +664,35 @@ STNode* SimplexTree::find_simplex(std::vector<int>& vertices)
 {
     //start at the root node
     STNode* node = root;
-    std::vector<STNode*> kids = node->get_children();
 
     //search the vector of children nodes for each vertex
     for(unsigned i=0; i<vertices.size(); i++)
     {
+        std::vector<STNode*> kids = node->get_children();
         //binary search for vertices[i]
         int key = vertices[i];
         int min = 0;
         int max = kids.size() - 1;
         int mid;
+        STNode * test = nullptr;
         while(max >= min)
         {
             mid = (min+max)/2;
-            if( (*kids[mid]).get_vertex() == key)
-                break;	//found it at kids[mid]
-            else if( (*kids[mid]).get_vertex() < key)
+            test = kids[mid];
+            int vertex = test -> get_vertex();
+
+            if( vertex == key ) {
+              node = test;
+              break;	//found it at kids[mid]
+            }
+            else if ( vertex < key )
                 min = mid + 1;
             else
                 max = mid - 1;
         }
 
         if(max < min)	//didn't find it
-            return NULL;
-        else			//found it, so update node and kids
-        {
-            node = kids[mid];
-            kids = node->get_children();
-        }
+            return nullptr;
     }
 
     //return global index
