@@ -120,8 +120,6 @@ class SimplexTree {
         SimplexSet ordered_simplices;        //pointers to simplices of dimension hom_dim in reverse-lexicographical multi-grade order
         SimplexSet ordered_low_simplices;    //pointers to simplices of dimension (hom_dim - 1) in reverse-lexicographical multi-grade order
 
-        static STNode* find_in_vector(int key, std::vector<STNode*> kids); 
-
         void build_VR_subtree(std::vector<unsigned>& times, std::vector<unsigned>& distances, STNode &parent, std::vector<unsigned> &parent_indexes, unsigned prev_time, unsigned prev_dist, unsigned cur_dim, unsigned& gic);	//recursive function used in build_VR_complex()
 
         void add_faces(STNode* node, std::vector<int>& vertices, int x, int y);	//recursively adds faces of a simplex to the SimplexTree; WARNING: doesn't update global data structures (e.g. global indexes)

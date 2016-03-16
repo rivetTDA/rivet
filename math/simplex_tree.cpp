@@ -13,7 +13,8 @@
 #include <limits>   //std::numeric_limits
 #include <stdexcept>
 #include <iostream>  //for std::cout, for testing only
-
+#include <algorithm>
+#include <omp>
 
 //SimplexTree constructor; requires dimension of homology to be computed and verbosity parameter
 SimplexTree::SimplexTree(int dim, int v) :
@@ -455,7 +456,8 @@ void SimplexTree::write_boundary_column(MapMatrix* mat, STNode* sim, int col, in
         return;
 
     //find all facets of this simplex
-    for(unsigned k=0; k<verts.size(); k++)       ///TODO: optimize! make this faster!
+    #pragma OMP parallel for
+    for(unsigned k=0; k<verts.size(); k++)
     {
        //facet vertices are all vertices in verts[] except verts[k]
         std::vector<int> facet;
@@ -634,7 +636,7 @@ std::vector<int> SimplexTree::find_vertices(int gi)
 void SimplexTree::find_vertices_recursively(std::vector<int> &vertices, STNode* node, int key)
 {
 	//search children of current node for greatest index less than or equal to key
-    std::vector<STNode*> kids = node->get_children();
+    std::vector<STNode*> &kids = node->get_children();
 	
 	int min = 0;
 	int max = kids.size() -1;
@@ -659,12 +661,12 @@ void SimplexTree::find_vertices_recursively(std::vector<int> &vertices, STNode* 
     find_vertices_recursively(vertices, kids[max], key);
 }
 
-//given a sorted vector of vertex indexes, return a pointer to the node representing the corresponding simplex
+//given a sorted vector of vertex indexes (labels), return a pointer to the node representing the corresponding simplex
 STNode* SimplexTree::find_simplex(std::vector<int>& vertices)
 {
   size_t size = vertices.size();
   if (size == 0)
-    return root;
+    return root; //root is associated with the null simpex
 
   //First node can be indexed directly from the root:
   STNode* node = root->get_children()[vertices[0]];
@@ -675,40 +677,13 @@ STNode* SimplexTree::find_simplex(std::vector<int>& vertices)
   {
       std::vector<STNode*> &kids = node->get_children();
       int key = vertices[i];
-      node = SimplexTree::find_in_vector(key, kids);
+      node = *(std::find_if(kids.begin(),
+                            kids.end(),
+                            [key](STNode* kid) { return kid->get_vertex() == key; }));
   }
 
-    //return global index
-    return node;
-}
-
-//search for STNode with vertex == key
-STNode * SimplexTree::find_in_vector(int key, std::vector<STNode*> kids) {
-  //These are quite small, not worth binary searching through.
-  for(STNode *node : kids) {
-    if (node->get_vertex() == key)
-      return node;
-  }
-  return nullptr;
-  // int min = 0;
-  // int max = kids.size() - 1;
-  // int mid;
-  // STNode * test = nullptr;
-  // while(max >= min)
-  // {
-  //   mid = (min+max)/2;
-  //   test = kids[mid];
-  //   int vertex = test -> get_vertex();
-
-  //   if( vertex == key ) {
-  //     return test; //found it at kids[mid]
-  //   }
-  //   else if ( vertex < key )
-  //     min = mid + 1;
-  //   else
-  //     max = mid - 1;
-  // }
-  // return nullptr;
+  //return global index
+  return node;
 }
 
 //returns the (time, dist) multi-index of the simplex with given global simplex index
