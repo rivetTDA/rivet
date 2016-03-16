@@ -14,7 +14,6 @@
 #include <stdexcept>
 #include <iostream>  //for std::cout, for testing only
 #include <algorithm>
-#include <omp>
 
 //SimplexTree constructor; requires dimension of homology to be computed and verbosity parameter
 SimplexTree::SimplexTree(int dim, int v) :
