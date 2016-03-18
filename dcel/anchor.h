@@ -1,9 +1,3 @@
-/**
- * \class	Anchor
- * \brief	Stores a Anchor: a multi-index pair along with a pointer to the line representing the Anchor in the arrangement
- * \author	Matthew L. Wright
- * \date	March 2014
- */
 
 #ifndef __ANCHOR_H__
 #define __ANCHOR_H__
@@ -13,6 +7,12 @@ class Halfedge;
 struct xiMatrixEntry;
 
 
+/**
+ * \class	Anchor
+ * \brief	Stores an Anchor: a multi-index pair along with a pointer to the line representing the Anchor in the arrangement
+ * \author	Matthew L. Wright
+ * \date	March 2014
+ */
 class Anchor
 {
     public:

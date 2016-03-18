@@ -1,5 +1,9 @@
 /**
  * \brief	Vertex, Halfedge, and Face classes for building a DCEL arrangement
+ *
+ * A DCEL is a doubly connected edge list, see e.g. de Berg et. al.'s Computational
+ * Geometry: Algorithms and Applications for background.
+ * 
  * \author	Matthew L. Wright
  * \date	March 2014
  */
