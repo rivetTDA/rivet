@@ -4,8 +4,7 @@
 
 #include "map_matrix.h"
 
-#include <QDebug>
-
+#include "debug.h"
 #include <stdexcept>    //for error-checking and debugging
 
 
@@ -488,7 +487,7 @@ void MapMatrix::print()
     //handle empty matrix
 	if(num_rows == 0 || columns.size() == 0)
 	{
-        qDebug() << "        (empty matrix:" << num_rows << "rows by" << columns.size() << "columns)";
+        debug() << "        (empty matrix:" << num_rows << "rows by" << columns.size() << "columns)";
 		return;
 	}
 	
@@ -512,7 +511,7 @@ void MapMatrix::print()
 	}
 	
 	//print the matrix
-    QDebug qd = qDebug().nospace();
+    Debug qd = debug(true);
     for(unsigned i=0; i<num_rows; i++)
 	{
         qd << "        |";
@@ -718,7 +717,7 @@ void MapMatrix_Perm::rebuild(MapMatrix_Perm* reference, std::vector<unsigned>& c
 //    for(unsigned j=0; j < columns.size(); j++)
 //        if(check[j] == false)
 //        {
-//            qDebug() << "ERROR: column permutation skipped" << j;
+//            debug() << "ERROR: column permutation skipped" << j;
 //        }
 
     //clear the matrix
@@ -782,7 +781,7 @@ void MapMatrix_Perm::rebuild(MapMatrix_Perm* reference, std::vector<unsigned>& c
     for(unsigned j=0; j < columns.size(); j++)
         if(check[j] == false)
         {
-            qDebug() << "ERROR: column permutation skipped" << j;
+            debug() << "ERROR: column permutation skipped" << j;
         }
 
     //clear the matrix
@@ -836,7 +835,7 @@ void MapMatrix_Perm::print()
     //handle empty matrix
     if(num_rows == 0 || columns.size() == 0)
     {
-        qDebug() << "        (empty matrix:" << num_rows << "rows by" << columns.size() << "columns)";
+        debug() << "        (empty matrix:" << num_rows << "rows by" << columns.size() << "columns)";
         return;
     }
 
@@ -862,7 +861,7 @@ void MapMatrix_Perm::print()
     //print the matrix
     for(unsigned i=0; i<num_rows; i++)
     {
-        QDebug qd = qDebug().nospace();
+        Debug qd = debug(true);
         qd << "        |";
         for(unsigned j=0; j<columns.size(); j++)
         {
@@ -883,7 +882,7 @@ void MapMatrix_Perm::check_lows()
         if(low_by_row[i] != -1)
         {
             if(low_by_col[low_by_row[i]] != i)
-                qDebug() << "===>>> ERROR: INCONSISTNECY IN LOW ARRAYS";
+                debug() << "===>>> ERROR: INCONSISTNECY IN LOW ARRAYS";
         }
     }
     for(unsigned j=0; j<columns.size(); j++)
@@ -909,11 +908,11 @@ void MapMatrix_Perm::check_lows()
 
         //does this match low_by_col[j]?
         if(lowest != low_by_col[j])
-            qDebug() << "===>>> ERROR IN low_by_col[" << j << "]";
+            debug() << "===>>> ERROR IN low_by_col[" << j << "]";
         else if(lowest != -1)
         {
             if(low_by_row[lowest] != j)
-                qDebug() << "===>>> ERROR: INCONSISTNECY IN LOW ARRAYS";
+                debug() << "===>>> ERROR: INCONSISTNECY IN LOW ARRAYS";
         }
     }
 }
@@ -1020,14 +1019,14 @@ void MapMatrix_RowPriority_Perm::swap_columns(unsigned j)
     mrep[j+1] = a;
 }
 
-//prints the matrix to qDebug(), for testing
+//prints the matrix to debug(), for testing
 //this function is identical to MapMatrix::print(), with rows and columns transposed
 void MapMatrix_RowPriority_Perm::print()
 {
     //handle empty matrix
     if(num_rows == 0 || columns.size() == 0)
     {
-        qDebug() << "        (empty matrix:" << columns.size() << "rows by" << num_rows << "columns)";
+        debug() << "        (empty matrix:" << columns.size() << "rows by" << num_rows << "columns)";
         return;
     }
 
@@ -1053,7 +1052,7 @@ void MapMatrix_RowPriority_Perm::print()
     //print the matrix
     for(unsigned i=0; i<num_rows; i++)
     {
-        QDebug qd = qDebug().nospace();
+        Debug qd = debug(true);
         qd << "        |";
         for(unsigned j=0; j<columns.size(); j++)
         {
@@ -1066,10 +1065,10 @@ void MapMatrix_RowPriority_Perm::print()
     }
 }//end print()
 
-//prints the permutation vectors to qDebug() for testing
+//prints the permutation vectors to debug() for testing
 void MapMatrix_RowPriority_Perm::print_perm()
 {
-    QDebug qd = qDebug();
+    Debug qd = debug();
     qd << " ==== Perm:";
     for(unsigned i=0; i<perm.size(); i++)
         qd << perm[i];
