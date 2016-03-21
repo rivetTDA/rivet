@@ -67,8 +67,10 @@ class MapMatrix : public MapMatrix_Base
 	public:
         MapMatrix(unsigned rows, unsigned cols);  //constructor to create matrix of specified size (all entries zero)
         MapMatrix(unsigned size);                 //constructor to create a (square) identity matrix
+        MapMatrix(std::initializer_list<std::initializer_list<int>>);
         virtual ~MapMatrix();                             //destructor
 		
+        virtual bool operator==(MapMatrix &other);
         unsigned width() const;               //returns the number of columns in the matrix
         unsigned height() const;              //returns the number of rows in the matrix
 		

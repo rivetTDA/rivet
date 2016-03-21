@@ -3,8 +3,10 @@
 #include <iostream>
 
 #ifdef QT_CORE_LIB
+
 #include <QDebug>
 using Debug = QDebug;
+
 Debug debug(bool nospace = false) {
   auto qd = qDebug();
   if (nospace) {
@@ -12,10 +14,13 @@ Debug debug(bool nospace = false) {
   }
   return qd;
 }
+
 #else
+
 using Debug = std::ostream&;
 
 Debug debug(bool nospace = false, std::ostream& out = std::clog) {
   return out;
 }
+
 #endif

@@ -318,6 +318,40 @@ MapMatrix::MapMatrix(unsigned size) :
     MapMatrix_Base(size)
 { }
 
+MapMatrix::MapMatrix(std::initializer_list<std::initializer_list<int>> values):
+  MapMatrix_Base(values.size(),
+                 std::accumulate(values.begin(), values.end(), 0U,
+                                 [](unsigned max_so_far, const std::initializer_list<int> & row) {
+                                   return std::max(max_so_far, static_cast<unsigned>(row.size()));
+                                 }))
+{
+  //TODO: Make this fast once we pick a representation.
+  auto row_it = values.begin();
+  for(unsigned row = 0; row < values.size(); row++) {
+    auto row_values = *row_it;
+    ++row_it;
+    auto col_it = row_values.begin();
+    for(unsigned col = 0; col < row_values.size(); col ++) {
+      if (*col_it)
+        set(row, col);
+      ++col_it;
+    }
+  }
+}
+
+bool MapMatrix::operator==(MapMatrix &other) {
+  //TODO: make fast once we choose a representation
+
+  if (height() != other.height() || width() != other.width())
+    return false;
+  for (unsigned row = 0; row < height(); row++)
+    for(unsigned col = 0; col < width(); col++)
+      if (entry(row, col) != other.entry(row, col))
+        return false;
+
+  return true;
+}
+
 //destructor: deletes all entries in this matrix (via automatic call to destructor of MapMatrix_Base)
 MapMatrix::~MapMatrix()
 { }
