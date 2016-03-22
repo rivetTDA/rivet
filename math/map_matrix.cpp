@@ -3,10 +3,9 @@
  */
 
 #include "map_matrix.h"
-
 #include "debug.h"
 #include <stdexcept>    //for error-checking and debugging
-
+#include <algorithm>    //for std::accumulate
 
 /********** implementation of base class MapMatrix_Base **********/
 
@@ -352,6 +351,7 @@ bool MapMatrix::operator==(MapMatrix &other) {
   return true;
 }
 
+
 //destructor: deletes all entries in this matrix (via automatic call to destructor of MapMatrix_Base)
 MapMatrix::~MapMatrix()
 { }
@@ -515,52 +515,47 @@ void MapMatrix::col_reduce()
     }
 }//end col_reduce()
 
-//function to print the matrix to standard output, for testing purposes
-void MapMatrix::print()
-{
-    //handle empty matrix
-	if(num_rows == 0 || columns.size() == 0)
-	{
-        debug() << "        (empty matrix:" << num_rows << "rows by" << columns.size() << "columns)";
-		return;
-	}
-	
+std::ostream& operator<<(std::ostream & out, const MapMatrix &matrix) {
+  //handle empty matrix
+	if(matrix.num_rows == 0 || matrix.columns.size() == 0)
+    {
+      out << "        (empty matrix:" << matrix.num_rows << "rows by" << matrix.columns.size() << "columns)";
+      return out;
+    }
+
 	//create a 2D array of booleans to temporarily store the matrix
-	bool mx[num_rows][columns.size()];
-    for(unsigned i=0; i<num_rows; i++)
-        for(unsigned j=0; j<columns.size(); j++)
+	bool mx[matrix.num_rows][matrix.columns.size()];
+  for(unsigned i=0; i<matrix.num_rows; i++)
+    for(unsigned j=0; j<matrix.columns.size(); j++)
 			mx[i][j] = false;
-	
+
 	//traverse the linked lists in order to fill the 2D array
-	MapMatrixNode* current;
-    for(unsigned j=0; j<columns.size(); j++)
-	{
-		current = columns[j];
-		while(current != NULL)
-		{
-            int row = current->get_row();
-			mx[row][j] = 1;
-            current = current->get_next();
-		}
-	}
-	
-	//print the matrix
-    Debug qd = debug(true);
-    for(unsigned i=0; i<num_rows; i++)
-	{
-        qd << "        |";
-        for(unsigned j=0; j<columns.size(); j++)
-		{
-			if(mx[i][j])
-                qd << " 1";
-			else
-                qd << " 0";
-		}
-        qd << " |\n";
-	}
-}//end print()
+  MapMatrix::MapMatrixNode* current;
+  for(unsigned j=0; j<matrix.columns.size(); j++)
+    {
+      current = matrix.columns[j];
+      while(current != NULL)
+        {
+          int row = current->get_row();
+          mx[row][j] = 1;
+          current = current->get_next();
+        }
+    }
 
-
+  for(unsigned i=0; i<matrix.num_rows; i++)
+    {
+      out << "        |";
+      for(unsigned j=0; j<matrix.columns.size(); j++)
+        {
+          if(mx[i][j])
+            out << " 1";
+          else
+            out << " 0";
+        }
+      out << " |\n";
+    }
+  return out;
+}
 
 /********** implementation of class MapMatrix_Perm, supports row swaps (and stores a low array) **********/
 

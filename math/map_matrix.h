@@ -23,7 +23,7 @@
 #define __MapMatrix_H__
 
 #include <vector>
-
+#include <iostream>
 
 //base class simply implements features common to all MapMatrices, whether column-priority or row-priority
 //written here using column-priority terminology, but this class is meant to be inherited, not instantiated directly
@@ -70,6 +70,7 @@ class MapMatrix : public MapMatrix_Base
         MapMatrix(std::initializer_list<std::initializer_list<int>>);
         virtual ~MapMatrix();                             //destructor
 		
+        friend std::ostream& operator<<(std::ostream&, const MapMatrix&);
         virtual bool operator==(MapMatrix &other);
         unsigned width() const;               //returns the number of columns in the matrix
         unsigned height() const;              //returns the number of rows in the matrix
@@ -85,7 +86,6 @@ class MapMatrix : public MapMatrix_Base
 
         void col_reduce();          //applies the column reduction algorithm to this matrix
 		
-        virtual void print();       //prints the matrix to standard output (for testing)
 };
 
 
