@@ -70,6 +70,7 @@ VisualizationWindow::VisualizationWindow(InputParameters& params) :
 
 VisualizationWindow::~VisualizationWindow()
 {
+    delete barcode;
     delete ui;
 }
 
@@ -131,22 +132,20 @@ void VisualizationWindow::augmented_arrangement_ready(Mesh* arrangement)
 
     //inialize persistence diagram
     p_diagram.create_diagram(input_params.shortName, input_params.dim);
-    p_diagram.resize_diagram(slice_diagram.get_slice_length(), slice_diagram.get_pd_scale());
 
     //get the barcode
     BarcodeTemplate& dbc = arrangement->get_barcode_template(angle_precise, offset_precise);
-    Barcode* barcode = rescale_barcode_template(dbc, angle_precise, offset_precise);      ///TODO: CHECK THIS!!!
+    barcode = rescale_barcode_template(dbc, angle_precise, offset_precise);
 
     //TESTING
     barcode->print();
 
     //draw the barcode
     double zero_coord = project_zero(angle_precise, offset_precise);
-    p_diagram.draw_dots(zero_coord, barcode);
-    slice_diagram.draw_barcode(barcode, zero_coord, ui->barcodeCheckBox->isChecked());
+    p_diagram.set_barcode(zero_coord, barcode);
+    p_diagram.resize_diagram(slice_diagram.get_slice_length(), slice_diagram.get_pd_scale());
 
-    //clean up
-    delete barcode;
+    slice_diagram.draw_barcode(barcode, zero_coord, ui->barcodeCheckBox->isChecked());
 
     //enable control items
     ui->barcodeCheckBox->setEnabled(true);
@@ -228,19 +227,19 @@ void VisualizationWindow::update_persistence_diagram()
     {
         //get the barcode
         BarcodeTemplate& dbc = arrangement->get_barcode_template(angle_precise, offset_precise);
-        Barcode* barcode = rescale_barcode_template(dbc, angle_precise, offset_precise);
+        if(barcode != NULL) //clean up the old barcode
+            delete barcode;
+        barcode = rescale_barcode_template(dbc, angle_precise, offset_precise);
 
         //TESTING
         dbc.print();
         barcode->print();
+
         double zero_coord = project_zero(angle_precise, offset_precise);
 
         //draw the barcode
         p_diagram.update_diagram(slice_diagram.get_slice_length(), slice_diagram.get_pd_scale(), zero_coord, barcode);
         slice_diagram.update_barcode(barcode, zero_coord, ui->barcodeCheckBox->isChecked());
-
-        //clean up
-        delete barcode;
     }
 }
 

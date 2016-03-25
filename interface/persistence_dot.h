@@ -20,13 +20,17 @@ public:
     void select();
     void deselect();
 
+    void add_index(unsigned index); //adds another "barcode" index to this dot
+    void incr_multiplicity(unsigned m); //increases the multiplicity of this dot by m
+
     double get_x(); //returns the unscaled x-coordinate associated with this dot
     double get_y(); //returns the unscaled y-coordinate associated with this dot
-    unsigned get_index(); //returns the index of this dot (e.g. to send to the SliceDiagram for highlighting effects)
+    std::vector<unsigned> get_indexes(); //returns the "barcode" indexes of this dot (e.g. to send to the SliceDiagram for highlighting effects)
+    unsigned get_multiplicity();    //returns the multiplicity of this dot
 
     void set_radius(double r);  //sets a new radius and re-draws the dot
 
-    const unsigned multiplicity;  //number of bars represented by this dot
+
 
 protected:
     void hoverEnterEvent(QGraphicsSceneHoverEvent *);
@@ -40,7 +44,8 @@ private:
 
     double x;   //unscaled x-coordinate (projection units)
     double y;   //unscaled y-coordinate (projection units)
-    unsigned index;   //index of this dot in the vector of PersistenceDots
+    std::vector<unsigned> indexes;   //indexes of this dot in the vector PersistenceDiagram::dots_by_bc_index (more than one index are possible because dots get combined in the upper horizontal strip of the persistence diagram)
+    unsigned multiplicity;  //number of bars represented by this dot
     double radius;
     bool pressed;
     bool hover;

@@ -575,8 +575,8 @@ void SliceDiagram::deselect_bar()
 }//end deselect_bar()
 
 //highlight the specified class of bars, which has been selected externally
-void SliceDiagram::receive_bar_selection(unsigned index)
-{
+void SliceDiagram::receive_bar_selection(std::vector<unsigned> indexes)
+{/**********************************IN PROGRESS**********************************
     //remove old selection
     if(selected != NOT_SELECTED && index != selected)
     {
@@ -592,7 +592,7 @@ void SliceDiagram::receive_bar_selection(unsigned index)
         (*it)->select();
 
     //highlight part of slice line
-    update_highlight();
+    update_highlight();*/
 }//end receive_bar_selection()
 
 //remove bar highlighting in response to external command

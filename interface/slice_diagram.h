@@ -61,7 +61,7 @@ public:
     void receive_parameter_change(QString& xtext, QString& ytext);            //updates the diagram after a change in configuration parameters
 
 public slots:
-    void receive_bar_selection(unsigned index); //highlight the specified class of bars, which has been selected externally
+    void receive_bar_selection(std::vector<unsigned> indexes); //highlight the specified class of bars, which has been selected externally
     void receive_bar_deselection();             //remove bar highlighting in response to external command
 
 signals:
