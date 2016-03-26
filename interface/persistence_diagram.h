@@ -39,6 +39,7 @@ public slots:
 
 signals:
     void persistence_dot_selected(std::vector<unsigned> indexes);
+    void persistence_dot_secondary_selection(std::vector<unsigned> indexes);
     void persistence_dot_deselected();
 
 private:

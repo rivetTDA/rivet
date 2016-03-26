@@ -19,7 +19,6 @@ SliceDiagram::SliceDiagram(ConfigParameters* params, std::vector<double>& x_grad
     QGraphicsScene(parent),
     config_params(params),
     dot_left(), dot_right(), slice_line(),
-    selected(-1), NOT_SELECTED(-1),
     x_grades(x_grades), y_grades(y_grades),
     padding(20),
     epsilon(pow(2,-30)), PI(3.14159265358979323846)
@@ -258,8 +257,12 @@ void SliceDiagram::resize_diagram()
         }
     }
 
+    //clear selection (because resizing window might combine or split dots in the upper strip of the persistence diagram)
+    clear_selection();
+    highlight_line->hide();
+
     //reposition highlighting
-    if(selected != NOT_SELECTED)
+    if(primary_selected.size() > 0)
         update_highlight();
 
     //set scene rectangle (necessary to prevent auto-scrolling)
@@ -344,7 +347,7 @@ void SliceDiagram::receive_parameter_change(QString& xtext, QString& ytext)
     x_label->setText(xtext);
     y_label->setText(ytext);
 
-    //update distram
+    //update diagram
     resize_diagram();
 
 }//end update_diagram()
@@ -478,8 +481,11 @@ void SliceDiagram::draw_barcode(Barcode *bc, double zero_coord, bool show)
 //TODO: would it be better to move bars, instead of deleting and re-creating them?
 void SliceDiagram::update_barcode(Barcode *bc, double zero_coord, bool show)
 {
+    //remove any current selection
+    primary_selected.clear();
+    secondary_selected.clear();
+
     //remove old bars
-    selected = -1;    //remove any current selection
     for(std::vector< std::list<PersistenceBar*> >::iterator it = bars.begin(); it != bars.end(); ++it)
     {
         while(!it->empty())
@@ -536,36 +542,28 @@ std::pair<double,double> SliceDiagram::compute_endpoint(double coordinate, unsig
 void SliceDiagram::select_bar(PersistenceBar* clicked)
 {
     //remove old selection
-    if(selected != NOT_SELECTED && clicked->get_index() != selected)
-    {
-        for(std::list<PersistenceBar*>::iterator it = bars[selected].begin(); it != bars[selected].end(); ++it)
-            (*it)->deselect();
-    }
+    clear_selection();
 
     //remember current selection
-    selected = clicked->get_index();
+    unsigned index = clicked->get_index();
+    primary_selected.push_back(index);
 
     //select all bars with the current index
-    for(std::list<PersistenceBar*>::iterator it = bars[selected].begin(); it != bars[selected].end(); ++it)
+    for(std::list<PersistenceBar*>::iterator it = bars[index].begin(); it != bars[index].end(); ++it)
         (*it)->select();
 
     //highlight part of slice line
     update_highlight();
 
     //highlight part of the persistence diagram
-    emit persistence_bar_selected(clicked->get_index());
+    emit persistence_bar_selected(index);
 }//end select_bar()
 
 //remove selection; if propagate, then deselect dot in the persistence diagram
 void SliceDiagram::deselect_bar()
 {
     //remove selection
-    if(selected != NOT_SELECTED)
-    {
-        for(std::list<PersistenceBar*>::iterator it = bars[selected].begin(); it != bars[selected].end(); ++it)
-            (*it)->deselect();
-        selected = -1;
-    }
+    clear_selection();
 
     //remove highlighted portion of slice line
     highlight_line->hide();
@@ -574,59 +572,113 @@ void SliceDiagram::deselect_bar()
     emit persistence_bar_deselected();
 }//end deselect_bar()
 
-//highlight the specified class of bars, which has been selected externally
+//highlight the specified class of bars, which has been selected externally (they become the primary selection)
 void SliceDiagram::receive_bar_selection(std::vector<unsigned> indexes)
-{/**********************************IN PROGRESS**********************************
+{
     //remove old selection
-    if(selected != NOT_SELECTED && index != selected)
+    clear_selection();
+
+    //remember new selection
+    primary_selected = indexes;
+
+    //select all bars with the new indexes
+    for(std::vector<unsigned>::iterator it = primary_selected.begin(); it != primary_selected.end(); ++it)
     {
-        for(std::list<PersistenceBar*>::iterator it = bars[selected].begin(); it != bars[selected].end(); ++it)
-            (*it)->deselect();
+        unsigned index = *it;
+        for(std::list<PersistenceBar*>::iterator it = bars[index].begin(); it != bars[index].end(); ++it)
+            (*it)->select();
     }
 
-    //remember current selection
-    selected = index;
-
-    //select all bars with the current index
-    for(std::list<PersistenceBar*>::iterator it = bars[selected].begin(); it != bars[selected].end(); ++it)
-        (*it)->select();
-
     //highlight part of slice line
-    update_highlight();*/
+    update_highlight();
 }//end receive_bar_selection()
+
+//secondary highlight, used for persistence dots that represent multiple classes of bars
+void SliceDiagram::receive_bar_secondary_selection(std::vector<unsigned> indexes)
+{
+    //remember this selection
+    secondary_selected = indexes;
+
+    //select all bars with the new indexes
+    for(std::vector<unsigned>::iterator it = secondary_selected.begin(); it != secondary_selected.end(); ++it)
+    {
+        unsigned index = *it;
+        for(std::list<PersistenceBar*>::iterator it = bars[index].begin(); it != bars[index].end(); ++it)
+            (*it)->select_secondary();
+    }
+
+    //update highlight
+    update_highlight();
+}//end receive_bar_secondary_selection()
 
 //remove bar highlighting in response to external command
 void SliceDiagram::receive_bar_deselection()
 {
     //remove selection
-    if(selected != NOT_SELECTED)
-    {
-        for(std::list<PersistenceBar*>::iterator it = bars[selected].begin(); it != bars[selected].end(); ++it)
-            (*it)->deselect();
-        selected = -1;
-    }
+    clear_selection();
 
     //remove highlighted portion of slice line
     highlight_line->hide();
 }//end receive_bar_deselection()
 
+//unselect all bars
+void SliceDiagram::clear_selection()
+{
+    //clear primary selection
+    for(std::vector<unsigned>::iterator it = primary_selected.begin(); it != primary_selected.end(); ++it)
+    {
+        unsigned index = *it;
+        for(std::list<PersistenceBar*>::iterator it = bars[index].begin(); it != bars[index].end(); ++it)
+            (*it)->deselect();
+    }
+    primary_selected.clear();
+
+    //clear secondary selection
+    for(std::vector<unsigned>::iterator it = secondary_selected.begin(); it != secondary_selected.end(); ++it)
+    {
+        unsigned index = *it;
+        for(std::list<PersistenceBar*>::iterator it = bars[index].begin(); it != bars[index].end(); ++it)
+            (*it)->deselect();
+    }
+    secondary_selected.clear();
+}//end clear_selection()
+
 //highlights part of the slice line
 void SliceDiagram::update_highlight()
 {
-    if(selected != NOT_SELECTED)
+    if(primary_selected.empty())    //then no highlighting
+        return;
+
+    //determine interval to be highlighted
+    PersistenceBar* cur_bar = bars[primary_selected[0]].front();
+    double start = cur_bar->get_start();
+    double end = cur_bar->get_end();
+    for(unsigned i = 1; i < primary_selected.size(); i++)
     {
-        PersistenceBar* selected_bar = bars[selected].front();
-        double start = selected_bar->get_start();
-        double end = selected_bar->get_end();
-        if(end == std::numeric_limits<double>::infinity())
-            end = get_zero() + data_infty;
-
-        std::pair<double,double> p1 = compute_endpoint(start, 0);
-        std::pair<double,double> p2 = compute_endpoint(end, 0);
-
-        highlight_line->setLine(p1.first, p1.second, p2.first, p2.second);
-        highlight_line->show();
+        PersistenceBar* cur_bar = bars[primary_selected[i]].front();
+        if(cur_bar->get_start() < start)
+            start = cur_bar->get_start();
+        if(cur_bar->get_end() > end)
+            end = cur_bar->get_end();
     }
+    for(unsigned i = 0; i < secondary_selected.size(); i++)
+    {
+        PersistenceBar* cur_bar = bars[secondary_selected[i]].front();
+        if(cur_bar->get_start() < start)
+            start = cur_bar->get_start();
+        if(cur_bar->get_end() > end)
+            end = cur_bar->get_end();
+    }
+
+    //highlight the interval
+    if(end == std::numeric_limits<double>::infinity())
+        end = get_zero() + data_infty;
+
+    std::pair<double,double> p1 = compute_endpoint(start, 0);
+    std::pair<double,double> p2 = compute_endpoint(end, 0);
+
+    highlight_line->setLine(p1.first, p1.second, p2.first, p2.second);
+    highlight_line->show();
 }//end update_highlight()
 
 //if "show" is true, then xi_0 support points are drawn; otherwise, they are hidden

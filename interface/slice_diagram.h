@@ -62,6 +62,7 @@ public:
 
 public slots:
     void receive_bar_selection(std::vector<unsigned> indexes); //highlight the specified class of bars, which has been selected externally
+    void receive_bar_secondary_selection(std::vector<unsigned> indexes);    //secondary highlight, used for persistence dots that represent multiple classes of bars
     void receive_bar_deselection();             //remove bar highlighting in response to external command
 
 signals:
@@ -95,10 +96,12 @@ private:
     std::vector<QGraphicsEllipseItem*> xi2_dots;    //pointers to all xi2 dots
     std::vector< std::list<PersistenceBar*> > bars; //pointers to all bars (in the barcode) -- each element of the vector stores a list of one or more identical bars that correspond to a single dot in the persistence diagram
 
-    QGRI_matrix hom_dim_rects;     //rectangles that plot the homology dimensions <--NEW
+    QGRI_matrix hom_dim_rects;     //rectangles that plot the homology dimensions
 
-    unsigned selected;              //index of the class of selected bars
-    const unsigned NOT_SELECTED;    //set to max_unsigned
+    std::vector<unsigned> primary_selected;     //indexes of classes of bars in the primary selection
+    std::vector<unsigned> secondary_selected;   //indexes of classes of bars in the secondary selection
+
+    void clear_selection();   //unselect all bars
 
   //data items
     struct xiFloatingPoint  ///TODO: is this a good design? consider how to most efficiently store the points

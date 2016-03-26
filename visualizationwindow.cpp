@@ -61,6 +61,7 @@ VisualizationWindow::VisualizationWindow(InputParameters& params) :
     QObject::connect(&slice_diagram, &SliceDiagram::persistence_bar_selected, &p_diagram, &PersistenceDiagram::receive_dot_selection);
     QObject::connect(&slice_diagram, &SliceDiagram::persistence_bar_deselected, &p_diagram, &PersistenceDiagram::receive_dot_deselection);
     QObject::connect(&p_diagram, &PersistenceDiagram::persistence_dot_selected, &slice_diagram, &SliceDiagram::receive_bar_selection);
+    QObject::connect(&p_diagram, &PersistenceDiagram::persistence_dot_secondary_selection, &slice_diagram, &SliceDiagram::receive_bar_secondary_selection);
     QObject::connect(&p_diagram, &PersistenceDiagram::persistence_dot_deselected, &slice_diagram, &SliceDiagram::receive_bar_deselection);
 
     //connect other signals and slots
@@ -366,7 +367,6 @@ void VisualizationWindow::showEvent(QShowEvent* event)
 
 void VisualizationWindow::resizeEvent(QResizeEvent* /*unused*/)
 {
-//    qDebug() << "resize event! slice_diagrma = " << slice_diagram;
     if(line_selection_ready)
     {
         slice_diagram.resize_diagram();

@@ -96,7 +96,8 @@ void PersistenceDiagram::resize_diagram(double slice_length, double diagram_scal
 
     //remove old dots
     selected = NULL;    //remove any current selection
-    while(!all_dots.empty())
+    dots_by_bc_index.clear();   //clear index data
+    while(!all_dots.empty())    //delete all dots
     {
         removeItem(all_dots.back());
         all_dots.pop_back();
@@ -299,7 +300,8 @@ void PersistenceDiagram::update_diagram(double slice_length, double diagram_scal
 
     //remove old dots
     selected = NULL;    //remove any current selection
-    while(!all_dots.empty())
+    dots_by_bc_index.clear();   //clear index data
+    while(!all_dots.empty())    //delete all dots
     {
         removeItem(all_dots.back());
         all_dots.pop_back();
@@ -307,7 +309,6 @@ void PersistenceDiagram::update_diagram(double slice_length, double diagram_scal
 
     //draw new dots
     draw_dots();
-
 }//end update_diagram()
 
 //highlight the specified dot, selected in the persistence diagram, and propagate to the slice diagram
@@ -321,8 +322,8 @@ void PersistenceDiagram::select_dot(PersistenceDot* clicked)
     selected = clicked;
 
     //highlight part of the persistence diagram
-    emit persistence_dot_selected(clicked->get_indexes());
-}
+    emit persistence_dot_selected( clicked->get_indexes() );
+}//end select_dot()
 
 //remove selection; if propagate, then deselect bar in the slice diagram
 void PersistenceDiagram::deselect_dot()
@@ -336,7 +337,7 @@ void PersistenceDiagram::deselect_dot()
 
     //remove highlighting from slice diagram
     emit persistence_dot_deselected();
-}
+}//end deselect_dot()
 
 //highlight the specified dot, which has been selected externally
 // index refers to the "barcode" index
@@ -349,7 +350,19 @@ void PersistenceDiagram::receive_dot_selection(unsigned index)
     //remember current selection
     selected = dots_by_bc_index[index];
     selected->select();
-}
+
+    //propagate secondary selection back to the slice diagram
+    std::vector<unsigned> primary = selected->get_indexes();
+    std::vector<unsigned> secondary;
+    for(unsigned i=0; i < primary.size(); i++)
+    {
+        if(primary[i] != index)
+            secondary.push_back(primary[i]);
+    }
+
+    if(secondary.size() > 0)
+        emit persistence_dot_secondary_selection(secondary);
+}//end receive_dot_selection()
 
 //remove dot highlighting in response to external command
 void PersistenceDiagram::receive_dot_deselection()
