@@ -43,9 +43,7 @@ SOURCES	+= main.cpp                         \
 		interface/config_parameters.cpp     \
 		interface/file_input_reader.cpp \
     driver.cpp \
-    interface/file_writer.cpp \
-    math/raw_b_data.cpp \
-    math/bd_node.cpp
+    interface/file_writer.cpp
     
 
 HEADERS  += visualizationwindow.h			\
@@ -78,9 +76,7 @@ HEADERS  += visualizationwindow.h			\
     interface/config_parameters.h \
     interface/file_input_reader.h \
     driver.h \
-    interface/file_writer.h \
-    math/raw_b_data.h \
-    math/bd_node.h
+    interface/file_writer.h
     
 
 FORMS   += visualizationwindow.ui			\
