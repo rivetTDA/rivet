@@ -14,6 +14,8 @@ CONFIG += c++11
 QT       += core gui \
 		widgets
 
+CONFIG += c++11
+
 TARGET = RIVET
 TEMPLATE = app
 
