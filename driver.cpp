@@ -46,19 +46,20 @@ void Driver::augmented_arrangement_ready(Mesh* arrangement)
     if(input_params.verbosity >= 2) { qDebug() << "COMPUTATION FINISHED."; }
 
     //if an output file has been specified, then save the arrangement
-    if(!input_params.outputFile.isEmpty())
+    if(!input_params.outputFile.empty())
     {
-        QFile file(input_params.outputFile);
+      auto outputFile = QString::fromStdString(input_params.outputFile);
+      QFile file(outputFile);
         if(file.open(QIODevice::ReadWrite | QIODevice::Truncate))
         {
-            qDebug() << "Writing file:" << input_params.outputFile;
+          qDebug() << "Writing file:" << outputFile;
 
             FileWriter fw(input_params, arrangement, x_exact, y_exact, xi_support);
             fw.write_augmented_arrangement(file);
         }
         else
         {
-            qDebug() << "Error: Unable to write file:" << input_params.outputFile;
+            qDebug() << "Error: Unable to write file:" << outputFile;
         }
         ///TODO: error handling?
     }

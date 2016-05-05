@@ -21,7 +21,7 @@ void FileWriter::write_augmented_arrangement(QFile& file)
 
     //write header info, in comment form
     stream << "# augmented arrangement data" << endl;
-    stream << "# computed by RIVET from the input file " << input_params.fileName << endl;
+stream << "# computed by RIVET from the input file " << QString::fromStdString(input_params.fileName) << endl;
     stream << "# homology dimension: " << input_params.dim << endl;
     stream << "# bins: " << input_params.x_bins << " " << input_params.y_bins << endl;
     stream << "# file created at: " << QDateTime::currentDateTime().toString() << endl << endl;
@@ -29,8 +29,8 @@ void FileWriter::write_augmented_arrangement(QFile& file)
     //write parameters
     stream << "RIVET_0" << endl;
     stream << input_params.dim << endl;
-    stream << input_params.x_label << endl;
-    stream << input_params.y_label << endl << endl;
+stream << QString::fromStdString(input_params.x_label) << endl;
+stream << QString::fromStdString(input_params.y_label) << endl << endl;
 
     //write x-grades
     stream << "x-grades" << endl;

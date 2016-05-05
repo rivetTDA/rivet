@@ -15,7 +15,7 @@ ConfigureDialog::ConfigureDialog(ConfigParameters& c_params, InputParameters& i_
     perCol(config_params.persistenceColor), perHiCol(config_params.persistenceHighlightColor),
     lineCol(config_params.sliceLineColor), lineHiCol(config_params.sliceLineHighlightColor),
     bettiRadius(config_params.bettiDotRadius), perRadius(config_params.persistenceDotRadius),
-    xlabel(input_params.x_label), ylabel(input_params.y_label)
+    xlabel(QString::fromStdString(input_params.x_label)), ylabel(QString::fromStdString(input_params.y_label))
 {
     ui->setupUi(this);
 
@@ -67,8 +67,8 @@ ConfigureDialog::ConfigureDialog(ConfigParameters& c_params, InputParameters& i_
     ui->persistenceDotSpinBox->setValue(perRadius);
 
   //set labels to current labels
-    ui->xaxisText->setText(input_params.x_label);
-    ui->yaxisText->setText(input_params.y_label);
+    ui->xaxisText->setText(xlabel);
+    ui->yaxisText->setText(ylabel);
 
 }//end constructor
 
@@ -96,8 +96,8 @@ void ConfigureDialog::on_okButton_clicked()
     config_params.persistenceDotRadius = perRadius;
 
     //update axis labels in input_params
-    input_params.x_label = xlabel;
-    input_params.y_label = ylabel;
+    input_params.x_label = xlabel.toUtf8().constData();
+    input_params.y_label = ylabel.toUtf8().constData();
 
     //close the dialog box
     close();

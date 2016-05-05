@@ -57,8 +57,8 @@ int main(int argc, char *argv[])
 
     QStringList args = parser.positionalArguments();
     if(args.size() > 0)
-    params.fileName = args.at(0);
-    params.outputFile = parser.value(outputOption);
+      params.fileName = args.at(0).toUtf8().constData();
+    params.outputFile = parser.value(outputOption).toUtf8().constData();
     params.dim = parser.value(homOption).toInt();
     params.verbosity = parser.value(verbosityOption).toInt();
     params.x_bins = parser.value(xbinOption).toInt();

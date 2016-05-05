@@ -120,7 +120,7 @@ private:
     double project_zero(double angle, double offset);
 
     //other items
-    void save_arrangement(QString& filename);
+    void save_arrangement(const QString& filename);
 
     AboutMessageBox aboutBox;       //which is better for these dialog boxes
     ConfigureDialog* configBox;     // -- pointer or no pointer?

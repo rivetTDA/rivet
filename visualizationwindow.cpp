@@ -98,7 +98,11 @@ void VisualizationWindow::paint_xi_support()
         slice_diagram.add_point(x_grades[it->x], y_grades[it->y], it->zero, it->one, it->two);
 
     //create the SliceDiagram
-    slice_diagram.create_diagram(input_params.x_label, input_params.y_label, x_grades.front(), x_grades.back(), y_grades.front(), y_grades.back(), ui->normCoordCheckBox->isChecked(), homology_dimensions);
+    slice_diagram.create_diagram(QString::fromStdString(input_params.x_label),
+                                 QString::fromStdString(input_params.y_label),
+                                 x_grades.front(), x_grades.back(),
+                                 y_grades.front(), y_grades.back(),
+                                 ui->normCoordCheckBox->isChecked(), homology_dimensions);
 
     //enable control items
     ui->BettiLabel->setEnabled(true);
@@ -132,7 +136,7 @@ void VisualizationWindow::augmented_arrangement_ready(Mesh* arrangement)
 //    arrangement->test_consistency();
 
     //inialize persistence diagram
-    p_diagram.create_diagram(input_params.shortName, input_params.dim);
+    p_diagram.create_diagram(QString::fromStdString(input_params.shortName), input_params.dim);
 
     //get the barcode
     BarcodeTemplate& dbc = arrangement->get_barcode_template(angle_precise, offset_precise);
@@ -157,8 +161,8 @@ void VisualizationWindow::augmented_arrangement_ready(Mesh* arrangement)
     ui->statusBar->showMessage("ready for interactive barcode exploration");
 
     //if an output file has been specified, then save the arrangement
-    if(!input_params.outputFile.isEmpty())
-        save_arrangement(input_params.outputFile);
+    if(!input_params.outputFile.empty())
+      save_arrangement(QString::fromStdString(input_params.outputFile));
     else if(input_params.raw_data)
         unsaved_data = true;
 
@@ -415,7 +419,8 @@ void VisualizationWindow::on_actionConfigure_triggered()
 
     if(line_selection_ready)
     {
-        slice_diagram.receive_parameter_change(input_params.x_label, input_params.y_label);
+      slice_diagram.receive_parameter_change(QString::fromStdString(input_params.x_label),
+                                             QString::fromStdString(input_params.y_label));
 
         if(persistence_diagram_drawn)
             p_diagram.receive_parameter_change();
@@ -456,7 +461,7 @@ void VisualizationWindow::on_actionSave_triggered()
     ///TODO: error handling?
 }//end on_actionSave_triggered()
 
-void VisualizationWindow::save_arrangement(QString& filename)
+void VisualizationWindow::save_arrangement(const QString& filename)
 {
     QFile file(filename);
     if(file.open(QIODevice::ReadWrite | QIODevice::Truncate))

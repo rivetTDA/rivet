@@ -21,7 +21,7 @@ DataSelectDialog::DataSelectDialog(InputParameters& params, QWidget *parent) :
     ui->ybinSpinBox->setSpecialValueText(tr("No bins"));
 
     //set initial values
-    if(!params.fileName.isEmpty())
+    if(!params.fileName.empty())
         detect_file_type();
     ui->homDimSpinBox->setValue(params.dim);
     ui->xbinSpinBox->setValue(params.x_bins);
@@ -61,14 +61,14 @@ void DataSelectDialog::on_openFileButton_clicked()
 
     if(!selected_file.isNull())
     {
-        params.fileName = selected_file;
-        detect_file_type();
+      params.fileName = selected_file.toUtf8().constData();
+      detect_file_type();
     }
 }//end on_openFileButton_clicked()
 
 void DataSelectDialog::detect_file_type()
 {
-    QFile infile(params.fileName);
+  QFile infile(QString::fromStdString(params.fileName));
     if(infile.open(QIODevice::ReadOnly | QIODevice::Text))
     {
         FileInputReader reader(infile);
@@ -95,8 +95,8 @@ void DataSelectDialog::detect_file_type()
         {
             ui->fileTypeLabel->setText("This file appears to contain pre-computed RIVET data.");
             QFileInfo fileInfo(infile);
-            params.shortName = fileInfo.fileName();
-            ui->fileLabel->setText("Selected file: " + params.shortName);
+            params.shortName = fileInfo.fileName().toUtf8().constData();
+            ui->fileLabel->setText("Selected file: " + fileInfo.fileName());
             params.raw_data = false;
             ui->parameterFrame->setEnabled(false);
             ui->computeButton->setEnabled(true);
@@ -120,8 +120,8 @@ void DataSelectDialog::raw_data_file_selected(const QFile& file)
 {
     //display file name
     QFileInfo fileInfo(file);
-    params.shortName = fileInfo.fileName();
-    ui->fileLabel->setText("Selected file: " + params.shortName);
+    params.shortName = fileInfo.fileName().toUtf8().constData();
+    ui->fileLabel->setText("Selected file: " + fileInfo.fileName());
 
     //save file parameters
     params.raw_data = true;

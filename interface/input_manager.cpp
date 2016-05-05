@@ -93,7 +93,7 @@ InputManager::InputManager(ComputationThread* cthread) :
     input_params(cthread->params),
     verbosity(cthread->verbosity),
     hom_dim(input_params.dim),
-    infile(input_params.fileName),
+    infile(QString::fromStdString(input_params.fileName)),
     x_grades(cthread->x_grades), x_exact(cthread->x_exact),
     y_grades(cthread->y_grades), y_exact(cthread->y_exact),
     simplex_tree(cthread->bifiltration)
@@ -105,7 +105,7 @@ InputManager::InputManager(ComputationThread* cthread) :
 void InputManager::start()
 {
 	//read the file
-    if(verbosity >= 2) { qDebug() << "READING FILE:" << input_params.fileName; }
+  if(verbosity >= 2) { qDebug() << "READING FILE:" << QString::fromStdString(input_params.fileName); }
     if(infile.open(QIODevice::ReadOnly | QIODevice::Text))
 	{
         FileInputReader reader(infile);
@@ -138,7 +138,7 @@ void InputManager::start()
 	}
 	else
 	{
-        qDebug() << "Error: Unable to open file: " << input_params.fileName;
+    qDebug() << "Error: Unable to open file: " << QString::fromStdString(input_params.fileName);
 		throw std::exception();
 	}
 
@@ -192,10 +192,10 @@ void InputManager::read_point_cloud(FileInputReader& reader)
     }
 
     //read label for x-axis
-    input_params.x_label = reader.next_line_str();
+    input_params.x_label = reader.next_line_str().toUtf8().constData();
 
     //set label for y-axis to "distance"
-    input_params.y_label = QString("distance");
+    input_params.y_label = "distance";
 
     //read points
     std::vector<DataPoint> points;
@@ -311,7 +311,7 @@ void InputManager::read_discrete_metric_space(FileInputReader& reader)
   // STEP 1: read data file and store exact (rational) values of the function for each point
 
     //first read the label for x-axis
-    input_params.x_label = reader.next_line_str();
+    input_params.x_label = reader.next_line_str().toUtf8().constData();
 
     //now read the values
     QStringList line = reader.next_line();
@@ -327,7 +327,7 @@ void InputManager::read_discrete_metric_space(FileInputReader& reader)
   // STEP 2: read data file and store exact (rational) values for all distances
 
     //first read the label for y-axis
-    input_params.y_label = reader.next_line_str();
+    input_params.y_label = reader.next_line_str().toUtf8().constData();
 
     //read the maximum length of edges to construct
     exact max_dist = str_to_exact(reader.next_line().first().toStdString());  ///TODO: don't convert to std::string
@@ -427,10 +427,10 @@ void InputManager::read_bifiltration(FileInputReader& reader)
     if(verbosity >= 2) { qDebug() << "  Found a bifiltration file.\n"; }
 
     //read the label for x-axis
-    input_params.x_label = reader.next_line_str();
+    input_params.x_label = reader.next_line_str().toUtf8().constData();
 
     //read the label for y-axis
-    input_params.y_label = reader.next_line_str();
+    input_params.y_label = reader.next_line_str().toUtf8().constData();
 
     //temporary data structures to store grades
     ExactSet x_set; //stores all unique x-alues; must DELETE all elements later!
@@ -513,8 +513,8 @@ void InputManager::read_RIVET_data(FileInputReader& reader)
 {
     //read parameters
     cthread->params.dim = reader.next_line().first().toInt();
-    cthread->params.x_label = reader.next_line_str();
-    cthread->params.y_label = reader.next_line_str();
+    cthread->params.x_label = reader.next_line_str().toUtf8().constData();
+    cthread->params.y_label = reader.next_line_str().toUtf8().constData();
 
     //read x-grades
     reader.next_line();  //this line should say "x-grades"

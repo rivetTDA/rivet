@@ -19,7 +19,7 @@ class PersistenceDiagram : public QGraphicsScene
 public:
     PersistenceDiagram(ConfigParameters* params, QObject* parent = 0);
 
-    void create_diagram(QString& filename, int dim);  //simply creates all objects; resize_diagram() handles positioning of objects
+    void create_diagram(const QString& filename, int dim);  //simply creates all objects; resize_diagram() handles positioning of objects
     void resize_diagram(double slice_length, double diagram_scale);  //resizes diagram to fill the QGraphicsView; called after every window resize
 
     void set_barcode(double zero, Barcode *bc); //sets the barcode and the zero coordinate
