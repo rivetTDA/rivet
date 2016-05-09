@@ -11,7 +11,7 @@ PersistenceBar::PersistenceBar(SliceDiagram *s_diagram, ConfigParameters* params
     config_params(params),
     start(unscaled_start), end(unscaled_end),
     class_index(index),
-    pressed(false), hover(false)
+    pressed(false), secondary(false), hover(false)
 {
     setAcceptHoverEvents(true);
 }
@@ -40,6 +40,10 @@ void PersistenceBar::paint(QPainter *painter, const QStyleOptionGraphicsItem * /
     {
         pen.setColor(config_params->persistenceHighlightColor);
     }
+    if(secondary)
+    {
+        pen.setStyle(Qt::DashLine);
+    }
 
     painter->setRenderHint(QPainter::Antialiasing);
     painter->setPen(pen);
@@ -59,9 +63,17 @@ void PersistenceBar::select()
     update();
 }
 
+void PersistenceBar::select_secondary()
+{
+    pressed = true;
+    secondary = true;
+    update();
+}
+
 void PersistenceBar::deselect()
 {
     pressed = false;
+    secondary = false;
     update();
 }
 

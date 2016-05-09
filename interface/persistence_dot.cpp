@@ -7,14 +7,15 @@
 
 
 PersistenceDot::PersistenceDot(PersistenceDiagram *p_diagram, ConfigParameters* params, double unscaled_x, double unscaled_y, unsigned multiplicity, double radius, unsigned index) :
-    multiplicity(multiplicity),
     pdgm(p_diagram),
     config_params(params),
     x(unscaled_x), y(unscaled_y),
-    index(index),
+    multiplicity(multiplicity),
     radius(radius),
     pressed(false), hover(false)
 {
+    indexes.push_back(index);
+
     setAcceptHoverEvents(true);
 //    setFlag(ItemSendsGeometryChanges);
 }
@@ -55,6 +56,18 @@ void PersistenceDot::deselect()
     update(boundingRect());
 }
 
+//adds another "barcode" index to this dot
+void PersistenceDot::add_index(unsigned index)
+{
+    indexes.push_back(index);
+}
+
+//increases the multiplicity of this dot by m
+void PersistenceDot::incr_multiplicity(unsigned m)
+{
+    multiplicity += m;
+}
+
 //returns the unscaled x-coordinate associated with this dot
 double PersistenceDot::get_x()
 {
@@ -67,10 +80,16 @@ double PersistenceDot::get_y()
     return y;
 }
 
-//returns the index of this dot (e.g. to send to the SliceDiagram for highlighting effects)
-unsigned PersistenceDot::get_index()
+//returns the "barcode" indexes of this dot (e.g. to send to the SliceDiagram for highlighting effects)
+std::vector<unsigned> PersistenceDot::get_indexes()
 {
-    return index;
+    return indexes;
+}
+
+//returns the multiplicity of this dot
+unsigned PersistenceDot::get_multiplicity()
+{
+    return multiplicity;
 }
 
 //sets a new radius and re-draws the dot

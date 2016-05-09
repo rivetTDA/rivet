@@ -95,6 +95,7 @@ private:
     double offset_precise;      //sufficiently-precise internal value of the slice-line offset, necessary because QDoubleSpinBox truncates this value
 
     Mesh* arrangement; //pointer to the DCEL arrangement
+    Barcode* barcode;  //pointer to the currently-displayed barcode
 
     //computation items
     ComputationThread cthread;

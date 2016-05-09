@@ -24,6 +24,7 @@ public:
     void set_line(double start_x, double start_y, double end_x, double end_y);
 
     void select();
+    void select_secondary();
     void deselect();
 
     double get_start(); //returns the unscaled x-coordinate associated with this bar
@@ -45,6 +46,7 @@ private:
     unsigned class_index;   //index of the dot corresponding to this bar in the Barcode object
 
     bool pressed;
+    bool secondary;
     bool hover;
     double dx;  //horizontal length of line (pixels)
     double dy;  //vertical length of line (pixels)
