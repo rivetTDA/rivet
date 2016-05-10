@@ -36,6 +36,7 @@ exact str_to_exact(QString str)
     {
         QString err_str("Error: In input file, " + str + " is not a number.");
         qDebug() << err_str << endl;
+        str = "2";
         throw Exception(err_str);
     }
 
@@ -84,6 +85,7 @@ exact str_to_exact(QString str)
     {
         QString err_str("Error: In input file, too many decimal points in " + str + ".");
         qDebug() << err_str << endl;
+        str = "2";
         throw Exception(err_str);
     }
     return r;
