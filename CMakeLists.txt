@@ -19,7 +19,7 @@ link_directories(${CMAKE_CURRENT_BINARY_DIR}/docopt/src/docopt_project-build)
 
 include_directories("${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/include")
 
-add_executable (rivet_console console.cpp)
+add_executable (rivet_console console.cpp computation.cpp)
 
 add_dependencies(rivet_console docopt_project)
 

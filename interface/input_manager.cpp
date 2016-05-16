@@ -2,15 +2,13 @@
  */
 
 #include "input_manager.h"
-
-#include "../computationthread.h"
+#include "supported_types.h"
+#include "../computation.h"
 #include "file_input_reader.h"
 #include "input_parameters.h"
 #include "../math/simplex_tree.h"
 
-#include <QDebug>
-#include <QString>
-#include <QTime>
+#include "debug.h"
 
 #include <boost/algorithm/string.hpp>
 
@@ -18,7 +16,7 @@
 #include <set>
 #include <sstream>
 #include <vector>
-
+#include <boost/algorithm/string.hpp>
 
 //epsilon value for use in comparisons
 double ExactValue::epsilon = pow(2,-30);
@@ -31,13 +29,28 @@ bool is_number(const std::string& s)
     return !s.empty() && it == s.end();
 }
 
+std::string join(const std::vector<std::string> &strings) {
+  std::stringstream ss;
+  for(int i = 0; i < strings.length(), i++) {
+    if (i > 0)
+      ss << " ";
+    ss << strings[i];
+  }
+  return ss.str();
+}
+
+std::vector<std::string> split(const std::string& str, const std::string& separators) {
+  std::vector<std::string> strings;
+  boost::split(str, strings, boost::is_any_of(separators));
+  return strings;
+}
+
 //helper function to convert a string to an exact (rational)
 //accepts string such as "12.34", "765", and "-10.8421"
 exact str_to_exact(std::string str)
 {
     if(!is_number(str)){
-    	QString qstr = QString::fromUtf8(str.c_str());
-  	 	qDebug()<<"Error: "<<qstr<<" is not a number"<<endl;
+  	 	debug()<<"Error: "<<str<<" is not a number"<<endl;
     	return 0;
     }
     exact r;
@@ -82,21 +95,38 @@ exact str_to_exact(std::string str)
     return r;
 }
 
+class TokenReader {
+public:
+  TokenReader(FileInputReader &reader): reader(reader) { }
+  bool has_next_token() {
+    if (it == tokens.end()) {
+      tokens = reader.next_line();
+      it = tokens.begin();
+    }
+    return it != tokens.end();
+  }
 
+  std::string next_token() {
+    if (has_next_token()) {
+      return *it;
+    }
+    return "";
+  }
+
+private:
+  FileInputReader &reader;
+  std::vector<std::string> tokens;
+  std::iterator<std::string> it;
+};
 
 //==================== InputManager class ====================
 
 
 //constructor
-InputManager::InputManager(ComputationThread* cthread) :
-    cthread(cthread),
-    input_params(cthread->params),
-    verbosity(cthread->verbosity),
-    hom_dim(input_params.dim),
-    infile(QString::fromStdString(input_params.fileName)),
-    x_grades(cthread->x_grades), x_exact(cthread->x_exact),
-    y_grades(cthread->y_grades), y_exact(cthread->y_exact),
-    simplex_tree(cthread->bifiltration)
+InputManager::InputManager(InputParameters &params) :
+    input_params(params),
+    verbosity(params->verbosity),
+    hom_dim(input_params.dim)
 { }
 
 //function to run the input manager, requires a filename
@@ -105,40 +135,40 @@ InputManager::InputManager(ComputationThread* cthread) :
 void InputManager::start()
 {
 	//read the file
-  if(verbosity >= 2) { qDebug() << "READING FILE:" << QString::fromStdString(input_params.fileName); }
+  if(verbosity >= 2) { debug() << "READING FILE:" << input_params.fileName; }
     if(infile.open(QIODevice::ReadOnly | QIODevice::Text))
 	{
         FileInputReader reader(infile);
 
         //determine what type of file it is
-        QString filetype = reader.next_line().first();  ///TODO: error handling -- the file must have at least one line with non-whitespace characters
+        std::string filetype = reader.next_line()[0];  ///TODO: error handling -- the file must have at least one line with non-whitespace characters
 
 		//call appropriate handler function
-        if(filetype == QString("points"))
+        if(filetype == std::string("points"))
 		{
             read_point_cloud(reader);
 		}
-        else if(filetype == QString("metric"))
+        else if(filetype == std::string("metric"))
         {
             read_discrete_metric_space(reader);
         }
-        else if(filetype == QString("bifiltration"))
+        else if(filetype == std::string("bifiltration"))
 		{
             read_bifiltration(reader);
 		}
-        else if(filetype == QString("RIVET_0"))
+        else if(filetype == std::string("RIVET_0"))
         {
             read_RIVET_data(reader);
         }
         else
 		{
-            qDebug() << "Error: Unrecognized file type.";
+            debug() << "Error: Unrecognized file type.";
 			throw std::exception();
 		}
 	}
 	else
 	{
-    qDebug() << "Error: Unable to open file: " << QString::fromStdString(input_params.fileName);
+    debug() << "Error: Unable to open file: " << input_params.fileName;
 		throw std::exception();
 	}
 
@@ -150,36 +180,36 @@ void InputManager::start()
 //  constructs a simplex tree representing the bifiltered Vietoris-Rips complex
 void InputManager::read_point_cloud(FileInputReader& reader)
 {
-    if(verbosity >= 6) { qDebug() << "  Found a point cloud file."; }
+    if(verbosity >= 6) { debug() << "  Found a point cloud file."; }
 
   // STEP 1: read data file and store exact (rational) values
 
     //read dimension of the points from the first line of the file
-    QStringList dimension_line = reader.next_line();
+    std::vector<std::string> dimension_line = reader.next_line();
     if (dimension_line.size() != 1)
     {
-    	qDebug() << "There was more than one value in the expected dimension line.  There may be a problem with your input file.  " << endl;
+    	debug() << "There was more than one value in the expected dimension line.  There may be a problem with your input file.  " << endl;
     }
-    int dimension = dimension_line.first().toInt();
+    int dimension = dimension_line[0];
 
     //check for invalid input
     if (dimension == 0)
     {
-    	qDebug() << "An invalid input was received for the dimension." << endl;
+    	debug() << "An invalid input was received for the dimension." << endl;
     	// throw an exception
     }
 
     //read maximum distance for edges in Vietoris-Rips complex
-    QStringList distance_line = reader.next_line();
+    std::vector<std::string> distance_line = reader.next_line();
     if (distance_line.size() != 1)
     {
-    	qDebug() << "There was more than one value in the expected distance line.  There may be a problem with your input file.  " << endl;
+    	debug() << "There was more than one value in the expected distance line.  There may be a problem with your input file.  " << endl;
     }
 
-    exact max_dist = str_to_exact(distance_line.first().toStdString());  ///TODO: don't convert to std::string
+    exact max_dist = str_to_exact(distance_line[0]);
     if (max_dist == 0)
     {
-    	qDebug() << "An invalid input was received for the max distance." << endl;
+    	debug() << "An invalid input was received for the max distance." << endl;
     	// throw an exception
     }
 
@@ -188,7 +218,7 @@ void InputManager::read_point_cloud(FileInputReader& reader)
     {
         std::ostringstream oss;
         oss << max_dist;
-        qDebug() << "  maximum distance:" << QString::fromStdString(oss.str());
+        debug() << "  maximum distance:" << oss.str();
     }
 
     //read label for x-axis
@@ -201,7 +231,7 @@ void InputManager::read_point_cloud(FileInputReader& reader)
     std::vector<DataPoint> points;
     while( reader.has_next_line() )
     {
-        QStringList tokens = reader.next_line();
+        std::vector<std::string> tokens = reader.next_line();
         if (tokens.size() != dimension + 1 )
         {
         	// TODO: need a check for characters in the point data
@@ -213,12 +243,12 @@ void InputManager::read_point_cloud(FileInputReader& reader)
         points.push_back(p);
     }
 
-    if(verbosity >= 4) { qDebug() << "  read" << points.size() << "points; input finished"; }
+    if(verbosity >= 4) { debug() << "  read" << points.size() << "points; input finished"; }
 
 
   // STEP 2: compute distance matrix, and create ordered lists of all unique distance and time values
 
-    if(verbosity >= 6) { qDebug() << "BUILDING DISTANCE AND TIME LISTS"; }
+    if(verbosity >= 6) { debug() << "BUILDING DISTANCE AND TIME LISTS"; }
     cthread->advanceProgressStage();
 
     unsigned num_points = points.size();
@@ -286,7 +316,7 @@ void InputManager::read_point_cloud(FileInputReader& reader)
     //  2. a list of k(k-1)/2 discrete distances
     //  3. max dimension of simplices to construct, which is one more than the dimension of homology to be computed
 
-    if(verbosity >= 6) { qDebug() << "BUILDING VIETORIS-RIPS BIFILTRATION"; }
+    if(verbosity >= 6) { debug() << "BUILDING VIETORIS-RIPS BIFILTRATION"; }
 
     simplex_tree->build_VR_complex(time_indexes, dist_indexes, x_grades.size(), y_grades.size());
 
@@ -306,7 +336,7 @@ void InputManager::read_point_cloud(FileInputReader& reader)
 //reads data representing a discrete metric space with a real-valued function and constructs a simplex tree
 void InputManager::read_discrete_metric_space(FileInputReader& reader)
 {
-    if(verbosity >= 2) { qDebug() << "  Found a discrete metric space file."; }
+    if(verbosity >= 2) { debug() << "  Found a discrete metric space file."; }
 
   // STEP 1: read data file and store exact (rational) values of the function for each point
 
@@ -314,28 +344,28 @@ void InputManager::read_discrete_metric_space(FileInputReader& reader)
     input_params.x_label = reader.next_line_str().toUtf8().constData();
 
     //now read the values
-    QStringList line = reader.next_line();
+    std::vector<std::string> line = reader.next_line();
     std::vector<exact> values;
     values.reserve(line.size());
 
     for(int i = 0; i < line.size(); i++)
     {
-        values.push_back(str_to_exact(line.at(i).toStdString()));
+        values.push_back(str_to_exact(line.at(i)));
     }
 
 
   // STEP 2: read data file and store exact (rational) values for all distances
 
     //first read the label for y-axis
-    input_params.y_label = reader.next_line_str().toUtf8().constData();
+    input_params.y_label = join(reader.next_line());
 
     //read the maximum length of edges to construct
-    exact max_dist = str_to_exact(reader.next_line().first().toStdString());  ///TODO: don't convert to std::string
+    exact max_dist = str_to_exact(reader.next_line()[0]);
     if(verbosity >= 4)
     {
         std::ostringstream oss;
         oss << max_dist;
-        qDebug() << "  maximum distance:" << QString::fromStdString(oss.str());
+        debug() << "  maximum distance:" << oss.str();
     }
 
     //prepare data structures
@@ -358,18 +388,17 @@ void InputManager::read_discrete_metric_space(FileInputReader& reader)
         //read distances from this point to all following points
         if(i < num_points - 1)  //then there is at least one point after point i, and there should be another line to read
         {
-//            line = reader.next_line();
-
+          TokenReader tokens(reader);
             for(unsigned j = i+1; j < num_points; j++)
             {
                 //read distance between points i and j
-                if(!reader.has_next_token())
-                    qDebug() << "ERROR: no distance between points" << i << "and" << j;
+                if(!tokens.has_next_token())
+                    debug() << "ERROR: no distance between points" << i << "and" << j;
 
-                QString str = reader.next_token();
-                qDebug() << str;
+                std::string str = tokens.next_token();
+                debug() << str;
 
-                exact cur_dist = str_to_exact(str.toStdString());
+                exact cur_dist = str_to_exact(str);
 
                 if( cur_dist <= max_dist )  //then this distance is allowed
                 {
@@ -403,7 +432,7 @@ void InputManager::read_discrete_metric_space(FileInputReader& reader)
 
   // STEP 4: build the bifiltration
 
-    if(verbosity >= 2) { qDebug() << "BUILDING VIETORIS-RIPS BIFILTRATION"; }
+    if(verbosity >= 2) { debug() << "BUILDING VIETORIS-RIPS BIFILTRATION"; }
 
     //build the Vietoris-Rips bifiltration from the discrete index vectors
     simplex_tree->build_VR_complex(value_indexes, dist_indexes, x_grades.size(), y_grades.size());
@@ -424,13 +453,13 @@ void InputManager::read_discrete_metric_space(FileInputReader& reader)
 //reads a bifiltration and constructs a simplex tree
 void InputManager::read_bifiltration(FileInputReader& reader)
 {
-    if(verbosity >= 2) { qDebug() << "  Found a bifiltration file.\n"; }
+    if(verbosity >= 2) { debug() << "  Found a bifiltration file.\n"; }
 
     //read the label for x-axis
-    input_params.x_label = reader.next_line_str().toUtf8().constData();
+    input_params.x_label = join(reader.next_line());
 
     //read the label for y-axis
-    input_params.y_label = reader.next_line_str().toUtf8().constData();
+    input_params.y_label = join(reader.next_line());
 
     //temporary data structures to store grades
     ExactSet x_set; //stores all unique x-alues; must DELETE all elements later!
@@ -441,7 +470,7 @@ void InputManager::read_bifiltration(FileInputReader& reader)
     unsigned num_simplices = 0;
     while( reader.has_next_line() )
 	{
-        QStringList tokens = reader.next_line();
+        std::vector<std::string> tokens = reader.next_line();
 
 		//read dimension of simplex
         int dim = tokens.size() - 3; //-3 because a n-simplex has (n+1) vertices, and the line also contains two grade values
@@ -450,14 +479,14 @@ void InputManager::read_bifiltration(FileInputReader& reader)
         std::vector<int> verts;
         for(int i = 0; i <= dim; i++)
         {
-            int v = tokens.at(i).toInt();
-            verts.push_back(v);
+          int v = std::stoi(tokens[i]);
+          verts.push_back(v);
         }
 
         //read multigrade and remember that it corresponds to this simplex
-        ret = x_set.insert(new ExactValue( str_to_exact(tokens.at(dim + 1).toStdString()) ));  ///TODO: don't convert to std::string
+        ret = x_set.insert(new ExactValue( str_to_exact(tokens.at(dim + 1))));
         (*(ret.first))->indexes.push_back(num_simplices);
-        ret = y_set.insert(new ExactValue( str_to_exact(tokens.at(dim + 2).toStdString()) ));  ///TODO: don't convert to std::string
+        ret = y_set.insert(new ExactValue( str_to_exact(tokens.at(dim + 2))));
         (*(ret.first))->indexes.push_back(num_simplices);
 
         //add the simplex to the simplex tree
@@ -477,16 +506,16 @@ void InputManager::read_bifiltration(FileInputReader& reader)
     build_grade_vectors(y_set, y_indexes, y_grades, y_exact, input_params.y_bins);
 
 //TESTING
-//    qDebug() << "x-grades sorted order:";
+//    debug() << "x-grades sorted order:";
 //    for(ExactSet::iterator it = x_set.begin(); it != x_set.end(); ++it)
 //    {
 //        std::ostringstream oss;
 //        oss << (*it)->exact_value << " = " << (*it)->double_value;
-//        qDebug() << "   " << QString::fromStdString(oss.str());
+//        debug() << "   " << oss.str();
 //    }
-//    qDebug() << "x-index vector:";
+//    debug() << "x-index vector:";
 //    for(std::vector<unsigned>::iterator it = x_indexes.begin(); it != x_indexes.end(); ++it)
-//        qDebug() << "   " << *it;
+//        debug() << "   " << *it;
 
     //update simplex tree nodes
     simplex_tree->update_xy_indexes(x_indexes, y_indexes, x_grades.size(), y_grades.size());
@@ -511,27 +540,27 @@ void InputManager::read_bifiltration(FileInputReader& reader)
 //reads a file of previously-computed data from RIVET
 void InputManager::read_RIVET_data(FileInputReader& reader)
 {
-    //read parameters
-    cthread->params.dim = reader.next_line().first().toInt();
-    cthread->params.x_label = reader.next_line_str().toUtf8().constData();
-    cthread->params.y_label = reader.next_line_str().toUtf8().constData();
+  //read parameters
+  cthread->params.dim = std::stoi(reader.next_line()[0]);
+  cthread->params.x_label = join(reader.next_line());
+  cthread->params.y_label = join(reader.next_line());
 
-    //read x-grades
-    reader.next_line();  //this line should say "x-grades"
-    QStringList line = reader.next_line();
-    while(line.first().at(0) != QChar('y')) //stop when we reach "y-grades"
+  //read x-grades
+  reader.next_line();  //this line should say "x-grades"
+  std::vector<std::string> line = reader.next_line();
+  while(line[0][0] != 'y') //stop when we reach "y-grades"
     {
-        exact num(line.first().toStdString());
-        x_exact.push_back(num);
-        x_grades.push_back( numerator(num).convert_to<double>() / denominator(num).convert_to<double>() );
-        line = reader.next_line();
+      exact num(line[0]);
+      x_exact.push_back(num);
+      x_grades.push_back( numerator(num).convert_to<double>() / denominator(num).convert_to<double>() );
+      line = reader.next_line();
     }
 
     //read y-grades
     line = reader.next_line();  //because the current line says "y-grades"
-    while(line.first().at(0) != QChar('x')) //stop when we reach "xi"
+    while(line[0][0] != 'x') //stop when we reach "xi"
     {
-        exact num(line.first().toStdString());
+        exact num(line[0]);
         y_exact.push_back(num);
         y_grades.push_back( numerator(num).convert_to<double>() / denominator(num).convert_to<double>() );
         line = reader.next_line();
@@ -539,15 +568,15 @@ void InputManager::read_RIVET_data(FileInputReader& reader)
 
     //read xi values
     line = reader.next_line();  //because the current line says "xi"
-    while(line.first().at(0) != QChar('b')) //stop when we reach "barcode templates"
+    while(line[0][0] != 'b') //stop when we reach "barcode templates"
     {
-        unsigned x = line.first().toUInt();
-        unsigned y = line.at(1).toUInt();
-        int zero = line.at(2).toInt();
-        int one = line.at(3).toInt();
-        int two = line.at(4).toInt();
-        cthread->xi_support.push_back(xiPoint(x, y, zero, one, two));
-        line = reader.next_line();
+      unsigned x = std::stoi(line[0]);
+      unsigned y = std::stoi(line[1]);
+      int zero = std::stoi(line[2]);
+      int one = std::stoi(line[3]);
+      int two = std::stoi(line[4]);
+      cthread->xi_support.push_back(xiPoint(x, y, zero, one, two));
+      line = reader.next_line();
     }
 
     //read barcode templates
@@ -557,17 +586,17 @@ void InputManager::read_RIVET_data(FileInputReader& reader)
         line = reader.next_line();
         cthread->barcode_templates.push_back(BarcodeTemplate());    //create a new BarcodeTemplate
 
-        if(line.first() != QString("-"))    //then the barcode is nonempty
+        if(line[0] != std::string("-"))    //then the barcode is nonempty
         {
             for(int i = 0; i < line.size(); i++)    //loop over all bars
             {
-                QStringList nums = line.at(i).split(",");
-                unsigned a = nums.first().toUInt();
-                unsigned b = -1;                    //default, for b = infinity
-                if(nums.at(1) != QChar('i'))        //then b is finite
-                    b = nums.at(1).toUInt();
-                unsigned m = nums.at(2).toUInt();
-                cthread->barcode_templates.back().add_bar(a, b, m);
+              std::vector<std::string> nums = split(line[i], ",");
+              unsigned a = std::stol(nums[0]);
+              unsigned b = -1;                    //default, for b = infinity
+              if(nums[1][0] != 'i')        //then b is finite
+                b = std::stol(nums[1]);
+              unsigned m = std::stol(nums[2]);
+              cthread->barcode_templates.back().add_bar(a, b, m);
             }
         }
     }

@@ -1,5 +1,7 @@
 #include "interface/input_parameters.h"
 #include "dcel/mesh.h"
+#include "interface/input_manager.h"
+#include "computation.h"
 #include "debug.h"
 #include <iostream>
 #include <string>

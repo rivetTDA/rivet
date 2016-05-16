@@ -12,7 +12,6 @@
 #define __InputManager_H__
 
 //forward declarations
-class ComputationThread;
 class FileInputReader;
 struct InputParameters;
 class SimplexTree;
@@ -20,12 +19,10 @@ class SimplexTree;
 #include <boost/multiprecision/cpp_int.hpp>
 typedef boost::multiprecision::cpp_rational exact;
 
-#include <QFile>
-#include <QStringList>
-
 #include <math.h>
 #include <set>
 #include <sstream>
+#include <fstream>
 #include <vector>
 
 
@@ -92,11 +89,10 @@ class InputManager
         void start();	//function to run the input manager
 		
     private:
-        ComputationThread* cthread;     //pointer to the computation thread object
         InputParameters& input_params;  //parameters supplied by the user
         const int verbosity;			//controls display of output, for debugging
         int hom_dim;                    //dimension of homology to be computed
-        QFile infile;                   //input file
+        std::ifstream infile;                   //input file
 		
         std::vector<double>& x_grades;  //floating-point values of all x-grades, sorted exactly
         std::vector<exact>& x_exact;    //exact (e.g. rational) values of all x-grades, sorted
@@ -138,17 +134,6 @@ struct DataPoint {
 
         birth = str_to_exact(strs.back());
     }
-
-    DataPoint(QStringList& list)   //first (size - 1) strings are coordinates, last string is "birth time"
-    {
-        coords.reserve(list.size() - 1);
-
-        for(int i = 0; i < list.size() - 1; i++)
-            coords.push_back(list.at(i).toDouble());
-
-        birth = str_to_exact(list.back().toStdString());
-    }
-
 
 };
 

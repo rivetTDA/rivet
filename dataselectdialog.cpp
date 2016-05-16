@@ -3,10 +3,12 @@
 
 #include "interface/file_input_reader.h"
 #include "interface/input_parameters.h"
+#include "interface/supported_types.h"
 
 #include <QDebug>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <fstream>
 
 
 DataSelectDialog::DataSelectDialog(InputParameters& params, QWidget *parent) :
@@ -68,66 +70,45 @@ void DataSelectDialog::on_openFileButton_clicked()
 
 void DataSelectDialog::detect_file_type()
 {
-  QFile infile(QString::fromStdString(params.fileName));
-    if(infile.open(QIODevice::ReadOnly | QIODevice::Text))
-    {
-        FileInputReader reader(infile);
+  std::ifstream infile(params.fileName);
 
-        //attempt to determine the file type
-        QString filetype = reader.next_line().first(); ///TODO: error handling?
+  if(!infile.is_open()) {
+    invalid_file("Unable to read file.");
+    return;
+  }
 
-        if(filetype == QString("points"))
-        {
-            ui->fileTypeLabel->setText("This file appears to contain point-cloud data.");
-            raw_data_file_selected(infile);
-        }
-        else if(filetype == QString("metric"))
-        {
-            ui->fileTypeLabel->setText("This file appears to contain metric data.");
-            raw_data_file_selected(infile);
-        }
-        else if(filetype == QString("bifiltration"))
-        {
-            ui->fileTypeLabel->setText("This file appears to contain bifiltration data.");
-            raw_data_file_selected(infile);
-        }
-        else if(filetype == QString("RIVET_0"))
-        {
-            ui->fileTypeLabel->setText("This file appears to contain pre-computed RIVET data.");
-            QFileInfo fileInfo(infile);
-            params.shortName = fileInfo.fileName().toUtf8().constData();
-            ui->fileLabel->setText("Selected file: " + fileInfo.fileName());
-            params.raw_data = false;
-            ui->parameterFrame->setEnabled(false);
-            ui->computeButton->setEnabled(true);
-        }
-        else    //unrecognized file type
-        {
-            ui->fileTypeLabel->setText("File type not recognized.");
-            ui->parameterFrame->setEnabled(false);
-            ui->computeButton->setEnabled(false);
-        }
-    }
-    else    //error: unable to read file
-    {
-        ui->fileTypeLabel->setText("Unable to read file.");
-        ui->parameterFrame->setEnabled(false);
-        ui->computeButton->setEnabled(false);
-    }
+  FileInputReader reader(infile);
+  if(reader.has_next_line()) {
+    invalid_file("Empty file.");
+    return;
+  }
+
+  auto line = reader.next_line();
+  auto file_type = line[0];
+
+  auto supported = rivet::get_supported_type(file_type);
+
+  if (!supported.first) {
+    invalid_file("File type not recognized.");
+    return;
+  }
+
+  auto supported_type = supported.second;
+  ui->fileTypeLabel->setText("This file appears to contain " + QString::fromStdString(supported_type.description) + ".");
+  QFileInfo fileInfo(QString::fromStdString(params.fileName));
+  ui->fileLabel->setText("Selected file: " + fileInfo.fileName());
+
+  //TODO: this updating of the params will need to happen in console also, need to refactor
+  params.shortName = fileInfo.fileName().toUtf8().constData();
+  params.raw_data = supported_type.is_data;
+
+  ui->parameterFrame->setEnabled(params.raw_data);
+  ui->computeButton->setEnabled(true);
+
 }//end detect_file_type()
 
-void DataSelectDialog::raw_data_file_selected(const QFile& file)
-{
-    //display file name
-    QFileInfo fileInfo(file);
-    params.shortName = fileInfo.fileName().toUtf8().constData();
-    ui->fileLabel->setText("Selected file: " + fileInfo.fileName());
-
-    //save file parameters
-    params.raw_data = true;
-
-    //activate parameter selection items
-    ui->parameterFrame->setEnabled(true);
-    ui->computeButton->setEnabled(true);
+void DataSelectDialog::invalid_file(const QString &message) {
+  ui->parameterFrame->setEnabled(false);
+  ui->computeButton->setEnabled(false);
+  ui->fileTypeLabel->setText(message);
 }
-
