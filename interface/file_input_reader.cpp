@@ -21,6 +21,8 @@ void FileInputReader::find_next_line()
       continue;
     next_line_tokens.clear();
     boost::split(next_line_tokens, line, boost::is_any_of("\t\n\r\b "));
+      next_line_found = true;
+      break;
   }
 }
 

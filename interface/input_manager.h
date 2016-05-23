@@ -135,7 +135,7 @@ class InputManager
         void build_grade_vectors(InputData &data, ExactSet& value_set, std::vector<unsigned>& indexes, std::vector<double>& grades_fp, std::vector<exact>& grades_exact, unsigned num_bins); //converts an ExactSets of values to the vectors of discrete values that SimplexTree uses to build the bifiltration, and also builds the grade vectors (floating-point and exact)
 
         exact approx(double x);         //finds a rational approximation of a floating-point value; precondition: x > 0
-    FileType *get_file_type(std::string fileName);
+    FileType &get_file_type(std::string fileName);
 };
 
 //helper function for converting a string to an exact value

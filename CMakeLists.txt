@@ -40,3 +40,4 @@ add_dependencies(rivet_console docopt_project)
 
 target_link_libraries(rivet_console docopt_s)
 
+

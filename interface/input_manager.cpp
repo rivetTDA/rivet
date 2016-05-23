@@ -141,7 +141,7 @@ InputManager::InputManager(InputParameters &params) :
 void InputManager::register_file_type(FileType file_type) {
     supported_types.push_back(file_type);
 }
-FileType* InputManager::get_file_type(std::string fileName) {
+FileType& InputManager::get_file_type(std::string fileName) {
     std::ifstream stream(fileName);
     if (!stream.is_open()) {
         throw std::runtime_error("Could not open " + fileName);
@@ -152,10 +152,12 @@ FileType* InputManager::get_file_type(std::string fileName) {
     auto it = std::find_if(supported_types.begin(), supported_types.end(), [filetype_name](FileType t) { return t.identifier == filetype_name; });
 
     if (it == supported_types.end()) {
-        return nullptr; //TODO: this is icky. Look for Maybe<T> implementation instead?
+        std::stringstream ss;
+        ss << "Unsupported file type: " << filetype_name;
+        throw std::runtime_error(ss.str());
     }
 
-    return &(*it);
+    return *it;
 }
 
 
@@ -165,16 +167,12 @@ FileType* InputManager::get_file_type(std::string fileName) {
 std::shared_ptr<InputData> InputManager::start(Progress &progress)
 {
 	//read the file
-  if(verbosity >= 2) { debug() << "READING FILE:" << input_params.fileName; }
-    auto ptr = get_file_type(input_params.fileName);
-    if (ptr == nullptr) {
-        throw std::runtime_error("Unsupported file type");
-    }
-    FileType file_type = *ptr;
-    std::ifstream infile(input_params.fileName);                   //input file
-    if (!infile.is_open()) {
-        throw std::runtime_error("Could not open input file");
-    }
+  if(verbosity >= 2) { debug() << "READING FILE:" << input_params.fileName << std::endl; }
+    auto file_type = get_file_type(input_params.fileName);
+        std::ifstream infile(input_params.fileName);                   //input file
+        if (!infile.is_open()) {
+            throw std::runtime_error("Could not open input file");
+        }
     return file_type.parser(infile, progress);
 }//end start()
 
@@ -189,13 +187,15 @@ std::shared_ptr<InputData> InputManager::read_point_cloud(std::ifstream &stream,
     if(verbosity >= 6) { debug() << "  Found a point cloud file."; }
 
   // STEP 1: read data file and store exact (rational) values
-
+//skip first line
+    reader.next_line();
     //read dimension of the points from the first line of the file
     std::vector<std::string> dimension_line = reader.next_line();
     if (dimension_line.size() != 1)
     {
     	debug() << "There was more than one value in the expected dimension line.  There may be a problem with your input file.  " << std::endl;
     }
+    debug() << "Dimension: " << dimension_line[0] << std::endl;
     int dimension = std::stoi(dimension_line[0]);
 
     //check for invalid input
@@ -554,13 +554,15 @@ std::shared_ptr<InputData> InputManager::read_RIVET_data(std::ifstream &stream, 
     std::shared_ptr<InputData> data(new InputData);
     FileInputReader reader(stream);
   //read parameters
+    auto line = reader.next_line();
+    debug() << join(line) << std::endl;
   input_params.dim = std::stoi(reader.next_line()[0]);
   input_params.x_label = join(reader.next_line());
   input_params.y_label = join(reader.next_line());
 
   //read x-grades
   reader.next_line();  //this line should say "x-grades"
-  std::vector<std::string> line = reader.next_line();
+  line = reader.next_line();
   while(line[0][0] != 'y') //stop when we reach "y-grades"
     {
       exact num(line[0]);

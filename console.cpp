@@ -32,62 +32,71 @@ unsigned int get_uint_or_die(std::map<std::string, docopt::value> &args, const s
     return static_cast<unsigned int>(args[key].asLong());
   } catch (std::exception &e) {
     std::cerr << "Argument " << key << " must be an integer" << std::endl;
-    exit(1);
+      throw std::runtime_error("Failed to parse integer");
+//    exit(1);
   }
 }
 
 int main(int argc, char *argv[])
 {
-    debug() << "CONSOLE RIVET" << std::endl;
+    try {
 
-    InputParameters params;   //parameter values stored here
+        debug() << "CONSOLE RIVET" << std::endl;
 
-
-    std::map<std::string, docopt::value> args = docopt::docopt(USAGE, {argv + 1, argv + argc}, true, "RIVET Console 0.4");
-
-    // for (auto const &arg : args) {
-    //   std::cout << arg.first << ":" << arg.second << std::endl;
-    // }
-
-    params.fileName = args["<input_file>"].asString();
-    params.outputFile = args["<output_file>"].asString();
-    params.dim = get_uint_or_die(args, "--homology");
-    params.x_bins = get_uint_or_die(args, "--xbins");
-    params.y_bins = get_uint_or_die(args, "--ybins");
-    params.verbosity = get_uint_or_die(args, "--verbosity");
+        debug() << "Creating params" << std::endl;
+        InputParameters params;   //parameter values stored here
 
 
-    InputManager inputManager(params);
-    Progress progress;
-    Computation computation(params, progress);
-    std::shared_ptr<InputData> input = inputManager.start(progress);
-    std::shared_ptr<ComputationResult> result = computation.compute(*input);
-    auto arrangement = result->arrangement;
-     //TESTING: print arrangement info and verify consistency
-     arrangement->print_stats();
-     arrangement->test_consistency();
+        debug() << "Parsing args" << std::endl;
+        std::map<std::string, docopt::value> args = docopt::docopt(USAGE, {argv + 1, argv + argc}, true,
+                                                                   "RIVET Console 0.4");
 
-     if(params.verbosity >= 2) { debug() << "COMPUTATION FINISHED."; }
+        // for (auto const &arg : args) {
+        //   std::cout << arg.first << ":" << arg.second << std::endl;
+        // }
 
-     //if an output file has been specified, then save the arrangement
-     if(!params.outputFile.empty())
-     {
-         std::ofstream file(params.outputFile);
-         if(file.is_open())
-         {
-             debug() << "Writing file:" << params.outputFile;
+        params.fileName = args["<input_file>"].asString();
+        params.outputFile = args["<output_file>"].asString();
+        params.dim = get_uint_or_die(args, "--homology");
+        params.x_bins = get_uint_or_die(args, "--xbins");
+        params.y_bins = get_uint_or_die(args, "--ybins");
+        params.verbosity = get_uint_or_die(args, "--verbosity");
 
-             FileWriter fw(params, *(arrangement), input->x_exact, input->y_exact, result->xi_support);
-             fw.write_augmented_arrangement(file);
-         }
-         else
-         {
-             debug() << "Error: Unable to write file:" << params.outputFile;
-         }
-         ///TODO: error handling?
-     }
-    debug() << "CONSOLE RIVET: Goodbye";
-    return 0;
+        debug() << "Parsed args" << std::endl;
+
+        InputManager inputManager(params);
+        Progress progress;
+        Computation computation(params, progress);
+        debug() << "Launching input manager" << std::endl;
+        std::shared_ptr<InputData> input = inputManager.start(progress);
+        debug() << "Launching computation" << std::endl;
+        std::shared_ptr<ComputationResult> result = computation.compute(*input);
+        auto arrangement = result->arrangement;
+        //TESTING: print arrangement info and verify consistency
+        arrangement->print_stats();
+        arrangement->test_consistency();
+
+        if (params.verbosity >= 2) { debug() << "COMPUTATION FINISHED."; }
+
+        //if an output file has been specified, then save the arrangement
+        if (!params.outputFile.empty()) {
+            std::ofstream file(params.outputFile);
+            if (file.is_open()) {
+                debug() << "Writing file:" << params.outputFile << std::endl;
+
+                FileWriter fw(params, *(arrangement), input->x_exact, input->y_exact, result->xi_support);
+                fw.write_augmented_arrangement(file);
+            }
+            else {
+                debug() << "Error: Unable to write file:" << params.outputFile << std::endl;
+            }
+            ///TODO: error handling?
+        }
+        debug() << "CONSOLE RIVET: Goodbye" << std::endl;
+        return 0;
+    } catch (std::exception &e) {
+        std::cerr << std::endl << "Error occurred: " << e.what() << std::endl;
+    }
 }
 
 //TODO: this was copied from driver.cpp, may need to merge the two versions.
