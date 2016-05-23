@@ -9,7 +9,6 @@
 #define __PERSISTENCE_UPDATER_H__
 
 //forward declarations
-class ComputationThread;
 class Face;
 class Halfedge;
 class IndexMatrix;
@@ -25,18 +24,19 @@ class xiMatrixEntry;
 
 #include <map>
 #include <vector>
+#include <interface/progress.h>
 
 
 class PersistenceUpdater
 {
     public:
 
-        PersistenceUpdater(Mesh* m, SimplexTree* b, std::vector<xiPoint>& xi_pts);  //constructor for when we must compute all of the barcode templates
+        PersistenceUpdater(Mesh& m, SimplexTree& b, std::vector<xiPoint>& xi_pts);  //constructor for when we must compute all of the barcode templates
 
-        PersistenceUpdater(Mesh* m, std::vector<xiPoint>& xi_pts); //constructor for when we load the pre-computed barcode templates from a RIVET data file
+        //PersistenceUpdater(Mesh& m, std::vector<xiPoint>& xi_pts); //constructor for when we load the pre-computed barcode templates from a RIVET data file
 
         //functions to compute and store barcode templates in each 2-cell of the mesh
-        void store_barcodes_with_reset(std::vector<Halfedge*>& path, ComputationThread* cthread);   //hybrid approach -- for expensive crossings, resets the matrices and does a standard persistence calculation
+        void store_barcodes_with_reset(std::vector<Halfedge*>& path, Progress &progress);   //hybrid approach -- for expensive crossings, resets the matrices and does a standard persistence calculation
         void store_barcodes_quicksort(std::vector<Halfedge*>& path);    ///TODO -- for expensive crossings, rearranges columns via quicksort and fixes the RU-decomposition globally
 
         //function to set the "edge weights" for each anchor line
@@ -48,8 +48,8 @@ class PersistenceUpdater
     private:
       //data structures
 
-        Mesh* mesh;                 //pointer to the DCEL arrangement in which the barcodes will be stored
-        SimplexTree* bifiltration;  //pointer to the bifiltration --- TODO: convert this to a reference
+        Mesh& mesh;                 //pointer to the DCEL arrangement in which the barcodes will be stored
+        SimplexTree& bifiltration;  //pointer to the bifiltration --- TODO: convert this to a reference
         int dim;                    //dimension of homology to be computed
 
         xiSupportMatrix xi_matrix;   //sparse matrix to hold xi support points -- used for finding anchors (to build the arrangement) and tracking simplices during the vineyard updates (when computing barcodes to store in the arrangement)

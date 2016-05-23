@@ -3,7 +3,6 @@
 
 #include "interface/file_input_reader.h"
 #include "interface/input_parameters.h"
-#include "interface/supported_types.h"
 
 #include <QDebug>
 #include <QFileDialog>

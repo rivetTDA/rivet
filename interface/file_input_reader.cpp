@@ -1,9 +1,10 @@
 #include "file_input_reader.h"
 
 #include <boost/algorithm/string.hpp>
+#include <vector>
 
-FileInputReader::FileInputReader(std::ifstream file) :
-    in(&file),
+FileInputReader::FileInputReader(std::ifstream &file) :
+    in(file),
     next_line_found(false)
 {
     find_next_line();
@@ -18,7 +19,7 @@ void FileInputReader::find_next_line()
     boost::trim(line);
     if (line.empty() || line[0] == '#')
       continue;
-    next_line_tokens = std::vector<std::string>;
+    next_line_tokens.clear();
     boost::split(next_line_tokens, line, boost::is_any_of("\t\n\r\b "));
   }
 }

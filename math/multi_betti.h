@@ -22,15 +22,17 @@ class xiPoint;
 typedef boost::multi_array<unsigned, 2> unsigned_matrix;
 
 #include <vector>
+#include <interface/progress.h>
+
 typedef std::vector<int> Vector;
 
 
 class MultiBetti
 {
 	public:
-        MultiBetti(SimplexTree* st, int dim, int v);		//constructor sets up the data structure but doesn't compute the multi-graded Betti numbers xi_0 and xi_1
+        MultiBetti(SimplexTree& st, int dim, int v);		//constructor sets up the data structure but doesn't compute the multi-graded Betti numbers xi_0 and xi_1
 		
-        void compute_fast(ComputationThread *cthread, unsigned_matrix& hom_dims);
+        void compute_fast(unsigned_matrix& hom_dims, Progress &progress);
             //computes xi_0 and xi_1 at all multi-grades in a fast way; also stores dimension of homology at each grade in the supplied matrix
 		
         //functions to compute xi_0 and xi_1    ----later, make these private and access them via compute_fast();
@@ -48,7 +50,7 @@ class MultiBetti
 		
         void print_lows(Vector &lows);  //TESTING ONLY
 		
-        SimplexTree* bifiltration;		//pointer to the bifiltration
+        SimplexTree& bifiltration;		//pointer to the bifiltration
 
         const int dimension;		//dimension of homology to compute
 

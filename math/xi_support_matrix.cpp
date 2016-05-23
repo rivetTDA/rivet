@@ -4,7 +4,7 @@
 #include "multi_betti.h"
 #include "xi_point.h"
 
-#include <qdebug.h>
+#include "debug.h"
 
 #include <cstddef>  //for NULL
 
@@ -99,7 +99,7 @@ xiSupportMatrix::~xiSupportMatrix()
 //  precondition: xi_pts contains the support points in lexicographical order
 ///NOTE: WRITTEN FOR JULY 2015 BUG FIX
 ///      Runtime complexity of this function is O(n_x * n_y). We can probably do better, but it probably doesn't matter.
-void xiSupportMatrix::fill_and_find_anchors(std::vector<xiPoint>& xi_pts, Mesh* mesh)
+void xiSupportMatrix::fill_and_find_anchors(std::vector<xiPoint>& xi_pts, Mesh& mesh)
 {
     unsigned next_xi_pt = 0;    //tracks the index of the next xi support point to insert
 
@@ -133,7 +133,7 @@ void xiSupportMatrix::fill_and_find_anchors(std::vector<xiPoint>& xi_pts, Mesh* 
 
                 //if this is also an anchor, send it to the Mesh
                 if(anchor)
-                    mesh->add_anchor(new_entry);
+                    mesh.add_anchor(new_entry);
             }
             else if(anchor)
             {
@@ -150,7 +150,7 @@ void xiSupportMatrix::fill_and_find_anchors(std::vector<xiPoint>& xi_pts, Mesh* 
                 xi_pts.push_back( xiPoint(i, j, 0, 0, 0) );
 
                 //send this anchor to the Mesh
-                mesh->add_anchor(new_entry);
+                mesh.add_anchor(new_entry);
             }
         }
     }

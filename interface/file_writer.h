@@ -12,7 +12,7 @@
 #include "../dcel/mesh.h"
 #include "../math/xi_point.h"
 
-#include <QFile>
+#include <fstream>
 
 #include <boost/multiprecision/cpp_int.hpp>
 typedef boost::multiprecision::cpp_rational exact;
@@ -23,13 +23,13 @@ typedef boost::multiprecision::cpp_rational exact;
 class FileWriter
 {
     public:
-        FileWriter(InputParameters& ip, Mesh* m, std::vector<exact>& x, std::vector<exact>& y, std::vector<xiPoint>& xi);
+        FileWriter(InputParameters& ip, Mesh& m, std::vector<exact>& x, std::vector<exact>& y, std::vector<xiPoint>& xi);
 
-        void write_augmented_arrangement(QFile& file);
+        void write_augmented_arrangement(std::ofstream &file);
 
     private:
         InputParameters& input_params;
-        Mesh* arrangement; //pointer to the DCEL arrangement
+        Mesh& arrangement; //reference to the DCEL arrangement
         std::vector<exact>& x_exact;       //exact (e.g. rational) values of all x-grades, sorted
         std::vector<exact>& y_exact;       //exact (e.g. rational) values of all y-grades, sorted
         std::vector<xiPoint>& xi_support;  //stores discrete coordinates of xi support points, with multiplicities

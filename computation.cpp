@@ -1,86 +1,85 @@
 #include "computation.h"
-
+#include "debug.h"
 #include "dcel/mesh.h"
 #include "interface/input_manager.h"
 #include "interface/input_parameters.h"
 #include "math/multi_betti.h"
-#include "math/simplex_tree.h"
-#include "math/xi_point.h"
 
 #include <chrono>
 
-Computation::Computation(InputParameters& params) :
+Computation::Computation(InputParameters& params, Progress &progress) :
     params(params),
+    progress(progress),
     verbosity(params.verbosity)
 { }
 
 Computation::~Computation()
 { }
 
-std::shared_ptr<ComputationResult> Computation::compute()
-{
-  //STAGES 1 and 2: INPUT DATA AND CREATE BIFILTRATION
+std::shared_ptr<ComputationResult> Computation::compute_rivet(RivetInput &input) {
+  
+      //STAGE 3: MULTIGRADED BETTI NUMBERS ALREADY COMPUTED, BUT MUST COMPUTE THE DIMENSIONS
 
-  std::chrono::time_point<std::chrono::system_clock> start, end;
+  std::shared_ptr<ComputationResult> result(new ComputationResult);
 
-  auto result = std::shared_ptr<ComputationResult>(new ComputationResult);
+  find_dimensions(input, result->homology_dimensions);      //compute the homology dimensions at each grade from the graded Betti numbers
 
-    //create the SimplexTree
-  result->bifiltration = new SimplexTree(params.dim, verbosity);
+        if(verbosity >= 2) { debug() << "INPUT FINISHED: xi support points ready"; }
 
-    //get the data via the InputManager
-    InputManager im(this);      //NOTE: InputManager will fill the vectors x_grades, x_exact, y_grades, and y_exact
-    im.start();                 //   If the input file is raw data, then InputManager will also build the bifiltration.
-                                //   If the input file is a RIVET data file, then InputManager will fill xi_support and barcode templates, but bifiltration will remain NULL.
+        xiSupportReady(input.xi_support);          //signal that xi support points are ready for visualization
+        progress.advanceProgressStage();    //update progress box to stage 4
 
-    //print bifiltration statistics
-    if(verbosity >= 2 && params.raw_data)
+
+      //STAGES 4 and 5: RE-BUILD THE AUGMENTED ARRANGEMENT
+
+        if(verbosity >= 2) { debug() << "RE-BUILDING THE AUGMENTED ARRANGEMENT"; }
+
+        auto start = std::chrono::system_clock::now();
+
+        std::shared_ptr<Mesh> arrangement(new Mesh(input.x_grades,
+                                                   input.x_exact,
+                                                   input.y_grades,
+                                                   input.y_exact,
+                                                   verbosity));
+        //TODO: hook up signals
+    Progress progress;
+        arrangement->build_arrangement(input.xi_support, input.barcode_templates, progress);
+        auto end = std::chrono::system_clock::now();
+
+        debug() << "   re-building the augmented arrangement took" << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "milliseconds";
+
+        //send (a pointer to) the arrangement back to the VisualizationWindow
+        arrangementReady(*arrangement);
+}
+
+std::shared_ptr<ComputationResult> Computation::compute_raw(RawDataInput &input) {
+
+    if(verbosity >= 2)
     {
         debug() << "\nBIFILTRATION:";
-        debug() << "   Number of simplices of dimension" << params.dim << ":" << bifiltration->get_size(params.dim);
-        debug() << "   Number of simplices of dimension" << (params.dim + 1) << ":" << bifiltration->get_size(params.dim + 1);
-        debug() << "   Number of x-grades:" << x_grades.size() << "; values" << x_grades.front() << "to" << x_grades.back();
-        debug() << "   Number of y-grades:" << y_grades.size() << "; values" << y_grades.front() << "to" << y_grades.back() << "\n";
+        debug() << "   Number of simplices of dimension" << params.dim << ":" << input.bifiltration().get_size(params.dim);
+        debug() << "   Number of simplices of dimension" << (params.dim + 1) << ":" << input.bifiltration().get_size(params.dim + 1);
+        debug() << "   Number of x-grades:" << input.x_grades.size() << "; values" << input.x_grades.front() << "to" << input.x_grades.back();
+        debug() << "   Number of y-grades:" << input.y_grades.size() << "; values" << input.y_grades.front() << "to" << input.y_grades.back() << "\n";
     }
-    if(verbosity >= 4)
-    {
-        debug() << "x-grades:";
-        for(unsigned i=0; i<x_grades.size(); i++)
-        {
-          std::ostringstream oss;
-          oss << x_exact[i];
-          debug() << "  " << x_grades[i] << "=" << oss.str().data();
-        }
-        debug() << "y-grades:";
-        for(unsigned i=0; i<y_grades.size(); i++)
-        {
-          std::ostringstream oss;
-          oss << y_exact[i];
-          debug() << "  " << y_grades[i] << "=" << oss.str().data();
-        }
-    }
-
-    advanceProgressStage(); //update progress box to stage 3
-
-    if(params.raw_data)    //then the user selected a raw data file, and we need to do persistence calculations
-    {
       //STAGE 3: COMPUTE MULTIGRADED BETTI NUMBERS
 
+    std::shared_ptr<ComputationResult> result(new ComputationResult);
         //compute xi_0 and xi_1 at all multi-grades
         if(verbosity >= 2) { debug() << "COMPUTING xi_0 AND xi_1 FOR HOMOLOGY DIMENSION " << params.dim << ":"; }
-        MultiBetti mb(bifiltration, params.dim, verbosity);
+        MultiBetti mb(input.bifiltration(), params.dim, verbosity);
 
-        start = std::chrono::system_clock::now();
-        mb.compute_fast(this, homology_dimensions);
+        auto start = std::chrono::system_clock::now();
+        mb.compute_fast(result->homology_dimensions, progress);
 
-        end = std::chrono::system_clock::now();
-        debug() << "  --> xi_i computation took " << end - start << " seconds";
+        auto end = std::chrono::system_clock::now();
+        debug() << "  --> xi_i computation took " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " seconds";
 
         //store the xi support points
         mb.store_support_points(result->xi_support);
 
-        emit xiSupportReady();          //signal that xi support points are ready for visualization
-        emit advanceProgressStage();    //update progress box to stage 4
+        xiSupportReady(result->xi_support);          //signal that xi support points are ready for visualization
+        progress.advanceProgressStage();    //update progress box to stage 4
 
 
       //STAGES 4 and 5: BUILD THE LINE ARRANGEMENT AND COMPUTE BARCODE TEMPLATES
@@ -89,59 +88,70 @@ std::shared_ptr<ComputationResult> Computation::compute()
         if(verbosity >= 2) { debug() << "CALCULATING ANCHORS AND BUILDING THE DCEL ARRANGEMENT"; }
 
         start = std::chrono::system_clock::now();
-        arrangement = new Mesh(x_grades, x_exact, y_grades, y_exact, verbosity);    //NOTE: delete later!
-        arrangement->build_arrangement(mb, result->xi_support, this);     ///TODO: update this -- does not need to store list of xi support points in xi_support
+        Mesh *arrangement = new Mesh(input.x_grades, input.x_exact, input.y_grades, input.y_exact, verbosity);
+        arrangement->build_arrangement(mb, result->xi_support, progress);     ///TODO: update this -- does not need to store list of xi support points in xi_support
         //NOTE: this also computes and stores barcode templates in the arrangement
 
         end = std::chrono::system_clock::now();
-        debug() << "   building the line arrangement and computing all barcode templates took" << end - start << "milliseconds";
+        debug() << "   building the line arrangement and computing all barcode templates took"
+                << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "milliseconds";
 
         //send (a pointer to) the arrangement back to the VisualizationWindow
-        arrangementReady(arrangement);
+        arrangementReady(*arrangement);
+    //TODO: bifiltration isn't used anywhere? Only part of the input?
+}
 
-        //delete the SimplexTree
-        delete bifiltration;
+std::shared_ptr<ComputationResult> Computation::compute(InputData &data)
+{
+  //STAGES 1 and 2: INPUT DATA AND CREATE BIFILTRATION
+
+  std::chrono::time_point<std::chrono::system_clock> start, end;
+
+    if(verbosity >= 4)
+    {
+        debug() << "x-grades:";
+        for(unsigned i=0; i<data.x_grades.size(); i++)
+        {
+          std::ostringstream oss;
+          oss << data.x_exact[i];
+          debug() << "  " << data.x_grades[i] << "=" << oss.str().data();
+        }
+        debug() << "y-grades:";
+        for(unsigned i=0; i<data.y_grades.size(); i++)
+        {
+          std::ostringstream oss;
+          oss << data.y_exact[i];
+          debug() << "  " << data.y_grades[i] << "=" << oss.str().data();
+        }
+    }
+
+    progress.advanceProgressStage(); //update progress box to stage 3
+
+    if(params.raw_data)    //then the user selected a raw data file, and we need to do persistence calculations
+    {
+      auto input = RawDataInput(data);
+        //print bifiltration statistics
+      return compute_raw(input);
     }
     else    //then the user selected a RIVET file with pre-computed persistence information, and we just need to re-build the arrangement
     {
-      //STAGE 3: MULTIGRADED BETTI NUMBERS ALREADY COMPUTED, BUT MUST COMPUTE THE DIMENSIONS
-
-        find_dimensions();      //compute the homology dimensions at each grade from the graded Betti numbers
-
-        if(verbosity >= 2) { debug() << "INPUT FINISHED: xi support points ready"; }
-
-        xiSupportReady();          //signal that xi support points are ready for visualization
-        advanceProgressStage();    //update progress box to stage 4
-
-
-      //STAGES 4 and 5: RE-BUILD THE AUGMENTED ARRANGEMENT
-
-        if(verbosity >= 2) { debug() << "RE-BUILDING THE AUGMENTED ARRANGEMENT"; }
-
-        start = std::chrono::system_clock::now();
-
-        arrangement = new Mesh(x_grades, x_exact, y_grades, y_exact, verbosity);    //NOTE: delete later!
-        arrangement->build_arrangement(xi_support, barcode_templates, this);
-        end = std::chrono::system_clock::now();
-
-        debug() << "   re-building the augmented arrangement took" << end - start << "milliseconds";
-
-        //send (a pointer to) the arrangement back to the VisualizationWindow
-        arrangementReady(arrangement);
+      auto input = RivetInput(data);
+      return compute_rivet(input);
     }
 }//end run()
 
 //computes homology dimensions from the graded Betti numbers (used when data comes from a pre-computed RIVET file)
-void Computation::find_dimensions()
+void Computation::find_dimensions(const RivetInput &input, unsigned_matrix &homology_dimensions)
 {
-    homology_dimensions.resize(boost::extents[x_grades.size()][y_grades.size()]);
-    std::vector<xiPoint>::iterator it = xi_support.begin();
+
+    homology_dimensions.resize(boost::extents[input.x_grades.size()][input.y_grades.size()]);
+    std::vector<xiPoint>::iterator it = input.xi_support.begin();
     int col_sum = 0;
 
     //compute dimensions at (0,y)
-    for(unsigned y = 0; y < y_grades.size(); y++)
+    for(unsigned y = 0; y < input.y_grades.size(); y++)
     {
-        if(it != xi_support.end() && it->x == 0 && it->y == y)
+        if(it != input.xi_support.end() && it->x == 0 && it->y == y)
         {
             col_sum += it->zero - it->one + it->two;
             ++it;
@@ -151,13 +161,13 @@ void Computation::find_dimensions()
     }
 
     //compute dimensions at (x,y) for x > 0
-    for(unsigned x = 1; x < x_grades.size(); x++)
+    for(unsigned x = 1; x < input.x_grades.size(); x++)
     {
         col_sum = 0;
 
-        for(unsigned y = 0; y < y_grades.size(); y++)
+        for(unsigned y = 0; y < input.y_grades.size(); y++)
         {
-            if(it != xi_support.end() && it->x == x && it->y == y)
+            if(it != input.xi_support.end() && it->x == x && it->y == y)
             {
                 col_sum += it->zero - it->one + it->two;
                 ++it;

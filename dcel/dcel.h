@@ -19,8 +19,7 @@ class Anchor;
 
 #include "barcode_template.h"
 
-#include <QDebug>
-
+#include "debug.h"
 
 class Vertex
 {
@@ -33,7 +32,7 @@ class Vertex
         double get_x();		//get the x-coordinate
         double get_y();		//get the y-coordinate
 
-        friend QDebug& operator<<(QDebug& qd, const Vertex& v);	//for printing the vertex
+        friend Debug& operator<<(Debug& qd, const Vertex& v);	//for printing the vertex
 
     private:
         Halfedge* incident_edge;	//pointer to one edge incident to this vertex
@@ -66,7 +65,7 @@ class Halfedge
 
         Anchor* get_anchor() const; //get the Anchor
 
-        friend QDebug& operator<<(QDebug& qd, const Halfedge& e);	//for printing the halfedge
+        friend Debug& operator<<(Debug& qd, const Halfedge& e);	//for printing the halfedge
 
     private:
         Vertex* origin;		//pointer to the vertex from which this halfedge originates
@@ -94,7 +93,7 @@ class Face
         bool has_been_visited();            //true iff cell has been visited in the vineyard-update process (so that we can distinguish a cell with an empty barcode from an unvisited cell)
         void mark_as_visited();             //marks this cell as visited
 
-        friend QDebug& operator<<(QDebug& os, const Face& f);	//for printing the face
+        friend Debug& operator<<(Debug& os, const Face& f);	//for printing the face
 
     private:
         Halfedge* boundary;     //pointer to one halfedge in the boundary of this cell

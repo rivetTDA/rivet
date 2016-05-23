@@ -2,7 +2,7 @@
 
 #include "anchor.h"
 
-#include <QDebug>
+#include "debug.h"
 
 
 /*** implementation of class Vertex **/
@@ -33,10 +33,10 @@ double Vertex::get_y()
     return y;
 }
 
-QDebug& operator<<(QDebug& qd, const Vertex& v)
+Debug& operator<<(Debug& qd, const Vertex& v)
 {
-    qd.nospace() << "(" << v.x << ", " << v.y << ")";
-    return qd.space();
+    qd << "(" << v.x << ", " << v.y << ")";
+    return qd;
 }
 
 
@@ -115,14 +115,14 @@ Anchor* Halfedge::get_anchor() const
     return anchor;
 }
 
-QDebug& operator<<(QDebug& qd, const Halfedge& e)
+Debug& operator<<(Debug& qd, const Halfedge& e)
 {
     Halfedge* t = e.twin;
-    qd.nospace() << *(e.origin) << "--" << *(t->origin) << "; ";
+    qd << *(e.origin) << "--" << *(t->origin) << "; ";
     if(e.anchor == NULL)
-        qd.nospace() << "Anchor null; ";
+        qd << "Anchor null; ";
     else
-        qd.nospace() << "Anchor coords (" << e.anchor->get_x() << ", " << e.anchor->get_y() << "); ";
+        qd << "Anchor coords (" << e.anchor->get_x() << ", " << e.anchor->get_y() << "); ";
     return qd;
 }
 
@@ -166,15 +166,15 @@ void Face::mark_as_visited()
     visited = true;
 }
 
-QDebug& operator<<(QDebug& qd, const Face& f)
+Debug& operator<<(Debug& qd, const Face& f)
 {
     Halfedge* start = f.boundary;
     Halfedge* curr = start;
     do{
-        qd.nospace() << *(curr->get_origin()) << "--";
+        qd << *(curr->get_origin()) << "--";
         curr = curr->get_next();
     }while(curr != start);
-    qd.nospace() << "cycle; ";
+    qd << "cycle; ";
     return qd;
 }
 

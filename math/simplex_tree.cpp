@@ -8,7 +8,7 @@
 #include "map_matrix.h"
 #include "st_node.h"
 
-#include <QDebug>
+#include "debug.h"
 
 #include <limits>   //std::numeric_limits
 #include <stdexcept>
@@ -162,7 +162,7 @@ void SimplexTree::build_VR_complex(std::vector<unsigned>& times, std::vector<uns
 
     //build simplex tree recursively
 	//this also assigns global indexes to each simplex
-    if(verbosity >= 6) { qDebug() << "BUILDING SIMPLEX TREE"; }
+    if(verbosity >= 6) { debug() << "BUILDING SIMPLEX TREE"; }
     unsigned gic=0;	//global index counter
     for(unsigned i=0; i<times.size(); i++)
 	{
@@ -697,8 +697,7 @@ SimplexData SimplexTree::get_simplex_data(int index)
 	{
 		if(kids.size() == 0)
 		{
-            qDebug() << "ERROR: vector of size zero in SimplexTree::get_multi_index()\n";
-			throw std::exception();
+			throw std::runtime_error("ERROR: vector of size zero in SimplexTree::get_multi_index()\n");
 		}
 		
 		//binary search for index

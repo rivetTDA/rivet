@@ -1,7 +1,7 @@
-#ifndef RIVET_DEBUG_H
-#define RIVET_DEBUG_H
-
-#include <iostream>
+//
+// Created by Bryn Keller on 5/23/16.
+//
+#include "debug.h"
 
 #ifdef QT_CORE_LIB
 
@@ -18,9 +18,9 @@ Debug debug(bool nospace = false) {
 
 #else
 
-using Debug = std::ostream&;
-
-Debug& debug(bool nospace = false, std::ostream& out = std::clog);
+Debug& debug(bool nospace, std::ostream& out) {
+    return out;
+}
 
 #endif
-#endif
+

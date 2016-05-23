@@ -1,6 +1,6 @@
 #include "barcode_template.h"
 
-#include <QDebug>
+#include "debug.h"
 
 
 BarTemplate::BarTemplate(unsigned a, unsigned b) :
@@ -80,12 +80,11 @@ bool BarcodeTemplate::is_empty()
 //for testing only
 void BarcodeTemplate::print()
 {
-    QDebug qd = qDebug().nospace();
-    qd << "      barcode template: ";
+    debug() << "      barcode template: ";
     for(std::set<BarTemplate>::iterator it = bars.begin(); it != bars.end(); ++it)
     {
         BarTemplate b = *it;
-        qd << "(" << b.begin << "," << b.end << ")x" << b.multiplicity << ", ";
+        debug(true) << "(" << b.begin << "," << b.end << ")x" << b.multiplicity << ", ";
     }
 }
 

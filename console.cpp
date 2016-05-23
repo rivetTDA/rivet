@@ -3,8 +3,7 @@
 #include "interface/input_manager.h"
 #include "computation.h"
 #include "debug.h"
-#include <iostream>
-#include <string>
+#include <interface/file_writer.h>
 
 #include "docopt/docopt.h"
 
@@ -28,9 +27,9 @@ static const char USAGE[] =
       -V <verbosity> --verbosity=<verbosity>   Verbosity level: 0 (no console output) to 10 (lots of output) [default: 2]
 )";
 
-long get_long_or_die(std::map<std::string, docopt::value> &args, const std::string &key) {
+unsigned int get_uint_or_die(std::map<std::string, docopt::value> &args, const std::string &key) {
   try {
-    return args[key].asLong();
+    return static_cast<unsigned int>(args[key].asLong());
   } catch (std::exception &e) {
     std::cerr << "Argument " << key << " must be an integer" << std::endl;
     exit(1);
@@ -39,6 +38,8 @@ long get_long_or_die(std::map<std::string, docopt::value> &args, const std::stri
 
 int main(int argc, char *argv[])
 {
+    debug() << "CONSOLE RIVET" << std::endl;
+
     InputParameters params;   //parameter values stored here
 
 
@@ -50,30 +51,48 @@ int main(int argc, char *argv[])
 
     params.fileName = args["<input_file>"].asString();
     params.outputFile = args["<output_file>"].asString();
-    params.dim = get_long_or_die(args, "--homology");
-    params.x_bins = get_long_or_die(args, "--xbins");
-    params.y_bins = get_long_or_die(args, "--ybins");
-    params.verbosity = get_long_or_die(args, "--verbosity");
+    params.dim = get_uint_or_die(args, "--homology");
+    params.x_bins = get_uint_or_die(args, "--xbins");
+    params.y_bins = get_uint_or_die(args, "--ybins");
+    params.verbosity = get_uint_or_die(args, "--verbosity");
 
-    debug() << "CONSOLE RIVET" << std::endl;
-  //   Driver driver(params);
 
-  //   QObject::connect(&driver, SIGNAL(finished()), app.data(), SLOT(quit()));
-  //   QObject::connect(app.data(), SIGNAL(aboutToQuit()), &driver, SLOT(aboutToQuitApp()));
+    InputManager inputManager(params);
+    Progress progress;
+    Computation computation(params, progress);
+    std::shared_ptr<InputData> input = inputManager.start(progress);
+    std::shared_ptr<ComputationResult> result = computation.compute(*input);
+    auto arrangement = result->arrangement;
+     //TESTING: print arrangement info and verify consistency
+     arrangement->print_stats();
+     arrangement->test_consistency();
 
-  //   QTimer::singleShot(10, &driver, SLOT(run()));  //calls driver.run()
-  //   return app->exec();                            //   10ms after the Qt messaging application starts
+     if(params.verbosity >= 2) { debug() << "COMPUTATION FINISHED."; }
 
-    // auto computation = Computation(verbosity,)
+     //if an output file has been specified, then save the arrangement
+     if(!params.outputFile.empty())
+     {
+         std::ofstream file(params.outputFile);
+         if(file.is_open())
+         {
+             debug() << "Writing file:" << params.outputFile;
+
+             FileWriter fw(params, *(arrangement), input->x_exact, input->y_exact, result->xi_support);
+             fw.write_augmented_arrangement(file);
+         }
+         else
+         {
+             debug() << "Error: Unable to write file:" << params.outputFile;
+         }
+         ///TODO: error handling?
+     }
+    debug() << "CONSOLE RIVET: Goodbye";
     return 0;
 }
 
 //TODO: this was copied from driver.cpp, may need to merge the two versions.
 // void console_augmented_arrangement_ready(Mesh* arrangement)
 // {
-//     //TESTING: print arrangement info and verify consistency
-//     arrangement->print_stats();
-// //    arrangement->test_consistency();
 
 //     //update status
 //     if(input_params.verbosity >= 2) { qDebug() << "COMPUTATION FINISHED."; }

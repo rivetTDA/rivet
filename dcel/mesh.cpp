@@ -5,7 +5,6 @@
 #include "mesh.h"
 
 #include "dcel.h"
-#include "../computationthread.h"
 #include "../dcel/barcode_template.h"
 #include "../math/multi_betti.h"            //this include might not be necessary
 #include "../math/persistence_updater.h"
@@ -18,6 +17,8 @@
 #include <limits>	//necessary for infinity
 #include <queue>    //for std::priority_queue
 #include <chrono>
+#include <interface/progress.h>
+#include <math/simplex_tree.h>
 
 // Mesh constructor; sets up bounding box (with empty interior) for the affine Grassmannian
 Mesh::Mesh(const std::vector<double> &xg,
@@ -91,62 +92,64 @@ Mesh::~Mesh()
 //builds the DCEL arrangement, computes and stores persistence data
 //also stores ordered list of xi support points in the supplied vector
 //precondition: the constructor has already created the boundary of the arrangement
-void Mesh::build_arrangement(MultiBetti& mb, std::vector<xiPoint>& xi_pts, std::function<void(int)> progress)
+void Mesh::build_arrangement(MultiBetti& mb, std::vector<xiPoint>& xi_pts, Progress &progress)
 {
-    std::chrono::time_point<std::chrono::system_clock> start, end;    //for timing the computations
+    std::chrono::time_point<std::chrono::system_clock> start;    //for timing the computations
 
     //first, create PersistenceUpdater
     //this also finds anchors and stores them in the vector Mesh::all_anchors -- JULY 2015 BUG FIX
-    progress(10);
+    progress.progress(10);
     start = std::chrono::system_clock::now();
-    PersistenceUpdater updater(this, mb.bifiltration, xi_pts);   //PersistenceUpdater object is able to do the calculations necessary for finding anchors and computing barcode templates
-    debug() << "  --> finding anchors took" << std::chrono::system_clock::now() - start << "seconds";
+    PersistenceUpdater updater(*this, mb.bifiltration, xi_pts);   //PersistenceUpdater object is able to do the calculations necessary for finding anchors and computing barcode templates
+    debug() << "  --> finding anchors took" << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start).count() << "milliseconds";
 
     //now that we have all the anchors, we can build the interior of the arrangement
-    progress(25);
+    progress.progress(25);
     start = std::chrono::system_clock::now();
     build_interior();
-    debug() << "  --> building the interior of the line arrangement took" << std::chrono::system_clock::now() - start << "seconds";
+    debug() << "  --> building the interior of the line arrangement took" << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start).count() << "milliseconds";
     print_stats();
 
     //compute the edge weights
-    progress(50);
+    progress.progress(50);
     start = std::chrono::system_clock::now();
     find_edge_weights(updater);
-    debug() << "  --> computing the edge weights took" << std::chrono::system_clock::now() - start << "seconds";
+    debug() << "  --> computing the edge weights took" << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start).count() << "milliseconds";
 
     //now that the arrangement is constructed, we can find a path -- NOTE: path starts with a (near-vertical) line to the right of all multigrades
-    progress(75);
+    progress.progress(75);
     std::vector<Halfedge*> path;
     start = std::chrono::system_clock::now();
     find_path(path);
-    debug() << "  --> finding the path took" << std::chrono::system_clock::now() - start << "seconds";
+    debug() << "  --> finding the path took" << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start).count() << "milliseconds";
 
     //update the progress dialog box
-    cthread->advanceProgressStage();            //update now in stage 5 (compute discrete barcodes)
-    cthread->setProgressMaximum(path.size());
+    progress.advanceProgressStage();            //update now in stage 5 (compute discrete barcodes)
+    progress.setProgressMaximum(path.size());
 
     //finally, we can traverse the path, computing and storing a barcode template in each 2-cell
-    updater.store_barcodes_with_reset(path, cthread);
+    updater.store_barcodes_with_reset(path, progress);
 
 }//end build_arrangement()
 
 //builds the DCEL arrangement from the supplied xi support points, but does NOT compute persistence data
-void Mesh::build_arrangement(std::vector<xiPoint>& xi_pts, std::vector<BarcodeTemplate>& barcode_templates, std::function<void(int)> progress)
+void Mesh::build_arrangement(std::vector<xiPoint>& xi_pts, std::vector<BarcodeTemplate>& barcode_templates, Progress &progress)
 {
     std::chrono::time_point<std::chrono::system_clock> start, end;
 
     //first, compute anchors and store them in the vector Mesh::all_anchors
-    progress(10);
+    progress.progress(10);
     start = std::chrono::system_clock::now();
-    PersistenceUpdater updater(this, xi_pts);   //we only use the PersistenceUpdater to find and store the anchors
-    debug() << "  --> finding anchors took" << std::chrono::system_clock::now() - start << "seconds";
+    //TODO: this is odd, fix.
+    SimplexTree dummy_tree(0,0);
+    PersistenceUpdater updater(*this, dummy_tree, xi_pts);   //we only use the PersistenceUpdater to find and store the anchors
+    debug() << "  --> finding anchors took" << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start).count() << "milliseconds";
 
     //now that we have all the anchors, we can build the interior of the arrangement
-    progress(30);
+    progress.progress(30);
     start = std::chrono::system_clock::now();
     build_interior();   ///TODO: build_interior() should update its status!
-    debug() << "  --> building the interior of the line arrangement took" << std::chrono::system_clock::now() - start << "seconds";
+    debug() << "  --> building the interior of the line arrangement took" << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start).count() << "milliseconds";
     print_stats();
 
     //check
@@ -171,10 +174,9 @@ void Mesh::build_interior()
 {
     if(verbosity >= 6)
     {
-        QDebug qd = debug().nospace();
-        qd << "BUILDING ARRANGEMENT:  Anchors sorted for left edge of strip: ";
+        debug() << "BUILDING ARRANGEMENT:  Anchors sorted for left edge of strip: ";
         for(std::set<Anchor*, Anchor_LeftComparator>::iterator it = all_anchors.begin(); it != all_anchors.end(); ++it)
-            qd << "(" << (*it)->get_x() << "," << (*it)->get_y() << ") ";
+            debug(true) << "(" << (*it)->get_x() << "," << (*it)->get_y() << ") ";
     }
 
   // DATA STRUCTURES
@@ -604,12 +606,12 @@ void Mesh::find_path(std::vector<Halfedge*>& pathvec)
     //TESTING -- print the edges in the dual graph
     if(verbosity >= 10)
     {
-//        QDebug qd = debug().nospace();
+//        Debug qd = debug(true);
         debug() << "EDGES IN THE DUAL GRAPH OF THE ARRANGEMENT: ";
         typedef boost::graph_traits<Graph>::edge_iterator edge_iterator;
         std::pair<edge_iterator, edge_iterator> ei = boost::edges(dual_graph);
         for(edge_iterator it = ei.first; it != ei.second; ++it)
-            debug().nospace() << "  (" << boost::source(*it, dual_graph) << "\t, " << boost::target(*it, dual_graph) << "\t) \tweight = " << boost::get(boost::edge_weight_t(), dual_graph, *it);
+            debug(true) << "  (" << boost::source(*it, dual_graph) << "\t, " << boost::target(*it, dual_graph) << "\t) \tweight = " << boost::get(boost::edge_weight_t(), dual_graph, *it);
     }
 
 
@@ -621,10 +623,10 @@ void Mesh::find_path(std::vector<Halfedge*>& pathvec)
 
     if(verbosity >= 10)
     {
-//        QDebug qd = debug().nospace();
+//        Debug qd = debug(true);
         debug() << "num MST edges: " << spanning_tree_edges.size() << "\n";
         for(unsigned i=0; i<spanning_tree_edges.size(); i++)
-            debug().nospace() << "  (" << boost::source(spanning_tree_edges[i], dual_graph) << "\t, " << boost::target(spanning_tree_edges[i], dual_graph) << "\t) \tweight = " << boost::get(boost::edge_weight_t(), dual_graph, spanning_tree_edges[i]);
+            debug(true) << "  (" << boost::source(spanning_tree_edges[i], dual_graph) << "\t, " << boost::target(spanning_tree_edges[i], dual_graph) << "\t) \tweight = " << boost::get(boost::edge_weight_t(), dual_graph, spanning_tree_edges[i]);
     }
 
 //  // PART 2-ALTERNATE: FIND A HAMILTONIAN TOUR
@@ -664,11 +666,10 @@ void Mesh::find_path(std::vector<Halfedge*>& pathvec)
     //TESTING -- PRINT PATH
     if(verbosity >= 10)
     {
-        QDebug qd = debug().nospace();
-        qd << "PATH: " << start << ", ";
+        debug() << "PATH: " << start << ", ";
         for(unsigned i=0; i<pathvec.size(); i++)
-            qd << (face_indexes.find((pathvec[i])->get_face()))->second << ", ";
-        qd << "\n";
+            debug(true) << (face_indexes.find((pathvec[i])->get_face()))->second << ", ";
+        debug(true) << "\n";
     }
 }//end find_path()
 
@@ -748,7 +749,7 @@ BarcodeTemplate& Mesh::get_barcode_template(double degrees, double offset)
     double slope = tan(radians);
     double intercept = offset/cos(radians);
 
-//    debug().nospace() << "  Line (deg, off) = (" << degrees << ", " << offset << ") transformed to (slope, int) = (" << slope << ", " << intercept << ")";
+//    debug(true) << "  Line (deg, off) = (" << degrees << ", " << offset << ") transformed to (slope, int) = (" << slope << ", " << intercept << ")";
 
     Face* cell = find_point(slope, -1*intercept);   //multiply by -1 for point-line duality
         ///TODO: REPLACE THIS WITH A SEEDED SEARCH
@@ -959,7 +960,7 @@ Face* Mesh::find_point(double x_coord, double y_coord)
                 {
                     finger = finger->get_twin();
 
-                    if(verbosity >= 8) { debug().nospace() << "   --- crossing line dual to anchor (" << temp->get_x() << "," << temp->get_y() << ") at x = " << x_pos; }
+                    if(verbosity >= 8) { debug(true) << "   --- crossing line dual to anchor (" << temp->get_x() << "," << temp->get_y() << ") at x = " << x_pos; }
                 }
             }
         }//end else

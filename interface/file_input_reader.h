@@ -13,7 +13,7 @@
 
 class FileInputReader : public std::iterator<std::output_iterator_tag,
   std::vector<std::string>,
-  ptrdiff_t,
+  std::ptrdiff_t,
   std::vector<std::string>*,
   std::vector<std::string>&>
 {
@@ -24,7 +24,7 @@ class FileInputReader : public std::iterator<std::output_iterator_tag,
         std::vector<std::string> next_line();    //returns the next line, as a vector of strings
 
     private:
-        std::ifstream in;
+        std::ifstream &in;
         bool next_line_found;
         std::vector<std::string> next_line_tokens;
         void find_next_line();

@@ -2,7 +2,6 @@
  */
 
 #include "input_manager.h"
-#include "supported_types.h"
 #include "../computation.h"
 #include "file_input_reader.h"
 #include "input_parameters.h"
@@ -31,7 +30,7 @@ bool is_number(const std::string& s)
 
 std::string join(const std::vector<std::string> &strings) {
   std::stringstream ss;
-  for(int i = 0; i < strings.length(), i++) {
+  for(int i = 0; i < strings.size(); i++) {
     if (i > 0)
       ss << " ";
     ss << strings[i];
@@ -39,9 +38,9 @@ std::string join(const std::vector<std::string> &strings) {
   return ss.str();
 }
 
-std::vector<std::string> split(const std::string& str, const std::string& separators) {
+std::vector<std::string> split(std::string& str, std::string separators) {
   std::vector<std::string> strings;
-  boost::split(str, strings, boost::is_any_of(separators));
+  boost::split(strings, str, boost::is_any_of(separators));
   return strings;
 }
 
@@ -50,7 +49,7 @@ std::vector<std::string> split(const std::string& str, const std::string& separa
 exact str_to_exact(std::string str)
 {
     if(!is_number(str)){
-  	 	debug()<<"Error: "<<str<<" is not a number"<<endl;
+  	 	debug()<<"Error: "<<str<<" is not a number"<<std::endl;
     	return 0;
     }
     exact r;
@@ -116,7 +115,7 @@ public:
 private:
   FileInputReader &reader;
   std::vector<std::string> tokens;
-  std::iterator<std::string> it;
+  std::vector<std::string>::iterator it;
 };
 
 //==================== InputManager class ====================
@@ -125,61 +124,68 @@ private:
 //constructor
 InputManager::InputManager(InputParameters &params) :
     input_params(params),
-    verbosity(params->verbosity),
+    verbosity(params.verbosity),
     hom_dim(input_params.dim)
-{ }
+{
+    register_file_type(FileType {"points", "point-cloud data", true,
+                               std::bind(&InputManager::read_point_cloud, this, std::placeholders::_1, std::placeholders::_2) });
+
+    register_file_type(FileType {"metric", "metric data", true,
+                                 std::bind(&InputManager::read_discrete_metric_space, this, std::placeholders::_1, std::placeholders::_2) });
+    register_file_type(FileType {"bifiltration", "bifiltration data", true,
+                                 std::bind(&InputManager::read_bifiltration, this, std::placeholders::_1, std::placeholders::_2) });
+    register_file_type(FileType {"RIVET_0", "pre-computed RIVET data", false,
+                                 std::bind(&InputManager::read_RIVET_data, this, std::placeholders::_1, std::placeholders::_2) });
+};
+
+void InputManager::register_file_type(FileType file_type) {
+    supported_types.push_back(file_type);
+}
+FileType* InputManager::get_file_type(std::string fileName) {
+    std::ifstream stream(fileName);
+    if (!stream.is_open()) {
+        throw std::runtime_error("Could not open " + fileName);
+    }
+    FileInputReader reader(stream);
+    std::string filetype_name = reader.next_line()[0];
+
+    auto it = std::find_if(supported_types.begin(), supported_types.end(), [filetype_name](FileType t) { return t.identifier == filetype_name; });
+
+    if (it == supported_types.end()) {
+        return nullptr; //TODO: this is icky. Look for Maybe<T> implementation instead?
+    }
+
+    return &(*it);
+}
+
 
 //function to run the input manager, requires a filename
 //  post condition: x_grades and x_exact have size x_bins, and they contain the grade values for the 2-D persistence module in double and exact form (respectively)
 //                  similarly for y_grades and y_exact
-void InputManager::start()
+std::shared_ptr<InputData> InputManager::start(Progress &progress)
 {
 	//read the file
   if(verbosity >= 2) { debug() << "READING FILE:" << input_params.fileName; }
-    if(infile.open(QIODevice::ReadOnly | QIODevice::Text))
-	{
-        FileInputReader reader(infile);
-
-        //determine what type of file it is
-        std::string filetype = reader.next_line()[0];  ///TODO: error handling -- the file must have at least one line with non-whitespace characters
-
-		//call appropriate handler function
-        if(filetype == std::string("points"))
-		{
-            read_point_cloud(reader);
-		}
-        else if(filetype == std::string("metric"))
-        {
-            read_discrete_metric_space(reader);
-        }
-        else if(filetype == std::string("bifiltration"))
-		{
-            read_bifiltration(reader);
-		}
-        else if(filetype == std::string("RIVET_0"))
-        {
-            read_RIVET_data(reader);
-        }
-        else
-		{
-            debug() << "Error: Unrecognized file type.";
-			throw std::exception();
-		}
-	}
-	else
-	{
-    debug() << "Error: Unable to open file: " << input_params.fileName;
-		throw std::exception();
-	}
-
+    auto ptr = get_file_type(input_params.fileName);
+    if (ptr == nullptr) {
+        throw std::runtime_error("Unsupported file type");
+    }
+    FileType file_type = *ptr;
+    std::ifstream infile(input_params.fileName);                   //input file
+    if (!infile.is_open()) {
+        throw std::runtime_error("Could not open input file");
+    }
+    return file_type.parser(infile, progress);
 }//end start()
 
 
 //reads a point cloud
 //  points are given by coordinates in Euclidean space, and each point has a "birth time"
 //  constructs a simplex tree representing the bifiltered Vietoris-Rips complex
-void InputManager::read_point_cloud(FileInputReader& reader)
+std::shared_ptr<InputData> InputManager::read_point_cloud(std::ifstream &stream, Progress &progress)
 {
+    FileInputReader reader(stream);
+    std::shared_ptr<InputData> data(new InputData);
     if(verbosity >= 6) { debug() << "  Found a point cloud file."; }
 
   // STEP 1: read data file and store exact (rational) values
@@ -188,14 +194,14 @@ void InputManager::read_point_cloud(FileInputReader& reader)
     std::vector<std::string> dimension_line = reader.next_line();
     if (dimension_line.size() != 1)
     {
-    	debug() << "There was more than one value in the expected dimension line.  There may be a problem with your input file.  " << endl;
+    	debug() << "There was more than one value in the expected dimension line.  There may be a problem with your input file.  " << std::endl;
     }
-    int dimension = dimension_line[0];
+    int dimension = std::stoi(dimension_line[0]);
 
     //check for invalid input
     if (dimension == 0)
     {
-    	debug() << "An invalid input was received for the dimension." << endl;
+    	debug() << "An invalid input was received for the dimension." << std::endl;
     	// throw an exception
     }
 
@@ -203,13 +209,13 @@ void InputManager::read_point_cloud(FileInputReader& reader)
     std::vector<std::string> distance_line = reader.next_line();
     if (distance_line.size() != 1)
     {
-    	debug() << "There was more than one value in the expected distance line.  There may be a problem with your input file.  " << endl;
+    	debug() << "There was more than one value in the expected distance line.  There may be a problem with your input file.  " << std::endl;
     }
 
     exact max_dist = str_to_exact(distance_line[0]);
     if (max_dist == 0)
     {
-    	debug() << "An invalid input was received for the max distance." << endl;
+    	debug() << "An invalid input was received for the max distance." << std::endl;
     	// throw an exception
     }
 
@@ -222,7 +228,7 @@ void InputManager::read_point_cloud(FileInputReader& reader)
     }
 
     //read label for x-axis
-    input_params.x_label = reader.next_line_str().toUtf8().constData();
+    input_params.x_label = reader.next_line()[0];
 
     //set label for y-axis to "distance"
     input_params.y_label = "distance";
@@ -249,7 +255,7 @@ void InputManager::read_point_cloud(FileInputReader& reader)
   // STEP 2: compute distance matrix, and create ordered lists of all unique distance and time values
 
     if(verbosity >= 6) { debug() << "BUILDING DISTANCE AND TIME LISTS"; }
-    cthread->advanceProgressStage();
+    progress.advanceProgressStage();
 
     unsigned num_points = points.size();
 
@@ -298,14 +304,14 @@ void InputManager::read_point_cloud(FileInputReader& reader)
 
     //first, times
     std::vector<unsigned> time_indexes(num_points, max_unsigned);   //vector of discrete time indexes for each point; max_unsigned shall represent undefined time (is this reasonable?)
-    build_grade_vectors(time_set, time_indexes, x_grades, x_exact, input_params.x_bins);
+    build_grade_vectors(*data, time_set, time_indexes, data->x_grades, data->x_exact, input_params.x_bins);
 
     //second, distances
     std::vector<unsigned> dist_indexes((num_points*(num_points-1))/2, max_unsigned);  //discrete distance matrix (triangle); max_unsigned shall represent undefined distance
-    build_grade_vectors(dist_set, dist_indexes, y_grades, y_exact, input_params.y_bins);
+    build_grade_vectors(*data, dist_set, dist_indexes, data->y_grades, data->y_exact, input_params.y_bins);
 
     //update progress
-    cthread->setCurrentProgress(30);
+    progress.progress(30);
 
 
   // STEP 4: build the bifiltration
@@ -318,7 +324,7 @@ void InputManager::read_point_cloud(FileInputReader& reader)
 
     if(verbosity >= 6) { debug() << "BUILDING VIETORIS-RIPS BIFILTRATION"; }
 
-    simplex_tree->build_VR_complex(time_indexes, dist_indexes, x_grades.size(), y_grades.size());
+    data->simplex_tree->build_VR_complex(time_indexes, dist_indexes, data->x_grades.size(), data->y_grades.size());
 
     //clean up
     for(ExactSet::iterator it = time_set.begin(); it != time_set.end(); ++it)
@@ -334,14 +340,15 @@ void InputManager::read_point_cloud(FileInputReader& reader)
 }//end read_point_cloud()
 
 //reads data representing a discrete metric space with a real-valued function and constructs a simplex tree
-void InputManager::read_discrete_metric_space(FileInputReader& reader)
+std::shared_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstream &stream, Progress &progress)
 {
     if(verbosity >= 2) { debug() << "  Found a discrete metric space file."; }
-
+    std::shared_ptr<InputData> data(new InputData);
+    FileInputReader reader(stream);
   // STEP 1: read data file and store exact (rational) values of the function for each point
 
     //first read the label for x-axis
-    input_params.x_label = reader.next_line_str().toUtf8().constData();
+    input_params.x_label = reader.next_line()[0];
 
     //now read the values
     std::vector<std::string> line = reader.next_line();
@@ -412,7 +419,7 @@ void InputManager::read_discrete_metric_space(FileInputReader& reader)
         }
     }//end for
 
-    cthread->advanceProgressStage();    //advance progress box to stage 2: building bifiltration
+    progress.advanceProgressStage();    //advance progress box to stage 2: building bifiltration
 
 
   // STEP 3: build vectors of discrete indexes for constructing the bifiltration
@@ -421,21 +428,21 @@ void InputManager::read_discrete_metric_space(FileInputReader& reader)
 
     //first, values
     std::vector<unsigned> value_indexes(num_points, max_unsigned);   //vector of discrete value indexes for each point; max_unsigned shall represent undefined value (is this reasonable?)
-    build_grade_vectors(value_set, value_indexes, x_grades, x_exact, input_params.x_bins);
+    build_grade_vectors(*data, value_set, value_indexes, data->x_grades, data->x_exact, input_params.x_bins);
 
     //second, distances
     std::vector<unsigned> dist_indexes((num_points*(num_points-1))/2, max_unsigned);  //discrete distance matrix (triangle); max_unsigned shall represent undefined distance
-    build_grade_vectors(dist_set, dist_indexes, y_grades, y_exact, input_params.y_bins);
+    build_grade_vectors(*data, dist_set, dist_indexes, data->y_grades, data->y_exact, input_params.y_bins);
 
     //update progress
-    cthread->setCurrentProgress(30);
+    progress.progress(30);
 
   // STEP 4: build the bifiltration
 
     if(verbosity >= 2) { debug() << "BUILDING VIETORIS-RIPS BIFILTRATION"; }
 
     //build the Vietoris-Rips bifiltration from the discrete index vectors
-    simplex_tree->build_VR_complex(value_indexes, dist_indexes, x_grades.size(), y_grades.size());
+    data->simplex_tree->build_VR_complex(value_indexes, dist_indexes, data->x_grades.size(), data->y_grades.size());
 
     //clean up
     for(ExactSet::iterator it = value_set.begin(); it != value_set.end(); ++it)
@@ -448,11 +455,14 @@ void InputManager::read_discrete_metric_space(FileInputReader& reader)
         ExactValue* p = *it;
         delete p;
     }
+    return data;
 }//end read_discrete_metric_space()
 
 //reads a bifiltration and constructs a simplex tree
-void InputManager::read_bifiltration(FileInputReader& reader)
+std::shared_ptr<InputData> InputManager::read_bifiltration(std::ifstream &stream, Progress &progress)
 {
+    std::shared_ptr<InputData> data(new InputData);
+    FileInputReader reader(stream);
     if(verbosity >= 2) { debug() << "  Found a bifiltration file.\n"; }
 
     //read the label for x-axis
@@ -490,20 +500,20 @@ void InputManager::read_bifiltration(FileInputReader& reader)
         (*(ret.first))->indexes.push_back(num_simplices);
 
         //add the simplex to the simplex tree
-        simplex_tree->add_simplex(verts, num_simplices, num_simplices);  //multigrade to be set later!
+        data->simplex_tree->add_simplex(verts, num_simplices, num_simplices);  //multigrade to be set later!
             ///TODO: FIX THE ABOVE FUNCTION!!!
         num_simplices++;
 	}
 
-    cthread->advanceProgressStage();    //advance progress box to stage 2: building bifiltration
+    progress.advanceProgressStage();    //advance progress box to stage 2: building bifiltration
 
     //build vectors of discrete grades, using bins
     unsigned max_unsigned = std::numeric_limits<unsigned>::max();
     std::vector<unsigned> x_indexes(num_simplices, max_unsigned);   //x_indexes[i] gives the discrete x-index for simplex i in the input order
     std::vector<unsigned> y_indexes(num_simplices, max_unsigned);   //y_indexes[i] gives the discrete y-index for simplex i in the input order
 
-    build_grade_vectors(x_set, x_indexes, x_grades, x_exact, input_params.x_bins);
-    build_grade_vectors(y_set, y_indexes, y_grades, y_exact, input_params.y_bins);
+    build_grade_vectors(*data, x_set, x_indexes, data->x_grades, data->x_exact, input_params.x_bins);
+    build_grade_vectors(*data, y_set, y_indexes, data->y_grades, data->y_exact, input_params.y_bins);
 
 //TESTING
 //    debug() << "x-grades sorted order:";
@@ -518,11 +528,11 @@ void InputManager::read_bifiltration(FileInputReader& reader)
 //        debug() << "   " << *it;
 
     //update simplex tree nodes
-    simplex_tree->update_xy_indexes(x_indexes, y_indexes, x_grades.size(), y_grades.size());
+    data->simplex_tree->update_xy_indexes(x_indexes, y_indexes, data->x_grades.size(), data->y_grades.size());
 
     //compute indexes
-    simplex_tree->update_global_indexes();
-    simplex_tree->update_dim_indexes();
+    data->simplex_tree->update_global_indexes();
+    data->simplex_tree->update_dim_indexes();
 
     //clean up
     for(ExactSet::iterator it = x_set.begin(); it != x_set.end(); ++it)
@@ -535,15 +545,18 @@ void InputManager::read_bifiltration(FileInputReader& reader)
         ExactValue* p = *it;
         delete p;
     }
+    return data;
 }//end read_bifiltration()
 
 //reads a file of previously-computed data from RIVET
-void InputManager::read_RIVET_data(FileInputReader& reader)
+std::shared_ptr<InputData> InputManager::read_RIVET_data(std::ifstream &stream, Progress &progress)
 {
+    std::shared_ptr<InputData> data(new InputData);
+    FileInputReader reader(stream);
   //read parameters
-  cthread->params.dim = std::stoi(reader.next_line()[0]);
-  cthread->params.x_label = join(reader.next_line());
-  cthread->params.y_label = join(reader.next_line());
+  input_params.dim = std::stoi(reader.next_line()[0]);
+  input_params.x_label = join(reader.next_line());
+  input_params.y_label = join(reader.next_line());
 
   //read x-grades
   reader.next_line();  //this line should say "x-grades"
@@ -551,8 +564,8 @@ void InputManager::read_RIVET_data(FileInputReader& reader)
   while(line[0][0] != 'y') //stop when we reach "y-grades"
     {
       exact num(line[0]);
-      x_exact.push_back(num);
-      x_grades.push_back( numerator(num).convert_to<double>() / denominator(num).convert_to<double>() );
+      data->x_exact.push_back(num);
+      data->x_grades.push_back( numerator(num).convert_to<double>() / denominator(num).convert_to<double>() );
       line = reader.next_line();
     }
 
@@ -561,8 +574,8 @@ void InputManager::read_RIVET_data(FileInputReader& reader)
     while(line[0][0] != 'x') //stop when we reach "xi"
     {
         exact num(line[0]);
-        y_exact.push_back(num);
-        y_grades.push_back( numerator(num).convert_to<double>() / denominator(num).convert_to<double>() );
+        data->y_exact.push_back(num);
+        data->y_grades.push_back( numerator(num).convert_to<double>() / denominator(num).convert_to<double>() );
         line = reader.next_line();
     }
 
@@ -575,7 +588,7 @@ void InputManager::read_RIVET_data(FileInputReader& reader)
       int zero = std::stoi(line[2]);
       int one = std::stoi(line[3]);
       int two = std::stoi(line[4]);
-      cthread->xi_support.push_back(xiPoint(x, y, zero, one, two));
+      data->xi_support.push_back(xiPoint(x, y, zero, one, two));
       line = reader.next_line();
     }
 
@@ -584,7 +597,7 @@ void InputManager::read_RIVET_data(FileInputReader& reader)
     while(reader.has_next_line())
     {
         line = reader.next_line();
-        cthread->barcode_templates.push_back(BarcodeTemplate());    //create a new BarcodeTemplate
+        data->barcode_templates.push_back(BarcodeTemplate());    //create a new BarcodeTemplate
 
         if(line[0] != std::string("-"))    //then the barcode is nonempty
         {
@@ -596,18 +609,23 @@ void InputManager::read_RIVET_data(FileInputReader& reader)
               if(nums[1][0] != 'i')        //then b is finite
                 b = std::stol(nums[1]);
               unsigned m = std::stol(nums[2]);
-              cthread->barcode_templates.back().add_bar(a, b, m);
+              data->barcode_templates.back().add_bar(a, b, m);
             }
         }
     }
 
     ///TODO: maybe make a different progress box for RIVET input???
-    cthread->advanceProgressStage();    //advance progress box to stage 2: building bifiltration
+    progress.advanceProgressStage();    //advance progress box to stage 2: building bifiltration
 
 }//end read_RIVET_data()
 
 //converts an ExactSet of values to the vectors of discrete values that SimplexTree uses to build the bifiltration, and also builds the grade vectors (floating-point and exact)
-void InputManager::build_grade_vectors(ExactSet& value_set, std::vector<unsigned>& discrete_indexes, std::vector<double>& grades_fp, std::vector<exact>& grades_exact, unsigned num_bins)
+void InputManager::build_grade_vectors(InputData &data,
+                                       ExactSet& value_set,
+                                       std::vector<unsigned>& discrete_indexes,
+                                       std::vector<double>& grades_fp,
+                                       std::vector<exact>& grades_exact,
+                                       unsigned num_bins)
 {
     if(num_bins == 0 || num_bins >= value_set.size())    //then don't use bins
     {
@@ -634,8 +652,8 @@ void InputManager::build_grade_vectors(ExactSet& value_set, std::vector<unsigned
         exact bin_size = (max - min)/num_bins;
 
         //store bin values
-        x_grades.reserve(num_bins);
-        x_exact.reserve(num_bins);
+        data.x_grades.reserve(num_bins);
+        data.x_exact.reserve(num_bins);
 
         ExactSet::iterator it = value_set.begin();
         for(unsigned c = 0; c < num_bins; c++)    //loop through all bins

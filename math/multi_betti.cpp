@@ -8,28 +8,27 @@
 #include "index_matrix.h"
 #include "simplex_tree.h"
 #include "xi_point.h"
-#include "../computationthread.h"
-
-#include <QDebug>
+#include "debug.h"
 
 #include <set>
+#include <interface/progress.h>
 
 
 //constructor
-MultiBetti::MultiBetti(SimplexTree* st, int dim, int v) :
+MultiBetti::MultiBetti(SimplexTree& st, int dim, int v) :
 	bifiltration(st),		//remember location of the simplex tree
 	dimension(dim),			//remember the dimension
 	verbosity(v)			//controls the amount of output
 {
 	//ensure that xi matrix is the correct size
-    num_x_grades = bifiltration->num_x_grades();
-    num_y_grades = bifiltration->num_y_grades();
+    num_x_grades = bifiltration.num_x_grades();
+    num_y_grades = bifiltration.num_y_grades();
     xi.resize(boost::extents[num_x_grades][num_y_grades][3]);
 
 }//end constructor
 
 //computes xi_0 and xi_1 at all multi-indexes in a fast way; also stores dimension of homology at each grade in the supplied matrix
-void MultiBetti::compute_fast(ComputationThread* cthread, unsigned_matrix& hom_dims)
+void MultiBetti::compute_fast(unsigned_matrix& hom_dims, Progress &progress)
 {
     //ensure hom_dims matrix is the correct size
     hom_dims.resize(boost::extents[num_x_grades][num_y_grades]);
@@ -37,22 +36,23 @@ void MultiBetti::compute_fast(ComputationThread* cthread, unsigned_matrix& hom_d
     // STEP 1: compute nullity
     compute_nullities(hom_dims);
 
-    cthread->setCurrentProgress(20);
+
+    progress.progress(20);
 
     // STEP 2: compute rank
     compute_ranks(hom_dims);
 
-    cthread->setCurrentProgress(40);
+    progress.progress(40);
 
     // STEP 3: compute alpha (concludes computation of xi_0)
     compute_alpha();
 
-    cthread->setCurrentProgress(70);
+    progress.progress(70);
 
     // STEP 4: compute eta (concludes computation of xi_1)
     compute_eta();
 
-    cthread->setCurrentProgress(95);
+    progress.progress(95);
 
     // STEP 5: compute xi_2 from the values of xi_0, xi_1, and the dimensions
     compute_xi2(hom_dims);
@@ -64,8 +64,8 @@ void MultiBetti::compute_fast(ComputationThread* cthread, unsigned_matrix& hom_d
 void MultiBetti::compute_nullities(unsigned_matrix& hom_dims)
 {
     //get data
-    MapMatrix* bdry1 = bifiltration->get_boundary_mx(dimension);
-    IndexMatrix* ind1 = bifiltration->get_index_mx(dimension);
+    MapMatrix* bdry1 = bifiltration.get_boundary_mx(dimension);
+    IndexMatrix* ind1 = bifiltration.get_index_mx(dimension);
 
     //set up data structures
     Vector current_lows;
@@ -157,8 +157,8 @@ void MultiBetti::compute_nullities(unsigned_matrix& hom_dims)
 void MultiBetti::compute_ranks(unsigned_matrix& hom_dims)
 {
     //get data
-    MapMatrix* bdry2 = bifiltration->get_boundary_mx(dimension + 1);
-    IndexMatrix* ind2 = bifiltration->get_index_mx(dimension + 1);
+    MapMatrix* bdry2 = bifiltration.get_boundary_mx(dimension + 1);
+    IndexMatrix* ind2 = bifiltration.get_index_mx(dimension + 1);
 
     //set up data structures
     Vector current_lows;
@@ -261,13 +261,12 @@ struct ColumnList {
 
     void print()    //TESTING ONLY
     {
-        QDebug qd = qDebug().nospace();
-        qd << "columns: ";
+        debug(true) << "columns: ";
         for(std::set<int>::iterator it=columns.begin(); it!=columns.end(); ++it)
-            qd << *it << ", ";
-        qd << "grades: ";
+            debug(true) << *it << ", ";
+        debug(true) << "grades: ";
         for(unsigned i=0; i<grades.size(); i++)
-            qd << grades[i] << ", ";
+            debug(true) << grades[i] << ", ";
     }
 };
 
@@ -276,13 +275,13 @@ struct ColumnList {
 void MultiBetti::compute_alpha()
 {
     //get data
-    DirectSumMatrices dsm = bifiltration->get_merge_mxs();
+    DirectSumMatrices dsm = bifiltration.get_merge_mxs();
     MapMatrix* bdry_bc = dsm.boundary_matrix;
     MapMatrix* merge = dsm.map_matrix;
     IndexMatrix* ind_bc = dsm.column_indexes;
 
-    MapMatrix* bdry_d = bifiltration->get_boundary_mx(dimension + 1);
-    IndexMatrix* ind_d = bifiltration->get_index_mx(dimension + 1);
+    MapMatrix* bdry_d = bifiltration.get_boundary_mx(dimension + 1);
+    IndexMatrix* ind_d = bifiltration.get_index_mx(dimension + 1);
 
     //set up data structures
     Vector current_lows_bc;                             //low arrays for matrix bdry_bc
@@ -379,12 +378,12 @@ void MultiBetti::compute_alpha()
 void MultiBetti::compute_eta()
 {
     //get data
-    DirectSumMatrices dsm = bifiltration->get_split_mxs();
+    DirectSumMatrices dsm = bifiltration.get_split_mxs();
     MapMatrix* bdry_bc = dsm.boundary_matrix;
     IndexMatrix* ind_bc = dsm.column_indexes;
     MapMatrix* split = dsm.map_matrix;
-    MapMatrix* bdry_a = bifiltration->get_boundary_mx(dimension);
-    IndexMatrix* ind_a = bifiltration->get_offset_index_mx(dimension);
+    MapMatrix* bdry_a = bifiltration.get_boundary_mx(dimension);
+    IndexMatrix* ind_a = bifiltration.get_offset_index_mx(dimension);
 
     //set up data structures
     Vector current_lows_a;                             //low arrays for matrix bdry_a
@@ -554,10 +553,9 @@ void MultiBetti::reduce_also(MapMatrix* mm, MapMatrix* m2, int first_col, int la
 //TESTING ONLY
 void MultiBetti::print_lows(Vector &lows)
 {
-    QDebug qd = qDebug().nospace();
-    qd << "      low array: ";
+    debug(true) << "      low array: ";
     for(unsigned i=0; i<lows.size(); i++)
-        qd << lows[i] << ", ";
+        debug(true) << lows[i] << ", ";
 }
 
 //reduce matrix: perform column operations on TWO MATRICES, regarded as one matrix spliced to preserve multi-grade order of columns

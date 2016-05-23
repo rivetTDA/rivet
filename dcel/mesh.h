@@ -25,6 +25,7 @@ typedef boost::multiprecision::cpp_rational exact;
 
 #include <vector>
 #include <set>
+#include "interface/progress.h"
 
 
 class Mesh
@@ -32,17 +33,21 @@ class Mesh
     friend class PersistenceUpdater; //allow PersistenceUpdater access to private variables in Mesh
 
     public:
-        Mesh(const std::vector<double>& xg, const std::vector<exact>& xe, const std::vector<double>& yg, const std::vector<exact>& ye, int verbosity);
+    Mesh(const std::vector<double>& xg,
+         const std::vector<exact>& xe,
+         const std::vector<double>& yg,
+         const std::vector<exact>& ye,
+         int verbosity);
             //constructor; sets up bounding box (with empty interior) for the affine Grassmannian
             //  requires references to vectors of all multi-grade values (both double and exact values)
 		
         ~Mesh();	//destructor: deletes all cells and anchors --- CHECK THIS!!!
 		
-        void build_arrangement(MultiBetti& mb, std::vector<xiPoint>& xi_pts, ComputationThread* cthread);
+        void build_arrangement(MultiBetti& mb, std::vector<xiPoint>& xi_pts, Progress &progress);
             //builds the DCEL arrangement, and computes and stores persistence data
             //also stores ordered list of xi support points in the supplied vector
 
-        void build_arrangement(std::vector<xiPoint>& xi_pts, std::vector<BarcodeTemplate>& barcode_templates, ComputationThread *cthread);
+        void build_arrangement(std::vector<xiPoint>& xi_pts, std::vector<BarcodeTemplate>& barcode_templates, Progress &progress);
             //builds the DCEL arrangement from the supplied xi support points, but does NOT compute persistence data
 
         BarcodeTemplate& get_barcode_template(double degrees, double offset);
