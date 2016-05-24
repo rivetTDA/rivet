@@ -43,11 +43,9 @@ int main(int argc, char *argv[])
 
         debug() << "CONSOLE RIVET" << std::endl;
 
-        debug() << "Creating params" << std::endl;
         InputParameters params;   //parameter values stored here
 
 
-        debug() << "Parsing args" << std::endl;
         std::map<std::string, docopt::value> args = docopt::docopt(USAGE, {argv + 1, argv + argc}, true,
                                                                    "RIVET Console 0.4");
 
@@ -62,21 +60,17 @@ int main(int argc, char *argv[])
         params.y_bins = get_uint_or_die(args, "--ybins");
         params.verbosity = get_uint_or_die(args, "--verbosity");
 
-        debug() << "Parsed args" << std::endl;
-
         InputManager inputManager(params);
         Progress progress;
         Computation computation(params, progress);
-        debug() << "Launching input manager" << std::endl;
         std::shared_ptr<InputData> input = inputManager.start(progress);
-        debug() << "Launching computation" << std::endl;
         std::shared_ptr<ComputationResult> result = computation.compute(*input);
         auto arrangement = result->arrangement;
         //TESTING: print arrangement info and verify consistency
         arrangement->print_stats();
         arrangement->test_consistency();
 
-        if (params.verbosity >= 2) { debug() << "COMPUTATION FINISHED."; }
+        if (params.verbosity >= 2) { debug() << "COMPUTATION FINISHED." << std::endl; }
 
         //if an output file has been specified, then save the arrangement
         if (!params.outputFile.empty()) {
@@ -88,9 +82,12 @@ int main(int argc, char *argv[])
                 fw.write_augmented_arrangement(file);
             }
             else {
-                debug() << "Error: Unable to write file:" << params.outputFile << std::endl;
+                std::stringstream ss;
+                ss << "Error: Unable to write file:" << params.outputFile << std::endl;
+                throw std::runtime_error(ss.str());
             }
-            ///TODO: error handling?
+        } else {
+            throw std::runtime_error("No output file name provided");
         }
         debug() << "CONSOLE RIVET: Goodbye" << std::endl;
         return 0;

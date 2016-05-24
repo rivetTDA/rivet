@@ -162,7 +162,7 @@ void SimplexTree::build_VR_complex(std::vector<unsigned>& times, std::vector<uns
 
     //build simplex tree recursively
 	//this also assigns global indexes to each simplex
-    if(verbosity >= 6) { debug() << "BUILDING SIMPLEX TREE"; }
+    if(verbosity >= 6) { debug() << "BUILDING SIMPLEX TREE" << std::endl; }
     unsigned gic=0;	//global index counter
     for(unsigned i=0; i<times.size(); i++)
 	{

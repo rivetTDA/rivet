@@ -19,6 +19,8 @@
 #include <chrono>
 #include <interface/progress.h>
 #include <math/simplex_tree.h>
+#include <timer.h>
+#include <sstream>
 
 // Mesh constructor; sets up bounding box (with empty interior) for the affine Grassmannian
 Mesh::Mesh(const std::vector<double> &xg,
@@ -101,27 +103,27 @@ void Mesh::build_arrangement(MultiBetti& mb, std::vector<xiPoint>& xi_pts, Progr
     progress.progress(10);
     start = std::chrono::system_clock::now();
     PersistenceUpdater updater(*this, mb.bifiltration, xi_pts);   //PersistenceUpdater object is able to do the calculations necessary for finding anchors and computing barcode templates
-    debug() << "  --> finding anchors took" << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start).count() << "milliseconds";
+    debug() << "  --> finding anchors took " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start).count() << " milliseconds" << std::endl;
 
     //now that we have all the anchors, we can build the interior of the arrangement
     progress.progress(25);
     start = std::chrono::system_clock::now();
     build_interior();
-    debug() << "  --> building the interior of the line arrangement took" << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start).count() << "milliseconds";
+    debug() << "  --> building the interior of the line arrangement took " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start).count() << " milliseconds" << std::endl;
     print_stats();
 
     //compute the edge weights
     progress.progress(50);
     start = std::chrono::system_clock::now();
     find_edge_weights(updater);
-    debug() << "  --> computing the edge weights took" << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start).count() << "milliseconds";
+    debug() << "  --> computing the edge weights took " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start).count() << " milliseconds" << std::endl;
 
     //now that the arrangement is constructed, we can find a path -- NOTE: path starts with a (near-vertical) line to the right of all multigrades
     progress.progress(75);
     std::vector<Halfedge*> path;
     start = std::chrono::system_clock::now();
     find_path(path);
-    debug() << "  --> finding the path took" << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start).count() << "milliseconds";
+    debug() << "  --> finding the path took " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start).count() << " milliseconds" << std::endl;
 
     //update the progress dialog box
     progress.advanceProgressStage();            //update now in stage 5 (compute discrete barcodes)
@@ -135,28 +137,31 @@ void Mesh::build_arrangement(MultiBetti& mb, std::vector<xiPoint>& xi_pts, Progr
 //builds the DCEL arrangement from the supplied xi support points, but does NOT compute persistence data
 void Mesh::build_arrangement(std::vector<xiPoint>& xi_pts, std::vector<BarcodeTemplate>& barcode_templates, Progress &progress)
 {
-    std::chrono::time_point<std::chrono::system_clock> start, end;
+    Timer timer;
 
     //first, compute anchors and store them in the vector Mesh::all_anchors
     progress.progress(10);
-    start = std::chrono::system_clock::now();
     //TODO: this is odd, fix.
     SimplexTree dummy_tree(0,0);
     PersistenceUpdater updater(*this, dummy_tree, xi_pts);   //we only use the PersistenceUpdater to find and store the anchors
-    debug() << "  --> finding anchors took" << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start).count() << "milliseconds";
+    debug() << "  --> finding anchors took" << timer.elapsed() << "milliseconds";
 
     //now that we have all the anchors, we can build the interior of the arrangement
     progress.progress(30);
-    start = std::chrono::system_clock::now();
+    timer.restart();
     build_interior();   ///TODO: build_interior() should update its status!
-    debug() << "  --> building the interior of the line arrangement took" << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start).count() << "milliseconds";
+    debug() << "  --> building the interior of the line arrangement took" << timer.elapsed() << "milliseconds";
     print_stats();
 
     //check
-    if(faces.size() != barcode_templates.size())
-        throw std::runtime_error("Number of faces does not match number of barcode templates");
-    else
+    if(faces.size() != barcode_templates.size()) {
+        std::stringstream ss;
+        ss << "Number of faces: " << faces.size()
+            << " does not match number of barcode templates: " << barcode_templates.size();
+        throw std::runtime_error(ss.str());
+    } else {
         debug() << "number of faces = number of barcode templates";
+    }
 
     //now store the barcode templates
     for(unsigned i = 0; i < barcode_templates.size(); i++)
@@ -174,7 +179,7 @@ void Mesh::build_interior()
 {
     if(verbosity >= 6)
     {
-        debug() << "BUILDING ARRANGEMENT:  Anchors sorted for left edge of strip: ";
+        debug() << "BUILDING ARRANGEMENT:  Anchors sorted for left edge of strip: " << std::endl;
         for(std::set<Anchor*, Anchor_LeftComparator>::iterator it = all_anchors.begin(); it != all_anchors.end(); ++it)
             debug(true) << "(" << (*it)->get_x() << "," << (*it)->get_y() << ") ";
     }
@@ -193,7 +198,7 @@ void Mesh::build_interior()
     std::set< Anchor_pair > considered_pairs;
 
   // PART 1: INSERT VERTICES AND EDGES ALONG LEFT EDGE OF THE ARRANGEMENT
-    if(verbosity >= 6) { debug() << "PART 1: LEFT EDGE OF ARRANGEMENT"; }
+    if(verbosity >= 6) { debug() << "PART 1: LEFT EDGE OF ARRANGEMENT" << std::endl; }
 
     //for each Anchor, create vertex and associated halfedges, anchored on the left edge of the strip
     Halfedge* leftedge = bottomleft;
@@ -401,7 +406,7 @@ void Mesh::build_interior()
     }//end while
 
   // PART 3: INSERT VERTICES ON RIGHT EDGE OF ARRANGEMENT AND CONNECT EDGES
-    if(verbosity >= 6) { debug() << "PART 3: RIGHT EDGE OF THE ARRANGEMENT"; }
+    if(verbosity >= 6) { debug() << "PART 3: RIGHT EDGE OF THE ARRANGEMENT" << std::endl; }
 
     Halfedge* rightedge = bottomright; //need a reference halfedge along the right side of the strip
     unsigned cur_x = 0;      //keep track of discrete x-coordinate of last Anchor whose line was connected to right edge (x-coordinate of Anchor is slope of line)
@@ -975,7 +980,7 @@ Face* Mesh::find_point(double x_coord, double y_coord)
 //prints a summary of the arrangement information, such as the number of anchors, vertices, halfedges, and faces
 void Mesh::print_stats()
 {
-    debug() << "The arrangement contains:" << all_anchors.size() << "anchors," << vertices.size() << "vertices" << halfedges.size() << "halfedges, and" << faces.size() << "faces";
+    debug() << "The arrangement contains: " << all_anchors.size() << " anchors, " << vertices.size() << " vertices, " << halfedges.size() << " halfedges, and " << faces.size() << " faces";
 }
 
 //print all the data from the mesh
