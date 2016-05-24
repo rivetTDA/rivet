@@ -15,6 +15,7 @@
 #include <QTime>
 
 #include <algorithm>
+#include <fstream>
 #include <sstream>
 
 
@@ -463,12 +464,12 @@ void VisualizationWindow::on_actionSave_triggered()
 
 void VisualizationWindow::save_arrangement(const QString& filename)
 {
-    QFile file(filename);
-    if(file.open(QIODevice::ReadWrite | QIODevice::Truncate))
+    std::ofstream file(filename);
+    if(file.is_open())
     {
         qDebug() << "Writing file:" << filename;
 
-        FileWriter fw(input_params, arrangement, x_exact, y_exact, xi_support);
+        FileWriter fw(input_params, *arrangement, x_exact, y_exact, xi_support);
         fw.write_augmented_arrangement(file);
 
         unsaved_data = false;

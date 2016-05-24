@@ -154,7 +154,7 @@ void Mesh::build_arrangement(std::vector<xiPoint>& xi_pts, std::vector<BarcodeTe
 
     //check
     if(faces.size() != barcode_templates.size())
-        debug() << "ERROR: number of faces does not match number of barcode templates";
+        throw std::runtime_error("Number of faces does not match number of barcode templates");
     else
         debug() << "number of faces = number of barcode templates";
 

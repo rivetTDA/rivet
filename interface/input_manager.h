@@ -90,6 +90,7 @@ struct InputData {
   std::shared_ptr<SimplexTree> simplex_tree; // will be non-null if we read raw data
   std::vector<xiPoint> xi_support; // will be non-empty if we read RIVET data
   std::vector<BarcodeTemplate> barcode_templates; //only used if we read a RIVET data file and need to store the barcode templates before the arrangement is ready
+
 };
 
 

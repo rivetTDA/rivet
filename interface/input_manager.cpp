@@ -173,7 +173,9 @@ std::shared_ptr<InputData> InputManager::start(Progress &progress)
         if (!infile.is_open()) {
             throw std::runtime_error("Could not open input file");
         }
-    return file_type.parser(infile, progress);
+    auto data = file_type.parser(infile, progress);
+    debug() << "Got data: " << data << std::endl;
+    return data;
 }//end start()
 
 
@@ -324,6 +326,7 @@ std::shared_ptr<InputData> InputManager::read_point_cloud(std::ifstream &stream,
 
     if(verbosity >= 6) { debug() << "BUILDING VIETORIS-RIPS BIFILTRATION"; }
 
+    data->simplex_tree.reset(new SimplexTree(dimension, num_points));
     data->simplex_tree->build_VR_complex(time_indexes, dist_indexes, data->x_grades.size(), data->y_grades.size());
 
     //clean up
@@ -337,6 +340,7 @@ std::shared_ptr<InputData> InputManager::read_point_cloud(std::ifstream &stream,
         ExactValue* p = *it;
         delete p;
     }
+    return data;
 }//end read_point_cloud()
 
 //reads data representing a discrete metric space with a real-valued function and constructs a simplex tree
