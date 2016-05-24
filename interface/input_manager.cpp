@@ -7,7 +7,6 @@
 #include "file_input_reader.h"
 #include "input_parameters.h"
 #include "../math/simplex_tree.h"
-#include "exception.h"
 
 #include <QDebug>
 #include <QString>
@@ -45,7 +44,6 @@ exact str_to_exact(QString str)
 
     //find decimal point, if it exists
     QStringList parts = str.split(".");
-//    int dec = str.indexOf(".");
 
     if(parts.size() == 1)	//then decimal point not found
     {
@@ -167,29 +165,27 @@ void InputManager::read_point_cloud(FileInputReader& reader)
     QStringList dimension_line = reader.next_line();
     if (dimension_line.size() != 1)
     {
-    	qDebug() << "There was more than one value in the expected dimension line.  There may be a problem with your input file.  " << endl;
+        throw Exception(QString("More than one value found in the point-cloud dimension line. Please check your input file."));
     }
     int dimension = dimension_line.first().toInt();
 
     //check for invalid input
-    if (dimension == 0)
+    if (dimension == 0)     //this is true if string-to-integer conversion failed (also, we don't process 0-D data)
     {
-    	qDebug() << "An invalid input was received for the dimension." << endl;
-    	// throw an exception
+        throw Exception(QString("An invalid input was received for the point-cloud dimension. Please check your input file."));
     }
 
     //read maximum distance for edges in Vietoris-Rips complex
     QStringList distance_line = reader.next_line();
     if (distance_line.size() != 1)
     {
-    	qDebug() << "There was more than one value in the expected distance line.  There may be a problem with your input file.  " << endl;
+        throw Exception(QString("More than one value found in the distance line. Please check your input file."));
     }
 
     exact max_dist = str_to_exact(distance_line.first());
-    if (max_dist == 0)
+    if (max_dist <= 0)
     {
-        qDebug() << "An invalid input was received for the max distance." << endl;
-        // throw an exception
+        throw Exception(QString("An invalid input was received for the max distance. Please check your input file."));
     }
 
     if(verbosity >= 4)
@@ -212,10 +208,7 @@ void InputManager::read_point_cloud(FileInputReader& reader)
         QStringList tokens = reader.next_line();
         if (tokens.size() != dimension + 1 )
         {
-        	// TODO: need a check for characters in the point data
-        	// look up qexception object
-        	// handle in dataselectDialogue
-        	continue;
+            throw Exception(QString("Found a line of point input with ")+QString::number(tokens.size())+QString(" items rather than ")+QString::number(dimension+1)+QString(". Please check your input file."));
         }
         DataPoint p(tokens);
         points.push_back(p);

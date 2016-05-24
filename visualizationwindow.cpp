@@ -505,7 +505,9 @@ void VisualizationWindow::receiveException(QString error){
     qDebug() << "Exception caught in visualizationThread" << error;
     data_selected = false;
     QMessageBox msgBox;
+    msgBox.setWindowTitle("RIVET Error");
     msgBox.setText(error);
+    msgBox.setIcon(QMessageBox::Critical);
     msgBox.exec();
     ds_dialog.show();
     return;
