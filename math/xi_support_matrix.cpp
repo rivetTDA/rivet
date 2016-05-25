@@ -123,7 +123,7 @@ void xiSupportMatrix::fill_and_find_anchors(std::vector<xiPoint>& xi_pts, Mesh& 
             //insert a new xiMatrixEntry
             if(xi_pt)
             {
-//                qDebug() << "  creating xiMatrixEntry at (" << i << "," << j << ") for xi point" << next_xi_pt;
+                debug() << "  creating xiMatrixEntry at (" << i << ", " << j << ") for xi point " << next_xi_pt << std::endl;
 
                 //create a new xiMatrixEntry
                 xiMatrixEntry* new_entry = new xiMatrixEntry(i, j, next_xi_pt, columns[i], rows[j]);
@@ -140,7 +140,7 @@ void xiSupportMatrix::fill_and_find_anchors(std::vector<xiPoint>& xi_pts, Mesh& 
                 //create a new xiMatrixEntry
                 unsigned entry_index = xi_pts.size();
 
-//                qDebug() << "  creating xiMatrixEntry at (" << i << "," << j << ") for an anchor; index =" << entry_index;
+                debug() << "  creating xiMatrixEntry at (" << i << "," << j << ") for an anchor; index = " << entry_index << std::endl;
 
                 xiMatrixEntry* new_entry = new xiMatrixEntry(i, j, entry_index, columns[i], rows[j]);
                 columns[i] = new_entry;

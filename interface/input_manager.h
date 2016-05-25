@@ -83,6 +83,7 @@ struct ExactValueComparator
 typedef std::set<ExactValue*, ExactValueComparator> ExactSet;
 
 struct InputData {
+    bool is_data;
   std::vector<double> x_grades;  //floating-point values of all x-grades, sorted exactly
   std::vector<exact> x_exact;    //exact (e.g. rational) values of all x-grades, sorted
   std::vector<double> y_grades;  //floating-point values of all y-grades, sorted exactly

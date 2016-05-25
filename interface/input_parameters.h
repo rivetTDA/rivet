@@ -12,7 +12,6 @@ struct InputParameters {
     unsigned y_bins;    //number of bins for y-coordinate (if 0, then bins are not used for y)
     std::string x_label;    //label for x-axis of slice diagram
     std::string y_label;    //label for y-axis of slice_diagram
-    bool raw_data;      //true if persistence must be computed from the data; false if the data is a RIVET file
     int verbosity;      //controls the amount of console output printed
 };
 

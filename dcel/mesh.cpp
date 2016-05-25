@@ -96,34 +96,34 @@ Mesh::~Mesh()
 //precondition: the constructor has already created the boundary of the arrangement
 void Mesh::build_arrangement(MultiBetti& mb, std::vector<xiPoint>& xi_pts, Progress &progress)
 {
-    std::chrono::time_point<std::chrono::system_clock> start;    //for timing the computations
+    debug() << "build_arrangement with multibetti" << std::endl;
+    Timer timer;
 
     //first, create PersistenceUpdater
     //this also finds anchors and stores them in the vector Mesh::all_anchors -- JULY 2015 BUG FIX
     progress.progress(10);
-    start = std::chrono::system_clock::now();
     PersistenceUpdater updater(*this, mb.bifiltration, xi_pts);   //PersistenceUpdater object is able to do the calculations necessary for finding anchors and computing barcode templates
-    debug() << "  --> finding anchors took " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start).count() << " milliseconds" << std::endl;
+    debug() << "  --> finding anchors took " << timer.elapsed() << " milliseconds" << std::endl;
 
     //now that we have all the anchors, we can build the interior of the arrangement
     progress.progress(25);
-    start = std::chrono::system_clock::now();
+    timer.restart();
     build_interior();
-    debug() << "  --> building the interior of the line arrangement took " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start).count() << " milliseconds" << std::endl;
+    debug() << "  --> building the interior of the line arrangement took " << timer.elapsed() << " milliseconds" << std::endl;
     print_stats();
 
     //compute the edge weights
     progress.progress(50);
-    start = std::chrono::system_clock::now();
+    timer.restart();
     find_edge_weights(updater);
-    debug() << "  --> computing the edge weights took " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start).count() << " milliseconds" << std::endl;
+    debug() << "  --> computing the edge weights took " << timer.elapsed() << " milliseconds" << std::endl;
 
     //now that the arrangement is constructed, we can find a path -- NOTE: path starts with a (near-vertical) line to the right of all multigrades
     progress.progress(75);
     std::vector<Halfedge*> path;
-    start = std::chrono::system_clock::now();
+    timer.restart();
     find_path(path);
-    debug() << "  --> finding the path took " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start).count() << " milliseconds" << std::endl;
+    debug() << "  --> finding the path took " << timer.elapsed() << " milliseconds" << std::endl;
 
     //update the progress dialog box
     progress.advanceProgressStage();            //update now in stage 5 (compute discrete barcodes)
@@ -144,7 +144,7 @@ void Mesh::build_arrangement(std::vector<xiPoint>& xi_pts, std::vector<BarcodeTe
     //TODO: this is odd, fix.
     SimplexTree dummy_tree(0,0);
     PersistenceUpdater updater(*this, dummy_tree, xi_pts);   //we only use the PersistenceUpdater to find and store the anchors
-    debug() << "  --> finding anchors took" << timer.elapsed() << "milliseconds";
+    debug() << "  --> finding anchors took " << timer.elapsed() << " milliseconds";
 
     //now that we have all the anchors, we can build the interior of the arrangement
     progress.progress(30);

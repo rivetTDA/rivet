@@ -6,6 +6,7 @@
 #include <interface/file_writer.h>
 
 #include "docopt/docopt.h"
+#include "../../../../usr/local/Cellar/gcc/5.3.0/include/c++/5.3.0/vector"
 
 static const char USAGE[] =
   R"(RIVET: Rank Invariant Visualization and Exploration Tool
@@ -60,9 +61,19 @@ int main(int argc, char *argv[])
         params.y_bins = get_uint_or_die(args, "--ybins");
         params.verbosity = get_uint_or_die(args, "--verbosity");
 
+        debug() << "X bins: " << params.x_bins << std::endl;
+        debug() << "Y bins: " << params.y_bins << std::endl;
+        debug() << "Verbosity: " << params.verbosity << std::endl;
+
         InputManager inputManager(params);
         Progress progress;
         Computation computation(params, progress);
+        computation.arrangementReady.connect([](Mesh& mesh){
+            std::cerr << "Arrangement received: " << mesh.x_grades.size() << " x " << mesh.y_grades.size() << std::endl;
+        });
+        computation.xiSupportReady.connect([](std::vector<xiPoint> points){
+            std::cerr << "xi support received: " << points.size() << std::endl;
+        });
         std::shared_ptr<InputData> input = inputManager.start(progress);
         std::shared_ptr<ComputationResult> result = computation.compute(*input);
         auto arrangement = result->arrangement;

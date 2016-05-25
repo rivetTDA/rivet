@@ -1,10 +1,8 @@
 #include "computation.h"
 #include "debug.h"
 #include "dcel/mesh.h"
-#include "interface/input_manager.h"
-#include "interface/input_parameters.h"
 #include "math/multi_betti.h"
-
+#include "timer.h"
 #include <chrono>
 
 Computation::Computation(InputParameters& params, Progress &progress) :
@@ -43,6 +41,7 @@ std::shared_ptr<ComputationResult> Computation::compute_rivet(RivetInput &input)
                                                    verbosity));
         //TODO: hook up signals
     Progress progress;
+    debug() << "Calling build_arrangement" << std::endl;
         arrangement->build_arrangement(input.xi_support, input.barcode_templates, progress);
         auto end = std::chrono::system_clock::now();
 
@@ -54,13 +53,21 @@ std::shared_ptr<ComputationResult> Computation::compute_rivet(RivetInput &input)
 
 std::shared_ptr<ComputationResult> Computation::compute_raw(RawDataInput &input) {
 
+    debug() << "entering compute_raw" << std::endl;
     if(verbosity >= 2)
     {
-        debug() << "\nBIFILTRATION:";
-        debug() << "   Number of simplices of dimension" << params.dim << ":" << input.bifiltration().get_size(params.dim);
-        debug() << "   Number of simplices of dimension" << (params.dim + 1) << ":" << input.bifiltration().get_size(params.dim + 1);
-        debug() << "   Number of x-grades:" << input.x_grades.size() << "; values" << input.x_grades.front() << "to" << input.x_grades.back();
-        debug() << "   Number of y-grades:" << input.y_grades.size() << "; values" << input.y_grades.front() << "to" << input.y_grades.back() << "\n";
+        debug() << "\nBIFILTRATION:" << std::endl;
+        debug() << "   Number of simplices of dimension " << params.dim << " : " << input.bifiltration().get_size(params.dim) << std::endl;
+        debug() << "   Number of simplices of dimension " << (params.dim + 1) << " : " << input.bifiltration().get_size(params.dim + 1) <<std::endl;
+        debug() << "   Number of x-grades:" << input.x_grades.size() << std::endl;
+        if (input.x_grades.size())
+        {
+            debug() << "; values " << input.x_grades.front() << " to " << input.x_grades.back() << std::endl;
+        }
+        debug() << "   Number of y-grades:" << input.y_grades.size() << std::endl;
+        if (input.y_grades.size()) {
+            debug() << "; values " << input.y_grades.front() << " to " << input.y_grades.back() << std::endl;
+        }
     }
       //STAGE 3: COMPUTE MULTIGRADED BETTI NUMBERS
 
@@ -68,12 +75,11 @@ std::shared_ptr<ComputationResult> Computation::compute_raw(RawDataInput &input)
         //compute xi_0 and xi_1 at all multi-grades
         if(verbosity >= 2) { debug() << "COMPUTING xi_0 AND xi_1 FOR HOMOLOGY DIMENSION " << params.dim << ":"; }
         MultiBetti mb(input.bifiltration(), params.dim, verbosity);
-
-        auto start = std::chrono::system_clock::now();
+        Timer timer;
+    debug() << "Calling compute_fast" << std::endl;
         mb.compute_fast(result->homology_dimensions, progress);
 
-        auto end = std::chrono::system_clock::now();
-        debug() << "  --> xi_i computation took " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " seconds";
+        debug() << "  --> xi_i computation took " << timer.elapsed() << " seconds";
 
         //store the xi support points
         mb.store_support_points(result->xi_support);
@@ -87,14 +93,13 @@ std::shared_ptr<ComputationResult> Computation::compute_raw(RawDataInput &input)
         //build the arrangement
         if(verbosity >= 2) { debug() << "CALCULATING ANCHORS AND BUILDING THE DCEL ARRANGEMENT"; }
 
-        start = std::chrono::system_clock::now();
+    timer.restart();
         Mesh *arrangement = new Mesh(input.x_grades, input.x_exact, input.y_grades, input.y_exact, verbosity);
         arrangement->build_arrangement(mb, result->xi_support, progress);     ///TODO: update this -- does not need to store list of xi support points in xi_support
         //NOTE: this also computes and stores barcode templates in the arrangement
 
-        end = std::chrono::system_clock::now();
         debug() << "   building the line arrangement and computing all barcode templates took"
-                << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "milliseconds";
+                << timer.elapsed() << "milliseconds";
 
         //send (a pointer to) the arrangement back to the VisualizationWindow
         arrangementReady(*arrangement);
@@ -127,10 +132,11 @@ std::shared_ptr<ComputationResult> Computation::compute(InputData &data)
 
     progress.advanceProgressStage(); //update progress box to stage 3
 
-    if(params.raw_data)    //then the user selected a raw data file, and we need to do persistence calculations
+    if(data.is_data)    //then the user selected a raw data file, and we need to do persistence calculations
     {
       auto input = RawDataInput(data);
         //print bifiltration statistics
+        debug() << "Computing from raw data" << std::endl;
       return compute_raw(input);
     }
     else    //then the user selected a RIVET file with pre-computed persistence information, and we just need to re-build the arrangement

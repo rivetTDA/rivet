@@ -16,14 +16,14 @@ typedef boost::multi_array<unsigned, 2> unsigned_matrix;
 
 class ComputationInput {
  public:
-  std::vector<double> &x_grades;
-  std::vector<exact> &x_exact;
-  std::vector<double> &y_grades;
-  std::vector<exact> &y_exact;
+  std::vector<double> x_grades;
+  std::vector<exact> x_exact;
+  std::vector<double> y_grades;
+  std::vector<exact> y_exact;
 
  protected:
     InputData &data;
-    ComputationInput(InputData &data) :
+    ComputationInput(InputData data) :
             data(data),
             x_grades(data.x_grades),
             x_exact(data.x_exact),
@@ -38,7 +38,7 @@ class RawDataInput : public ComputationInput {
   SimplexTree& bifiltration() {
       return *(data.simplex_tree);
   }
-  RawDataInput(InputData &data) : ComputationInput(data)
+  RawDataInput(InputData data) : ComputationInput(data)
   { }
 };
 
@@ -47,7 +47,7 @@ class RivetInput : public ComputationInput {
  public:
   std::vector<xiPoint> &xi_support;
   std::vector<BarcodeTemplate> &barcode_templates;
-  RivetInput(InputData &data) :
+  RivetInput(InputData data) :
           ComputationInput(data),
           xi_support(data.xi_support),
           barcode_templates(data.barcode_templates){}

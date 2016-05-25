@@ -233,8 +233,12 @@ MapMatrix* SimplexTree::get_boundary_mx(int dim)
         simplices = &ordered_high_simplices;
         num_rows = ordered_simplices.size();
     }
-    else
-        throw std::runtime_error("attempting to compute boundary matrix for improper dimension");
+    else {
+        std::stringstream ss;
+        ss << "attempting to compute boundary matrix for improper dimension (" << dim << "), expected either "
+           << hom_dim << " or " << hom_dim + 1;
+        throw std::runtime_error(ss.str());
+    }
 
     //create the MapMatrix
     MapMatrix* mat = new MapMatrix(num_rows, simplices->size());			//DELETE this object later!

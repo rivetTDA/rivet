@@ -174,6 +174,7 @@ std::shared_ptr<InputData> InputManager::start(Progress &progress)
             throw std::runtime_error("Could not open input file");
         }
     auto data = file_type.parser(infile, progress);
+    data->is_data = file_type.is_data;
     debug() << "Got data: " << data << std::endl;
     return data;
 }//end start()
@@ -186,7 +187,7 @@ std::shared_ptr<InputData> InputManager::read_point_cloud(std::ifstream &stream,
 {
     FileInputReader reader(stream);
     std::shared_ptr<InputData> data(new InputData);
-    if(verbosity >= 6) { debug() << "  Found a point cloud file."; }
+    if(verbosity >= 6) { debug() << "  Found a point cloud file." << std::endl; }
 
   // STEP 1: read data file and store exact (rational) values
 //skip first line
@@ -217,8 +218,7 @@ std::shared_ptr<InputData> InputManager::read_point_cloud(std::ifstream &stream,
     exact max_dist = str_to_exact(distance_line[0]);
     if (max_dist == 0)
     {
-    	debug() << "An invalid input was received for the max distance." << std::endl;
-    	// throw an exception
+    	throw std::runtime_error("An invalid input was received for the max distance.");
     }
 
 
@@ -226,7 +226,7 @@ std::shared_ptr<InputData> InputManager::read_point_cloud(std::ifstream &stream,
     {
         std::ostringstream oss;
         oss << max_dist;
-        debug() << "  maximum distance:" << oss.str();
+        debug() << "  maximum distance: " << oss.str() << std::endl;
     }
 
     //read label for x-axis
@@ -251,12 +251,15 @@ std::shared_ptr<InputData> InputManager::read_point_cloud(std::ifstream &stream,
         points.push_back(p);
     }
 
-    if(verbosity >= 4) { debug() << "  read" << points.size() << "points; input finished"; }
+    if(verbosity >= 4) { debug() << "  read" << points.size() << "points; input finished" << std::endl; }
 
+    if (points.empty()) {
+        throw std::runtime_error("No points loaded");
+    }
 
   // STEP 2: compute distance matrix, and create ordered lists of all unique distance and time values
 
-    if(verbosity >= 6) { debug() << "BUILDING DISTANCE AND TIME LISTS"; }
+    if(verbosity >= 6) { debug() << "BUILDING DISTANCE AND TIME LISTS" << std::endl; }
     progress.advanceProgressStage();
 
     unsigned num_points = points.size();
@@ -326,7 +329,8 @@ std::shared_ptr<InputData> InputManager::read_point_cloud(std::ifstream &stream,
 
     if(verbosity >= 6) { debug() << "BUILDING VIETORIS-RIPS BIFILTRATION"; }
 
-    data->simplex_tree.reset(new SimplexTree(dimension, num_points));
+    debug() << "x grades: " << data->x_grades.size() << " y grades: " << data->y_grades.size() << std::endl;
+    data->simplex_tree.reset(new SimplexTree(dimension, input_params.verbosity));
     data->simplex_tree->build_VR_complex(time_indexes, dist_indexes, data->x_grades.size(), data->y_grades.size());
 
     //clean up
