@@ -33,7 +33,7 @@ exact str_to_exact(QString str)
     str.toDouble(&isDouble);
     if(!isDouble)
     {
-        QString err_str("Error: In input file, " + str + " is not a number.");
+        QString err_str("Error: In input file, \"" + str + "\" is not a number.");
         qDebug() << err_str << endl;
         throw Exception(err_str);
     }
@@ -137,14 +137,12 @@ void InputManager::start()
         }
         else
 		{
-            qDebug() << "Error: Unrecognized file type.";
-			throw std::exception();
+            throw Exception(QString("Unrecognized input file type."));
 		}
 	}
 	else
 	{
-        qDebug() << "Error: Unable to open file: " << input_params.fileName;
-		throw std::exception();
+        throw Exception(QString("Error: Unable to open file: " + input_params.fileName));
 	}
 
 }//end start()
@@ -453,7 +451,7 @@ void InputManager::read_bifiltration(FileInputReader& reader)
             int v = tokens.at(i).toInt(&isInt);
             if(!isInt)
             {
-                QString err_str("Error: In input file, " + tokens.at(i) + " is not an integer.");
+                QString err_str("Error: In input file, \"" + tokens.at(i) + "\" is not an integer.");
                 qDebug() << err_str << endl;
                 throw Exception(err_str);
             }
@@ -468,7 +466,6 @@ void InputManager::read_bifiltration(FileInputReader& reader)
 
         //add the simplex to the simplex tree
         simplex_tree->add_simplex(verts, num_simplices, num_simplices);  //multigrade to be set later!
-            ///TODO: FIX THE ABOVE FUNCTION!!!
         num_simplices++;
 	}
 
@@ -481,18 +478,6 @@ void InputManager::read_bifiltration(FileInputReader& reader)
 
     build_grade_vectors(x_set, x_indexes, x_grades, x_exact, input_params.x_bins);
     build_grade_vectors(y_set, y_indexes, y_grades, y_exact, input_params.y_bins);
-
-//TESTING
-//    qDebug() << "x-grades sorted order:";
-//    for(ExactSet::iterator it = x_set.begin(); it != x_set.end(); ++it)
-//    {
-//        std::ostringstream oss;
-//        oss << (*it)->exact_value << " = " << (*it)->double_value;
-//        qDebug() << "   " << QString::fromStdString(oss.str());
-//    }
-//    qDebug() << "x-index vector:";
-//    for(std::vector<unsigned>::iterator it = x_indexes.begin(); it != x_indexes.end(); ++it)
-//        qDebug() << "   " << *it;
 
     //update simplex tree nodes
     simplex_tree->update_xy_indexes(x_indexes, y_indexes, x_grades.size(), y_grades.size());
