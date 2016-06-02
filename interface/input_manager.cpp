@@ -35,7 +35,6 @@ exact str_to_exact(QString str)
     {
         QString err_str("Error: In input file, " + str + " is not a number.");
         qDebug() << err_str << endl;
-        str = "2";
         throw Exception(err_str);
     }
 
@@ -83,7 +82,6 @@ exact str_to_exact(QString str)
     {
         QString err_str("Error: In input file, too many decimal points in " + str + ".");
         qDebug() << err_str << endl;
-        str = "2";
         throw Exception(err_str);
     }
     return r;
@@ -332,11 +330,9 @@ void InputManager::read_discrete_metric_space(FileInputReader& reader)
 
     //read the maximum length of edges to construct
     exact max_dist = str_to_exact(reader.next_line().first());
-    if(verbosity >= 4)
+    if (max_dist <= 0)
     {
-        std::ostringstream oss;
-        oss << max_dist;
-        qDebug() << "  maximum distance:" << QString::fromStdString(oss.str());
+        throw Exception(QString("An invalid input was received for the max distance. Please check your input file."));
     }
 
     //prepare data structures
@@ -357,20 +353,22 @@ void InputManager::read_discrete_metric_space(FileInputReader& reader)
         (*(ret.first))->indexes.push_back(i);
 
         //read distances from this point to all following points
-        if(i < num_points - 1)  //then there is at least one point after point i, and there should be another line to read
+        if(i < num_points - 1)  //then there is at least one point after point i, and there should be more distances to read
         {
-//            line = reader.next_line();
-
             for(unsigned j = i+1; j < num_points; j++)
             {
                 //read distance between points i and j
                 if(!reader.has_next_token())
-                    qDebug() << "ERROR: no distance between points" << i << "and" << j;
+                    throw Exception(QString("No distance value for points " + QString::number(i) + " and " + QString::number(j) +". Please check your input file."));
 
                 QString str = reader.next_token();
-                qDebug() << str;
 
                 exact cur_dist = str_to_exact(str);
+
+                if (cur_dist < 0)
+                {
+                    throw Exception(QString("A negative number was received for a distance. Please check your input file."));
+                }
 
                 if( cur_dist <= max_dist )  //then this distance is allowed
                 {
@@ -451,7 +449,14 @@ void InputManager::read_bifiltration(FileInputReader& reader)
         std::vector<int> verts;
         for(int i = 0; i <= dim; i++)
         {
-            int v = tokens.at(i).toInt();
+            bool isInt;
+            int v = tokens.at(i).toInt(&isInt);
+            if(!isInt)
+            {
+                QString err_str("Error: In input file, " + tokens.at(i) + " is not an integer.");
+                qDebug() << err_str << endl;
+                throw Exception(err_str);
+            }
             verts.push_back(v);
         }
 
