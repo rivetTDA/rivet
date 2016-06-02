@@ -175,7 +175,7 @@ std::shared_ptr<InputData> InputManager::start(Progress &progress)
         }
     auto data = file_type.parser(infile, progress);
     data->is_data = file_type.is_data;
-    debug() << "Got data: " << data << std::endl;
+    debug() << "Set is_data to " << data->is_data << std::endl;
     return data;
 }//end start()
 
@@ -186,7 +186,7 @@ std::shared_ptr<InputData> InputManager::start(Progress &progress)
 std::shared_ptr<InputData> InputManager::read_point_cloud(std::ifstream &stream, Progress &progress)
 {
     FileInputReader reader(stream);
-    std::shared_ptr<InputData> data(new InputData);
+    auto data = std::make_shared<InputData>();
     if(verbosity >= 6) { debug() << "  Found a point cloud file." << std::endl; }
 
   // STEP 1: read data file and store exact (rational) values
@@ -330,7 +330,7 @@ std::shared_ptr<InputData> InputManager::read_point_cloud(std::ifstream &stream,
     if(verbosity >= 6) { debug() << "BUILDING VIETORIS-RIPS BIFILTRATION"; }
 
     debug() << "x grades: " << data->x_grades.size() << " y grades: " << data->y_grades.size() << std::endl;
-    data->simplex_tree.reset(new SimplexTree(dimension, input_params.verbosity));
+    data->simplex_tree.reset(new SimplexTree(input_params.dim, input_params.verbosity));
     data->simplex_tree->build_VR_complex(time_indexes, dist_indexes, data->x_grades.size(), data->y_grades.size());
 
     //clean up

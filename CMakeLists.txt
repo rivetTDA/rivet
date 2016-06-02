@@ -21,11 +21,14 @@ link_directories(${CMAKE_CURRENT_BINARY_DIR}/docopt/src/docopt_project-build)
 
 include_directories("${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/include")
 
-add_executable (rivet_console console.cpp computation.cpp
-        dcel/mesh.cpp
-        interface/progress.cpp interface/file_writer.cpp
+add_executable (rivet_console
+        console.cpp
+        computation.cpp
+        interface/progress.cpp
+        interface/file_writer.cpp
         interface/file_input_reader.cpp
         interface/input_manager.cpp
+        dcel/mesh.cpp
         dcel/anchor.cpp
         dcel/barcode_template.cpp
         dcel/dcel.cpp
@@ -36,7 +39,9 @@ add_executable (rivet_console console.cpp computation.cpp
         math/xi_point.cpp
         math/xi_support_matrix.cpp
         math/index_matrix.cpp
-        math/persistence_updater.cpp timer.cpp timer.h debug.cpp)
+        math/persistence_updater.cpp
+        timer.cpp
+        debug.cpp)
 
 add_dependencies(rivet_console docopt_project)
 

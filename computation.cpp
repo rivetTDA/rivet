@@ -106,7 +106,7 @@ std::shared_ptr<ComputationResult> Computation::compute_raw(RawDataInput &input)
     //TODO: bifiltration isn't used anywhere? Only part of the input?
 }
 
-std::shared_ptr<ComputationResult> Computation::compute(InputData &data)
+std::shared_ptr<ComputationResult> Computation::compute(const InputData &data)
 {
   //STAGES 1 and 2: INPUT DATA AND CREATE BIFILTRATION
 

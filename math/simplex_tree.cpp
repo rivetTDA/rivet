@@ -19,7 +19,12 @@
 //SimplexTree constructor; requires dimension of homology to be computed and verbosity parameter
 SimplexTree::SimplexTree(int dim, int v) :
     root(new STNode()), x_grades(0), y_grades(0), hom_dim(dim), verbosity(v)
-{ }
+{
+    if (hom_dim > 5) {
+        throw std::runtime_error("Dimensions greater than 5 probably don't make sense");
+    }
+    debug() << "Created SimplexTree(" << hom_dim << ", " << verbosity << ")" << std::endl;
+}
 
 //destructor
 SimplexTree::~SimplexTree()
@@ -114,7 +119,7 @@ void SimplexTree::update_gi_recursively(STNode* node, int &gic)
 void SimplexTree::update_dim_indexes()
 {
     //build the lists of pointers to simplices of appropriate dimensions
-    build_dim_lists_recursively(root, 0, hom_dim);
+    build_dim_lists_recursively(root, 0);
 
     //update the dimension indexes in the tree
     int i=0;
@@ -131,7 +136,7 @@ void SimplexTree::update_dim_indexes()
 }
 
 //recursively build lists to determine dimension indexes
-void SimplexTree::build_dim_lists_recursively(STNode* node, int cur_dim, int hom_dim)
+void SimplexTree::build_dim_lists_recursively(STNode* node, int cur_dim)
 {
     //get children of current node
     std::vector<STNode*> kids = node->get_children();
@@ -147,7 +152,7 @@ void SimplexTree::build_dim_lists_recursively(STNode* node, int cur_dim, int hom
     //recurse through children
     for(unsigned i=0; i<kids.size(); i++)
     {
-        build_dim_lists_recursively(kids[i], cur_dim+1, hom_dim);
+        build_dim_lists_recursively(kids[i], cur_dim+1);
     }
 }
 
