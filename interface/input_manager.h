@@ -11,7 +11,8 @@
 #ifndef __InputManager_H__
 #define __InputManager_H__
 
-//forward declarations
+
+#include "exception.h"
 class ComputationThread;
 class FileInputReader;
 struct InputParameters;
@@ -129,7 +130,14 @@ struct DataPoint {
         coords.reserve(list.size() - 1);
 
         for(int i = 0; i < list.size() - 1; i++)
-            coords.push_back(list.at(i).toDouble());
+        {
+            bool isDouble;
+            coords.push_back(list.at(i).toDouble(&isDouble));
+            if(!isDouble)
+            {
+                throw Exception(QString("Error: In input file, " + list.at(i) + " is not a number."));
+            }
+        }
 
         birth = str_to_exact(list.back());
     }

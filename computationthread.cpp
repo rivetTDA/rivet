@@ -1,6 +1,6 @@
 #include "computationthread.h"
 
-#include "exception.h"
+
 #include "dcel/mesh.h"
 #include "interface/input_manager.h"
 #include "interface/input_parameters.h"
@@ -50,6 +50,8 @@ void ComputationThread::run()
     catch(Exception& except)
     {
         qDebug() << "Exception caught in ComputationThread::run(): " << except.get_error_string();
+        emit sendException(except.get_error_string());
+        return;
     }
 
 

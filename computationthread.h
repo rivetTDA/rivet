@@ -19,7 +19,7 @@ typedef boost::multiprecision::cpp_rational exact;
 typedef boost::multi_array<unsigned, 2> unsigned_matrix;
 
 #include <vector>
-
+#include "exception.h"
 
 class ComputationThread : public QThread
 {
@@ -39,6 +39,7 @@ class ComputationThread : public QThread
         void setCurrentProgress(unsigned current);
         void xiSupportReady();
         void arrangementReady(Mesh* arrangement);
+        void sendException (QString error);
 
     protected:
         void run() Q_DECL_OVERRIDE;
