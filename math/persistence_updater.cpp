@@ -119,18 +119,18 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
     qDebug() << "TRAVERSING THE PATH USING THE RESET ALGORITHM: path has" << path.size() << "steps";
     qDebug() << "                              ^^^^^^^^^^^^^^^";
 
-    // choose the initial value of the threshold intelligently
-    unsigned long threshold = choose_initial_threshold(time_for_initial_decomp);   //if the number of swaps might exceed this threshold, then do a persistence calculation from scratch
-    qDebug() << "initial reset threshold set to" << threshold;
-
-    timer.start();
-
     //data structures for analyzing the computation
     unsigned long total_transpositions = 0;
-    unsigned total_time_for_transpositions = 0; //NEW
+    unsigned total_time_for_transpositions = 0;
     unsigned number_of_resets = 1;  //we count the initial RU-decomposition as the first reset
     unsigned total_time_for_resets = time_for_initial_decomp;
     int max_time = 0;
+
+    // choose the initial value of the threshold intelligently (if the number of swaps might exceed this threshold, then we will do a persistence calculation from scratch)
+    unsigned long threshold = choose_initial_threshold(time_for_initial_decomp, total_transpositions, total_time_for_transpositions);
+    qDebug() << "initial reset threshold set to" << threshold;
+
+    timer.start();
 
     //traverse the path
     QTime steptimer;
@@ -274,11 +274,8 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
             max_time = step_time;
 
         //update the treshold
-        if(total_time_for_transpositions > 0 && total_transpositions > total_time_for_transpositions)
-        {
-            threshold = (unsigned long) ((double) total_transpositions / (double) total_time_for_transpositions)*(total_time_for_resets/number_of_resets);
-            qDebug() << "       new threshold:" << threshold;
-        }
+        threshold = (unsigned long) ((double) total_transpositions / (double) total_time_for_transpositions)*(total_time_for_resets/number_of_resets);
+        qDebug() << "       new threshold:" << threshold;
     }//end path traversal
 
     //print runtime data
@@ -1440,15 +1437,9 @@ void PersistenceUpdater::store_barcode_template(Face* cell)
 }//end store_barcode_template()
 
 //chooses an initial threshold by timing vineyard updates corresponding to random transpositions
-unsigned long PersistenceUpdater::choose_initial_threshold(int time_for_initial_decomp)
+unsigned long PersistenceUpdater::choose_initial_threshold(int decomp_time, unsigned long & num_trans, unsigned &trans_time)
 {
     qDebug() << "RANDOM VINEYARD UPDATES TO CHOOSE THE INITIAL THRESHOLD";
-
-    //make a copy of the matrices
-    MapMatrix_Perm* R_low_copy = new MapMatrix_Perm(*R_low);
-    MapMatrix_Perm* R_high_copy = new MapMatrix_Perm(*R_high);
-    MapMatrix_RowPriority_Perm* U_low_copy = new MapMatrix_RowPriority_Perm(*U_low);
-    MapMatrix_RowPriority_Perm* U_high_copy = new MapMatrix_RowPriority_Perm(*U_high);
 
     //other data structures
     int num_cols = R_low->width() + R_high->width();
@@ -1459,7 +1450,7 @@ unsigned long PersistenceUpdater::choose_initial_threshold(int time_for_initial_
         return 1000;
 
     //determine the time for which we will do transpositions
-    int trans_time = time_for_initial_decomp / 20;
+    trans_time = decomp_time / 20;
     if(trans_time < 100)
         trans_time = 100;   //run for at least 100 milliseconds
 
@@ -1469,7 +1460,8 @@ unsigned long PersistenceUpdater::choose_initial_threshold(int time_for_initial_
 
     //do transpositions
     qDebug() << "  -->Doing some random vineyard updates...";
-    while(timer.elapsed() < trans_time || trans_list.size() == 0)   //do a transposition
+    while( (timer.elapsed() < trans_time || trans_list.size() == 0) &&
+         (timer.elapsed() < 5 || trans_list.size() < 5000) )   //do a transposition
     {
         int rand_col = rand() % (num_cols - 1);   //random integer in {0, 1, ..., num_cols - 2}
 
@@ -1506,19 +1498,9 @@ unsigned long PersistenceUpdater::choose_initial_threshold(int time_for_initial_
 
     qDebug() << "  -->Did" << (2*trans_list.size()) << "vineyard updates in" << trans_time << "milliseconds.";
 
-    //restore the matrices to the copies made at the beginning of this function
-    ///TODO: is this good style?
-    delete R_low;
-    R_low = R_low_copy;
-    delete R_high;
-    R_high = R_high_copy;
-    delete U_low;
-    U_low = U_low_copy;
-    delete U_high;
-    U_high = U_high_copy;
-
     //return the threshold
-    return (unsigned long) (((double) (2*trans_list.size()) / (double) trans_time) * time_for_initial_decomp);
+    num_trans = 2*trans_list.size();
+    return (unsigned long) (((double) num_trans / (double) trans_time) * decomp_time);
 }//end choose_initial_threshold()
 
 
