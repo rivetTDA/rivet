@@ -1,6 +1,7 @@
 #include "visualizationwindow.h"
 #include "ui_visualizationwindow.h"
 
+#include "exception.h"
 #include "dcel/barcode_template.h"
 #include "dcel/mesh.h"
 #include "interface/barcode.h"
@@ -45,6 +46,8 @@ VisualizationWindow::VisualizationWindow(InputParameters& params) :
     ui->pdView->scale(1,-1);
     ui->pdView->setRenderHint(QPainter::Antialiasing);
 
+ //connect exception
+    QObject::connect(&cthread, &ComputationThread::sendException, this, &VisualizationWindow::receiveException);
     //connect signal from DataSelectDialog to start the computation
     QObject::connect(&ds_dialog, &DataSelectDialog::dataSelected, this, &VisualizationWindow::start_computation);
 
@@ -66,7 +69,7 @@ VisualizationWindow::VisualizationWindow(InputParameters& params) :
 
     //connect other signals and slots
     QObject::connect(&prog_dialog, &ProgressDialog::stopComputation, &cthread, &ComputationThread::terminate);  ///TODO: don't use QThread::terminate()! modify ComputationThread so that it can stop gracefully and clean up after itself
-
+   
 }
 
 VisualizationWindow::~VisualizationWindow()
@@ -86,7 +89,14 @@ void VisualizationWindow::start_computation()
     prog_dialog.raise();
 
     //start the computation in a new thread
-    cthread.compute();
+    try
+    {
+        cthread.compute();
+    }
+    catch(Exception& except)
+    {
+        qDebug() << "Exception caught in VisualizationWindow::start_computation: " << except.get_error_string();
+    }
 
 }//end start_computation()
 
@@ -471,7 +481,7 @@ void VisualizationWindow::save_arrangement(QString& filename)
     else
     {
         QMessageBox errorBox(QMessageBox::Warning, "Error", QString("Unable to write file: ").append(filename));
-        errorBox.exec();
+        errorBox.exec();    
     }
     ///TODO: error handling?
 }//end save_arrangement()
@@ -487,3 +497,17 @@ void VisualizationWindow::on_actionOpen_triggered()
 
     ///TODO: open the data select dialog box and load new data
 }//end on_actionOpen_triggered()
+
+//receive excpetion
+
+void VisualizationWindow::receiveException(QString error){
+    qDebug() << "Exception caught in visualizationThread" << error;
+    data_selected = false;
+    QMessageBox msgBox;
+    msgBox.setWindowTitle("RIVET Error");
+    msgBox.setText(error);
+    msgBox.setIcon(QMessageBox::Critical);
+    msgBox.exec();
+    ds_dialog.show();
+    return;
+}

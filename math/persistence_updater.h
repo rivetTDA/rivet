@@ -146,7 +146,7 @@ class PersistenceUpdater
         void store_barcode_template(Face* cell);
 
         //chooses an initial threshold by timing vineyard updates corresponding to random transpositions
-        unsigned long choose_initial_threshold(int time_for_initial_decomp);
+        unsigned long choose_initial_threshold(int decomp_time, unsigned long & num_trans, unsigned & trans_time);
 
         ///TESTING ONLY
         void check_low_matrix(MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL);

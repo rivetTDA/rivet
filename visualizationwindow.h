@@ -16,7 +16,7 @@ class xiPoint;
 #include "interface/persistence_diagram.h"
 #include "interface/progressdialog.h"
 #include "interface/slice_diagram.h"
-
+#include "exception.h"
 #include <QMainWindow>
 #include <QtWidgets>
 
@@ -69,6 +69,7 @@ private slots:
     void on_actionSave_line_selection_window_as_image_triggered();
     void on_actionSave_triggered();
     void on_actionOpen_triggered();
+    void receiveException(QString error);
 
 private:
     Ui::VisualizationWindow *ui;

@@ -1,5 +1,6 @@
 #include "computationthread.h"
 
+
 #include "dcel/mesh.h"
 #include "interface/input_manager.h"
 #include "interface/input_parameters.h"
@@ -40,8 +41,19 @@ void ComputationThread::run()
 
     //get the data via the InputManager
     InputManager im(this);      //NOTE: InputManager will fill the vectors x_grades, x_exact, y_grades, and y_exact
-    im.start();                 //   If the input file is raw data, then InputManager will also build the bifiltration.
-                                //   If the input file is a RIVET data file, then InputManager will fill xi_support and barcode templates, but bifiltration will remain NULL.
+
+    try
+    {
+        im.start();                 //   If the input file is raw data, then InputManager will also build the bifiltration.
+                                    //   If the input file is a RIVET data file, then InputManager will fill xi_support and barcode templates, but bifiltration will remain NULL.
+    }
+    catch(Exception& except)
+    {
+        qDebug() << "Exception caught in ComputationThread::run(): " << except.get_error_string();
+        emit sendException(except.get_error_string());
+        return;
+    }
+
 
     //print bifiltration statistics
     if(verbosity >= 2 && params.raw_data)
