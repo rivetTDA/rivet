@@ -183,10 +183,10 @@ std::shared_ptr<InputData> InputManager::start(Progress &progress)
 //reads a point cloud
 //  points are given by coordinates in Euclidean space, and each point has a "birth time"
 //  constructs a simplex tree representing the bifiltered Vietoris-Rips complex
-std::shared_ptr<InputData> InputManager::read_point_cloud(std::ifstream &stream, Progress &progress)
+InputData* InputManager::read_point_cloud(std::ifstream &stream, Progress &progress)
 {
     FileInputReader reader(stream);
-    auto data = std::make_shared<InputData>();
+    auto data = new InputData();
     if(verbosity >= 6) { debug() << "  Found a point cloud file." << std::endl; }
 
   // STEP 1: read data file and store exact (rational) values

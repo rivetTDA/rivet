@@ -70,7 +70,7 @@ class Computation
   Computation(InputParameters &params, Progress &progress);
   ~Computation();
 
-  std::shared_ptr<ComputationResult> compute(InputData &data);
+  std::shared_ptr<ComputationResult> compute(InputData data);
 
     private:
         InputParameters& params;
