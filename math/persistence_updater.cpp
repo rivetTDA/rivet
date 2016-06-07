@@ -1294,7 +1294,7 @@ void PersistenceUpdater::count_switches_and_separations(xiMatrixEntry* at_anchor
 //used by the previous function to split grade lists at each anchor crossing
 void PersistenceUpdater::do_separations(xiMatrixEntry* greater, xiMatrixEntry* lesser, bool horiz)
 {
-    //first, low simpilicse
+    //first, low simpilices
     int gr_col = greater->low_index;
     int cur_col = gr_col;
     std::list<Multigrade*> grades = greater->low_simplices;

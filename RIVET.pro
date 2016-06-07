@@ -12,7 +12,6 @@ CONFIG += c++11
 TARGET = RIVET
 TEMPLATE = app
 
-
 SOURCES	+= main.cpp                         \
 		visualizationwindow.cpp             \
 		dataselectdialog.cpp                \
@@ -43,7 +42,8 @@ SOURCES	+= main.cpp                         \
 		interface/config_parameters.cpp     \
 		interface/file_input_reader.cpp \
     driver.cpp \
-    interface/file_writer.cpp
+    interface/file_writer.cpp \
+    exception.cpp
     
 
 HEADERS  += visualizationwindow.h			\
@@ -76,7 +76,8 @@ HEADERS  += visualizationwindow.h			\
     interface/config_parameters.h \
     interface/file_input_reader.h \
     driver.h \
-    interface/file_writer.h
+    interface/file_writer.h \
+    exception.h
     
 
 FORMS   += visualizationwindow.ui			\

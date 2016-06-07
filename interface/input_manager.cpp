@@ -23,49 +23,48 @@
 //epsilon value for use in comparisons
 double ExactValue::epsilon = pow(2,-30);
 
-// function for determining whether or not a string is a number
-bool is_number(const std::string& s)
-{
-    std::string::const_iterator it = s.begin();
-    while (it != s.end() && (std::isdigit(*it) || *it =='.')) ++it;
-    return !s.empty() && it == s.end();
-}
 
 //helper function to convert a string to an exact (rational)
 //accepts string such as "12.34", "765", and "-10.8421"
-exact str_to_exact(std::string str)
+exact str_to_exact(QString str)
 {
-    if(!is_number(str)){
-    	QString qstr = QString::fromUtf8(str.c_str());
-  	 	qDebug()<<"Error: "<<qstr<<" is not a number"<<endl;
-    	return 0;
+    //make sure str represents a number
+    bool isDouble;
+    str.toDouble(&isDouble);
+    if(!isDouble)
+    {
+        QString err_str("Error: In input file, \"" + str + "\" is not a number.");
+        qDebug() << err_str << endl;
+        throw Exception(err_str);
     }
+
+    //now convert str to an exact value
     exact r;
 
     //find decimal point, if it exists
-    std::string::size_type dec = str.find(".");
+    QStringList parts = str.split(".");
 
-    if(dec == std::string::npos)	//then decimal point not found
+    if(parts.size() == 1)	//then decimal point not found
     {
-        r = exact(str);
+        r = exact(str.toStdString());
     }
-    else	//then decimal point found
+    else if(parts.size() == 2)	//then decimal point found
     {
         //get whole part and fractional part
-        std::string whole = str.substr(0,dec);
-        std::string frac = str.substr(dec+1);
+        QString& whole = parts.first();
+        QString& frac = parts.last();
         unsigned exp = frac.length();
 
         //test for negative, and remove minus sign character
         bool neg = false;
-        if(whole.length() > 0 && whole[0] == '-')
+        if(whole.length() > 0 && whole.at(0) == '-')
         {
             neg = true;
-            whole.erase(0, 1);
+            whole.remove(0, 1);
         }
 
         //remove leading zeros (otherwise, c++ thinks we are using octal numbers)
-        std::string num_str = whole + frac;
+        std::string num_str = whole.toStdString() + frac.toStdString();
         boost::algorithm::trim_left_if(num_str, boost::is_any_of("0"));
 
         //now it is safe to convert to rational
@@ -78,6 +77,12 @@ exact str_to_exact(std::string str)
         r = exact(num, denom);
         if(neg)
             r = -1*r;
+    }
+    else    //error
+    {
+        QString err_str("Error: In input file, too many decimal points in " + str + ".");
+        qDebug() << err_str << endl;
+        throw Exception(err_str);
     }
     return r;
 }
@@ -132,14 +137,12 @@ void InputManager::start()
         }
         else
 		{
-            qDebug() << "Error: Unrecognized file type.";
-			throw std::exception();
+            throw Exception(QString("Unrecognized input file type."));
 		}
 	}
 	else
 	{
-        qDebug() << "Error: Unable to open file: " << input_params.fileName;
-		throw std::exception();
+        throw Exception(QString("Error: Unable to open file: " + input_params.fileName));
 	}
 
 }//end start()
@@ -158,31 +161,28 @@ void InputManager::read_point_cloud(FileInputReader& reader)
     QStringList dimension_line = reader.next_line();
     if (dimension_line.size() != 1)
     {
-    	qDebug() << "There was more than one value in the expected dimension line.  There may be a problem with your input file.  " << endl;
+        throw Exception(QString("More than one value found in the point-cloud dimension line. Please check your input file."));
     }
     int dimension = dimension_line.first().toInt();
 
     //check for invalid input
-    if (dimension == 0)
+    if (dimension == 0)     //this is true if string-to-integer conversion failed (also, we don't process 0-D data)
     {
-    	qDebug() << "An invalid input was received for the dimension." << endl;
-    	// throw an exception
+        throw Exception(QString("An invalid input was received for the point-cloud dimension. Please check your input file."));
     }
 
     //read maximum distance for edges in Vietoris-Rips complex
     QStringList distance_line = reader.next_line();
     if (distance_line.size() != 1)
     {
-    	qDebug() << "There was more than one value in the expected distance line.  There may be a problem with your input file.  " << endl;
+        throw Exception(QString("More than one value found in the distance line. Please check your input file."));
     }
 
-    exact max_dist = str_to_exact(distance_line.first().toStdString());  ///TODO: don't convert to std::string
-    if (max_dist == 0)
+    exact max_dist = str_to_exact(distance_line.first());
+    if (max_dist <= 0)
     {
-    	qDebug() << "An invalid input was received for the max distance." << endl;
-    	// throw an exception
+        throw Exception(QString("An invalid input was received for the max distance. Please check your input file."));
     }
-
 
     if(verbosity >= 4)
     {
@@ -204,10 +204,7 @@ void InputManager::read_point_cloud(FileInputReader& reader)
         QStringList tokens = reader.next_line();
         if (tokens.size() != dimension + 1 )
         {
-        	// TODO: need a check for characters in the point data
-        	// look up qexception object
-        	// handle in dataselectDialogue
-        	continue;
+            throw Exception(QString("Found a line of point input with ")+QString::number(tokens.size())+QString(" items rather than ")+QString::number(dimension+1)+QString(". Please check your input file."));
         }
         DataPoint p(tokens);
         points.push_back(p);
@@ -320,7 +317,7 @@ void InputManager::read_discrete_metric_space(FileInputReader& reader)
 
     for(int i = 0; i < line.size(); i++)
     {
-        values.push_back(str_to_exact(line.at(i).toStdString()));
+        values.push_back(str_to_exact(line.at(i)));
     }
 
 
@@ -330,12 +327,10 @@ void InputManager::read_discrete_metric_space(FileInputReader& reader)
     input_params.y_label = reader.next_line_str();
 
     //read the maximum length of edges to construct
-    exact max_dist = str_to_exact(reader.next_line().first().toStdString());  ///TODO: don't convert to std::string
-    if(verbosity >= 4)
+    exact max_dist = str_to_exact(reader.next_line().first());
+    if (max_dist <= 0)
     {
-        std::ostringstream oss;
-        oss << max_dist;
-        qDebug() << "  maximum distance:" << QString::fromStdString(oss.str());
+        throw Exception(QString("An invalid input was received for the max distance. Please check your input file."));
     }
 
     //prepare data structures
@@ -356,20 +351,22 @@ void InputManager::read_discrete_metric_space(FileInputReader& reader)
         (*(ret.first))->indexes.push_back(i);
 
         //read distances from this point to all following points
-        if(i < num_points - 1)  //then there is at least one point after point i, and there should be another line to read
+        if(i < num_points - 1)  //then there is at least one point after point i, and there should be more distances to read
         {
-//            line = reader.next_line();
-
             for(unsigned j = i+1; j < num_points; j++)
             {
                 //read distance between points i and j
                 if(!reader.has_next_token())
-                    qDebug() << "ERROR: no distance between points" << i << "and" << j;
+                    throw Exception(QString("No distance value for points " + QString::number(i) + " and " + QString::number(j) +". Please check your input file."));
 
                 QString str = reader.next_token();
-                qDebug() << str;
 
-                exact cur_dist = str_to_exact(str.toStdString());
+                exact cur_dist = str_to_exact(str);
+
+                if (cur_dist < 0)
+                {
+                    throw Exception(QString("A negative number was received for a distance. Please check your input file."));
+                }
 
                 if( cur_dist <= max_dist )  //then this distance is allowed
                 {
@@ -450,19 +447,25 @@ void InputManager::read_bifiltration(FileInputReader& reader)
         std::vector<int> verts;
         for(int i = 0; i <= dim; i++)
         {
-            int v = tokens.at(i).toInt();
+            bool isInt;
+            int v = tokens.at(i).toInt(&isInt);
+            if(!isInt)
+            {
+                QString err_str("Error: In input file, \"" + tokens.at(i) + "\" is not an integer.");
+                qDebug() << err_str << endl;
+                throw Exception(err_str);
+            }
             verts.push_back(v);
         }
 
         //read multigrade and remember that it corresponds to this simplex
-        ret = x_set.insert(new ExactValue( str_to_exact(tokens.at(dim + 1).toStdString()) ));  ///TODO: don't convert to std::string
+        ret = x_set.insert(new ExactValue( str_to_exact(tokens.at(dim + 1)) ));
         (*(ret.first))->indexes.push_back(num_simplices);
-        ret = y_set.insert(new ExactValue( str_to_exact(tokens.at(dim + 2).toStdString()) ));  ///TODO: don't convert to std::string
+        ret = y_set.insert(new ExactValue( str_to_exact(tokens.at(dim + 2)) ));
         (*(ret.first))->indexes.push_back(num_simplices);
 
         //add the simplex to the simplex tree
         simplex_tree->add_simplex(verts, num_simplices, num_simplices);  //multigrade to be set later!
-            ///TODO: FIX THE ABOVE FUNCTION!!!
         num_simplices++;
 	}
 
@@ -475,18 +478,6 @@ void InputManager::read_bifiltration(FileInputReader& reader)
 
     build_grade_vectors(x_set, x_indexes, x_grades, x_exact, input_params.x_bins);
     build_grade_vectors(y_set, y_indexes, y_grades, y_exact, input_params.y_bins);
-
-//TESTING
-//    qDebug() << "x-grades sorted order:";
-//    for(ExactSet::iterator it = x_set.begin(); it != x_set.end(); ++it)
-//    {
-//        std::ostringstream oss;
-//        oss << (*it)->exact_value << " = " << (*it)->double_value;
-//        qDebug() << "   " << QString::fromStdString(oss.str());
-//    }
-//    qDebug() << "x-index vector:";
-//    for(std::vector<unsigned>::iterator it = x_indexes.begin(); it != x_indexes.end(); ++it)
-//        qDebug() << "   " << *it;
 
     //update simplex tree nodes
     simplex_tree->update_xy_indexes(x_indexes, y_indexes, x_grades.size(), y_grades.size());
