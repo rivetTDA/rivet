@@ -96,13 +96,21 @@ void SliceDiagram::create_diagram(QString x_text, QString y_text, double xmin, d
     if(max_hom_dim == 0)
         max_hom_dim = 1;
 
+    //parameters for grayscale values
+    int darkest = 30;   //light gray
+    int lightest = 225; //dark gray (almost black)
+    double gray_slope = ((double)(darkest - lightest)/(max_hom_dim - 1));
+
     //now create the rectangles
     hom_dim_rects.resize(boost::extents[x_grades.size()][y_grades.size()]);
     for(unsigned i = 0; i < x_grades.size(); i++)
     {
         for(unsigned j = 0; j < y_grades.size(); j++)
         {
-            int gray_value = 255 - (hom_dims[i][j]*200)/max_hom_dim;
+            int gray_value = 255;   //white
+            if(hom_dims[i][j] > 0)
+                gray_value = (int)(gray_slope*(hom_dims[i][j] - 1) + lightest);
+
             QGraphicsRectItem* item = addRect(QRectF(), Qt::NoPen, QBrush(QColor(gray_value, gray_value, gray_value)));
             item->setToolTip(QString("dimension = ") + QString::number(hom_dims[i][j]));
             hom_dim_rects[i][j] = item;
