@@ -22,7 +22,7 @@ class ComputationInput {
   std::vector<exact> y_exact;
 
  protected:
-    InputData &data;
+    InputData data;
     ComputationInput(InputData data) :
             data(data),
             x_grades(data.x_grades),
@@ -56,8 +56,8 @@ class RivetInput : public ComputationInput {
 struct ComputationResult {
   unsigned_matrix homology_dimensions;
   std::vector<xiPoint> xi_support;
-  std::shared_ptr<Mesh> arrangement;
-  std::shared_ptr<SimplexTree> bifiltration;
+  std::shared_ptr<Mesh> arrangement = std::make_shared(nullptr);
+  std::shared_ptr<SimplexTree> bifiltration = std::make_shared(nullptr);
 };
 
 class Computation
@@ -70,7 +70,7 @@ class Computation
   Computation(InputParameters &params, Progress &progress);
   ~Computation();
 
-  std::shared_ptr<ComputationResult> compute(InputData data);
+  std::unique_ptr<ComputationResult> compute(InputData data);
 
     private:
         InputParameters& params;
@@ -80,7 +80,7 @@ class Computation
 
         void find_dimensions(const RivetInput &input, unsigned_matrix &homology_dimensions);  //computes homology dimensions from the graded Betti numbers (used when data comes from a pre-computed RIVET file)
 
-        std::shared_ptr<ComputationResult> compute_rivet(RivetInput &input);
-        std::shared_ptr<ComputationResult> compute_raw(RawDataInput &input);
+        std::unique_ptr<ComputationResult> compute_rivet(RivetInput &input);
+        std::unique_ptr<ComputationResult> compute_raw(RawDataInput &input);
 };
 

@@ -14,11 +14,11 @@ Computation::Computation(InputParameters& params, Progress &progress) :
 Computation::~Computation()
 { }
 
-std::shared_ptr<ComputationResult> Computation::compute_rivet(RivetInput &input) {
+std::unique_ptr<ComputationResult> Computation::compute_rivet(RivetInput &input) {
   
       //STAGE 3: MULTIGRADED BETTI NUMBERS ALREADY COMPUTED, BUT MUST COMPUTE THE DIMENSIONS
 
-  std::shared_ptr<ComputationResult> result(new ComputationResult);
+  std::unique_ptr<ComputationResult> result(new ComputationResult);
 
   find_dimensions(input, result->homology_dimensions);      //compute the homology dimensions at each grade from the graded Betti numbers
 
@@ -51,7 +51,7 @@ std::shared_ptr<ComputationResult> Computation::compute_rivet(RivetInput &input)
         arrangementReady(*arrangement);
 }
 
-std::shared_ptr<ComputationResult> Computation::compute_raw(RawDataInput &input) {
+std::unique_ptr<ComputationResult> Computation::compute_raw(RawDataInput &input) {
 
     debug() << "entering compute_raw" << std::endl;
     if(verbosity >= 2)
@@ -71,7 +71,7 @@ std::shared_ptr<ComputationResult> Computation::compute_raw(RawDataInput &input)
     }
       //STAGE 3: COMPUTE MULTIGRADED BETTI NUMBERS
 
-    std::shared_ptr<ComputationResult> result(new ComputationResult);
+    std::unique_ptr<ComputationResult> result(new ComputationResult);
         //compute xi_0 and xi_1 at all multi-grades
         if(verbosity >= 2) { debug() << "COMPUTING xi_0 AND xi_1 FOR HOMOLOGY DIMENSION " << params.dim << ":"; }
         MultiBetti mb(input.bifiltration(), params.dim, verbosity);
@@ -103,14 +103,14 @@ std::shared_ptr<ComputationResult> Computation::compute_raw(RawDataInput &input)
 
         //send (a pointer to) the arrangement back to the VisualizationWindow
         arrangementReady(*arrangement);
+    result->arrangement.reset(arrangement);
     //TODO: bifiltration isn't used anywhere? Only part of the input?
+    return result;
 }
 
-std::shared_ptr<ComputationResult> Computation::compute(InputData data)
+std::unique_ptr<ComputationResult> Computation::compute(InputData data)
 {
   //STAGES 1 and 2: INPUT DATA AND CREATE BIFILTRATION
-
-  std::chrono::time_point<std::chrono::system_clock> start, end;
 
     if(verbosity >= 4)
     {

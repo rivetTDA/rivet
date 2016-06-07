@@ -100,7 +100,7 @@ struct FileType {
   std::string identifier;
   std::string description;
   bool is_data;
-  std::function<std::shared_ptr<InputData> (std::ifstream&, Progress&)> parser;
+  std::function<std::unique_ptr<InputData> (std::ifstream&, Progress&)> parser;
 };
 
 //TODO: the input manager doesn't really hold an appreciable
@@ -113,7 +113,7 @@ class InputManager
 	public:
         InputManager(InputParameters &input_params);
 
-        std::shared_ptr<InputData> start(Progress &progress);	//function to run the input manager
+        std::unique_ptr<InputData> start(Progress &progress);	//function to run the input manager
 
     private:
         InputParameters& input_params;  //parameters supplied by the user
@@ -129,10 +129,10 @@ class InputManager
 
         void register_file_type(FileType file_type);
 
-        InputData read_point_cloud(std::ifstream &stream, Progress &progress);		//reads a point cloud and constructs a simplex tree representing the bifiltered Vietoris-Rips complex
-        std::shared_ptr<InputData> read_discrete_metric_space(std::ifstream &stream, Progress &progress);   //reads data representing a discrete metric space with a real-valued function and constructs a simplex tree
-        std::shared_ptr<InputData> read_bifiltration(std::ifstream &stream, Progress &progress);	//reads a bifiltration and constructs a simplex tree
-        std::shared_ptr<InputData> read_RIVET_data(std::ifstream &stream, Progress &progress);      //reads a file of previously-computed data from RIVET
+        std::unique_ptr<InputData> read_point_cloud(std::ifstream &stream, Progress &progress);		//reads a point cloud and constructs a simplex tree representing the bifiltered Vietoris-Rips complex
+        std::unique_ptr<InputData> read_discrete_metric_space(std::ifstream &stream, Progress &progress);   //reads data representing a discrete metric space with a real-valued function and constructs a simplex tree
+        std::unique_ptr<InputData> read_bifiltration(std::ifstream &stream, Progress &progress);	//reads a bifiltration and constructs a simplex tree
+        std::unique_ptr<InputData> read_RIVET_data(std::ifstream &stream, Progress &progress);      //reads a file of previously-computed data from RIVET
 
         void build_grade_vectors(InputData &data, ExactSet& value_set, std::vector<unsigned>& indexes, std::vector<double>& grades_fp, std::vector<exact>& grades_exact, unsigned num_bins); //converts an ExactSets of values to the vectors of discrete values that SimplexTree uses to build the bifiltration, and also builds the grade vectors (floating-point and exact)
 

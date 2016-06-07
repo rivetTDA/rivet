@@ -74,10 +74,11 @@ int main(int argc, char *argv[])
         computation.xiSupportReady.connect([](std::vector<xiPoint> points){
             std::cerr << "xi support received: " << points.size() << std::endl;
         });
-        std::shared_ptr<InputData> input = inputManager.start(progress);
+        //TODO: input is a simple pointer, switch to unique_ptr
+        auto input = inputManager.start(progress);
         debug() << "Input processed" << std::endl;
         debug() << "Dim is still " << input->simplex_tree->hom_dim << std::endl;
-        std::shared_ptr<ComputationResult> result = computation.compute(*input);
+        auto result = computation.compute(*input);
         debug() << "Computation complete" << std::endl;
         auto arrangement = result->arrangement;
         //TESTING: print arrangement info and verify consistency

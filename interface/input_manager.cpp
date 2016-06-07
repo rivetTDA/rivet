@@ -164,7 +164,7 @@ FileType& InputManager::get_file_type(std::string fileName) {
 //function to run the input manager, requires a filename
 //  post condition: x_grades and x_exact have size x_bins, and they contain the grade values for the 2-D persistence module in double and exact form (respectively)
 //                  similarly for y_grades and y_exact
-std::shared_ptr<InputData> InputManager::start(Progress &progress)
+std::unique_ptr<InputData> InputManager::start(Progress &progress)
 {
 	//read the file
   if(verbosity >= 2) { debug() << "READING FILE:" << input_params.fileName << std::endl; }
@@ -183,7 +183,7 @@ std::shared_ptr<InputData> InputManager::start(Progress &progress)
 //reads a point cloud
 //  points are given by coordinates in Euclidean space, and each point has a "birth time"
 //  constructs a simplex tree representing the bifiltered Vietoris-Rips complex
-InputData* InputManager::read_point_cloud(std::ifstream &stream, Progress &progress)
+std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream &stream, Progress &progress)
 {
     FileInputReader reader(stream);
     auto data = new InputData();
@@ -344,14 +344,14 @@ InputData* InputManager::read_point_cloud(std::ifstream &stream, Progress &progr
         ExactValue* p = *it;
         delete p;
     }
-    return data;
+    return std::unique_ptr<InputData>(data);
 }//end read_point_cloud()
 
 //reads data representing a discrete metric space with a real-valued function and constructs a simplex tree
-std::shared_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstream &stream, Progress &progress)
+std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstream &stream, Progress &progress)
 {
     if(verbosity >= 2) { debug() << "  Found a discrete metric space file."; }
-    std::shared_ptr<InputData> data(new InputData);
+    std::unique_ptr<InputData> data(new InputData);
     FileInputReader reader(stream);
   // STEP 1: read data file and store exact (rational) values of the function for each point
 
@@ -467,9 +467,9 @@ std::shared_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
 }//end read_discrete_metric_space()
 
 //reads a bifiltration and constructs a simplex tree
-std::shared_ptr<InputData> InputManager::read_bifiltration(std::ifstream &stream, Progress &progress)
+std::unique_ptr<InputData> InputManager::read_bifiltration(std::ifstream &stream, Progress &progress)
 {
-    std::shared_ptr<InputData> data(new InputData);
+    std::unique_ptr<InputData> data(new InputData);
     FileInputReader reader(stream);
     if(verbosity >= 2) { debug() << "  Found a bifiltration file.\n"; }
 
@@ -557,7 +557,7 @@ std::shared_ptr<InputData> InputManager::read_bifiltration(std::ifstream &stream
 }//end read_bifiltration()
 
 //reads a file of previously-computed data from RIVET
-std::shared_ptr<InputData> InputManager::read_RIVET_data(std::ifstream &stream, Progress &progress)
+std::unique_ptr<InputData> InputManager::read_RIVET_data(std::ifstream &stream, Progress &progress)
 {
     std::shared_ptr<InputData> data(new InputData);
     FileInputReader reader(stream);
