@@ -274,7 +274,7 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
             max_time = step_time;
 
         //update the treshold
-        threshold = (unsigned long) ((double) total_transpositions / (double) total_time_for_transpositions)*(total_time_for_resets/number_of_resets);
+        threshold = (unsigned long) (((double) total_transpositions / total_time_for_transpositions)*((double) total_time_for_resets/number_of_resets));
         qDebug() << "       new threshold:" << threshold;
     }//end path traversal
 
