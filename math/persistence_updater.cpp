@@ -70,13 +70,13 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
     R_high = bifiltration->get_boundary_mx(low_simplex_order, num_low_simplices, high_simplex_order, num_high_simplices);
 
     //print runtime data
-    qDebug() << "  --> computing initial order on simplices and building the boundary matrices took" << timer.elapsed() << "milliseconds";
+    qDebug().noquote() << "  --> computing initial order on simplices and building the boundary matrices took" << format_milliseconds(timer.elapsed());
 
     //copy the boundary matrices (R) for fast reset later
     timer.start();
     MapMatrix_Perm* R_low_initial = new MapMatrix_Perm(*R_low);
     MapMatrix_Perm* R_high_initial = new MapMatrix_Perm(*R_high);
-    qDebug() << "  --> copying the boundary matrices took" << timer.elapsed() << "milliseconds";
+    qDebug().noquote() << "  --> copying the boundary matrices took" << format_milliseconds(timer.elapsed());
 
     //initialize the permutation vectors
     perm_low.resize(R_low->width());
@@ -104,7 +104,7 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
     U_high = R_high->decompose_RU();
 
     int time_for_initial_decomp = timer.elapsed();
-    qDebug() << "  --> computing the RU decomposition took" << time_for_initial_decomp << "milliseconds";
+    qDebug().noquote() << "  --> computing the RU decomposition took" << format_milliseconds(time_for_initial_decomp);
 
     //store the barcode template in the first cell
     Face* first_cell = mesh->topleft->get_twin()->get_face();
@@ -255,7 +255,7 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
 
         if(num_trans < threshold)   //then we did vineyard-updates
         {
-            qDebug() << "    --> this step took" << step_time << "milliseconds and involved" << swap_counter << "transpositions; estimate was" << num_trans;
+            qDebug().noquote() << "    --> this step took" << format_milliseconds(step_time) << " and involved" << swap_counter << "transpositions; estimate was" << num_trans;
             if(swap_counter != num_trans)
                 qDebug() << "    ========>>> ERROR: transposition count doesn't match estimate!";
             total_transpositions += swap_counter;
@@ -263,7 +263,7 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
         }
         else
         {
-            qDebug() << "    --> this step took" << step_time << "milliseconds; reset matrices to avoid" << num_trans << "transpositions";
+            qDebug().noquote() << "    --> this step took" << format_milliseconds(step_time) << "; reset matrices to avoid" << num_trans << "transpositions";
             if(swap_counter > 0)
                 qDebug() << "    ========>>> ERROR: swaps occurred on a matrix reset!";
             number_of_resets++;
@@ -279,12 +279,12 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
     }//end path traversal
 
     //print runtime data
-    qDebug() << "DATA: path traversal and persistence updates took" << timer.elapsed() << "milliseconds";
-    qDebug() << "    max time per anchor crossing:" << max_time;
+    qDebug().noquote() << "DATA: path traversal and persistence updates took" << format_milliseconds(timer.elapsed());
+    qDebug().noquote() << "    max time per anchor crossing:" << format_milliseconds(max_time);
     qDebug() << "    total number of transpositions:" << total_transpositions;
     qDebug() << "    matrices were reset" << number_of_resets << "times when estimated number of transpositions exceeded" << threshold;
     if(number_of_resets > 0)
-        qDebug() << "    average time for reset:" << (total_time_for_resets/number_of_resets) << "milliseconds";
+        qDebug().noquote() << "    average time for reset:" << format_milliseconds((int)(total_time_for_resets/number_of_resets));
 
 
   // PART 4: CLEAN UP
@@ -1571,4 +1571,21 @@ void PersistenceUpdater::print_high_partition()
     qd << "  high partition: ";
     for(std::map<unsigned, xiMatrixEntry*>::iterator it = lift_high.begin(); it != lift_high.end(); ++it)
         qd << it->first << "->" << it->second->index << ", ";
+}
+
+QString PersistenceUpdater::format_milliseconds(int ms)
+{
+    int z = ms % 1000;
+    int s = (ms/1000) % 60;
+    int m = (ms/(1000*60)) % 60;
+    int h = (ms/(1000*60*60));
+
+    QString hstr = (h < 10) ? QString("0") + QString::number(h) : QString::number(h);
+    QString mstr = (m < 10) ? QString("0") + QString::number(m) : QString::number(m);
+    QString sstr = (s < 10) ? QString("0") + QString::number(s) : QString::number(s);
+    QString zstr = (z < 100) ? QString("0") + QString::number(z) : QString::number(z);
+    if(z < 10)
+        zstr.prepend("0");
+
+    return hstr + QString(":") + mstr + QString(":") + sstr + QString(".") + zstr;
 }

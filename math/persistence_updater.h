@@ -23,6 +23,8 @@ class xiMatrixEntry;
 
 #include "xi_support_matrix.h"
 
+#include <QString>
+
 #include <map>
 #include <vector>
 
@@ -155,6 +157,7 @@ class PersistenceUpdater
         void print_perms(Perm& per, Perm& inv);
         void print_high_partition();
 
+        QString format_milliseconds(int ms);
 };
 
 #endif // __PERSISTENCE_UPDATER_H__
