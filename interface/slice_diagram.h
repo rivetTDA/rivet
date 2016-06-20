@@ -114,12 +114,13 @@ private:
     };
     std::vector<xiFloatingPoint> points;    //point data to be drawn in the slice area
 
-    const std::vector<double>& x_grades;    //NEW -- for dimension visualization
+    const std::vector<double>& x_grades;    //for dimension visualization
     const std::vector<double>& y_grades;    // "
 
     ///TODO: the next four values can be obtained from x_grades and y_grades
     double data_xmin, data_xmax, data_ymin, data_ymax;  //min and max coordinates of the data
     double data_infty;      //data position that is outside of the window, used for drawing bars that extend to infinity
+    int max_xi_value;       //max value of the bigraded betti numbers
 
     int diagram_width, diagram_height;  //pixel size of the diagram
     bool normalized_coords;             //whether the user has selected "normalize coordinates"

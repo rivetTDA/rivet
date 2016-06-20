@@ -20,6 +20,7 @@ SliceDiagram::SliceDiagram(ConfigParameters* params, std::vector<double>& x_grad
     config_params(params),
     dot_left(), dot_right(), slice_line(),
     x_grades(x_grades), y_grades(y_grades),
+    max_xi_value(0),
     padding(20),
     epsilon(pow(2,-30)), PI(3.14159265358979323846)
 { }
@@ -33,6 +34,13 @@ SliceDiagram::~SliceDiagram()
 void SliceDiagram::add_point(double x_coord, double y_coord, int xi0m, int xi1m, int xi2m)
 {
     points.push_back(xiFloatingPoint(x_coord, y_coord, xi0m, xi1m, xi2m));
+
+    if(xi0m > max_xi_value)
+        max_xi_value = xi0m;
+    if(xi1m > max_xi_value)
+        max_xi_value = xi1m;
+    if(xi2m > max_xi_value)
+        max_xi_value = xi2m;
 }
 
 //NOTE: create_diagram() simply creates all objects; resize_diagram() handles positioning of objects
@@ -216,6 +224,21 @@ void SliceDiagram::resize_diagram()
     //determine diagram size
     diagram_width = scale_x*(data_xmax - data_xmin);  //units: pixels
     diagram_height = scale_y*(data_ymax - data_ymin); //units: pixels
+
+    //determine automatic dot sizes, if necessary
+    if(config_params->autoDotSize && max_xi_value > 0)
+    {
+        int x_grid = diagram_width / x_grades.size();
+        int y_grid = diagram_height / y_grades.size();
+        int min_grid = (x_grid < y_grid) ? x_grid : y_grid;
+
+        int auto_radius = (int) min_grid / sqrt(max_xi_value);
+        if(auto_radius < 3)
+            auto_radius = 3;
+
+        config_params->bettiDotRadius = auto_radius;
+        config_params->persistenceDotRadius = auto_radius;
+    }
 
     //reposition reference objects
     control_rect->setRect(0, 0, diagram_width + padding, diagram_height + padding);

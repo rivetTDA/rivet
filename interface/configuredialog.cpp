@@ -15,6 +15,7 @@ ConfigureDialog::ConfigureDialog(ConfigParameters& c_params, InputParameters& i_
     perCol(config_params.persistenceColor), perHiCol(config_params.persistenceHighlightColor),
     lineCol(config_params.sliceLineColor), lineHiCol(config_params.sliceLineHighlightColor),
     bettiRadius(config_params.bettiDotRadius), perRadius(config_params.persistenceDotRadius),
+    autoDots(config_params.autoDotSize),
     xlabel(input_params.x_label), ylabel(input_params.y_label)
 {
     ui->setupUi(this);
@@ -66,6 +67,15 @@ ConfigureDialog::ConfigureDialog(ConfigParameters& c_params, InputParameters& i_
     ui->bettiDotSpinBox->setValue(bettiRadius);
     ui->persistenceDotSpinBox->setValue(perRadius);
 
+    if(autoDots)
+    {
+        ui->AutoDotSizeCheckBox->setChecked(true);
+        ui->bettiDotSpinBox->setEnabled(false);
+        ui->bettiDotSizeLabel->setEnabled(false);
+        ui->persistenceDotSpinBox->setEnabled(false);
+        ui->persistenceDotSizeLabel->setEnabled(false);
+    }
+
   //set labels to current labels
     ui->xaxisText->setText(input_params.x_label);
     ui->yaxisText->setText(input_params.y_label);
@@ -94,6 +104,7 @@ void ConfigureDialog::on_okButton_clicked()
     config_params.sliceLineHighlightColor = lineHiCol;
     config_params.bettiDotRadius = bettiRadius;
     config_params.persistenceDotRadius = perRadius;
+    config_params.autoDotSize = autoDots;
 
     //update axis labels in input_params
     input_params.x_label = xlabel;
@@ -294,17 +305,6 @@ void ConfigureDialog::on_persistenceDotSpinBox_valueChanged(int arg1)
     perRadius = arg1;
 }
 
-void ConfigureDialog::on_defaultSizesButton_clicked()
-{
-    ConfigParameters defaults;
-
-    bettiRadius = defaults.bettiDotRadius;
-    ui->bettiDotSpinBox->setValue(bettiRadius);
-
-    perRadius = defaults.persistenceDotRadius;
-    ui->persistenceDotSpinBox->setValue(perRadius);
-}
-
 void ConfigureDialog::on_xaxisText_editingFinished()
 {
     xlabel = ui->xaxisText->text();
@@ -313,4 +313,24 @@ void ConfigureDialog::on_xaxisText_editingFinished()
 void ConfigureDialog::on_yaxisText_editingFinished()
 {
     ylabel = ui->yaxisText->text();
+}
+
+void ConfigureDialog::on_AutoDotSizeCheckBox_clicked(bool checked)
+{
+    autoDots = checked;
+
+    if(autoDots)
+    {
+        ui->bettiDotSpinBox->setEnabled(false);
+        ui->bettiDotSizeLabel->setEnabled(false);
+        ui->persistenceDotSpinBox->setEnabled(false);
+        ui->persistenceDotSizeLabel->setEnabled(false);
+    }
+    else
+    {
+        ui->bettiDotSpinBox->setEnabled(true);
+        ui->bettiDotSizeLabel->setEnabled(true);
+        ui->persistenceDotSpinBox->setEnabled(true);
+        ui->persistenceDotSizeLabel->setEnabled(true);
+    }
 }
