@@ -96,34 +96,34 @@ Mesh::~Mesh()
 //precondition: the constructor has already created the boundary of the arrangement
 void Mesh::build_arrangement(MultiBetti& mb, std::vector<xiPoint>& xi_pts, Progress &progress)
 {
-    debug() << "build_arrangement with multibetti" << std::endl;
+    debug() << "build_arrangement with multibetti" ;
     Timer timer;
 
     //first, create PersistenceUpdater
     //this also finds anchors and stores them in the vector Mesh::all_anchors -- JULY 2015 BUG FIX
     progress.progress(10);
     PersistenceUpdater updater(*this, mb.bifiltration, xi_pts);   //PersistenceUpdater object is able to do the calculations necessary for finding anchors and computing barcode templates
-    debug() << "  --> finding anchors took " << timer.elapsed() << " milliseconds" << std::endl;
+    debug() << "  --> finding anchors took " << timer.elapsed() << " milliseconds" ;
 
     //now that we have all the anchors, we can build the interior of the arrangement
     progress.progress(25);
     timer.restart();
     build_interior();
-    debug() << "  --> building the interior of the line arrangement took " << timer.elapsed() << " milliseconds" << std::endl;
+    debug() << "  --> building the interior of the line arrangement took " << timer.elapsed() << " milliseconds" ;
     print_stats();
 
     //compute the edge weights
     progress.progress(50);
     timer.restart();
     find_edge_weights(updater);
-    debug() << "  --> computing the edge weights took " << timer.elapsed() << " milliseconds" << std::endl;
+    debug() << "  --> computing the edge weights took " << timer.elapsed() << " milliseconds" ;
 
     //now that the arrangement is constructed, we can find a path -- NOTE: path starts with a (near-vertical) line to the right of all multigrades
     progress.progress(75);
     std::vector<Halfedge*> path;
     timer.restart();
     find_path(path);
-    debug() << "  --> finding the path took " << timer.elapsed() << " milliseconds" << std::endl;
+    debug() << "  --> finding the path took " << timer.elapsed() << " milliseconds" ;
 
     //update the progress dialog box
     progress.advanceProgressStage();            //update now in stage 5 (compute discrete barcodes)
@@ -179,7 +179,7 @@ void Mesh::build_interior()
 {
     if(verbosity >= 6)
     {
-        debug() << "BUILDING ARRANGEMENT:  Anchors sorted for left edge of strip: " << std::endl;
+        debug() << "BUILDING ARRANGEMENT:  Anchors sorted for left edge of strip: " ;
         for(std::set<Anchor*, Anchor_LeftComparator>::iterator it = all_anchors.begin(); it != all_anchors.end(); ++it)
             debug(true) << "(" << (*it)->get_x() << "," << (*it)->get_y() << ") ";
     }
@@ -198,7 +198,7 @@ void Mesh::build_interior()
     std::set< Anchor_pair > considered_pairs;
 
   // PART 1: INSERT VERTICES AND EDGES ALONG LEFT EDGE OF THE ARRANGEMENT
-    if(verbosity >= 6) { debug() << "PART 1: LEFT EDGE OF ARRANGEMENT" << std::endl; }
+    if(verbosity >= 6) { debug() << "PART 1: LEFT EDGE OF ARRANGEMENT" ; }
 
     //for each Anchor, create vertex and associated halfedges, anchored on the left edge of the strip
     Halfedge* leftedge = bottomleft;
@@ -406,7 +406,7 @@ void Mesh::build_interior()
     }//end while
 
   // PART 3: INSERT VERTICES ON RIGHT EDGE OF ARRANGEMENT AND CONNECT EDGES
-    if(verbosity >= 6) { debug() << "PART 3: RIGHT EDGE OF THE ARRANGEMENT" << std::endl; }
+    if(verbosity >= 6) { debug() << "PART 3: RIGHT EDGE OF THE ARRANGEMENT" ; }
 
     Halfedge* rightedge = bottomright; //need a reference halfedge along the right side of the strip
     unsigned cur_x = 0;      //keep track of discrete x-coordinate of last Anchor whose line was connected to right edge (x-coordinate of Anchor is slope of line)

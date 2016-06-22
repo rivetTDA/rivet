@@ -32,7 +32,7 @@ unsigned int get_uint_or_die(std::map<std::string, docopt::value> &args, const s
   try {
     return static_cast<unsigned int>(args[key].asLong());
   } catch (std::exception &e) {
-    std::cerr << "Argument " << key << " must be an integer" << std::endl;
+    std::cerr << "Argument " << key << " must be an integer" ;
       throw std::runtime_error("Failed to parse integer");
 //    exit(1);
   }
@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
 {
     try {
 
-        debug() << "CONSOLE RIVET" << std::endl;
+        debug() << "CONSOLE RIVET" ;
 
         InputParameters params;   //parameter values stored here
 
@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
                                                                    "RIVET Console 0.4");
 
         // for (auto const &arg : args) {
-        //   std::cout << arg.first << ":" << arg.second << std::endl;
+        //   std::cout << arg.first << ":" << arg.second ;
         // }
 
         params.fileName = args["<input_file>"].asString();
@@ -61,53 +61,53 @@ int main(int argc, char *argv[])
         params.y_bins = get_uint_or_die(args, "--ybins");
         params.verbosity = get_uint_or_die(args, "--verbosity");
 
-        debug() << "X bins: " << params.x_bins << std::endl;
-        debug() << "Y bins: " << params.y_bins << std::endl;
-        debug() << "Verbosity: " << params.verbosity << std::endl;
+        debug() << "X bins: " << params.x_bins ;
+        debug() << "Y bins: " << params.y_bins ;
+        debug() << "Verbosity: " << params.verbosity ;
 
         InputManager inputManager(params);
         Progress progress;
         Computation computation(params, progress);
         computation.arrangementReady.connect([](Mesh& mesh){
-            std::cerr << "Arrangement received: " << mesh.x_grades.size() << " x " << mesh.y_grades.size() << std::endl;
+            std::cerr << "Arrangement received: " << mesh.x_grades.size() << " x " << mesh.y_grades.size() ;
         });
         computation.xiSupportReady.connect([](std::vector<xiPoint> points){
-            std::cerr << "xi support received: " << points.size() << std::endl;
+            std::cerr << "xi support received: " << points.size() ;
         });
         //TODO: input is a simple pointer, switch to unique_ptr
         auto input = inputManager.start(progress);
-        debug() << "Input processed" << std::endl;
-        debug() << "Dim is still " << input->simplex_tree->hom_dim << std::endl;
+        debug() << "Input processed" ;
+        debug() << "Dim is still " << input->simplex_tree->hom_dim ;
         auto result = computation.compute(*input);
-        debug() << "Computation complete" << std::endl;
+        debug() << "Computation complete" ;
         auto arrangement = result->arrangement;
         //TESTING: print arrangement info and verify consistency
         arrangement->print_stats();
         arrangement->test_consistency();
 
-        if (params.verbosity >= 2) { debug() << "COMPUTATION FINISHED." << std::endl; }
+        if (params.verbosity >= 2) { debug() << "COMPUTATION FINISHED." ; }
 
         //if an output file has been specified, then save the arrangement
         if (!params.outputFile.empty()) {
             std::ofstream file(params.outputFile);
             if (file.is_open()) {
-                debug() << "Writing file:" << params.outputFile << std::endl;
+                debug() << "Writing file:" << params.outputFile ;
 
                 FileWriter fw(params, *(arrangement), input->x_exact, input->y_exact, result->xi_support);
                 fw.write_augmented_arrangement(file);
             }
             else {
                 std::stringstream ss;
-                ss << "Error: Unable to write file:" << params.outputFile << std::endl;
+                ss << "Error: Unable to write file:" << params.outputFile ;
                 throw std::runtime_error(ss.str());
             }
         } else {
             throw std::runtime_error("No output file name provided");
         }
-        debug() << "CONSOLE RIVET: Goodbye" << std::endl;
+        debug() << "CONSOLE RIVET: Goodbye" ;
         return 0;
     } catch (std::exception &e) {
-        std::cerr << std::endl << "Error occurred: " << e.what() << std::endl;
+        std::cerr  << "Error occurred: " << e.what() ;
     }
 }
 

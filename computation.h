@@ -56,8 +56,8 @@ class RivetInput : public ComputationInput {
 struct ComputationResult {
   unsigned_matrix homology_dimensions;
   std::vector<xiPoint> xi_support;
-  std::shared_ptr<Mesh> arrangement = std::make_shared(nullptr);
-  std::shared_ptr<SimplexTree> bifiltration = std::make_shared(nullptr);
+  std::shared_ptr<Mesh> arrangement;
+  std::shared_ptr<SimplexTree> bifiltration;
 };
 
 class Computation

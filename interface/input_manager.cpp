@@ -49,7 +49,7 @@ std::vector<std::string> split(std::string& str, std::string separators) {
 exact str_to_exact(std::string str)
 {
     if(!is_number(str)){
-  	 	debug()<<"Error: "<<str<<" is not a number"<<std::endl;
+  	 	debug()<<"Error: "<<str<<" is not a number";
     	return 0;
     }
     exact r;
@@ -167,7 +167,7 @@ FileType& InputManager::get_file_type(std::string fileName) {
 std::unique_ptr<InputData> InputManager::start(Progress &progress)
 {
 	//read the file
-  if(verbosity >= 2) { debug() << "READING FILE:" << input_params.fileName << std::endl; }
+  if(verbosity >= 2) { debug() << "READING FILE:" << input_params.fileName ; }
     auto file_type = get_file_type(input_params.fileName);
         std::ifstream infile(input_params.fileName);                   //input file
         if (!infile.is_open()) {
@@ -175,7 +175,7 @@ std::unique_ptr<InputData> InputManager::start(Progress &progress)
         }
     auto data = file_type.parser(infile, progress);
     data->is_data = file_type.is_data;
-    debug() << "Set is_data to " << data->is_data << std::endl;
+    debug() << "Set is_data to " << data->is_data ;
     return data;
 }//end start()
 
@@ -187,7 +187,7 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream &stream,
 {
     FileInputReader reader(stream);
     auto data = new InputData();
-    if(verbosity >= 6) { debug() << "  Found a point cloud file." << std::endl; }
+    if(verbosity >= 6) { debug() << "  Found a point cloud file." ; }
 
   // STEP 1: read data file and store exact (rational) values
 //skip first line
@@ -196,15 +196,15 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream &stream,
     std::vector<std::string> dimension_line = reader.next_line();
     if (dimension_line.size() != 1)
     {
-    	debug() << "There was more than one value in the expected dimension line.  There may be a problem with your input file.  " << std::endl;
+    	debug() << "There was more than one value in the expected dimension line.  There may be a problem with your input file.  " ;
     }
-    debug() << "Dimension: " << dimension_line[0] << std::endl;
+    debug() << "Dimension: " << dimension_line[0] ;
     int dimension = std::stoi(dimension_line[0]);
 
     //check for invalid input
     if (dimension == 0)
     {
-    	debug() << "An invalid input was received for the dimension." << std::endl;
+    	debug() << "An invalid input was received for the dimension." ;
     	// throw an exception
     }
 
@@ -212,7 +212,7 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream &stream,
     std::vector<std::string> distance_line = reader.next_line();
     if (distance_line.size() != 1)
     {
-    	debug() << "There was more than one value in the expected distance line.  There may be a problem with your input file.  " << std::endl;
+    	debug() << "There was more than one value in the expected distance line.  There may be a problem with your input file.  " ;
     }
 
     exact max_dist = str_to_exact(distance_line[0]);
@@ -226,7 +226,7 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream &stream,
     {
         std::ostringstream oss;
         oss << max_dist;
-        debug() << "  maximum distance: " << oss.str() << std::endl;
+        debug() << "  maximum distance: " << oss.str() ;
     }
 
     //read label for x-axis
@@ -251,7 +251,7 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream &stream,
         points.push_back(p);
     }
 
-    if(verbosity >= 4) { debug() << "  read" << points.size() << "points; input finished" << std::endl; }
+    if(verbosity >= 4) { debug() << "  read" << points.size() << "points; input finished" ; }
 
     if (points.empty()) {
         throw std::runtime_error("No points loaded");
@@ -259,7 +259,7 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream &stream,
 
   // STEP 2: compute distance matrix, and create ordered lists of all unique distance and time values
 
-    if(verbosity >= 6) { debug() << "BUILDING DISTANCE AND TIME LISTS" << std::endl; }
+    if(verbosity >= 6) { debug() << "BUILDING DISTANCE AND TIME LISTS" ; }
     progress.advanceProgressStage();
 
     unsigned num_points = points.size();
@@ -329,7 +329,7 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream &stream,
 
     if(verbosity >= 6) { debug() << "BUILDING VIETORIS-RIPS BIFILTRATION"; }
 
-    debug() << "x grades: " << data->x_grades.size() << " y grades: " << data->y_grades.size() << std::endl;
+    debug() << "x grades: " << data->x_grades.size() << " y grades: " << data->y_grades.size() ;
     data->simplex_tree.reset(new SimplexTree(input_params.dim, input_params.verbosity));
     data->simplex_tree->build_VR_complex(time_indexes, dist_indexes, data->x_grades.size(), data->y_grades.size());
 
@@ -563,7 +563,7 @@ std::unique_ptr<InputData> InputManager::read_RIVET_data(std::ifstream &stream, 
     FileInputReader reader(stream);
   //read parameters
     auto line = reader.next_line();
-    debug() << join(line) << std::endl;
+    debug() << join(line) ;
   input_params.dim = std::stoi(reader.next_line()[0]);
   input_params.x_label = join(reader.next_line());
   input_params.y_label = join(reader.next_line());

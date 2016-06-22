@@ -682,7 +682,7 @@ void MultiBetti::store_support_points(std::vector<xiPoint>& xi_supp)
 
             if(xi0 != 0 || xi1 != 0 || xi2 != 0) {   //then we have found an xi support point
                 xi_supp.push_back(xiPoint(i, j, xi0, xi1, xi2));
-                debug() << "Added xi support: " << i <<  " " << j << " " << xi0 << " " << xi1 << " " << xi2 << std::endl;
+                debug() << "Added xi support: " << i <<  " " << j << " " << xi0 << " " << xi1 << " " << xi2 ;
             }
         }
     }

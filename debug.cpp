@@ -18,8 +18,8 @@ Debug debug(bool nospace = false) {
 
 #else
 
-Debug& debug(bool nospace, std::ostream& out) {
-    return out;
+Debug debug(bool nospace, std::ostream& out) {
+    return Debug(out, !nospace);
 }
 
 #endif

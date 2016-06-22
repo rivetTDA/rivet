@@ -41,7 +41,7 @@ std::unique_ptr<ComputationResult> Computation::compute_rivet(RivetInput &input)
                                                    verbosity));
         //TODO: hook up signals
     Progress progress;
-    debug() << "Calling build_arrangement" << std::endl;
+    debug() << "Calling build_arrangement" ;
         arrangement->build_arrangement(input.xi_support, input.barcode_templates, progress);
         auto end = std::chrono::system_clock::now();
 
@@ -53,20 +53,20 @@ std::unique_ptr<ComputationResult> Computation::compute_rivet(RivetInput &input)
 
 std::unique_ptr<ComputationResult> Computation::compute_raw(RawDataInput &input) {
 
-    debug() << "entering compute_raw" << std::endl;
+    debug() << "entering compute_raw" ;
     if(verbosity >= 2)
     {
-        debug() << "\nBIFILTRATION:" << std::endl;
-        debug() << "   Number of simplices of dimension " << params.dim << " : " << input.bifiltration().get_size(params.dim) << std::endl;
-        debug() << "   Number of simplices of dimension " << (params.dim + 1) << " : " << input.bifiltration().get_size(params.dim + 1) <<std::endl;
-        debug() << "   Number of x-grades:" << input.x_grades.size() << std::endl;
+        debug() << "\nBIFILTRATION:" ;
+        debug() << "   Number of simplices of dimension " << params.dim << " : " << input.bifiltration().get_size(params.dim) ;
+        debug() << "   Number of simplices of dimension " << (params.dim + 1) << " : " << input.bifiltration().get_size(params.dim + 1) ;
+        debug() << "   Number of x-grades:" << input.x_grades.size() ;
         if (input.x_grades.size())
         {
-            debug() << "; values " << input.x_grades.front() << " to " << input.x_grades.back() << std::endl;
+            debug() << "; values " << input.x_grades.front() << " to " << input.x_grades.back() ;
         }
-        debug() << "   Number of y-grades:" << input.y_grades.size() << std::endl;
+        debug() << "   Number of y-grades:" << input.y_grades.size() ;
         if (input.y_grades.size()) {
-            debug() << "; values " << input.y_grades.front() << " to " << input.y_grades.back() << std::endl;
+            debug() << "; values " << input.y_grades.front() << " to " << input.y_grades.back() ;
         }
     }
       //STAGE 3: COMPUTE MULTIGRADED BETTI NUMBERS
@@ -76,7 +76,7 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(RawDataInput &input)
         if(verbosity >= 2) { debug() << "COMPUTING xi_0 AND xi_1 FOR HOMOLOGY DIMENSION " << params.dim << ":"; }
         MultiBetti mb(input.bifiltration(), params.dim, verbosity);
         Timer timer;
-    debug() << "Calling compute_fast" << std::endl;
+    debug() << "Calling compute_fast" ;
         mb.compute_fast(result->homology_dimensions, progress);
 
         debug() << "  --> xi_i computation took " << timer.elapsed() << " seconds";
@@ -136,7 +136,7 @@ std::unique_ptr<ComputationResult> Computation::compute(InputData data)
     {
       auto input = RawDataInput(data);
         //print bifiltration statistics
-        debug() << "Computing from raw data" << std::endl;
+        debug() << "Computing from raw data" ;
       return compute_raw(input);
     }
     else    //then the user selected a RIVET file with pre-computed persistence information, and we just need to re-build the arrangement
