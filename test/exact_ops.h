@@ -10,7 +10,6 @@
 #include "catch.hpp"
 #include <vector>
 #include <iostream>
-#include "interface/input_manager.h"
 #include "numerics.h"
 
 TEST_CASE( "Exact parser parses 12.34", "[Exact]" ) {

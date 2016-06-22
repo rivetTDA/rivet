@@ -153,7 +153,7 @@ struct DataPoint {
 
         for(unsigned i=0; i < strs.size() - 1; i++)
         {
-            int value;
+            double value;
             std::stringstream convert(strs[i]);
             convert >> value;
             coords.push_back(value);
