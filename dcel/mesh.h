@@ -19,10 +19,7 @@ class Vertex;
 
 #include "anchor.h"
 #include "../math/xi_point.h"
-
-#include <boost/multiprecision/cpp_int.hpp>
-typedef boost::multiprecision::cpp_rational exact;
-
+#include "numerics.h"
 #include <vector>
 #include <set>
 #include "interface/progress.h"

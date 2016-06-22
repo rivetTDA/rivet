@@ -26,7 +26,8 @@ typedef boost::multiprecision::cpp_rational exact;
 #include <sstream>
 #include <fstream>
 #include <vector>
-
+#include "numerics.h"
+using namespace rivet::numeric;
 
 //first, a struct to help sort multi-grade values
 struct ExactValue
@@ -139,9 +140,6 @@ class InputManager
         exact approx(double x);         //finds a rational approximation of a floating-point value; precondition: x > 0
     FileType &get_file_type(std::string fileName);
 };
-
-//helper function for converting a string to an exact value
-exact str_to_exact(std::string str);
 
 //a struct to store exact coordinates of a point, along with a "birth time"
 struct DataPoint {

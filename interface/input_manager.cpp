@@ -9,8 +9,6 @@
 
 #include "debug.h"
 
-#include <boost/algorithm/string.hpp>
-
 #include <algorithm>
 #include <set>
 #include <sstream>
@@ -21,12 +19,6 @@
 double ExactValue::epsilon = pow(2,-30);
 
 // function for determining whether or not a string is a number
-bool is_number(const std::string& s)
-{
-    std::string::const_iterator it = s.begin();
-    while (it != s.end() && (std::isdigit(*it) || *it =='.')) ++it;
-    return !s.empty() && it == s.end();
-}
 
 std::string join(const std::vector<std::string> &strings) {
   std::stringstream ss;
@@ -42,56 +34,6 @@ std::vector<std::string> split(std::string& str, std::string separators) {
   std::vector<std::string> strings;
   boost::split(strings, str, boost::is_any_of(separators));
   return strings;
-}
-
-//helper function to convert a string to an exact (rational)
-//accepts string such as "12.34", "765", and "-10.8421"
-exact str_to_exact(std::string str)
-{
-    if(!is_number(str)){
-  	 	debug()<<"Error: "<<str<<" is not a number";
-    	return 0;
-    }
-    exact r;
-
-    //find decimal point, if it exists
-    std::string::size_type dec = str.find(".");
-
-    if(dec == std::string::npos)	//then decimal point not found
-    {
-        r = exact(str);
-    }
-    else	//then decimal point found
-    {
-        //get whole part and fractional part
-        std::string whole = str.substr(0,dec);
-        std::string frac = str.substr(dec+1);
-        unsigned exp = frac.length();
-
-        //test for negative, and remove minus sign character
-        bool neg = false;
-        if(whole.length() > 0 && whole[0] == '-')
-        {
-            neg = true;
-            whole.erase(0, 1);
-        }
-
-        //remove leading zeros (otherwise, c++ thinks we are using octal numbers)
-        std::string num_str = whole + frac;
-        boost::algorithm::trim_left_if(num_str, boost::is_any_of("0"));
-
-        //now it is safe to convert to rational
-        std::istringstream s(num_str);
-        boost::multiprecision::cpp_int num;
-        s >> num;
-        boost::multiprecision::cpp_int ten = 10;
-        boost::multiprecision::cpp_int denom = boost::multiprecision::pow(ten,exp);
-
-        r = exact(num, denom);
-        if(neg)
-            r = -1*r;
-    }
-    return r;
 }
 
 class TokenReader {
@@ -119,7 +61,7 @@ private:
 };
 
 //==================== InputManager class ====================
-
+using namespace rivet::numeric;
 
 //constructor
 InputManager::InputManager(InputParameters &params) :

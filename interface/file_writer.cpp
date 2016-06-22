@@ -23,7 +23,7 @@ stream << "# computed by RIVET from the input file " << input_params.fileName <<
     stream << "# bins: " << input_params.x_bins << " " << input_params.y_bins << std::endl;
     stream << "# file created at: "
             << std::ctime(&now)
-            << std::endl << std::endl;
+            << std::endl;
 
     //write parameters
     stream << "RIVET_0" << std::endl;

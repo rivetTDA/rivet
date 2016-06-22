@@ -40,6 +40,7 @@ add_executable (rivet_console
         math/xi_support_matrix.cpp
         math/index_matrix.cpp
         math/persistence_updater.cpp
+        numerics.cpp
         timer.cpp
         debug.cpp)
 
