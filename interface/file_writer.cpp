@@ -11,28 +11,6 @@ FileWriter::FileWriter(InputParameters& ip, Mesh& m, std::vector<xiPoint>& xi) :
 
 }
 
-std::ofstream & operator<<(std::ofstream &stream, const Mesh &mesh) {//write x-grades
-    stream << "x-grades" << std::endl;
-    for(std::vector<exact>::const_iterator it = mesh.x_exact.begin(); it != mesh.x_exact.end(); ++it)
-    {
-        std::ostringstream oss;
-        oss << *it;
-        stream << oss.str() << std::endl;
-    }
-    stream << std::endl;
-
-    //write y-grades
-    stream << "y-grades" << std::endl;
-    for(std::vector<exact>::const_iterator it = mesh.y_exact.begin(); it != mesh.y_exact.end(); ++it)
-    {
-        std::ostringstream oss;
-        oss << *it;
-        stream << oss.str() << std::endl;
-    }
-    stream << std::endl;
-    return stream;
-}
-
 void FileWriter::write_augmented_arrangement(std::ofstream& stream)
 {
 
