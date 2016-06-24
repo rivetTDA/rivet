@@ -30,10 +30,10 @@ class Mesh
     friend class PersistenceUpdater; //allow PersistenceUpdater access to private variables in Mesh
 
     public:
-    Mesh(const std::vector<double>& xg,
-         const std::vector<exact>& xe,
-         const std::vector<double>& yg,
-         const std::vector<exact>& ye,
+    Mesh(std::vector<double> xg,
+         std::vector<exact> xe,
+         std::vector<double> yg,
+         std::vector<exact> ye,
          int verbosity);
             //constructor; sets up bounding box (with empty interior) for the affine Grassmannian
             //  requires references to vectors of all multi-grade values (both double and exact values)
@@ -65,14 +65,17 @@ class Mesh
 		
 
         //references to vectors of multi-grade values
-        const std::vector<double>& x_grades;   //floating-point values for x-grades
-        const std::vector<exact>& x_exact;     //exact values for all x-grades
-        const std::vector<double>& y_grades;   //floating-point values for y-grades
-        const std::vector<exact>& y_exact;     //exact values for all y-grades
+        const std::vector<double> x_grades;   //floating-point values for x-grades
+        const std::vector<exact> x_exact;     //exact values for all x-grades
+        const std::vector<double> y_grades;   //floating-point values for y-grades
+        const std::vector<exact> y_exact;     //exact values for all y-grades
 
         //these are necessary for comparisons, but should they really be static members of Mesh???
         static double epsilon;
         static bool almost_equal(const double a, const double b);
+
+    friend std::ostream& operator<<(std::ostream&, const Mesh&);
+    friend std::istream& operator>>(std::istream&, Mesh&);
 
     private:
       //data structures

@@ -5,11 +5,32 @@
 #include <chrono>
 
 
-FileWriter::FileWriter(InputParameters& ip, Mesh& m, std::vector<exact>& x, std::vector<exact>& y, std::vector<xiPoint>& xi) :
-    input_params(ip), arrangement(m),
-    x_exact(x), y_exact(y), xi_support(xi)
+FileWriter::FileWriter(InputParameters& ip, Mesh& m, std::vector<xiPoint>& xi) :
+    input_params(ip), arrangement(m), xi_support(xi)
 {
 
+}
+
+std::ofstream & operator<<(std::ofstream &stream, const Mesh &mesh) {//write x-grades
+    stream << "x-grades" << std::endl;
+    for(std::vector<exact>::const_iterator it = mesh.x_exact.begin(); it != mesh.x_exact.end(); ++it)
+    {
+        std::ostringstream oss;
+        oss << *it;
+        stream << oss.str() << std::endl;
+    }
+    stream << std::endl;
+
+    //write y-grades
+    stream << "y-grades" << std::endl;
+    for(std::vector<exact>::const_iterator it = mesh.y_exact.begin(); it != mesh.y_exact.end(); ++it)
+    {
+        std::ostringstream oss;
+        oss << *it;
+        stream << oss.str() << std::endl;
+    }
+    stream << std::endl;
+    return stream;
 }
 
 void FileWriter::write_augmented_arrangement(std::ofstream& stream)
@@ -30,26 +51,7 @@ stream << "# computed by RIVET from the input file " << input_params.fileName <<
     stream << input_params.dim << std::endl;
 stream << input_params.x_label << std::endl;
 stream << input_params.y_label << std::endl << std::endl;
-
-    //write x-grades
-    stream << "x-grades" << std::endl;
-    for(std::vector<exact>::iterator it = x_exact.begin(); it != x_exact.end(); ++it)
-    {
-        std::ostringstream oss;
-        oss << *it;
-        stream << oss.str() << std::endl;
-    }
-    stream << std::endl;
-
-    //write y-grades
-    stream << "y-grades" << std::endl;
-    for(std::vector<exact>::iterator it = y_exact.begin(); it != y_exact.end(); ++it)
-    {
-        std::ostringstream oss;
-        oss << *it;
-        stream << oss.str() << std::endl;
-    }
-    stream << std::endl;
+    stream << arrangement;
 
     //write values of the multigraded Betti numbers
     stream << "xi values" << std::endl;
@@ -85,3 +87,4 @@ stream << input_params.y_label << std::endl << std::endl;
         stream << std::endl;
     }
 }
+

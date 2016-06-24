@@ -23,10 +23,10 @@
 #include <sstream>
 
 // Mesh constructor; sets up bounding box (with empty interior) for the affine Grassmannian
-Mesh::Mesh(const std::vector<double> &xg,
-           const std::vector<exact> &xe,
-           const std::vector<double> &yg,
-           const std::vector<exact> &ye,
+Mesh::Mesh(std::vector<double> xg,
+           std::vector<exact> xe,
+           std::vector<double> yg,
+           std::vector<exact> ye,
            int verbosity) :
     x_grades(xg), x_exact(xe), y_grades(yg), y_exact(ye),
     INFTY(std::numeric_limits<double>::infinity()),

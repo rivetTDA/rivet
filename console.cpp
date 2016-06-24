@@ -68,16 +68,27 @@ int main(int argc, char *argv[])
         InputManager inputManager(params);
         Progress progress;
         Computation computation(params, progress);
+        progress.advanceProgressStage.connect([]{
+            std::cout << "STAGE" << std::endl;
+        });
+        progress.progress.connect([](int amount) {
+            std::cout << "PROGRESS " << amount << std::endl;
+        });
         computation.arrangementReady.connect([](Mesh& mesh){
+            std::cout << "ARRANGEMENT" << std::endl;
+//            std::cout << mesh << std::endl;
+            std::cout << "END ARRANGEMENT";
             std::cerr << "Arrangement received: " << mesh.x_grades.size() << " x " << mesh.y_grades.size() ;
         });
         computation.xiSupportReady.connect([](std::vector<xiPoint> points){
+            std::cout << "XI" << std::endl;
+//            std::cout << points << std::endl;
+            std::cout << "END XI" << std::endl;
             std::cerr << "xi support received: " << points.size() ;
         });
         //TODO: input is a simple pointer, switch to unique_ptr
         auto input = inputManager.start(progress);
         debug() << "Input processed" ;
-        debug() << "Dim is still " << input->simplex_tree->hom_dim ;
         auto result = computation.compute(*input);
         debug() << "Computation complete" ;
         auto arrangement = result->arrangement;
@@ -93,7 +104,7 @@ int main(int argc, char *argv[])
             if (file.is_open()) {
                 debug() << "Writing file:" << params.outputFile ;
 
-                FileWriter fw(params, *(arrangement), input->x_exact, input->y_exact, result->xi_support);
+                FileWriter fw(params, *(arrangement), result->xi_support);
                 fw.write_augmented_arrangement(file);
             }
             else {
