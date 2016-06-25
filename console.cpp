@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
             std::cout << "ARRANGEMENT" << std::endl;
 //            std::cout << mesh << std::endl;
             std::cout << "END ARRANGEMENT";
-            std::cerr << "Arrangement received: " << mesh.x_grades.size() << " x " << mesh.y_grades.size() ;
+            std::cerr << "Arrangement received: " << mesh.x_exact.size() << " x " << mesh.y_exact.size() ;
         });
         computation.xiSupportReady.connect([](std::vector<xiPoint> points){
             std::cout << "XI" << std::endl;

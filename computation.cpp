@@ -34,9 +34,7 @@ std::unique_ptr<ComputationResult> Computation::compute_rivet(RivetInput &input)
 
         auto start = std::chrono::system_clock::now();
 
-        std::shared_ptr<Mesh> arrangement(new Mesh(input.x_grades,
-                                                   input.x_exact,
-                                                   input.y_grades,
+        std::shared_ptr<Mesh> arrangement(new Mesh(input.x_exact,
                                                    input.y_exact,
                                                    verbosity));
         //TODO: hook up signals
@@ -59,14 +57,14 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(RawDataInput &input)
         debug() << "\nBIFILTRATION:" ;
         debug() << "   Number of simplices of dimension " << params.dim << " : " << input.bifiltration().get_size(params.dim) ;
         debug() << "   Number of simplices of dimension " << (params.dim + 1) << " : " << input.bifiltration().get_size(params.dim + 1) ;
-        debug() << "   Number of x-grades:" << input.x_grades.size() ;
-        if (input.x_grades.size())
+        debug() << "   Number of x-exact:" << input.x_exact.size() ;
+        if (input.x_exact.size())
         {
-            debug() << "; values " << input.x_grades.front() << " to " << input.x_grades.back() ;
+            debug() << "; values " << input.x_exact.front() << " to " << input.x_exact.back() ;
         }
-        debug() << "   Number of y-grades:" << input.y_grades.size() ;
-        if (input.y_grades.size()) {
-            debug() << "; values " << input.y_grades.front() << " to " << input.y_grades.back() ;
+        debug() << "   Number of y-exact:" << input.y_exact.size() ;
+        if (input.y_exact.size()) {
+            debug() << "; values " << input.y_exact.front() << " to " << input.y_exact.back() ;
         }
     }
       //STAGE 3: COMPUTE MULTIGRADED BETTI NUMBERS
@@ -94,7 +92,7 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(RawDataInput &input)
         if(verbosity >= 2) { debug() << "CALCULATING ANCHORS AND BUILDING THE DCEL ARRANGEMENT"; }
 
     timer.restart();
-        Mesh *arrangement = new Mesh(input.x_grades, input.x_exact, input.y_grades, input.y_exact, verbosity);
+        Mesh *arrangement = new Mesh(input.x_exact, input.y_exact, verbosity);
         arrangement->build_arrangement(mb, result->xi_support, progress);     ///TODO: update this -- does not need to store list of xi support points in xi_support
         //NOTE: this also computes and stores barcode templates in the arrangement
 
@@ -111,23 +109,10 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(RawDataInput &input)
 std::unique_ptr<ComputationResult> Computation::compute(InputData data)
 {
   //STAGES 1 and 2: INPUT DATA AND CREATE BIFILTRATION
-
     if(verbosity >= 4)
     {
-        debug() << "x-grades:";
-        for(unsigned i=0; i<data.x_grades.size(); i++)
-        {
-          std::ostringstream oss;
-          oss << data.x_exact[i];
-          debug() << "  " << data.x_grades[i] << "=" << oss.str().data();
-        }
-        debug() << "y-grades:";
-        for(unsigned i=0; i<data.y_grades.size(); i++)
-        {
-          std::ostringstream oss;
-          oss << data.y_exact[i];
-          debug() << "  " << data.y_grades[i] << "=" << oss.str().data();
-        }
+
+        write_grades(std::clog, data.x_exact, data.y_exact);
     }
 
     progress.advanceProgressStage(); //update progress box to stage 3
@@ -150,12 +135,12 @@ std::unique_ptr<ComputationResult> Computation::compute(InputData data)
 void Computation::find_dimensions(const RivetInput &input, unsigned_matrix &homology_dimensions)
 {
 
-    homology_dimensions.resize(boost::extents[input.x_grades.size()][input.y_grades.size()]);
+    homology_dimensions.resize(boost::extents[input.x_exact.size()][input.y_exact.size()]);
     std::vector<xiPoint>::iterator it = input.xi_support.begin();
     int col_sum = 0;
 
     //compute dimensions at (0,y)
-    for(unsigned y = 0; y < input.y_grades.size(); y++)
+    for(unsigned y = 0; y < input.y_exact.size(); y++)
     {
         if(it != input.xi_support.end() && it->x == 0 && it->y == y)
         {
@@ -167,11 +152,11 @@ void Computation::find_dimensions(const RivetInput &input, unsigned_matrix &homo
     }
 
     //compute dimensions at (x,y) for x > 0
-    for(unsigned x = 1; x < input.x_grades.size(); x++)
+    for(unsigned x = 1; x < input.x_exact.size(); x++)
     {
         col_sum = 0;
 
-        for(unsigned y = 0; y < input.y_grades.size(); y++)
+        for(unsigned y = 0; y < input.y_exact.size(); y++)
         {
             if(it != input.xi_support.end() && it->x == x && it->y == y)
             {

@@ -85,9 +85,7 @@ typedef std::set<ExactValue*, ExactValueComparator> ExactSet;
 
 struct InputData {
     bool is_data;
-  std::vector<double> x_grades;  //floating-point values of all x-grades, sorted exactly
   std::vector<exact> x_exact;    //exact (e.g. rational) values of all x-grades, sorted
-  std::vector<double> y_grades;  //floating-point values of all y-grades, sorted exactly
   std::vector<exact> y_exact;    //exact (e.g. rational) values of all y-grades, sorted
   std::shared_ptr<SimplexTree> simplex_tree; // will be non-null if we read raw data
   std::vector<xiPoint> xi_support; // will be non-empty if we read RIVET data
@@ -135,7 +133,7 @@ class InputManager
         std::unique_ptr<InputData> read_bifiltration(std::ifstream &stream, Progress &progress);	//reads a bifiltration and constructs a simplex tree
         std::unique_ptr<InputData> read_RIVET_data(std::ifstream &stream, Progress &progress);      //reads a file of previously-computed data from RIVET
 
-        void build_grade_vectors(InputData &data, ExactSet& value_set, std::vector<unsigned>& indexes, std::vector<double>& grades_fp, std::vector<exact>& grades_exact, unsigned num_bins); //converts an ExactSets of values to the vectors of discrete values that SimplexTree uses to build the bifiltration, and also builds the grade vectors (floating-point and exact)
+        void build_grade_vectors(InputData &data, ExactSet& value_set, std::vector<unsigned>& indexes, std::vector<exact>& grades_exact, unsigned num_bins); //converts an ExactSets of values to the vectors of discrete values that SimplexTree uses to build the bifiltration, and also builds the grade vectors (floating-point and exact)
 
         exact approx(double x);         //finds a rational approximation of a floating-point value; precondition: x > 0
     FileType &get_file_type(std::string fileName);

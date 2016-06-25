@@ -25,14 +25,39 @@ class Vertex;
 #include "interface/progress.h"
 
 
+//std::ostream& write_grades(std::ostream &stream, const std::vector<exact> &x_exact, const std::vector<exact> &y_exact);
+
+template<typename T>
+T& write_grades(T &stream, const std::vector<exact> &x_exact, const std::vector<exact> &y_exact) {
+
+    //write x-grades
+    stream << "x-grades" << std::endl;
+    for(std::vector<exact>::const_iterator it = x_exact.begin(); it != x_exact.end(); ++it)
+    {
+        std::ostringstream oss;
+        oss << *it;
+        stream << oss.str() << std::endl;
+    }
+    stream << std::endl;
+
+    //write y-grades
+    stream << "y-grades" << std::endl;
+    for(std::vector<exact>::const_iterator it = y_exact.begin(); it != y_exact.end(); ++it)
+    {
+        std::ostringstream oss;
+        oss << *it;
+        stream << oss.str() << std::endl;
+    }
+    stream << std::endl;
+    return stream;
+}
+
 class Mesh
 {
     friend class PersistenceUpdater; //allow PersistenceUpdater access to private variables in Mesh
 
     public:
-    Mesh(std::vector<double> xg,
-         std::vector<exact> xe,
-         std::vector<double> yg,
+    Mesh(std::vector<exact> xe,
          std::vector<exact> ye,
          int verbosity);
             //constructor; sets up bounding box (with empty interior) for the affine Grassmannian
@@ -65,9 +90,7 @@ class Mesh
 		
 
         //references to vectors of multi-grade values
-        const std::vector<double> x_grades;   //floating-point values for x-grades
         const std::vector<exact> x_exact;     //exact values for all x-grades
-        const std::vector<double> y_grades;   //floating-point values for y-grades
         const std::vector<exact> y_exact;     //exact values for all y-grades
 
         //these are necessary for comparisons, but should they really be static members of Mesh???
@@ -79,6 +102,8 @@ class Mesh
 
     private:
       //data structures
+      std::vector<double> x_grades;   //floating-point values for x-grades
+    std::vector<double> y_grades;   //floating-point values for y-grades
         std::vector<Vertex*> vertices;		//all vertices in the mesh
 		std::vector<Halfedge*> halfedges;	//all halfedges in the mesh
 		std::vector<Face*> faces;		//all faces in the mesh

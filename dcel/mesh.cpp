@@ -23,15 +23,19 @@
 #include <sstream>
 
 // Mesh constructor; sets up bounding box (with empty interior) for the affine Grassmannian
-Mesh::Mesh(std::vector<double> xg,
-           std::vector<exact> xe,
-           std::vector<double> yg,
+Mesh::Mesh(std::vector<exact> xe,
            std::vector<exact> ye,
            int verbosity) :
-    x_grades(xg), x_exact(xe), y_grades(yg), y_exact(ye),
+    x_exact(xe), y_exact(ye), x_grades(xe.size()), y_grades(ye.size()),
     INFTY(std::numeric_limits<double>::infinity()),
     verbosity(verbosity)
 {
+    std::transform(x_exact.begin(), x_exact.end(), x_grades.begin(), [](exact num) {
+        return numerator(num).convert_to<double>() / denominator(num).convert_to<double>();
+    });
+    std::transform(y_exact.begin(), y_exact.end(), y_grades.begin(), [](exact num) {
+        return numerator(num).convert_to<double>() / denominator(num).convert_to<double>();
+    });
     //create vertices
     vertices.push_back( new Vertex(0, INFTY) );         //index 0
     vertices.push_back( new Vertex(INFTY, INFTY) );     //index 1
@@ -1354,25 +1358,6 @@ bool Mesh::almost_equal(const double a, const double b)
     return false;
 }
 
-std::ostream & operator<<(std::ostream &stream, const Mesh &mesh) {//write x-grades
-    stream << "x-grades" << std::endl;
-    for(std::vector<exact>::const_iterator it = mesh.x_exact.begin(); it != mesh.x_exact.end(); ++it)
-    {
-        std::ostringstream oss;
-        oss << *it;
-        stream << oss.str() << std::endl;
-    }
-    stream << std::endl;
-
-    //write y-grades
-    stream << "y-grades" << std::endl;
-    for(std::vector<exact>::const_iterator it = mesh.y_exact.begin(); it != mesh.y_exact.end(); ++it)
-    {
-        std::ostringstream oss;
-        oss << *it;
-        stream << oss.str() << std::endl;
-    }
-    stream << std::endl;
-    return stream;
+std::ostream & operator<<(std::ostream &stream, const Mesh &mesh) {
+    return write_grades(stream, mesh.x_exact, mesh.y_exact);
 }
-

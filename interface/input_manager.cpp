@@ -251,11 +251,11 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream &stream,
 
     //first, times
     std::vector<unsigned> time_indexes(num_points, max_unsigned);   //vector of discrete time indexes for each point; max_unsigned shall represent undefined time (is this reasonable?)
-    build_grade_vectors(*data, time_set, time_indexes, data->x_grades, data->x_exact, input_params.x_bins);
+    build_grade_vectors(*data, time_set, time_indexes, data->x_exact, input_params.x_bins);
 
     //second, distances
     std::vector<unsigned> dist_indexes((num_points*(num_points-1))/2, max_unsigned);  //discrete distance matrix (triangle); max_unsigned shall represent undefined distance
-    build_grade_vectors(*data, dist_set, dist_indexes, data->y_grades, data->y_exact, input_params.y_bins);
+    build_grade_vectors(*data, dist_set, dist_indexes, data->y_exact, input_params.y_bins);
 
     //update progress
     progress.progress(30);
@@ -271,9 +271,9 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream &stream,
 
     if(verbosity >= 6) { debug() << "BUILDING VIETORIS-RIPS BIFILTRATION"; }
 
-    debug() << "x grades: " << data->x_grades.size() << " y grades: " << data->y_grades.size() ;
+    debug() << "x grades: " << data->x_exact.size() << " y grades: " << data->y_exact.size() ;
     data->simplex_tree.reset(new SimplexTree(input_params.dim, input_params.verbosity));
-    data->simplex_tree->build_VR_complex(time_indexes, dist_indexes, data->x_grades.size(), data->y_grades.size());
+    data->simplex_tree->build_VR_complex(time_indexes, dist_indexes, data->x_exact.size(), data->y_exact.size());
 
     //clean up
     for(ExactSet::iterator it = time_set.begin(); it != time_set.end(); ++it)
@@ -378,11 +378,11 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
 
     //first, values
     std::vector<unsigned> value_indexes(num_points, max_unsigned);   //vector of discrete value indexes for each point; max_unsigned shall represent undefined value (is this reasonable?)
-    build_grade_vectors(*data, value_set, value_indexes, data->x_grades, data->x_exact, input_params.x_bins);
+    build_grade_vectors(*data, value_set, value_indexes, data->x_exact, input_params.x_bins);
 
     //second, distances
     std::vector<unsigned> dist_indexes((num_points*(num_points-1))/2, max_unsigned);  //discrete distance matrix (triangle); max_unsigned shall represent undefined distance
-    build_grade_vectors(*data, dist_set, dist_indexes, data->y_grades, data->y_exact, input_params.y_bins);
+    build_grade_vectors(*data, dist_set, dist_indexes, data->y_exact, input_params.y_bins);
 
     //update progress
     progress.progress(30);
@@ -392,7 +392,7 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
     if(verbosity >= 2) { debug() << "BUILDING VIETORIS-RIPS BIFILTRATION"; }
 
     //build the Vietoris-Rips bifiltration from the discrete index vectors
-    data->simplex_tree->build_VR_complex(value_indexes, dist_indexes, data->x_grades.size(), data->y_grades.size());
+    data->simplex_tree->build_VR_complex(value_indexes, dist_indexes, data->x_exact.size(), data->y_exact.size());
 
     //clean up
     for(ExactSet::iterator it = value_set.begin(); it != value_set.end(); ++it)
@@ -462,8 +462,8 @@ std::unique_ptr<InputData> InputManager::read_bifiltration(std::ifstream &stream
     std::vector<unsigned> x_indexes(num_simplices, max_unsigned);   //x_indexes[i] gives the discrete x-index for simplex i in the input order
     std::vector<unsigned> y_indexes(num_simplices, max_unsigned);   //y_indexes[i] gives the discrete y-index for simplex i in the input order
 
-    build_grade_vectors(*data, x_set, x_indexes, data->x_grades, data->x_exact, input_params.x_bins);
-    build_grade_vectors(*data, y_set, y_indexes, data->y_grades, data->y_exact, input_params.y_bins);
+    build_grade_vectors(*data, x_set, x_indexes, data->x_exact, input_params.x_bins);
+    build_grade_vectors(*data, y_set, y_indexes, data->y_exact, input_params.y_bins);
 
 //TESTING
 //    debug() << "x-grades sorted order:";
@@ -478,7 +478,7 @@ std::unique_ptr<InputData> InputManager::read_bifiltration(std::ifstream &stream
 //        debug() << "   " << *it;
 
     //update simplex tree nodes
-    data->simplex_tree->update_xy_indexes(x_indexes, y_indexes, data->x_grades.size(), data->y_grades.size());
+    data->simplex_tree->update_xy_indexes(x_indexes, y_indexes, data->x_exact.size(), data->y_exact.size());
 
     //compute indexes
     data->simplex_tree->update_global_indexes();
@@ -517,7 +517,6 @@ std::unique_ptr<InputData> InputManager::read_RIVET_data(std::ifstream &stream, 
     {
       exact num(line[0]);
       data->x_exact.push_back(num);
-      data->x_grades.push_back( numerator(num).convert_to<double>() / denominator(num).convert_to<double>() );
       line = reader.next_line();
     }
 
@@ -527,7 +526,6 @@ std::unique_ptr<InputData> InputManager::read_RIVET_data(std::ifstream &stream, 
     {
         exact num(line[0]);
         data->y_exact.push_back(num);
-        data->y_grades.push_back( numerator(num).convert_to<double>() / denominator(num).convert_to<double>() );
         line = reader.next_line();
     }
 
@@ -575,19 +573,16 @@ std::unique_ptr<InputData> InputManager::read_RIVET_data(std::ifstream &stream, 
 void InputManager::build_grade_vectors(InputData &data,
                                        ExactSet& value_set,
                                        std::vector<unsigned>& discrete_indexes,
-                                       std::vector<double>& grades_fp,
                                        std::vector<exact>& grades_exact,
                                        unsigned num_bins)
 {
     if(num_bins == 0 || num_bins >= value_set.size())    //then don't use bins
     {
-        grades_fp.reserve(value_set.size());
         grades_exact.reserve(value_set.size());
 
         unsigned c = 0;  //counter for indexes
         for(ExactSet::iterator it = value_set.begin(); it != value_set.end(); ++it)   //loop through all UNIQUE values
         {
-            grades_fp.push_back( (*it)->double_value );
             grades_exact.push_back( (*it)->exact_value );
 
             for(unsigned i = 0; i < (*it)->indexes.size(); i++ ) //loop through all point indexes for this value
@@ -604,14 +599,12 @@ void InputManager::build_grade_vectors(InputData &data,
         exact bin_size = (max - min)/num_bins;
 
         //store bin values
-        data.x_grades.reserve(num_bins);
         data.x_exact.reserve(num_bins);
 
         ExactSet::iterator it = value_set.begin();
         for(unsigned c = 0; c < num_bins; c++)    //loop through all bins
         {
           ExactValue cur_bin(static_cast<exact>(min + (c+1)*bin_size ));    //store the bin value (i.e. the right endpoint of the bin interval)
-            grades_fp.push_back(cur_bin.double_value);
             grades_exact.push_back(cur_bin.exact_value);
 
             //store bin index for all points whose time value is in this bin
