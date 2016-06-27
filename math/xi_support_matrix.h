@@ -66,7 +66,7 @@ class xiSupportMatrix
         xiSupportMatrix(unsigned width, unsigned height);   //constructor
         ~xiSupportMatrix();     //destructor
 
-        void fill_and_find_anchors(std::vector<xiPoint>& xi_pts, Mesh& mesh);   //stores xi support points in the xiSupportMatrix
+        std::vector<xiMatrixEntry*> fill_and_find_anchors(std::vector<xiPoint>& xi_pts);   //stores xi support points in the xiSupportMatrix
             //also finds anchors, which are stored both in the matrix and in the vector xi_pts
             //precondition: xi_pts contains the support points in lexicographical order
 

@@ -99,9 +99,11 @@ xiSupportMatrix::~xiSupportMatrix()
 //  precondition: xi_pts contains the support points in lexicographical order
 ///NOTE: WRITTEN FOR JULY 2015 BUG FIX
 ///      Runtime complexity of this function is O(n_x * n_y). We can probably do better, but it probably doesn't matter.
-void xiSupportMatrix::fill_and_find_anchors(std::vector<xiPoint>& xi_pts, Mesh& mesh)
+std::vector<xiMatrixEntry*> xiSupportMatrix::fill_and_find_anchors(std::vector<xiPoint>& xi_pts)
 {
     unsigned next_xi_pt = 0;    //tracks the index of the next xi support point to insert
+
+    std::vector<xiMatrixEntry*> matrix_entries;
 
     //loop over all grades in lexicographical order
     for(unsigned i = 0; i < columns.size(); i++)
@@ -109,51 +111,47 @@ void xiSupportMatrix::fill_and_find_anchors(std::vector<xiPoint>& xi_pts, Mesh& 
         for(unsigned j = 0; j < rows.size(); j++)
         {
             //see if the next xi support point is in position (i,j)
-            bool xi_pt = false;
-            if(xi_pts.size() > next_xi_pt && xi_pts[next_xi_pt].x == i && xi_pts[next_xi_pt].y == j)
-                xi_pt = true;
+            bool xi_pt = (xi_pts.size() > next_xi_pt
+                          && xi_pts[next_xi_pt].x == i
+                          && xi_pts[next_xi_pt].y == j);
 
             //see if there is an anchor at position (i,j)
-            bool anchor = false;
-            if(columns[i] != NULL && rows[j] != NULL)   //then there is a strict anchor at (i,j)
-                anchor = true;
-            else if(xi_pt && (columns[i] != NULL || rows[j] != NULL))   //then there is a non-strict anchor at (i,j)
-                anchor = true;
+            bool anchor = (columns[i] != NULL && rows[j] != NULL) // strict anchor
+                            || (xi_pt && (columns[i] != NULL || rows[j] != NULL)); //non-strict anchor at (i,j)
+
+            if (! (xi_pt || anchor))
+                continue;
 
             //insert a new xiMatrixEntry
+            auto insertion_point = -1;
+
             if(xi_pt)
             {
                 debug() << "  creating xiMatrixEntry at (" << i << ", " << j << ") for xi point " << next_xi_pt ;
 
-                //create a new xiMatrixEntry
-                xiMatrixEntry* new_entry = new xiMatrixEntry(i, j, next_xi_pt, columns[i], rows[j]);
-                columns[i] = new_entry;
-                rows[j] = new_entry;
-                next_xi_pt++;
-
-                //if this is also an anchor, send it to the Mesh
-                if(anchor)
-                    mesh.add_anchor(new_entry);
+                insertion_point = next_xi_pt++;
             }
-            else if(anchor)
-            {
-                //create a new xiMatrixEntry
-                unsigned entry_index = xi_pts.size();
+            else {
+                insertion_point = xi_pts.size();
 
-                debug() << "  creating xiMatrixEntry at (" << i << "," << j << ") for an anchor; index = " << entry_index ;
-
-                xiMatrixEntry* new_entry = new xiMatrixEntry(i, j, entry_index, columns[i], rows[j]);
-                columns[i] = new_entry;
-                rows[j] = new_entry;
+                debug() << "  creating xiMatrixEntry at (" << i << "," << j << ") for an anchor; index = " << insertion_point ;
 
                 //add this point to xi_pts
                 xi_pts.push_back( xiPoint(i, j, 0, 0, 0) );
 
-                //send this anchor to the Mesh
-                mesh.add_anchor(new_entry);
+            }
+
+            //create a new xiMatrixEntry
+            xiMatrixEntry* new_entry = new xiMatrixEntry(i, j, insertion_point, columns[i], rows[j]);
+            columns[i] = new_entry;
+            rows[j] = new_entry;
+
+            if (anchor) {
+                matrix_entries.push_back(new_entry);
             }
         }
     }
+    return matrix_entries;
 }//end fill_and_find_anchors()
 
 //gets a pointer to the rightmost entry in row r; returns NULL if row r is empty

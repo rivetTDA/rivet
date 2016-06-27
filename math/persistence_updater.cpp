@@ -22,8 +22,11 @@ PersistenceUpdater::PersistenceUpdater(Mesh &m, SimplexTree& b, std::vector<xiPo
     testing(false)
 {
     //fill the xiSupportMatrix with the xi support points and anchors
-    //  also stores the anchors in xi_pts and in the Mesh
-    xi_matrix.fill_and_find_anchors(xi_pts, m);
+    //  also stores the anchors in xi_pts
+    for(auto matrix_entry : xi_matrix.fill_and_find_anchors(xi_pts)) {
+        //Add anchors to mesh also
+        m.add_anchor(matrix_entry);
+    }
 }
 
 ////constructor for when we load the pre-computed barcode templates from a RIVET data file

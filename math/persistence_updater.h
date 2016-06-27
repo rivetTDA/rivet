@@ -49,7 +49,7 @@ class PersistenceUpdater
       //data structures
 
         Mesh& mesh;                 //pointer to the DCEL arrangement in which the barcodes will be stored
-        SimplexTree& bifiltration;  //pointer to the bifiltration --- TODO: convert this to a reference
+        SimplexTree& bifiltration;  //pointer to the bifiltration
         int dim;                    //dimension of homology to be computed
 
         xiSupportMatrix xi_matrix;   //sparse matrix to hold xi support points -- used for finding anchors (to build the arrangement) and tracking simplices during the vineyard updates (when computing barcodes to store in the arrangement)
