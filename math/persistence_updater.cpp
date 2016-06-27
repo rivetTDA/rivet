@@ -25,7 +25,7 @@ PersistenceUpdater::PersistenceUpdater(Mesh &m, SimplexTree& b, std::vector<xiPo
     //  also stores the anchors in xi_pts
     for(auto matrix_entry : xi_matrix.fill_and_find_anchors(xi_pts)) {
         //Add anchors to mesh also
-        m.add_anchor(matrix_entry);
+        m.add_anchor(Anchor(matrix_entry));
     }
 }
 

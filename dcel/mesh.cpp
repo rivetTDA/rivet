@@ -787,9 +787,10 @@ unsigned Mesh::num_faces()
 }
 
 //creates a new anchor in the vector all_anchors
-void Mesh::add_anchor(xiMatrixEntry* entry)
+void Mesh::add_anchor(Anchor anchor)
 {
-    all_anchors.insert(new Anchor(entry));
+    //TODO: not clear why all_anchors should contain anchor pointers and not just anchors.
+    all_anchors.insert(new Anchor(anchor.get_entry()));
 }
 
 //finds the first anchor that intersects the left edge of the arrangement at a point not less than the specified y-coordinate

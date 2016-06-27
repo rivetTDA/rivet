@@ -81,7 +81,7 @@ class Mesh
         unsigned num_faces();   //returns the number of 2-cells, and thus the number of barcode templates, in the arrangement
 		
         //JULY 2015 BUG FIX:
-        void add_anchor(xiMatrixEntry* entry);  //creates a new anchor in the vector all_anchors
+        void add_anchor(Anchor anchor);  //creates a new anchor in the vector all_anchors
 
         //TESTING ONLY
         void print_stats(); //prints a summary of the arrangement information, such as the number of anchors, vertices, halfedges, and faces
