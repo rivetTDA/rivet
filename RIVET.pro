@@ -34,9 +34,9 @@ SOURCES	+= main.cpp                         \
 		interface/slice_line.cpp            \
 		math/index_matrix.cpp               \
 		math/map_matrix.cpp                 \
-		math/multi_betti.cpp                \
-		math/simplex_tree.cpp               \
-		math/st_node.cpp                    \
+		#math/multi_betti.cpp                \
+		#math/simplex_tree.cpp               \
+		#math/st_node.cpp                    \
 		interface/barcode.cpp               \
 		dcel/barcode_template.cpp           \
 		dcel/anchor.cpp                     \

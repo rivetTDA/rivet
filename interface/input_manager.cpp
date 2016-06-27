@@ -116,8 +116,8 @@ std::unique_ptr<InputData> InputManager::start(Progress &progress)
             throw std::runtime_error("Could not open input file");
         }
     auto data = file_type.parser(infile, progress);
+    data->file_type = file_type;
     data->is_data = file_type.is_data;
-    debug() << "Set is_data to " << data->is_data ;
     return data;
 }//end start()
 

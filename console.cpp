@@ -17,11 +17,13 @@ static const char USAGE[] =
     Usage:
       rivet_console (-h | --help)
       rivet_console --version
+      rivet_console <input_file> --identify
       rivet_console <input_file> <output_file> [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>]
 
     Options:
       -h --help                                Show this screen
       --version                                Show the version
+      --identify                               Parse the file and print filetype information
       -H <dimension> --homology=<dimension>    Dimension of homology to compute [default: 0]
       -x <xbins> --xbins=<xbins>               Number of bins in the x direction [default: 0]
       -y <ybins> --ybins=<ybins>               Number of bins in the y direction [default: 0]
@@ -40,9 +42,7 @@ unsigned int get_uint_or_die(std::map<std::string, docopt::value> &args, const s
 
 int main(int argc, char *argv[])
 {
-    try {
-
-        debug() << "CONSOLE RIVET" ;
+//        debug() << "CONSOLE RIVET" ;
 
         InputParameters params;   //parameter values stored here
 
@@ -55,21 +55,28 @@ int main(int argc, char *argv[])
         // }
 
         params.fileName = args["<input_file>"].asString();
-        params.outputFile = args["<output_file>"].asString();
+    docopt::value &out_file_name = args["<output_file>"];
+    if (out_file_name.isString()) {
+        params.outputFile = out_file_name.asString();
+    }
         params.dim = get_uint_or_die(args, "--homology");
         params.x_bins = get_uint_or_die(args, "--xbins");
         params.y_bins = get_uint_or_die(args, "--ybins");
         params.verbosity = get_uint_or_die(args, "--verbosity");
+    if (args["--identify"].isBool() && args["--identify"].asBool()) {
+        params.verbosity = 0;
+    }
 
-        debug() << "X bins: " << params.x_bins ;
-        debug() << "Y bins: " << params.y_bins ;
-        debug() << "Verbosity: " << params.verbosity ;
+//        debug() << "X bins: " << params.x_bins ;
+//        debug() << "Y bins: " << params.y_bins ;
+//        debug() << "Verbosity: " << params.verbosity ;
 
         InputManager inputManager(params);
         Progress progress;
         Computation computation(params, progress);
         progress.advanceProgressStage.connect([]{
             std::cout << "STAGE" << std::endl;
+
         });
         progress.progress.connect([](int amount) {
             std::cout << "PROGRESS " << amount << std::endl;
@@ -88,9 +95,15 @@ int main(int argc, char *argv[])
         });
         //TODO: input is a simple pointer, switch to unique_ptr
         auto input = inputManager.start(progress);
-        debug() << "Input processed" ;
+        if (args["--identify"].asBool()) {
+            std::cout << "FILE TYPE: " << input->file_type.identifier << std::endl;
+            std::cout << "FILE TYPE DESCRIPTION: " << input->file_type.description << std::endl;
+            std::cout << "RAW DATA: " << input->is_data << std::endl;
+            return 0;
+        }
+        if (params.verbosity >= 2) { debug() << "Input processed"; }
         auto result = computation.compute(*input);
-        debug() << "Computation complete" ;
+        if (params.verbosity >= 2) { debug() << "Computation complete"; }
         auto arrangement = result->arrangement;
         //TESTING: print arrangement info and verify consistency
         arrangement->print_stats();
@@ -117,37 +130,5 @@ int main(int argc, char *argv[])
         }
         debug() << "CONSOLE RIVET: Goodbye" ;
         return 0;
-    } catch (std::exception &e) {
-        std::cerr  << "Error occurred: " << e.what() ;
-    }
 }
 
-//TODO: this was copied from driver.cpp, may need to merge the two versions.
-// void console_augmented_arrangement_ready(Mesh* arrangement)
-// {
-
-//     //update status
-//     if(input_params.verbosity >= 2) { qDebug() << "COMPUTATION FINISHED."; }
-
-//     //if an output file has been specified, then save the arrangement
-//     if(!input_params.outputFile.isEmpty())
-//     {
-//         QFile file(input_params.outputFile);
-//         if(file.open(QIODevice::ReadWrite | QIODevice::Truncate))
-//         {
-//             qDebug() << "Writing file:" << input_params.outputFile;
-
-//             FileWriter fw(input_params, arrangement, x_exact, y_exact, xi_support);
-//             fw.write_augmented_arrangement(file);
-//         }
-//         else
-//         {
-//             qDebug() << "Error: Unable to write file:" << input_params.outputFile;
-//         }
-//         ///TODO: error handling?
-//     }
-
-//     //must call quit when complete
-//     quit();
-
-// }//end augmented_arrangement_ready()

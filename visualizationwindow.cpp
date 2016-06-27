@@ -164,8 +164,10 @@ void VisualizationWindow::augmented_arrangement_ready(Mesh* arrangement)
     //if an output file has been specified, then save the arrangement
     if(!input_params.outputFile.empty())
       save_arrangement(QString::fromStdString(input_params.outputFile));
-    else if(input_params.raw_data)
-        unsaved_data = true;
+    //TODO: we don't have file reading tools here anymore, so we don't know what kind of file it was
+    //Have to rely on console to either a) always save (to tmp file if needed), or b) tell us filetype in the output.
+//    else if(input_params.raw_data)
+//        unsaved_data = true;
 
 }//end augmented_arrangement_ready()
 
@@ -464,12 +466,12 @@ void VisualizationWindow::on_actionSave_triggered()
 
 void VisualizationWindow::save_arrangement(const QString& filename)
 {
-    std::ofstream file(filename);
+    std::ofstream file(filename.toStdString());
     if(file.is_open())
     {
         qDebug() << "Writing file:" << filename;
 
-        FileWriter fw(input_params, *arrangement, x_exact, y_exact, xi_support);
+        FileWriter fw(input_params, *arrangement, xi_support);
         fw.write_augmented_arrangement(file);
 
         unsaved_data = false;

@@ -83,6 +83,15 @@ struct ExactValueComparator
 //ExactSet will help sort grades
 typedef std::set<ExactValue*, ExactValueComparator> ExactSet;
 
+struct InputData;
+
+struct FileType {
+    std::string identifier;
+    std::string description;
+    bool is_data;
+    std::function<std::unique_ptr<InputData> (std::ifstream&, Progress&)> parser;
+};
+
 struct InputData {
     bool is_data;
   std::vector<exact> x_exact;    //exact (e.g. rational) values of all x-grades, sorted
@@ -90,17 +99,11 @@ struct InputData {
   std::shared_ptr<SimplexTree> simplex_tree; // will be non-null if we read raw data
   std::vector<xiPoint> xi_support; // will be non-empty if we read RIVET data
   std::vector<BarcodeTemplate> barcode_templates; //only used if we read a RIVET data file and need to store the barcode templates before the arrangement is ready
-
+    FileType file_type;
 };
 
 
 
-struct FileType {
-  std::string identifier;
-  std::string description;
-  bool is_data;
-  std::function<std::unique_ptr<InputData> (std::ifstream&, Progress&)> parser;
-};
 
 //TODO: the input manager doesn't really hold an appreciable
 //amount of state, there's really no reason to instantiate a class
