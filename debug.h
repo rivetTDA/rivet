@@ -8,13 +8,8 @@
 #include <QDebug>
 using Debug = QDebug;
 
-Debug debug(bool nospace = false) {
-  auto qd = qDebug();
-  if (nospace) {
-    qd = qd.nospace();
-  }
-  return qd;
-}
+Debug debug(bool nospace = false);
+
 
 #else
 

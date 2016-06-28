@@ -54,23 +54,13 @@ T& write_grades(T &stream, const std::vector<exact> &x_exact, const std::vector<
 
 class Mesh
 {
-    friend class PersistenceUpdater; //allow PersistenceUpdater access to private variables in Mesh
-
     public:
-    Mesh(std::vector<exact> xe,
-         std::vector<exact> ye,
-         int verbosity);
+    Mesh(std::vector<exact> xe, std::vector<exact> ye, unsigned verbosity);
             //constructor; sets up bounding box (with empty interior) for the affine Grassmannian
             //  requires references to vectors of all multi-grade values (both double and exact values)
 		
         ~Mesh();	//destructor: deletes all cells and anchors --- CHECK THIS!!!
 		
-        void build_arrangement(MultiBetti& mb, std::vector<xiPoint>& xi_pts, Progress &progress);
-            //builds the DCEL arrangement, and computes and stores persistence data
-            //also stores ordered list of xi support points in the supplied vector
-
-        void build_arrangement(std::vector<xiPoint>& xi_pts, std::vector<BarcodeTemplate>& barcode_templates, Progress &progress);
-            //builds the DCEL arrangement from the supplied xi support points, but does NOT compute persistence data
 
         BarcodeTemplate& get_barcode_template(double degrees, double offset);
             //returns barcode template associated with the specified line (point)
@@ -110,6 +100,8 @@ class Mesh
 		
 		const double INFTY;
 
+    unsigned verbosity;
+
         std::set<Anchor*, Anchor_LeftComparator> all_anchors;	//set of Anchors that are represented in the mesh, ordered by position of curve along left side of the arrangement, from bottom to top
 		
         Halfedge* topleft;			//pointer to Halfedge that points down from top left corner (0,infty)
@@ -119,13 +111,7 @@ class Mesh
 		
         std::vector<Halfedge*> vertical_line_query_list; //stores a pointer to the rightmost Halfedge of the "top" line of each unique slope, ordered from small slopes to big slopes (each Halfedge points to Anchor and Face for vertical-line queries)
 
-        const int verbosity;			//controls display of output, for debugging
-
-
       //functions for creating the arrangement
-        void build_interior();
-            //builds the interior of DCEL arrangement using a version of the Bentley-Ottmann algorithm
-            //precondition: all achors have been stored via find_anchors()
 
         Halfedge* insert_vertex(Halfedge* edge, double x, double y);	//inserts a new vertex on the specified edge, with the specified coordinates, and updates all relevant pointers
         Halfedge* create_edge_left(Halfedge* edge, Anchor *anchor);    //creates the first pair of Halfedges in an anchor line, anchored on the left edge of the strip

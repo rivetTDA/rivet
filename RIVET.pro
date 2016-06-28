@@ -50,7 +50,8 @@ SOURCES	+= main.cpp                         \
 		interface/config_parameters.cpp     \
 		interface/file_input_reader.cpp \
     driver.cpp \
-    interface/file_writer.cpp
+    interface/file_writer.cpp \
+    debug.cpp \
     timer.cpp \
 
 HEADERS  += visualizationwindow.h			\

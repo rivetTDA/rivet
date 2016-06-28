@@ -5,10 +5,7 @@
 
 #ifdef QT_CORE_LIB
 
-#include <QDebug>
-using Debug = QDebug;
-
-Debug debug(bool nospace = false) {
+Debug debug(bool nospace) {
   auto qd = qDebug();
   if (nospace) {
     qd = qd.nospace();
