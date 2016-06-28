@@ -26,7 +26,7 @@ SOURCES	+= main.cpp                         \
 		dcel/dcel.cpp                       \
 		dcel/mesh.cpp                       \
 		interface/control_dot.cpp           \
-		interface/input_manager.cpp         \
+		#interface/input_manager.cpp         \
 		interface/persistence_bar.cpp       \
 		interface/persistence_diagram.cpp   \
 		interface/persistence_dot.cpp       \
@@ -40,7 +40,7 @@ SOURCES	+= main.cpp                         \
 		interface/barcode.cpp               \
 		dcel/barcode_template.cpp           \
 		dcel/anchor.cpp                     \
-		math/persistence_updater.cpp        \
+		#math/persistence_updater.cpp        \
 		math/xi_support_matrix.cpp          \
 		math/xi_point.cpp                   \
 		interface/progressdialog.cpp        \
@@ -51,7 +51,7 @@ SOURCES	+= main.cpp                         \
 		interface/file_input_reader.cpp \
     driver.cpp \
     interface/file_writer.cpp
-    
+    timer.cpp \
 
 HEADERS  += visualizationwindow.h			\
 		dataselectdialog.h					\

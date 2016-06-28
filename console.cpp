@@ -63,7 +63,8 @@ int main(int argc, char *argv[])
         params.x_bins = get_uint_or_die(args, "--xbins");
         params.y_bins = get_uint_or_die(args, "--ybins");
         params.verbosity = get_uint_or_die(args, "--verbosity");
-    if (args["--identify"].isBool() && args["--identify"].asBool()) {
+    bool identify = args["--identify"].isBool() && args["--identify"].asBool();
+    if (identify) {
         params.verbosity = 0;
     }
 
@@ -94,8 +95,14 @@ int main(int argc, char *argv[])
             std::cerr << "xi support received: " << points.size() ;
         });
         //TODO: input is a simple pointer, switch to unique_ptr
-        auto input = inputManager.start(progress);
-        if (args["--identify"].asBool()) {
+    std::unique_ptr<InputData> input;
+    try {
+        input = inputManager.start(progress);
+    } catch (const std::exception &e) {
+        std::cerr << "INPUT ERROR: " << e.what() << std::endl;
+        return 1;
+    }
+        if (identify) {
             std::cout << "FILE TYPE: " << input->file_type.identifier << std::endl;
             std::cout << "FILE TYPE DESCRIPTION: " << input->file_type.description << std::endl;
             std::cout << "RAW DATA: " << input->is_data << std::endl;

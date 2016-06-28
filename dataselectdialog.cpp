@@ -7,6 +7,8 @@
 #include <QDebug>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QProcess>
+#include <QStringList>
 #include <fstream>
 
 
@@ -82,26 +84,40 @@ void DataSelectDialog::detect_file_type()
     return;
   }
 
-  auto line = reader.next_line();
-  auto file_type = line[0];
+    QProcess console;
+    console.setProcessChannelMode(QProcess::MergedChannels);
+    QStringList args;
+    args.append(QString::fromStdString(params.fileName));
+    args.append("--identify");
+    console.start("rivet_console", args);
 
-  auto supported = rivet::get_supported_type(file_type);
+    if (!console.waitForStarted()) {
+        invalid_file("Error launching rivet_console");
+        return;
+    }
 
-  if (!supported.first) {
-    invalid_file("File type not recognized.");
-    return;
-  }
+    console.waitForReadyRead();
+    bool raw = false;
+    while(console.canReadLine()) {
+        QString line = console.readLine();
+        if (line.startsWith("RAW DATA: ")) {
+            raw = line.contains("1");
+        } else if (line.startsWith("INPUT ERROR: ")) {
+            invalid_file(line.mid(QString("INPUT ERROR: ").length()));
+            return;
+        } else if (line.startsWith("FILE TYPE DESCRIPTION: ")) {
 
-  auto supported_type = supported.second;
-  ui->fileTypeLabel->setText("This file appears to contain " + QString::fromStdString(supported_type.description) + ".");
-  QFileInfo fileInfo(QString::fromStdString(params.fileName));
-  ui->fileLabel->setText("Selected file: " + fileInfo.fileName());
+            ui->fileTypeLabel->setText("This file appears to contain " +
+                    line.mid(QString("FILE TYPE DESCRIPTION: ").length()) + ".");
+            QFileInfo fileInfo(QString::fromStdString(params.fileName));
+            ui->fileLabel->setText("Selected file: " + fileInfo.fileName());
 
-  //TODO: this updating of the params will need to happen in console also, need to refactor
-  params.shortName = fileInfo.fileName().toUtf8().constData();
-  params.raw_data = supported_type.is_data;
+            //TODO: this updating of the params will need to happen in console also, need to refactor
+            params.shortName = fileInfo.fileName().toUtf8().constData();
+        }
+    }
 
-  ui->parameterFrame->setEnabled(params.raw_data);
+  ui->parameterFrame->setEnabled(raw);
   ui->computeButton->setEnabled(true);
 
 }//end detect_file_type()

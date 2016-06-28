@@ -14,7 +14,7 @@
 Driver::Driver(InputParameters& params, QObject *parent) :
     QObject(parent),
     input_params(params),
-    cthread(input_params.verbosity, input_params, x_grades, x_exact, y_grades, y_exact, xi_support, homology_dimensions)
+    cthread(input_params)
 {
     //get instance of the main application
     app = QCoreApplication::instance();
@@ -48,18 +48,17 @@ void Driver::augmented_arrangement_ready(Mesh* arrangement)
     //if an output file has been specified, then save the arrangement
     if(!input_params.outputFile.empty())
     {
-      auto outputFile = QString::fromStdString(input_params.outputFile);
-      QFile file(outputFile);
-        if(file.open(QIODevice::ReadWrite | QIODevice::Truncate))
+        std::ofstream file(input_params.outputFile);
+        if(file.is_open())
         {
-          qDebug() << "Writing file:" << outputFile;
+          qDebug() << "Writing file:" << QString::fromStdString(input_params.outputFile);
 
-            FileWriter fw(input_params, arrangement, x_exact, y_exact, xi_support);
+            FileWriter fw(input_params, *arrangement, xi_support);
             fw.write_augmented_arrangement(file);
         }
         else
         {
-            qDebug() << "Error: Unable to write file:" << outputFile;
+            qDebug() << "Error: Unable to write file:" << QString::fromStdString(input_params.outputFile);
         }
         ///TODO: error handling?
     }
