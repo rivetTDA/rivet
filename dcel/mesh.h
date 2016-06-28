@@ -54,6 +54,9 @@ T& write_grades(T &stream, const std::vector<exact> &x_exact, const std::vector<
 
 class Mesh
 {
+//TODO: refactor so Mesh doesn't need friends.
+    friend class PersistenceUpdater;
+    friend class MeshBuilder;
     public:
     Mesh(std::vector<exact> xe, std::vector<exact> ye, unsigned verbosity);
             //constructor; sets up bounding box (with empty interior) for the affine Grassmannian

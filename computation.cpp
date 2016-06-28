@@ -1,6 +1,7 @@
 #include "computation.h"
 #include "debug.h"
 #include "dcel/mesh.h"
+#include "dcel/mesh_builder.h"
 #include "math/multi_betti.h"
 #include "timer.h"
 #include <chrono>
@@ -34,13 +35,11 @@ std::unique_ptr<ComputationResult> Computation::compute_rivet(RivetInput &input)
 
         auto start = std::chrono::system_clock::now();
 
-        std::shared_ptr<Mesh> arrangement(new Mesh(input.x_exact,
-                                                   input.y_exact,
-                                                   verbosity));
         //TODO: hook up signals
     Progress progress;
     debug() << "Calling build_arrangement" ;
-        arrangement->build_arrangement(input.xi_support, input.barcode_templates, progress);
+    MeshBuilder builder(verbosity);
+    auto arrangement = builder.build_arrangement(input.x_exact, input.y_exact, input.xi_support, input.barcode_templates, progress);
         auto end = std::chrono::system_clock::now();
 
         debug() << "   re-building the augmented arrangement took" << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "milliseconds";
@@ -92,8 +91,8 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(RawDataInput &input)
         if(verbosity >= 2) { debug() << "CALCULATING ANCHORS AND BUILDING THE DCEL ARRANGEMENT"; }
 
     timer.restart();
-        Mesh *arrangement = new Mesh(input.x_exact, input.y_exact, verbosity);
-        arrangement->build_arrangement(mb, result->xi_support, progress);     ///TODO: update this -- does not need to store list of xi support points in xi_support
+    MeshBuilder builder(verbosity);
+    auto arrangement = builder.build_arrangement(mb, input.x_exact, input.y_exact, result->xi_support, progress);     ///TODO: update this -- does not need to store list of xi support points in xi_support
         //NOTE: this also computes and stores barcode templates in the arrangement
 
         debug() << "   building the line arrangement and computing all barcode templates took"
@@ -101,7 +100,7 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(RawDataInput &input)
 
         //send (a pointer to) the arrangement back to the VisualizationWindow
         arrangementReady(*arrangement);
-    result->arrangement.reset(arrangement);
+    result->arrangement = std::move(arrangement);
     //TODO: bifiltration isn't used anywhere? Only part of the input?
     return result;
 }

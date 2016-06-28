@@ -29,6 +29,7 @@ add_executable (rivet_console
         interface/file_input_reader.cpp
         interface/input_manager.cpp
         dcel/mesh.cpp
+        dcel/mesh_builder.cpp
         dcel/anchor.cpp
         dcel/barcode_template.cpp
         dcel/dcel.cpp

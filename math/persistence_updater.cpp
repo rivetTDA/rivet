@@ -16,10 +16,10 @@
 
 
 //constructor for when we must compute all of the barcode templates
-PersistenceUpdater::PersistenceUpdater(Mesh &m, SimplexTree& b, std::vector<xiPoint> &xi_pts) :
+PersistenceUpdater::PersistenceUpdater(Mesh &m, SimplexTree& b, std::vector<xiPoint> &xi_pts, unsigned verbosity) :
     mesh(m), bifiltration(b), dim(b.hom_dim),
-    xi_matrix(m.x_grades.size(), m.y_grades.size()),
-    testing(false)
+    xi_matrix(m.x_exact.size(), m.y_exact.size()),
+    testing(false), verbosity(verbosity)
 {
     //fill the xiSupportMatrix with the xi support points and anchors
     //  also stores the anchors in xi_pts
@@ -49,11 +49,11 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
     Timer timer;
 
     //initialize the lift map from simplex grades to LUB-indexes
-    if(mesh.verbosity >= 6) { debug() << "  Mapping low simplices:"; }
+    if(verbosity >= 6) { debug() << "  Mapping low simplices:"; }
     IndexMatrix* ind_low = bifiltration.get_index_mx(dim);    //can we improve this with something more efficient than IndexMatrix?
     store_multigrades(ind_low, true);
 
-    if(mesh.verbosity >= 6) { debug() << "  Mapping high simplices:"; }
+    if(verbosity >= 6) { debug() << "  Mapping high simplices:"; }
     IndexMatrix* ind_high = bifiltration.get_index_mx(dim + 1);    //again, could be improved?
     store_multigrades(ind_high, false);
 
@@ -308,12 +308,12 @@ void PersistenceUpdater::set_anchor_weights(std::vector<Halfedge*>& path)
   // PART 1: GET THE PROPER SIMPLEX ORDERING
 
     //initialize the lift map from simplex grades to LUB-indexes
-    if(mesh.verbosity >= 6) { debug() << "  Mapping low simplices:"; }
+    if(verbosity >= 6) { debug() << "  Mapping low simplices:"; }
     IndexMatrix* ind_low = bifiltration.get_index_mx(dim);    //can we improve this with something more efficient than IndexMatrix?
     store_multigrades(ind_low, true);
     delete ind_low;
 
-    if(mesh.verbosity >= 6) { debug() << "  Mapping high simplices:"; }
+    if(verbosity >= 6) { debug() << "  Mapping high simplices:"; }
     IndexMatrix* ind_high = bifiltration.get_index_mx(dim + 1);    //again, could be improved?
     store_multigrades(ind_high, false);
     delete ind_high;
@@ -374,7 +374,7 @@ void PersistenceUpdater::clear_levelsets()
 //NOTE: this function has been updated for the new (unfactored) lift map of August 2015
 void PersistenceUpdater::store_multigrades(IndexMatrix* ind, bool low)
 {
-    if(mesh.verbosity >= 6) { debug() << "STORING MULTIGRADES: low =" << low; }
+    if(verbosity >= 6) { debug() << "STORING MULTIGRADES: low =" << low; }
 
     //initialize linked list to track the "frontier"
     typedef std::list<xiMatrixEntry*> Frontier;
@@ -428,7 +428,7 @@ void PersistenceUpdater::store_multigrades(IndexMatrix* ind, bool low)
                 //now map the multigrade to the xi support entry
                 (*it)->add_multigrade(x, y, last_col - first_col, last_col, low);
 
-                if(mesh.verbosity >= 6) { debug() << "    simplices at (" << x << "," << y << "), in columns" << (first_col + 1) << "to" << last_col << ", mapped to xiMatrixEntry at (" << (*it)->x << ", " << (*it)->y << ")"; }
+                if(verbosity >= 6) { debug() << "    simplices at (" << x << "," << y << "), in columns" << (first_col + 1) << "to" << last_col << ", mapped to xiMatrixEntry at (" << (*it)->x << ", " << (*it)->y << ")"; }
             }
         }//end x loop
     }//end y loop
@@ -471,7 +471,7 @@ unsigned PersistenceUpdater::build_simplex_order(IndexMatrix* ind, bool low, std
         if(cur == NULL)
             continue;
 
-        if(mesh.verbosity >= 6) { debug() << "----xiMatrixEntry (" << cur->x << "," << cur->y << ")"; }
+        if(verbosity >= 6) { debug() << "----xiMatrixEntry (" << cur->x << "," << cur->y << ")"; }
 
         //store index of rightmost column that is mapped to this equivalence class
         int* cur_ind = (low) ? &(cur->low_index) : &(cur->high_index);
@@ -487,7 +487,7 @@ unsigned PersistenceUpdater::build_simplex_order(IndexMatrix* ind, bool low, std
         for(std::list<Multigrade*>::iterator it = mgrades->begin(); it != mgrades->end(); ++it)
         {
             Multigrade* mg = *it;
-            if(mesh.verbosity >= 6) { debug() << "  multigrade (" << mg->x << "," << mg->y << ") has" << mg->num_cols << "simplices with last dim_index" << mg->simplex_index << "which will map to order_index" << o_index; }
+            if(verbosity >= 6) { debug() << "  multigrade (" << mg->x << "," << mg->y << ") has" << mg->num_cols << "simplices with last dim_index" << mg->simplex_index << "which will map to order_index" << o_index; }
 
             for(unsigned s=0; s < mg->num_cols; s++)  // simplex with dim_index (mg->simplex_index - s) has order_index o_index
             {
@@ -1365,7 +1365,7 @@ void PersistenceUpdater::quicksort_and_reduce(xiMatrixEntry* first, xiMatrixEntr
 //removes entries corresponding to xiMatrixEntry head from lift_low and lift_high
 void PersistenceUpdater::remove_lift_entries(xiMatrixEntry* entry)
 {
-    if(mesh.verbosity >= 9) { debug() << "    ----removing partition entries for xiMatrixEntry" << entry->index << "(" << entry->low_index << ";" << entry->high_index << ")"; }
+    if(verbosity >= 9) { debug() << "    ----removing partition entries for xiMatrixEntry" << entry->index << "(" << entry->low_index << ";" << entry->high_index << ")"; }
 
     //low simplices
     std::map<unsigned, xiMatrixEntry*>::iterator it1 = lift_low.find(entry->low_index);
@@ -1382,7 +1382,7 @@ void PersistenceUpdater::remove_lift_entries(xiMatrixEntry* entry)
 //if the equivalence class corresponding to xiMatrixEntry head has nonempty sets of "low" or "high" simplices, then this function creates the appropriate entries in lift_low and lift_high
 void PersistenceUpdater::add_lift_entries(xiMatrixEntry* entry)
 {
-    if(mesh.verbosity >= 9) { debug() << "    ----adding partition entries for xiMatrixEntry" << entry->index << "(" << entry->low_index << ";" << entry->high_index << ")"; }
+    if(verbosity >= 9) { debug() << "    ----adding partition entries for xiMatrixEntry" << entry->index << "(" << entry->low_index << ";" << entry->high_index << ")"; }
 
     //low simplices
     if(entry->low_count > 0)

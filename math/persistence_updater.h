@@ -31,7 +31,7 @@ class PersistenceUpdater
 {
     public:
 
-        PersistenceUpdater(Mesh& m, SimplexTree& b, std::vector<xiPoint>& xi_pts);  //constructor for when we must compute all of the barcode templates
+        PersistenceUpdater(Mesh& m, SimplexTree& b, std::vector<xiPoint>& xi_pts, unsigned verbosity);  //constructor for when we must compute all of the barcode templates
 
         //PersistenceUpdater(Mesh& m, std::vector<xiPoint>& xi_pts); //constructor for when we load the pre-computed barcode templates from a RIVET data file
 
@@ -51,6 +51,8 @@ class PersistenceUpdater
         Mesh& mesh;                 //pointer to the DCEL arrangement in which the barcodes will be stored
         SimplexTree& bifiltration;  //pointer to the bifiltration
         int dim;                    //dimension of homology to be computed
+
+    unsigned verbosity;
 
         xiSupportMatrix xi_matrix;   //sparse matrix to hold xi support points -- used for finding anchors (to build the arrangement) and tracking simplices during the vineyard updates (when computing barcodes to store in the arrangement)
 
