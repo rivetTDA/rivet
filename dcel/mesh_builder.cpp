@@ -62,6 +62,8 @@ std::unique_ptr<Mesh> MeshBuilder::build_arrangement(MultiBetti& mb,
     //finally, we can traverse the path, computing and storing a barcode template in each 2-cell
     updater.store_barcodes_with_reset(path, progress);
 
+    return mesh;
+
 }//end build_arrangement()
 
 //builds the DCEL arrangement from the supplied xi support points, but does NOT compute persistence data
@@ -101,6 +103,7 @@ std::unique_ptr<Mesh> MeshBuilder::build_arrangement(std::vector<exact> x_exact,
     {
         mesh->set_barcode_template(i, barcode_templates[i]);
     }
+    return mesh;
 }//end build_arrangement()
 
 
