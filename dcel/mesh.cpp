@@ -27,7 +27,7 @@ Mesh::Mesh(std::vector<exact> xe,
            std::vector<exact> ye,
 unsigned verbosity):
     x_exact(xe), y_exact(ye), x_grades(xe.size()), y_grades(ye.size()),
-    INFTY(std::numeric_limits<double>::infinity()), verbosity(verbosity)
+    INFTY(std::numeric_limits<double>::infinity()), verbosity(verbosity), halfedges(), vertices(), faces()
 {
     std::transform(x_exact.begin(), x_exact.end(), x_grades.begin(), [](exact num) {
         return numerator(num).convert_to<double>() / denominator(num).convert_to<double>();
@@ -605,6 +605,9 @@ void Mesh::test_consistency()
         debug() << "   ---Problems detected among faces.";
 
     //find exterior halfedges
+    if (halfedges.size() < 2) {
+        debug() << "Only " << halfedges.size() << "halfedges present!";
+    }
     Halfedge* start = halfedges[1];
     Halfedge* cur = start;
     do{

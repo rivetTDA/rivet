@@ -100,8 +100,8 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(RawDataInput &input)
 
         //send (a pointer to) the arrangement back to the VisualizationWindow
         arrangementReady(*arrangement);
+    arrangement->test_consistency();
     result->arrangement = std::move(arrangement);
-    //TODO: bifiltration isn't used anywhere? Only part of the input?
     return result;
 }
 

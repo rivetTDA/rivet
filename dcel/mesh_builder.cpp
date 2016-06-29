@@ -120,7 +120,8 @@ void MeshBuilder::build_interior(Mesh &mesh)
     // DATA STRUCTURES
 
     //data structure for ordered list of lines
-    std::vector<Halfedge*> lines(mesh.all_anchors.size());
+    std::vector<Halfedge*> lines;
+    lines.reserve(mesh.all_anchors.size());
 
     //data structure for queue of future intersections
     std::priority_queue< Mesh::Crossing*, std::vector<Mesh::Crossing*>, Mesh::CrossingComparator > crossings;
