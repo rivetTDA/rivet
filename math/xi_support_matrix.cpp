@@ -19,7 +19,7 @@ xiMatrixEntry::xiMatrixEntry() :
 { }
 
 //regular constructor
-xiMatrixEntry::xiMatrixEntry(unsigned x, unsigned y, unsigned i, xiMatrixEntry* d, xiMatrixEntry* l) :
+xiMatrixEntry::xiMatrixEntry(unsigned x, unsigned y, unsigned i, std::shared_ptr<xiMatrixEntry> d, std::shared_ptr<xiMatrixEntry> l) :
     x(x), y(y), index(i), down(d), left(l),
     low_count(0), high_count(0), low_index(0), high_index(0)
 { }
@@ -36,18 +36,18 @@ void xiMatrixEntry::add_multigrade(unsigned x, unsigned y, unsigned num_cols, in
 {
     if(low)
     {
-        low_simplices.push_back(new Multigrade(x, y, num_cols, index));
+        low_simplices.push_back(std::make_shared<Multigrade>(x, y, num_cols, index));
         low_count += num_cols;
     }
     else
     {
-        high_simplices.push_back(new Multigrade(x, y, num_cols, index));
+        high_simplices.push_back(std::make_shared<Multigrade>(x, y, num_cols, index));
         high_count += num_cols;
     }
 }
 
 //inserts a Multigrade at the beginning of the list for the given dimension
-void xiMatrixEntry::insert_multigrade(Multigrade* mg, bool low)
+void xiMatrixEntry::insert_multigrade(std::shared_ptr<Multigrade> mg, bool low)
 {
     if(low)
         low_simplices.push_back(mg);
@@ -64,12 +64,9 @@ Multigrade::Multigrade(unsigned x, unsigned y, unsigned num_cols, int simplex_in
 { }
 
 //comparator for sorting Multigrades (reverse) lexicographically
-bool Multigrade::LexComparator(const Multigrade* first, const Multigrade* second)
+bool Multigrade::LexComparator(const Multigrade &first, const Multigrade &second)
 {
-    if( first->x > second->x || (first->x == second->x && first->y > second->y) )
-        return true;
-    //else
-    return false;
+    return first.x > second.x || (first.x == second.x && first.y > second.y);
 }
 
 /********** xiSupportMatrix **********/
@@ -79,31 +76,16 @@ xiSupportMatrix::xiSupportMatrix(unsigned width, unsigned height) :
     columns(width), rows(height)
 { }
 
-//destructor
-xiSupportMatrix::~xiSupportMatrix()
-{
-    //suffices to clear all columns
-    for(unsigned i=0; i<columns.size(); i++)
-    {
-        while(columns[i] != NULL)
-        {
-            xiMatrixEntry* cur = columns[i];
-            columns[i] = cur->down;
-            delete cur;
-        }
-    }
-}
-
 //stores the supplied xi support points in the xiSupportMatrix
 //  also finds anchors, which are stored in the matrix, the vector xi_pts, AND in the Mesh
 //  precondition: xi_pts contains the support points in lexicographical order
 ///NOTE: WRITTEN FOR JULY 2015 BUG FIX
 ///      Runtime complexity of this function is O(n_x * n_y). We can probably do better, but it probably doesn't matter.
-std::vector<xiMatrixEntry*> xiSupportMatrix::fill_and_find_anchors(std::vector<xiPoint>& xi_pts)
+std::vector<std::shared_ptr<xiMatrixEntry>> xiSupportMatrix::fill_and_find_anchors(std::vector<xiPoint>& xi_pts)
 {
     unsigned next_xi_pt = 0;    //tracks the index of the next xi support point to insert
 
-    std::vector<xiMatrixEntry*> matrix_entries;
+    std::vector<std::shared_ptr<xiMatrixEntry>> matrix_entries;
 
     //loop over all grades in lexicographical order
     for(unsigned i = 0; i < columns.size(); i++)
@@ -142,7 +124,7 @@ std::vector<xiMatrixEntry*> xiSupportMatrix::fill_and_find_anchors(std::vector<x
             }
 
             //create a new xiMatrixEntry
-            xiMatrixEntry* new_entry = new xiMatrixEntry(i, j, insertion_point, columns[i], rows[j]);
+            std::shared_ptr<xiMatrixEntry> new_entry(new xiMatrixEntry(i, j, insertion_point, columns[i], rows[j]));
             columns[i] = new_entry;
             rows[j] = new_entry;
 
@@ -155,13 +137,13 @@ std::vector<xiMatrixEntry*> xiSupportMatrix::fill_and_find_anchors(std::vector<x
 }//end fill_and_find_anchors()
 
 //gets a pointer to the rightmost entry in row r; returns NULL if row r is empty
-xiMatrixEntry* xiSupportMatrix::get_row(unsigned r)
+std::shared_ptr<xiMatrixEntry> xiSupportMatrix::get_row(unsigned r)
 {
     return rows[r];
 }
 
 //gets a pointer to the top entry in column c; returns NULL if column c is empty
-xiMatrixEntry* xiSupportMatrix::get_col(unsigned c)
+std::shared_ptr<xiMatrixEntry> xiSupportMatrix::get_col(unsigned c)
 {
     return columns[c];
 }
@@ -177,7 +159,7 @@ void xiSupportMatrix::clear_grade_lists()
 {
     for(unsigned i = 0; i < columns.size(); i++)
     {
-        xiMatrixEntry* cur_entry = columns[i];
+        std::shared_ptr<xiMatrixEntry> cur_entry = columns[i];
         while(cur_entry != NULL)
         {
             cur_entry->low_simplices.clear();

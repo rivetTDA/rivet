@@ -16,10 +16,20 @@ externalproject_add(
   CMAKE_ARGS -D CMAKE_CXX_STANDARD=11 -D CMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
   )
 
+externalproject_add(
+        cereal_project
+        PREFIX cereal
+        GIT_REPOSITORY https://github.com/USCiLab/cereal
+        GIT_TAG v1.1.2
+        CONFIGURE_COMMAND ""
+        BUILD_COMMAND ""
+        INSTALL_COMMAND ""
+)
+
 #note this must come before add_executable or it will be ignored
 link_directories(${CMAKE_CURRENT_BINARY_DIR}/docopt/src/docopt_project-build)
 
-include_directories("${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/include")
+include_directories("${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/include" "${CMAKE_CURRENT_BINARY_DIR}/cereal/include")
 
 add_executable (rivet_console
         console.cpp
@@ -45,7 +55,7 @@ add_executable (rivet_console
         timer.cpp
         debug.cpp)
 
-add_dependencies(rivet_console docopt_project)
+add_dependencies(rivet_console docopt_project cereal_project)
 
 target_link_libraries(rivet_console docopt_s)
 

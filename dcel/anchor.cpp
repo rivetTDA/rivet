@@ -2,9 +2,7 @@
 
 #include "../math/xi_support_matrix.h"
 
-#include <cstddef>  //for NULL
-
-Anchor::Anchor(xiMatrixEntry* e) :
+Anchor::Anchor(std::shared_ptr<xiMatrixEntry> e) :
     x_coord(e->x), y_coord(e->y), entry(e), above_line(true)
 { }
 
@@ -31,6 +29,7 @@ Anchor& Anchor::operator= (const Anchor& other)
     //do the copy
     x_coord = other.x_coord;
     y_coord = other.y_coord;
+    entry = other.entry;
     dual_line = other.dual_line;
     position = other.position;
     above_line = other.above_line;
@@ -43,9 +42,9 @@ bool Anchor::operator== (const Anchor& other) const
     return (x_coord == other.x_coord && y_coord == other.y_coord);
 }
 
-bool Anchor::comparable(Anchor *other) const   //tests whether two Anchors are (strongly) comparable
+bool Anchor::comparable(const Anchor &other) const   //tests whether two Anchors are (strongly) comparable
 {
-    return ( y_coord > other->get_y() && x_coord > other->get_x() ) || ( y_coord < other->get_y() && x_coord < other->get_x() );
+    return ( y_coord > other.get_y() && x_coord > other.get_x() ) || ( y_coord < other.get_y() && x_coord < other.get_x() );
 }
 
 unsigned Anchor::get_x() const
@@ -58,12 +57,12 @@ unsigned Anchor::get_y() const
     return y_coord;
 }
 
-void Anchor::set_line(Halfedge* e)
+void Anchor::set_line(std::shared_ptr<Halfedge> e)
 {
     dual_line = e;
 }
 
-Halfedge* Anchor::get_line() const
+std::shared_ptr<Halfedge> Anchor::get_line() const
 {
     return dual_line;
 }
@@ -88,7 +87,7 @@ void Anchor::toggle()
     above_line = !above_line;
 }
 
-xiMatrixEntry* Anchor::get_entry()
+std::shared_ptr<xiMatrixEntry> Anchor::get_entry()
 {
     return entry;
 }

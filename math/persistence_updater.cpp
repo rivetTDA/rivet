@@ -41,7 +41,7 @@ PersistenceUpdater::PersistenceUpdater(Mesh &m, SimplexTree& b, std::vector<xiPo
 
 //computes and stores a barcode template in each 2-cell of mesh
 //resets the matrices and does a standard persistence calculation for expensive crossings
-void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path, Progress &progress)
+void PersistenceUpdater::store_barcodes_with_reset(std::vector<std::shared_ptr<Halfedge>>& path, Progress &progress)
 {
 
   // PART 1: GET THE BOUNDARY MATRICES WITH PROPER SIMPLEX ORDERING
@@ -110,7 +110,7 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
     debug() << "  --> computing the RU decomposition took" << time_for_initial_decomp << "milliseconds";
 
     //store the barcode template in the first cell
-    Face* first_cell = mesh.topleft->get_twin()->get_face();
+    std::shared_ptr<Face> first_cell = mesh.topleft->get_twin()->get_face();
     store_barcode_template(first_cell);
 
     debug() << "Initial persistence computation in cell " << mesh.FID(first_cell);
@@ -146,15 +146,15 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
         unsigned long swap_counter = 0;   //count of how many transpositions we actually do
 
         //determine which anchor is represented by this edge
-        Anchor* cur_anchor = (path[i])->get_anchor();
-        xiMatrixEntry* at_anchor = cur_anchor->get_entry();
+        std::shared_ptr<Anchor> cur_anchor = (path[i])->get_anchor();
+        std::shared_ptr<xiMatrixEntry> at_anchor = cur_anchor->get_entry();
 
         //get equivalence classes for this anchor
-        xiMatrixEntry* down = at_anchor->down;
-        xiMatrixEntry* left = at_anchor->left;
+        std::shared_ptr<xiMatrixEntry> down = at_anchor->down;
+        std::shared_ptr<xiMatrixEntry> left = at_anchor->left;
 
         //if this is a strict anchor, then swap simplices
-        if(down != NULL && left != NULL) //then this is a strict anchor and some simplices swap
+        if(down != nullptr && left != nullptr) //then this is a strict anchor and some simplices swap
         {
             debug(true) << "  step " << i << " of path: crossing (strict) anchor at ("<< cur_anchor->get_x() << ", " << cur_anchor->get_y() << ") into cell " << mesh.FID((path[i])->get_face()) << "; edge weight: " << cur_anchor->get_weight();
 
@@ -206,8 +206,8 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
         {
             debug(true) << "  step " << i << " of path: crossing (non-strict) anchor at ("<< cur_anchor->get_x() << ", " << cur_anchor->get_y() << ") into cell " << mesh.FID((path[i])->get_face()) << "; edge weight: " << cur_anchor->get_weight();
 
-            xiMatrixEntry* generator = at_anchor->down;
-            if(generator == NULL)
+            std::shared_ptr<xiMatrixEntry> generator = at_anchor->down;
+            if(generator == nullptr)
                 generator = at_anchor->left;
 
             if((cur_anchor->is_above() && generator == at_anchor->down) || (!cur_anchor->is_above() && generator == at_anchor->left))
@@ -249,7 +249,7 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
 //        print_high_partition();
 
         //if this cell does not yet have a barcode template, then store it now
-        Face* cur_face = (path[i])->get_face();
+        std::shared_ptr<Face> cur_face = (path[i])->get_face();
         if(!cur_face->has_been_visited())
             store_barcode_template(cur_face);
 
@@ -303,7 +303,7 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
 }//end store_barcodes_with_reset()
 
 //function to set the "edge weights" for each anchor line
-void PersistenceUpdater::set_anchor_weights(std::vector<Halfedge*>& path)
+void PersistenceUpdater::set_anchor_weights(std::vector<std::shared_ptr<Halfedge>>& path)
 {
   // PART 1: GET THE PROPER SIMPLEX ORDERING
 
@@ -327,19 +327,19 @@ void PersistenceUpdater::set_anchor_weights(std::vector<Halfedge*>& path)
       unsigned long separations = 0;
 
       //determine which anchor is represented by this edge
-      Anchor* cur_anchor = (path[i])->get_anchor();
-      xiMatrixEntry* at_anchor = cur_anchor->get_entry();
+      std::shared_ptr<Anchor> cur_anchor = (path[i])->get_anchor();
+      std::shared_ptr<xiMatrixEntry> at_anchor = cur_anchor->get_entry();
 
       debug() << "  step" << i << "of the short path: crossing anchor at ("<< cur_anchor->get_x() << "," << cur_anchor->get_y() << ") into cell" << mesh.FID((path[i])->get_face());
 
       //if this is a strict anchor, then there can be switches and separations
-      if(at_anchor->down != NULL && at_anchor->left != NULL) //then this is a strict anchor
+      if(at_anchor->down != nullptr && at_anchor->left != nullptr) //then this is a strict anchor
       {
           count_switches_and_separations(at_anchor, cur_anchor->is_above(), switches, separations);
       }
       else    //this is a non-strict anchor, so there can be separations but not switches
       {
-          xiMatrixEntry* generator = (at_anchor->down != NULL) ? at_anchor->down : at_anchor->left;
+          std::shared_ptr<xiMatrixEntry> generator = (at_anchor->down != nullptr) ? at_anchor->down : at_anchor->left;
 
           if((cur_anchor->is_above() && generator == at_anchor->down) || (!cur_anchor->is_above() && generator == at_anchor->left))
               //then merge classes
@@ -377,7 +377,7 @@ void PersistenceUpdater::store_multigrades(IndexMatrix* ind, bool low)
     if(verbosity >= 6) { debug() << "STORING MULTIGRADES: low =" << low; }
 
     //initialize linked list to track the "frontier"
-    typedef std::list<xiMatrixEntry*> Frontier;
+    typedef std::list<std::shared_ptr<xiMatrixEntry>> Frontier;
     Frontier frontier;
 
     //loop through rows of xiSupportMatrix, from top to bottom
@@ -386,8 +386,8 @@ void PersistenceUpdater::store_multigrades(IndexMatrix* ind, bool low)
         //update the frontier for row y:
         //  if the last element of frontier has the same x-coord as cur, then replace that element with cur
         //  otherwise, append cur to the end of frontier
-        xiMatrixEntry* cur = xi_matrix.get_row(y);
-        if(cur != NULL)
+        std::shared_ptr<xiMatrixEntry> cur = xi_matrix.get_row(y);
+        if(cur != nullptr)
         {
             Frontier::iterator it = frontier.end();  //the past-the-end element of frontier
             if(it != frontier.begin())  //then the frontier is not empty
@@ -447,11 +447,11 @@ unsigned PersistenceUpdater::build_simplex_order(IndexMatrix* ind, bool low, std
     unsigned num_simplices = 0;
     for(unsigned row = 0; row < xi_matrix.height(); row++)
     {
-        xiMatrixEntry* cur = xi_matrix.get_row(row);
-        if(cur == NULL)
+        std::shared_ptr<xiMatrixEntry> cur = xi_matrix.get_row(row);
+        if(cur == nullptr)
             continue;
-        std::list<Multigrade*>* mgrades = (low) ? &(cur->low_simplices) : &(cur->high_simplices);
-        for(std::list<Multigrade*>::iterator it = mgrades->begin(); it != mgrades->end(); ++it)
+        std::list<std::shared_ptr<Multigrade>>* mgrades = (low) ? &(cur->low_simplices) : &(cur->high_simplices);
+        for(std::list<std::shared_ptr<Multigrade>>::iterator it = mgrades->begin(); it != mgrades->end(); ++it)
         {
             num_simplices += (*it)->num_cols;
         }
@@ -467,8 +467,8 @@ unsigned PersistenceUpdater::build_simplex_order(IndexMatrix* ind, bool low, std
     //consider the rightmost xiMatrixEntry in each row
     for(unsigned row = xi_matrix.height(); row-- > 0; )  //row counts down from (xi_matrix->height() - 1) to 0
     {
-        xiMatrixEntry* cur = xi_matrix.get_row(row);
-        if(cur == NULL)
+        std::shared_ptr<xiMatrixEntry> cur = xi_matrix.get_row(row);
+        if(cur == nullptr)
             continue;
 
         if(verbosity >= 6) { debug() << "----xiMatrixEntry (" << cur->x << "," << cur->y << ")"; }
@@ -478,15 +478,15 @@ unsigned PersistenceUpdater::build_simplex_order(IndexMatrix* ind, bool low, std
         *cur_ind = o_index;
 
         //get the multigrade list for this xiMatrixEntry
-        std::list<Multigrade*>* mgrades = (low) ? &(cur->low_simplices) : &(cur->high_simplices);
+        std::list<std::shared_ptr<Multigrade>>* mgrades = (low) ? &(cur->low_simplices) : &(cur->high_simplices);
 
         //sort the multigrades in lexicographical order
-        mgrades->sort(Multigrade::LexComparator);
+        mgrades->sort([](std::shared_ptr<Multigrade> a, std::shared_ptr<Multigrade> b){return Multigrade::LexComparator(*a, *b);});
 
         //store map values for all simplices at these multigrades
-        for(std::list<Multigrade*>::iterator it = mgrades->begin(); it != mgrades->end(); ++it)
+        for(std::list<std::shared_ptr<Multigrade>>::iterator it = mgrades->begin(); it != mgrades->end(); ++it)
         {
-            Multigrade* mg = *it;
+            std::shared_ptr<Multigrade> mg = *it;
             if(verbosity >= 6) { debug() << "  multigrade (" << mg->x << "," << mg->y << ") has" << mg->num_cols << "simplices with last dim_index" << mg->simplex_index << "which will map to order_index" << o_index; }
 
             for(unsigned s=0; s < mg->num_cols; s++)  // simplex with dim_index (mg->simplex_index - s) has order_index o_index
@@ -500,9 +500,9 @@ unsigned PersistenceUpdater::build_simplex_order(IndexMatrix* ind, bool low, std
         if(*cur_ind != o_index)
         {
             if(low)
-                lift_low.insert( std::pair<unsigned, xiMatrixEntry*>(*cur_ind, cur) );
+                lift_low.insert( std::pair<unsigned, std::shared_ptr<xiMatrixEntry>>(*cur_ind, cur) );
             else
-                lift_high.insert( std::pair<unsigned, xiMatrixEntry*>(*cur_ind, cur) );
+                lift_high.insert( std::pair<unsigned, std::shared_ptr<xiMatrixEntry>>(*cur_ind, cur) );
         }
     }//end for(row > 0)
 
@@ -511,12 +511,12 @@ unsigned PersistenceUpdater::build_simplex_order(IndexMatrix* ind, bool low, std
 
 //counts the number of transpositions that will happen if we cross an anchor and do vineyeard-updates
 //this function DOES NOT MODIFY the xiSupportMatrix
-unsigned long PersistenceUpdater::count_transpositions(xiMatrixEntry* anchor, bool from_below)
+unsigned long PersistenceUpdater::count_transpositions(std::shared_ptr<xiMatrixEntry> anchor, bool from_below)
 {
     //identify entries
-    xiMatrixEntry* first = from_below ? anchor->down : anchor->left;
-    xiMatrixEntry* second = from_below ? anchor->left : anchor->down;
-    xiMatrixEntry* temp = new xiMatrixEntry(anchor->left->x, anchor->down->y);
+    std::shared_ptr<xiMatrixEntry> first = from_below ? anchor->down : anchor->left;
+    std::shared_ptr<xiMatrixEntry> second = from_below ? anchor->left : anchor->down;
+    std::shared_ptr<xiMatrixEntry> temp(new xiMatrixEntry(anchor->left->x, anchor->down->y));
 
     //counters
     unsigned long count = 0;
@@ -546,14 +546,14 @@ unsigned long PersistenceUpdater::count_transpositions(xiMatrixEntry* anchor, bo
 
 //counts the number of transpositions that result from separations
 //this function DOES NOT MODIFY the xiSupportMatrix
-void PersistenceUpdater::count_transpositions_from_separations(xiMatrixEntry* greater, xiMatrixEntry* lesser, bool horiz, bool low, unsigned long& count_trans, unsigned& count_lesser)
+void PersistenceUpdater::count_transpositions_from_separations(std::shared_ptr<xiMatrixEntry> greater, std::shared_ptr<xiMatrixEntry> lesser, bool horiz, bool low, unsigned long& count_trans, unsigned& count_lesser)
 {
     int gr_col = greater->low_index;
     int cur_col = gr_col;
-    std::list<Multigrade*> grades = low ? greater->low_simplices : greater->high_simplices;
-    for(std::list<Multigrade*>::iterator it = grades.begin(); it != grades.end(); ++it)
+    std::list<std::shared_ptr<Multigrade>> grades = low ? greater->low_simplices : greater->high_simplices;
+    for(std::list<std::shared_ptr<Multigrade>>::iterator it = grades.begin(); it != grades.end(); ++it)
     {
-        Multigrade* cur_grade = *it;
+        std::shared_ptr<Multigrade> cur_grade = *it;
         if((horiz && cur_grade->x > lesser->x) || (!horiz && cur_grade->y > lesser->y))   //then there will be transpositions from separations
         {
             count_trans += cur_grade->num_cols * (gr_col - cur_col);
@@ -567,18 +567,18 @@ void PersistenceUpdater::count_transpositions_from_separations(xiMatrixEntry* gr
 
 //moves grades associated with xiMatrixEntry greater, that come before xiMatrixEntry lesser in R^2, so that they become associated with lesser
 //  precondition: no grades lift to lesser (it has empty level sets under the lift map)
-unsigned long PersistenceUpdater::split_grade_lists(xiMatrixEntry* greater, xiMatrixEntry* lesser, bool horiz)
+unsigned long PersistenceUpdater::split_grade_lists(std::shared_ptr<xiMatrixEntry> greater, std::shared_ptr<xiMatrixEntry> lesser, bool horiz)
 {
     unsigned long swap_counter = 0;
 
     //low simplices
     int gr_col = greater->low_index;
     int cur_col = gr_col;
-    std::list<Multigrade*> grades = greater->low_simplices;
+    std::list<std::shared_ptr<Multigrade>> grades = greater->low_simplices;
     greater->low_simplices.clear();
-    for(std::list<Multigrade*>::iterator it = grades.begin(); it != grades.end(); ++it)
+    for(std::list<std::shared_ptr<Multigrade>>::iterator it = grades.begin(); it != grades.end(); ++it)
     {
-        Multigrade* cur_grade = *it;
+        std::shared_ptr<Multigrade> cur_grade = *it;
         if((horiz && cur_grade->x > lesser->x) || (!horiz && cur_grade->y > lesser->y))  //then this grade lifts to greater, so move columns to the right
         {
             if(cur_col != gr_col)   //then we must move the columns
@@ -601,9 +601,9 @@ unsigned long PersistenceUpdater::split_grade_lists(xiMatrixEntry* greater, xiMa
     cur_col = gr_col;
     grades = greater->high_simplices;
     greater->high_simplices.clear();
-    for(std::list<Multigrade*>::iterator it = grades.begin(); it != grades.end(); ++it)
+    for(std::list<std::shared_ptr<Multigrade>>::iterator it = grades.begin(); it != grades.end(); ++it)
     {
-        Multigrade* cur_grade = *it;
+        std::shared_ptr<Multigrade> cur_grade = *it;
         if((horiz && cur_grade->x > lesser->x) || (!horiz && cur_grade->y > lesser->y))  //then this grade lifts to greater, so move columns to the right
         {
             if(cur_col != gr_col)   //then we must move the columns
@@ -625,18 +625,18 @@ unsigned long PersistenceUpdater::split_grade_lists(xiMatrixEntry* greater, xiMa
 }//end split_grade_lists()
 
 //splits grade lists and updates the permutation vectors, but does NOT do vineyard updates
-void PersistenceUpdater::split_grade_lists_no_vineyards(xiMatrixEntry* greater, xiMatrixEntry* lesser, bool horiz)
+void PersistenceUpdater::split_grade_lists_no_vineyards(std::shared_ptr<xiMatrixEntry> greater, std::shared_ptr<xiMatrixEntry> lesser, bool horiz)
 {
   //STEP 1: update the lift map for all multigrades and store the current column index for each multigrade
 
     //first, low simpilices
     int gr_col = greater->low_index;
     int cur_col = gr_col;
-    std::list<Multigrade*> grades = greater->low_simplices;
+    std::list<std::shared_ptr<Multigrade>> grades = greater->low_simplices;
     greater->low_simplices.clear();       ///this isn't so efficient...
-    for(std::list<Multigrade*>::iterator it = grades.begin(); it != grades.end(); ++it)
+    for(std::list<std::shared_ptr<Multigrade>>::iterator it = grades.begin(); it != grades.end(); ++it)
     {
-        Multigrade* cur_grade = *it;
+        std::shared_ptr<Multigrade> cur_grade = *it;
         cur_grade->simplex_index = cur_col;
         if((horiz && cur_grade->x > lesser->x) || (!horiz && cur_grade->y > lesser->y))  //then this grade lifts to greater
         {
@@ -655,11 +655,11 @@ void PersistenceUpdater::split_grade_lists_no_vineyards(xiMatrixEntry* greater, 
     //now high simplices
     gr_col = greater->high_index;
     cur_col = gr_col;
-    std::list<Multigrade*> grades_h = greater->high_simplices;
+    std::list<std::shared_ptr<Multigrade>> grades_h = greater->high_simplices;
     greater->high_simplices.clear();       ///this isn't so efficient...
-    for(std::list<Multigrade*>::iterator it = grades_h.begin(); it != grades_h.end(); ++it)
+    for(std::list<std::shared_ptr<Multigrade>>::iterator it = grades_h.begin(); it != grades_h.end(); ++it)
     {
-        Multigrade* cur_grade = *it;
+        std::shared_ptr<Multigrade> cur_grade = *it;
         cur_grade->simplex_index = cur_col;
         if((horiz && cur_grade->x > lesser->x) || (!horiz && cur_grade->y > lesser->y))  //then this grade lifts to greater
         {
@@ -678,7 +678,7 @@ void PersistenceUpdater::split_grade_lists_no_vineyards(xiMatrixEntry* greater, 
   //STEP 2: traverse grades (backwards) in the new order and update the permutation vectors to reflect the new order on matrix columns
 
     //temporary data structures
-    xiMatrixEntry* cur_entry = greater;
+    std::shared_ptr<xiMatrixEntry> cur_entry = greater;
     int low_col = cur_entry->low_index;
     int high_col = cur_entry->high_index;
 
@@ -686,9 +686,9 @@ void PersistenceUpdater::split_grade_lists_no_vineyards(xiMatrixEntry* greater, 
     while(true) //loop ends with break statement
     {
         //update positions of "low" simplices for this entry
-        for(std::list<Multigrade*>::iterator it = cur_entry->low_simplices.begin(); it != cur_entry->low_simplices.end(); ++it)
+        for(std::list<std::shared_ptr<Multigrade>>::iterator it = cur_entry->low_simplices.begin(); it != cur_entry->low_simplices.end(); ++it)
         {
-            Multigrade* cur_grade = *it;
+            std::shared_ptr<Multigrade> cur_grade = *it;
             for(unsigned i=0; i<cur_grade->num_cols; i++)
             {
                 //column currently in position (cur_grade->simplex_index - i) has new position low_col
@@ -699,9 +699,9 @@ void PersistenceUpdater::split_grade_lists_no_vineyards(xiMatrixEntry* greater, 
         }
 
         //update positions of "high" simplices for this entry
-        for(std::list<Multigrade*>::iterator it = cur_entry->high_simplices.begin(); it != cur_entry->high_simplices.end(); ++it)
+        for(std::list<std::shared_ptr<Multigrade>>::iterator it = cur_entry->high_simplices.begin(); it != cur_entry->high_simplices.end(); ++it)
         {
-            Multigrade* cur_grade = *it;
+            std::shared_ptr<Multigrade> cur_grade = *it;
             for(unsigned i=0; i<cur_grade->num_cols; i++)
             {
                 //column currently in position (cur_grade->simplex_index - i) has new position high_col
@@ -727,7 +727,7 @@ void PersistenceUpdater::split_grade_lists_no_vineyards(xiMatrixEntry* greater, 
 }//end split_grade_lists_no_vineyards()
 
 //moves all grades associated with xiMatrixEntry lesser so that they become associated with xiMatrixEntry greater
-void PersistenceUpdater::merge_grade_lists(xiMatrixEntry* greater, xiMatrixEntry* lesser)
+void PersistenceUpdater::merge_grade_lists(std::shared_ptr<xiMatrixEntry> greater, std::shared_ptr<xiMatrixEntry> lesser)
 {
     //low simplices
     greater->low_simplices.splice(greater->low_simplices.end(), lesser->low_simplices);
@@ -740,11 +740,11 @@ void PersistenceUpdater::merge_grade_lists(xiMatrixEntry* greater, xiMatrixEntry
     lesser->high_count = 0;
 }//end merge_grade_lists()
 
-//moves columns from an equivalence class given by xiMatrixEntry* first to their new positions after or among the columns in the equivalence class given by xiMatrixEntry* second
+//moves columns from an equivalence class given by std::shared_ptr<xiMatrixEntry> first to their new positions after or among the columns in the equivalence class given by std::shared_ptr<xiMatrixEntry> second
 // the boolean argument indicates whether an anchor is being crossed from below (or from above)
 // this version updates the permutation vectors required for the "reset" approach
 ///NOTE: this function has been updated for the July/August 2015 bug fix
-unsigned long PersistenceUpdater::move_columns(xiMatrixEntry* first, xiMatrixEntry* second, bool from_below)
+unsigned long PersistenceUpdater::move_columns(std::shared_ptr<xiMatrixEntry> first, std::shared_ptr<xiMatrixEntry> second, bool from_below)
 {
     ///DEBUGGING
     if(first->low_index + second->low_count != second->low_index || first->high_index + second->high_count != second->high_index)
@@ -764,9 +764,9 @@ unsigned long PersistenceUpdater::move_columns(xiMatrixEntry* first, xiMatrixEnt
     unsigned long swap_counter = 0;
 
     //move all "low" simplices for xiMatrixEntry first (start with rightmost column, end with leftmost)
-    for(std::list<Multigrade*>::iterator it = first->low_simplices.begin(); it != first->low_simplices.end(); ) //NOTE: iterator advances in loop
+    for(std::list<std::shared_ptr<Multigrade>>::iterator it = first->low_simplices.begin(); it != first->low_simplices.end(); ) //NOTE: iterator advances in loop
     {
-        Multigrade* cur_grade = *it;
+        std::shared_ptr<Multigrade> cur_grade = *it;
 
         if( (from_below && cur_grade->x > second->x) || (!from_below && cur_grade->y > second->y) )
             //then move columns at cur_grade past columns at xiMatrixEntry second; lift map does not change ( lift : multigrades --> xiSupportElements )
@@ -791,9 +791,9 @@ unsigned long PersistenceUpdater::move_columns(xiMatrixEntry* first, xiMatrixEnt
     }//end "low" simplex loop
 
     //move all "high" simplices for xiMatrixEntry first (start with rightmost column, end with leftmost)
-    for(std::list<Multigrade*>::iterator it = first->high_simplices.begin(); it != first->high_simplices.end(); ) //NOTE: iterator advances in loop
+    for(std::list<std::shared_ptr<Multigrade>>::iterator it = first->high_simplices.begin(); it != first->high_simplices.end(); ) //NOTE: iterator advances in loop
     {
-        Multigrade* cur_grade = *it;
+        std::shared_ptr<Multigrade> cur_grade = *it;
 
 //        debug() << "  ====>>>> moving high simplices at grade (" << cur_grade->x << "," << cur_grade->y << ")";
 
@@ -1096,19 +1096,19 @@ void PersistenceUpdater::vineyard_update_high(unsigned a)
 
 
 //swaps two blocks of columns by updating the total order on columns, then rebuilding the matrices and computing a new RU-decomposition
-void PersistenceUpdater::update_order_and_reset_matrices(xiMatrixEntry* first, xiMatrixEntry* second, bool from_below, MapMatrix_Perm* RL_initial, MapMatrix_Perm* RH_initial)
+void PersistenceUpdater::update_order_and_reset_matrices(std::shared_ptr<xiMatrixEntry> first, std::shared_ptr<xiMatrixEntry> second, bool from_below, MapMatrix_Perm* RL_initial, MapMatrix_Perm* RH_initial)
 {
   //STEP 1: update the lift map for all multigrades and store the current column index for each multigrade
 
     //store current column index for each multigrade that lifts to xiMatrixEntry second
     int low_col = second->low_index;
-    for(std::list<Multigrade*>::iterator it = second->low_simplices.begin(); it != second->low_simplices.end(); ++it) //starts with rightmost column, ends with leftmost
+    for(std::list<std::shared_ptr<Multigrade>>::iterator it = second->low_simplices.begin(); it != second->low_simplices.end(); ++it) //starts with rightmost column, ends with leftmost
     {
         (*it)->simplex_index = low_col;
         low_col -= (*it)->num_cols;
     }
     int high_col = second->high_index;
-    for(std::list<Multigrade*>::iterator it = second->high_simplices.begin(); it != second->high_simplices.end(); ++it) //starts with rightmost column, ends with leftmost
+    for(std::list<std::shared_ptr<Multigrade>>::iterator it = second->high_simplices.begin(); it != second->high_simplices.end(); ++it) //starts with rightmost column, ends with leftmost
     {
         (*it)->simplex_index = high_col;
         high_col -= (*it)->num_cols;
@@ -1124,9 +1124,9 @@ void PersistenceUpdater::update_order_and_reset_matrices(xiMatrixEntry* first, x
 
     //store current column index and update the lift map for each multigrade that lifts to xiMatrixEntry first
     //"low" simplices (start with rightmost column, end with leftmost)
-    for(std::list<Multigrade*>::iterator it = first->low_simplices.begin(); it != first->low_simplices.end(); ) //NOTE: iterator advances in loop
+    for(std::list<std::shared_ptr<Multigrade>>::iterator it = first->low_simplices.begin(); it != first->low_simplices.end(); ) //NOTE: iterator advances in loop
     {
-        Multigrade* cur_grade = *it;
+        std::shared_ptr<Multigrade> cur_grade = *it;
 
         //remember current position of this grade
         cur_grade->simplex_index = low_col;
@@ -1153,9 +1153,9 @@ void PersistenceUpdater::update_order_and_reset_matrices(xiMatrixEntry* first, x
     }//end "low" simplex loop
 
     //"high" simplices (start with rightmost column, end with leftmost)
-    for(std::list<Multigrade*>::iterator it = first->high_simplices.begin(); it != first->high_simplices.end(); ) //NOTE: iterator advances in loop
+    for(std::list<std::shared_ptr<Multigrade>>::iterator it = first->high_simplices.begin(); it != first->high_simplices.end(); ) //NOTE: iterator advances in loop
     {
-        Multigrade* cur_grade = *it;
+        std::shared_ptr<Multigrade> cur_grade = *it;
 
         //remember current position of this grade
         cur_grade->simplex_index = high_col;
@@ -1185,7 +1185,7 @@ void PersistenceUpdater::update_order_and_reset_matrices(xiMatrixEntry* first, x
   //STEP 2: traverse grades (backwards) in the new order and update the permutation vectors to reflect the new order on matrix columns
 
     //temporary data structures
-    xiMatrixEntry* cur_entry = first;
+    std::shared_ptr<xiMatrixEntry> cur_entry = first;
     low_col = first->low_index;
     high_col = first->high_index;
 
@@ -1193,9 +1193,9 @@ void PersistenceUpdater::update_order_and_reset_matrices(xiMatrixEntry* first, x
     while(first != second)
     {
         //update positions of "low" simplices for this entry
-        for(std::list<Multigrade*>::iterator it = cur_entry->low_simplices.begin(); it != cur_entry->low_simplices.end(); ++it)
+        for(std::list<std::shared_ptr<Multigrade>>::iterator it = cur_entry->low_simplices.begin(); it != cur_entry->low_simplices.end(); ++it)
         {
-            Multigrade* cur_grade = *it;
+            std::shared_ptr<Multigrade> cur_grade = *it;
             for(unsigned i=0; i<cur_grade->num_cols; i++)
             {
                 //column currently in position (cur_grade->simplex_index - i) has new position low_col
@@ -1206,9 +1206,9 @@ void PersistenceUpdater::update_order_and_reset_matrices(xiMatrixEntry* first, x
         }
 
         //update positions of "high" simplices for this entry
-        for(std::list<Multigrade*>::iterator it = cur_entry->high_simplices.begin(); it != cur_entry->high_simplices.end(); ++it)
+        for(std::list<std::shared_ptr<Multigrade>>::iterator it = cur_entry->high_simplices.begin(); it != cur_entry->high_simplices.end(); ++it)
         {
-            Multigrade* cur_grade = *it;
+            std::shared_ptr<Multigrade> cur_grade = *it;
             for(unsigned i=0; i<cur_grade->num_cols; i++)
             {
                 //column currently in position (cur_grade->simplex_index - i) has new position high_col
@@ -1249,7 +1249,7 @@ void PersistenceUpdater::update_order_and_reset_matrices(xiMatrixEntry* first, x
 }//end update_order_and_reset_matrices()
 
 //updates the total order on columns, rebuilds the matrices, and computing a new RU-decomposition for a NON-STRICT anchor
-void PersistenceUpdater::update_order_and_reset_matrices(xiMatrixEntry* anchor, xiMatrixEntry* generator, MapMatrix_Perm* RL_initial, MapMatrix_Perm* RH_initial)
+void PersistenceUpdater::update_order_and_reset_matrices(std::shared_ptr<xiMatrixEntry> anchor, std::shared_ptr<xiMatrixEntry> generator, MapMatrix_Perm* RL_initial, MapMatrix_Perm* RH_initial)
 {
     //anything to do here?????
     //anchor and generator?????
@@ -1268,12 +1268,12 @@ void PersistenceUpdater::update_order_and_reset_matrices(xiMatrixEntry* anchor, 
 }//end update_order_and_reset_matrices()
 
 //swaps two blocks of simplices in the total order, and returns the number of transpositions that would be performed on the matrix columns if we were doing vineyard updates
-void PersistenceUpdater::count_switches_and_separations(xiMatrixEntry* at_anchor, bool from_below, unsigned long& switches, unsigned long& seps)
+void PersistenceUpdater::count_switches_and_separations(std::shared_ptr<xiMatrixEntry> at_anchor, bool from_below, unsigned long& switches, unsigned long& seps)
 {
     //identify entries
-    xiMatrixEntry* first = from_below ? at_anchor->down : at_anchor->left;
-    xiMatrixEntry* second = from_below ? at_anchor->left : at_anchor->down;
-    xiMatrixEntry* temp = new xiMatrixEntry(at_anchor->left->x, at_anchor->down->y); //temporary entry for holding grades that come before BOTH first and second
+    std::shared_ptr<xiMatrixEntry> first = from_below ? at_anchor->down : at_anchor->left;
+    std::shared_ptr<xiMatrixEntry> second = from_below ? at_anchor->left : at_anchor->down;
+    std::shared_ptr<xiMatrixEntry> temp(new xiMatrixEntry(at_anchor->left->x, at_anchor->down->y)); //temporary entry for holding grades that come before BOTH first and second
 
     //separate out the grades that lift to anchor from those that lift to second
     do_separations(at_anchor, second, from_below);
@@ -1298,16 +1298,16 @@ void PersistenceUpdater::count_switches_and_separations(xiMatrixEntry* at_anchor
 }//end count_switches_and_separations()
 
 //used by the previous function to split grade lists at each anchor crossing
-void PersistenceUpdater::do_separations(xiMatrixEntry* greater, xiMatrixEntry* lesser, bool horiz)
+void PersistenceUpdater::do_separations(std::shared_ptr<xiMatrixEntry> greater, std::shared_ptr<xiMatrixEntry> lesser, bool horiz)
 {
     //first, low simpilicse
     int gr_col = greater->low_index;
     int cur_col = gr_col;
-    std::list<Multigrade*> grades = greater->low_simplices;
+    std::list<std::shared_ptr<Multigrade>> grades = greater->low_simplices;
     greater->low_simplices.clear();       ///this isn't so efficient...
-    for(std::list<Multigrade*>::iterator it = grades.begin(); it != grades.end(); ++it)
+    for(std::list<std::shared_ptr<Multigrade>>::iterator it = grades.begin(); it != grades.end(); ++it)
     {
-        Multigrade* cur_grade = *it;
+        std::shared_ptr<Multigrade> cur_grade = *it;
         if((horiz && cur_grade->x > lesser->x) || (!horiz && cur_grade->y > lesser->y))  //then this grade lifts to greater
         {
             greater->low_simplices.push_back(cur_grade);
@@ -1325,11 +1325,11 @@ void PersistenceUpdater::do_separations(xiMatrixEntry* greater, xiMatrixEntry* l
     //now high simplices
     gr_col = greater->high_index;
     cur_col = gr_col;
-    std::list<Multigrade*> grades_h = greater->high_simplices;
+    std::list<std::shared_ptr<Multigrade>> grades_h = greater->high_simplices;
     greater->high_simplices.clear();       ///this isn't so efficient...
-    for(std::list<Multigrade*>::iterator it = grades_h.begin(); it != grades_h.end(); ++it)
+    for(std::list<std::shared_ptr<Multigrade>>::iterator it = grades_h.begin(); it != grades_h.end(); ++it)
     {
-        Multigrade* cur_grade = *it;
+        std::shared_ptr<Multigrade> cur_grade = *it;
         if((horiz && cur_grade->x > lesser->x) || (!horiz && cur_grade->y > lesser->y))  //then this grade lifts to greater
         {
             greater->high_simplices.push_back(cur_grade);
@@ -1346,7 +1346,7 @@ void PersistenceUpdater::do_separations(xiMatrixEntry* greater, xiMatrixEntry* l
 }//end do_separations
 
 //swaps two blocks of columns by using a quicksort to update the matrices, then fixing the RU-decomposition (Gaussian elimination on U followed by reduction of R)
-void PersistenceUpdater::quicksort_and_reduce(xiMatrixEntry* first, xiMatrixEntry* second, bool from_below)
+void PersistenceUpdater::quicksort_and_reduce(std::shared_ptr<xiMatrixEntry> first, std::shared_ptr<xiMatrixEntry> second, bool from_below)
 {
     //update the lift map for all multigrades, storing the current column index for each multigrade
 
@@ -1363,40 +1363,40 @@ void PersistenceUpdater::quicksort_and_reduce(xiMatrixEntry* first, xiMatrixEntr
 }//end quicksort_and_reduce()
 
 //removes entries corresponding to xiMatrixEntry head from lift_low and lift_high
-void PersistenceUpdater::remove_lift_entries(xiMatrixEntry* entry)
+void PersistenceUpdater::remove_lift_entries(std::shared_ptr<xiMatrixEntry> entry)
 {
     if(verbosity >= 9) { debug() << "    ----removing partition entries for xiMatrixEntry" << entry->index << "(" << entry->low_index << ";" << entry->high_index << ")"; }
 
     //low simplices
-    std::map<unsigned, xiMatrixEntry*>::iterator it1 = lift_low.find(entry->low_index);
+    std::map<unsigned, std::shared_ptr<xiMatrixEntry>>::iterator it1 = lift_low.find(entry->low_index);
     if(it1 != lift_low.end() && it1->second == entry)
         lift_low.erase(it1);
 
     //high simplices
-    std::map<unsigned, xiMatrixEntry*>::iterator it2 = lift_high.find(entry->high_index);
+    std::map<unsigned, std::shared_ptr<xiMatrixEntry>>::iterator it2 = lift_high.find(entry->high_index);
     if(it2 != lift_high.end() && it2->second == entry)
         lift_high.erase(it2);
 
 }//end remove_lift_entries()
 
 //if the equivalence class corresponding to xiMatrixEntry head has nonempty sets of "low" or "high" simplices, then this function creates the appropriate entries in lift_low and lift_high
-void PersistenceUpdater::add_lift_entries(xiMatrixEntry* entry)
+void PersistenceUpdater::add_lift_entries(std::shared_ptr<xiMatrixEntry> entry)
 {
     if(verbosity >= 9) { debug() << "    ----adding partition entries for xiMatrixEntry" << entry->index << "(" << entry->low_index << ";" << entry->high_index << ")"; }
 
     //low simplices
     if(entry->low_count > 0)
-        lift_low.insert( std::pair<unsigned, xiMatrixEntry*>(entry->low_index, entry) );
+        lift_low.insert( std::pair<unsigned, std::shared_ptr<xiMatrixEntry>>(entry->low_index, entry) );
 
     //high simplices
     if(entry->high_count > 0)
-        lift_high.insert( std::pair<unsigned, xiMatrixEntry*>(entry->high_index, entry) );
+        lift_high.insert( std::pair<unsigned, std::shared_ptr<xiMatrixEntry>>(entry->high_index, entry) );
 }//end add_lift_entries()
 
 //stores a barcode template in a 2-cell of the arrangement
 ///TODO: IMPROVE THIS!!! (store previous barcode at the simplicial level, and only examine columns that were modified in the recent update)
 /// Is there a better way to handle endpoints at infinity?
-void PersistenceUpdater::store_barcode_template(Face* cell)
+void PersistenceUpdater::store_barcode_template(std::shared_ptr<Face> cell)
 {
 //    QDebug debug(true) = debug().nospace();
 //    debug(true) << "  -----barcode: ";
@@ -1413,7 +1413,7 @@ void PersistenceUpdater::store_barcode_template(Face* cell)
         if(R_low->col_is_empty(c))  //then simplex corresponding to column c is positive
         {
             //find index of template point corresponding to simplex c
-            std::map<unsigned, xiMatrixEntry*>::iterator tp1 = lift_low.lower_bound(c);
+            std::map<unsigned, std::shared_ptr<xiMatrixEntry>>::iterator tp1 = lift_low.lower_bound(c);
             unsigned a = (tp1 != lift_low.end()) ? tp1->second->index : -1;   //index is -1 iff the simplex maps to infinity
             ///TODO: CHECK -- SIMPLICES NEVER LIFT TO INFINITY NOW, RIGHT????
 
@@ -1422,7 +1422,7 @@ void PersistenceUpdater::store_barcode_template(Face* cell)
             if(s != -1)  //then simplex c is paired with negative simplex s
             {
                 //find index of xi support point corresponding to simplex s
-                std::map<unsigned, xiMatrixEntry*>::iterator tp2 = lift_high.lower_bound(s);
+                std::map<unsigned, std::shared_ptr<xiMatrixEntry>>::iterator tp2 = lift_high.lower_bound(s);
                 unsigned b = (tp2 != lift_high.end()) ? tp2->second->index : -1;   //index is -1 iff the simplex maps to infinity
                 ///TODO: CHECK -- SIMPLICES NEVER LIFT TO INFINITY NOW, RIGHT????
 
@@ -1587,6 +1587,6 @@ void PersistenceUpdater::print_perms(Perm& per, Perm& inv)
 void PersistenceUpdater::print_high_partition()
 {
     debug(true) << "  high partition: ";
-    for(std::map<unsigned, xiMatrixEntry*>::iterator it = lift_high.begin(); it != lift_high.end(); ++it)
+    for(std::map<unsigned, std::shared_ptr<xiMatrixEntry>>::iterator it = lift_high.begin(); it != lift_high.end(); ++it)
         debug(true) << it->first << "->" << it->second->index << ", ";
 }

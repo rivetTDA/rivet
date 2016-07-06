@@ -21,6 +21,7 @@
 #include <math/simplex_tree.h>
 #include <timer.h>
 #include <sstream>
+#include "pointer_comparator.h"
 
 // Mesh constructor; sets up bounding box (with empty interior) for the affine Grassmannian
 Mesh::Mesh(std::vector<exact> xe,
@@ -36,16 +37,16 @@ unsigned verbosity):
         return numerator(num).convert_to<double>() / denominator(num).convert_to<double>();
     });
     //create vertices
-    vertices.push_back( new Vertex(0, INFTY) );         //index 0
-    vertices.push_back( new Vertex(INFTY, INFTY) );     //index 1
-    vertices.push_back( new Vertex(INFTY, -INFTY) );    //index 2
-    vertices.push_back( new Vertex(0, -INFTY) );        //index 3
+    vertices.push_back( std::make_shared<Vertex>(0, INFTY));         //index 0
+    vertices.push_back( std::make_shared<Vertex>(INFTY, INFTY));     //index 1
+    vertices.push_back( std::make_shared<Vertex>(INFTY, -INFTY));    //index 2
+    vertices.push_back( std::make_shared<Vertex>(0, -INFTY));        //index 3
 
     //create halfedges
     for(int i=0; i<4; i++)
     {
-        halfedges.push_back( new Halfedge( vertices[i], NULL) );		//index 0, 2, 4, 6 (inside halfedges)
-        halfedges.push_back( new Halfedge( vertices[(i+1)%4], NULL) );		//index 1, 3, 5, 7 (outside halfedges)
+        halfedges.push_back( std::make_shared<Halfedge>(vertices[i], std::shared_ptr<Anchor>(nullptr)));		//index 0, 2, 4, 6 (inside halfedges)
+        halfedges.push_back( std::make_shared<Halfedge>(vertices[(i+1)%4], std::shared_ptr<Anchor>(nullptr)));		//index 1, 3, 5, 7 (outside halfedges)
         halfedges[2*i]->set_twin( halfedges[2*i+1] );
         halfedges[2*i+1]->set_twin( halfedges[2*i] );
     }
@@ -62,57 +63,41 @@ unsigned verbosity):
     }
 
     //create face
-    faces.push_back( new Face( halfedges[0] ) );
+    faces.push_back( std::make_shared<Face>( halfedges[0] ));
 
     //set the remaining pointers on the halfedges
     for(int i=0; i<4; i++)
     {
-        Halfedge* inside = halfedges[2*i];
+        std::shared_ptr<Halfedge> inside = halfedges[2*i];
         inside->set_next( halfedges[(2*i+2)%8] );
         inside->set_prev( halfedges[(2*i+6)%8] );
         inside->set_face( faces[0] );
 
-        Halfedge* outside = halfedges[2*i+1];
+        std::shared_ptr<Halfedge> outside = halfedges[2*i+1];
         outside->set_next( halfedges[(2*i+7)%8] );
         outside->set_prev( halfedges[(2*i+3)%8] );
     }
 }//end constructor
-
-//destructor
-Mesh::~Mesh()
-{
-    for(std::vector<Vertex*>::iterator it = vertices.begin(); it != vertices.end(); ++it)
-        delete (*it);
-
-    for(std::vector<Halfedge*>::iterator it = halfedges.begin(); it != halfedges.end(); ++it)
-        delete (*it);
-
-    for(std::vector<Face*>::iterator it = faces.begin(); it != faces.end(); ++it)
-        delete (*it);
-
-    for(std::set<Anchor*>::iterator it = all_anchors.begin(); it != all_anchors.end(); ++it)
-        delete (*it);
-}//end destructor
 
 
 
 //inserts a new vertex on the specified edge, with the specified coordinates, and updates all relevant pointers
 //  i.e. new vertex is between initial and termainal points of the specified edge
 //returns pointer to a new halfedge, whose initial point is the new vertex, and that follows the specified edge around its face
-Halfedge* Mesh::insert_vertex(Halfedge* edge, double x, double y)
+std::shared_ptr<Halfedge> Mesh::insert_vertex(std::shared_ptr<Halfedge> edge, double x, double y)
 {
 	//create new vertex
-    Vertex* new_vertex = new Vertex(x, y);
+    std::shared_ptr<Vertex> new_vertex = std::make_shared<Vertex>(x, y);
 	vertices.push_back(new_vertex);
 	
     //get twin and Anchor of this edge
-	Halfedge* twin = edge->get_twin();
-    Anchor* anchor = edge->get_anchor();
+	std::shared_ptr<Halfedge> twin = edge->get_twin();
+    std::shared_ptr<Anchor> anchor = edge->get_anchor();
 	
 	//create new halfedges
-    Halfedge* up = new Halfedge(new_vertex, anchor);
+    std::shared_ptr<Halfedge> up = std::make_shared<Halfedge>(new_vertex, anchor);
 	halfedges.push_back(up);
-    Halfedge* dn = new Halfedge(new_vertex, anchor);
+    std::shared_ptr<Halfedge> dn = std::make_shared<Halfedge>(new_vertex, anchor);
 	halfedges.push_back(dn);
 		
 	//update pointers
@@ -145,16 +130,16 @@ Halfedge* Mesh::insert_vertex(Halfedge* edge, double x, double y)
 //creates the first pair of Halfedges in an Anchor line, anchored on the left edge of the strip at origin of specified edge
 //  also creates a new face (the face below the new edge)
 //  CAUTION: leaves NULL: new_edge.next and new_twin.prev
-Halfedge* Mesh::create_edge_left(Halfedge* edge, Anchor* anchor)
+std::shared_ptr<Halfedge> Mesh::create_edge_left(std::shared_ptr<Halfedge> edge, std::shared_ptr<Anchor> anchor)
 {
     //create new halfedges
-    Halfedge* new_edge = new Halfedge(edge->get_origin(), anchor); //points AWAY FROM left edge
+    std::shared_ptr<Halfedge> new_edge(new Halfedge(edge->get_origin(), anchor)); //points AWAY FROM left edge
     halfedges.push_back(new_edge);
-    Halfedge* new_twin = new Halfedge(NULL, anchor);   //points TOWARDS left edge
+    std::shared_ptr<Halfedge> new_twin(new Halfedge(NULL, anchor));   //points TOWARDS left edge
     halfedges.push_back(new_twin);
 
     //create new face
-    Face* new_face = new Face(new_edge);
+    std::shared_ptr<Face> new_face(new Face(new_edge));
     faces.push_back(new_face);
 
     //update Halfedge pointers
@@ -185,7 +170,7 @@ BarcodeTemplate& Mesh::get_barcode_template(double degrees, double offset)
 {
     if(degrees == 90) //then line is vertical
     {
-        Face* cell = find_vertical_line(-1*offset); //multiply by -1 to correct for orientation of offset
+        std::shared_ptr<Face> cell = find_vertical_line(-1*offset); //multiply by -1 to correct for orientation of offset
 
         ///TODO: store some point/cell to seed the next query
 
@@ -195,8 +180,8 @@ BarcodeTemplate& Mesh::get_barcode_template(double degrees, double offset)
 
     if(degrees == 0) //then line is horizontal
     {
-        Face* cell = topleft->get_twin()->get_face();    //default
-        Anchor* anchor = find_least_upper_anchor(offset);
+        std::shared_ptr<Face> cell = topleft->get_twin()->get_face();    //default
+        std::shared_ptr<Anchor> anchor = find_least_upper_anchor(offset);
 
         if(anchor != NULL)
             cell = anchor->get_line()->get_face();
@@ -214,7 +199,7 @@ BarcodeTemplate& Mesh::get_barcode_template(double degrees, double offset)
 
 //    debug(true) << "  Line (deg, off) = (" << degrees << ", " << offset << ") transformed to (slope, int) = (" << slope << ", " << intercept << ")";
 
-    Face* cell = find_point(slope, -1*intercept);   //multiply by -1 for point-line duality
+    std::shared_ptr<Face> cell = find_point(slope, -1*intercept);   //multiply by -1 for point-line duality
         ///TODO: REPLACE THIS WITH A SEEDED SEARCH
 
     ///TODO: store seed
@@ -243,13 +228,12 @@ unsigned Mesh::num_faces()
 //creates a new anchor in the vector all_anchors
 void Mesh::add_anchor(Anchor anchor)
 {
-    //TODO: not clear why all_anchors should contain anchor pointers and not just anchors.
-    all_anchors.insert(new Anchor(anchor.get_entry()));
+    all_anchors.insert(std::make_shared<Anchor>(anchor.get_entry()));
 }
 
 //finds the first anchor that intersects the left edge of the arrangement at a point not less than the specified y-coordinate
 //  if no such anchor, returns NULL
-Anchor* Mesh::find_least_upper_anchor(double y_coord)
+std::shared_ptr<Anchor> Mesh::find_least_upper_anchor(double y_coord)
 {
     //binary search to find greatest y-grade not greater than than y_coord
     unsigned best = 0;
@@ -278,9 +262,8 @@ Anchor* Mesh::find_least_upper_anchor(double y_coord)
     //if we get here, then y_grades[best] is the greatest y-grade not greater than y_coord
     //now find Anchor whose line intersects the left edge of the arrangement lowest, but not below y_grade[best]
     unsigned int zero = 0;  //disambiguate the following function call
-    Anchor* test = new Anchor(zero, best);
-    std::set<Anchor*, Anchor_LeftComparator>::iterator it = all_anchors.lower_bound(test);
-    delete test;
+    std::shared_ptr<Anchor> test(new Anchor(zero, best));
+    std::set<std::shared_ptr<Anchor>, PointerComparator<Anchor, Anchor_LeftComparator>>::iterator it = all_anchors.lower_bound(test);
 
     if(it == all_anchors.end())    //not found
     {
@@ -292,7 +275,7 @@ Anchor* Mesh::find_least_upper_anchor(double y_coord)
 
 //finds the (unbounded) cell associated to dual point of the vertical line with the given x-coordinate
 //  i.e. finds the Halfedge whose Anchor x-coordinate is the largest such coordinate not larger than than x_coord; returns the Face corresponding to that Halfedge
-Face* Mesh::find_vertical_line(double x_coord)
+std::shared_ptr<Face> Mesh::find_vertical_line(double x_coord)
 {
     //is there an Anchor with x-coordinate not greater than x_coord?
     if(vertical_line_query_list.size() >= 1 && x_grades[ vertical_line_query_list[0]->get_anchor()->get_x() ] <= x_coord)
@@ -305,7 +288,7 @@ Face* Mesh::find_vertical_line(double x_coord)
         while(max >= min)
         {
             unsigned mid = (max + min)/2;
-            Anchor* test = vertical_line_query_list[mid]->get_anchor();
+            std::shared_ptr<Anchor> test = vertical_line_query_list[mid]->get_anchor();
 
             if(x_grades[test->get_x()] <= x_coord)    //found a lower bound, but search upper subarray for a better lower bound
             {
@@ -329,13 +312,13 @@ Face* Mesh::find_vertical_line(double x_coord)
 }//end find_vertical_line()
 
 //find a 2-cell containing the specified point
-Face* Mesh::find_point(double x_coord, double y_coord)
+std::shared_ptr<Face> Mesh::find_point(double x_coord, double y_coord)
 {
     //start on the left edge of the arrangement, at the correct y-coordinate
-    Anchor* start = find_least_upper_anchor(-1*y_coord);
+    std::shared_ptr<Anchor> start = find_least_upper_anchor(-1*y_coord);
 
-    Face* cell = NULL;		//will later point to the cell containing the specified point
-    Halfedge* finger = NULL;	//for use in finding the cell
+    std::shared_ptr<Face> cell = NULL;		//will later point to the cell containing the specified point
+    std::shared_ptr<Halfedge> finger = NULL;	//for use in finding the cell
 
     if(start == NULL)	//then starting point is in the top (unbounded) cell
     {
@@ -353,7 +336,7 @@ Face* Mesh::find_point(double x_coord, double y_coord)
         if(verbosity >= 8) { debug() << "  Considering cell " << FID(finger->get_face()); }
 
         //find the edge of the current cell that crosses the horizontal line at y_coord
-        Vertex* next_pt = finger->get_next()->get_origin();
+        std::shared_ptr<Vertex> next_pt = finger->get_next()->get_origin();
 
         if(verbosity >= 8)
         {
@@ -389,7 +372,7 @@ Face* Mesh::find_point(double x_coord, double y_coord)
             else	//move to adjacent cell
             {
                 //find degree of vertex
-                Halfedge* thumb = finger->get_next();
+                std::shared_ptr<Halfedge> thumb = finger->get_next();
                 int deg = 1;
                 while(thumb != finger->get_twin())
                 {
@@ -413,7 +396,7 @@ Face* Mesh::find_point(double x_coord, double y_coord)
             }
             else	//then edge is not vertical
             {
-                Anchor* temp = finger->get_anchor();
+                std::shared_ptr<Anchor> temp = finger->get_anchor();
                 double x_pos = ( y_coord + y_grades[temp->get_y()] )/x_grades[temp->get_x()];  //NOTE: division by zero never occurs because we are searching along a horizontal line, and thus we never cross horizontal lines in the arrangement
 
                 if(x_pos >= x_coord)	//found the cell
@@ -454,8 +437,8 @@ void Mesh::print()
     debug() << "  Halfedges";
     for(unsigned i=0; i<halfedges.size(); i++)
 	{
-		Halfedge* e = halfedges[i];
-		Halfedge* t = e->get_twin();
+		std::shared_ptr<Halfedge> e = halfedges[i];
+		std::shared_ptr<Halfedge> t = e->get_twin();
         debug() << "    halfedge " << i << ": " << *(e->get_origin()) << "--" << *(t->get_origin()) << "; ";
         if(e->get_anchor() == NULL)
             debug() << "Anchor null; ";
@@ -471,8 +454,8 @@ void Mesh::print()
 	}
 	
 /*    debug() << "  Outside (unbounded) region: ";
-	Halfedge* start = halfedges[1];
-	Halfedge* curr = start;
+	std::shared_ptr<Halfedge> start = halfedges[1];
+	std::shared_ptr<Halfedge> curr = start;
 	do{
         debug() << *(curr->get_origin()) << "--";
 		curr = curr->get_next();
@@ -480,7 +463,7 @@ void Mesh::print()
     debug() << "cycle";
 */
     debug() << "  Anchor set: ";
-    std::set<Anchor*>::iterator it;
+    std::set<std::shared_ptr<Anchor>>::iterator it;
     for(it = all_anchors.begin(); it != all_anchors.end(); ++it)
 	{
         Anchor cur = **it;
@@ -492,7 +475,7 @@ void Mesh::print()
 
 //look up halfedge ID, used in print() for debugging
 // HID = halfedge ID
-unsigned Mesh::HID(Halfedge* h)
+unsigned Mesh::HID(std::shared_ptr<Halfedge> h)
 {
     for(unsigned i=0; i<halfedges.size(); i++)
 	{
@@ -506,7 +489,7 @@ unsigned Mesh::HID(Halfedge* h)
 
 //look up face ID, used in print() for debugging
 // FID = face ID
-unsigned Mesh::FID(Face* f)
+unsigned Mesh::FID(std::shared_ptr<Face> f)
 {
     for(unsigned i=0; i<faces.size(); i++)
 	{
@@ -520,7 +503,7 @@ unsigned Mesh::FID(Face* f)
 
 //look up vertex ID, used in print() for debugging
 // VID = vertex ID
-unsigned Mesh::VID(Vertex* v)
+unsigned Mesh::VID(std::shared_ptr<Vertex> v)
 {
     for(unsigned i=0; i<vertices.size(); i++)
     {
@@ -540,9 +523,9 @@ void Mesh::test_consistency()
     bool face_problem = false;
     std::set<int> edges_found_in_faces;
 
-    for(std::vector<Face*>::iterator it = faces.begin(); it != faces.end(); ++it)
+    for(std::vector<std::shared_ptr<Face>>::iterator it = faces.begin(); it != faces.end(); ++it)
     {
-        Face* face = *it;
+        std::shared_ptr<Face> face = *it;
         debug() << "  Checking face " << FID(face);
 
         if(face->get_boundary() == NULL)
@@ -552,7 +535,7 @@ void Mesh::test_consistency()
         }
         else
         {
-            Halfedge* start = face->get_boundary();
+            std::shared_ptr<Halfedge> start = face->get_boundary();
             edges_found_in_faces.insert(HID(start));
 
             if(start->get_face() != face)
@@ -565,7 +548,7 @@ void Mesh::test_consistency()
                 debug() << "    PROBLEM: starting halfedge" << HID(start) << "of face" << FID(face) << "has NULL next pointer.";
             else
             {
-                Halfedge* cur = start->get_next();
+                std::shared_ptr<Halfedge> cur = start->get_next();
                 int i = 0;
                 while(cur != start)
                 {
@@ -608,8 +591,8 @@ void Mesh::test_consistency()
     if (halfedges.size() < 2) {
         debug() << "Only " << halfedges.size() << "halfedges present!";
     }
-    Halfedge* start = halfedges[1];
-    Halfedge* cur = start;
+    std::shared_ptr<Halfedge> start = halfedges[1];
+    std::shared_ptr<Halfedge> cur = start;
     do{
         edges_found_in_faces.insert(HID(cur));
 
@@ -640,12 +623,12 @@ void Mesh::test_consistency()
     bool curve_problem = false;
     std::set<int> edges_found_in_curves;
 
-    for(std::set<Anchor*>::iterator it = all_anchors.begin(); it != all_anchors.end(); ++it)
+    for(std::set<std::shared_ptr<Anchor>>::iterator it = all_anchors.begin(); it != all_anchors.end(); ++it)
     {
-        Anchor* anchor = *it;
+        std::shared_ptr<Anchor> anchor = *it;
         debug() << "  Checking line for anchor (" << anchor->get_x() <<"," << anchor->get_y() << ")";
 
-        Halfedge* edge = anchor->get_line();
+        std::shared_ptr<Halfedge> edge = anchor->get_line();
         do{
             edges_found_in_curves.insert(HID(edge));
             edges_found_in_curves.insert(HID(edge->get_twin()));
@@ -713,7 +696,7 @@ void Mesh::test_consistency()
 
     //check anchor lines
     debug() << "Checking order of vertices along right edge of the strip:";
-    Halfedge* redge = halfedges[3];
+    std::shared_ptr<Halfedge> redge = halfedges[3];
     while(redge != halfedges[1])
     {
         debug() << " y = " << redge->get_origin()->get_y() << "at vertex" << VID(redge->get_origin());
@@ -727,7 +710,7 @@ void Mesh::test_consistency()
 
 //Crossing constructor
 //precondition: Anchors a and b must be comparable
-Mesh::Crossing::Crossing(Anchor* a, Anchor* b, Mesh* m) : a(a), b(b), m(m)
+Mesh::Crossing::Crossing(std::shared_ptr<Anchor> a, std::shared_ptr<Anchor> b, std::shared_ptr<Mesh> m) : a(a), b(b), m(m)
 {
     //store the x-coordinate of the crossing for fast (inexact) comparisons
     x = (m->y_grades[a->get_y()] - m->y_grades[b->get_y()])/(m->x_grades[a->get_x()] - m->x_grades[b->get_x()]);
@@ -760,7 +743,7 @@ bool Mesh::CrossingComparator::operator()(const Crossing* c1, const Crossing* c2
         throw std::exception();
     }
 
-    Mesh* m = c1->m;    //makes it easier to reference arrays in the mesh
+    std::shared_ptr<Mesh> m = c1->m;    //makes it easier to reference arrays in the mesh
 
     //now do the comparison
     //if the x-coordinates are nearly equal as double values, then compare exact values

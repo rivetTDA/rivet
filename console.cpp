@@ -84,13 +84,13 @@ int main(int argc, char *argv[])
         });
         computation.arrangementReady.connect([](Mesh& mesh){
             std::cout << "ARRANGEMENT" << std::endl;
-//            std::cout << mesh << std::endl;
+            //std::cout << mesh << std::endl;
             std::cout << "END ARRANGEMENT" << std::endl;
             std::cerr << "Arrangement received: " << mesh.x_exact.size() << " x " << mesh.y_exact.size() << std::endl;
         });
         computation.xiSupportReady.connect([](std::vector<xiPoint> points){
             std::cout << "XI" << std::endl;
-//            std::cout << points << std::endl;
+            //std::cout << points << std::endl;
             std::cout << "END XI" << std::endl;
             std::cerr << "xi support received: " << points.size() ;
         });
