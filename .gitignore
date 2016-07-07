@@ -23,3 +23,5 @@ ui_configuredialog.h
 ui_dataselectdialog.h
 ui_progressdialog.h
 ui_visualizationwindow.h
+build
+cereal

@@ -55,6 +55,8 @@ struct Multigrade
 
     Multigrade(unsigned x, unsigned y, unsigned num_cols, int simplex_index);   //constructor
 
+    Multigrade(); // For serialization
+
     static bool LexComparator(const Multigrade &first, const Multigrade &second);   //comparator for sorting Multigrades lexicographically
 };
 

@@ -11,11 +11,7 @@
 #ifndef __DCEL_H__
 #define __DCEL_H__
 
-//forward declarations
-class Vertex;
 class Halfedge;
-class Face;
-class Anchor;
 
 #include <memory>
 #include "barcode_template.h"
@@ -26,6 +22,7 @@ class Vertex
 {
     public:
         Vertex(double x_coord, double y_coord);	//constructor, sets (x, y)-coordinates of the vertex
+        Vertex(); //For serialization
 
         void set_incident_edge(std::shared_ptr<Halfedge> edge);		//set the incident edge
         std::shared_ptr<Halfedge> get_incident_edge();			//get the incident edge
@@ -35,6 +32,8 @@ class Vertex
 
         friend Debug& operator<<(Debug& qd, const Vertex& v);	//for printing the vertex
 
+    template <class Archive> void cerealize(Archive &ar);
+
     private:
         std::shared_ptr<Halfedge> incident_edge;	//pointer to one edge incident to this vertex
         double x;			//x-coordinate of this vertex
@@ -42,6 +41,9 @@ class Vertex
 
 };//end class Vertex
 
+
+class Face;
+class Anchor;
 
 class Halfedge
 {
@@ -68,6 +70,8 @@ class Halfedge
 
         friend Debug& operator<<(Debug& qd, const Halfedge& e);	//for printing the halfedge
 
+    template <class Archive>
+    void cerealize(Archive &ar);
     private:
         std::shared_ptr<Vertex> origin;		//pointer to the vertex from which this halfedge originates
         std::shared_ptr<Halfedge> twin;		//pointer to the halfedge that, together with this halfedge, make one edge
@@ -83,6 +87,7 @@ class Face
 {
     public:
         Face(std::shared_ptr<Halfedge> e);      //constructor: requires pointer to a boundary halfedge
+        Face(); // For serialization
         ~Face();                //destructor: destroys barcode template
 
         void set_boundary(std::shared_ptr<Halfedge> e);     //set the pointer to a halfedge on the boundary of this face
@@ -96,6 +101,8 @@ class Face
 
         friend Debug& operator<<(Debug& os, const Face& f);	//for printing the face
 
+        template<class Archive>
+                void cerealize(Archive & ar);
     private:
         std::shared_ptr<Halfedge> boundary;     //pointer to one halfedge in the boundary of this cell
         BarcodeTemplate dbc;    //barcode template stored in this cell

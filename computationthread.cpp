@@ -1,16 +1,21 @@
 #include "computationthread.h"
 
+#define CEREAL_SERIALIZE_FUNCTION_NAME cerealize
+
 #include "dcel/mesh.h"
 #include "interface/input_manager.h"
 #include "interface/input_parameters.h"
 #include "math/multi_betti.h"
 #include "math/simplex_tree.h"
 #include "math/xi_point.h"
-
+#include "dcel/serialization.h"
+#include <cereal/archives/json.hpp>
+#include <cereal/types/memory.hpp>
 #include <QDebug>
 #include <QTime>
 #include <QProcess>
 #include <QString>
+
 
 ComputationThread::ComputationThread(InputParameters& params, QObject *parent) :
     QThread(parent),
@@ -57,8 +62,16 @@ void ComputationThread::run()
             emit xiSupportReady();
         } else if (line.startsWith("ARRANGEMENT")) {
             //TODO: load arrangement
-//            arrangement << console;
-//            emit arrangementReady(arrangement);
+            std::stringstream ss;
+            while(console.canReadLine()) {
+                QString s = console.readLine();
+                if (s.startsWith("END ARRANGEMENT")) {
+                    cereal::JSONInputArchive archive(ss);
+                    archive(arrangement);
+                    emit arrangementReady(&*arrangement);
+                    break;
+                }
+            }
         }
     }
 

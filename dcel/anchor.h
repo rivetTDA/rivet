@@ -21,6 +21,7 @@ class Anchor
         Anchor(std::shared_ptr<xiMatrixEntry> e);           //default constructor
         Anchor(unsigned x, unsigned y);     //constructor, requires only x- and y-coordinates
         Anchor(const Anchor& other);        //copy constructor
+        Anchor(); //For serialization
 
         Anchor& operator= (const Anchor& other);	//assignment operator
         bool operator== (const Anchor& other) const;	//equality operator
@@ -44,6 +45,8 @@ class Anchor
         void set_weight(unsigned long w);   //sets the estimate of the cost of updating the RU-decomposition when crossing this anchor
         unsigned long get_weight();         //returns estimate of the cost of updating the RU-decomposition when crossing this anchor
 
+    template <class Archive>
+            void cerealize(Archive &ar);
     private:
         unsigned x_coord;	//discrete x-coordinate
         unsigned y_coord;	//discrete y-coordinate

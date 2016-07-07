@@ -1,13 +1,13 @@
 #pragma once
 
 #include "interface/input_parameters.h"
+#include "numerics.h"
 #include "interface/input_manager.h"
 #include "dcel/barcode_template.h"
 #include "math/simplex_tree.h"
 #include "math/xi_point.h"
 
 #include <boost/multiprecision/cpp_int.hpp>
-typedef boost::multiprecision::cpp_rational exact;
 #include <boost/signals2.hpp>
 #include "boost/multi_array.hpp"
 typedef boost::multi_array<unsigned, 2> unsigned_matrix;

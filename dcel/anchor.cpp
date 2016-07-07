@@ -37,6 +37,8 @@ Anchor& Anchor::operator= (const Anchor& other)
     return *this;
 }
 
+Anchor::Anchor() { }
+
 bool Anchor::operator== (const Anchor& other) const
 {
     return (x_coord == other.x_coord && y_coord == other.y_coord);

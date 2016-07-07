@@ -23,6 +23,8 @@
 #include <sstream>
 #include "pointer_comparator.h"
 
+Mesh::Mesh(): INFTY(std::numeric_limits<double>::infinity()) {}
+
 // Mesh constructor; sets up bounding box (with empty interior) for the affine Grassmannian
 Mesh::Mesh(std::vector<exact> xe,
            std::vector<exact> ye,
@@ -738,8 +740,8 @@ bool Mesh::CrossingComparator::operator()(const Crossing* c1, const Crossing* c2
     if(c1->a->get_position() >= c1->b->get_position() || c2->a->get_position() >= c2->b->get_position())
     {
         debug() << "INVERTED CROSSING ERROR\n";
-        debug() << "crossing 1 involves anchors " << c1->a << " (pos " << c1->a->get_position() << ") and " << c1->b << " (pos " << c1->b->get_position() << "),";
-        debug() << "crossing 2 involves anchors " << c2->a << " (pos " << c2->a->get_position() << ") and " << c2->b << " (pos " << c2->b->get_position() << "),";
+        debug() << "crossing 1 involves anchors " << &*(c1->a) << " (pos " << c1->a->get_position() << ") and " << &*(c1->b) << " (pos " << c1->b->get_position() << "),";
+        debug() << "crossing 2 involves anchors " << &*(c2->a) << " (pos " << c2->a->get_position() << ") and " << &*(c2->b) << " (pos " << c2->b->get_position() << "),";
         throw std::exception();
     }
 

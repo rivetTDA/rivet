@@ -25,7 +25,6 @@ class Vertex;
 #include "interface/progress.h"
 #include "pointer_comparator.h"
 
-
 //std::ostream& write_grades(std::ostream &stream, const std::vector<exact> &x_exact, const std::vector<exact> &y_exact);
 
 template<typename T>
@@ -53,12 +52,14 @@ T& write_grades(T &stream, const std::vector<exact> &x_exact, const std::vector<
     return stream;
 }
 
+
 class Mesh
 {
 //TODO: refactor so Mesh doesn't need friends.
     friend class PersistenceUpdater;
     friend class MeshBuilder;
     public:
+    Mesh(); //For serialization
     Mesh(std::vector<exact> xe, std::vector<exact> ye, unsigned verbosity);
             //constructor; sets up bounding box (with empty interior) for the affine Grassmannian
             //  requires references to vectors of all multi-grade values (both double and exact values)
@@ -83,16 +84,18 @@ class Mesh
 		
 
         //references to vectors of multi-grade values
-        const std::vector<exact> x_exact;     //exact values for all x-grades
-        const std::vector<exact> y_exact;     //exact values for all y-grades
+        std::vector<exact> x_exact;     //exact values for all x-grades
+        std::vector<exact> y_exact;     //exact values for all y-grades
 
         //these are necessary for comparisons, but should they really be static members of Mesh???
         static double epsilon;
         static bool almost_equal(const double a, const double b);
 
+
     friend std::ostream& operator<<(std::ostream&, const Mesh&);
     friend std::istream& operator>>(std::istream&, Mesh&);
-
+    template<class Archive> void load(Archive &archive);
+    template<class Archive> void save(Archive &archive) const;
     private:
       //data structures
       std::vector<double> x_grades;   //floating-point values for x-grades

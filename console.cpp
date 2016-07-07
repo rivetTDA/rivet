@@ -1,3 +1,5 @@
+#define CEREAL_SERIALIZE_FUNCTION_NAME cerealize
+
 #include "interface/input_parameters.h"
 #include "dcel/mesh.h"
 #include "interface/input_manager.h"
@@ -6,7 +8,9 @@
 #include <interface/file_writer.h>
 
 #include "docopt/docopt.h"
-#include "../../../../usr/local/Cellar/gcc/5.3.0/include/c++/5.3.0/vector"
+#include <cereal/archives/json.hpp>
+#include "dcel/serialization.h"
+#include "../../Library/Caches/CLion2016.1/cmake/generated/rivet-4c1a4387/4c1a4387/Debug2/cereal/src/cereal_project/include/cereal/archives/binary.hpp"
 
 static const char USAGE[] =
   R"(RIVET: Rank Invariant Visualization and Exploration Tool
@@ -84,13 +88,17 @@ int main(int argc, char *argv[])
         });
         computation.arrangementReady.connect([](Mesh& mesh){
             std::cout << "ARRANGEMENT" << std::endl;
-            //std::cout << mesh << std::endl;
+            cereal::JSONOutputArchive archive(std::cout);
+            archive(mesh);
+            std::cout << std::endl;
             std::cout << "END ARRANGEMENT" << std::endl;
             std::cerr << "Arrangement received: " << mesh.x_exact.size() << " x " << mesh.y_exact.size() << std::endl;
         });
         computation.xiSupportReady.connect([](std::vector<xiPoint> points){
             std::cout << "XI" << std::endl;
-            //std::cout << points << std::endl;
+            cereal::JSONOutputArchive archive(std::cout);
+            archive(points);
+            std::cout << std::endl;
             std::cout << "END XI" << std::endl;
             std::cerr << "xi support received: " << points.size() ;
         });

@@ -23,13 +23,13 @@ externalproject_add(
         GIT_TAG v1.1.2
         CONFIGURE_COMMAND ""
         BUILD_COMMAND ""
-        INSTALL_COMMAND ""
+        INSTALL_COMMAND COMMAND cp -R ${CMAKE_CURRENT_BINARY_DIR}/cereal/src/cereal_project/include/cereal ${PROJECT_SOURCE_DIR}
 )
 
 #note this must come before add_executable or it will be ignored
 link_directories(${CMAKE_CURRENT_BINARY_DIR}/docopt/src/docopt_project-build)
 
-include_directories("${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/include" "${CMAKE_CURRENT_BINARY_DIR}/cereal/include")
+include_directories("${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/include")
 
 add_executable (rivet_console
         console.cpp

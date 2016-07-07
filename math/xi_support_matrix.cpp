@@ -63,6 +63,8 @@ Multigrade::Multigrade(unsigned x, unsigned y, unsigned num_cols, int simplex_in
     x(x), y(y), num_cols(num_cols), simplex_index(simplex_index)
 { }
 
+Multigrade::Multigrade() {}
+
 //comparator for sorting Multigrades (reverse) lexicographically
 bool Multigrade::LexComparator(const Multigrade &first, const Multigrade &second)
 {

@@ -84,7 +84,9 @@ HEADERS  += visualizationwindow.h			\
     interface/config_parameters.h \
     interface/file_input_reader.h \
     driver.h \
-    interface/file_writer.h
+    interface/file_writer.h \
+    dcel/serialization.h \
+    cereal/archives/json.hpp \
     
 
 FORMS   += visualizationwindow.ui			\

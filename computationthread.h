@@ -48,7 +48,7 @@ class ComputationThread : public QThread
         InputParameters& params;
 
         std::vector<xiPoint> xi_support;
-        Mesh* arrangement;
+        std::shared_ptr<Mesh> arrangement;
 
 
 };

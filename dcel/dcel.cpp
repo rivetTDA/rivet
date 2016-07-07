@@ -13,6 +13,8 @@ Vertex::Vertex(double x_coord, double y_coord) :
     y(y_coord)
 { }
 
+Vertex::Vertex() { }
+
 void Vertex::set_incident_edge(std::shared_ptr<Halfedge> edge)
 {
     incident_edge = edge;
@@ -132,6 +134,8 @@ Debug& operator<<(Debug& qd, const Halfedge& e)
 
 Face::Face(std::shared_ptr<Halfedge> e) : boundary(e), visited(false)
 { }
+
+Face::Face(): boundary(), visited(false) {}
 
 Face::~Face()
 { }

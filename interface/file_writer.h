@@ -15,7 +15,6 @@
 #include <fstream>
 
 #include <boost/multiprecision/cpp_int.hpp>
-typedef boost::multiprecision::cpp_rational exact;
 
 #include <vector>
 
