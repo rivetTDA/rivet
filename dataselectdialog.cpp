@@ -3,6 +3,7 @@
 
 #include "interface/file_input_reader.h"
 #include "interface/input_parameters.h"
+#include "interface/console_interaction.h"
 
 #include <QDebug>
 #include <QFileDialog>
@@ -79,27 +80,29 @@ void DataSelectDialog::detect_file_type()
   }
 
   FileInputReader reader(infile);
-  if(reader.has_next_line()) {
+  if(!reader.has_next_line()) {
     invalid_file("Empty file.");
     return;
   }
 
     QProcess console;
     console.setProcessChannelMode(QProcess::MergedChannels);
+    console.setWorkingDirectory(QCoreApplication::applicationDirPath());
     QStringList args;
     args.append(QString::fromStdString(params.fileName));
     args.append("--identify");
-    console.start("rivet_console", args);
+    console.start("./rivet_console", args);
 
     if (!console.waitForStarted()) {
-        invalid_file("Error launching rivet_console");
+        invalid_file(RivetConsole::errorMessage(console.error()));
         return;
     }
 
     console.waitForReadyRead();
     bool raw = false;
-    while(console.canReadLine()) {
+    while(console.canReadLine() || console.waitForReadyRead()) {
         QString line = console.readLine();
+        qDebug() << line;
         if (line.startsWith("RAW DATA: ")) {
             raw = line.contains("1");
         } else if (line.startsWith("INPUT ERROR: ")) {
@@ -108,7 +111,7 @@ void DataSelectDialog::detect_file_type()
         } else if (line.startsWith("FILE TYPE DESCRIPTION: ")) {
 
             ui->fileTypeLabel->setText("This file appears to contain " +
-                    line.mid(QString("FILE TYPE DESCRIPTION: ").length()) + ".");
+                    line.mid(QString("FILE TYPE DESCRIPTION: ").length()).trimmed() + ".");
             QFileInfo fileInfo(QString::fromStdString(params.fileName));
             ui->fileLabel->setText("Selected file: " + fileInfo.fileName());
 

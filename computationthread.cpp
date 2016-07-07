@@ -45,7 +45,7 @@ void ComputationThread::run()
                                 << "-V" << QString::number(params.verbosity));
 
     if (!console.waitForStarted()) {
-        qDebug() << "Error launching rivet_console";
+        qDebug() << "Error launching rivet_console:" << RivetConsoleApp::errorMessage(console.error()) ;
         return;
     }
 
