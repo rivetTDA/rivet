@@ -20,7 +20,7 @@ externalproject_add(
         cereal_project
         PREFIX cereal
         GIT_REPOSITORY https://github.com/USCiLab/cereal
-        GIT_TAG v1.1.2
+        GIT_TAG v1.2.0
         CONFIGURE_COMMAND ""
         BUILD_COMMAND ""
         INSTALL_COMMAND COMMAND cp -R ${CMAKE_CURRENT_BINARY_DIR}/cereal/src/cereal_project/include/cereal ${PROJECT_SOURCE_DIR}

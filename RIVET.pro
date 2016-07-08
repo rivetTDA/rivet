@@ -53,6 +53,8 @@ SOURCES	+= main.cpp                         \
     interface/file_writer.cpp \
     debug.cpp \
     timer.cpp \
+    interface/console_interaction.cpp \
+    numerics.cpp \
 
 HEADERS  += visualizationwindow.h			\
 		dataselectdialog.h					\
@@ -87,7 +89,8 @@ HEADERS  += visualizationwindow.h			\
     interface/file_writer.h \
     dcel/serialization.h \
     cereal/archives/json.hpp \
-    
+    interface/console_interaction.h \
+    numerics.h \
 
 FORMS   += visualizationwindow.ui			\
 		dataselectdialog.ui \

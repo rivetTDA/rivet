@@ -84,10 +84,10 @@ private:
     ConfigParameters config_params;   //parameters that control the visualization
     DataSelectDialog ds_dialog;       //dialog box that gets the input parameters
 
-    std::vector<double> x_grades;     //floating-point x-coordinates of the grades, sorted exactly
-    std::vector<exact> x_exact;       //exact (e.g. rational) values of all x-grades, sorted
-    std::vector<double> y_grades;     //floating-point y-coordinates of the grades
-    std::vector<exact> y_exact;       //exact (e.g. rational) values of all y-grades, sorted
+    std::vector<exact> x_exact;
+    std::vector<exact> y_exact;
+    std::vector<double> y_grades;
+    std::vector<double> x_grades;
     std::vector<xiPoint> xi_support;  //stores discrete coordinates of xi support points, with multiplicities
     unsigned_matrix homology_dimensions;       //stores the dimension of homology at each grade
 

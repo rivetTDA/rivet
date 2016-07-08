@@ -34,6 +34,12 @@ class ComputationThread : public QThread
 
         void compute();
 
+    //TODO: these really ought to be delivered via signal rather than read by other classes
+        std::vector<xiPoint> xi_support;
+        std::vector<exact> x_exact;
+        std::vector<exact> y_exact;
+        unsigned_matrix hom_dims;
+
     signals:
         void advanceProgressStage();
         void setProgressMaximum(unsigned max);
@@ -47,7 +53,6 @@ class ComputationThread : public QThread
     private:
         InputParameters& params;
 
-        std::vector<xiPoint> xi_support;
         std::shared_ptr<Mesh> arrangement;
 
 

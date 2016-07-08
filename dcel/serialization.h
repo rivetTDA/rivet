@@ -13,6 +13,7 @@
 #include <cereal/types/string.hpp>
 #include <cereal/types/common.hpp>
 #include "numerics.h"
+#include "anchor.h"
 #include "dcel.h"
 #include "math/xi_point.h"
 #include "math/xi_support_matrix.h"
@@ -100,4 +101,7 @@ void Mesh::save(Archive &archive) const {
              verbosity, topleft, topright, bottomleft, bottomright, vertical_line_query_list
     );
 }
+
+
+
 #endif //RIVET_CONSOLE_SERIALIZATION_H

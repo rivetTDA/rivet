@@ -25,7 +25,7 @@ std::unique_ptr<ComputationResult> Computation::compute_rivet(RivetInput &input)
 
         if(verbosity >= 2) { debug() << "INPUT FINISHED: xi support points ready"; }
 
-        xiSupportReady(input.xi_support);          //signal that xi support points are ready for visualization
+        xiSupportReady(XiSupportMessage {input.xi_support, input.x_exact, input.y_exact});          //signal that xi support points are ready for visualization
         progress.advanceProgressStage();    //update progress box to stage 4
 
 
@@ -45,7 +45,7 @@ std::unique_ptr<ComputationResult> Computation::compute_rivet(RivetInput &input)
         debug() << "   re-building the augmented arrangement took" << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "milliseconds";
 
         //send (a pointer to) the arrangement back to the VisualizationWindow
-        arrangementReady(*arrangement);
+        arrangementReady(arrangement);
 }
 
 std::unique_ptr<ComputationResult> Computation::compute_raw(RawDataInput &input) {
@@ -81,7 +81,7 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(RawDataInput &input)
         //store the xi support points
         mb.store_support_points(result->xi_support);
 
-        xiSupportReady(result->xi_support);          //signal that xi support points are ready for visualization
+        xiSupportReady(XiSupportMessage {result->xi_support, input.x_exact, input.y_exact});          //signal that xi support points are ready for visualization
         progress.advanceProgressStage();    //update progress box to stage 4
 
 
@@ -99,7 +99,7 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(RawDataInput &input)
                 << timer.elapsed() << "milliseconds";
 
         //send (a pointer to) the arrangement back to the VisualizationWindow
-        arrangementReady(*arrangement);
+        arrangementReady(arrangement);
     arrangement->test_consistency();
     result->arrangement = std::move(arrangement);
     return result;

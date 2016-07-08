@@ -6,6 +6,7 @@
 #include "interface/barcode.h"
 #include "interface/config_parameters.h"
 #include "interface/file_writer.h"
+#include "numerics.h"
 
 #include <QDateTime>
 #include <QDebug>
@@ -26,7 +27,8 @@ VisualizationWindow::VisualizationWindow(InputParameters& params) :
     data_selected(false), unsaved_data(false),
     input_params(params), config_params(),
     ds_dialog(input_params, this),
-    x_grades(), x_exact(), y_grades(), y_exact(), xi_support(), homology_dimensions(),
+    x_grades(), x_exact(), y_grades(), y_exact(),
+    xi_support(), homology_dimensions(),
     angle_precise(0), offset_precise(0),
     cthread(input_params),
     prog_dialog(this),
@@ -94,6 +96,13 @@ void VisualizationWindow::start_computation()
 //this slot is signaled when the xi support points are ready to be drawn
 void VisualizationWindow::paint_xi_support()
 {
+    //First load our local copies of the data
+    //TODO: this dataflow is still odd, could use more attention.
+    xi_support = cthread.xi_support;
+    x_exact = cthread.x_exact;
+    y_exact = cthread.y_exact;
+    x_grades = rivet::numeric::to_doubles(x_exact);
+    y_grades = rivet::numeric::to_doubles(y_exact);
     //send xi support points to the SliceDiagram
     for(std::vector<xiPoint>::iterator it = xi_support.begin(); it != xi_support.end(); ++it)
         slice_diagram.add_point(x_grades[it->x], y_grades[it->y], it->zero, it->one, it->two);

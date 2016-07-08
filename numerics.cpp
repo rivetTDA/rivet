@@ -6,6 +6,13 @@
 namespace rivet {
 
     namespace numeric {
+        std::vector<double> to_doubles(const std::vector<exact> exacts) {
+            std::vector<double> doubles(exacts.size());
+            std::transform(exacts.begin(), exacts.end(), doubles.begin(), [](exact num) {
+                return numerator(num).convert_to<double>() / denominator(num).convert_to<double>();
+            });
+            return doubles;
+        }
 
         bool is_number(const std::string &s) {
             std::string::const_iterator it = s.begin();

@@ -9,6 +9,8 @@
 
 #include "docopt/docopt.h"
 #include <cereal/archives/json.hpp>
+#include <cereal/archives/binary.hpp>
+#include <cereal/archives/xml.hpp>
 #include "dcel/serialization.h"
 #include "../../Library/Caches/CLion2016.1/cmake/generated/rivet-4c1a4387/4c1a4387/Debug2/cereal/src/cereal_project/include/cereal/archives/binary.hpp"
 
@@ -86,21 +88,29 @@ int main(int argc, char *argv[])
         progress.progress.connect([](int amount) {
             std::cout << "PROGRESS " << amount << std::endl;
         });
-        computation.arrangementReady.connect([](Mesh& mesh){
+        computation.arrangementReady.connect([](std::shared_ptr<Mesh> mesh){
             std::cout << "ARRANGEMENT" << std::endl;
-            cereal::JSONOutputArchive archive(std::cout);
-            archive(mesh);
-            std::cout << std::endl;
+            //cereal::JSONOutputArchive archive(std::cout);
+//            cereal::BinaryOutputArchive archive(std::cout);
+            {
+                cereal::XMLOutputArchive archive(std::cout);
+                archive(mesh);
+            }
             std::cout << "END ARRANGEMENT" << std::endl;
-            std::cerr << "Arrangement received: " << mesh.x_exact.size() << " x " << mesh.y_exact.size() << std::endl;
+            std::cerr << "Arrangement received: " << mesh->x_exact.size() << " x " << mesh->y_exact.size() << std::endl;
+            std::cout.flush();
         });
-        computation.xiSupportReady.connect([](std::vector<xiPoint> points){
+        computation.xiSupportReady.connect([](XiSupportMessage message){
             std::cout << "XI" << std::endl;
-            cereal::JSONOutputArchive archive(std::cout);
-            archive(points);
-            std::cout << std::endl;
+//            cereal::JSONOutputArchive archive(std::cout);
+//            cereal::BinaryOutputArchive archive(std::cout);
+            {
+                cereal::XMLOutputArchive archive(std::cout);
+                archive(message);
+            }
             std::cout << "END XI" << std::endl;
-            std::cerr << "xi support received: " << points.size() ;
+            std::cout.flush();
+            std::cerr << "xi support received: " << message.xi_support.size();
         });
         //TODO: input is a simple pointer, switch to unique_ptr
     std::unique_ptr<InputData> input;
@@ -140,8 +150,6 @@ int main(int argc, char *argv[])
                 ss << "Error: Unable to write file:" << params.outputFile ;
                 throw std::runtime_error(ss.str());
             }
-        } else {
-            throw std::runtime_error("No output file name provided");
         }
         debug() << "CONSOLE RIVET: Goodbye" ;
         return 0;

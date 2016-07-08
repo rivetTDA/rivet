@@ -3,7 +3,8 @@
 //
 
 #include "console_interaction.h"
-void RivetConsoleApp::errorMessage(QProcess::ProcessError error) {
+
+QString RivetConsoleApp::errorMessage(QProcess::ProcessError error) {
 
         switch (error) {
                 case QProcess::FailedToStart:
@@ -20,4 +21,12 @@ void RivetConsoleApp::errorMessage(QProcess::ProcessError error) {
                         return ("Error communicating with Rivet console");
 
         }
+}
+
+std::unique_ptr<QProcess> RivetConsoleApp::start(QStringList args) {
+        std::unique_ptr<QProcess> console(new QProcess());
+        console->setProcessChannelMode(QProcess::MergedChannels);
+        console->setWorkingDirectory(QCoreApplication::applicationDirPath());
+        console->start("./rivet_console", args);
+        return console;
 }

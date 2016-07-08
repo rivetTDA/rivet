@@ -29,15 +29,9 @@ Mesh::Mesh(): INFTY(std::numeric_limits<double>::infinity()) {}
 Mesh::Mesh(std::vector<exact> xe,
            std::vector<exact> ye,
 unsigned verbosity):
-    x_exact(xe), y_exact(ye), x_grades(xe.size()), y_grades(ye.size()),
+    x_exact(xe), y_exact(ye), x_grades(rivet::numeric::to_doubles(xe)), y_grades(rivet::numeric::to_doubles(ye)),
     INFTY(std::numeric_limits<double>::infinity()), verbosity(verbosity), halfedges(), vertices(), faces()
 {
-    std::transform(x_exact.begin(), x_exact.end(), x_grades.begin(), [](exact num) {
-        return numerator(num).convert_to<double>() / denominator(num).convert_to<double>();
-    });
-    std::transform(y_exact.begin(), y_exact.end(), y_grades.begin(), [](exact num) {
-        return numerator(num).convert_to<double>() / denominator(num).convert_to<double>();
-    });
     //create vertices
     vertices.push_back( std::make_shared<Vertex>(0, INFTY));         //index 0
     vertices.push_back( std::make_shared<Vertex>(INFTY, INFTY));     //index 1

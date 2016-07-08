@@ -3,6 +3,7 @@
 #include "interface/input_parameters.h"
 #include "numerics.h"
 #include "interface/input_manager.h"
+#include "dcel/dcel.h"
 #include "dcel/barcode_template.h"
 #include "math/simplex_tree.h"
 #include "math/xi_point.h"
@@ -61,8 +62,8 @@ class Computation
  public:
 
     //TODO: these signals are a little strange, they should go away soon
-    boost::signals2::signal<void(Mesh&)> arrangementReady;
-    boost::signals2::signal<void(std::vector<xiPoint>)> xiSupportReady;
+    boost::signals2::signal<void(std::shared_ptr<Mesh>)> arrangementReady;
+    boost::signals2::signal<void(XiSupportMessage)> xiSupportReady;
   Computation(InputParameters &params, Progress &progress);
   ~Computation();
 

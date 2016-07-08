@@ -85,23 +85,19 @@ void DataSelectDialog::detect_file_type()
     return;
   }
 
-    QProcess console;
-    console.setProcessChannelMode(QProcess::MergedChannels);
-    console.setWorkingDirectory(QCoreApplication::applicationDirPath());
     QStringList args;
     args.append(QString::fromStdString(params.fileName));
     args.append("--identify");
-    console.start("./rivet_console", args);
+    auto console = RivetConsoleApp::start(args);
 
-    if (!console.waitForStarted()) {
-        invalid_file(RivetConsole::errorMessage(console.error()));
+    if (!console->waitForStarted()) {
+        invalid_file(RivetConsoleApp::errorMessage(console->error()));
         return;
     }
 
-    console.waitForReadyRead();
     bool raw = false;
-    while(console.canReadLine() || console.waitForReadyRead()) {
-        QString line = console.readLine();
+    while(console->canReadLine() || console->waitForReadyRead()) {
+        QString line = console->readLine();
         qDebug() << line;
         if (line.startsWith("RAW DATA: ")) {
             raw = line.contains("1");

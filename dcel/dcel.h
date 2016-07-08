@@ -14,6 +14,9 @@
 class Halfedge;
 
 #include <memory>
+#include <vector>
+#include <math/xi_point.h>
+#include <numerics.h>
 #include "barcode_template.h"
 
 #include "debug.h"
@@ -110,5 +113,16 @@ class Face
 
 };//end class Face
 
+//This class exists only for data transfer between console and viewer
+struct XiSupportMessage {
+    std::vector<xiPoint> xi_support;
+    std::vector<exact> x_exact;
+    std::vector<exact> y_exact;
+
+    template<class Archive>
+            void cerealize(Archive &ar) {
+        ar(xi_support, x_exact, y_exact);
+    }
+};
 
 #endif // __DCEL_H__

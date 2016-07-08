@@ -16,6 +16,7 @@ namespace rivet
     namespace numeric {
         exact str_to_exact(const std::string& str);
         bool is_number(const std::string& str);
+        std::vector<double> to_doubles(const std::vector<exact> exacts);
     }
 
 }
