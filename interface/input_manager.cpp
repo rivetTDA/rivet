@@ -121,18 +121,22 @@ void InputManager::start()
 		//call appropriate handler function
         if(filetype == QString("points"))
 		{
+            input_params.raw_data = true;
             read_point_cloud(reader);
 		}
         else if(filetype == QString("metric"))
         {
+            input_params.raw_data = true;
             read_discrete_metric_space(reader);
         }
         else if(filetype == QString("bifiltration"))
 		{
+            input_params.raw_data = true;
             read_bifiltration(reader);
 		}
         else if(filetype == QString("RIVET_0"))
         {
+            input_params.raw_data = false;
             read_RIVET_data(reader);
         }
         else
