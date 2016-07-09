@@ -11,7 +11,6 @@
 #include <boost/multiprecision/cpp_int.hpp>
 #include <boost/signals2.hpp>
 #include "boost/multi_array.hpp"
-typedef boost::multi_array<unsigned, 2> unsigned_matrix;
 #include <vector>
 #include <interface/progress.h>
 

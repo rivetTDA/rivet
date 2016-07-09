@@ -116,12 +116,13 @@ class Face
 //This class exists only for data transfer between console and viewer
 struct XiSupportMessage {
     std::vector<xiPoint> xi_support;
+    unsigned_matrix homology_dimensions;
     std::vector<exact> x_exact;
     std::vector<exact> y_exact;
 
     template<class Archive>
             void cerealize(Archive &ar) {
-        ar(xi_support, x_exact, y_exact);
+        ar(xi_support, homology_dimensions, x_exact, y_exact);
     }
 };
 

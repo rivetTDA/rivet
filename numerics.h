@@ -8,8 +8,11 @@
 #include <string>
 #include <boost/algorithm/string.hpp>
 #include <boost/multiprecision/cpp_int.hpp>
+#include <boost/multi_array.hpp>
 
 typedef boost::multiprecision::cpp_rational exact;
+
+typedef boost::multi_array<unsigned, 2> unsigned_matrix;
 
 namespace rivet
 {

@@ -103,6 +103,7 @@ void VisualizationWindow::paint_xi_support()
     y_exact = cthread.y_exact;
     x_grades = rivet::numeric::to_doubles(x_exact);
     y_grades = rivet::numeric::to_doubles(y_exact);
+    homology_dimensions.resize(std::vector<unsigned>(cthread.hom_dims.shape(), cthread.hom_dims.shape() + cthread.hom_dims.num_dimensions()));
     //send xi support points to the SliceDiagram
     for(std::vector<xiPoint>::iterator it = xi_support.begin(); it != xi_support.end(); ++it)
         slice_diagram.add_point(x_grades[it->x], y_grades[it->y], it->zero, it->one, it->two);

@@ -16,6 +16,7 @@
 #include <cereal/types/memory.hpp>
 #include "interface/console_interaction.h"
 
+#include <vector>
 #include <QDebug>
 #include <QTime>
 #include <QProcess>
@@ -66,16 +67,20 @@ void ComputationThread::run()
             if (line.startsWith("END XI")) {
 //                    cereal::JSONInputArchive archive(ss);
 //                    cereal::BinaryInputArchive archive(ss);
+                XiSupportMessage message;
                 {
-                    qDebug() << "Buffer is:";
-                    qDebug() << QString::fromStdString(ss.str());
                     cereal::XMLInputArchive archive(ss);
-                    XiSupportMessage message;
                     archive(message);
+                }
                     xi_support = message.xi_support;
+                    std::vector<unsigned> dims(message.homology_dimensions.shape(),
+                                                          message.homology_dimensions.shape() + message.homology_dimensions.num_dimensions());
+                    assert(dims.size() == 2);
+                    hom_dims.resize(boost::extents[dims[0]][dims[1]]);
+                    hom_dims = message.homology_dimensions;
+                qDebug() << "Received hom_dims: " << hom_dims.shape()[0] << " x " << hom_dims.shape()[1];
                     x_exact = message.x_exact;
                     y_exact = message.y_exact;
-                }
                 reading_xi = false;
                 emit xiSupportReady();
             } else {
