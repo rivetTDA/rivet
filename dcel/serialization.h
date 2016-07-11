@@ -94,9 +94,6 @@ template <class Archive>
 void Mesh::save(Archive &archive) const {
     save_exacts(archive, x_exact);
     save_exacts(archive, y_exact);
-    archive( x_grades, y_grades, vertices, halfedges, faces,
-             verbosity, topleft, topright, bottomleft, bottomright, vertical_line_query_list
-    );
     archive( x_exact, y_exact, x_grades, y_grades, vertices, halfedges, faces,
              verbosity, topleft, topright, bottomleft, bottomright, vertical_line_query_list
     );

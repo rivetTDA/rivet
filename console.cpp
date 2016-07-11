@@ -91,9 +91,9 @@ int main(int argc, char *argv[])
             std::cout << "ARRANGEMENT" << std::endl;
             std::stringstream ss;
             {
-                cereal::JSONOutputArchive archive(std::cout);
+//                cereal::JSONOutputArchive archive(std::cout);
 //                cereal::BinaryOutputArchive archive(ss);
-//                cereal::XMLOutputArchive archive(std::cout);
+                cereal::XMLOutputArchive archive(std::cout);
                 archive(*mesh);
             }
 //            std::string original = ss.str();

@@ -92,8 +92,8 @@ void ComputationThread::run()
 //                ss = std::stringstream(decode64(ss.str()));
                 {
 //                    cereal::BinaryInputArchive archive(ss);
-                    cereal::JSONInputArchive archive(ss);
-                    //cereal::XMLInputArchive archive(ss);
+//                    cereal::JSONInputArchive archive(ss);
+                    cereal::XMLInputArchive archive(ss);
                     arrangement.reset(new Mesh());
                     archive(*arrangement);
                 }
