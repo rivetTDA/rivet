@@ -15,6 +15,7 @@
 #include <cereal/archives/binary.hpp>
 #include <cereal/types/memory.hpp>
 #include "interface/console_interaction.h"
+#include "base_64.h"
 
 #include <vector>
 #include <QDebug>
@@ -88,17 +89,19 @@ void ComputationThread::run()
             }
         } else if (reading_mesh) {
             if (line.startsWith("END ARRANGEMENT")) {
-//                    cereal::JSONInputArchive archive(ss);
-//                    cereal::BinaryInputArchive archive(ss);
+//                ss = std::stringstream(decode64(ss.str()));
                 {
-                    cereal::XMLInputArchive archive(ss);
-                    archive(arrangement);
+//                    cereal::BinaryInputArchive archive(ss);
+                    cereal::JSONInputArchive archive(ss);
+                    //cereal::XMLInputArchive archive(ss);
+                    arrangement.reset(new Mesh());
+                    archive(*arrangement);
                 }
                 qDebug() << "Mesh received: " << arrangement->x_exact.size() << " x " << arrangement->y_exact.size();
                 emit arrangementReady(&*arrangement);
                 return;
             } else {
-                ss << line.toStdString();
+                ss << line.trimmed().toStdString();
             }
 
         } else if (line.startsWith("PROGRESS ")) {

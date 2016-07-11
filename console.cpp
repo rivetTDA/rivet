@@ -6,13 +6,12 @@
 #include "computation.h"
 #include "debug.h"
 #include <interface/file_writer.h>
-
 #include "docopt/docopt.h"
 #include <cereal/archives/json.hpp>
 #include <cereal/archives/binary.hpp>
 #include <cereal/archives/xml.hpp>
 #include "dcel/serialization.h"
-#include "../../Library/Caches/CLion2016.1/cmake/generated/rivet-4c1a4387/4c1a4387/Debug2/cereal/src/cereal_project/include/cereal/archives/binary.hpp"
+#include "base_64.h"
 
 static const char USAGE[] =
   R"(RIVET: Rank Invariant Visualization and Exploration Tool
@@ -90,12 +89,18 @@ int main(int argc, char *argv[])
         });
         computation.arrangementReady.connect([](std::shared_ptr<Mesh> mesh){
             std::cout << "ARRANGEMENT" << std::endl;
-            //cereal::JSONOutputArchive archive(std::cout);
-//            cereal::BinaryOutputArchive archive(std::cout);
+            std::stringstream ss;
             {
-                cereal::XMLOutputArchive archive(std::cout);
-                archive(mesh);
+                cereal::JSONOutputArchive archive(std::cout);
+//                cereal::BinaryOutputArchive archive(ss);
+//                cereal::XMLOutputArchive archive(std::cout);
+                archive(*mesh);
             }
+//            std::string original = ss.str();
+//            std::string result = encode64(original);
+//            std::string decoded = decode64(result);
+//            assert(decoded == original);
+            std::cout << ss.str() << std::endl;
             std::cout << "END ARRANGEMENT" << std::endl;
             std::cerr << "Arrangement received: " << mesh->x_exact.size() << " x " << mesh->y_exact.size() << std::endl;
             std::cout.flush();

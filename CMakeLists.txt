@@ -53,7 +53,8 @@ add_executable (rivet_console
         math/persistence_updater.cpp
         numerics.cpp
         timer.cpp
-        debug.cpp)
+        debug.cpp
+        base_64.cpp)
 
 add_dependencies(rivet_console docopt_project cereal_project)
 

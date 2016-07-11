@@ -23,6 +23,8 @@ add_executable (unit_tests
         ../math/xi_point.cpp
         ../math/xi_support_matrix.cpp
         ../math/index_matrix.cpp
-        ../math/persistence_updater.cpp)
+        ../math/persistence_updater.cpp
+        ../dcel/mesh_builder.cpp
+        ../base_64.cpp)
 
 include_directories("${PROJECT_SOURCE_DIR}/..")

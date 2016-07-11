@@ -55,6 +55,7 @@ SOURCES	+= main.cpp                         \
     timer.cpp \
     interface/console_interaction.cpp \
     numerics.cpp \
+    base_64.cpp \
 
 HEADERS  += visualizationwindow.h			\
 		dataselectdialog.h					\
@@ -91,6 +92,7 @@ HEADERS  += visualizationwindow.h			\
     cereal/archives/json.hpp \
     interface/console_interaction.h \
     numerics.h \
+    base_64.h \
 
 FORMS   += visualizationwindow.ui			\
 		dataselectdialog.ui \
