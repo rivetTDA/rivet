@@ -1,6 +1,7 @@
 #include "dcel.h"
 
 #include "anchor.h"
+#include <ostream>
 
 #include "debug.h"
 
@@ -8,12 +9,12 @@
 /*** implementation of class Vertex **/
 
 Vertex::Vertex(double x_coord, double y_coord) :
-    incident_edge(NULL),
+    incident_edge(nullptr),
     x(x_coord),
     y(y_coord)
 { }
 
-Vertex::Vertex() { }
+Vertex::Vertex() : incident_edge(nullptr), x(0), y(0) { }
 
 void Vertex::set_incident_edge(std::shared_ptr<Halfedge> edge)
 {
@@ -35,10 +36,15 @@ double Vertex::get_y()
     return y;
 }
 
-Debug& operator<<(Debug& qd, const Vertex& v)
+std::ostream & operator<<(std::ostream &qd, const Vertex &v)
 {
-    qd << "(" << v.x << ", " << v.y << ")";
+    auto raw = reinterpret_cast<uintptr_t>(&*(v.incident_edge));
+    qd << "(" << v.x << ", " << v.y << ", " << raw << ")";
     return qd;
+}
+
+bool Vertex::operator==(Vertex const &other) {
+    return x == other.x && y == other.y;
 }
 
 
@@ -46,20 +52,20 @@ Debug& operator<<(Debug& qd, const Vertex& v)
 
 Halfedge::Halfedge(std::shared_ptr<Vertex> v, std::shared_ptr<Anchor> p) :
     origin(v),
-    twin(NULL),
-    next(NULL),
-    prev(NULL),
-    face(NULL),
+    twin(nullptr),
+    next(nullptr),
+    prev(nullptr),
+    face(nullptr),
     anchor(p)
 { }
 
 Halfedge::Halfedge() :
-    origin(NULL),
-    twin(NULL),
-    next(NULL),
-    prev(NULL),
-    face(NULL),
-    anchor(NULL)
+    origin(nullptr),
+    twin(nullptr),
+    next(nullptr),
+    prev(nullptr),
+    face(nullptr),
+    anchor(nullptr)
 { }
 
 void Halfedge::set_twin(std::shared_ptr<Halfedge> e)
@@ -121,7 +127,7 @@ Debug& operator<<(Debug& qd, const Halfedge& e)
 {
     std::shared_ptr<Halfedge> t = e.twin;
     qd << *(e.origin) << "--" << *(t->origin) << "; ";
-    if(e.anchor == NULL)
+    if(e.anchor == nullptr)
         qd << "Anchor null; ";
     else
         qd << "Anchor coords (" << e.anchor->get_x() << ", " << e.anchor->get_y() << "); ";

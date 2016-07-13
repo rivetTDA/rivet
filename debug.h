@@ -2,6 +2,7 @@
 #define RIVET_DEBUG_H
 
 #include <iostream>
+#include <memory>
 
 #ifdef QT_CORE_LIB
 
@@ -26,7 +27,7 @@ struct Debug {
 
 template <typename T>
 Debug operator<<(Debug &&d, T const & x) {
-    d.os << x;
+    (d.os) << x;
     if (d.space)
         d.os << " ";
     return std::move(d);

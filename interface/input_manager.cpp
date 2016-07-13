@@ -501,7 +501,7 @@ std::unique_ptr<InputData> InputManager::read_bifiltration(std::ifstream &stream
 //reads a file of previously-computed data from RIVET
 std::unique_ptr<InputData> InputManager::read_RIVET_data(std::ifstream &stream, Progress &progress)
 {
-    std::shared_ptr<InputData> data(new InputData);
+    std::unique_ptr<InputData> data(new InputData);
     FileInputReader reader(stream);
   //read parameters
     auto line = reader.next_line();
@@ -567,6 +567,7 @@ std::unique_ptr<InputData> InputManager::read_RIVET_data(std::ifstream &stream, 
     ///TODO: maybe make a different progress box for RIVET input???
     progress.advanceProgressStage();    //advance progress box to stage 2: building bifiltration
 
+    return data;
 }//end read_RIVET_data()
 
 //converts an ExactSet of values to the vectors of discrete values that SimplexTree uses to build the bifiltration, and also builds the grade vectors (floating-point and exact)

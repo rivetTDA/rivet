@@ -17,8 +17,8 @@ struct BarTemplate
     bool operator<(const BarTemplate other) const;
 
     template <class Archive>
-    void cerealize(Archive & ar) {
-        ar(begin, end, multiplicity);
+    void serialize(Archive & ar, const unsigned int version) {
+        ar & begin & end & multiplicity;
     }
 };
 
@@ -38,8 +38,8 @@ class BarcodeTemplate
         void print();   //for testing only
 
         template <class Archive>
-                void cerealize(Archive &ar) {
-            ar(bars);
+                void serialize(Archive &ar, const unsigned int version) {
+            ar & bars;
         }
     private:
         std::set<BarTemplate> bars;

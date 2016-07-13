@@ -15,7 +15,7 @@ BarTemplate::BarTemplate(const BarTemplate& other) :
     begin(other.begin), end(other.end), multiplicity(other.multiplicity)
 { }
 
-BarTemplate::BarTemplate() { }
+BarTemplate::BarTemplate(): begin(0), end(0), multiplicity(0) { }
 
 bool BarTemplate::operator<(const BarTemplate other) const
 {

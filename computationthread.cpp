@@ -1,7 +1,5 @@
 #include "computationthread.h"
 
-#define CEREAL_SERIALIZE_FUNCTION_NAME cerealize
-
 #include "dcel/mesh.h"
 #include "interface/input_manager.h"
 #include "interface/input_parameters.h"
@@ -10,13 +8,12 @@
 #include "math/xi_point.h"
 #include "dcel/serialization.h"
 
-#include <cereal/archives/json.hpp>
-#include <cereal/archives/xml.hpp>
-#include <cereal/archives/binary.hpp>
-#include <cereal/types/memory.hpp>
 #include "interface/console_interaction.h"
 #include "base_64.h"
 
+#include <boost/archive/tmpdir.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
 #include <vector>
 #include <QDebug>
 #include <QTime>
@@ -70,8 +67,9 @@ void ComputationThread::run()
 //                    cereal::BinaryInputArchive archive(ss);
                 XiSupportMessage message;
                 {
-                    cereal::XMLInputArchive archive(ss);
-                    archive(message);
+//                    cereal::XMLInputArchive archive(ss);
+                    boost::archive::text_iarchive archive(ss);
+                    archive >> message;
                 }
                     xi_support = message.xi_support;
                     std::vector<unsigned> dims(message.homology_dimensions.shape(),
@@ -93,9 +91,10 @@ void ComputationThread::run()
                 {
 //                    cereal::BinaryInputArchive archive(ss);
 //                    cereal::JSONInputArchive archive(ss);
-                    cereal::XMLInputArchive archive(ss);
+//                    cereal::XMLInputArchive archive(ss);
+                    boost::archive::text_iarchive archive(ss);
                     arrangement.reset(new Mesh());
-                    archive(*arrangement);
+                    archive >> *arrangement;
                 }
                 qDebug() << "Mesh received: " << arrangement->x_exact.size() << " x " << arrangement->y_exact.size();
                 emit arrangementReady(&*arrangement);

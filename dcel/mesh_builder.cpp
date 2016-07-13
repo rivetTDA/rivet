@@ -8,6 +8,7 @@
 #include <boost/graph/kruskal_min_spanning_tree.hpp>
 #include <math/simplex_tree.h>
 #include "dcel/mesh_builder.h"
+#include "dcel/anchor.h"
 #include "dcel/mesh.h"
 #include "dcel/dcel.h"
 #include "timer.h"
@@ -145,7 +146,7 @@ void MeshBuilder::build_interior(std::shared_ptr<Mesh> mesh)
     {
         std::shared_ptr<Anchor> cur_anchor = *it;
 
-        if(verbosity >= 8) { debug() << "  Processing Anchor" << cur_anchor << "at (" << cur_anchor->get_x() << "," << cur_anchor->get_y() << ")"; }
+        if(verbosity >= 8) { debug() << "  Processing Anchor" << " at (" << cur_anchor->get_x() << "," << cur_anchor->get_y() << ")"; }
 
         if(cur_anchor->get_y() != prev_y)	//then create new vertex
         {
@@ -201,7 +202,8 @@ void MeshBuilder::build_interior(std::shared_ptr<Mesh> mesh)
         unsigned first_pos = cur->a->get_position();   //most recent edge in the curve corresponding to Anchor a
         unsigned last_pos = cur->b->get_position();   //most recent edge in the curve corresponding to Anchor b
 
-        if(verbosity >= 8) { debug() << " next intersection: Anchor" << cur->a << " (pos" << first_pos << "), Anchor" << cur->b << " (pos" << last_pos; }
+        if(verbosity >= 8) { debug() << " next intersection: Anchor" << *(cur->a) << " (pos" << first_pos << "), Anchor"
+                             << *(cur->b) << " (pos" << last_pos; }
 
         if(last_pos != first_pos + 1)
         {
@@ -223,7 +225,7 @@ void MeshBuilder::build_interior(std::shared_ptr<Mesh> mesh)
 
             last_pos++; //last_pos = cur->b->get_position();
 
-            if(verbosity >= 8) { debug() << " |---also intersects Anchor" << cur->b << "(" << last_pos << ")"; }
+            if(verbosity >= 8) { debug() << " |---also intersects Anchor" << *(cur->b) << "(" << last_pos << ")"; }
         }
 
         //compute y-coordinate of intersection
@@ -232,7 +234,7 @@ void MeshBuilder::build_interior(std::shared_ptr<Mesh> mesh)
         if(verbosity >= 8) { debug() << "  found intersection between" << (last_pos - first_pos + 1) << "edges at x =" << sweep->x << ", y =" << intersect_y; }
 
         //create new vertex
-        std::shared_ptr<Vertex> new_vertex(new Vertex(sweep->x, intersect_y));
+        auto new_vertex = std::make_shared<Vertex>(sweep->x, intersect_y);
         mesh->vertices.push_back(new_vertex);
 
         //anchor edges to vertex and create new face(s) and edges	//TODO: check this!!!
@@ -339,7 +341,7 @@ void MeshBuilder::build_interior(std::shared_ptr<Mesh> mesh)
         {
             status_counter++;
             if(status_counter % status_interval == 0)
-                debug() << "      processed" << status_counter << "intersections; sweep position =" << sweep;
+                debug() << "      processed" << status_counter << "intersections; sweep position =" << *sweep;
         }
     }//end while
 

@@ -5,7 +5,7 @@
 #-------------------------------------------------
 
 macx {
-  QMAKE_CXXFLAGS+="-g -gdwarf-2"
+  QMAKE_CXXFLAGS+="-g -gdwarf-2 -ftemplate-depth=1024 "
   QMAKE_POST_LINK='/usr/bin/dsymutil RIVET.app/Contents/MacOS/RIVET -o RIVET.app/Contents/MacOS/RIVET.dsym'
 }
 

@@ -5,13 +5,15 @@
 #ifndef RIVET_CONSOLE_SERIALIZATION_H
 #define RIVET_CONSOLE_SERIALIZATION_H
 
-#include <cereal/cereal.hpp>
-#include <cereal/types/set.hpp>
-#include <cereal/types/memory.hpp>
-#include <cereal/types/vector.hpp>
-#include <cereal/types/list.hpp>
-#include <cereal/types/string.hpp>
-#include <cereal/types/common.hpp>
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/utility.hpp>
+#include <boost/serialization/list.hpp>
+//#include <boost/serialization/assume_abstract.hpp>
+#include <boost/serialization/set.hpp>
+#include <boost/serialization/export.hpp>
+#include <boost/serialization/vector.hpp>
+
 #include "numerics.h"
 #include "anchor.h"
 #include "dcel.h"
@@ -19,107 +21,110 @@
 #include "math/xi_support_matrix.h"
 #include "barcode_template.h"
 
-namespace boost {
-    namespace multiprecision {
-        template<class Archive>
-        void load(Archive &ar, exact &num) {
-            std::string rep;
-            ar(rep);
-            num.assign(rep);
-        }
+//namespace boost {
+//    namespace multiprecision {
+//        template<class Archive>
+//        void load(Archive &ar, exact &num, const unsigned int version) {
+//            std::string rep;
+//            ar &rep;
+//            num.assign(rep;
+//        }
+//
+//        template<class Archive>
+//        void save(Archive &ar, exact const &num , const unsigned int version) {
+//            std::stringstream ss;
+//            ss & num;
+//            ar &ss.str();
+//        }
+//    }
+//}
 
-        template<class Archive>
-        void save(Archive &ar, exact const &num ) {
-            std::stringstream ss;
-            ss << num;
-            ar(ss.str());
-        }
-    }
+BOOST_CLASS_EXPORT(BarcodeTemplate);
+BOOST_CLASS_EXPORT(BarTemplate);
+BOOST_CLASS_EXPORT(xiMatrixEntry);
+BOOST_CLASS_EXPORT(Anchor);
+BOOST_CLASS_EXPORT(Face);
+BOOST_CLASS_EXPORT(Halfedge);
+BOOST_CLASS_EXPORT(Mesh);
+BOOST_CLASS_EXPORT(Vertex);
+
+
+template <class Archive>
+void Vertex::serialize(Archive &ar, const unsigned int version) {
+    ar &incident_edge & x & y;
 }
 
 template <class Archive>
-void Vertex::cerealize(Archive &ar) {
-    ar(incident_edge, x, y);
-}
-
-template <class Archive>
-void Halfedge::cerealize(Archive &ar) {
-    ar(origin, twin, next, prev, face, anchor);
+void Halfedge::serialize(Archive &ar, const unsigned int version) {
+    ar &origin & twin & next & prev & face & anchor;
 }
 
 template<class Archive>
-void Face::cerealize(Archive & ar) {
-    ar(boundary, dbc, visited);
+void Face::serialize(Archive & ar, const unsigned int version) {
+    ar &boundary & dbc & visited;
 }
 
 template <class Archive>
-void Anchor::cerealize(Archive &ar) {
-    ar(x_coord, y_coord, entry, dual_line, position, above_line, weight);
+void Anchor::serialize(Archive &ar, const unsigned int version) {
+    ar &x_coord & y_coord & entry & dual_line & position & above_line & weight;
 }
 
 template <class Archive>
-void cerealize(Archive &ar, xiMatrixEntry &x) {
-    ar(x.x, x.y, x.index, x.down, x.left, x.low_simplices, x.high_simplices, x.low_count, x.high_count,
-       x.low_index, x.high_index);
+void serialize(Archive &ar, xiMatrixEntry &x, const unsigned int version) {
+    ar &x.x & x.y & x.index & x.down & x.left & x.low_simplices & x.high_simplices & x.low_count & x.high_count &
+       x.low_index & x.high_index;
 }
 
 template <class Archive>
-void cerealize(Archive &ar, Multigrade &m) {
-    ar(m.num_cols, m.simplex_index, m.x, m.y);
+void serialize(Archive &ar, Multigrade &m, const unsigned int version) {
+    ar &m.num_cols & m.simplex_index & m.x & m.y;
 }
 
 template <class Archive>
-void save_exacts(Archive &ar, std::vector<exact> const &vector) {
-    ar( cereal::make_size_tag( static_cast<cereal::size_type>(vector.size()) ) ); // number of elements
-    for(auto && v : vector)
-        ar( v );
-}
-template <class Archive>
-void load_exacts(Archive &ar, std::vector<exact> &vector) {
-    ar( cereal::make_size_tag( static_cast<cereal::size_type>(vector.size()) ) ); // number of elements
-    for(auto & v : vector)
-        ar( v );
+void Mesh::serialize(Archive &ar, const unsigned int version) {
+ar & x_exact
+    & y_exact
+    & x_grades
+    & y_grades;
+    std::cout << "Processing faces" << std::endl;
+      ar & topleft
+      & topright
+      & bottomleft
+      & bottomright;
+
+    std::cout << "Processing collections" << std::endl;
+    ar
+    & all_anchors
+    & halfedges
+    & faces
+    & verbosity
+    & vertical_line_query_list
+    & vertices;
 }
 
-template <class Archive>
-void Mesh::load(Archive &archive) {
-    load_exacts(archive, x_exact);
-    load_exacts(archive, y_exact);
-archive( x_grades, y_grades, vertices, halfedges, faces,
-        verbosity, topleft, topright, bottomleft, bottomright, vertical_line_query_list
-);
-}
-
-template <class Archive>
-void Mesh::save(Archive &archive) const {
-    save_exacts(archive, x_exact);
-    save_exacts(archive, y_exact);
-    archive( x_exact, y_exact, x_grades, y_grades, vertices, halfedges, faces,
-             verbosity, topleft, topright, bottomleft, bottomright, vertical_line_query_list
-    );
-}
+#include <boost/serialization/split_free.hpp>
+BOOST_SERIALIZATION_SPLIT_FREE(unsigned_matrix)
 
 namespace boost {
+
+
     template<class Archive>
-    void save(Archive &ar, unsigned_matrix const &mat) {
+    void save(Archive &ar, unsigned_matrix const &mat, const unsigned int &version) {
         assert(mat.num_dimensions() == 2);
         std::vector<unsigned> dims(mat.shape(), mat.shape() + mat.num_dimensions());
         std::vector<unsigned> data(mat.data(), mat.data() + mat.num_elements());
-        ar(dims, data);
+        ar &dims &  data;
     }
 
     template <class Archive>
-    void load(Archive & ar, unsigned_matrix &mat) {
+    void load(Archive & ar, unsigned_matrix &mat, const unsigned int &version) {
         std::vector<unsigned> dims;
         std::vector<unsigned> data;
-        ar(dims, data);
+        ar &dims & data;
         unsigned_matrix::extent_gen extents;
         auto size = extents[dims[0]][dims[1]];
-    std::clog << "Resizing to " << dims[0] << " x " << dims[1] << std::endl;
         mat.resize(size);
-        std::clog << "Copying " << data.size() * sizeof(unsigned) << "bytes" << std::endl;
         std::memcpy(data.data(), mat.data(), data.size() * sizeof(unsigned));
-        std::clog << "Copied" << std::endl;
     }
 }
 

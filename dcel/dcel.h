@@ -33,9 +33,11 @@ class Vertex
         double get_x();		//get the x-coordinate
         double get_y();		//get the y-coordinate
 
-        friend Debug& operator<<(Debug& qd, const Vertex& v);	//for printing the vertex
+        friend std::ostream& operator<<(std::ostream &qd, const Vertex& v);	//for printing the vertex
 
-    template <class Archive> void cerealize(Archive &ar);
+        bool operator==(Vertex const &other);
+
+    template <class Archive> void serialize(Archive &ar, const unsigned int version);
 
     private:
         std::shared_ptr<Halfedge> incident_edge;	//pointer to one edge incident to this vertex
@@ -74,7 +76,7 @@ class Halfedge
         friend Debug& operator<<(Debug& qd, const Halfedge& e);	//for printing the halfedge
 
     template <class Archive>
-    void cerealize(Archive &ar);
+    void serialize(Archive &ar, const unsigned int version);
     private:
         std::shared_ptr<Vertex> origin;		//pointer to the vertex from which this halfedge originates
         std::shared_ptr<Halfedge> twin;		//pointer to the halfedge that, together with this halfedge, make one edge
@@ -105,7 +107,7 @@ class Face
         friend Debug& operator<<(Debug& os, const Face& f);	//for printing the face
 
         template<class Archive>
-                void cerealize(Archive & ar);
+                void serialize(Archive & ar, const unsigned int version);
     private:
         std::shared_ptr<Halfedge> boundary;     //pointer to one halfedge in the boundary of this cell
         BarcodeTemplate dbc;    //barcode template stored in this cell
@@ -121,8 +123,8 @@ struct XiSupportMessage {
     std::vector<exact> y_exact;
 
     template<class Archive>
-            void cerealize(Archive &ar) {
-        ar(xi_support, homology_dimensions, x_exact, y_exact);
+            void serialize(Archive &ar, const unsigned int version) {
+        ar & xi_support & homology_dimensions & x_exact & y_exact;
     }
 };
 

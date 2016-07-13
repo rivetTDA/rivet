@@ -1,5 +1,5 @@
 #include "anchor.h"
-
+#include <ostream>
 #include "../math/xi_support_matrix.h"
 
 Anchor::Anchor(std::shared_ptr<xiMatrixEntry> e) :
@@ -37,7 +37,12 @@ Anchor& Anchor::operator= (const Anchor& other)
     return *this;
 }
 
-Anchor::Anchor() { }
+std::ostream & operator<<(std::ostream &stream, const Anchor &anchor) {
+    stream << "Anchor(" << anchor.get_x()  << ", " << anchor.get_y() << ")";
+    return stream;
+}
+
+Anchor::Anchor() : x_coord(0), y_coord(0), entry(), dual_line(), position(), above_line(false), weight(0) { }
 
 bool Anchor::operator== (const Anchor& other) const
 {

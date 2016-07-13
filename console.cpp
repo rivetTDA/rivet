@@ -1,4 +1,3 @@
-#define CEREAL_SERIALIZE_FUNCTION_NAME cerealize
 
 #include "interface/input_parameters.h"
 #include "dcel/mesh.h"
@@ -7,9 +6,11 @@
 #include "debug.h"
 #include <interface/file_writer.h>
 #include "docopt/docopt.h"
-#include <cereal/archives/json.hpp>
-#include <cereal/archives/binary.hpp>
-#include <cereal/archives/xml.hpp>
+#include <boost/archive/tmpdir.hpp>
+
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
+
 #include "dcel/serialization.h"
 #include "base_64.h"
 
@@ -93,25 +94,35 @@ int main(int argc, char *argv[])
             {
 //                cereal::JSONOutputArchive archive(std::cout);
 //                cereal::BinaryOutputArchive archive(ss);
-                cereal::XMLOutputArchive archive(std::cout);
-                archive(*mesh);
+//                cereal::XMLOutputArchive archive(std::cout);
+                boost::archive::text_oarchive archive(ss);
+                archive << mesh;
+
             }
-//            std::string original = ss.str();
+
 //            std::string result = encode64(original);
 //            std::string decoded = decode64(result);
 //            assert(decoded == original);
             std::cout << ss.str() << std::endl;
             std::cout << "END ARRANGEMENT" << std::endl;
-            std::cerr << "Arrangement received: " << mesh->x_exact.size() << " x " << mesh->y_exact.size() << std::endl;
             std::cout.flush();
+            {
+                std::cerr << "Testing deserialization locally..." << std::endl;
+                std::string original = ss.str();
+                boost::archive::text_iarchive inarch(ss);
+                Mesh test;
+                inarch >> test;
+                std::cerr << "Arrangement received: " << test.x_exact.size() << " x " << test.y_exact.size() << std::endl;
+            }
         });
         computation.xiSupportReady.connect([](XiSupportMessage message){
             std::cout << "XI" << std::endl;
 //            cereal::JSONOutputArchive archive(std::cout);
 //            cereal::BinaryOutputArchive archive(std::cout);
             {
-                cereal::XMLOutputArchive archive(std::cout);
-                archive(message);
+//                cereal::XMLOutputArchive archive(std::cout);
+                boost::archive::text_oarchive archive(std::cout);
+                archive << message;
             }
             std::cout << "END XI" << std::endl;
             std::cout.flush();

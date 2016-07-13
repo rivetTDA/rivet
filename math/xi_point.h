@@ -12,8 +12,8 @@ public:
     xiPoint(); //for serialization
 
     template <class Archive>
-    void cerealize(Archive &archive) {
-        archive(x, y, zero, one, two);
+    void serialize(Archive &archive, const unsigned int version) {
+        archive & x & y & zero & one & two;
     }
 };
 

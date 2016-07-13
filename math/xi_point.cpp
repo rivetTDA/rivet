@@ -5,4 +5,4 @@ xiPoint::xiPoint(unsigned xc, unsigned yc, int m0, int m1, int m2) :
     zero(m0), one(m1), two(m2)
 { }
 
-xiPoint::xiPoint() { }
+xiPoint::xiPoint():x(0), y(0), zero(0), one(0), two(0) { }

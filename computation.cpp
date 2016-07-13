@@ -46,6 +46,7 @@ std::unique_ptr<ComputationResult> Computation::compute_rivet(RivetInput &input)
 
         //send (a pointer to) the arrangement back to the VisualizationWindow
         arrangementReady(arrangement);
+    return result;
 }
 
 std::unique_ptr<ComputationResult> Computation::compute_raw(RawDataInput &input) {
