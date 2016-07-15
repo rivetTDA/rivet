@@ -50,14 +50,14 @@ Vertex v2 = round_trip<Vertex>(v);
 }
 
 
-TEST_CASE( "Mesh serialization works", "[Serialization]" ) {
-    auto mesh = std::make_shared<Mesh>(std::vector<exact>{1,2,3,4}, std::vector<exact>{5,6,7,8}, 10);
-    auto xi = std::make_shared<xiMatrixEntry>(1,2);
-    mesh->add_anchor(Anchor(xi));
-    auto result = round_trip(mesh);
-//    REQUIRE (*((*mesh).vertices[0]) == *((*result).vertices[0]));
-    REQUIRE(true==true);
-}
+//TEST_CASE( "Mesh serialization works", "[Serialization]" ) {
+//    auto mesh = std::make_shared<Mesh>(std::vector<exact>{1,2,3,4}, std::vector<exact>{5,6,7,8}, 10);
+//    auto xi = std::make_shared<xiMatrixEntry>(1,2);
+//    mesh->add_anchor(Anchor(xi));
+//    auto result = round_trip(mesh);
+////    REQUIRE (*((*mesh).vertices[0]) == *((*result).vertices[0]));
+//    REQUIRE(true==true);
+//}
 
 #endif //RIVET_CONSOLE_SERIALIZATION_TESTS_H_H
 

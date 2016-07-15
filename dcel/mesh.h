@@ -95,7 +95,6 @@ class Mesh
 
     friend std::ostream& operator<<(std::ostream&, const Mesh&);
     friend std::istream& operator>>(std::istream&, Mesh&);
-    template<class Archive> void serialize(Archive &archive, const unsigned int version);
     std::shared_ptr<Halfedge> insert_vertex(std::shared_ptr<Halfedge> edge, double x, double y);	//inserts a new vertex on the specified edge, with the specified coordinates, and updates all relevant pointers
     private:
       //data structures

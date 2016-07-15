@@ -60,19 +60,21 @@ class Anchor
         unsigned long weight;   //estimate of the cost of updating the RU-decomposition when crossing this anchor
 };
 
+template<typename T>
+struct AnchorComparator {
+
+public:
+    bool operator() (const T &lhs, const T &rhs) const  //returns true if lhs comes before rhs
+    {
+        if(lhs.get_y() > rhs.get_y())		//first compare y-coordinates (reverse order)
+            return true;
+        return lhs.get_x() < rhs.get_x();
+    }
+};
 
 //TODO: IS IT OK TO IMPLEMENT THE FOLLOWING COMPARATOR HERE, IN THE .h FILE???
 
-class Anchor_LeftComparator
-{
-    public:
-        bool operator() (const Anchor &lhs, const Anchor &rhs) const  //returns true if lhs comes before rhs
-        {
-            if(lhs.get_y() > rhs.get_y())		//first compare y-coordinates (reverse order)
-                return true;
-            return lhs.get_x() < rhs.get_x();
-        }
-};
+struct Anchor_LeftComparator : AnchorComparator<Anchor> {};
 
 
 #endif // __ANCHOR_H__
