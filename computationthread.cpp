@@ -7,6 +7,7 @@
 #include "math/simplex_tree.h"
 #include "math/xi_point.h"
 #include "dcel/serialization.h"
+#include "dcel/mesh_message.h"
 
 #include "interface/console_interaction.h"
 #include "base_64.h"
@@ -93,7 +94,7 @@ void ComputationThread::run()
 //                    cereal::JSONInputArchive archive(ss);
 //                    cereal::XMLInputArchive archive(ss);
                     boost::archive::text_iarchive archive(ss);
-                    arrangement.reset(new Mesh());
+                    arrangement.reset(new MeshMessage());
                     archive >> *arrangement;
                 }
                 qDebug() << "Mesh received: " << arrangement->x_exact.size() << " x " << arrangement->y_exact.size();

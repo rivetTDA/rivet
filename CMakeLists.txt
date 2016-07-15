@@ -36,6 +36,7 @@ add_executable (rivet_console
         dcel/anchor.cpp
         dcel/barcode_template.cpp
         dcel/dcel.cpp
+        dcel/mesh_message.cpp
         math/map_matrix.cpp
         math/multi_betti.cpp
         math/simplex_tree.cpp

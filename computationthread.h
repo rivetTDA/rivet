@@ -19,6 +19,7 @@ typedef boost::multiprecision::cpp_rational exact;
 typedef boost::multi_array<unsigned, 2> unsigned_matrix;
 
 #include <vector>
+#include "dcel/serialization.h"
 
 
 class ComputationThread : public QThread
@@ -53,7 +54,7 @@ class ComputationThread : public QThread
     private:
         InputParameters& params;
 
-        std::shared_ptr<Mesh> arrangement;
+        std::shared_ptr<MeshMessage> arrangement;
 
 
 };

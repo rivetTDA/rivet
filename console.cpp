@@ -13,6 +13,7 @@
 
 #include "dcel/serialization.h"
 #include "base_64.h"
+#include "dcel/mesh_message.h"
 
 static const char USAGE[] =
   R"(RIVET: Rank Invariant Visualization and Exploration Tool
