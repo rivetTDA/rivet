@@ -36,7 +36,7 @@ double Vertex::get_y()
     return y;
 }
 
-std::ostream & operator<<(std::ostream &qd, const Vertex &v)
+Debug & operator<<(Debug &qd, const Vertex &v)
 {
     auto raw = reinterpret_cast<uintptr_t>(&*(v.incident_edge));
     qd << "(" << v.x << ", " << v.y << ", " << raw << ")";

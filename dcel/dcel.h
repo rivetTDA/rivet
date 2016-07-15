@@ -33,7 +33,7 @@ class Vertex
         double get_x();		//get the x-coordinate
         double get_y();		//get the y-coordinate
 
-        friend std::ostream& operator<<(std::ostream &qd, const Vertex& v);	//for printing the vertex
+        friend Debug& operator<<(Debug &qd, const Vertex& v);	//for printing the vertex
 
         bool operator==(Vertex const &other);
 

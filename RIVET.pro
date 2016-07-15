@@ -19,6 +19,9 @@ CONFIG += c++11
 TARGET = RIVET
 TEMPLATE = app
 
+QMAKE_LIBDIR += /usr/local/lib #TODO: figure out how to generalize
+LIBS        += -lboost_system-mt
+LIBS        += -lboost_serialization-mt
 
 SOURCES	+= main.cpp                         \
 		visualizationwindow.cpp             \

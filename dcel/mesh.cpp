@@ -128,13 +128,13 @@ std::shared_ptr<Halfedge> Mesh::insert_vertex(std::shared_ptr<Halfedge> edge, do
 
 //creates the first pair of Halfedges in an Anchor line, anchored on the left edge of the strip at origin of specified edge
 //  also creates a new face (the face below the new edge)
-//  CAUTION: leaves NULL: new_edge.next and new_twin.prev
+//  CAUTION: leaves nullptr: new_edge.next and new_twin.prev
 std::shared_ptr<Halfedge> Mesh::create_edge_left(std::shared_ptr<Halfedge> edge, std::shared_ptr<Anchor> anchor)
 {
     //create new halfedges
     std::shared_ptr<Halfedge> new_edge(new Halfedge(edge->get_origin(), anchor)); //points AWAY FROM left edge
     halfedges.push_back(new_edge);
-    std::shared_ptr<Halfedge> new_twin(new Halfedge(NULL, anchor));   //points TOWARDS left edge
+    std::shared_ptr<Halfedge> new_twin(new Halfedge(nullptr, anchor));   //points TOWARDS left edge
     halfedges.push_back(new_twin);
 
     //create new face
@@ -148,7 +148,7 @@ std::shared_ptr<Halfedge> Mesh::create_edge_left(std::shared_ptr<Halfedge> edge,
 
     edge->get_prev()->set_next(new_edge);
     edge->get_prev()->set_face(new_face);
-    if(edge->get_prev()->get_prev() != NULL)
+    if(edge->get_prev()->get_prev() != nullptr)
         edge->get_prev()->get_prev()->set_face(new_face);
 
     new_twin->set_next(edge);
@@ -167,41 +167,31 @@ std::shared_ptr<Halfedge> Mesh::create_edge_left(std::shared_ptr<Halfedge> edge,
 //REQUIREMENT: 0 <= degrees <= 90
 BarcodeTemplate& Mesh::get_barcode_template(double degrees, double offset)
 {
+    ///TODO: store some point/cell to seed the next query
+    std::shared_ptr<Face> cell;
     if(degrees == 90) //then line is vertical
     {
-        std::shared_ptr<Face> cell = find_vertical_line(-1*offset); //multiply by -1 to correct for orientation of offset
-
-        ///TODO: store some point/cell to seed the next query
-
+        cell = find_vertical_line(-1*offset); //multiply by -1 to correct for orientation of offset
         if(verbosity >= 3) { debug() << " ||| vertical line found in cell " << FID(cell); }
-        return cell->get_barcode();
-    }
 
-    if(degrees == 0) //then line is horizontal
-    {
-        std::shared_ptr<Face> cell = topleft->get_twin()->get_face();    //default
+    } else if (degrees == 0) { //then line is horizontal
         std::shared_ptr<Anchor> anchor = find_least_upper_anchor(offset);
 
-        if(anchor != NULL)
+        if(anchor != nullptr)
             cell = anchor->get_line()->get_face();
-
-        ///TODO: store some point/cell to seed the next query
+        else
+            cell = topleft->get_twin()->get_face();    //default
 
         if(verbosity >= 3) { debug() << " --- horizontal line found in cell " << FID(cell); }
-        return cell->get_barcode();
+
+    } else {
+        //else: the line is neither horizontal nor vertical
+        double radians = degrees * 3.14159265 / 180;
+        double slope = tan(radians);
+        double intercept = offset / cos(radians);
+        cell = find_point(slope, -1 * intercept);   //multiply by -1 for point-line duality
     }
-
-    //else: the line is neither horizontal nor vertical
-    double radians = degrees * 3.14159265/180;
-    double slope = tan(radians);
-    double intercept = offset/cos(radians);
-
-//    debug(true) << "  Line (deg, off) = (" << degrees << ", " << offset << ") transformed to (slope, int) = (" << slope << ", " << intercept << ")";
-
-    std::shared_ptr<Face> cell = find_point(slope, -1*intercept);   //multiply by -1 for point-line duality
-        ///TODO: REPLACE THIS WITH A SEEDED SEARCH
-
-    ///TODO: store seed
+    ///TODO: REPLACE THIS WITH A SEEDED SEARCH
 
     return cell->get_barcode();  ////FIX THIS!!!
 }//end get_barcode_template()
@@ -231,7 +221,7 @@ void Mesh::add_anchor(Anchor anchor)
 }
 
 //finds the first anchor that intersects the left edge of the arrangement at a point not less than the specified y-coordinate
-//  if no such anchor, returns NULL
+//  if no such anchor, returns nullptr
 std::shared_ptr<Anchor> Mesh::find_least_upper_anchor(double y_coord)
 {
     //binary search to find greatest y-grade not greater than than y_coord
@@ -256,7 +246,7 @@ std::shared_ptr<Anchor> Mesh::find_least_upper_anchor(double y_coord)
         }
     }
     else
-        return NULL;
+        return nullptr;
 
     //if we get here, then y_grades[best] is the greatest y-grade not greater than y_coord
     //now find Anchor whose line intersects the left edge of the arrangement lowest, but not below y_grade[best]
@@ -266,7 +256,7 @@ std::shared_ptr<Anchor> Mesh::find_least_upper_anchor(double y_coord)
 
     if(it == all_anchors.end())    //not found
     {
-        return NULL;
+        return nullptr;
     }
     //else
     return *it;
@@ -277,7 +267,8 @@ std::shared_ptr<Anchor> Mesh::find_least_upper_anchor(double y_coord)
 std::shared_ptr<Face> Mesh::find_vertical_line(double x_coord)
 {
     //is there an Anchor with x-coordinate not greater than x_coord?
-    if(vertical_line_query_list.size() >= 1 && x_grades[ vertical_line_query_list[0]->get_anchor()->get_x() ] <= x_coord)
+    if(vertical_line_query_list.size() >= 1
+       && x_grades[ vertical_line_query_list[0]->get_anchor()->get_x() ] <= x_coord)
     {
         //binary search the vertical line query list
         unsigned min = 0;
@@ -309,6 +300,16 @@ std::shared_ptr<Face> Mesh::find_vertical_line(double x_coord)
     return bottomright->get_twin()->get_face();
 
 }//end find_vertical_line()
+void Mesh::announce_next_point(std::shared_ptr<Halfedge> finger, std::shared_ptr<Vertex> next_pt) {
+
+    if(verbosity >= 8)
+    {
+        if(finger->get_anchor() != nullptr)
+            debug() << "     -- next point: (" << next_pt->get_x() << "," << next_pt->get_y() << ") vertex ID" << VID(next_pt) << "; along line corresponding to anchor at (" << finger->get_anchor()->get_x() << "," << finger->get_anchor()->get_y() << ")";
+        else
+            debug() << "     -- next point: (" << next_pt->get_x() << "," << next_pt->get_y() << ") vertex ID" << VID(next_pt) << "; along line corresponding to nullptr anchor";
+    }
+}
 
 //find a 2-cell containing the specified point
 std::shared_ptr<Face> Mesh::find_point(double x_coord, double y_coord)
@@ -316,10 +317,9 @@ std::shared_ptr<Face> Mesh::find_point(double x_coord, double y_coord)
     //start on the left edge of the arrangement, at the correct y-coordinate
     std::shared_ptr<Anchor> start = find_least_upper_anchor(-1*y_coord);
 
-    std::shared_ptr<Face> cell = NULL;		//will later point to the cell containing the specified point
-    std::shared_ptr<Halfedge> finger = NULL;	//for use in finding the cell
+    std::shared_ptr<Halfedge> finger = nullptr;	//for use in finding the cell
 
-    if(start == NULL)	//then starting point is in the top (unbounded) cell
+    if(start == nullptr)	//then starting point is in the top (unbounded) cell
     {
         finger = topleft->get_twin()->get_next();   //this is the top edge of the top cell (at y=infty)
         if(verbosity >= 8) { debug() << "  Starting in top (unbounded) cell"; }
@@ -330,33 +330,24 @@ std::shared_ptr<Face> Mesh::find_point(double x_coord, double y_coord)
         if(verbosity >= 8) { debug() << "  Reference Anchor: (" << x_grades[start->get_x()] << "," << y_grades[start->get_y()] << "); halfedge" << HID(finger); }
     }
 
-    while(cell == NULL) //while not found
+    std::shared_ptr<Face> cell = nullptr;		//will later point to the cell containing the specified point
+
+
+    while(cell == nullptr) //while not found
     {
         if(verbosity >= 8) { debug() << "  Considering cell " << FID(finger->get_face()); }
 
         //find the edge of the current cell that crosses the horizontal line at y_coord
         std::shared_ptr<Vertex> next_pt = finger->get_next()->get_origin();
 
-        if(verbosity >= 8)
-        {
-            if(finger->get_anchor() != NULL)
-                debug() << "     -- next point: (" << next_pt->get_x() << "," << next_pt->get_y() << ") vertex ID" << VID(next_pt) << "; along line corresponding to anchor at (" << finger->get_anchor()->get_x() << "," << finger->get_anchor()->get_y() << ")";
-            else
-                debug() << "     -- next point: (" << next_pt->get_x() << "," << next_pt->get_y() << ") vertex ID" << VID(next_pt) << "; along line corresponding to NULL anchor";
-        }
+        announce_next_point(finger, next_pt);
 
         while(next_pt->get_y() > y_coord)
         {
             finger = finger->get_next();
             next_pt = finger->get_next()->get_origin();
 
-            if(verbosity >= 8)
-            {
-                if(finger->get_anchor() != NULL)
-                    debug() << "     -- next point: (" << next_pt->get_x() << "," << next_pt->get_y() << ") vertex ID" << VID(next_pt) << "; along line corresponding to anchor at (" << finger->get_anchor()->get_x() << "," << finger->get_anchor()->get_y() << ")";
-                else
-                    debug() << "     -- next point: (" << next_pt->get_x() << "," << next_pt->get_y() << ") vertex ID" << VID(next_pt) << "; along line corresponding to NULL anchor";
-            }
+            announce_next_point(finger, next_pt);
         }
 
         //now next_pt is at or below the horizontal line at y_coord
@@ -389,7 +380,7 @@ std::shared_ptr<Face> Mesh::find_point(double x_coord, double y_coord)
         }
         else	//then next_pt is below the horizontal line
         {
-            if(finger->get_anchor() == NULL)	//then edge is vertical, so we have found the cell
+            if(finger->get_anchor() == nullptr)	//then edge is vertical, so we have found the cell
             {
                 cell = finger->get_face();
             }
@@ -439,7 +430,7 @@ void Mesh::print()
 		std::shared_ptr<Halfedge> e = halfedges[i];
 		std::shared_ptr<Halfedge> t = e->get_twin();
         debug() << "    halfedge " << i << ": " << *(e->get_origin()) << "--" << *(t->get_origin()) << "; ";
-        if(e->get_anchor() == NULL)
+        if(e->get_anchor() == nullptr)
             debug() << "Anchor null; ";
 		else
             debug() << "Anchor coords (" << e->get_anchor()->get_x() << ", " << e->get_anchor()->get_y() << "); ";
@@ -470,47 +461,48 @@ void Mesh::print()
 	}	
 }//end print()
 
+template<typename T> long index_of(std::vector<T> const &vec, T const &t) {
+    for(long i = 0; i < vec.size(); i++) {
+        if (vec[i] == t)
+            return i;
+    }
+    return -1;
+}
+
 /********** functions for testing **********/
 
 //look up halfedge ID, used in print() for debugging
 // HID = halfedge ID
-unsigned Mesh::HID(std::shared_ptr<Halfedge> h)
+long Mesh::HID(std::shared_ptr<Halfedge> h) const
 {
-    for(unsigned i=0; i<halfedges.size(); i++)
-	{
-		if(halfedges[i] == h)
-			return i;
-	}
-	
-	//we should never get here
-	return -1;	
+    return index_of(halfedges, h);
 }
 
 //look up face ID, used in print() for debugging
 // FID = face ID
-unsigned Mesh::FID(std::shared_ptr<Face> f)
+long Mesh::FID(std::shared_ptr<Face> f) const
 {
-    for(unsigned i=0; i<faces.size(); i++)
-	{
-		if(faces[i] == f)
-			return i;
-	}
-	
-	//we should only get here if f is NULL (meaning the unbounded, outside face)
-	return -1;	
+    return index_of(faces, f);
 }
 
 //look up vertex ID, used in print() for debugging
 // VID = vertex ID
-unsigned Mesh::VID(std::shared_ptr<Vertex> v)
+long Mesh::VID(std::shared_ptr<Vertex> v) const
 {
-    for(unsigned i=0; i<vertices.size(); i++)
+    return index_of(vertices, v);
+}
+
+long Mesh::AID(std::shared_ptr<Anchor> a) const {
+    auto it = all_anchors.begin();
+
+    for(unsigned i=0; i<all_anchors.size(); i++)
     {
-        if(vertices[i] == v)
+        if (*it == a)
             return i;
+        ++it;
     }
 
-    //we should only get here if f is NULL (meaning the unbounded, outside face)
+    //we should only get here if f is nullptr (meaning the unbounded, outside face)
     return -1;
 }
 
@@ -527,7 +519,7 @@ void Mesh::test_consistency()
         std::shared_ptr<Face> face = *it;
         debug() << "  Checking face " << FID(face);
 
-        if(face->get_boundary() == NULL)
+        if(face->get_boundary() == nullptr)
         {
             debug() << "    PROBLEM: face" << FID(face) << "has null edge pointer.";
             face_problem = true;
@@ -543,8 +535,8 @@ void Mesh::test_consistency()
                 face_problem = true;
             }
 
-            if(start->get_next() == NULL)
-                debug() << "    PROBLEM: starting halfedge" << HID(start) << "of face" << FID(face) << "has NULL next pointer.";
+            if(start->get_next() == nullptr)
+                debug() << "    PROBLEM: starting halfedge" << HID(start) << "of face" << FID(face) << "has nullptr next pointer.";
             else
             {
                 std::shared_ptr<Halfedge> cur = start->get_next();
@@ -560,9 +552,9 @@ void Mesh::test_consistency()
                         break;
                     }
 
-                    if(cur->get_next() == NULL)
+                    if(cur->get_next() == nullptr)
                     {
-                        debug() << "    PROBLEM: halfedge" << HID(cur) << "has NULL next pointer.";
+                        debug() << "    PROBLEM: halfedge" << HID(cur) << "has nullptr next pointer.";
                         face_problem = true;
                         break;
                     }
@@ -595,9 +587,9 @@ void Mesh::test_consistency()
     do{
         edges_found_in_faces.insert(HID(cur));
 
-        if(cur->get_next() == NULL)
+        if(cur->get_next() == nullptr)
         {
-            debug() << "    PROBLEM: halfedge " << HID(cur) << " has NULL next pointer.";
+            debug() << "    PROBLEM: halfedge " << HID(cur) << " has nullptr next pointer.";
             break;
         }
         cur = cur->get_next();
@@ -643,9 +635,9 @@ void Mesh::test_consistency()
                 curve_problem = true;
             }
 
-            if(edge->get_next() == NULL)
+            if(edge->get_next() == nullptr)
             {
-                debug() << "    PROBLEM: halfedge" << HID(edge) << "has NULL next pointer.";
+                debug() << "    PROBLEM: halfedge" << HID(edge) << "has nullptr next pointer.";
                 curve_problem = true;
                 break;
             }
@@ -665,9 +657,9 @@ void Mesh::test_consistency()
         edges_found_in_curves.insert(HID(cur));
         edges_found_in_curves.insert(HID(cur->get_twin()));
 
-        if(cur->get_next() == NULL)
+        if(cur->get_next() == nullptr)
         {
-            debug() << "    PROBLEM: halfedge" << HID(cur) << "has NULL next pointer.";
+            debug() << "    PROBLEM: halfedge" << HID(cur) << "has nullptr next pointer.";
             break;
         }
         cur = cur->get_next();

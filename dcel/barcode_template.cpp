@@ -24,7 +24,7 @@ bool BarTemplate::operator<(const BarTemplate other) const
 
 
 
-BarcodeTemplate::BarcodeTemplate()
+BarcodeTemplate::BarcodeTemplate(): bars()
 { }
 
 //adds a bar to the barcode (updating multiplicity, if necessary)

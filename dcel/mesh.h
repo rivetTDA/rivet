@@ -58,12 +58,13 @@ class Mesh
 //TODO: refactor so Mesh doesn't need friends.
     friend class PersistenceUpdater;
     friend class MeshBuilder;
+    friend struct MeshMessage;
     public:
     Mesh(); //For serialization
     Mesh(std::vector<exact> xe, std::vector<exact> ye, unsigned verbosity);
             //constructor; sets up bounding box (with empty interior) for the affine Grassmannian
             //  requires references to vectors of all multi-grade values (both double and exact values)
-		
+
 
 
         BarcodeTemplate& get_barcode_template(double degrees, double offset);
@@ -137,10 +138,12 @@ class Mesh
         std::shared_ptr<Face> find_point(double x_coord, double y_coord);    //finds a 2-cell containing the specified point
 
       //functions for testing
-        unsigned HID(std::shared_ptr<Halfedge> h);		//halfedge ID, for printing and debugging
-        unsigned FID(std::shared_ptr<Face> f);		//face ID, for printing and debugging
-        unsigned VID(std::shared_ptr<Vertex> v);    //vertex ID, for printing and debugging
+        long HID(std::shared_ptr<Halfedge> h) const;		//halfedge ID, for printing and debugging
+        long FID(std::shared_ptr<Face> f) const;		//face ID, for printing and debugging
+        long AID(std::shared_ptr<Anchor> a) const;    //anchor ID, for printing and debugging
+        long VID(std::shared_ptr<Vertex> v) const;    //vertex ID, for printing and debugging
 
+        void announce_next_point(std::shared_ptr<Halfedge> finder, std::shared_ptr<Vertex> next_pt);
 
       //struct to hold a future intersection event
         struct Crossing {

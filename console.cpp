@@ -90,13 +90,14 @@ int main(int argc, char *argv[])
         });
         computation.arrangementReady.connect([](std::shared_ptr<Mesh> mesh){
             std::cout << "ARRANGEMENT" << std::endl;
+            MeshMessage arrangement(*mesh);
             std::stringstream ss;
             {
 //                cereal::JSONOutputArchive archive(std::cout);
 //                cereal::BinaryOutputArchive archive(ss);
 //                cereal::XMLOutputArchive archive(std::cout);
                 boost::archive::text_oarchive archive(ss);
-                archive << mesh;
+                archive << arrangement;
 
             }
 
@@ -110,9 +111,9 @@ int main(int argc, char *argv[])
                 std::cerr << "Testing deserialization locally..." << std::endl;
                 std::string original = ss.str();
                 boost::archive::text_iarchive inarch(ss);
-                Mesh test;
+                MeshMessage test;
                 inarch >> test;
-                std::cerr << "Arrangement received: " << test.x_exact.size() << " x " << test.y_exact.size() << std::endl;
+                std::cerr << "Deserialized!";
             }
         });
         computation.xiSupportReady.connect([](XiSupportMessage message){
