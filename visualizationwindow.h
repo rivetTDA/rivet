@@ -4,7 +4,6 @@
 //forward declarations
 class Barcode;
 class BarcodeTemplate;
-class Mesh;
 class xiPoint;
 
 #include "computationthread.h"
@@ -16,7 +15,7 @@ class xiPoint;
 #include "interface/persistence_diagram.h"
 #include "interface/progressdialog.h"
 #include "interface/slice_diagram.h"
-
+#include "dcel/mesh_message.h"
 #include <QMainWindow>
 #include <QtWidgets>
 
@@ -50,7 +49,7 @@ protected:
 public slots:
     void start_computation(); //begins the computation pipeline
     void paint_xi_support();
-    void augmented_arrangement_ready(Mesh* arrangement);
+    void augmented_arrangement_ready(MeshMessage* arrangement);
     void set_line_parameters(double angle, double offset);
 
 private slots:
@@ -94,7 +93,7 @@ private:
     double angle_precise;       //sufficiently-precise internal value of the slice-line angle in DEGREES, necessary because QDoubleSpinBox truncates this value
     double offset_precise;      //sufficiently-precise internal value of the slice-line offset, necessary because QDoubleSpinBox truncates this value
 
-    Mesh* arrangement; //pointer to the DCEL arrangement
+    MeshMessage* arrangement; //pointer to the DCEL arrangement
     Barcode* barcode;  //pointer to the currently-displayed barcode
 
     //computation items

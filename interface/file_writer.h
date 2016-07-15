@@ -17,6 +17,7 @@
 #include <boost/multiprecision/cpp_int.hpp>
 
 #include <vector>
+#include <dcel/mesh_message.h>
 
 
 class FileWriter

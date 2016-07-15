@@ -19,7 +19,7 @@ typedef boost::multiprecision::cpp_rational exact;
 typedef boost::multi_array<unsigned, 2> unsigned_matrix;
 
 #include <vector>
-#include "dcel/serialization.h"
+#include "dcel/mesh_message.h"
 
 
 class ComputationThread : public QThread
@@ -46,7 +46,7 @@ class ComputationThread : public QThread
         void setProgressMaximum(unsigned max);
         void setCurrentProgress(unsigned current);
         void xiSupportReady();
-        void arrangementReady(Mesh* arrangement);
+        void arrangementReady(MeshMessage* arrangement);
 
     protected:
         void run() Q_DECL_OVERRIDE;

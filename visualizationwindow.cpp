@@ -2,7 +2,7 @@
 #include "ui_visualizationwindow.h"
 
 #include "dcel/barcode_template.h"
-#include "dcel/mesh.h"
+#include "dcel/mesh_message.h"
 #include "interface/barcode.h"
 #include "interface/config_parameters.h"
 #include "interface/file_writer.h"
@@ -138,20 +138,20 @@ void VisualizationWindow::paint_xi_support()
 }
 
 //this slot is signaled when the agumented arrangement is ready
-void VisualizationWindow::augmented_arrangement_ready(Mesh* arrangement)
+void VisualizationWindow::augmented_arrangement_ready(MeshMessage* arrangement)
 {
     //receive the arrangement
     this->arrangement = arrangement;
 
     //TESTING: print arrangement info and verify consistency
-    arrangement->print_stats();
+//    arrangement->print_stats();
 //    arrangement->test_consistency();
 
     //inialize persistence diagram
     p_diagram.create_diagram(QString::fromStdString(input_params.shortName), input_params.dim);
 
     //get the barcode
-    BarcodeTemplate& dbc = arrangement->get_barcode_template(angle_precise, offset_precise);
+    BarcodeTemplate& dbc = arrangement->get_barcode_template(angle_precise, offset_precise).get(); //TODO: assuming there is one, is this true? If so change the type of get_barcode_template
     barcode = rescale_barcode_template(dbc, angle_precise, offset_precise);
 
     //TESTING
@@ -245,7 +245,7 @@ void VisualizationWindow::update_persistence_diagram()
     if(persistence_diagram_drawn)
     {
         //get the barcode
-        BarcodeTemplate& dbc = arrangement->get_barcode_template(angle_precise, offset_precise);
+        BarcodeTemplate& dbc = arrangement->get_barcode_template(angle_precise, offset_precise).get();
         if(barcode != NULL) //clean up the old barcode
             delete barcode;
         barcode = rescale_barcode_template(dbc, angle_precise, offset_precise);
@@ -482,10 +482,11 @@ void VisualizationWindow::save_arrangement(const QString& filename)
     {
         qDebug() << "Writing file:" << filename;
 
-        FileWriter fw(input_params, *arrangement, xi_support);
-        fw.write_augmented_arrangement(file);
-
-        unsaved_data = false;
+        throw std::runtime_error("Not implemented yet"); //TODO: fix
+//        FileWriter fw(input_params, *arrangement, xi_support);
+//        fw.write_augmented_arrangement(file);
+//
+//        unsaved_data = false;
     }
     else
     {

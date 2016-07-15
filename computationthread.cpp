@@ -97,11 +97,13 @@ void ComputationThread::run()
                     arrangement.reset(new MeshMessage());
                     archive >> *arrangement;
                 }
-                qDebug() << "Mesh received: " << arrangement->x_exact.size() << " x " << arrangement->y_exact.size();
+//                qDebug() << "Mesh received: " << arrangement->x_exact.size() << " x " << arrangement->y_exact.size();
                 emit arrangementReady(&*arrangement);
+                console->waitForFinished();
                 return;
             } else {
-                ss << line.trimmed().toStdString();
+//                ss << line.trimmed().toStdString();
+                ss << line.toStdString();
             }
 
         } else if (line.startsWith("PROGRESS ")) {

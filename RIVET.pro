@@ -43,6 +43,7 @@ SOURCES	+= main.cpp                         \
 		interface/barcode.cpp               \
 		dcel/barcode_template.cpp           \
 		dcel/anchor.cpp                     \
+		dcel/mesh_message.cpp               \
 		#math/persistence_updater.cpp        \
 		math/xi_support_matrix.cpp          \
 		math/xi_point.cpp                   \
@@ -52,7 +53,7 @@ SOURCES	+= main.cpp                         \
 		interface/configuredialog.cpp       \
 		interface/config_parameters.cpp     \
 		interface/file_input_reader.cpp \
-    driver.cpp \
+    #driver.cpp \
     interface/file_writer.cpp \
     debug.cpp \
     timer.cpp \
@@ -89,7 +90,7 @@ HEADERS  += visualizationwindow.h			\
     interface/configuredialog.h \
     interface/config_parameters.h \
     interface/file_input_reader.h \
-    driver.h \
+    #driver.h \
     interface/file_writer.h \
     dcel/serialization.h \
     cereal/archives/json.hpp \
