@@ -15,13 +15,16 @@ void FileWriter::write_augmented_arrangement(std::ofstream& stream)
 {
 
     auto now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    //At some point just doing stream << std::ctime(&now) started giving ambiguous operator<< errors,
+    //so let's be explicit.
+    std::string now_as_string = std::ctime(&now);
     //write header info, in comment form
     stream << "# augmented arrangement data" << std::endl;
 stream << "# computed by RIVET from the input file " << input_params.fileName << std::endl;
     stream << "# homology dimension: " << input_params.dim << std::endl;
     stream << "# bins: " << input_params.x_bins << " " << input_params.y_bins << std::endl;
     stream << "# file created at: "
-            << std::ctime(&now)
+            << now_as_string
             << std::endl;
 
     //write parameters

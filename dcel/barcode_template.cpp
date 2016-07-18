@@ -90,4 +90,15 @@ void BarcodeTemplate::print()
     }
 }
 
+bool operator==(BarcodeTemplate const &left, BarcodeTemplate const &right) {
+    return left.bars == right.bars;
+}
+
+bool operator==(BarTemplate const &left, BarTemplate const &right) {
+    return left.begin == right.begin
+           && left.end == right.end
+            && left.multiplicity == right.multiplicity;
+
+}
+
 

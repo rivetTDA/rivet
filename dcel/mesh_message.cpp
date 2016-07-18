@@ -9,11 +9,11 @@
 MeshMessage::MeshMessage(Mesh const &mesh):
             x_grades(mesh.x_grades),
             y_grades(mesh.y_grades),
-            half_edges(mesh.halfedges.size()),
-            vertices(mesh.vertices.size()),
-            anchors(mesh.all_anchors.size()),
-            faces(mesh.faces.size()),
-            vertical_line_query_list(mesh.vertical_line_query_list.size())
+            half_edges(),
+            vertices(),
+            anchors(),
+            faces(),
+            vertical_line_query_list()
     {
         //REALLY slow with all these VID, FID, etc. calls, but will do for now.
         for(auto face: mesh.faces) {
@@ -30,6 +30,7 @@ MeshMessage::MeshMessage(Mesh const &mesh):
             });
         }
         for(auto anchor: mesh.all_anchors) {
+            std::cerr << "Adding anchor: " << anchor->get_x() << ", " << anchor->get_y() << std::endl;
             anchors.push_back(Anchor{
                     anchor->get_x(),
                     anchor->get_y(),
@@ -39,6 +40,7 @@ MeshMessage::MeshMessage(Mesh const &mesh):
                     anchor->get_weight()
             });
         }
+        assert(anchors.size() == mesh.all_anchors.size());
         for (auto vertex: mesh.vertices) {
             vertices.push_back(Vertex{
                     HalfedgeId(mesh.HID(vertex->get_incident_edge())),
@@ -263,3 +265,154 @@ MeshMessage::MeshMessage(Mesh const &mesh):
         return get(cell).dbc;
     }//end get_barcode_template()
 
+bool check(bool condition, std::string message) {
+    if (!condition) {
+        std::cerr << message;
+    }
+    return condition;
+}
+
+bool operator==(MeshMessage::Halfedge const & left, MeshMessage::Halfedge const & right) {
+    return left.origin == right.origin
+            && left.anchor == right.anchor
+            && left.face == right.face
+            && left.next == right.next
+            && left.prev == right.prev
+        && left.twin == right.twin;
+}
+
+
+bool operator==(MeshMessage::Vertex const & left, MeshMessage::Vertex const & right) {
+    return left.incident_edge == right.incident_edge
+            && left.x == right.x
+            && left.y == right.y;
+}
+
+bool operator==(MeshMessage::Face const & left, MeshMessage::Face const & right) {
+    return left.boundary == right.boundary
+            && left.dbc == right.dbc;
+}
+
+bool operator==(MeshMessage::Anchor const & left, MeshMessage::Anchor const & right) {
+    return left.above_line == right.above_line
+            && left.dual_line == right.dual_line
+            && left.position == right.position
+            && left.weight == right.weight
+            && left.x_coord == right.x_coord
+            && left.y_coord == right.y_coord;
+}
+
+bool operator==(MeshMessage const & left, MeshMessage const & right) {
+    bool corners = left.topright == right.topright
+    && left.topleft == right.topleft
+    && left.bottomleft == right.bottomleft
+    && left.bottomright == right.bottomright;
+    if (!check(corners, "corners")) return false;
+    if (!check(left.vertical_line_query_list == right.vertical_line_query_list, "query")) return false;
+    if (!check(left.vertices == right.vertices, "vertices")) return false;
+    if (!check(left.anchors == right.anchors, "anchors")) return false;
+    if (!check(left.faces == right.faces, "faces")) return false;
+    if (!check(left.half_edges == right.half_edges, "edges")) return false;
+    if (!check(left.x_grades == right.x_grades, "x_grades")) return false;
+    if (!check(left.y_grades == right.y_grades, "y_grades")) return false;
+    return true;
+}
+
+template <typename T, typename U, typename ID>
+void set_if_valid(std::function<void(U)> func, std::vector<T> vec, ID id) {
+    if (id != ID::invalid()) {
+        func(vec[static_cast<long>(id)]);
+    }
+
+};
+Mesh MeshMessage::to_mesh() const {
+    Mesh mesh;
+    //First create all the objects
+    for (auto vertex : vertices) {
+        mesh.vertices.push_back(std::make_shared<::Vertex>(vertex.x, vertex.y));
+    }
+    for (auto face : faces) {
+        mesh.faces.push_back(std::make_shared<::Face>());
+    }
+    for (auto edge : half_edges) {
+        mesh.halfedges.push_back(std::make_shared<::Halfedge>());
+    }
+    std::vector<std::shared_ptr<::Anchor>> temp_anchors; //For indexing, since mesh.all_anchors is a set
+    for (auto anchor : anchors) {
+
+        std::shared_ptr<::Anchor> ptr = std::make_shared<::Anchor>(anchor.x_coord, anchor.y_coord);
+        temp_anchors.push_back(ptr);
+        mesh.all_anchors.insert(ptr);
+    }
+
+    //Now populate all the pointers
+
+    for (int i = 0; i < vertices.size(); i++) {
+        if (vertices[i].incident_edge != HalfedgeId::invalid()) {
+            mesh.vertices[i]->set_incident_edge(mesh.halfedges[static_cast<long>(vertices[i].incident_edge)]);
+        }
+    }
+    for (int i = 0; i < faces.size(); i++) {
+        auto mface = mesh.faces[i];
+        auto face = faces[i];
+        //TODO: this doesn't seem right, why would a face not have a boundary?
+        if (faces[i].boundary != HalfedgeId::invalid()) {
+            mface->set_boundary(mesh.halfedges[static_cast<long>(face.boundary)]);
+        }
+        if (face.dbc) {
+            mface->set_barcode(face.dbc.get());
+        }
+    }
+    for (int i = 0; i < half_edges.size(); i++) {
+        ::Halfedge &edge = *(mesh.halfedges[i]);
+        MeshMessage::Halfedge ref = half_edges[i];
+        if (ref.face != FaceId::invalid())
+            edge.set_face(mesh.faces[static_cast<long>(ref.face)]);
+        if (ref.anchor != AnchorId::invalid()) {
+            edge.set_anchor(temp_anchors[static_cast<long>(ref.anchor)]);
+        }
+        //TODO: shouldn't a halfedge always have a next?
+        if (ref.next != HalfedgeId::invalid()) {
+            edge.set_next(mesh.halfedges[static_cast<long>(ref.next)]);
+        }
+        if (ref.origin != VertexId::invalid()) {
+            edge.set_origin(mesh.vertices[static_cast<long>(ref.origin)]);
+        }
+        if (ref.prev != HalfedgeId::invalid()) {
+            edge.set_prev(mesh.halfedges[static_cast<long>(ref.prev)]);
+        }
+        if (ref.twin != HalfedgeId::invalid()) {
+            edge.set_twin(mesh.halfedges[static_cast<long>(ref.twin)]);
+        }
+    }
+
+    for (int i = 0; i < vertical_line_query_list.size(); i++) {
+        mesh.vertical_line_query_list.push_back(mesh.halfedges[static_cast<long>(vertical_line_query_list[i])]);
+    }
+
+    assert(mesh.all_anchors.size() == anchors.size());
+    auto it = mesh.all_anchors.begin();
+    for (int i = 0; i < anchors.size(); i++) {
+        ::Anchor &anchor = **it;
+        MeshMessage::Anchor ref = anchors[i];
+        if (ref.dual_line != HalfedgeId::invalid()) {
+            std::shared_ptr<::Halfedge> edge = mesh.halfedges[static_cast<long>(ref.dual_line)];
+            //TODO: why, oh why, should this reset be necessary?
+            anchor.get_line().reset();
+            anchor.set_line(edge);
+        }
+        anchor.set_position(ref.position);
+        anchor.set_weight(ref.weight);
+        if (it != mesh.all_anchors.end()) {
+            ++it;
+        }
+    }
+    mesh.bottomleft = mesh.halfedges[static_cast<long>(bottomleft)];
+    mesh.bottomright = mesh.halfedges[static_cast<long>(bottomright)];
+    mesh.topright = mesh.halfedges[static_cast<long>(topright)];
+    mesh.topleft = mesh.halfedges[static_cast<long>(topleft)];
+
+    mesh.x_grades = x_grades;
+    mesh.y_grades = y_grades;
+    return mesh;
+}

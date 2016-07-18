@@ -15,6 +15,7 @@
 #include <boost/archive/tmpdir.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
+#include <fstream>
 #include <vector>
 #include <QDebug>
 #include <QTime>
@@ -57,7 +58,6 @@ void ComputationThread::run()
     }
 
     bool reading_xi = false;
-    bool reading_mesh = false;
     std::stringstream ss;
     while(console->canReadLine() || console->waitForReadyRead()) {
         QString line = console->readLine();
@@ -86,14 +86,14 @@ void ComputationThread::run()
             } else {
                 ss << line.toStdString();
             }
-        } else if (reading_mesh) {
-            if (line.startsWith("END ARRANGEMENT")) {
-//                ss = std::stringstream(decode64(ss.str()));
+        } else if (line.startsWith("ARRANGEMENT: ")) {
                 {
-//                    cereal::BinaryInputArchive archive(ss);
-//                    cereal::JSONInputArchive archive(ss);
-//                    cereal::XMLInputArchive archive(ss);
-                    boost::archive::text_iarchive archive(ss);
+                    std::ifstream input(line.mid(QString("ARRANGEMENT: ").length()).trimmed().toStdString());
+                    //TODO: better error handling on both sides
+                    if (!input.is_open()) {
+                        throw std::runtime_error("Could not open console arrangement file");
+                    }
+                    boost::archive::text_iarchive archive(input);
                     arrangement.reset(new MeshMessage());
                     archive >> *arrangement;
                 }
@@ -101,11 +101,6 @@ void ComputationThread::run()
                 emit arrangementReady(&*arrangement);
                 console->waitForFinished();
                 return;
-            } else {
-//                ss << line.trimmed().toStdString();
-                ss << line.toStdString();
-            }
-
         } else if (line.startsWith("PROGRESS ")) {
             auto progress = line.mid(QString("PROGRESS ").length()).trimmed();
             qDebug() << "***Progress is: " << progress;
@@ -114,9 +109,6 @@ void ComputationThread::run()
             emit advanceProgressStage();
         } else if (line.startsWith("XI")) {
             reading_xi = true;
-            ss.clear();
-        } else if (line.startsWith("ARRANGEMENT")) {
-            reading_mesh = true;
             ss.clear();
         }
     }

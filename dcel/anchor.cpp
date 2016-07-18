@@ -7,7 +7,7 @@ Anchor::Anchor(std::shared_ptr<xiMatrixEntry> e) :
 { }
 
 Anchor::Anchor(unsigned x, unsigned y) :
-    x_coord(x), y_coord(y), entry(NULL), dual_line(NULL)
+    x_coord(x), y_coord(y), entry(), dual_line(), position(0), above_line(false)
 { }
 
 Anchor::Anchor(const Anchor& other)

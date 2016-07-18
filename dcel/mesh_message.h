@@ -27,6 +27,10 @@ public:
 
     boost::optional<BarcodeTemplate> get_barcode_template(double degrees, double offset);
 
+    friend bool operator==(MeshMessage const &left, MeshMessage const &right);
+
+    Mesh to_mesh() const;
+
 private:
 
     typedef ID<Vertex, long, -1> VertexId;
@@ -64,7 +68,10 @@ private:
         }
     };
 
+    friend bool operator==(Anchor const &left, Anchor const &right);
+
     struct AnchorStructComparator : AnchorComparator<MeshMessage::Anchor> {};
+
 
     struct Halfedge {
 
@@ -80,6 +87,8 @@ private:
             ar & origin & twin & next & prev & face & anchor;
         }
     };
+
+    friend bool operator==(Halfedge const &left, Halfedge const &right);
 
     struct Face {
         HalfedgeId boundary;     //pointer to one halfedge in the boundary of this cell
@@ -109,6 +118,7 @@ private:
         }
         BOOST_SERIALIZATION_SPLIT_MEMBER()
     };
+    friend bool operator==(Face const &left, Face const &right);
 
     struct Vertex {
         HalfedgeId incident_edge;	//pointer to one edge incident to this vertex
@@ -121,6 +131,7 @@ private:
         }
     };
 
+    friend bool operator==(Vertex const &left, Vertex const &right);
     std::vector<Halfedge> half_edges;
     std::vector<Vertex> vertices;
     std::vector<Anchor> anchors;

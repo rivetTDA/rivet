@@ -47,6 +47,39 @@ unsigned int get_uint_or_die(std::map<std::string, docopt::value> &args, const s
   }
 }
 
+//http://stackoverflow.com/a/2869667/224186
+std::string getcwd()
+{
+    const size_t chunkSize=255;
+    const int maxChunks=10240; // 2550 KiBs of current path are more than enough
+
+    char stackBuffer[chunkSize]; // Stack buffer for the "normal" case
+    if(getcwd(stackBuffer,sizeof(stackBuffer))!=NULL)
+        return stackBuffer;
+    if(errno!=ERANGE)
+    {
+        // It's not ERANGE, so we don't know how to handle it
+        throw std::runtime_error("Cannot determine the current path.");
+        // Of course you may choose a different error reporting method
+    }
+    // Ok, the stack buffer isn't long enough; fallback to heap allocation
+    for(int chunks=2; chunks<maxChunks ; chunks++)
+    {
+        // With boost use scoped_ptr; in C++0x, use unique_ptr
+        // If you want to be less C++ but more efficient you may want to use realloc
+        std::auto_ptr<char> cwd(new char[chunkSize*chunks]);
+        if(getcwd(cwd.get(),chunkSize*chunks)!=NULL)
+            return cwd.get();
+        if(errno!=ERANGE)
+        {
+            // It's not ERANGE, so we don't know how to handle it
+            throw std::runtime_error("Cannot determine the current path.");
+            // Of course you may choose a different error reporting method
+        }
+    }
+    throw std::runtime_error("Cannot determine the current path; the path is apparently unreasonably long");
+}
+
 int main(int argc, char *argv[])
 {
 //        debug() << "CONSOLE RIVET" ;
@@ -90,32 +123,44 @@ int main(int argc, char *argv[])
             std::cout << "PROGRESS " << amount << std::endl;
         });
         computation.arrangementReady.connect([](std::shared_ptr<Mesh> mesh){
-            std::cout << "ARRANGEMENT" << std::endl;
+            //TODO: won't work on windows, need xplatform separator.
+            std::string file_name(getcwd() + "/rivet_arrangement_temp");
+            std::ofstream output(file_name);
+
             MeshMessage arrangement(*mesh);
-            std::stringstream ss;
+
             {
+                boost::archive::text_oarchive archive(output);
+                archive << arrangement;
+            }
+            std::cout.flush();
+            {
+                //TODO: this should become a system test with a known dataset
+                std::stringstream ss;
+                {
 //                cereal::JSONOutputArchive archive(std::cout);
 //                cereal::BinaryOutputArchive archive(ss);
 //                cereal::XMLOutputArchive archive(std::cout);
-                boost::archive::text_oarchive archive(ss);
-                archive << arrangement;
+                    boost::archive::text_oarchive archive(ss);
+                    archive << arrangement;
 
-            }
-
-//            std::string result = encode64(original);
-//            std::string decoded = decode64(result);
-//            assert(decoded == original);
-            std::cout << ss.str() << std::endl;
-            std::cout << "END ARRANGEMENT" << std::endl;
-            std::cout.flush();
-            {
+                }
                 std::cerr << "Testing deserialization locally..." << std::endl;
                 std::string original = ss.str();
                 boost::archive::text_iarchive inarch(ss);
                 MeshMessage test;
                 inarch >> test;
                 std::cerr << "Deserialized!";
+                if (!(arrangement == test)) {
+                    throw std::runtime_error("Original and deserialized don't match!");
+                }
+                Mesh reconstituted = arrangement.to_mesh();
+                MeshMessage round_trip(reconstituted);
+                if (!(round_trip == arrangement)) {
+                    throw std::runtime_error("Original and reconstituted don't match!");
+                }
             }
+            std::cout << "ARRANGEMENT: " << file_name << std::endl;
         });
         computation.xiSupportReady.connect([](XiSupportMessage message){
             std::cout << "XI" << std::endl;

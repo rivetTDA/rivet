@@ -71,6 +71,7 @@ class Halfedge
         void set_face(std::shared_ptr<Face> f);     //set the face that this halfedge borders
         std::shared_ptr<Face> get_face() const;     //get the face that this halfedge borders
 
+        void set_anchor(std::shared_ptr<Anchor>);   //set the Anchor
         std::shared_ptr<Anchor> get_anchor() const; //get the Anchor
 
         friend Debug& operator<<(Debug& qd, const Halfedge& e);	//for printing the halfedge
@@ -99,7 +100,7 @@ class Face
         std::shared_ptr<Halfedge> get_boundary();           //get the (pointer to the) boundary halfedge
 
         BarcodeTemplate& get_barcode();         //returns a reference to the barcode template stored in this cell
-        void set_barcode(BarcodeTemplate& bt);  //stores (a copy of) the specified barcode template in this cell
+        void set_barcode(const BarcodeTemplate& bt);  //stores (a copy of) the specified barcode template in this cell
 
         bool has_been_visited();            //true iff cell has been visited in the vineyard-update process (so that we can distinguish a cell with an empty barcode from an unvisited cell)
         void mark_as_visited();             //marks this cell as visited

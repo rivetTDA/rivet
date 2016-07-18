@@ -20,6 +20,7 @@ struct BarTemplate
     void serialize(Archive & ar, const unsigned int version) {
         ar & begin & end & multiplicity;
     }
+    friend bool operator==(BarTemplate const &left, BarTemplate const &right);
 };
 
 
@@ -41,8 +42,10 @@ class BarcodeTemplate
                 void serialize(Archive &ar, const unsigned int version) {
             ar & bars;
         }
+    friend bool operator==(BarcodeTemplate const &left, BarcodeTemplate const &right);
     private:
         std::set<BarTemplate> bars;
 };
+
 
 #endif // __BARCODE_TEMPLATE_H__

@@ -118,6 +118,10 @@ std::shared_ptr<Face> Halfedge::get_face() const
     return face;
 }
 
+void Halfedge::set_anchor(std::shared_ptr<Anchor> anchor) {
+    this->anchor = anchor;
+}
+
 std::shared_ptr<Anchor> Halfedge::get_anchor() const
 {
     return anchor;
@@ -161,7 +165,7 @@ BarcodeTemplate& Face::get_barcode()
     return dbc;
 }
 
-void Face::set_barcode(BarcodeTemplate& bt)
+void Face::set_barcode(const BarcodeTemplate& bt)
 {
     dbc = bt;   ///TODO: is this good design???
 }

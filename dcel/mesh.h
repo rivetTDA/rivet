@@ -52,13 +52,15 @@ T& write_grades(T &stream, const std::vector<exact> &x_exact, const std::vector<
     return stream;
 }
 
+class MeshMessage;
 
 class Mesh
 {
 //TODO: refactor so Mesh doesn't need friends.
     friend class PersistenceUpdater;
     friend class MeshBuilder;
-    friend struct MeshMessage;
+    friend class MeshMessage;
+    friend Mesh to_mesh(MeshMessage const &msg);
     public:
     Mesh(); //For serialization
     Mesh(std::vector<exact> xe, std::vector<exact> ye, unsigned verbosity);
@@ -137,6 +139,7 @@ class Mesh
         std::shared_ptr<Face> find_point(double x_coord, double y_coord);    //finds a 2-cell containing the specified point
 
       //functions for testing
+      long HID(Halfedge * h) const;		//halfedge ID, for printing and debugging
         long HID(std::shared_ptr<Halfedge> h) const;		//halfedge ID, for printing and debugging
         long FID(std::shared_ptr<Face> f) const;		//face ID, for printing and debugging
         long AID(std::shared_ptr<Anchor> a) const;    //anchor ID, for printing and debugging
