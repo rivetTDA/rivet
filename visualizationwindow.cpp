@@ -151,7 +151,7 @@ void VisualizationWindow::augmented_arrangement_ready(MeshMessage* arrangement)
     p_diagram.create_diagram(QString::fromStdString(input_params.shortName), input_params.dim);
 
     //get the barcode
-    BarcodeTemplate& dbc = arrangement->get_barcode_template(angle_precise, offset_precise).get(); //TODO: assuming there is one, is this true? If so change the type of get_barcode_template
+    BarcodeTemplate dbc = arrangement->get_barcode_template(angle_precise, offset_precise);
     barcode = rescale_barcode_template(dbc, angle_precise, offset_precise);
 
     //TESTING
@@ -245,7 +245,7 @@ void VisualizationWindow::update_persistence_diagram()
     if(persistence_diagram_drawn)
     {
         //get the barcode
-        BarcodeTemplate& dbc = arrangement->get_barcode_template(angle_precise, offset_precise).get();
+        BarcodeTemplate dbc = arrangement->get_barcode_template(angle_precise, offset_precise);
         if(barcode != NULL) //clean up the old barcode
             delete barcode;
         barcode = rescale_barcode_template(dbc, angle_precise, offset_precise);

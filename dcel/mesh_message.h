@@ -25,7 +25,7 @@ public:
         ar & x_grades & y_grades & half_edges & vertices & anchors & faces & topleft & topright & bottomleft & bottomright & vertical_line_query_list;
     }
 
-    boost::optional<BarcodeTemplate> get_barcode_template(double degrees, double offset);
+    BarcodeTemplate get_barcode_template(double degrees, double offset);
 
     friend bool operator==(MeshMessage const &left, MeshMessage const &right);
 
@@ -92,32 +92,15 @@ private:
 
     struct Face {
         HalfedgeId boundary;     //pointer to one halfedge in the boundary of this cell
-        boost::optional<BarcodeTemplate> dbc;    //barcode template stored in this cell
+        BarcodeTemplate dbc;    //barcode template stored in this cell
 
 
         template<typename Archive>
-        void save(Archive &ar, const unsigned int & version) const {
-            if (dbc) {
-                ar & boundary & true & dbc.get();
-            } else {
-                ar & boundary & false;
-            }
+        void serialize(Archive &ar, const unsigned int & version) {
+            ar & boundary & dbc;
         }
-
-        template<typename Archive>
-        void load(Archive &ar, const unsigned int &version) {
-            bool has_dbc;
-            ar & boundary & has_dbc;
-            if (has_dbc) {
-                BarcodeTemplate temp;
-                ar & temp;
-                dbc.reset(temp);
-            } else {
-                dbc.reset();
-            }
-        }
-        BOOST_SERIALIZATION_SPLIT_MEMBER()
     };
+
     friend bool operator==(Face const &left, Face const &right);
 
     struct Vertex {

@@ -239,7 +239,7 @@ MeshMessage::MeshMessage(Mesh const &mesh):
         return anchors[static_cast<long>(index)];
     }
 
-    boost::optional<BarcodeTemplate> MeshMessage::get_barcode_template(double degrees, double offset)
+    BarcodeTemplate MeshMessage::get_barcode_template(double degrees, double offset)
     {
         ///TODO: store some point/cell to seed the next query
         FaceId cell;
@@ -359,9 +359,7 @@ Mesh MeshMessage::to_mesh() const {
         if (faces[i].boundary != HalfedgeId::invalid()) {
             mface->set_boundary(mesh.halfedges[static_cast<long>(face.boundary)]);
         }
-        if (face.dbc) {
-            mface->set_barcode(face.dbc.get());
-        }
+        mface->set_barcode(face.dbc);
     }
     for (int i = 0; i < half_edges.size(); i++) {
         ::Halfedge &edge = *(mesh.halfedges[i]);
