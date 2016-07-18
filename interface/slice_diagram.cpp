@@ -22,6 +22,7 @@ SliceDiagram::SliceDiagram(ConfigParameters* params, std::vector<double>& x_grad
     x_grades(x_grades), y_grades(y_grades),
     max_xi_value(0),
     padding(20),
+    control_dot_moved(false),
     epsilon(pow(2,-30)), PI(3.14159265358979323846)
 { }
 
@@ -182,7 +183,7 @@ void SliceDiagram::create_diagram(QString x_text, QString y_text, double xmin, d
     resize_diagram();
 
     //update angle and offset boxes in VisualizationWindow
-    update_window_controls();
+    update_window_controls(false);
 }//end create_diagram()
 
 //resizes diagram to fill the QGraphicsView
@@ -434,7 +435,7 @@ void SliceDiagram::update_line(double angle, double offset)
 }//end update_line()
 
 //updates controls in the VisualizationWindow in response to a change in the line (also update SliceDiagram data values)
-void SliceDiagram::update_window_controls()
+void SliceDiagram::update_window_controls(bool from_dot)
 {
     //refresh the scene to avoid artifacts from old lines, which otherwise can occur when the user moves the line quickly
     update(sceneRect());    //NOTE: this updates more items than necessary, but that is fine as long as it is fast
@@ -472,6 +473,9 @@ void SliceDiagram::update_window_controls()
 
         angle = angle*180/PI;   //convert to degrees
     }
+
+    //remember whether the source of this change is the move of a ControlDot
+    control_dot_moved = from_dot;
 
     //send updates
     emit set_line_control_elements(angle, offset);
@@ -563,8 +567,14 @@ std::pair<double,double> SliceDiagram::compute_endpoint(double coordinate, unsig
     }
 
     //adjust for position of slice line
-    x += dot_left->pos().x();
-    y += dot_left->pos().y();
+    if(control_dot_moved) {
+        x += slice_line->pos().x();
+        y += slice_line->pos().y();
+    }
+    else {
+        x += dot_left->pos().x();
+        y += dot_left->pos().y();
+    }
 
     return std::pair<double,double>(x,y);
 }//end compute_endpoint()

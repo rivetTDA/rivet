@@ -120,12 +120,12 @@ QVariant SliceLine::itemChange(GraphicsItemChange change, const QVariant &value)
         right_dot->set_position(newpos + right_point);
 
         //update ui control objects
-        sdgm->update_window_controls();
+        sdgm->update_window_controls(false);
 
         return newpos;
     }
     return QGraphicsItem::itemChange(change, value);
-}
+}//end itemChange()
 
 //updates left-bottom endpoint
 void SliceLine::update_lb_endpoint(QPointF& newpos)
@@ -148,7 +148,7 @@ void SliceLine::update_lb_endpoint(QPointF& newpos)
     }
 
     //update ui control objects
-    sdgm->update_window_controls();
+    sdgm->update_window_controls(true);
 
     update_lock = false;
 }
@@ -172,7 +172,7 @@ void SliceLine::update_rt_endpoint(QPointF& newpos)
     }
 
     //update ui control objects
-    sdgm->update_window_controls();
+    sdgm->update_window_controls(true);
 
     update_lock = false;
 }
@@ -295,7 +295,7 @@ void SliceLine::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         update();
 
         //update ui control objects
-        sdgm->update_window_controls();
+        sdgm->update_window_controls(false);
     }
 
     QGraphicsItem::mouseMoveEvent(event);

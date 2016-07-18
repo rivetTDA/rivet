@@ -38,7 +38,7 @@ public:
     void redraw_dots();      //redraws the support points of the multigraded Betti numbers
 
     void update_line(double angle, double offset);  //updates the line, in response to a change in the controls in the VisualizationWindow
-    void update_window_controls();   //computes new angle and offset in response to a change in the line, emits signal for the VisualizationWindow
+    void update_window_controls(bool from_dot);   //computes new angle and offset in response to a change in the line, emits signal for the VisualizationWindow
 
     void draw_barcode(Barcode* bc, double zero_coord, bool show); //draws the barcode parallel to the slice line; "show" determines whether or not bars are visible
     void update_barcode(Barcode* bc, double zero_coord, bool show);  //updates the barcode (e.g. after a change in the slice line)
@@ -131,6 +131,8 @@ private:
     double line_pos;     //relative position of left endpoint of line: 0 is lower left corner, positive values (up to 1) are along left side, negative values (to -1) are along bottom edge of box
 
     const int padding;  //distance between xi support point area and control rectangle (on the top and right sides)
+
+    bool control_dot_moved; //true if line is moved by a ControlDot -- used as part of a hack to make barcode display in the proper position relative to the line
 
     const double epsilon;   //used for almost-equal comparisons
     const double PI;   //used in get_pd_scale() when the slice line is vertical
