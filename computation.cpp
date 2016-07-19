@@ -111,7 +111,6 @@ std::unique_ptr<ComputationResult> Computation::compute(InputData data)
   //STAGES 1 and 2: INPUT DATA AND CREATE BIFILTRATION
     if(verbosity >= 4)
     {
-
         write_grades(std::clog, data.x_exact, data.y_exact);
     }
 

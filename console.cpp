@@ -173,6 +173,18 @@ int main(int argc, char *argv[])
             }
             std::cout << "END XI" << std::endl;
             std::cout.flush();
+            {
+                std::cerr << "Local deserialization test" << std::endl;
+                std::stringstream ss;
+                boost::archive::text_oarchive out(ss);
+                out << message;
+                boost::archive::text_iarchive in(ss);
+                XiSupportMessage result;
+                in >> result;
+                if (!(message == result)) {
+                    throw std::runtime_error("Original XiSupportMessage and reconstituted don't match!");
+                }
+            }
             std::cerr << "xi support received: " << message.xi_support.size();
         });
         //TODO: input is a simple pointer, switch to unique_ptr

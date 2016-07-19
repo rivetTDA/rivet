@@ -79,6 +79,12 @@ void ComputationThread::run()
                     hom_dims.resize(boost::extents[dims[0]][dims[1]]);
                     hom_dims = message.homology_dimensions;
                 qDebug() << "Received hom_dims: " << hom_dims.shape()[0] << " x " << hom_dims.shape()[1];
+                for(int i = 0; i < hom_dims.shape()[0]; i++) {
+                    auto row = qDebug();
+                    for (int j = 0; j < hom_dims.shape()[1]; j++) {
+                        row << hom_dims[i][j];
+                    }
+                }
                     x_exact = message.x_exact;
                     y_exact = message.y_exact;
                 reading_xi = false;

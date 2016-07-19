@@ -123,10 +123,13 @@ struct XiSupportMessage {
     std::vector<exact> x_exact;
     std::vector<exact> y_exact;
 
+    friend bool operator==(XiSupportMessage const &left, XiSupportMessage const &right);
+
     template<class Archive>
             void serialize(Archive &ar, const unsigned int version) {
         ar & xi_support & homology_dimensions & x_exact & y_exact;
     }
 };
+
 
 #endif // __DCEL_H__

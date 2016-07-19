@@ -85,19 +85,24 @@ namespace boost {
     void save(Archive &ar, unsigned_matrix const &mat, const unsigned int &version) {
         assert(mat.num_dimensions() == 2);
         std::vector<unsigned> dims(mat.shape(), mat.shape() + mat.num_dimensions());
-        std::vector<unsigned> data(mat.data(), mat.data() + mat.num_elements());
-        ar &dims &  data;
+        std::vector<unsigned> data(mat.origin(), mat.origin() + mat.num_elements());
+        ar & dims & data;
     }
 
     template <class Archive>
     void load(Archive & ar, unsigned_matrix &mat, const unsigned int &version) {
         std::vector<unsigned> dims;
         std::vector<unsigned> data;
-        ar &dims & data;
+        ar & dims & data;
         unsigned_matrix::extent_gen extents;
         auto size = extents[dims[0]][dims[1]];
+        std::cerr << "Data: ";
+        for (auto i = 0; i < data.size(); i++) {
+            std::cerr << data[i] << " ";
+        }
+        std::cerr << std::endl;
         mat.resize(size);
-        std::memcpy(data.data(), mat.data(), data.size() * sizeof(unsigned));
+        std::memcpy(mat.origin(), data.data(), data.size() * sizeof(unsigned));
     }
 }
 
