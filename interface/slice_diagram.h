@@ -56,7 +56,6 @@ public:
 
     double get_slice_length();  //gets the length of the slice, for scaling the persistence diagram
     double get_pd_scale();      //gets the number of pixels per unit, for the persistence diagram
-    double get_zero();          //gets the coordinate on the slice line which we consider "zero" for the persistence diagram
 
     void receive_parameter_change(QString& xtext, QString& ytext);            //updates the diagram after a change in configuration parameters
 
@@ -119,6 +118,7 @@ private:
 
     ///TODO: the next four values can be obtained from x_grades and y_grades
     double data_xmin, data_xmax, data_ymin, data_ymax;  //min and max coordinates of the data
+    double line_zero; //coordinate of projection of lower-left corner of line-selection window onto selected line
     double data_infty;      //data position that is outside of the window, used for drawing bars that extend to infinity
     int max_xi_value;       //max value of the bigraded betti numbers
 
@@ -134,7 +134,6 @@ private:
 
     bool control_dot_moved; //true if line is moved by a ControlDot -- used as part of a hack to make barcode display in the proper position relative to the line
 
-    const double epsilon;   //used for almost-equal comparisons
     const double PI;   //used in get_pd_scale() when the slice line is vertical
 
   //private functions

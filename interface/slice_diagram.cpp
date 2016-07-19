@@ -20,10 +20,11 @@ SliceDiagram::SliceDiagram(ConfigParameters* params, std::vector<double>& x_grad
     config_params(params),
     dot_left(), dot_right(), slice_line(),
     x_grades(x_grades), y_grades(y_grades),
+    line_zero(0),
     max_xi_value(0),
     padding(20),
     control_dot_moved(false),
-    epsilon(pow(2,-30)), PI(3.14159265358979323846)
+    PI(3.14159265358979323846)
 { }
 
 SliceDiagram::~SliceDiagram()
@@ -268,7 +269,7 @@ void SliceDiagram::resize_diagram()
     slice_line->update_position(x, y, line_vert, line_slope*scale_y/scale_x);
 
     //reposition bars
-    double infty = get_zero() + data_infty;
+    double infty = line_zero + data_infty;
     unsigned count = 1;
     for(unsigned i = 0; i < bars.size(); i++)
     {
@@ -434,9 +435,6 @@ void SliceDiagram::update_line(double angle, double offset)
 //updates controls in the VisualizationWindow in response to a change in the line (also update SliceDiagram data values)
 void SliceDiagram::update_window_controls(bool from_dot)
 {
-    //refresh the scene to avoid artifacts from old lines, which otherwise can occur when the user moves the line quickly
-    update(sceneRect());    //NOTE: this updates more items than necessary, but that is fine as long as it is fast
-
     //update SliceDiagram data values
     line_vert = slice_line->is_vertical();
     line_slope = slice_line->get_slope()*scale_x/scale_y;   //convert pixel units to data units
@@ -484,14 +482,16 @@ void SliceDiagram::update_window_controls(bool from_dot)
 //draws the barcode parallel to the slice line
 void SliceDiagram::draw_barcode(Barcode *bc, double zero_coord, bool show)
 {
+    line_zero = zero_coord;
+
     bars.resize(bc->size());
     unsigned num_bars = 1;
     unsigned index = 0;
 
     for(std::multiset<MultiBar>::iterator it = bc->begin(); it != bc->end(); ++it)
     {
-        double start = it->birth - zero_coord;
-        double end = it->death - zero_coord;
+        double start = it->birth - line_zero;
+        double end = it->death - line_zero;
 
         for(unsigned i=0; i < it->multiplicity; i++)
         {
@@ -540,7 +540,7 @@ std::pair<double,double> SliceDiagram::compute_endpoint(double coordinate, unsig
 
     //handle infinity
     if(coordinate == std::numeric_limits<double>::infinity())
-        coordinate = get_zero() + data_infty;
+        coordinate = line_zero + data_infty;
 
     //compute x and y relative to slice line (pixel units)
     double x = 0;
@@ -710,7 +710,7 @@ void SliceDiagram::update_highlight()
 
     //highlight the interval
     if(end == std::numeric_limits<double>::infinity())
-        end = get_zero() + data_infty;
+        end = line_zero + data_infty;
 
     std::pair<double,double> p1 = compute_endpoint(start, 0);
     std::pair<double,double> p2 = compute_endpoint(end, 0);
@@ -775,49 +775,3 @@ double SliceDiagram::get_pd_scale()
     double denominator = sqrt(scale_x*scale_x*sine*sine + scale_y*scale_y*cosine*cosine);
     return scale_x*scale_y/denominator;
 }
-
-//gets the coordinate on the slice line which we consider "zero" for the persistence diagram
-///DEPRECATED -- REPLACED WITH CLEANER, MORE PRECISE FUNCTION VisualizationWindow::project_zero
-///  IF THIS FUNCTION IS DELETED, THEN SliceDiagram::epsilon IS ALSO NOT NEEDED
-double SliceDiagram::get_zero()
-{
-    //handle vertical lines
-    if(slice_line->is_vertical())
-        return data_ymin;
-
-    //handle horizontal lines
-    if(slice_line->get_slope() == 0)
-        return data_xmin;
-
-    //handle lines that are neither vertical nor horizontal
-    //point (x0,y0) is the bottom/left endpoint of the slice line (in data units)
-    double x0 = slice_line->pos().x()/scale_x + data_xmin;
-    double y0 = slice_line->pos().y()/scale_y + data_ymin;
-
-    double radians = atan(line_slope);
-    double offset = cos(radians) * (y0 - tan(radians)*x0);
-
-    //point (x1,y1) is the orthogonal projection of (0,0) onto the slice line (in data units)
-    double x1 = -1*offset * sin(radians);
-    double y1 = offset * cos(radians);
-
-    //find the distance between (x0,y0) and (x1,y1)
-    double dist = sqrt( (x0 - x1)*(x0 - x1) + (y0 - y1)*(y0 - y1) );
-
-    //return the distance with the correct sign
-    if(std::abs(x0 - x1) > epsilon)  //then determine the sign via the x-coordinates
-    {
-        if(x0 > x1)
-            return dist;
-        /*else*/
-        return -1*dist;
-    }
-    if(std::abs(y0 - y1) > epsilon)  //since the x-coordinates are almost equal, determine the sign via the y-coordinates
-    {
-        if(y0 > y1)
-            return dist;
-        /*else*/
-        return -1*dist;
-    }
-    return 0;   //if the x-coordinates are almost equal, and the y-coordinates are almost equal, then the distance is zero
-}//end get_zero()
