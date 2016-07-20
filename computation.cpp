@@ -25,7 +25,7 @@ std::unique_ptr<ComputationResult> Computation::compute_rivet(RivetInput &input)
 
         if(verbosity >= 2) { debug() << "INPUT FINISHED: xi support points ready"; }
 
-        xiSupportReady(XiSupportMessage {input.xi_support, result->homology_dimensions, input.x_exact, input.y_exact});          //signal that xi support points are ready for visualization
+        xiSupportReady(XiSupportMessage {input.x_label, input.y_label, input.xi_support, result->homology_dimensions, input.x_exact, input.y_exact});          //signal that xi support points are ready for visualization
         progress.advanceProgressStage();    //update progress box to stage 4
 
 
@@ -82,7 +82,7 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(RawDataInput &input)
         //store the xi support points
         mb.store_support_points(result->xi_support);
 
-        xiSupportReady(XiSupportMessage {result->xi_support, result->homology_dimensions, input.x_exact, input.y_exact});          //signal that xi support points are ready for visualization
+        xiSupportReady(XiSupportMessage {input.x_label, input.y_label, result->xi_support, result->homology_dimensions, input.x_exact, input.y_exact});          //signal that xi support points are ready for visualization
         progress.advanceProgressStage();    //update progress box to stage 4
 
 

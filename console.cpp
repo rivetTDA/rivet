@@ -217,7 +217,7 @@ int main(int argc, char *argv[])
             if (file.is_open()) {
                 debug() << "Writing file:" << params.outputFile ;
 
-                FileWriter fw(params, *(arrangement), result->xi_support);
+                FileWriter fw(params, *input, *(arrangement), result->xi_support);
                 fw.write_augmented_arrangement(file);
             }
             else {

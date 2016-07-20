@@ -93,6 +93,8 @@ struct FileType {
 };
 
 struct InputData {
+    std::string x_label;
+    std::string y_label;
     bool is_data;
   std::vector<exact> x_exact;    //exact (e.g. rational) values of all x-grades, sorted
   std::vector<exact> y_exact;    //exact (e.g. rational) values of all y-grades, sorted

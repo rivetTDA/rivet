@@ -2,6 +2,8 @@
 #define INPUT_PARAMETERS_H
 
 #include <string>
+//TODO: this class currently conflates 3 things: command line arguments, file load dialog arguments, and viewer configuration state
+
 //these parameters are set by the user via the console or the DataSelectDialog before computation can begin
 struct InputParameters {
     std::string fileName;   //name of data file
@@ -10,9 +12,9 @@ struct InputParameters {
     int dim;            //dimension of homology to compute
     unsigned x_bins;    //number of bins for x-coordinate (if 0, then bins are not used for x)
     unsigned y_bins;    //number of bins for y-coordinate (if 0, then bins are not used for y)
-    std::string x_label;    //label for x-axis of slice diagram
-    std::string y_label;    //label for y-axis of slice_diagram
     int verbosity;      //controls the amount of console output printed
+    std::string x_label; //used by configuration dialog
+    std::string y_label; //used by configuration dialog
 };
 
 #endif // INPUT_PARAMETERS_H

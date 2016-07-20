@@ -110,8 +110,8 @@ void VisualizationWindow::paint_xi_support()
         slice_diagram.add_point(x_grades[it->x], y_grades[it->y], it->zero, it->one, it->two);
 
     //create the SliceDiagram
-    slice_diagram.create_diagram(QString::fromStdString(input_params.x_label),
-                                 QString::fromStdString(input_params.y_label),
+    slice_diagram.create_diagram(cthread.x_label,
+                                 cthread.y_label,
                                  x_grades.front(), x_grades.back(),
                                  y_grades.front(), y_grades.back(),
                                  ui->normCoordCheckBox->isChecked(), homology_dimensions);
@@ -433,8 +433,7 @@ void VisualizationWindow::on_actionConfigure_triggered()
 
     if(line_selection_ready)
     {
-      slice_diagram.receive_parameter_change(QString::fromStdString(input_params.x_label),
-                                             QString::fromStdString(input_params.y_label));
+      slice_diagram.receive_parameter_change(cthread.x_label, cthread.y_label);
 
         if(persistence_diagram_drawn)
             p_diagram.receive_parameter_change();

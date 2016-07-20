@@ -1,12 +1,13 @@
 #include "file_writer.h"
 
 #include "../dcel/barcode_template.h"
+#include "input_manager.h"
 
 #include <chrono>
 
 
-FileWriter::FileWriter(InputParameters& ip, Mesh& m, std::vector<xiPoint>& xi) :
-    input_params(ip), arrangement(m), xi_support(xi)
+FileWriter::FileWriter(InputParameters & ip, InputData& data, Mesh& m, std::vector<xiPoint>& xi) :
+    input_data(data), input_params(ip), arrangement(m), xi_support(xi)
 {
 
 }
@@ -30,8 +31,8 @@ stream << "# computed by RIVET from the input file " << input_params.fileName <<
     //write parameters
     stream << "RIVET_0" << std::endl;
     stream << input_params.dim << std::endl;
-stream << input_params.x_label << std::endl;
-stream << input_params.y_label << std::endl << std::endl;
+stream << input_data.x_label << std::endl;
+stream << input_data.y_label << std::endl << std::endl;
     stream << arrangement;
 
     //write values of the multigraded Betti numbers

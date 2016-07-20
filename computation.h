@@ -18,11 +18,15 @@ class ComputationInput {
  public:
   std::vector<exact> x_exact;
   std::vector<exact> y_exact;
+    std::string x_label;
+    std::string y_label;
 
  protected:
     InputData data;
     ComputationInput(InputData data) :
             data(data),
+            x_label(data.x_label),
+            y_label(data.y_label),
             x_exact(data.x_exact),
             y_exact(data.y_exact)
     { }

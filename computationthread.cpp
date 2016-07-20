@@ -28,7 +28,9 @@ ComputationThread::ComputationThread(InputParameters& params, QObject *parent) :
     params(params),
     xi_support(),
     x_exact(),
-    y_exact()
+    y_exact(),
+    x_label(),
+    y_label()
 { }
 
 ComputationThread::~ComputationThread()
@@ -85,8 +87,11 @@ void ComputationThread::run()
                         row << hom_dims[i][j];
                     }
                 }
+                //TODO: Probably better to not have to unpack all these properties into fields of computationthread.
                     x_exact = message.x_exact;
                     y_exact = message.y_exact;
+                x_label = QString::fromStdString(message.x_label);
+                y_label = QString::fromStdString(message.y_label);
                 reading_xi = false;
                 emit xiSupportReady();
             } else {

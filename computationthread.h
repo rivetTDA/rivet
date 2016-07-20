@@ -40,6 +40,8 @@ class ComputationThread : public QThread
         std::vector<exact> x_exact;
         std::vector<exact> y_exact;
         unsigned_matrix hom_dims;
+    QString x_label;
+    QString y_label;
 
     signals:
         void advanceProgressStage();

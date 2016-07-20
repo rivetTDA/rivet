@@ -172,10 +172,10 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream &stream,
     }
 
     //read label for x-axis
-    input_params.x_label = reader.next_line()[0];
+    data->x_label = reader.next_line()[0];
 
     //set label for y-axis to "distance"
-    input_params.y_label = "distance";
+    data->y_label = "distance";
 
     //read points
     std::vector<DataPoint> points;
@@ -298,7 +298,7 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
   // STEP 1: read data file and store exact (rational) values of the function for each point
 
     //first read the label for x-axis
-    input_params.x_label = reader.next_line()[0];
+    data->x_label = reader.next_line()[0];
 
     //now read the values
     std::vector<std::string> line = reader.next_line();
@@ -314,7 +314,7 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
   // STEP 2: read data file and store exact (rational) values for all distances
 
     //first read the label for y-axis
-    input_params.y_label = join(reader.next_line());
+    data->y_label = join(reader.next_line());
 
     //read the maximum length of edges to construct
     exact max_dist = str_to_exact(reader.next_line()[0]);
@@ -416,10 +416,10 @@ std::unique_ptr<InputData> InputManager::read_bifiltration(std::ifstream &stream
     if(verbosity >= 2) { debug() << "  Found a bifiltration file.\n"; }
 
     //read the label for x-axis
-    input_params.x_label = join(reader.next_line());
+    data->x_label = join(reader.next_line());
 
     //read the label for y-axis
-    input_params.y_label = join(reader.next_line());
+    data->y_label = join(reader.next_line());
 
     //temporary data structures to store grades
     ExactSet x_set; //stores all unique x-alues; must DELETE all elements later!
@@ -507,8 +507,8 @@ std::unique_ptr<InputData> InputManager::read_RIVET_data(std::ifstream &stream, 
     auto line = reader.next_line();
     debug() << join(line) ;
   input_params.dim = std::stoi(reader.next_line()[0]);
-  input_params.x_label = join(reader.next_line());
-  input_params.y_label = join(reader.next_line());
+  data->x_label = join(reader.next_line());
+  data->y_label = join(reader.next_line());
 
   //read x-grades
   reader.next_line();  //this line should say "x-grades"
