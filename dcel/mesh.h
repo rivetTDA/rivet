@@ -35,9 +35,9 @@ class Mesh
         Mesh(const std::vector<double>& xg, const std::vector<exact>& xe, const std::vector<double>& yg, const std::vector<exact>& ye, int verbosity);
             //constructor; sets up bounding box (with empty interior) for the affine Grassmannian
             //  requires references to vectors of all multi-grade values (both double and exact values)
-		
+
         ~Mesh();	//destructor: deletes all cells and anchors --- CHECK THIS!!!
-		
+
         void build_arrangement(MultiBetti& mb, std::vector<xiPoint>& xi_pts, ComputationThread* cthread);
             //builds the DCEL arrangement, and computes and stores persistence data
             //also stores ordered list of xi support points in the supplied vector
@@ -52,7 +52,7 @@ class Mesh
             //returns the barcode template associated with faces[i]
 
         unsigned num_faces();   //returns the number of 2-cells, and thus the number of barcode templates, in the arrangement
-		
+
         //JULY 2015 BUG FIX:
         void add_anchor(xiMatrixEntry* entry);  //creates a new anchor in the vector all_anchors
 
@@ -60,7 +60,7 @@ class Mesh
         void print_stats(); //prints a summary of the arrangement information, such as the number of anchors, vertices, halfedges, and faces
 		void print();	//prints all the data from the mesh
         void test_consistency();    //attempts to find inconsistencies in the DCEL arrangement
-		
+
 
         //references to vectors of multi-grade values
         const std::vector<double>& x_grades;   //floating-point values for x-grades
@@ -77,16 +77,16 @@ class Mesh
         std::vector<Vertex*> vertices;		//all vertices in the mesh
 		std::vector<Halfedge*> halfedges;	//all halfedges in the mesh
 		std::vector<Face*> faces;		//all faces in the mesh
-		
+
 		const double INFTY;
 
         std::set<Anchor*, Anchor_LeftComparator> all_anchors;	//set of Anchors that are represented in the mesh, ordered by position of curve along left side of the arrangement, from bottom to top
-		
+
         Halfedge* topleft;			//pointer to Halfedge that points down from top left corner (0,infty)
         Halfedge* topright;         //pointer to Halfedge that points down from the top right corner (infty,infty)
         Halfedge* bottomleft;       //pointer to Halfedge that points up from bottom left corner (0,-infty)
         Halfedge* bottomright;      //pointer to Halfedge that points up from bottom right corner (infty,-infty)
-		
+
         std::vector<Halfedge*> vertical_line_query_list; //stores a pointer to the rightmost Halfedge of the "top" line of each unique slope, ordered from small slopes to big slopes (each Halfedge points to Anchor and Face for vertical-line queries)
 
         const int verbosity;			//controls display of output, for debugging
@@ -103,7 +103,7 @@ class Mesh
         void find_edge_weights(PersistenceUpdater& updater);    //computes and stores the edge weight for each anchor line
 
         void find_path(std::vector<Halfedge *> &pathvec);   //finds a pseudo-optimal path through all 2-cells of the arrangement
-        void find_subpath(unsigned cur_node, std::vector< std::set<unsigned> >& adj, std::vector<Halfedge*>& pathvec, bool return_path); //builds the path recursively
+        void find_subpath(unsigned cur_node, std::vector< std::vector<unsigned> >& adj, std::vector<Halfedge*>& pathvec, bool return_path, std::vector<bool> &discovered); //builds the path recursively
 
         void set_barcode_template(unsigned i, BarcodeTemplate& bt);    //stores (a copy of) the given barcode template in faces[i]; used for re-building the arrangement from a RIVET data file
 

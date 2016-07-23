@@ -20,6 +20,7 @@
 
 #include <limits>	//necessary for infinity
 #include <queue>    //for std::priority_queue
+#include <stack>    //for find_subpath
 
 
 // Mesh constructor; sets up bounding box (with empty interior) for the affine Grassmannian
@@ -456,40 +457,40 @@ Halfedge* Mesh::insert_vertex(Halfedge* edge, double x, double y)
 	//create new vertex
     Vertex* new_vertex = new Vertex(x, y);
 	vertices.push_back(new_vertex);
-	
+
     //get twin and Anchor of this edge
 	Halfedge* twin = edge->get_twin();
     Anchor* anchor = edge->get_anchor();
-	
+
 	//create new halfedges
     Halfedge* up = new Halfedge(new_vertex, anchor);
 	halfedges.push_back(up);
     Halfedge* dn = new Halfedge(new_vertex, anchor);
 	halfedges.push_back(dn);
-		
+
 	//update pointers
 	up->set_next(edge->get_next());
 	up->set_prev(edge);
 	up->set_twin(twin);
     up->set_face(edge->get_face());
-	
+
 	up->get_next()->set_prev(up);
-	
+
 	edge->set_next(up);
 	edge->set_twin(dn);
-	
+
 	dn->set_next(twin->get_next());
 	dn->set_prev(twin);
 	dn->set_twin(edge);
     dn->set_face(twin->get_face());
 
 	dn->get_next()->set_prev(dn);
-	
+
 	twin->set_next(dn);
 	twin->set_twin(up);
-	
+
 	new_vertex->set_incident_edge(up);
-	
+
 	//return pointer to up
 	return up;
 }//end insert_vertex()
@@ -643,6 +644,7 @@ void Mesh::find_path(std::vector<Halfedge*>& pathvec)
 
     //organize the edges of the minimal spanning tree so that we can traverse the tree
     std::vector< std::set<unsigned> > adjacencies(faces.size(), std::set<unsigned>());  //this will store all adjacency relationships in the spanning tree
+    std::vector< std::vector<unsigned> > adjList(faces.size(), std::vector<unsigned>());
     for(unsigned i=0; i<spanning_tree_edges.size(); i++)
     {
         unsigned a = boost::source(spanning_tree_edges[i], dual_graph);
@@ -650,6 +652,9 @@ void Mesh::find_path(std::vector<Halfedge*>& pathvec)
 
         (adjacencies[a]).insert(b);
         (adjacencies[b]).insert(a);
+
+        adjList.at(a).push_back(b);
+        adjList.at(b).push_back(a);
     }
 
     //traverse the tree
@@ -658,7 +663,11 @@ void Mesh::find_path(std::vector<Halfedge*>& pathvec)
     Face* initial_cell = topleft->get_twin()->get_face();
     unsigned start = (face_indexes.find(initial_cell))->second;
 
-    find_subpath(start, adjacencies, pathvec, false);
+    std::vector<bool> discovered(adjList.size(), false);
+    discovered.at(start) = true;
+
+    // find_subpath(start, adjacencies, pathvec, false);
+    find_subpath(start, adjList, pathvec, false, discovered);
 
     //TESTING -- PRINT PATH
     if(verbosity >= 10)
@@ -673,10 +682,75 @@ void Mesh::find_path(std::vector<Halfedge*>& pathvec)
 
 //recursive method to build part of the path
 //return_path == TRUE iff we want the path to return to the current node after traversing all of its children
-void Mesh::find_subpath(unsigned cur_node, std::vector< std::set<unsigned> >& adj, std::vector<Halfedge*>& pathvec, bool return_path)
+void Mesh::find_subpath(unsigned cur_node, std::vector< std::vector<unsigned> >& adj, std::vector<Halfedge*>& pathvec, bool return_path, std::vector<bool> &discovered)
 {
 
-    while(!adj[cur_node].empty())   //cur_node still has children to traverse
+    std::stack<unsigned> nodes, edgeStack;
+    unsigned node = cur_node, edgeIndex = 0;
+    nodes.push(node);
+    edgeStack.push(0);
+    discovered.at(node) = true;
+
+    while (!nodes.empty())
+    {
+        node = nodes.top();
+        edgeIndex = edgeStack.top();
+
+        if (edgeIndex < adj.at(node).size())
+        {
+            if ( !discovered.at( adj.at(node).at(edgeIndex) ) )
+            {
+                unsigned next_node = (unsigned) adj.at(node).at(edgeIndex);
+
+                Halfedge* cur_edge = (faces[node])->get_boundary();
+                while (cur_edge->get_twin()->get_face() != faces[next_node])
+                {
+                    cur_edge = cur_edge->get_next();
+
+                    if (cur_edge == (faces[node])->get_boundary())
+                    {
+                        qDebug() << "ERROR:  cannot find edge between 2-cells " << cur_node << " and " << node << "\n";
+                        throw std::exception();
+                    }
+                }
+                pathvec.push_back(cur_edge->get_twin());
+
+                node = adj.at(node).at(edgeIndex);
+                discovered.at(node) = true;
+                nodes.push(node);
+                edgeStack.top()++;
+                edgeStack.push(0);
+            }
+            else
+            {
+                edgeIndex = ++edgeStack.top();
+            }
+        }
+        else
+        {
+            unsigned next_node = nodes.top();
+            nodes.pop();
+            edgeStack.pop();
+
+            if (!nodes.empty())
+            {
+                Halfedge* cur_edge = (faces[nodes.top()])->get_boundary();
+                while (cur_edge->get_twin()->get_face() != faces[next_node])
+                {
+                    cur_edge = cur_edge->get_next();
+
+                    if (cur_edge == (faces[nodes.top()])->get_boundary())
+                    {
+                        qDebug() << "ERROR:  cannot find edge between 2-cells " << cur_node << "and " << node << "\n";
+                        throw std::exception();
+                    }
+                }
+                pathvec.push_back(cur_edge->get_twin());
+            }
+        }
+    }
+
+/*    while(!adj[cur_node].empty())   //cur_node still has children to traverse
     {
         //get the next node that is adjacent to cur_node
         unsigned next_node = *(adj[cur_node].begin());
@@ -709,7 +783,7 @@ void Mesh::find_subpath(unsigned cur_node, std::vector< std::set<unsigned> >& ad
         if(return_here)
             pathvec.push_back(cur_edge);
 
-    }//end while
+    }//end while*/
 
 }//end find_subpath()
 
@@ -984,7 +1058,7 @@ void Mesh::print()
 	{
         qDebug() << "    vertex " << i << ": " << *vertices[i] << "; incident edge: " << HID(vertices[i]->get_incident_edge());
 	}
-	
+
     qDebug() << "  Halfedges";
     for(unsigned i=0; i<halfedges.size(); i++)
 	{
@@ -997,13 +1071,13 @@ void Mesh::print()
             qDebug() << "Anchor coords (" << e->get_anchor()->get_x() << ", " << e->get_anchor()->get_y() << "); ";
         qDebug() << "twin: " << HID(t) << "; next: " << HID(e->get_next()) << "; prev: " << HID(e->get_prev()) << "; face: " << FID(e->get_face());
 	}
-	
+
     qDebug() << "  Faces";
     for(unsigned i=0; i<faces.size(); i++)
 	{
         qDebug() << "    face " << i << ": " << *faces[i];
 	}
-	
+
 /*    qDebug() << "  Outside (unbounded) region: ";
 	Halfedge* start = halfedges[1];
 	Halfedge* curr = start;
@@ -1019,7 +1093,7 @@ void Mesh::print()
 	{
         Anchor cur = **it;
         qDebug() << "(" << cur.get_x() << ", " << cur.get_y() << ") halfedge " << HID(cur.get_line()) << "; ";
-	}	
+	}
 }//end print()
 
 /********** functions for testing **********/
@@ -1033,9 +1107,9 @@ unsigned Mesh::HID(Halfedge* h)
 		if(halfedges[i] == h)
 			return i;
 	}
-	
+
 	//we should never get here
-	return -1;	
+	return -1;
 }
 
 //look up face ID, used in print() for debugging
@@ -1047,9 +1121,9 @@ unsigned Mesh::FID(Face* f)
 		if(faces[i] == f)
 			return i;
 	}
-	
+
 	//we should only get here if f is NULL (meaning the unbounded, outside face)
-	return -1;	
+	return -1;
 }
 
 //look up vertex ID, used in print() for debugging
