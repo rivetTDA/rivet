@@ -15,41 +15,7 @@ Computation::Computation(InputParameters& params, Progress &progress) :
 Computation::~Computation()
 { }
 
-std::unique_ptr<ComputationResult> Computation::compute_rivet(RivetInput &input) {
-  
-      //STAGE 3: MULTIGRADED BETTI NUMBERS ALREADY COMPUTED, BUT MUST COMPUTE THE DIMENSIONS
-
-  std::unique_ptr<ComputationResult> result(new ComputationResult);
-
-  find_dimensions(input, result->homology_dimensions);      //compute the homology dimensions at each grade from the graded Betti numbers
-
-        if(verbosity >= 2) { debug() << "INPUT FINISHED: xi support points ready"; }
-
-        xiSupportReady(XiSupportMessage {input.x_label, input.y_label, input.xi_support, result->homology_dimensions, input.x_exact, input.y_exact});          //signal that xi support points are ready for visualization
-        progress.advanceProgressStage();    //update progress box to stage 4
-
-
-      //STAGES 4 and 5: RE-BUILD THE AUGMENTED ARRANGEMENT
-
-        if(verbosity >= 2) { debug() << "RE-BUILDING THE AUGMENTED ARRANGEMENT"; }
-
-        auto start = std::chrono::system_clock::now();
-
-        //TODO: hook up signals
-    Progress progress;
-    debug() << "Calling build_arrangement" ;
-    MeshBuilder builder(verbosity);
-    auto arrangement = builder.build_arrangement(input.x_exact, input.y_exact, input.xi_support, input.barcode_templates, progress);
-        auto end = std::chrono::system_clock::now();
-
-        debug() << "   re-building the augmented arrangement took" << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "milliseconds";
-
-        //send (a pointer to) the arrangement back to the VisualizationWindow
-        arrangementReady(arrangement);
-    return result;
-}
-
-std::unique_ptr<ComputationResult> Computation::compute_raw(RawDataInput &input) {
+std::unique_ptr<ComputationResult> Computation::compute_raw(ComputationInput &input) {
 
     debug() << "entering compute_raw" ;
     if(verbosity >= 2)
@@ -116,54 +82,9 @@ std::unique_ptr<ComputationResult> Computation::compute(InputData data)
 
     progress.advanceProgressStage(); //update progress box to stage 3
 
-    if(data.is_data)    //then the user selected a raw data file, and we need to do persistence calculations
-    {
-      auto input = RawDataInput(data);
+      auto input = ComputationInput(data);
         //print bifiltration statistics
         debug() << "Computing from raw data" ;
       return compute_raw(input);
-    }
-    else    //then the user selected a RIVET file with pre-computed persistence information, and we just need to re-build the arrangement
-    {
-      auto input = RivetInput(data);
-      return compute_rivet(input);
-    }
-}//end run()
+}
 
-//computes homology dimensions from the graded Betti numbers (used when data comes from a pre-computed RIVET file)
-void Computation::find_dimensions(const RivetInput &input, unsigned_matrix &homology_dimensions)
-{
-
-    homology_dimensions.resize(boost::extents[input.x_exact.size()][input.y_exact.size()]);
-    std::vector<xiPoint>::iterator it = input.xi_support.begin();
-    int col_sum = 0;
-
-    //compute dimensions at (0,y)
-    for(unsigned y = 0; y < input.y_exact.size(); y++)
-    {
-        if(it != input.xi_support.end() && it->x == 0 && it->y == y)
-        {
-            col_sum += it->zero - it->one + it->two;
-            ++it;
-        }
-
-        homology_dimensions[0][y] = col_sum;
-    }
-
-    //compute dimensions at (x,y) for x > 0
-    for(unsigned x = 1; x < input.x_exact.size(); x++)
-    {
-        col_sum = 0;
-
-        for(unsigned y = 0; y < input.y_exact.size(); y++)
-        {
-            if(it != input.xi_support.end() && it->x == x && it->y == y)
-            {
-                col_sum += it->zero - it->one + it->two;
-                ++it;
-            }
-
-            homology_dimensions[x][y] = homology_dimensions[x-1][y] + col_sum;
-        }
-    }
-}//end find_dimensions()

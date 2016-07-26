@@ -14,6 +14,7 @@
 #include <vector>
 #include <interface/progress.h>
 
+//TODO: Remove either this or InputData, since there's no need for both anymore now that RIVET_0 files aren't supported.
 class ComputationInput {
  public:
   std::vector<exact> x_exact;
@@ -21,8 +22,10 @@ class ComputationInput {
     std::string x_label;
     std::string y_label;
 
- protected:
-    InputData data;
+    SimplexTree& bifiltration() {
+        return *(data.simplex_tree);
+    }
+
     ComputationInput(InputData data) :
             data(data),
             x_label(data.x_label),
@@ -30,27 +33,9 @@ class ComputationInput {
             x_exact(data.x_exact),
             y_exact(data.y_exact)
     { }
-};
 
-/// Raw data from points or other sources comes with a bifiltration
-class RawDataInput : public ComputationInput {
- public:
-  SimplexTree& bifiltration() {
-      return *(data.simplex_tree);
-  }
-  RawDataInput(InputData data) : ComputationInput(data)
-  { }
-};
-
-/// Precomputed Rivet data comes with xi support points and barcode templates
-class RivetInput : public ComputationInput {
- public:
-  std::vector<xiPoint> &xi_support;
-  std::vector<BarcodeTemplate> &barcode_templates;
-  RivetInput(InputData data) :
-          ComputationInput(data),
-          xi_support(data.xi_support),
-          barcode_templates(data.barcode_templates){}
+ protected:
+    InputData data;
 };
 
 struct ComputationResult {
@@ -78,9 +63,6 @@ class Computation
 
         const int verbosity;
 
-        void find_dimensions(const RivetInput &input, unsigned_matrix &homology_dimensions);  //computes homology dimensions from the graded Betti numbers (used when data comes from a pre-computed RIVET file)
-
-        std::unique_ptr<ComputationResult> compute_rivet(RivetInput &input);
-        std::unique_ptr<ComputationResult> compute_raw(RawDataInput &input);
+        std::unique_ptr<ComputationResult> compute_raw(ComputationInput &input);
 };
 
