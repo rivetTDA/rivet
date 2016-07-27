@@ -20,7 +20,7 @@ void FileInputReader::find_next_line()
     if (line.empty() || line[0] == '#')
       continue;
     next_line_tokens.clear();
-    boost::split(next_line_tokens, line, boost::is_any_of("\t\n\r\b "));
+    boost::split(next_line_tokens, line, boost::is_space(std::locale()), boost::token_compress_on);
       next_line_found = true;
       break;
   }

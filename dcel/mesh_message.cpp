@@ -339,10 +339,28 @@ Mesh MeshMessage::to_mesh() const {
     }
     std::vector<std::shared_ptr<::Anchor>> temp_anchors; //For indexing, since mesh.all_anchors is a set
     for (auto anchor : anchors) {
-
         std::shared_ptr<::Anchor> ptr = std::make_shared<::Anchor>(anchor.x_coord, anchor.y_coord);
+        std::clog << "Adding anchor to mesh: " << ptr->get_x() << ", " << ptr-> get_y() << std::endl;
+        assert(anchor.x_coord == ptr->get_x());
+        assert(anchor.y_coord == ptr->get_y());
         temp_anchors.push_back(ptr);
-        mesh.all_anchors.insert(ptr);
+    }
+
+    mesh.all_anchors.clear();
+    mesh.all_anchors = std::set<std::shared_ptr<::Anchor>, PointerComparator<::Anchor, Anchor_LeftComparator>>(temp_anchors.begin(), temp_anchors.end());
+
+    assert(mesh.all_anchors.size() == anchors.size());
+
+    auto it = mesh.all_anchors.begin();
+    for(int i = 0; i < anchors.size(); i++) {
+        std::clog << "Checking: ";
+        std::clog << anchors[i].x_coord << "-->" << temp_anchors[i]->get_x() << "-->" << (*it)->get_x() << " / ";
+        assert(anchors[i].x_coord == temp_anchors[i]->get_x());
+        assert(anchors[i].x_coord == (*it)->get_x());
+        std::clog << anchors[i].y_coord << "-->" << temp_anchors[i]->get_y() << "-->" << (*it)->get_y() << std::endl;
+        assert(anchors[i].y_coord == temp_anchors[i]->get_y());
+        assert(anchors[i].y_coord == (*it)->get_y());
+        ++it;
     }
 
     //Now populate all the pointers
@@ -389,7 +407,8 @@ Mesh MeshMessage::to_mesh() const {
     }
 
     assert(mesh.all_anchors.size() == anchors.size());
-    auto it = mesh.all_anchors.begin();
+
+    it = mesh.all_anchors.begin();
     for (int i = 0; i < anchors.size(); i++) {
         ::Anchor &anchor = **it;
         MeshMessage::Anchor ref = anchors[i];
@@ -399,8 +418,11 @@ Mesh MeshMessage::to_mesh() const {
             anchor.get_line().reset();
             anchor.set_line(edge);
         }
-        anchor.set_position(ref.position);
+        if (ref.above_line != anchor.is_above()) {
+            anchor.toggle();
+        }
         anchor.set_weight(ref.weight);
+        anchor.set_position(ref.position);
         if (it != mesh.all_anchors.end()) {
             ++it;
         }
@@ -412,5 +434,20 @@ Mesh MeshMessage::to_mesh() const {
 
     mesh.x_grades = x_grades;
     mesh.y_grades = y_grades;
+
+    it = mesh.all_anchors.begin();
+    for(int i = 0; i < anchors.size(); i++) {
+        std::clog << "Checking: ";
+        assert(anchors[i].x_coord == temp_anchors[i]->get_x());
+        assert(anchors[i].x_coord == (*it)->get_x());
+        std::clog << anchors[i].x_coord << " ";
+        assert(anchors[i].y_coord == temp_anchors[i]->get_y());
+        assert(anchors[i].y_coord == (*it)->get_y());
+        std::clog << anchors[i].y_coord << std::endl;
+        assert(anchors[i].above_line == (*it)->is_above());
+        assert(anchors[i].position == (*it)->get_position());
+        ++it;
+    }
+    std::clog << "All anchors identical in to_mesh" << std::endl;
     return mesh;
 }

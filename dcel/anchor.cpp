@@ -10,32 +10,32 @@ Anchor::Anchor(unsigned x, unsigned y) :
     x_coord(x), y_coord(y), entry(), dual_line(), position(0), above_line(false)
 { }
 
-Anchor::Anchor(const Anchor& other)
-{
-    x_coord = other.x_coord;
-    y_coord = other.y_coord;
-    entry = other.entry;
-    dual_line = other.dual_line;
-    position = other.position;
-    above_line = other.above_line;
-}
-
-Anchor& Anchor::operator= (const Anchor& other)
-{
-    //check for self-assignment
-    if(this == &other)
-        return *this;
-
-    //do the copy
-    x_coord = other.x_coord;
-    y_coord = other.y_coord;
-    entry = other.entry;
-    dual_line = other.dual_line;
-    position = other.position;
-    above_line = other.above_line;
-
-    return *this;
-}
+//Anchor::Anchor(const Anchor& other)
+//{
+//    x_coord = other.x_coord;
+//    y_coord = other.y_coord;
+//    entry = other.entry;
+//    dual_line = other.dual_line;
+//    position = other.position;
+//    above_line = other.above_line;
+//}
+//
+//Anchor& Anchor::operator= (const Anchor& other)
+//{
+//    //check for self-assignment
+//    if(this == &other)
+//        return *this;
+//
+//    //do the copy
+//    x_coord = other.x_coord;
+//    y_coord = other.y_coord;
+//    entry = other.entry;
+//    dual_line = other.dual_line;
+//    position = other.position;
+//    above_line = other.above_line;
+//
+//    return *this;
+//}
 
 std::ostream & operator<<(std::ostream &stream, const Anchor &anchor) {
     stream << "Anchor(" << anchor.get_x()  << ", " << anchor.get_y() << ")";

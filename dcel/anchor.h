@@ -20,10 +20,10 @@ class Anchor
     public:
         Anchor(std::shared_ptr<xiMatrixEntry> e);           //default constructor
         Anchor(unsigned x, unsigned y);     //constructor, requires only x- and y-coordinates
-        Anchor(const Anchor& other);        //copy constructor
+//        Anchor(const Anchor& other);        //copy constructor
         Anchor(); //For serialization
 
-        Anchor& operator= (const Anchor& other);	//assignment operator
+//        Anchor& operator= (const Anchor& other);	//assignment operator
         bool operator== (const Anchor& other) const;	//equality operator
 
         bool comparable(const Anchor &other) const;   //tests whether two Anchors are (strongly) comparable

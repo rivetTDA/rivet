@@ -184,10 +184,16 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream &stream,
         std::vector<std::string> tokens = reader.next_line();
         if (tokens.size() != dimension + 1 )
         {
-        	// TODO: need a check for characters in the point data
-        	// look up qexception object
-        	// handle in dataselectDialogue
-        	continue;
+            std::stringstream ss;
+            ss << "invalid line (should be " << dimension + 1 << " tokens but was " << tokens.size() << ")" << std::endl;
+            ss << "[";
+            for (auto t : tokens) {
+                ss << t << " ";
+            }
+            ss << "]" << std::endl;
+
+            throw std::runtime_error(ss.str());
+
         }
         DataPoint p(tokens);
         points.push_back(p);

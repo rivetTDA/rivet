@@ -202,8 +202,11 @@ void MeshBuilder::build_interior(std::shared_ptr<Mesh> mesh)
         unsigned first_pos = cur->a->get_position();   //most recent edge in the curve corresponding to Anchor a
         unsigned last_pos = cur->b->get_position();   //most recent edge in the curve corresponding to Anchor b
 
-        if(verbosity >= 8) { debug() << " next intersection: Anchor" << *(cur->a) << " (pos" << first_pos << "), Anchor"
-                             << *(cur->b) << " (pos" << last_pos; }
+//        if(verbosity >= 8) {
+//            debug() << " next intersection: Anchor"
+//                    << *(cur->a) << " (pos" << first_pos << "), Anchor"
+//                    << *(cur->b) << " (pos" << last_pos;
+//        }
 
         if(last_pos != first_pos + 1)
         {
@@ -225,13 +228,14 @@ void MeshBuilder::build_interior(std::shared_ptr<Mesh> mesh)
 
             last_pos++; //last_pos = cur->b->get_position();
 
-            if(verbosity >= 8) { debug() << " |---also intersects Anchor" << *(cur->b) << "(" << last_pos << ")"; }
+//            if(verbosity >= 8) { debug() << " |---also intersects Anchor" << *(cur->b) << "(" << last_pos << ")"; }
         }
 
         //compute y-coordinate of intersection
         double intersect_y = mesh->x_grades[sweep->a->get_x()]*(sweep->x) - mesh->y_grades[sweep->a->get_y()];
 
-        if(verbosity >= 8) { debug() << "  found intersection between" << (last_pos - first_pos + 1) << "edges at x =" << sweep->x << ", y =" << intersect_y; }
+        if(verbosity >= 8) { debug() << "  found intersection between"
+                                     << (last_pos - first_pos + 1) << "edges at x =" << sweep->x << ", y =" << intersect_y; }
 
         //create new vertex
         auto new_vertex = std::make_shared<Vertex>(sweep->x, intersect_y);
