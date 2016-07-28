@@ -261,8 +261,12 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<std::shared_ptr<H
             debug() << "    --> this step took" << step_time << "milliseconds and involved" << swap_counter << "transpositions; estimate was" << num_trans;
             if(swap_counter != num_trans)
                 debug() << "    ========>>> ERROR: transposition count doesn't match estimate!";
-            total_transpositions += swap_counter;
-            total_time_for_transpositions += step_time;
+
+            if(swap_counter > 0)   //don't track time for overhead that doesn't result in any transpositions
+            {
+                total_transpositions += swap_counter;
+                total_time_for_transpositions += step_time;
+            }
         }
         else
         {
@@ -277,11 +281,8 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<std::shared_ptr<H
             max_time = step_time;
 
         //update the treshold
-        if(total_time_for_transpositions > 0 && total_transpositions > total_time_for_transpositions)
-        {
-            threshold = (unsigned long) ((double) total_transpositions / (double) total_time_for_transpositions)*(total_time_for_resets/number_of_resets);
-            debug() << "       new threshold:" << threshold;
-        }
+        threshold = (unsigned long) (((double) total_transpositions / total_time_for_transpositions)*((double) total_time_for_resets/number_of_resets));
+        debug() << "       new threshold:" << threshold;
     }//end path traversal
 
     //print runtime data

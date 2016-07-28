@@ -10,6 +10,7 @@ ConfigParameters::ConfigParameters() :
     sliceLineColor(0, 0, 255, 150),                 //blue semi-transparent, for slice line
     sliceLineHighlightColor(0, 200, 200, 150)   ,   //cyan semi-transparent, for highlighting the slice line on click-and-drag
     bettiDotRadius(5),                              //radius of dot representing xi_0 = 1 or xi_1 = 1
-    persistenceDotRadius(5)                         //radius of dot representing one homology class in persistence diagram
+    persistenceDotRadius(5),                        //radius of dot representing one homology class in persistence diagram
+    autoDotSize(true)                               //automatic dot sizing is initially on
 { }
 

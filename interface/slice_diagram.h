@@ -38,7 +38,7 @@ public:
     void redraw_dots();      //redraws the support points of the multigraded Betti numbers
 
     void update_line(double angle, double offset);  //updates the line, in response to a change in the controls in the VisualizationWindow
-    void update_window_controls();   //computes new angle and offset in response to a change in the line, emits signal for the VisualizationWindow
+    void update_window_controls(bool from_dot);   //computes new angle and offset in response to a change in the line, emits signal for the VisualizationWindow
 
     void draw_barcode(Barcode* bc, double zero_coord, bool show); //draws the barcode parallel to the slice line; "show" determines whether or not bars are visible
     void update_barcode(Barcode* bc, double zero_coord, bool show);  //updates the barcode (e.g. after a change in the slice line)
@@ -56,7 +56,6 @@ public:
 
     double get_slice_length();  //gets the length of the slice, for scaling the persistence diagram
     double get_pd_scale();      //gets the number of pixels per unit, for the persistence diagram
-    double get_zero();          //gets the coordinate on the slice line which we consider "zero" for the persistence diagram
 
     void receive_parameter_change(const QString& xtext, const QString& ytext);            //updates the diagram after a change in configuration parameters
 
@@ -114,12 +113,14 @@ private:
     };
     std::vector<xiFloatingPoint> points;    //point data to be drawn in the slice area
 
-    const std::vector<double>& x_grades;    //NEW -- for dimension visualization
+    const std::vector<double>& x_grades;    //for dimension visualization
     const std::vector<double>& y_grades;    // "
 
     ///TODO: the next four values can be obtained from x_grades and y_grades
     double data_xmin, data_xmax, data_ymin, data_ymax;  //min and max coordinates of the data
+    double line_zero; //coordinate of projection of lower-left corner of line-selection window onto selected line
     double data_infty;      //data position that is outside of the window, used for drawing bars that extend to infinity
+    int max_xi_value;       //max value of the bigraded betti numbers
 
     int diagram_width, diagram_height;  //pixel size of the diagram
     bool normalized_coords;             //whether the user has selected "normalize coordinates"
@@ -131,7 +132,8 @@ private:
 
     const int padding;  //distance between xi support point area and control rectangle (on the top and right sides)
 
-    const double epsilon;   //used for almost-equal comparisons
+    bool control_dot_moved; //true if line is moved by a ControlDot -- used as part of a hack to make barcode display in the proper position relative to the line
+
     const double PI;   //used in get_pd_scale() when the slice line is vertical
 
   //private functions

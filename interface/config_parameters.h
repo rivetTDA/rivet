@@ -17,6 +17,7 @@ struct ConfigParameters {
   //sizes
     int bettiDotRadius;
     int persistenceDotRadius;
+    bool autoDotSize;
 
   //constructor
     ConfigParameters();

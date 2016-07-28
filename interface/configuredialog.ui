@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>600</width>
-    <height>400</height>
+    <height>420</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,8 +18,8 @@
     <rect>
      <x>20</x>
      <y>10</y>
-     <width>581</width>
-     <height>341</height>
+     <width>561</width>
+     <height>361</height>
     </rect>
    </property>
    <property name="currentIndex">
@@ -417,7 +417,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>270</y>
+       <y>290</y>
        <width>190</width>
        <height>27</height>
       </rect>
@@ -454,7 +454,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>support points of multigraded Betti numbers</string>
+      <string>Support points of multigraded Betti numbers</string>
      </property>
     </widget>
     <widget class="QLabel" name="persistenceDotSizeLabel">
@@ -467,7 +467,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>persistence diagram dots</string>
+      <string>Persistence diagram dots</string>
      </property>
     </widget>
     <widget class="QSpinBox" name="bettiDotSpinBox">
@@ -496,17 +496,17 @@
       <number>1</number>
      </property>
     </widget>
-    <widget class="QPushButton" name="defaultSizesButton">
+    <widget class="QCheckBox" name="AutoDotSizeCheckBox">
      <property name="geometry">
       <rect>
-       <x>10</x>
-       <y>270</y>
-       <width>190</width>
-       <height>27</height>
+       <x>30</x>
+       <y>110</y>
+       <width>211</width>
+       <height>22</height>
       </rect>
      </property>
      <property name="text">
-      <string>Restore Default Sizes</string>
+      <string>Use automatic dot sizes</string>
      </property>
     </widget>
    </widget>
@@ -588,7 +588,7 @@
    <property name="geometry">
     <rect>
      <x>490</x>
-     <y>360</y>
+     <y>380</y>
      <width>99</width>
      <height>27</height>
     </rect>
@@ -601,7 +601,7 @@
    <property name="geometry">
     <rect>
      <x>380</x>
-     <y>360</y>
+     <y>380</y>
      <width>99</width>
      <height>27</height>
     </rect>
@@ -630,7 +630,6 @@
   <tabstop>defaultColorsButton</tabstop>
   <tabstop>bettiDotSpinBox</tabstop>
   <tabstop>persistenceDotSpinBox</tabstop>
-  <tabstop>defaultSizesButton</tabstop>
   <tabstop>xaxisText</tabstop>
   <tabstop>yaxisText</tabstop>
   <tabstop>cancelButton</tabstop>
