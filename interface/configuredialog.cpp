@@ -16,7 +16,6 @@ ConfigureDialog::ConfigureDialog(ConfigParameters& c_params, InputParameters& i_
     lineCol(config_params.sliceLineColor), lineHiCol(config_params.sliceLineHighlightColor),
     bettiRadius(config_params.bettiDotRadius), perRadius(config_params.persistenceDotRadius),
     autoDots(config_params.autoDotSize),
-    xlabel(input_params.x_label), ylabel(input_params.y_label)
     xlabel(QString::fromStdString(input_params.x_label)), ylabel(QString::fromStdString(input_params.y_label))
 {
     ui->setupUi(this);

@@ -1,8 +1,8 @@
 cmake_minimum_required (VERSION 3.1)
+project (rivet_console)
 set (CMAKE_CXX_STANDARD 11)
 set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-ftemplate-depth=1024 -Wall -Wextra -pedantic")
-project (rivet_console)
 
 include(ExternalProject)
 
@@ -53,6 +53,9 @@ add_executable (rivet_console
 add_dependencies(rivet_console docopt_project)
 
 target_link_libraries(rivet_console docopt_s ${Boost_LIBRARIES})
+# TODO: Make this file run the qmake build as well, and copy the rivet_console into the same dir where the viewer is built
+# TODO: make this not recompile everything we just compiled for rivet_console.
+# Maybe using https://cmake.org/Wiki/CMake/Tutorials/Object_Library ?
 
 add_executable(unit_tests
         computation.cpp
@@ -77,6 +80,7 @@ add_executable(unit_tests
         timer.cpp
         debug.cpp
         test/unit_tests.cpp)
+
 
 include_directories("${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/include" ${Boost_INCLUDE_DIR} ${PROJECT_SOURCE_DIR}/test)
 

@@ -93,7 +93,6 @@ HEADERS  += visualizationwindow.h			\
     #driver.h \
     interface/file_writer.h \
     dcel/serialization.h \
-    cereal/archives/json.hpp \
     interface/console_interaction.h \
     numerics.h \
     base_64.h \
