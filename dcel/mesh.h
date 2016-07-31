@@ -103,7 +103,7 @@ class Mesh
         void find_edge_weights(PersistenceUpdater& updater);    //computes and stores the edge weight for each anchor line
 
         void find_path(std::vector<Halfedge *> &pathvec);   //finds a pseudo-optimal path through all 2-cells of the arrangement
-        void find_subpath(unsigned cur_node, std::vector< std::vector<unsigned> >& adj, std::vector<Halfedge*>& pathvec, bool return_path, std::vector<bool> &discovered); //builds the path recursively
+        void find_subpath(unsigned cur_node, std::vector< std::vector<unsigned> >& adj, std::vector<Halfedge*>& pathvec); //builds the path recursively
 
         void set_barcode_template(unsigned i, BarcodeTemplate& bt);    //stores (a copy of) the given barcode template in faces[i]; used for re-building the arrangement from a RIVET data file
 

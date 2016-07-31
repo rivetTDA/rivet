@@ -9,6 +9,7 @@
 #include "../dcel/barcode_template.h"
 #include "../math/multi_betti.h"            //this include might not be necessary
 #include "../math/persistence_updater.h"
+#include "../cutgraph.cpp"
 
 #include <QDebug>
 #include <QTime>
@@ -21,6 +22,7 @@
 #include <limits>	//necessary for infinity
 #include <queue>    //for std::priority_queue
 #include <stack>    //for find_subpath
+#include <algorithm> //for find function in version 3 of find_subpath
 
 
 // Mesh constructor; sets up bounding box (with empty interior) for the affine Grassmannian
@@ -575,6 +577,11 @@ void Mesh::find_path(std::vector<Halfedge*>& pathvec)
     for(unsigned i=0; i<faces.size(); i++)
         face_indexes.insert( std::pair<Face*, unsigned>(faces[i], i));
 
+    // distance vector for sorting the adjacency list
+    std::vector<std::vector<unsigned> > distances(faces.size(), std::vector<unsigned>(faces.size(), -1));
+    for (int i = 0; i < distances.size(); ++i)
+    	distances.at(i).at(i) = 0;
+
     //loop over all faces
     for(unsigned i=0; i<faces.size(); i++)
     {
@@ -594,6 +601,8 @@ void Mesh::find_path(std::vector<Halfedge*>& pathvec)
                 if(i < j)
                 {
                     boost::add_edge(i, j, current->get_anchor()->get_weight(), dual_graph);
+                    distances.at(i).at(j) = current->get_anchor()->get_weight();
+                    distances.at(j).at(i) = current->get_anchor()->get_weight();
                 }
             }
             //move to the next neighbor
@@ -643,15 +652,11 @@ void Mesh::find_path(std::vector<Halfedge*>& pathvec)
   // PART 3: CONVERT THE OUTPUT OF PART 2 TO A PATH
 
     //organize the edges of the minimal spanning tree so that we can traverse the tree
-    std::vector< std::set<unsigned> > adjacencies(faces.size(), std::set<unsigned>());  //this will store all adjacency relationships in the spanning tree
-    std::vector< std::vector<unsigned> > adjList(faces.size(), std::vector<unsigned>());
+    std::vector< std::vector<unsigned> > adjList(faces.size(), std::vector<unsigned>()); //this will store all adjacency relationships in the spanning tree
     for(unsigned i=0; i<spanning_tree_edges.size(); i++)
     {
         unsigned a = boost::source(spanning_tree_edges[i], dual_graph);
         unsigned b = boost::target(spanning_tree_edges[i], dual_graph);
-
-        (adjacencies[a]).insert(b);
-        (adjacencies[b]).insert(a);
 
         adjList.at(a).push_back(b);
         adjList.at(b).push_back(a);
@@ -663,11 +668,11 @@ void Mesh::find_path(std::vector<Halfedge*>& pathvec)
     Face* initial_cell = topleft->get_twin()->get_face();
     unsigned start = (face_indexes.find(initial_cell))->second;
 
-    std::vector<bool> discovered(adjList.size(), false);
-    discovered.at(start) = true;
+    // sort the adjacencies to minimize backtracking in the path
+    sortAdjacencies(adjList, distances, start);
 
     // find_subpath(start, adjacencies, pathvec, false);
-    find_subpath(start, adjList, pathvec, false, discovered);
+    find_subpath(start, adjList, pathvec);
 
     //TESTING -- PRINT PATH
     if(verbosity >= 10)
@@ -682,108 +687,139 @@ void Mesh::find_path(std::vector<Halfedge*>& pathvec)
 
 //recursive method to build part of the path
 //return_path == TRUE iff we want the path to return to the current node after traversing all of its children
-void Mesh::find_subpath(unsigned cur_node, std::vector< std::vector<unsigned> >& adj, std::vector<Halfedge*>& pathvec, bool return_path, std::vector<bool> &discovered)
+void Mesh::find_subpath(unsigned cur_node, std::vector< std::vector<unsigned> >& adj, std::vector<Halfedge*>& pathvec)
 {
+	// VERSION 1 -- MAYBE BETTER THAN VERSION 2
+	// Uses a stack for nodes and erases adjacencies that have already been discovered
+	// Uses erase and find functions which add some overhead
+	// Could possibly be reimplemented to use std::set<unsigned> instead of std::vector<unsigned> for adjacency list
+		// but this might be a bit difficult because of set sorting (we want to sort so as to minimize backtracking)
+		// might have to use a mapping of some sort, a struct, or a pair to get the sorting to work properly
+		// which will add some more overhead
 
-    std::stack<unsigned> nodes, edgeStack;
+	std::stack<unsigned> nodes; // stack for nodes as we do DFS
+    std::stack<Halfedge*> backtrack; // stack for storing extra copy of Halfedge* so we don't have to recalculate when popping
+    unsigned node = cur_node;
+    nodes.push(node); // push node onto the node stack
+
+    while (!nodes.empty()) // while we have not traversed the whole tree
+    {
+		node = nodes.top(); // let node be the current node that we are considering
+
+        if (adj.at(node).size() != 0) // if we have not traversed all of node's children
+        {
+        	// find the halfedge to be traversed
+            unsigned next_node = (unsigned) adj.at(node).back();
+
+            Halfedge* cur_edge = (faces[node])->get_boundary();
+            while (cur_edge->get_twin()->get_face() != faces[next_node])
+            {
+                cur_edge = cur_edge->get_next();
+
+                if (cur_edge == (faces[node])->get_boundary())
+                {
+                    qDebug() << "ERROR:  cannot find edge between 2-cells " << node << " and " << next_node << "\n";
+                    throw std::exception();
+                }
+            }
+            // and push it onto pathvec
+            pathvec.push_back(cur_edge->get_twin());
+            // push a copy onto the backtracking stack so we don't have to search for this Halfedge* again when popping
+            backtrack.push(cur_edge->get_twin());
+            // push the next node onto the stack
+            nodes.push(next_node);
+
+            // erase the adjacencies so they will not be considered again
+            adj.at(node).erase(adj.at(node).end() - 1); // NOTE:  could possible use resize(adj.at(node).size() - 1) if that is faster than erase but I'm not sure if it would be
+            adj.at(next_node).erase( find(adj.at(next_node).begin(), adj.at(next_node).end(), node) );
+
+        } // end if
+
+        else // if we have traversed all of node's children
+        {
+            nodes.pop(); // pop node off of the node stack
+
+            if (!backtrack.empty()) // if there is still backtracking to be done
+            {
+                pathvec.push_back(backtrack.top()); // push the top of backtrack onto pathvec
+                backtrack.pop(); // and pop that Halfedge* off of backtrack
+            }
+        }
+    } // end while
+
+
+
+
+	// VERSION 2 -- REQUIRES REVERSING pairCompare FUNCTION IN cutgraph.cpp
+	// Uses stacks for nodes and backtracking and uses boolean array for keeping track of which vertices have been discovered
+	// Must perfonm linear search at each iteration of the while loop to find which node(s) (if any) need to be considered
+	/*
+	bool discovered[adj.size()]; // boolean array for keeping track of which nodes have been visited
+	// populate the boolean array with false
+	for (int i = 0; i < adj.size(); ++i)
+	{
+		discovered[i] = false;
+	}
+	std::stack<unsigned> nodes; // stack for nodes as we do DFS
+    std::stack<Halfedge*> backtrack; // stack for storing extra copy of Halfedge* so we don't have to recalculate when popping
     unsigned node = cur_node, edgeIndex = 0;
-    nodes.push(node);
-    edgeStack.push(0);
-    discovered.at(node) = true;
+    nodes.push(node); // push node onto the node stack
+    discovered[node] = true; // mark node as discovered
 
-    while (!nodes.empty())
+    while (!nodes.empty()) // while we have not traversed the whole tree
     {
-        node = nodes.top();
-        edgeIndex = edgeStack.top();
+		node = nodes.top(); // let node be the current node that we are considering
+		// find the next undiscovered node
+		edgeIndex = adj.at(node).size(); // set edgeIndex such that we will skip to the else if we don't find an undiscovered adjacency
+        // look for an undiscovered adjacency
+		for (int i = 0; i < adj.at(node).size(); ++i)
+		{
+			if (!discovered[adj.at(node).at(i)])
+			{
+				edgeIndex = i;
+				break;
+			}
+		}
 
-        if (edgeIndex < adj.at(node).size())
+        if (edgeIndex < adj.at(node).size()) // if we have not traversed all of node's children
         {
-            if ( !discovered.at( adj.at(node).at(edgeIndex) ) )
-            {
-                unsigned next_node = (unsigned) adj.at(node).at(edgeIndex);
+        	discovered[adj.at(node).at(edgeIndex)] = true; // discover our next node
 
-                Halfedge* cur_edge = (faces[node])->get_boundary();
-                while (cur_edge->get_twin()->get_face() != faces[next_node])
+        	// find the halfedge to be traversed
+            unsigned next_node = (unsigned) adj.at(node).at(edgeIndex);
+
+            Halfedge* cur_edge = (faces[node])->get_boundary();
+            while (cur_edge->get_twin()->get_face() != faces[next_node])
+            {
+                cur_edge = cur_edge->get_next();
+
+                if (cur_edge == (faces[node])->get_boundary())
                 {
-                    cur_edge = cur_edge->get_next();
-
-                    if (cur_edge == (faces[node])->get_boundary())
-                    {
-                        qDebug() << "ERROR:  cannot find edge between 2-cells " << cur_node << " and " << node << "\n";
-                        throw std::exception();
-                    }
+                    qDebug() << "ERROR:  cannot find edge between 2-cells " << node << " and " << next_node << "\n";
+                    throw std::exception();
                 }
-                pathvec.push_back(cur_edge->get_twin());
+            }
+            // and push it onto pathvec
+            pathvec.push_back(cur_edge->get_twin());
+            // push a copy onto the backtracking stack so we don't have to search for this Halfedge* again when popping
+            backtrack.push(cur_edge->get_twin());
+            // push the next node onto the stack
+            nodes.push( adj.at(node).at(edgeIndex) );
 
-                node = adj.at(node).at(edgeIndex);
-                discovered.at(node) = true;
-                nodes.push(node);
-                edgeStack.top()++;
-                edgeStack.push(0);
-            }
-            else
-            {
-                edgeIndex = ++edgeStack.top();
-            }
-        }
-        else
+        } // end if
+
+        else // if we have traversed all of node's children
         {
-            unsigned next_node = nodes.top();
-            nodes.pop();
-            edgeStack.pop();
+            nodes.pop(); // pop node off of the node stack
 
-            if (!nodes.empty())
+            if (!backtrack.empty()) // if there is still backtracking to be done
             {
-                Halfedge* cur_edge = (faces[nodes.top()])->get_boundary();
-                while (cur_edge->get_twin()->get_face() != faces[next_node])
-                {
-                    cur_edge = cur_edge->get_next();
-
-                    if (cur_edge == (faces[nodes.top()])->get_boundary())
-                    {
-                        qDebug() << "ERROR:  cannot find edge between 2-cells " << cur_node << "and " << node << "\n";
-                        throw std::exception();
-                    }
-                }
-                pathvec.push_back(cur_edge->get_twin());
+                pathvec.push_back(backtrack.top()); // push the top of backtrack onto pathvec
+                backtrack.pop(); // and pop that Halfedge* off of backtrack
             }
         }
-    }
-
-/*    while(!adj[cur_node].empty())   //cur_node still has children to traverse
-    {
-        //get the next node that is adjacent to cur_node
-        unsigned next_node = *(adj[cur_node].begin());
-
-        //find the next Halfedge and append it to pathvec
-        Halfedge* cur_edge = (faces[cur_node])->get_boundary();
-        while(cur_edge->get_twin()->get_face() != faces[next_node])     //do we really have to search for the correct edge???
-        {
-            cur_edge = cur_edge->get_next();
-
-            if(cur_edge == (faces[cur_node])->get_boundary())   //THIS SHOULD NEVER HAPPEN
-            {
-                qDebug() << "ERROR: cannot find edge between 2-cells " << cur_node << " and " << next_node << "\n";
-                throw std::exception();
-            }
-        }
-        pathvec.push_back(cur_edge->get_twin());
-
-        //remove adjacencies that have been already processed
-        adj[cur_node].erase(next_node);     //removes (cur_node, next_node)
-        adj[next_node].erase(cur_node);     //removes (next_node, cur_node)
-
-        //do we need to return to this node?
-        bool return_here = return_path || !adj[cur_node].empty();
-
-        //recurse through the next node
-        find_subpath(next_node, adj, pathvec, return_here);
-
-        //if we will return to this node, then add reverse Halfedge to pathvec
-        if(return_here)
-            pathvec.push_back(cur_edge);
-
-    }//end while*/
+    } // end while
+    */
 
 }//end find_subpath()
 
