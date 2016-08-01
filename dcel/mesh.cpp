@@ -9,7 +9,7 @@
 #include "../dcel/barcode_template.h"
 #include "../math/multi_betti.h"            //this include might not be necessary
 #include "../math/persistence_updater.h"
-#include "../cutgraph.cpp"
+#include "../cutgraph.h"
 
 #include <QDebug>
 #include <QTime>
