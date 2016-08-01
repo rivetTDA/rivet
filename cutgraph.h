@@ -14,12 +14,12 @@ bool pairCompare(std::pair<unsigned, unsigned> left, std::pair<unsigned, unsigne
 void sortAdjacencies(std::vector<std::vector<unsigned> > &adjList, std::vector<std::vector<unsigned> > &distances, unsigned start)
 {
 	bool discovered[adjList.size()]; // boolean array for keeping track of which nodes have been visited
-	unsigned branching[adjList.size()]; // this will contain the number of nodes "hanging" from the node represented by its index in branching
-	// populate the boolean array with false and the branching array with 0
+	unsigned branchWeight[adjList.size()]; // this will contain the number of nodes "hanging" from the node represented by its index in branchWeight
+	// populate the boolean array with false and the branchWeight array with 0
 	for (int i = 0; i < adjList.size(); ++i)
 	{
 		discovered[i] = false;
-		branching[i] = 0;
+		branchWeight[i] = 0;
 	}
 	std::stack<unsigned> nodes; // stack for nodes as we do DFS
     unsigned node = start, edgeIndex = 0, runningSum = 0;
@@ -55,16 +55,16 @@ void sortAdjacencies(std::vector<std::vector<unsigned> > &adjList, std::vector<s
             runningSum = 0; // reset runningSum
 			for (int i = 0; i < adjList.at(node).size(); ++i)
 			{
-				runningSum += 1 + branching[ adjList.at(node).at(i) ];
+				runningSum += branchWeight[adjList.at(node).at(i)] + distances.at(node).at( adjList.at(node).at(i) );
 			}
 
-			if (!nodes.empty()) // if there is a parent node we know that we overcounted the branching by 1
+			if (!nodes.empty()) // if there is a parent node we know that we overcounted the branchWeight by 1
 			{
-				branching[node] = runningSum - 1; // assign runningSum to branching at the current node
+				branchWeight[node] = runningSum - distances.at(node).at(nodes.top()); // assign runningSum to branchWeight at the current node
 			}
-			else // otherwise, we are at the root of the tree and we can assign runningSum to the branching at node
+			else // otherwise, we are at the root of the tree and we can assign runningSum to the branchWeight at node
 			{
-				branching[node] = runningSum; // assign runningSum to branching at the current node
+				branchWeight[node] = runningSum; // assign runningSum to branchWeight at the current node
 			}
         }
     } // end while
@@ -75,17 +75,17 @@ void sortAdjacencies(std::vector<std::vector<unsigned> > &adjList, std::vector<s
 	// qDebug() << "adjList = ";
 	// for (int i = 0; i < adjList.size(); ++i)
 	// {
-	// 	qDebug() << "branching.at(" << i << ") = " << branching[i];
+	// 	qDebug() << "branchWeight.at(" << i << ") = " << branchWeight[i];
 	// 	// qDebug().nospace() << i << " = ";
 	// 	for (int j = 0; j < adjList.at(i).size(); ++j)
 	// 	{
-	// 		qDebug().nospace() << adjList.at(i).at(j) << "  ";
+	// 		qDebug().nospace() << adjList.at(i).at(j) << "  =  " << distances.at(i).at( adjList.at(i).at(j) );
 	// 	}
 	// }
 
 	// for (int i = 0; i < adjList.size(); ++i)
 	// {
-	// 	qDebug() << "branching.at(" << i << ") = " << branching[i];
+	// 	qDebug() << "branchWeight.at(" << i << ") = " << branchWeight[i];
 	// }
 
     std::vector<std::pair<unsigned, unsigned> > toBeSorted; // vector of pairs to contain the children of a given node
@@ -97,8 +97,8 @@ void sortAdjacencies(std::vector<std::vector<unsigned> > &adjList, std::vector<s
 		toBeSorted.clear(); // clear toBeSorted so we don't have any extra pairs from previous iterations
 		for (int j = 0; j < adjList.at(i).size(); ++j) // for each child of the current node
 		{
-			// make a pair where the first element is the branching off of that child and the second element is the child
-			newPair.first = branching[ adjList.at(i).at(j) ];
+			// make a pair where the first element is the branchWeight off of that child and the second element is the child
+			newPair.first = branchWeight[ adjList.at(i).at(j) ];
 			newPair.second = adjList.at(i).at(j);
 
 			// and then push it onto toBeSorted
@@ -106,7 +106,7 @@ void sortAdjacencies(std::vector<std::vector<unsigned> > &adjList, std::vector<s
 		}
 
 		// now sort the pairs
-		// NOTE:  pairCompare currently places the most branching first and the least branching last
+		// NOTE:  pairCompare currently places the most branchWeight first and the least branchWeight last
 		sort(toBeSorted.begin(), toBeSorted.end(), pairCompare);
 
 		// replace the elements in the adjacency list in sorted order
@@ -122,18 +122,18 @@ void sortAdjacencies(std::vector<std::vector<unsigned> > &adjList, std::vector<s
 	// for (int i = 0; i < adjList.size(); ++i)
 	// {
 	// 	qDebug() << "i = " << i;
-	// 	previous = branching[ adjList.at(i).at(0) ];
+	// 	previous = branchWeight[ adjList.at(i).at(0) ];
 	// 	for (int j = 1; j < adjList.at(i).size(); ++j)
 	// 	{
 	// 		// NOTE:  this line will throw an error depending on the configuration of pairCompare
-	// 			// if using "left.first < right.first" in pairCompare, then use "branching[ adjList.at(i).at(j) ] < previous" here
-	// 			// if using "left.first > right.first" in pairCompare, then use "branching[ adjList.at(i).at(j) ] > previous" here
-	// 		if ( branching[ adjList.at(i).at(j) ] > previous)
+	// 			// if using "left.first < right.first" in pairCompare, then use "branchWeight[ adjList.at(i).at(j) ] < previous" here
+	// 			// if using "left.first > right.first" in pairCompare, then use "branchWeight[ adjList.at(i).at(j) ] > previous" here
+	// 		if ( branchWeight[ adjList.at(i).at(j) ] > previous)
 	// 		{
 	// 			qDebug() << "There was a problem between indices " << j - 1 << " and " << j << " in list at " << i;
 	// 			throw std::exception();
 	// 		}
-	// 		previous = branching[ adjList.at(i).at(j) ];
+	// 		previous = branchWeight[ adjList.at(i).at(j) ];
 	// 	}
 	// 	qDebug() << "so far so good";
 	// }
