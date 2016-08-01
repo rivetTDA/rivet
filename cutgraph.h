@@ -8,8 +8,7 @@
 // NOTE:  this function currently sorts in reverse order (most branching first, least branching last)
 bool pairCompare(std::pair<unsigned, unsigned> left, std::pair<unsigned, unsigned> right)
 {
-    // return left.first < right.first; // "NORMAL"  pairCompare FOR VERSION 2 OF find_subpath
-    return left.first > right.first; // "REVERSED" pairCompare FOR VERSION 1 OF find_subpath
+    return left.first > right.first; // REVERSED sorting
 }
 
 void sortAdjacencies(std::vector<std::vector<unsigned> > &adjList, std::vector<std::vector<unsigned> > &distances, unsigned start)
@@ -23,7 +22,7 @@ void sortAdjacencies(std::vector<std::vector<unsigned> > &adjList, std::vector<s
 		branching[i] = 0;
 	}
 	std::stack<unsigned> nodes; // stack for nodes as we do DFS
-    unsigned node = start, edgeIndex = 0, runningSum = 0;;
+    unsigned node = start, edgeIndex = 0, runningSum = 0;
     nodes.push(node); // push node onto the node stack
     discovered[node] = true; // mark node as discovered
 

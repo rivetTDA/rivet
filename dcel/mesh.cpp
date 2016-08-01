@@ -685,24 +685,15 @@ void Mesh::find_path(std::vector<Halfedge*>& pathvec)
     }
 }//end find_path()
 
-//recursive method to build part of the path
-//return_path == TRUE iff we want the path to return to the current node after traversing all of its children
+// Uses a stack for nodes and erases adjacencies that have already been discovered
 void Mesh::find_subpath(unsigned cur_node, std::vector< std::vector<unsigned> >& adj, std::vector<Halfedge*>& pathvec)
 {
-	// VERSION 1 -- MAYBE BETTER THAN VERSION 2
-	// Uses a stack for nodes and erases adjacencies that have already been discovered
-	// Uses erase and find functions which add some overhead
-	// Could possibly be reimplemented to use std::set<unsigned> instead of std::vector<unsigned> for adjacency list
-		// but this might be a bit difficult because of set sorting (we want to sort so as to minimize backtracking)
-		// might have to use a mapping of some sort, a struct, or a pair to get the sorting to work properly
-		// which will add some more overhead
-
 	std::stack<unsigned> nodes; // stack for nodes as we do DFS
     std::stack<Halfedge*> backtrack; // stack for storing extra copy of Halfedge* so we don't have to recalculate when popping
-    unsigned node = cur_node;
+    unsigned node = cur_node, numDiscovered = 1, numNodes = adj.size();
     nodes.push(node); // push node onto the node stack
 
-    while (!nodes.empty()) // while we have not traversed the whole tree
+    while (numDiscovered != numNodes) // while we have not traversed the whole tree
     {
 		node = nodes.top(); // let node be the current node that we are considering
 
@@ -728,9 +719,11 @@ void Mesh::find_subpath(unsigned cur_node, std::vector< std::vector<unsigned> >&
             backtrack.push(cur_edge->get_twin());
             // push the next node onto the stack
             nodes.push(next_node);
+            // increment the discovered counter
+            ++numDiscovered;
 
             // erase the adjacencies so they will not be considered again
-            adj.at(node).erase(adj.at(node).end() - 1); // NOTE:  could possible use resize(adj.at(node).size() - 1) if that is faster than erase but I'm not sure if it would be
+            adj.at(node).erase(adj.at(node).end() - 1); // NOTE:  could use resize(adj.at(node).size() - 1) if that is faster than erase but I'm not sure if it would be
             adj.at(next_node).erase( find(adj.at(next_node).begin(), adj.at(next_node).end(), node) );
 
         } // end if
@@ -738,88 +731,10 @@ void Mesh::find_subpath(unsigned cur_node, std::vector< std::vector<unsigned> >&
         else // if we have traversed all of node's children
         {
             nodes.pop(); // pop node off of the node stack
-
-            if (!backtrack.empty()) // if there is still backtracking to be done
-            {
-                pathvec.push_back(backtrack.top()); // push the top of backtrack onto pathvec
-                backtrack.pop(); // and pop that Halfedge* off of backtrack
-            }
+            pathvec.push_back(backtrack.top()); // push the top of backtrack onto pathvec
+            backtrack.pop(); // and pop that Halfedge* off of backtrack
         }
-    } // end while
-
-
-
-
-	// VERSION 2 -- REQUIRES REVERSING pairCompare FUNCTION IN cutgraph.cpp
-	// Uses stacks for nodes and backtracking and uses boolean array for keeping track of which vertices have been discovered
-	// Must perfonm linear search at each iteration of the while loop to find which node(s) (if any) need to be considered
-	/*
-	bool discovered[adj.size()]; // boolean array for keeping track of which nodes have been visited
-	// populate the boolean array with false
-	for (int i = 0; i < adj.size(); ++i)
-	{
-		discovered[i] = false;
-	}
-	std::stack<unsigned> nodes; // stack for nodes as we do DFS
-    std::stack<Halfedge*> backtrack; // stack for storing extra copy of Halfedge* so we don't have to recalculate when popping
-    unsigned node = cur_node, edgeIndex = 0;
-    nodes.push(node); // push node onto the node stack
-    discovered[node] = true; // mark node as discovered
-
-    while (!nodes.empty()) // while we have not traversed the whole tree
-    {
-		node = nodes.top(); // let node be the current node that we are considering
-		// find the next undiscovered node
-		edgeIndex = adj.at(node).size(); // set edgeIndex such that we will skip to the else if we don't find an undiscovered adjacency
-        // look for an undiscovered adjacency
-		for (int i = 0; i < adj.at(node).size(); ++i)
-		{
-			if (!discovered[adj.at(node).at(i)])
-			{
-				edgeIndex = i;
-				break;
-			}
-		}
-
-        if (edgeIndex < adj.at(node).size()) // if we have not traversed all of node's children
-        {
-        	discovered[adj.at(node).at(edgeIndex)] = true; // discover our next node
-
-        	// find the halfedge to be traversed
-            unsigned next_node = (unsigned) adj.at(node).at(edgeIndex);
-
-            Halfedge* cur_edge = (faces[node])->get_boundary();
-            while (cur_edge->get_twin()->get_face() != faces[next_node])
-            {
-                cur_edge = cur_edge->get_next();
-
-                if (cur_edge == (faces[node])->get_boundary())
-                {
-                    qDebug() << "ERROR:  cannot find edge between 2-cells " << node << " and " << next_node << "\n";
-                    throw std::exception();
-                }
-            }
-            // and push it onto pathvec
-            pathvec.push_back(cur_edge->get_twin());
-            // push a copy onto the backtracking stack so we don't have to search for this Halfedge* again when popping
-            backtrack.push(cur_edge->get_twin());
-            // push the next node onto the stack
-            nodes.push( adj.at(node).at(edgeIndex) );
-
-        } // end if
-
-        else // if we have traversed all of node's children
-        {
-            nodes.pop(); // pop node off of the node stack
-
-            if (!backtrack.empty()) // if there is still backtracking to be done
-            {
-                pathvec.push_back(backtrack.top()); // push the top of backtrack onto pathvec
-                backtrack.pop(); // and pop that Halfedge* off of backtrack
-            }
-        }
-    } // end while
-    */
+    }
 
 }//end find_subpath()
 
