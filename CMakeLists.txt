@@ -16,12 +16,12 @@ externalproject_add(
   )
 
 
-find_package(Boost 1.60 COMPONENTS serialization-mt system-mt)
+find_package(Boost COMPONENTS serialization system)
 
 #note this must come before add_executable or it will be ignored
 link_directories(${CMAKE_CURRENT_BINARY_DIR}/docopt/src/docopt_project-build)
 
-include_directories("${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/include" ${Boost_INCLUDE_DIR})
+include_directories("${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/include" ${Boost_INCLUDE_DIR} "${CMAKE_CURRENT_BINARY_DIR}/docopt/src/docopt_project")
 
 add_executable (rivet_console
         console.cpp

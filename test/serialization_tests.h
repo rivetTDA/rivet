@@ -26,28 +26,28 @@ template <typename T>
         return result;
 }
 
-TEST_CASE( "Vertex serialization works", "[Serialization]" ) {
+//TEST_CASE( "Vertex serialization works", "[Serialization]" ) {
 
-    Vertex v(1, 2);
-    Vertex v2 = round_trip<Vertex>(v);
+    //Vertex v(1, 2);
+    //Vertex v2 = round_trip<Vertex>(v);
 
-//    REQUIRE (v == v2);
-}
-TEST_CASE( "Vertex serialization works with shared_ptr", "[Serialization]" ) {
+////    REQUIRE (v == v2);
+//}
+//TEST_CASE( "Vertex serialization works with shared_ptr", "[Serialization]" ) {
 
-auto v1 = std::make_shared<Vertex>(1, 2);
-auto v2 = round_trip<std::shared_ptr<Vertex>>(v1);
+//auto v1 = std::make_shared<Vertex>(1, 2);
+//auto v2 = round_trip<std::shared_ptr<Vertex>>(v1);
 
-//REQUIRE (*v1 == *v2);
-}
-TEST_CASE( "Vertex serialization works with halfedge", "[Serialization]" ) {
-    auto edge = std::make_shared<Halfedge>();
-Vertex v(1, 2);
-    v.set_incident_edge(edge);
-Vertex v2 = round_trip<Vertex>(v);
+////REQUIRE (*v1 == *v2);
+//}
+//TEST_CASE( "Vertex serialization works with halfedge", "[Serialization]" ) {
+    //auto edge = std::make_shared<Halfedge>();
+//Vertex v(1, 2);
+    //v.set_incident_edge(edge);
+//Vertex v2 = round_trip<Vertex>(v);
 
-//REQUIRE (v == v2);
-}
+////REQUIRE (v == v2);
+//}
 
 
 //TEST_CASE( "Mesh serialization works", "[Serialization]" ) {

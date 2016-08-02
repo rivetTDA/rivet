@@ -40,8 +40,8 @@
 //    }
 //}
 
-BOOST_CLASS_EXPORT(BarcodeTemplate);
-BOOST_CLASS_EXPORT(BarTemplate);
+BOOST_CLASS_EXPORT(BarcodeTemplate)
+BOOST_CLASS_EXPORT(BarTemplate)
 
 
 template <class Archive>

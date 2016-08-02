@@ -5,7 +5,7 @@
 #include "computation.h"
 #include "debug.h"
 #include <interface/file_writer.h>
-#include "docopt/docopt.h"
+#include "docopt.h"
 #include <boost/archive/tmpdir.hpp>
 
 #include <boost/archive/text_iarchive.hpp>
