@@ -17,10 +17,10 @@ MeshMessage::MeshMessage(Mesh const &mesh):
     {
         //REALLY slow with all these VID, FID, etc. calls, but will do for now.
         for(auto face: mesh.faces) {
-            faces.push_back(Face{HalfedgeId(mesh.HID(face->get_boundary())), face->get_barcode()});
+            faces.push_back(FaceM{HalfedgeId(mesh.HID(face->get_boundary())), face->get_barcode()});
         }
         for(auto half: mesh.halfedges) {
-            half_edges.push_back(Halfedge {
+            half_edges.push_back(HalfedgeM {
                     VertexId(mesh.VID(half->get_origin())),
                     HalfedgeId(mesh.HID(half->get_twin())),
                     HalfedgeId(mesh.HID(half->get_next())),
@@ -31,7 +31,7 @@ MeshMessage::MeshMessage(Mesh const &mesh):
         }
         for(auto anchor: mesh.all_anchors) {
             std::cerr << "Adding anchor: " << anchor->get_x() << ", " << anchor->get_y() << std::endl;
-            anchors.push_back(Anchor{
+            anchors.push_back(AnchorM {
                     anchor->get_x(),
                     anchor->get_y(),
                     HalfedgeId(mesh.HID(anchor->get_line())),
@@ -42,7 +42,7 @@ MeshMessage::MeshMessage(Mesh const &mesh):
         }
         assert(anchors.size() == mesh.all_anchors.size());
         for (auto vertex: mesh.vertices) {
-            vertices.push_back(Vertex{
+            vertices.push_back(VertexM {
                     HalfedgeId(mesh.HID(vertex->get_incident_edge())),
                     vertex->get_x(),
                     vertex->get_y()
@@ -64,7 +64,7 @@ MeshMessage::MeshMessage(Mesh const &mesh):
 
 //finds the first anchor that intersects the left edge of the arrangement at a point not less than the specified y-coordinate
 //  if no such anchor, returns nullptr
-    boost::optional<MeshMessage::Anchor> MeshMessage::find_least_upper_anchor(double y_coord)
+    boost::optional<MeshMessage::AnchorM> MeshMessage::find_least_upper_anchor(double y_coord)
     {
         //binary search to find greatest y-grade not greater than than y_coord
         unsigned best = 0;
@@ -93,7 +93,7 @@ MeshMessage::MeshMessage(Mesh const &mesh):
         //if we get here, then y_grades[best] is the greatest y-grade not greater than y_coord
         //now find Anchor whose line intersects the left edge of the arrangement lowest, but not below y_grade[best]
         unsigned int zero = 0;  //disambiguate the following function call
-        Anchor test{zero, best};
+        AnchorM test{zero, best};
         auto it = std::lower_bound(anchors.begin(), anchors.end(), test, AnchorStructComparator());
 
         if(it == anchors.end())    //not found
@@ -142,7 +142,7 @@ MeshMessage::MeshMessage(Mesh const &mesh):
     MeshMessage::FaceId MeshMessage::find_point(double x_coord, double y_coord)
     {
         //start on the left edge of the arrangement, at the correct y-coordinate
-        boost::optional<Anchor> start = find_least_upper_anchor(-1*y_coord);
+        boost::optional<AnchorM> start = find_least_upper_anchor(-1*y_coord);
 
         HalfedgeId finger; //for use in finding the cell
 
@@ -168,7 +168,7 @@ MeshMessage::MeshMessage(Mesh const &mesh):
                 next_pt = get(get(finger).next).origin;
             }
 
-            Vertex vertex = get(next_pt);
+            VertexM vertex = get(next_pt);
             //now next_pt is at or below the horizontal line at y_coord
             //if (x_coord, y_coord) is to the left of crossing point, then we have found the cell; otherwise, move to the adjacent cell
 
@@ -191,7 +191,7 @@ MeshMessage::MeshMessage(Mesh const &mesh):
 
                     //move halfway around the vertex
                     finger = get(finger).next;
-                    for(int i=0; i<deg/2; i++)
+                    for(auto i=0; i<deg/2; i++)
                     {
                         finger = get(get(finger).twin).next;
                     }
@@ -205,7 +205,7 @@ MeshMessage::MeshMessage(Mesh const &mesh):
                 }
                 else	//then edge is not vertical
                 {
-                    Anchor temp = get(get(finger).anchor);
+                    AnchorM temp = get(get(finger).anchor);
                     double x_pos = ( y_coord + y_grades[temp.get_y()] )/x_grades[temp.get_x()];  //NOTE: division by zero never occurs because we are searching along a horizontal line, and thus we never cross horizontal lines in the arrangement
 
                     if(x_pos >= x_coord)	//found the cell
@@ -226,16 +226,16 @@ MeshMessage::MeshMessage(Mesh const &mesh):
 //returns barcode template associated with the specified line (point)
 //REQUIREMENT: 0 <= degrees <= 90
 
-    MeshMessage::Halfedge & MeshMessage::get(HalfedgeId index) {
+    MeshMessage::HalfedgeM & MeshMessage::get(HalfedgeId index) {
         return half_edges[static_cast<long>(index)];
     }
-    MeshMessage::Face & MeshMessage::get(MeshMessage::FaceId index) {
+    MeshMessage::FaceM & MeshMessage::get(MeshMessage::FaceId index) {
         return faces[static_cast<long>(index)];
     }
-    MeshMessage::Vertex & MeshMessage::get(MeshMessage::VertexId index) {
+    MeshMessage::VertexM & MeshMessage::get(MeshMessage::VertexId index) {
         return vertices[static_cast<long>(index)];
     }
-    MeshMessage::Anchor & MeshMessage::get(MeshMessage::AnchorId index) {
+    MeshMessage::AnchorM & MeshMessage::get(MeshMessage::AnchorId index) {
         return anchors[static_cast<long>(index)];
     }
 
@@ -272,7 +272,7 @@ bool check(bool condition, std::string message) {
     return condition;
 }
 
-bool operator==(MeshMessage::Halfedge const & left, MeshMessage::Halfedge const & right) {
+bool operator==(MeshMessage::HalfedgeM const & left, MeshMessage::HalfedgeM const & right) {
     return left.origin == right.origin
             && left.anchor == right.anchor
             && left.face == right.face
@@ -282,18 +282,18 @@ bool operator==(MeshMessage::Halfedge const & left, MeshMessage::Halfedge const 
 }
 
 
-bool operator==(MeshMessage::Vertex const & left, MeshMessage::Vertex const & right) {
+bool operator==(MeshMessage::VertexM const & left, MeshMessage::VertexM const & right) {
     return left.incident_edge == right.incident_edge
             && left.x == right.x
             && left.y == right.y;
 }
 
-bool operator==(MeshMessage::Face const & left, MeshMessage::Face const & right) {
+bool operator==(MeshMessage::FaceM const & left, MeshMessage::FaceM const & right) {
     return left.boundary == right.boundary
             && left.dbc == right.dbc;
 }
 
-bool operator==(MeshMessage::Anchor const & left, MeshMessage::Anchor const & right) {
+bool operator==(MeshMessage::AnchorM const & left, MeshMessage::AnchorM const & right) {
     return left.above_line == right.above_line
             && left.dual_line == right.dual_line
             && left.position == right.position
@@ -352,7 +352,7 @@ Mesh MeshMessage::to_mesh() const {
     assert(mesh.all_anchors.size() == anchors.size());
 
     auto it = mesh.all_anchors.begin();
-    for(int i = 0; i < anchors.size(); i++) {
+    for(auto i = 0; i < anchors.size(); i++) {
         std::clog << "Checking: ";
         std::clog << anchors[i].x_coord << "-->" << temp_anchors[i]->get_x() << "-->" << (*it)->get_x() << " / ";
         assert(anchors[i].x_coord == temp_anchors[i]->get_x());
@@ -365,12 +365,12 @@ Mesh MeshMessage::to_mesh() const {
 
     //Now populate all the pointers
 
-    for (int i = 0; i < vertices.size(); i++) {
+    for(auto i = 0; i < vertices.size(); i++) {
         if (vertices[i].incident_edge != HalfedgeId::invalid()) {
             mesh.vertices[i]->set_incident_edge(mesh.halfedges[static_cast<long>(vertices[i].incident_edge)]);
         }
     }
-    for (int i = 0; i < faces.size(); i++) {
+    for(auto i = 0; i < faces.size(); i++) {
         auto mface = mesh.faces[i];
         auto face = faces[i];
         //TODO: this doesn't seem right, why would a face not have a boundary?
@@ -379,9 +379,9 @@ Mesh MeshMessage::to_mesh() const {
         }
         mface->set_barcode(face.dbc);
     }
-    for (int i = 0; i < half_edges.size(); i++) {
+    for(auto i = 0; i < half_edges.size(); i++) {
         ::Halfedge &edge = *(mesh.halfedges[i]);
-        MeshMessage::Halfedge ref = half_edges[i];
+        MeshMessage::HalfedgeM ref = half_edges[i];
         if (ref.face != FaceId::invalid())
             edge.set_face(mesh.faces[static_cast<long>(ref.face)]);
         if (ref.anchor != AnchorId::invalid()) {
@@ -402,16 +402,16 @@ Mesh MeshMessage::to_mesh() const {
         }
     }
 
-    for (int i = 0; i < vertical_line_query_list.size(); i++) {
+    for(auto i = 0; i < vertical_line_query_list.size(); i++) {
         mesh.vertical_line_query_list.push_back(mesh.halfedges[static_cast<long>(vertical_line_query_list[i])]);
     }
 
     assert(mesh.all_anchors.size() == anchors.size());
 
     it = mesh.all_anchors.begin();
-    for (int i = 0; i < anchors.size(); i++) {
+    for(auto i = 0; i < anchors.size(); i++) {
         ::Anchor &anchor = **it;
-        MeshMessage::Anchor ref = anchors[i];
+        MeshMessage::AnchorM ref = anchors[i];
         if (ref.dual_line != HalfedgeId::invalid()) {
             std::shared_ptr<::Halfedge> edge = mesh.halfedges[static_cast<long>(ref.dual_line)];
             //TODO: why, oh why, should this reset be necessary?
@@ -436,7 +436,7 @@ Mesh MeshMessage::to_mesh() const {
     mesh.y_grades = y_grades;
 
     it = mesh.all_anchors.begin();
-    for(int i = 0; i < anchors.size(); i++) {
+    for(auto i = 0; i < anchors.size(); i++) {
         std::clog << "Checking: ";
         assert(anchors[i].x_coord == temp_anchors[i]->get_x());
         assert(anchors[i].x_coord == (*it)->get_x());

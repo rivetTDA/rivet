@@ -48,7 +48,7 @@ private:
 
     std::vector<HalfedgeId> vertical_line_query_list; //stores a pointer to the rightmost Halfedge of the "top" line of each unique slope, ordered from small slopes to big slopes (each Halfedge points to Anchor and Face for vertical-line queries)
 
-    struct Anchor {
+    struct AnchorM {
 
         unsigned x_coord;	//discrete x-coordinate
         unsigned y_coord;	//discrete y-coordinate
@@ -68,12 +68,12 @@ private:
         }
     };
 
-    friend bool operator==(Anchor const &left, Anchor const &right);
+    friend bool operator==(AnchorM const &left, AnchorM const &right);
 
-    struct AnchorStructComparator : AnchorComparator<MeshMessage::Anchor> {};
+    struct AnchorStructComparator : AnchorComparator<MeshMessage::AnchorM> {};
 
 
-    struct Halfedge {
+    struct HalfedgeM {
 
         VertexId origin;		//pointer to the vertex from which this halfedge originates
         HalfedgeId twin;		//pointer to the halfedge that, together with this halfedge, make one edge
@@ -88,9 +88,9 @@ private:
         }
     };
 
-    friend bool operator==(Halfedge const &left, Halfedge const &right);
+    friend bool operator==(HalfedgeM const &left, HalfedgeM const &right);
 
-    struct Face {
+    struct FaceM {
         HalfedgeId boundary;     //pointer to one halfedge in the boundary of this cell
         BarcodeTemplate dbc;    //barcode template stored in this cell
 
@@ -101,9 +101,9 @@ private:
         }
     };
 
-    friend bool operator==(Face const &left, Face const &right);
+    friend bool operator==(FaceM const &left, FaceM const &right);
 
-    struct Vertex {
+    struct VertexM {
         HalfedgeId incident_edge;	//pointer to one edge incident to this vertex
         double x;			//x-coordinate of this vertex
         double y;			//y-coordinate of this vertex
@@ -114,15 +114,15 @@ private:
         }
     };
 
-    friend bool operator==(Vertex const &left, Vertex const &right);
-    std::vector<Halfedge> half_edges;
-    std::vector<Vertex> vertices;
-    std::vector<Anchor> anchors;
-    std::vector<Face> faces;
+    friend bool operator==(VertexM const &left, VertexM const &right);
+    std::vector<HalfedgeM> half_edges;
+    std::vector<VertexM> vertices;
+    std::vector<AnchorM> anchors;
+    std::vector<FaceM> faces;
 
 //finds the first anchor that intersects the left edge of the arrangement at a point not less than the specified y-coordinate
 //  if no such anchor, returns nullptr
-    boost::optional<Anchor> find_least_upper_anchor(double y_coord);
+    boost::optional<AnchorM> find_least_upper_anchor(double y_coord);
 
 //finds the (unbounded) cell associated to dual point of the vertical line with the given x-coordinate
 //  i.e. finds the Halfedge whose Anchor x-coordinate is the largest such coordinate not larger than than x_coord; returns the Face corresponding to that Halfedge
@@ -131,10 +131,10 @@ private:
 ////find a 2-cell containing the specified point
     FaceId find_point(double x_coord, double y_coord);
 
-    Halfedge & get(HalfedgeId index);
-    Face & get(FaceId index);
-    Vertex & get(VertexId index);
-    Anchor & get(AnchorId index);
+    HalfedgeM & get(HalfedgeId index);
+    FaceM & get(FaceId index);
+    VertexM & get(VertexId index);
+    AnchorM & get(AnchorId index);
 
 };
 

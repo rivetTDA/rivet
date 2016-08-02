@@ -33,14 +33,4 @@ private:
 };
 
 
-template<class Tag, class impl, impl default_value, std::vector<impl> extent>
-class IndexedID : ID<Tag, impl, default_value> {
-        Tag & operator *() {
-            if (static_cast<impl>(*this) == default_value) {
-                return nullptr;
-            } else {
-                return extent[static_cast<impl>(*this)];
-            }
-        }
-};
 #endif //RIVET_CONSOLE_TYPE_TAG_H

@@ -6,8 +6,6 @@ set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-ftemplate-depth=1024 -Wall -Wextra -ped
 
 include(ExternalProject)
 
-#Is it helpful to download and install this automatically, or should we add it to the
-#requirements people have to install for themselves?
 externalproject_add(
   docopt_project
   PREFIX docopt
