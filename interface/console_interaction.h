@@ -4,6 +4,7 @@
 
 #ifndef RIVET_CONSOLE_CONSOLE_INTERACTION_H
 #define RIVET_CONSOLE_CONSOLE_INTERACTION_H
+#include <memory>
 #include <QString>
 #include <QProcess>
 #include <QCoreApplication>

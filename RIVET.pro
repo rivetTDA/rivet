@@ -20,8 +20,8 @@ TARGET = RIVET
 TEMPLATE = app
 
 QMAKE_LIBDIR += /usr/local/lib #TODO: figure out how to generalize
-LIBS        += -lboost_system-mt
-LIBS        += -lboost_serialization-mt
+LIBS        += -lboost_system
+LIBS        += -lboost_serialization
 
 SOURCES	+= main.cpp                         \
 		visualizationwindow.cpp             \
