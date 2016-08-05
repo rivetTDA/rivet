@@ -137,31 +137,28 @@ int main(int argc, char *argv[])
                 archive << arrangement;
             }
             std::cout.flush();
+            //TODO: this should become a system test with a known dataset
+            std::stringstream ss(std::ios_base::binary | std::ios_base::out | std::ios_base::in);
             {
-                //TODO: this should become a system test with a known dataset
-                std::stringstream ss(std::ios_base::binary | std::ios_base::out | std::ios_base::in);
-                {
-//                cereal::JSONOutputArchive archive(std::cout);
-//                cereal::BinaryOutputArchive archive(ss);
-//                cereal::XMLOutputArchive archive(std::cout);
-                    boost::archive::binary_oarchive archive(ss);
-                    archive << arrangement;
+                boost::archive::binary_oarchive archive(ss);
+                archive << arrangement;
 
-                }
-                std::cerr << "Testing deserialization locally..." << std::endl;
-                std::string original = ss.str();
+            }
+            std::cerr << "Testing deserialization locally..." << std::endl;
+            std::string original = ss.str();
+            MeshMessage test;
+            {
                 boost::archive::binary_iarchive inarch(ss);
-                MeshMessage test;
                 inarch >> test;
                 std::cerr << "Deserialized!";
-                if (!(arrangement == test)) {
-                    throw std::runtime_error("Original and deserialized don't match!");
-                }
-                Mesh reconstituted = arrangement.to_mesh();
-                MeshMessage round_trip(reconstituted);
-                if (!(round_trip == arrangement)) {
-                    throw std::runtime_error("Original and reconstituted don't match!");
-                }
+            }
+            if (!(arrangement == test)) {
+                throw std::runtime_error("Original and deserialized don't match!");
+            }
+            Mesh reconstituted = arrangement.to_mesh();
+            MeshMessage round_trip(reconstituted);
+            if (!(round_trip == arrangement)) {
+                throw std::runtime_error("Original and reconstituted don't match!");
             }
             std::cout << "ARRANGEMENT: " << file_name << std::endl;
         });
