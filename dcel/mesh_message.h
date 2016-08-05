@@ -22,7 +22,9 @@ public:
 
     template<class Archive>
     void serialize(Archive &ar, const unsigned int & version) {
-        ar & x_grades & y_grades & half_edges & vertices & anchors & faces & topleft & topright & bottomleft & bottomright & vertical_line_query_list;
+        ar & x_grades & y_grades & half_edges & vertices & anchors & faces
+        & topleft & topright & bottomleft & bottomright
+        & vertical_line_query_list;
     }
 
     BarcodeTemplate get_barcode_template(double degrees, double offset);
@@ -32,6 +34,8 @@ public:
     Mesh to_mesh() const;
 
 private:
+
+    friend class boost::serialization::access;
 
     typedef ID<Vertex, long, -1> VertexId;
     typedef ID<Anchor, long, -1> AnchorId;

@@ -10,6 +10,8 @@
 
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
 
 #include "dcel/serialization.h"
 #include "base_64.h"
@@ -130,24 +132,25 @@ int main(int argc, char *argv[])
             MeshMessage arrangement(*mesh);
 
             {
-                boost::archive::text_oarchive archive(output);
+//                boost::archive::text_oarchive archive(output);
+                boost::archive::binary_oarchive archive(output);
                 archive << arrangement;
             }
             std::cout.flush();
             {
                 //TODO: this should become a system test with a known dataset
-                std::stringstream ss;
+                std::stringstream ss(std::ios_base::binary | std::ios_base::out | std::ios_base::in);
                 {
 //                cereal::JSONOutputArchive archive(std::cout);
 //                cereal::BinaryOutputArchive archive(ss);
 //                cereal::XMLOutputArchive archive(std::cout);
-                    boost::archive::text_oarchive archive(ss);
+                    boost::archive::binary_oarchive archive(ss);
                     archive << arrangement;
 
                 }
                 std::cerr << "Testing deserialization locally..." << std::endl;
                 std::string original = ss.str();
-                boost::archive::text_iarchive inarch(ss);
+                boost::archive::binary_iarchive inarch(ss);
                 MeshMessage test;
                 inarch >> test;
                 std::cerr << "Deserialized!";

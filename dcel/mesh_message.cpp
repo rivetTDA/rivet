@@ -59,7 +59,9 @@ MeshMessage::MeshMessage(Mesh const &mesh):
         bottomright = HalfedgeId(mesh.HID(mesh.bottomright));
     }
 
-    MeshMessage::MeshMessage() : half_edges(), vertices(), anchors(), faces() {}
+    MeshMessage::MeshMessage() : x_grades(), y_grades(), vertical_line_query_list(),
+                                 half_edges(), vertices(), anchors(), faces(),
+                                    topleft(), topright(), bottomleft(), bottomright() {}
 
 
 //finds the first anchor that intersects the left edge of the arrangement at a point not less than the specified y-coordinate
