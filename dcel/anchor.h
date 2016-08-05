@@ -68,11 +68,11 @@ public:
     {
         if(lhs.get_y() > rhs.get_y())		//first compare y-coordinates (reverse order)
             return true;
+        else if (lhs.get_y() < rhs.get_y())
+            return false;
         return lhs.get_x() < rhs.get_x();
     }
 };
-
-//TODO: IS IT OK TO IMPLEMENT THE FOLLOWING COMPARATOR HERE, IN THE .h FILE???
 
 struct Anchor_LeftComparator : AnchorComparator<Anchor> {};
 
