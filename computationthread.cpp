@@ -15,6 +15,8 @@
 #include <boost/archive/tmpdir.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
 #include <fstream>
 #include <vector>
 #include <QDebug>
@@ -66,11 +68,8 @@ void ComputationThread::run()
         qDebug().noquote() << "console: " << line;
         if (reading_xi) {
             if (line.startsWith("END XI")) {
-//                    cereal::JSONInputArchive archive(ss);
-//                    cereal::BinaryInputArchive archive(ss);
                 XiSupportMessage message;
                 {
-//                    cereal::XMLInputArchive archive(ss);
                     boost::archive::text_iarchive archive(ss);
                     archive >> message;
                 }
@@ -104,7 +103,7 @@ void ComputationThread::run()
                     if (!input.is_open()) {
                         throw std::runtime_error("Could not open console arrangement file");
                     }
-                    boost::archive::text_iarchive archive(input);
+                    boost::archive::binary_iarchive archive(input);
                     arrangement.reset(new MeshMessage());
                     archive >> *arrangement;
                 }
