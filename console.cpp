@@ -27,7 +27,7 @@ static const char USAGE[] =
       rivet_console (-h | --help)
       rivet_console --version
       rivet_console <input_file> --identify
-      rivet_console <input_file> <output_file> [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>]
+      rivet_console <input_file> <output_file> [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [-f <format>]
 
     Options:
       -h --help                                Show this screen
@@ -37,6 +37,7 @@ static const char USAGE[] =
       -x <xbins> --xbins=<xbins>               Number of bins in the x direction [default: 0]
       -y <ybins> --ybins=<ybins>               Number of bins in the y direction [default: 0]
       -V <verbosity> --verbosity=<verbosity>   Verbosity level: 0 (no console output) to 10 (lots of output) [default: 2]
+      -f <format>                              Output format for file [default: R1]
 )";
 
 unsigned int get_uint_or_die(std::map<std::string, docopt::value> &args, const std::string &key) {
@@ -82,6 +83,16 @@ std::string getcwd()
     throw std::runtime_error("Cannot determine the current path; the path is apparently unreasonably long");
 }
 
+void write_boost_file(InputParameters const &params, XiSupportMessage const &message, MeshMessage const &mesh) {
+    std::ofstream file(params.outputFile, std::ios::binary);
+    if (!file.is_open()) {
+        throw std::runtime_error("Could not open " + params.outputFile + " for reading");
+    }
+    boost::archive::binary_oarchive oarchive(file);
+    oarchive & params & message & mesh;
+    file.flush();
+}
+
 int main(int argc, char *argv[])
 {
 //        debug() << "CONSOLE RIVET" ;
@@ -96,6 +107,10 @@ int main(int argc, char *argv[])
         //   std::cout << arg.first << ":" << arg.second ;
         // }
 
+
+    MeshMessage* mesh_message = nullptr;
+    XiSupportMessage* xi_supp_message = nullptr;
+
         params.fileName = args["<input_file>"].asString();
     docopt::value &out_file_name = args["<output_file>"];
     if (out_file_name.isString()) {
@@ -105,6 +120,7 @@ int main(int argc, char *argv[])
         params.x_bins = get_uint_or_die(args, "--xbins");
         params.y_bins = get_uint_or_die(args, "--ybins");
         params.verbosity = get_uint_or_die(args, "--verbosity");
+        params.outputFormat = args["-f"].asString();
     bool identify = args["--identify"].isBool() && args["--identify"].asBool();
     if (identify) {
         params.verbosity = 0;
@@ -124,24 +140,13 @@ int main(int argc, char *argv[])
         progress.progress.connect([](int amount) {
             std::cout << "PROGRESS " << amount << std::endl;
         });
-        computation.arrangementReady.connect([](std::shared_ptr<Mesh> mesh){
-            //TODO: won't work on windows, need xplatform separator.
-            std::string file_name(getcwd() + "/rivet_arrangement_temp");
-            std::ofstream output(file_name);
-
-            MeshMessage arrangement(*mesh);
-
-            {
-//                boost::archive::text_oarchive archive(output);
-                boost::archive::binary_oarchive archive(output);
-                archive << arrangement;
-            }
-            std::cout.flush();
+        computation.arrangementReady.connect([&mesh_message, &params](std::shared_ptr<Mesh> mesh){
+            mesh_message = new MeshMessage(*mesh);
             //TODO: this should become a system test with a known dataset
             std::stringstream ss(std::ios_base::binary | std::ios_base::out | std::ios_base::in);
             {
                 boost::archive::binary_oarchive archive(ss);
-                archive << arrangement;
+                archive << *mesh_message;
 
             }
             std::cerr << "Testing deserialization locally..." << std::endl;
@@ -152,18 +157,19 @@ int main(int argc, char *argv[])
                 inarch >> test;
                 std::cerr << "Deserialized!";
             }
-            if (!(arrangement == test)) {
+            if (!(*mesh_message == test)) {
                 throw std::runtime_error("Original and deserialized don't match!");
             }
-            Mesh reconstituted = arrangement.to_mesh();
+            Mesh reconstituted = mesh_message->to_mesh();
             MeshMessage round_trip(reconstituted);
-            if (!(round_trip == arrangement)) {
+            if (!(round_trip == *mesh_message)) {
                 throw std::runtime_error("Original and reconstituted don't match!");
             }
-            std::cout << "ARRANGEMENT: " << file_name << std::endl;
+            std::cout << "ARRANGEMENT: " << params.outputFile << std::endl;
         });
-        computation.xiSupportReady.connect([](XiSupportMessage message){
+        computation.xiSupportReady.connect([&xi_supp_message](XiSupportMessage message){
             std::cout << "XI" << std::endl;
+            xi_supp_message = new XiSupportMessage(message);
 //            cereal::JSONOutputArchive archive(std::cout);
 //            cereal::BinaryOutputArchive archive(std::cout);
             {
@@ -173,11 +179,13 @@ int main(int argc, char *argv[])
             }
             std::cout << "END XI" << std::endl;
             std::cout.flush();
+            std::stringstream ss;
             {
                 std::cerr << "Local deserialization test" << std::endl;
-                std::stringstream ss;
                 boost::archive::text_oarchive out(ss);
                 out << message;
+            }
+            {
                 boost::archive::text_iarchive in(ss);
                 XiSupportMessage result;
                 in >> result;
@@ -217,8 +225,14 @@ int main(int argc, char *argv[])
             if (file.is_open()) {
                 debug() << "Writing file:" << params.outputFile ;
 
-                FileWriter fw(params, *input, *(arrangement), result->xi_support);
-                fw.write_augmented_arrangement(file);
+                if (params.outputFormat == "R0") {
+                    FileWriter fw(params, *input, *(arrangement), result->xi_support);
+                    fw.write_augmented_arrangement(file);
+                } else if (params.outputFormat == "R1") {
+                    write_boost_file(params, *xi_supp_message, *mesh_message);
+                } else {
+                    throw std::runtime_error("Unsupported output format: " + params.outputFormat);
+                }
             }
             else {
                 std::stringstream ss;

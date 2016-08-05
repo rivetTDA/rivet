@@ -23,7 +23,7 @@
 #include <QTime>
 #include <QProcess>
 #include <QString>
-
+#include <QDir>
 
 ComputationThread::ComputationThread(InputParameters& params, QObject *parent) :
     QThread(parent),
@@ -49,11 +49,12 @@ void ComputationThread::run()
     QStringList args;
 
     args << QString::fromStdString(params.fileName)
-    << QString::fromStdString(params.outputFile)
+    << QDir(QCoreApplication::applicationDirPath()).filePath("rivet_arrangement_temp")
     << "-H" << QString::number(params.dim)
     << "-x" << QString::number(params.x_bins)
     << "-y" << QString::number(params.y_bins)
-    << "-V" << QString::number(params.verbosity);
+    << "-V" << QString::number(params.verbosity)
+            << "-f" << "R1";
     auto console = RivetConsoleApp::start(args);
 
     if (!console->waitForStarted()) {
@@ -98,6 +99,7 @@ void ComputationThread::run()
             }
         } else if (line.startsWith("ARRANGEMENT: ")) {
                 {
+                    console->waitForFinished();
                     std::ifstream input(line.mid(QString("ARRANGEMENT: ").length()).trimmed().toStdString());
                     //TODO: better error handling on both sides
                     if (!input.is_open()) {
@@ -105,11 +107,14 @@ void ComputationThread::run()
                     }
                     boost::archive::binary_iarchive archive(input);
                     arrangement.reset(new MeshMessage());
+                    InputParameters p;
+                    XiSupportMessage m;
+                    archive >> p;
+                    archive >> m;
                     archive >> *arrangement;
                 }
 //                qDebug() << "Mesh received: " << arrangement->x_exact.size() << " x " << arrangement->y_exact.size();
-                emit arrangementReady(&*arrangement);
-                console->waitForFinished();
+            emit arrangementReady(&*arrangement);
                 return;
         } else if (line.startsWith("PROGRESS ")) {
             auto progress = line.mid(QString("PROGRESS ").length()).trimmed();

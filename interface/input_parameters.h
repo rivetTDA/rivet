@@ -15,6 +15,12 @@ struct InputParameters {
     int verbosity;      //controls the amount of console output printed
     std::string x_label; //used by configuration dialog
     std::string y_label; //used by configuration dialog
+    std::string outputFormat; // Supported values: R0, R1
+
+    template<typename Archive>
+            void serialize(Archive &ar, const unsigned int &version) {
+        ar & fileName & shortName & outputFile & dim & x_bins & y_bins & verbosity & x_label & y_label & outputFormat;
+    }
 };
 
 #endif // INPUT_PARAMETERS_H
