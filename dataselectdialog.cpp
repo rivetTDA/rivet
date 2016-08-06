@@ -85,38 +85,44 @@ void DataSelectDialog::detect_file_type()
     return;
   }
 
-    QStringList args;
-    args.append(QString::fromStdString(params.fileName));
-    args.append("--identify");
-    auto console = RivetConsoleApp::start(args);
+    auto line = reader.next_line();
+    if (line[0] == "RIVET_1") {
+        ui->fileTypeLabel->setText("This file appears to contain pre-computed RIVET data");
+        ui->parameterFrame->setEnabled(false);
+    } else {
+        QStringList args;
+        args.append(QString::fromStdString(params.fileName));
+        args.append("--identify");
+        auto console = RivetConsoleApp::start(args);
 
-    if (!console->waitForStarted()) {
-        invalid_file(RivetConsoleApp::errorMessage(console->error()));
-        return;
-    }
-
-    bool raw = false;
-    while(console->canReadLine() || console->waitForReadyRead()) {
-        QString line = console->readLine();
-        qDebug() << line;
-        if (line.startsWith("RAW DATA: ")) {
-            raw = line.contains("1");
-        } else if (line.startsWith("INPUT ERROR: ")) {
-            invalid_file(line.mid(QString("INPUT ERROR: ").length()));
+        if (!console->waitForStarted()) {
+            invalid_file(RivetConsoleApp::errorMessage(console->error()));
             return;
-        } else if (line.startsWith("FILE TYPE DESCRIPTION: ")) {
-
-            ui->fileTypeLabel->setText("This file appears to contain " +
-                    line.mid(QString("FILE TYPE DESCRIPTION: ").length()).trimmed() + ".");
-            QFileInfo fileInfo(QString::fromStdString(params.fileName));
-            ui->fileLabel->setText("Selected file: " + fileInfo.fileName());
-
-            //TODO: this updating of the params will need to happen in console also, need to refactor
-            params.shortName = fileInfo.fileName().toUtf8().constData();
         }
+
+        bool raw = false;
+        while (console->canReadLine() || console->waitForReadyRead()) {
+            QString line = console->readLine();
+            qDebug() << line;
+            if (line.startsWith("RAW DATA: ")) {
+                raw = line.contains("1");
+            } else if (line.startsWith("INPUT ERROR: ")) {
+                invalid_file(line.mid(QString("INPUT ERROR: ").length()));
+                return;
+            } else if (line.startsWith("FILE TYPE DESCRIPTION: ")) {
+
+                ui->fileTypeLabel->setText("This file appears to contain " +
+                                           line.mid(QString("FILE TYPE DESCRIPTION: ").length()).trimmed() + ".");
+                QFileInfo fileInfo(QString::fromStdString(params.fileName));
+                ui->fileLabel->setText("Selected file: " + fileInfo.fileName());
+
+                //TODO: this updating of the params will need to happen in console also, need to refactor
+                params.shortName = fileInfo.fileName().toUtf8().constData();
+            }
+        }
+        ui->parameterFrame->setEnabled(raw);
     }
 
-  ui->parameterFrame->setEnabled(raw);
   ui->computeButton->setEnabled(true);
 
 }//end detect_file_type()

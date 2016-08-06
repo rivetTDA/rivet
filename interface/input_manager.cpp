@@ -76,8 +76,8 @@ InputManager::InputManager(InputParameters &params) :
                                  std::bind(&InputManager::read_discrete_metric_space, this, std::placeholders::_1, std::placeholders::_2) });
     register_file_type(FileType {"bifiltration", "bifiltration data", true,
                                  std::bind(&InputManager::read_bifiltration, this, std::placeholders::_1, std::placeholders::_2) });
-    register_file_type(FileType {"RIVET_0", "pre-computed RIVET data", false,
-                                 std::bind(&InputManager::read_RIVET_data, this, std::placeholders::_1, std::placeholders::_2) });
+//    register_file_type(FileType {"RIVET_0", "pre-computed RIVET data", false,
+//                                 std::bind(&InputManager::read_RIVET_data, this, std::placeholders::_1, std::placeholders::_2) });
 };
 
 void InputManager::register_file_type(FileType file_type) {
@@ -101,7 +101,6 @@ FileType& InputManager::get_file_type(std::string fileName) {
 
     return *it;
 }
-
 
 //function to run the input manager, requires a filename
 //  post condition: x_grades and x_exact have size x_bins, and they contain the grade values for the 2-D persistence module in double and exact form (respectively)

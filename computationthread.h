@@ -36,6 +36,7 @@ class ComputationThread : public QThread
         void compute();
 
     //TODO: these really ought to be delivered via signal rather than read by other classes
+    XiSupportMessage message;
         std::vector<xiPoint> xi_support;
         std::vector<exact> x_exact;
         std::vector<exact> y_exact;
@@ -58,7 +59,13 @@ class ComputationThread : public QThread
 
         std::shared_ptr<MeshMessage> arrangement;
 
+    void compute_from_file();
+    void unpack_message_fields();
+    bool is_precomputed(std::string file_name);
+    void load_from_file();
 
 };
 
+//TODO: Move this somewhere. See comments on implementation for details.
+void write_boost_file(QString file_name, InputParameters const &params, XiSupportMessage const &message, MeshMessage const &mesh);
 #endif // COMPUTATIONTHREAD_H

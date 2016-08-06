@@ -143,3 +143,4 @@ private:
 };
 
 #endif //RIVET_CONSOLE_MESH_MESSAGE_H
+

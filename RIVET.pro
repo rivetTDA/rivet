@@ -9,12 +9,10 @@ macx {
   QMAKE_POST_LINK='/usr/bin/dsymutil RIVET.app/Contents/MacOS/RIVET -o RIVET.app/Contents/MacOS/RIVET.dsym'
 }
 
-CONFIG += c++11
+CONFIG += c++11 debug
 
 QT       += core gui \
 		widgets
-
-CONFIG += c++11
 
 TARGET = RIVET
 TEMPLATE = app

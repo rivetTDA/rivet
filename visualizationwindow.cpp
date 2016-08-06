@@ -19,7 +19,6 @@
 #include <fstream>
 #include <sstream>
 
-
 VisualizationWindow::VisualizationWindow(InputParameters& params) :
     QMainWindow(),
     ui(new Ui::VisualizationWindow),
@@ -466,7 +465,7 @@ void VisualizationWindow::on_actionSave_line_selection_window_as_image_triggered
 
 void VisualizationWindow::on_actionSave_triggered()
 {
-    QString fileName= QFileDialog::getSaveFileName(this, "Save computed data", QCoreApplication::applicationDirPath(), "Text File (*.txt)");
+    QString fileName= QFileDialog::getSaveFileName(this, "Save computed data", QCoreApplication::applicationDirPath());
     if (!fileName.isNull())
     {
         save_arrangement(fileName);
@@ -476,23 +475,14 @@ void VisualizationWindow::on_actionSave_triggered()
 
 void VisualizationWindow::save_arrangement(const QString& filename)
 {
-    std::ofstream file(filename.toStdString());
-    if(file.is_open())
-    {
-        qDebug() << "Writing file:" << filename;
-
-        throw std::runtime_error("Not implemented yet"); //TODO: fix
-//        FileWriter fw(input_params, *arrangement, xi_support);
-//        fw.write_augmented_arrangement(file);
-//
-//        unsaved_data = false;
-    }
-    else
-    {
-        QMessageBox errorBox(QMessageBox::Warning, "Error", QString("Unable to write file: ").append(filename));
+    try {
+        write_boost_file(filename, input_params, cthread.message, *arrangement);
+    } catch (std::exception &e) {
+        QMessageBox errorBox(QMessageBox::Warning, "Error",
+                             QString("Unable to write file: ").append(filename).append(": ")
+                                    .append(e.what()));
         errorBox.exec();
     }
-    ///TODO: error handling?
 }//end save_arrangement()
 
 void VisualizationWindow::on_actionOpen_triggered()

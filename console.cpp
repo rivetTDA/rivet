@@ -83,16 +83,19 @@ std::string getcwd()
     throw std::runtime_error("Cannot determine the current path; the path is apparently unreasonably long");
 }
 
+//TODO: this doesn't really belong here, look for a better place.
 void write_boost_file(InputParameters const &params, XiSupportMessage const &message, MeshMessage const &mesh) {
     std::ofstream file(params.outputFile, std::ios::binary);
     if (!file.is_open()) {
-        throw std::runtime_error("Could not open " + params.outputFile + " for reading");
+        throw std::runtime_error("Could not open " + params.outputFile + " for writing");
     }
+    file << "RIVET_1\n";
     boost::archive::binary_oarchive oarchive(file);
     oarchive & params & message & mesh;
     file.flush();
 }
 
+//
 int main(int argc, char *argv[])
 {
 //        debug() << "CONSOLE RIVET" ;

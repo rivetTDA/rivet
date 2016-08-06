@@ -19,6 +19,7 @@
 #include <boost/archive/binary_oarchive.hpp>
 #include <fstream>
 #include <vector>
+#include <string>
 #include <QDebug>
 #include <QTime>
 #include <QProcess>
@@ -44,8 +45,67 @@ void ComputationThread::compute()
 }
 
 //this function does the work
-void ComputationThread::run()
-{
+void ComputationThread::run() {
+    if (is_precomputed(params.fileName)) {
+        load_from_file();
+    } else {
+        compute_from_file();
+    }
+}
+
+bool ComputationThread::is_precomputed(std::string file_name) {
+    std::ifstream file(file_name);
+    if (!file.is_open()) {
+        throw std::runtime_error("Couldn't open " + file_name + " for reading");
+    }
+    std::string line;
+    std::getline(file, line);
+    return line == "RIVET_1";
+}
+
+
+void ComputationThread::load_from_file() {
+    std::ifstream file(params.fileName);
+    if (!file.is_open()) {
+        throw std::runtime_error("Couldn't open " + params.fileName + " for reading");
+    }
+    std::string type;
+    std::getline(file, type);
+    assert(type == "RIVET_1");
+    boost::archive::binary_iarchive archive(file);
+
+    arrangement.reset(new MeshMessage());
+    archive >> params;
+    archive >> message;
+    unpack_message_fields();
+    emit xiSupportReady();
+    archive >> *arrangement;
+    emit arrangementReady(&*arrangement);
+}
+
+//TODO: Probably better to not have to unpack all these properties into fields of computationthread.
+void ComputationThread::unpack_message_fields() {
+
+    xi_support = message.xi_support;
+    std::vector<unsigned> dims(message.homology_dimensions.shape(),
+                               message.homology_dimensions.shape() + message.homology_dimensions.num_dimensions());
+    assert(dims.size() == 2);
+    hom_dims.resize(boost::extents[dims[0]][dims[1]]);
+    hom_dims = message.homology_dimensions;
+    qDebug() << "Received hom_dims: " << hom_dims.shape()[0] << " x " << hom_dims.shape()[1];
+    for(int i = 0; i < hom_dims.shape()[0]; i++) {
+        auto row = qDebug();
+        for (int j = 0; j < hom_dims.shape()[1]; j++) {
+            row << hom_dims[i][j];
+        }
+    }
+    x_exact = message.x_exact;
+    y_exact = message.y_exact;
+    x_label = QString::fromStdString(message.x_label);
+    y_label = QString::fromStdString(message.y_label);
+}
+
+void ComputationThread::compute_from_file() {
     QStringList args;
 
     args << QString::fromStdString(params.fileName)
@@ -69,29 +129,11 @@ void ComputationThread::run()
         qDebug().noquote() << "console: " << line;
         if (reading_xi) {
             if (line.startsWith("END XI")) {
-                XiSupportMessage message;
                 {
                     boost::archive::text_iarchive archive(ss);
                     archive >> message;
                 }
-                    xi_support = message.xi_support;
-                    std::vector<unsigned> dims(message.homology_dimensions.shape(),
-                                                          message.homology_dimensions.shape() + message.homology_dimensions.num_dimensions());
-                    assert(dims.size() == 2);
-                    hom_dims.resize(boost::extents[dims[0]][dims[1]]);
-                    hom_dims = message.homology_dimensions;
-                qDebug() << "Received hom_dims: " << hom_dims.shape()[0] << " x " << hom_dims.shape()[1];
-                for(int i = 0; i < hom_dims.shape()[0]; i++) {
-                    auto row = qDebug();
-                    for (int j = 0; j < hom_dims.shape()[1]; j++) {
-                        row << hom_dims[i][j];
-                    }
-                }
-                //TODO: Probably better to not have to unpack all these properties into fields of computationthread.
-                    x_exact = message.x_exact;
-                    y_exact = message.y_exact;
-                x_label = QString::fromStdString(message.x_label);
-                y_label = QString::fromStdString(message.y_label);
+                unpack_message_fields();
                 reading_xi = false;
                 emit xiSupportReady();
             } else {
@@ -101,9 +143,13 @@ void ComputationThread::run()
                 {
                     console->waitForFinished();
                     std::ifstream input(line.mid(QString("ARRANGEMENT: ").length()).trimmed().toStdString());
-                    //TODO: better error handling on both sides
                     if (!input.is_open()) {
                         throw std::runtime_error("Could not open console arrangement file");
+                    }
+                    std::string type;
+                    std::getline(input, type);
+                    if (type != "RIVET_1") {
+                        throw std::runtime_error("Unsupported file format");
                     }
                     boost::archive::binary_iarchive archive(input);
                     arrangement.reset(new MeshMessage());
@@ -132,3 +178,17 @@ void ComputationThread::run()
 
 }//end run()
 
+//TODO: this doesn't really belong here, look for a better place.
+//NOTE this is a copy of a function in the console
+//It has to be here because we get duplicate symbol errors when we use binary_oarchive in a different compilation
+//unit in addition to this one.
+void write_boost_file(QString file_name, InputParameters const &params, XiSupportMessage const &message, MeshMessage const &mesh) {
+    std::ofstream file(file_name.toStdString(), std::ios::binary);
+    if (!file.is_open()) {
+        throw std::runtime_error("Could not open " + file_name.toStdString() + " for writing");
+    }
+    file << "RIVET_1\n";
+    boost::archive::binary_oarchive oarchive(file);
+    oarchive & params & message & mesh;
+    file.flush();
+}

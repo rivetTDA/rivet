@@ -453,3 +453,4 @@ Mesh MeshMessage::to_mesh() const {
     std::clog << "All anchors identical in to_mesh" << std::endl;
     return mesh;
 }
+
