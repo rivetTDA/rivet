@@ -35,7 +35,7 @@ build will create both executables, and put everything in the right place.
 ## Contributors
 
 Michael Lesnick (Princeton)
-Matthew Wright (St. Olaf's)
+Matthew Wright (St. Olaf College)
 Bryn Keller (Intel Labs)
 
 TODO: Other contributors please add yourselves!
