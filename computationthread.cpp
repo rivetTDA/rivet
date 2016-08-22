@@ -141,8 +141,8 @@ void ComputationThread::compute_from_file() {
             }
         } else if (line.startsWith("ARRANGEMENT: ")) {
                 {
-                    console->waitForFinished();
                     std::ifstream input(line.mid(QString("ARRANGEMENT: ").length()).trimmed().toStdString());
+                    console->waitForFinished();
                     if (!input.is_open()) {
                         throw std::runtime_error("Could not open console arrangement file");
                     }
@@ -154,9 +154,9 @@ void ComputationThread::compute_from_file() {
                     boost::archive::binary_iarchive archive(input);
                     arrangement.reset(new MeshMessage());
                     InputParameters p;
-                    XiSupportMessage m;
                     archive >> p;
-                    archive >> m;
+                    archive >> message;
+                    unpack_message_fields();
                     archive >> *arrangement;
                 }
 //                qDebug() << "Mesh received: " << arrangement->x_exact.size() << " x " << arrangement->y_exact.size();

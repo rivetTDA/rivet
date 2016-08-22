@@ -146,19 +146,23 @@ int main(int argc, char *argv[])
         computation.arrangementReady.connect([&mesh_message, &params](std::shared_ptr<Mesh> mesh){
             mesh_message = new MeshMessage(*mesh);
             //TODO: this should become a system test with a known dataset
+            //Note we no longer write the arrangement to stdout, it goes to a file at the end
+            //of the run. This message just announces the absolute path of the file.
+            //The viewer should capture the file name from the stdout stream, and
+            //then wait for the console program to finish before attempting to read the file.
             std::stringstream ss(std::ios_base::binary | std::ios_base::out | std::ios_base::in);
             {
                 boost::archive::binary_oarchive archive(ss);
                 archive << *mesh_message;
 
             }
-            std::cerr << "Testing deserialization locally..." << std::endl;
+            std::clog << "Testing deserialization locally..." << std::endl;
             std::string original = ss.str();
             MeshMessage test;
             {
                 boost::archive::binary_iarchive inarch(ss);
                 inarch >> test;
-                std::cerr << "Deserialized!";
+                std::clog << "Deserialized!";
             }
             if (!(*mesh_message == test)) {
                 throw std::runtime_error("Original and deserialized don't match!");
