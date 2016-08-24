@@ -123,6 +123,7 @@ private:
 
     AboutMessageBox aboutBox;       //which is better for these dialog boxes
     ConfigureDialog* configBox;     // -- pointer or no pointer?
+    void copy_fields_from_cthread();
 };
 
 #endif // VISUALIZATIONWINDOW_H

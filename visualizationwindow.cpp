@@ -92,10 +92,7 @@ void VisualizationWindow::start_computation()
 
 }//end start_computation()
 
-//this slot is signaled when the xi support points are ready to be drawn
-void VisualizationWindow::paint_xi_support()
-{
-    //First load our local copies of the data
+void VisualizationWindow::copy_fields_from_cthread() {
     //TODO: this dataflow is still odd, could use more attention.
     xi_support = cthread.xi_support;
     x_exact = cthread.x_exact;
@@ -104,6 +101,13 @@ void VisualizationWindow::paint_xi_support()
     y_grades = rivet::numeric::to_doubles(y_exact);
     homology_dimensions.resize(std::vector<unsigned>(cthread.hom_dims.shape(), cthread.hom_dims.shape() + cthread.hom_dims.num_dimensions()));
     homology_dimensions = cthread.hom_dims;
+}
+
+//this slot is signaled when the xi support points are ready to be drawn
+void VisualizationWindow::paint_xi_support()
+{
+    //First load our local copies of the data
+    copy_fields_from_cthread();
     //send xi support points to the SliceDiagram
     for(std::vector<xiPoint>::iterator it = xi_support.begin(); it != xi_support.end(); ++it)
         slice_diagram.add_point(x_grades[it->x], y_grades[it->y], it->zero, it->one, it->two);
@@ -139,6 +143,9 @@ void VisualizationWindow::paint_xi_support()
 //this slot is signaled when the agumented arrangement is ready
 void VisualizationWindow::augmented_arrangement_ready(MeshMessage* arrangement)
 {
+    //First load our local copies of the data
+    copy_fields_from_cthread();
+
     //receive the arrangement
     this->arrangement = arrangement;
 
@@ -270,6 +277,8 @@ Barcode* VisualizationWindow::rescale_barcode_template(BarcodeTemplate& dbc, dou
     //loop through bars
     for(std::set<BarTemplate>::iterator it = dbc.begin(); it != dbc.end(); ++it)
     {
+        qDebug() << "BarTemplate: " << it->begin << " " << it->end;
+        assert(it->begin < xi_support.size());
         xiPoint begin = xi_support[it->begin];
         double birth = project(begin, angle, offset);
 
@@ -282,6 +291,7 @@ Barcode* VisualizationWindow::rescale_barcode_template(BarcodeTemplate& dbc, dou
             }
             else    //then bar is finite
             {
+                assert(it->end < xi_support.size());
                 xiPoint end = xi_support[it->end];
                 double death = project(end, angle, offset);
 //                qDebug() << "   ===>>> (" << it->begin << "," << it->end << ") |---> (" << birth << "," << death << ")";

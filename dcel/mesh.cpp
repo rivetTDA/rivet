@@ -793,3 +793,4 @@ bool Mesh::almost_equal(const double a, const double b)
 std::ostream & operator<<(std::ostream &stream, const Mesh &mesh) {
     return write_grades(stream, mesh.x_exact, mesh.y_exact);
 }
+

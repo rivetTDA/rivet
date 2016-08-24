@@ -34,7 +34,7 @@ std::shared_ptr<Mesh> MeshBuilder::build_arrangement(MultiBetti& mb,
     progress.progress(10);
     std::shared_ptr<Mesh> mesh(new Mesh(x_exact, y_exact, verbosity));
     PersistenceUpdater updater(*mesh, mb.bifiltration, xi_pts, verbosity);   //PersistenceUpdater object is able to do the calculations necessary for finding anchors and computing barcode templates
-    debug() << "  --> finding anchors took " << timer.elapsed() << " milliseconds" ;
+    debug() << "  --> finding anchors took " << timer.elapsed() << " milliseconds";
 
     //now that we have all the anchors, we can build the interior of the arrangement
     progress.progress(25);
