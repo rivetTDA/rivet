@@ -124,7 +124,7 @@ void ComputationThread::compute_from_file() {
 
     bool reading_xi = false;
     std::stringstream ss;
-    while(console->canReadLine() || console->waitForReadyRead()) {
+    while(console->canReadLine() || console->waitForReadyRead(-1)) {
         QString line = console->readLine();
         qDebug().noquote() << "console: " << line;
         if (reading_xi) {
@@ -141,8 +141,8 @@ void ComputationThread::compute_from_file() {
             }
         } else if (line.startsWith("ARRANGEMENT: ")) {
                 {
-                    std::ifstream input(line.mid(QString("ARRANGEMENT: ").length()).trimmed().toStdString());
                     console->waitForFinished();
+                    std::ifstream input(line.mid(QString("ARRANGEMENT: ").length()).trimmed().toStdString());
                     if (!input.is_open()) {
                         throw std::runtime_error("Could not open console arrangement file");
                     }
