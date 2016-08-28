@@ -14,7 +14,7 @@ bool pairCompare(std::pair<unsigned, unsigned> left, std::pair<unsigned, unsigne
 void sortAdjacencies(std::vector<std::vector<unsigned> > &adjList, std::vector<std::vector<unsigned> > &distances, unsigned start)
 {
 	bool discovered[adjList.size()]; // boolean array for keeping track of which nodes have been visited
-	unsigned branchWeight[adjList.size()]; // this will contain the number of nodes "hanging" from the node represented by its index in branchWeight
+	unsigned branchWeight[adjList.size()]; // this will contain the weight of the edges "hanging" from the node represented by its index in branchWeight
 	// populate the boolean array with false and the branchWeight array with 0
 	for (int i = 0; i < adjList.size(); ++i)
 	{
@@ -31,8 +31,8 @@ void sortAdjacencies(std::vector<std::vector<unsigned> > &adjList, std::vector<s
 		node = nodes.top(); // let node be the current node that we are considering
 
 		// find the next undiscovered node
-		edgeIndex = adjList.at(node).size(); // set edgeIndex such that we will skip to the else if we don't find an undiscovered adjacency
-        // look for an undiscovered adjacency
+		edgeIndex = adjList.at(node).size(); // set edgeIndex such that we will skip to the else statement if we don't find an undiscovered node
+        // look for an undiscovered node
 		for (int i = 0; i < adjList.at(node).size(); ++i)
 		{
 			if (!discovered[ adjList.at(node).at(i) ])
@@ -58,7 +58,7 @@ void sortAdjacencies(std::vector<std::vector<unsigned> > &adjList, std::vector<s
 				runningSum += branchWeight[adjList.at(node).at(i)] + distances.at(node).at( adjList.at(node).at(i) );
 			}
 
-			if (!nodes.empty()) // if there is a parent node we know that we overcounted the branchWeight by 1
+			if (!nodes.empty()) // if there is a parent node, we know that we overcounted the branchWeight by the weight of the edge between the current node and its parent
 			{
 				branchWeight[node] = runningSum - distances.at(node).at(nodes.top()); // assign runningSum to branchWeight at the current node
 			}
@@ -106,7 +106,7 @@ void sortAdjacencies(std::vector<std::vector<unsigned> > &adjList, std::vector<s
 		}
 
 		// now sort the pairs
-		// NOTE:  pairCompare currently places the most branchWeight first and the least branchWeight last
+		// NOTE:  pairCompare currently places the "heaviest" branchWeight first and the "lightest" branchWeight last
 		sort(toBeSorted.begin(), toBeSorted.end(), pairCompare);
 
 		// replace the elements in the adjacency list in sorted order
