@@ -75,8 +75,12 @@ void ComputationThread::load_from_file() {
     boost::archive::binary_iarchive archive(file);
 
     arrangement.reset(new MeshMessage());
-    archive >> params;
-    archive >> message;
+    InputParameters p;
+    archive >> p;
+    params = p;
+    XiSupportMessage m;
+    archive >> m;
+    message = m;
     unpack_message_fields();
     emit xiSupportReady();
     archive >> *arrangement;
