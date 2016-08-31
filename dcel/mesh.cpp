@@ -716,7 +716,7 @@ void Mesh::find_subpath(unsigned cur_node, std::vector< std::vector<unsigned> >&
             // and push it onto pathvec
             pathvec.push_back(cur_edge->get_twin());
             // push a copy onto the backtracking stack so we don't have to search for this Halfedge* again when popping
-            backtrack.push(cur_edge->get_twin());
+            backtrack.push(cur_edge);
             // push the next node onto the stack
             nodes.push(next_node);
             // increment the discovered counter

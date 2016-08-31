@@ -84,7 +84,8 @@ HEADERS  += visualizationwindow.h			\
     interface/file_input_reader.h \
     driver.h \
     interface/file_writer.h \
-    exception.h
+    exception.h \
+    cutgraph.h
     
 
 FORMS   += visualizationwindow.ui			\
