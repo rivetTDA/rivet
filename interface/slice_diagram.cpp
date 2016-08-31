@@ -54,7 +54,7 @@ void SliceDiagram::create_diagram(const QString x_text, const QString y_text, do
     data_ymin = ymin;
     data_ymax = ymax;
     normalized_coords = norm_coords;
-    data_infty = 4*(xmax - xmin + ymax - ymin);
+    data_infty = 10*(xmax - xmin + ymax - ymin);
 
     //pens and brushes
     QPen blackPen(Qt::black);
@@ -269,7 +269,6 @@ void SliceDiagram::resize_diagram()
     slice_line->update_position(x, y, line_vert, line_slope*scale_y/scale_x);
 
     //reposition bars
-    double infty = line_zero + data_infty;
     unsigned count = 1;
     for(unsigned i = 0; i < bars.size(); i++)
     {
@@ -277,9 +276,6 @@ void SliceDiagram::resize_diagram()
         {
             double start = (*it)->get_start();
             double end = (*it)->get_end();
-            if(end == std::numeric_limits<double>::infinity())
-                end = infty;
-
             std::pair<double,double> p1 = compute_endpoint(start, count);
             std::pair<double,double> p2 = compute_endpoint(end, count);
             (*it)->set_line(p1.first, p1.second, p2.first, p2.second);
@@ -540,7 +536,7 @@ std::pair<double,double> SliceDiagram::compute_endpoint(double coordinate, unsig
 
     //handle infinity
     if(coordinate == std::numeric_limits<double>::infinity())
-        coordinate = line_zero + data_infty;
+        coordinate = data_infty;
 
     //compute x and y relative to slice line (pixel units)
     double x = 0;
@@ -709,9 +705,6 @@ void SliceDiagram::update_highlight()
     }
 
     //highlight the interval
-    if(end == std::numeric_limits<double>::infinity())
-        end = line_zero + data_infty;
-
     std::pair<double,double> p1 = compute_endpoint(start, 0);
     std::pair<double,double> p2 = compute_endpoint(end, 0);
 
