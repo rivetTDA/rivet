@@ -251,12 +251,19 @@ void VisualizationWindow::update_persistence_diagram()
     if(persistence_diagram_drawn)
     {
         //get the barcode
+        qDebug() << "  QUERY: angle =" << angle_precise << ", offset =" << offset_precise;
         BarcodeTemplate dbc = arrangement->get_barcode_template(angle_precise, offset_precise);
         if(barcode != NULL) //clean up the old barcode
             delete barcode;
         barcode = rescale_barcode_template(dbc, angle_precise, offset_precise);
 
         //TESTING
+        qDebug() << "  XI SUPPORT VECTOR:";
+        for(unsigned i=0; i<xi_support.size(); i++)
+        {
+            xiPoint p = xi_support[i];
+            qDebug().nospace() << "    [" << i << "]: (" << p.x << "," << p.y << ") --> (" << x_grades[p.x] << "," << y_grades[p.y] << ")";
+        }
         dbc.print();
         barcode->print();
 
