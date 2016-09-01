@@ -668,39 +668,47 @@ void Mesh::find_path(std::vector<Halfedge*>& pathvec)
     Face* initial_cell = topleft->get_twin()->get_face();
     unsigned start = (face_indexes.find(initial_cell))->second;
 
+    //this will store only the children of each node, with initial_cell regarded as the root of the tree
+    std::vector< std::vector<unsigned> > children(faces.size(), std::vector<unsigned>());
+
     // sort the adjacencies to minimize backtracking in the path
-    sortAdjacencies(adjList, distances, start);
+    // i.e. child nodes are sorted in increasing order of branch weight
+    sortAdjacencies(adjList, distances, start, children);
 
     // find_subpath(start, adjacencies, pathvec, false);
-    find_subpath(start, adjList, pathvec);
+    find_subpath(start, children, pathvec);
 
     //TESTING -- PRINT PATH
-    if(verbosity >= 10)
+    if(verbosity >= 2)
     {
         QDebug qd = qDebug().nospace();
         qd << "PATH: " << start << ", ";
         for(unsigned i=0; i<pathvec.size(); i++)
-            qd << (face_indexes.find((pathvec[i])->get_face()))->second << ", ";
+        {
+            unsigned cur = (face_indexes.find((pathvec[i])->get_face()))->second;
+            qd << "<" << pathvec[i]->get_anchor()->get_weight() << ">" << cur << ", "; //edge weight appears in angle brackets
+        }
         qd << "\n";
     }
 }//end find_path()
 
 // Uses a stack for nodes and erases adjacencies that have already been discovered
-void Mesh::find_subpath(unsigned cur_node, std::vector< std::vector<unsigned> >& adj, std::vector<Halfedge*>& pathvec)
+void Mesh::find_subpath(unsigned cur_node, std::vector< std::vector<unsigned> >& children, std::vector<Halfedge*>& pathvec)
 {
 	std::stack<unsigned> nodes; // stack for nodes as we do DFS
     std::stack<Halfedge*> backtrack; // stack for storing extra copy of Halfedge* so we don't have to recalculate when popping
-    unsigned node = cur_node, numDiscovered = 1, numNodes = adj.size();
+    unsigned node = cur_node, numDiscovered = 1, numNodes = children.size();
     nodes.push(node); // push node onto the node stack
 
     while (numDiscovered != numNodes) // while we have not traversed the whole tree
     {
 		node = nodes.top(); // let node be the current node that we are considering
 
-        if (adj.at(node).size() != 0) // if we have not traversed all of node's children
+        if (children[node].size() != 0) // if we have not traversed all of node's children
         {
         	// find the halfedge to be traversed
-            unsigned next_node = (unsigned) adj.at(node).back();
+            unsigned next_node = children[node].back();
+            children[node].pop_back();
 
             Halfedge* cur_edge = (faces[node])->get_boundary();
             while (cur_edge->get_twin()->get_face() != faces[next_node])
@@ -723,8 +731,8 @@ void Mesh::find_subpath(unsigned cur_node, std::vector< std::vector<unsigned> >&
             ++numDiscovered;
 
             // erase the adjacencies so they will not be considered again
-            adj.at(node).erase(adj.at(node).end() - 1); // NOTE:  could use resize(adj.at(node).size() - 1) if that is faster than erase but I'm not sure if it would be
-            adj.at(next_node).erase( find(adj.at(next_node).begin(), adj.at(next_node).end(), node) );
+//            adj.at(node).erase(adj.at(node).end() - 1); // NOTE:  could use resize(adj.at(node).size() - 1) if that is faster than erase but I'm not sure if it would be
+//            adj.at(next_node).erase( find(adj.at(next_node).begin(), adj.at(next_node).end(), node) );
 
         } // end if
 
