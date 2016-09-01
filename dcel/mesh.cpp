@@ -613,7 +613,6 @@ void Mesh::find_path(std::vector<Halfedge*>& pathvec)
     //TESTING -- print the edges in the dual graph
     if(verbosity >= 10)
     {
-//        QDebug qd = qDebug().nospace();
         qDebug() << "EDGES IN THE DUAL GRAPH OF THE ARRANGEMENT: ";
         typedef boost::graph_traits<Graph>::edge_iterator edge_iterator;
         std::pair<edge_iterator, edge_iterator> ei = boost::edges(dual_graph);
@@ -630,24 +629,11 @@ void Mesh::find_path(std::vector<Halfedge*>& pathvec)
 
     if(verbosity >= 10)
     {
-//        QDebug qd = qDebug().nospace();
         qDebug() << "num MST edges: " << spanning_tree_edges.size() << "\n";
         for(unsigned i=0; i<spanning_tree_edges.size(); i++)
             qDebug().nospace() << "  (" << boost::source(spanning_tree_edges[i], dual_graph) << "\t, " << boost::target(spanning_tree_edges[i], dual_graph) << "\t) \tweight = " << boost::get(boost::edge_weight_t(), dual_graph, spanning_tree_edges[i]);
     }
 
-//  // PART 2-ALTERNATE: FIND A HAMILTONIAN TOUR
-//    ///This doesn't serve our purposes.
-//    ///  It doesn't start at the cell representing a vertical line, but that could be fixed by using metric_tsp_approx_from_vertex(...).
-//    ///  Worse, it always produces a cycle and doesn't give the intermediate nodes between non-adjacent nodes that appear consecutively in the tour.
-
-//    typedef boost::graph_traits<Graph>::vertex_descriptor Vertex;
-//    std::vector<Vertex> tsp_vertices;
-//    boost::metric_tsp_approx_tour(dual_graph, std::back_inserter(tsp_vertices));
-
-//    qDebug() << "num TSP vertices: " << tsp_vertices.size() << "\n";
-//    for(unsigned i=0; i<tsp_vertices.size(); i++)
-//        qDebug() << "  " << tsp_vertices[i] << "\n";
 
   // PART 3: CONVERT THE OUTPUT OF PART 2 TO A PATH
 
@@ -663,7 +649,7 @@ void Mesh::find_path(std::vector<Halfedge*>& pathvec)
     }
 
     //traverse the tree
-    //at each step in the traversal, append the corresponding Halfedge* to pathvec
+    //
     //make sure to start at the proper node (2-cell)
     Face* initial_cell = topleft->get_twin()->get_face();
     unsigned start = (face_indexes.find(initial_cell))->second;
@@ -692,17 +678,22 @@ void Mesh::find_path(std::vector<Halfedge*>& pathvec)
     }
 }//end find_path()
 
-// Uses a stack for nodes and erases adjacencies that have already been discovered
-void Mesh::find_subpath(unsigned cur_node, std::vector< std::vector<unsigned> >& children, std::vector<Halfedge*>& pathvec)
+// Function to find a path through all nodes in a tree, starting at a specified node
+// Iterative version: uses a stack to perform a depth-first search of the tree
+// Input: tree is specified by the 2-D vector children
+//   children[i] is a vector of indexes of the children of node i, in decreasing order of branch weight
+//   (branch weight is total weight of all edges below a given node, plus weight of edge to parent node)
+// Output: vector pathvec contains a Halfedge pointer for each step of the path
+void Mesh::find_subpath(unsigned start_node, std::vector< std::vector<unsigned> >& children, std::vector<Halfedge*>& pathvec)
 {
 	std::stack<unsigned> nodes; // stack for nodes as we do DFS
+    nodes.push(start_node); // push node onto the node stack
     std::stack<Halfedge*> backtrack; // stack for storing extra copy of Halfedge* so we don't have to recalculate when popping
-    unsigned node = cur_node, numDiscovered = 1, numNodes = children.size();
-    nodes.push(node); // push node onto the node stack
+    unsigned numDiscovered = 1, numNodes = children.size();
 
     while (numDiscovered != numNodes) // while we have not traversed the whole tree
     {
-		node = nodes.top(); // let node be the current node that we are considering
+        unsigned node = nodes.top(); // let node be the current node that we are considering
 
         if (children[node].size() != 0) // if we have not traversed all of node's children
         {
@@ -729,14 +720,8 @@ void Mesh::find_subpath(unsigned cur_node, std::vector< std::vector<unsigned> >&
             nodes.push(next_node);
             // increment the discovered counter
             ++numDiscovered;
-
-            // erase the adjacencies so they will not be considered again
-//            adj.at(node).erase(adj.at(node).end() - 1); // NOTE:  could use resize(adj.at(node).size() - 1) if that is faster than erase but I'm not sure if it would be
-//            adj.at(next_node).erase( find(adj.at(next_node).begin(), adj.at(next_node).end(), node) );
-
         } // end if
-
-        else // if we have traversed all of node's children
+        else // we have traversed all of node's children
         {
             nodes.pop(); // pop node off of the node stack
             pathvec.push_back(backtrack.top()); // push the top of backtrack onto pathvec

@@ -71,16 +71,8 @@ void sortAdjacencies(std::vector<std::vector<unsigned> > &adjList, std::vector<s
 
             branchWeight[node] = running_sum; // assign running_sum to branchWeight at the current node
 
-            qDebug() << "weight of subtree" << node << ":" << branchWeight[node];
-
             //sort the children of current node (sorts in increasing order by branch weight)
             std::sort(toBeSorted.begin(), toBeSorted.end());
-
-            QDebug qd = qDebug();
-            qd << "   children:";
-            for(unsigned i=0; i < toBeSorted.size(); i++)
-                qd <<  "(" << toBeSorted[i].second << "," << toBeSorted[i].first << ")";
-
 
             // copy the children indexes to the children vector in reverse branch-weight order
             for(std::vector< std::pair<unsigned, unsigned> >::reverse_iterator rit = toBeSorted.rbegin();
@@ -88,13 +80,7 @@ void sortAdjacencies(std::vector<std::vector<unsigned> > &adjList, std::vector<s
             {
                 children[node].push_back(rit->second);
             }
-
-            QDebug qd2 = qDebug();
-            qd2 << "   children sorted:";
-            for(unsigned i=0; i < children[node].size(); i++)
-                qd2 << children[node][i];
         }
     } // end while
-
-} // end of sortAdjacencies
+} // end sortAdjacencies()
 
