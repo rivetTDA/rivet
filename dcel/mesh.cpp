@@ -648,20 +648,17 @@ void Mesh::find_path(std::vector<Halfedge*>& pathvec)
         adjList.at(b).push_back(a);
     }
 
-    //traverse the tree
-    //
     //make sure to start at the proper node (2-cell)
     Face* initial_cell = topleft->get_twin()->get_face();
     unsigned start = (face_indexes.find(initial_cell))->second;
 
-    //this will store only the children of each node, with initial_cell regarded as the root of the tree
+    //store the children of each node (with initial_cell regarded as the root of the tree)
     std::vector< std::vector<unsigned> > children(faces.size(), std::vector<unsigned>());
 
-    // sort the adjacencies to minimize backtracking in the path
-    // i.e. child nodes are sorted in increasing order of branch weight
+    // sort child nodes in decreasing order of branch weight to minimize backtracking in the path
     sortAdjacencies(adjList, distances, start, children);
 
-    // find_subpath(start, adjacencies, pathvec, false);
+    // now we can find the path
     find_subpath(start, children, pathvec);
 
     //TESTING -- PRINT PATH
@@ -686,7 +683,7 @@ void Mesh::find_path(std::vector<Halfedge*>& pathvec)
 // Output: vector pathvec contains a Halfedge pointer for each step of the path
 void Mesh::find_subpath(unsigned start_node, std::vector< std::vector<unsigned> >& children, std::vector<Halfedge*>& pathvec)
 {
-	std::stack<unsigned> nodes; // stack for nodes as we do DFS
+    std::stack<unsigned> nodes; // stack for nodes as we do DFS
     nodes.push(start_node); // push node onto the node stack
     std::stack<Halfedge*> backtrack; // stack for storing extra copy of Halfedge* so we don't have to recalculate when popping
     unsigned numDiscovered = 1, numNodes = children.size();
@@ -697,7 +694,7 @@ void Mesh::find_subpath(unsigned start_node, std::vector< std::vector<unsigned> 
 
         if (children[node].size() != 0) // if we have not traversed all of node's children
         {
-        	// find the halfedge to be traversed
+            // find the halfedge to be traversed
             unsigned next_node = children[node].back();
             children[node].pop_back();
 
