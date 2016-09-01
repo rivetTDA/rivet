@@ -68,6 +68,7 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(ComputationInput &in
         //send (a pointer to) the arrangement back to the VisualizationWindow
         arrangementReady(arrangement);
     //re-send xi support and other anchors
+    debug() << "Sending" << result->xi_support.size() << "anchors";
     xiSupportReady(XiSupportMessage {input.x_label, input.y_label, result->xi_support, result->homology_dimensions, input.x_exact, input.y_exact});
     arrangement->test_consistency();
     result->arrangement = std::move(arrangement);
