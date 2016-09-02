@@ -151,6 +151,7 @@ void ComputationThread::compute_from_file() {
                     if (type != "RIVET_1") {
                         throw std::runtime_error("Unsupported file format");
                     }
+                    qDebug() << "ComputationThread::compute_from_file() : checkpoint A -- xi_support.size() = " << xi_support.size();
                     boost::archive::binary_iarchive archive(input);
                     arrangement.reset(new MeshMessage());
                     InputParameters p;
@@ -158,6 +159,7 @@ void ComputationThread::compute_from_file() {
                     archive >> message;
                     unpack_message_fields();
                     archive >> *arrangement;
+                    qDebug() << "ComputationThread::compute_from_file() : checkpoint B -- xi_support.size() = " << xi_support.size();
                 }
 //                qDebug() << "Mesh received: " << arrangement->x_exact.size() << " x " << arrangement->y_exact.size();
             emit arrangementReady(&*arrangement);
