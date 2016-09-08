@@ -2,10 +2,10 @@
 // Created by Bryn Keller on 6/28/16.
 //
 
-#include "dcel/mesh_builder.h"
+#include "dcel/arrangement_builder.h"
 #include "dcel/anchor.h"
 #include "dcel/dcel.h"
-#include "dcel/mesh.h"
+#include "dcel/arrangement.h"
 #include "debug.h"
 #include "timer.h"
 #include <boost/graph/adjacency_list.hpp>
@@ -18,7 +18,7 @@
 #include <cutgraph.h>
 #include <stack> //for find_subpath
 
-MeshBuilder::MeshBuilder(unsigned verbosity)
+ArrangementBuilder::ArrangementBuilder(unsigned verbosity)
     : verbosity(verbosity)
 {
 }
@@ -26,40 +26,40 @@ MeshBuilder::MeshBuilder(unsigned verbosity)
 //builds the DCEL arrangement, computes and stores persistence data
 //also stores ordered list of xi support points in the supplied vector
 //precondition: the constructor has already created the boundary of the arrangement
-std::shared_ptr<Mesh> MeshBuilder::build_arrangement(MultiBetti& mb,
+std::shared_ptr<Arrangement> ArrangementBuilder::build_arrangement(MultiBetti& mb,
     std::vector<exact> x_exact,
     std::vector<exact> y_exact,
-    std::vector<xiPoint>& xi_pts,
+    std::vector<TemplatePoint>& template_points,
     Progress& progress)
 {
     debug() << "build_arrangement with multibetti";
     Timer timer;
 
     //first, create PersistenceUpdater
-    //this also finds anchors and stores them in the vector Mesh::all_anchors -- JULY 2015 BUG FIX
+    //this also finds anchors and stores them in the vector Arrangement::all_anchors -- JULY 2015 BUG FIX
     progress.progress(10);
-    std::shared_ptr<Mesh> mesh(new Mesh(x_exact, y_exact, verbosity));
-    PersistenceUpdater updater(*mesh, mb.bifiltration, xi_pts, verbosity); //PersistenceUpdater object is able to do the calculations necessary for finding anchors and computing barcode templates
+    std::shared_ptr<Arrangement> arrangement(new Arrangement(x_exact, y_exact, verbosity));
+    PersistenceUpdater updater(*arrangement, mb.bifiltration, template_points, verbosity); //PersistenceUpdater object is able to do the calculations necessary for finding anchors and computing barcode templates
     debug() << "  --> finding anchors took " << timer.elapsed() << " milliseconds";
 
     //now that we have all the anchors, we can build the interior of the arrangement
     progress.progress(25);
     timer.restart();
-    build_interior(mesh);
+    build_interior(arrangement);
     debug() << "  --> building the interior of the line arrangement took " << timer.elapsed() << " milliseconds";
-    mesh->print_stats();
+    arrangement->print_stats();
 
     //compute the edge weights
     progress.progress(50);
     timer.restart();
-    find_edge_weights(*mesh, updater);
+    find_edge_weights(*arrangement, updater);
     debug() << "  --> computing the edge weights took " << timer.elapsed() << " milliseconds";
 
     //now that the arrangement is constructed, we can find a path -- NOTE: path starts with a (near-vertical) line to the right of all multigrades
     progress.progress(75);
     std::vector<std::shared_ptr<Halfedge>> path;
     timer.restart();
-    find_path(*mesh, path);
+    find_path(*arrangement, path);
     debug() << "  --> finding the path took " << timer.elapsed() << " milliseconds";
 
     //update the progress dialog box
@@ -69,36 +69,36 @@ std::shared_ptr<Mesh> MeshBuilder::build_arrangement(MultiBetti& mb,
     //finally, we can traverse the path, computing and storing a barcode template in each 2-cell
     updater.store_barcodes_with_reset(path, progress);
 
-    return mesh;
+    return arrangement;
 
 } //end build_arrangement()
 
 //builds the DCEL arrangement from the supplied xi support points, but does NOT compute persistence data
-std::shared_ptr<Mesh> MeshBuilder::build_arrangement(std::vector<exact> x_exact, std::vector<exact> y_exact,
-    std::vector<xiPoint>& xi_pts, std::vector<BarcodeTemplate>& barcode_templates,
+std::shared_ptr<Arrangement> ArrangementBuilder::build_arrangement(std::vector<exact> x_exact, std::vector<exact> y_exact,
+    std::vector<TemplatePoint>& xi_pts, std::vector<BarcodeTemplate>& barcode_templates,
     Progress& progress)
 {
     Timer timer;
 
-    //first, compute anchors and store them in the vector Mesh::all_anchors
+    //first, compute anchors and store them in the vector Arrangement::all_anchors
     progress.progress(10);
     //TODO: this is odd, fix.
     SimplexTree dummy_tree(0, 0);
-    std::shared_ptr<Mesh> mesh(new Mesh(x_exact, y_exact, verbosity));
-    PersistenceUpdater updater(*mesh, dummy_tree, xi_pts, verbosity); //we only use the PersistenceUpdater to find and store the anchors
+    std::shared_ptr<Arrangement> arrangement(new Arrangement(x_exact, y_exact, verbosity));
+    PersistenceUpdater updater(*arrangement, dummy_tree, xi_pts, verbosity); //we only use the PersistenceUpdater to find and store the anchors
     debug() << "  --> finding anchors took " << timer.elapsed() << " milliseconds";
 
     //now that we have all the anchors, we can build the interior of the arrangement
     progress.progress(30);
     timer.restart();
-    build_interior(mesh); ///TODO: build_interior() should update its status!
+    build_interior(arrangement); ///TODO: build_interior() should update its status!
     debug() << "  --> building the interior of the line arrangement took" << timer.elapsed() << "milliseconds";
-    mesh->print_stats();
+    arrangement->print_stats();
 
     //check
-    if (mesh->faces.size() != barcode_templates.size()) {
+    if (arrangement->faces.size() != barcode_templates.size()) {
         std::stringstream ss;
-        ss << "Number of faces: " << mesh->faces.size()
+        ss << "Number of faces: " << arrangement->faces.size()
            << " does not match number of barcode templates: " << barcode_templates.size();
         throw std::runtime_error(ss.str());
     } else {
@@ -107,21 +107,21 @@ std::shared_ptr<Mesh> MeshBuilder::build_arrangement(std::vector<exact> x_exact,
 
     //now store the barcode templates
     for (unsigned i = 0; i < barcode_templates.size(); i++) {
-        mesh->set_barcode_template(i, barcode_templates[i]);
+        arrangement->set_barcode_template(i, barcode_templates[i]);
     }
-    return mesh;
+    return arrangement;
 } //end build_arrangement()
 
 //function to build the arrangement using a version of the Bentley-Ottmann algorithm, given all Anchors
 //preconditions:
 //   all Anchors are in a list, ordered by Anchor_LeftComparator
-//   boundary of the mesh is created (as in the mesh constructor)
-void MeshBuilder::build_interior(std::shared_ptr<Mesh> mesh)
+//   boundary of the arrangement is created (as in the arrangement constructor)
+void ArrangementBuilder::build_interior(std::shared_ptr<Arrangement> arrangement)
 {
     if (verbosity >= 6) {
         debug() << "BUILDING ARRANGEMENT:  Anchors sorted for left edge of strip: ";
-        for (std::set<std::shared_ptr<Anchor>, Anchor_LeftComparator>::iterator it = mesh->all_anchors.begin();
-             it != mesh->all_anchors.end(); ++it)
+        for (std::set<std::shared_ptr<Anchor>, Anchor_LeftComparator>::iterator it = arrangement->all_anchors.begin();
+             it != arrangement->all_anchors.end(); ++it)
             debug(true) << "(" << (*it)->get_x() << "," << (*it)->get_y() << ") ";
     }
 
@@ -129,10 +129,10 @@ void MeshBuilder::build_interior(std::shared_ptr<Mesh> mesh)
 
     //data structure for ordered list of lines
     std::vector<std::shared_ptr<Halfedge>> lines;
-    lines.reserve(mesh->all_anchors.size());
+    lines.reserve(arrangement->all_anchors.size());
 
     //data structure for queue of future intersections
-    std::priority_queue<Mesh::Crossing*, std::vector<Mesh::Crossing*>, Mesh::CrossingComparator> crossings;
+    std::priority_queue<Arrangement::Crossing*, std::vector<Arrangement::Crossing*>, Arrangement::CrossingComparator> crossings;
 
     //data structure for all pairs of Anchors whose potential crossings have been considered
     typedef std::pair<std::shared_ptr<Anchor>, std::shared_ptr<Anchor>> Anchor_pair;
@@ -144,10 +144,10 @@ void MeshBuilder::build_interior(std::shared_ptr<Mesh> mesh)
     }
 
     //for each Anchor, create vertex and associated halfedges, anchored on the left edge of the strip
-    std::shared_ptr<Halfedge> leftedge = mesh->bottomleft;
+    std::shared_ptr<Halfedge> leftedge = arrangement->bottomleft;
     unsigned prev_y = std::numeric_limits<unsigned>::max();
-    for (std::set<std::shared_ptr<Anchor>, Anchor_LeftComparator>::iterator it = mesh->all_anchors.begin();
-         it != mesh->all_anchors.end(); ++it) {
+    for (std::set<std::shared_ptr<Anchor>, Anchor_LeftComparator>::iterator it = arrangement->all_anchors.begin();
+         it != arrangement->all_anchors.end(); ++it) {
         std::shared_ptr<Anchor> cur_anchor = *it;
 
         if (verbosity >= 8) {
@@ -157,13 +157,13 @@ void MeshBuilder::build_interior(std::shared_ptr<Mesh> mesh)
 
         if (cur_anchor->get_y() != prev_y) //then create new vertex
         {
-            double dual_point_y_coord = -1 * mesh->y_grades[cur_anchor->get_y()]; //point-line duality requires multiplying by -1
-            leftedge = mesh->insert_vertex(leftedge, 0, dual_point_y_coord); //set leftedge to edge that will follow the new edge
+            double dual_point_y_coord = -1 * arrangement->y_grades[cur_anchor->get_y()]; //point-line duality requires multiplying by -1
+            leftedge = arrangement->insert_vertex(leftedge, 0, dual_point_y_coord); //set leftedge to edge that will follow the new edge
             prev_y = cur_anchor->get_y(); //remember the discrete y-index
         }
 
         //now insert new edge at origin vertex of leftedge
-        std::shared_ptr<Halfedge> new_edge = mesh->create_edge_left(leftedge, cur_anchor);
+        std::shared_ptr<Halfedge> new_edge = arrangement->create_edge_left(leftedge, cur_anchor);
 
         //remember Halfedge corresponding to this Anchor
         lines.push_back(new_edge);
@@ -180,7 +180,7 @@ void MeshBuilder::build_interior(std::shared_ptr<Mesh> mesh)
         std::shared_ptr<Anchor> a = lines[i]->get_anchor();
         std::shared_ptr<Anchor> b = lines[i + 1]->get_anchor();
         if (a->comparable(*b)) //then the Anchors are (strongly) comparable, so we must store an intersection
-            crossings.push(new Mesh::Crossing(a, b, mesh));
+            crossings.push(new Arrangement::Crossing(a, b, arrangement));
 
         //remember that we have now considered this intersection
         considered_pairs.insert(Anchor_pair(a, b));
@@ -196,11 +196,11 @@ void MeshBuilder::build_interior(std::shared_ptr<Mesh> mesh)
     int status_interval = 10000; //controls frequency of output
 
     //current position of sweep line
-    Mesh::Crossing* sweep = NULL;
+    Arrangement::Crossing* sweep = NULL;
 
     while (!crossings.empty()) {
         //get the next intersection from the queue
-        Mesh::Crossing* cur = crossings.top();
+        Arrangement::Crossing* cur = crossings.top();
         crossings.pop();
 
         //process the intersection
@@ -235,7 +235,7 @@ void MeshBuilder::build_interior(std::shared_ptr<Mesh> mesh)
         }
 
         //compute y-coordinate of intersection
-        double intersect_y = mesh->x_grades[sweep->a->get_x()] * (sweep->x) - mesh->y_grades[sweep->a->get_y()];
+        double intersect_y = arrangement->x_grades[sweep->a->get_x()] * (sweep->x) - arrangement->y_grades[sweep->a->get_y()];
 
         if (verbosity >= 8) {
             debug() << "  found intersection between"
@@ -244,7 +244,7 @@ void MeshBuilder::build_interior(std::shared_ptr<Mesh> mesh)
 
         //create new vertex
         auto new_vertex = std::make_shared<Vertex>(sweep->x, intersect_y);
-        mesh->vertices.push_back(new_vertex);
+        arrangement->vertices.push_back(new_vertex);
 
         //anchor edges to vertex and create new face(s) and edges	//TODO: check this!!!
         std::shared_ptr<Halfedge> prev_new_edge = NULL; //necessary to remember the previous new edge at each interation of the loop
@@ -257,9 +257,9 @@ void MeshBuilder::build_interior(std::shared_ptr<Mesh> mesh)
 
             //create next pair of twin halfedges along the current curve (i.e. curves[incident_edges[i]] )
             std::shared_ptr<Halfedge> new_edge(new Halfedge(new_vertex, incoming->get_anchor())); //points AWAY FROM new_vertex
-            mesh->halfedges.push_back(new_edge);
+            arrangement->halfedges.push_back(new_edge);
             std::shared_ptr<Halfedge> new_twin(new Halfedge(NULL, incoming->get_anchor())); //points TOWARDS new_vertex
-            mesh->halfedges.push_back(new_twin);
+            arrangement->halfedges.push_back(new_twin);
 
             //update halfedge pointers
             new_edge->set_twin(new_twin);
@@ -277,7 +277,7 @@ void MeshBuilder::build_interior(std::shared_ptr<Mesh> mesh)
                 incoming->get_next()->set_prev(incoming);
 
                 std::shared_ptr<Face> new_face(new Face(new_twin));
-                mesh->faces.push_back(new_face);
+                arrangement->faces.push_back(new_face);
 
                 new_twin->set_face(new_face);
                 prev_new_edge->set_face(new_face);
@@ -324,7 +324,7 @@ void MeshBuilder::build_interior(std::shared_ptr<Mesh> mesh)
             {
                 considered_pairs.insert(Anchor_pair(a, b));
                 if (a->comparable(*b)) //then the Anchors are (strongly) comparable, so we have found an intersection to store
-                    crossings.push(new Mesh::Crossing(a, b, mesh));
+                    crossings.push(new Arrangement::Crossing(a, b, arrangement));
             }
         }
 
@@ -338,7 +338,7 @@ void MeshBuilder::build_interior(std::shared_ptr<Mesh> mesh)
             {
                 considered_pairs.insert(Anchor_pair(a, b));
                 if (a->comparable(*b)) //then the Anchors are (strongly) comparable, so we have found an intersection to store
-                    crossings.push(new Mesh::Crossing(a, b, mesh));
+                    crossings.push(new Arrangement::Crossing(a, b, arrangement));
             }
         }
 
@@ -355,7 +355,7 @@ void MeshBuilder::build_interior(std::shared_ptr<Mesh> mesh)
         debug() << "PART 3: RIGHT EDGE OF THE ARRANGEMENT";
     }
 
-    std::shared_ptr<Halfedge> rightedge = mesh->bottomright; //need a reference halfedge along the right side of the strip
+    std::shared_ptr<Halfedge> rightedge = arrangement->bottomright; //need a reference halfedge along the right side of the strip
     unsigned cur_x = 0; //keep track of discrete x-coordinate of last Anchor whose line was connected to right edge (x-coordinate of Anchor is slope of line)
 
     //connect each line to the right edge of the arrangement (at x = INFTY)
@@ -370,18 +370,18 @@ void MeshBuilder::build_interior(std::shared_ptr<Mesh> mesh)
         {
             cur_x = cur_anchor->get_x();
 
-            double Y = mesh->INFTY; //default, for lines with positive slope
-            if (mesh->x_grades[cur_x] < 0)
+            double Y = arrangement->INFTY; //default, for lines with positive slope
+            if (arrangement->x_grades[cur_x] < 0)
                 Y = -1 * Y; //for lines with negative slope
-            else if (mesh->x_grades[cur_x] == 0)
+            else if (arrangement->x_grades[cur_x] == 0)
                 Y = 0; //for horizontal lines
 
-            rightedge = mesh->insert_vertex(rightedge, mesh->INFTY, Y);
+            rightedge = arrangement->insert_vertex(rightedge, arrangement->INFTY, Y);
         } else //no new vertex required, but update previous entry for vertical-line queries
-            mesh->vertical_line_query_list.pop_back();
+            arrangement->vertical_line_query_list.pop_back();
 
         //store Halfedge for vertical-line queries
-        mesh->vertical_line_query_list.push_back(incoming->get_twin());
+        arrangement->vertical_line_query_list.push_back(incoming->get_twin());
 
         //connect current line to the most-recently-inserted vertex
         std::shared_ptr<Vertex> cur_vertex = rightedge->get_origin();
@@ -404,7 +404,7 @@ void MeshBuilder::build_interior(std::shared_ptr<Mesh> mesh)
 ////finds a pseudo-optimal path through all 2-cells of the arrangement
 //// path consists of a vector of Halfedges
 //// at each step of the path, the Halfedge points to the Anchor being crossed and the 2-cell (Face) being entered
-//void MeshBuilder::find_path(Mesh &mesh, std::vector<std::shared_ptr<Halfedge>>& pathvec)
+//void ArrangementBuilder::find_path(Arrangement &arrangement, std::vector<std::shared_ptr<Halfedge>>& pathvec)
 //{
 //    // PART 1: BUILD THE DUAL GRAPH OF THE ARRANGEMENT
 //
@@ -415,14 +415,14 @@ void MeshBuilder::build_interior(std::shared_ptr<Mesh> mesh)
 //
 //    //make a map for reverse-lookup of face indexes by face pointers -- Is this really necessary? Can I avoid doing this?
 //    std::map<std::shared_ptr<Face>, unsigned> face_indexes;
-//    for(unsigned i=0; i<mesh.faces.size(); i++)
-//        face_indexes.insert( std::pair<std::shared_ptr<Face>, unsigned>(mesh.faces[i], i));
+//    for(unsigned i=0; i<arrangement.faces.size(); i++)
+//        face_indexes.insert( std::pair<std::shared_ptr<Face>, unsigned>(arrangement.faces[i], i));
 //
 //    //loop over all faces
-//    for(unsigned i=0; i<mesh.faces.size(); i++)
+//    for(unsigned i=0; i<arrangement.faces.size(); i++)
 //    {
 //        //consider all neighbors of this faces
-//        std::shared_ptr<Halfedge> boundary = (mesh.faces[i])->get_boundary();
+//        std::shared_ptr<Halfedge> boundary = (arrangement.faces[i])->get_boundary();
 //        std::shared_ptr<Halfedge> current = boundary;
 //        do
 //        {
@@ -486,7 +486,7 @@ void MeshBuilder::build_interior(std::shared_ptr<Mesh> mesh)
 //    // PART 3: CONVERT THE OUTPUT OF PART 2 TO A PATH
 //
 //    //organize the edges of the minimal spanning tree so that we can traverse the tree
-//    std::vector< std::set<unsigned> > adjacencies(mesh.faces.size(), std::set<unsigned>());  //this will store all adjacency relationships in the spanning tree
+//    std::vector< std::set<unsigned> > adjacencies(arrangement.faces.size(), std::set<unsigned>());  //this will store all adjacency relationships in the spanning tree
 //    for(unsigned i=0; i<spanning_tree_edges.size(); i++)
 //    {
 //        unsigned a = boost::source(spanning_tree_edges[i], dual_graph);
@@ -499,10 +499,10 @@ void MeshBuilder::build_interior(std::shared_ptr<Mesh> mesh)
 //    //traverse the tree
 //    //at each step in the traversal, append the corresponding std::shared_ptr<Halfedge> to pathvec
 //    //make sure to start at the proper node (2-cell)
-//    std::shared_ptr<Face> initial_cell = mesh.topleft->get_twin()->get_face();
+//    std::shared_ptr<Face> initial_cell = arrangement.topleft->get_twin()->get_face();
 //    unsigned start = (face_indexes.find(initial_cell))->second;
 //
-//    find_subpath(mesh, start, adjacencies, pathvec, false);
+//    find_subpath(arrangement, start, adjacencies, pathvec, false);
 //
 //    //TESTING -- PRINT PATH
 ////    if(verbosity >= 10)
@@ -520,7 +520,7 @@ void MeshBuilder::build_interior(std::shared_ptr<Mesh> mesh)
 //   children[i] is a vector of indexes of the children of node i, in decreasing order of branch weight
 //   (branch weight is total weight of all edges below a given node, plus weight of edge to parent node)
 // Output: vector pathvec contains a Halfedge pointer for each step of the path
-void MeshBuilder::find_subpath(Mesh& mesh, unsigned start_node, std::vector<std::vector<unsigned>>& children, std::vector<std::shared_ptr<Halfedge>>& pathvec)
+void ArrangementBuilder::find_subpath(Arrangement& arrangement, unsigned start_node, std::vector<std::vector<unsigned>>& children, std::vector<std::shared_ptr<Halfedge>>& pathvec)
 {
     std::stack<unsigned> nodes; // stack for nodes as we do DFS
     nodes.push(start_node); // push node onto the node stack
@@ -537,11 +537,11 @@ void MeshBuilder::find_subpath(Mesh& mesh, unsigned start_node, std::vector<std:
             unsigned next_node = children[node].back();
             children[node].pop_back();
 
-            std::shared_ptr<Halfedge> cur_edge = (mesh.faces[node])->get_boundary();
-            while (cur_edge->get_twin()->get_face() != mesh.faces[next_node]) {
+            std::shared_ptr<Halfedge> cur_edge = (arrangement.faces[node])->get_boundary();
+            while (cur_edge->get_twin()->get_face() != arrangement.faces[next_node]) {
                 cur_edge = cur_edge->get_next();
 
-                if (cur_edge == (mesh.faces[node])->get_boundary()) {
+                if (cur_edge == (arrangement.faces[node])->get_boundary()) {
                     debug() << "ERROR:  cannot find edge between 2-cells " << node << " and " << next_node << "\n";
                     throw std::exception();
                 }
@@ -566,7 +566,7 @@ void MeshBuilder::find_subpath(Mesh& mesh, unsigned start_node, std::vector<std:
 } //end find_subpath()
 ////recursive method to build part of the path
 ////return_path == TRUE iff we want the path to return to the current node after traversing all of its children
-//void MeshBuilder::find_subpath(Mesh &mesh, unsigned cur_node, std::vector< std::set<unsigned> >& adj, std::vector<std::shared_ptr<Halfedge>>& pathvec, bool return_path)
+//void ArrangementBuilder::find_subpath(Arrangement &arrangement, unsigned cur_node, std::vector< std::set<unsigned> >& adj, std::vector<std::shared_ptr<Halfedge>>& pathvec, bool return_path)
 //{
 //
 //    while(!adj[cur_node].empty())   //cur_node still has children to traverse
@@ -575,12 +575,12 @@ void MeshBuilder::find_subpath(Mesh& mesh, unsigned start_node, std::vector<std:
 //        unsigned next_node = *(adj[cur_node].begin());
 //
 //        //find the next Halfedge and append it to pathvec
-//        std::shared_ptr<Halfedge> cur_edge = (mesh.faces[cur_node])->get_boundary();
-//        while(cur_edge->get_twin()->get_face() != mesh.faces[next_node])     //do we really have to search for the correct edge???
+//        std::shared_ptr<Halfedge> cur_edge = (arrangement.faces[cur_node])->get_boundary();
+//        while(cur_edge->get_twin()->get_face() != arrangement.faces[next_node])     //do we really have to search for the correct edge???
 //        {
 //            cur_edge = cur_edge->get_next();
 //
-//            if(cur_edge == (mesh.faces[cur_node])->get_boundary())   //THIS SHOULD NEVER HAPPEN
+//            if(cur_edge == (arrangement.faces[cur_node])->get_boundary())   //THIS SHOULD NEVER HAPPEN
 //            {
 //                debug() << "ERROR: cannot find edge between 2-cells " << cur_node << " and " << next_node << "\n";
 //                throw std::exception();
@@ -596,7 +596,7 @@ void MeshBuilder::find_subpath(Mesh& mesh, unsigned start_node, std::vector<std:
 //        bool return_here = return_path || !adj[cur_node].empty();
 //
 //        //recurse through the next node
-//        find_subpath(mesh, next_node, adj, pathvec, return_here);
+//        find_subpath(arrangement, next_node, adj, pathvec, return_here);
 //
 //        //if we will return to this node, then add reverse Halfedge to pathvec
 //        if(return_here)
@@ -607,15 +607,15 @@ void MeshBuilder::find_subpath(Mesh& mesh, unsigned start_node, std::vector<std:
 //}//end find_subpath()
 
 //computes and stores the edge weight for each anchor line
-void MeshBuilder::find_edge_weights(Mesh& mesh, PersistenceUpdater& updater)
+void ArrangementBuilder::find_edge_weights(Arrangement& arrangement, PersistenceUpdater& updater)
 {
     debug() << " FINDING EDGE WEIGHTS:";
 
     std::vector<std::shared_ptr<Halfedge>> pathvec;
-    std::shared_ptr<Halfedge> cur_edge = mesh.topright;
+    std::shared_ptr<Halfedge> cur_edge = arrangement.topright;
 
     //find a path across all anchor lines
-    while (cur_edge->get_twin() != mesh.bottomright) //then there is another vertex to consider on the right edge
+    while (cur_edge->get_twin() != arrangement.bottomright) //then there is another vertex to consider on the right edge
     {
         cur_edge = cur_edge->get_next();
         while (cur_edge->get_twin()->get_face() != NULL) //then we have another edge crossing to append to the path
@@ -637,7 +637,7 @@ void MeshBuilder::find_edge_weights(Mesh& mesh, PersistenceUpdater& updater)
 //finds a pseudo-optimal path through all 2-cells of the arrangement
 // path consists of a vector of Halfedges
 // at each step of the path, the Halfedge points to the Anchor being crossed and the 2-cell (Face) being entered
-void MeshBuilder::find_path(Mesh& mesh, std::vector<std::shared_ptr<Halfedge>>& pathvec)
+void ArrangementBuilder::find_path(Arrangement& arrangement, std::vector<std::shared_ptr<Halfedge>>& pathvec)
 {
     // PART 1: BUILD THE DUAL GRAPH OF THE ARRANGEMENT
 
@@ -649,18 +649,18 @@ void MeshBuilder::find_path(Mesh& mesh, std::vector<std::shared_ptr<Halfedge>>& 
 
     //make a map for reverse-lookup of face indexes by face pointers -- Is this really necessary? Can I avoid doing this?
     std::map<std::shared_ptr<Face>, unsigned> face_indexes;
-    for (unsigned i = 0; i < mesh.faces.size(); i++)
-        face_indexes.insert(std::pair<std::shared_ptr<Face>, unsigned>(mesh.faces[i], i));
+    for (unsigned i = 0; i < arrangement.faces.size(); i++)
+        face_indexes.insert(std::pair<std::shared_ptr<Face>, unsigned>(arrangement.faces[i], i));
 
     // distance vector for sorting the adjacency list
-    std::vector<std::vector<unsigned>> distances(mesh.faces.size(), std::vector<unsigned>(mesh.faces.size(), -1));
+    std::vector<std::vector<unsigned>> distances(arrangement.faces.size(), std::vector<unsigned>(arrangement.faces.size(), -1));
     for (int i = 0; i < distances.size(); ++i)
         distances.at(i).at(i) = 0;
 
-    //loop over all mesh.faces
-    for (unsigned i = 0; i < mesh.faces.size(); i++) {
-        //consider all neighbors of this mesh.faces
-        std::shared_ptr<Halfedge> boundary = (mesh.faces[i])->get_boundary();
+    //loop over all arrangement.faces
+    for (unsigned i = 0; i < arrangement.faces.size(); i++) {
+        //consider all neighbors of this arrangement.faces
+        std::shared_ptr<Halfedge> boundary = (arrangement.faces[i])->get_boundary();
         std::shared_ptr<Halfedge> current = boundary;
         do {
             //find index of neighbor
@@ -669,7 +669,7 @@ void MeshBuilder::find_path(Mesh& mesh, std::vector<std::shared_ptr<Halfedge>>& 
                 std::map<std::shared_ptr<Face>, unsigned>::iterator it = face_indexes.find(neighbor);
                 unsigned j = it->second;
 
-                //if i < j, then create an (undirected) edge between these mesh.faces
+                //if i < j, then create an (undirected) edge between these arrangement.faces
                 if (i < j) {
                     boost::add_edge(i, j, current->get_anchor()->get_weight(), dual_graph);
                     distances.at(i).at(j) = current->get_anchor()->get_weight();
@@ -705,7 +705,7 @@ void MeshBuilder::find_path(Mesh& mesh, std::vector<std::shared_ptr<Halfedge>>& 
     // PART 3: CONVERT THE OUTPUT OF PART 2 TO A PATH
 
     //organize the edges of the minimal spanning tree so that we can traverse the tree
-    std::vector<std::vector<unsigned>> adjList(mesh.faces.size(), std::vector<unsigned>()); //this will store all adjacency relationships in the spanning tree
+    std::vector<std::vector<unsigned>> adjList(arrangement.faces.size(), std::vector<unsigned>()); //this will store all adjacency relationships in the spanning tree
     for (unsigned i = 0; i < spanning_tree_edges.size(); i++) {
         unsigned a = boost::source(spanning_tree_edges[i], dual_graph);
         unsigned b = boost::target(spanning_tree_edges[i], dual_graph);
@@ -715,17 +715,17 @@ void MeshBuilder::find_path(Mesh& mesh, std::vector<std::shared_ptr<Halfedge>>& 
     }
 
     //make sure to start at the proper node (2-cell)
-    std::shared_ptr<Face> initial_cell = mesh.topleft->get_twin()->get_face();
+    std::shared_ptr<Face> initial_cell = arrangement.topleft->get_twin()->get_face();
     unsigned start = (face_indexes.find(initial_cell))->second;
 
     //store the children of each node (with initial_cell regarded as the root of the tree)
-    std::vector<std::vector<unsigned>> children(mesh.faces.size(), std::vector<unsigned>());
+    std::vector<std::vector<unsigned>> children(arrangement.faces.size(), std::vector<unsigned>());
 
     // sort child nodes in decreasing order of branch weight to minimize backtracking in the path
     sortAdjacencies(adjList, distances, start, children);
 
     // now we can find the path
-    find_subpath(mesh, start, children, pathvec);
+    find_subpath(arrangement, start, children, pathvec);
 
     //TESTING -- PRINT PATH
     if (verbosity >= 2) {

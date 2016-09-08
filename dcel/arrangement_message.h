@@ -7,17 +7,17 @@
 #include "dcel/anchor.h"
 #include "dcel/barcode_template.h"
 #include "dcel/dcel.h"
-#include "dcel/mesh.h"
+#include "dcel/arrangement.h"
 #include "type_tag.h"
 #include <boost/optional.hpp>
 #include <boost/serialization/split_member.hpp>
 
-class MeshMessage {
+class ArrangementMessage {
 
 public:
-    MeshMessage(Mesh const& mesh);
+    ArrangementMessage(Arrangement const& arrangement);
 
-    MeshMessage();
+    ArrangementMessage();
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int& version)
@@ -27,9 +27,9 @@ public:
 
     BarcodeTemplate get_barcode_template(double degrees, double offset);
 
-    friend bool operator==(MeshMessage const& left, MeshMessage const& right);
+    friend bool operator==(ArrangementMessage const& left, ArrangementMessage const& right);
 
-    Mesh to_mesh() const;
+    Arrangement to_arrangement() const;
 
 private:
     friend class boost::serialization::access;
@@ -72,7 +72,7 @@ private:
 
     friend bool operator==(AnchorM const& left, AnchorM const& right);
 
-    struct AnchorStructComparator : AnchorComparator<MeshMessage::AnchorM> {
+    struct AnchorStructComparator : AnchorComparator<ArrangementMessage::AnchorM> {
     };
 
     struct HalfedgeM {

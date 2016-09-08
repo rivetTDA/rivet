@@ -4,11 +4,11 @@
 //forward declarations
 class InputManager;
 struct InputParameters;
-class Mesh;
+class Arrangement;
 
 #include "dcel/barcode_template.h"
 #include "math/simplex_tree.h"
-#include "math/xi_point.h"
+#include "math/template_point.h"
 
 #include <QObject>
 #include <QThread>
@@ -18,7 +18,7 @@ typedef boost::multiprecision::cpp_rational exact;
 #include "boost/multi_array.hpp"
 typedef boost::multi_array<unsigned, 2> unsigned_matrix;
 
-#include "dcel/mesh_message.h"
+#include "dcel/arrangement_message.h"
 #include <vector>
 
 class ComputationThread : public QThread {
@@ -34,8 +34,8 @@ public:
     void compute();
 
     //TODO: these really ought to be delivered via signal rather than read by other classes
-    XiSupportMessage message;
-    std::vector<xiPoint> xi_support;
+    TemplatePointsMessage message;
+    std::vector<TemplatePoint> template_points;
     std::vector<exact> x_exact;
     std::vector<exact> y_exact;
     unsigned_matrix hom_dims;
@@ -46,8 +46,8 @@ signals:
     void advanceProgressStage();
     void setProgressMaximum(unsigned max);
     void setCurrentProgress(unsigned current);
-    void xiSupportReady();
-    void arrangementReady(MeshMessage* arrangement);
+    void templatePointsReady();
+    void arrangementReady(ArrangementMessage* arrangement);
 
 protected:
     void run() Q_DECL_OVERRIDE;
@@ -55,7 +55,7 @@ protected:
 private:
     InputParameters& params;
 
-    std::shared_ptr<MeshMessage> arrangement;
+    std::shared_ptr<ArrangementMessage> arrangement;
 
     void compute_from_file();
     void unpack_message_fields();
@@ -64,5 +64,5 @@ private:
 };
 
 //TODO: Move this somewhere. See comments on implementation for details.
-void write_boost_file(QString file_name, InputParameters const& params, XiSupportMessage const& message, MeshMessage const& mesh);
+void write_boost_file(QString file_name, InputParameters const& params, TemplatePointsMessage const& message, ArrangementMessage const& arrangement);
 #endif // COMPUTATIONTHREAD_H

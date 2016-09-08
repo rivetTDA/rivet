@@ -4,8 +4,8 @@
 #include <set>
 
 struct BarTemplate {
-    unsigned begin; //index of xiMatrixEntry of the equivalence class corresponding to the beginning of this bar
-    unsigned end; //index of xiMatrixEntry of the equivalence class corresponding to the end of this bar
+    unsigned begin; //index of TemplatePointsMatrixEntry of the equivalence class corresponding to the beginning of this bar
+    unsigned end; //index of TemplatePointsMatrixEntry of the equivalence class corresponding to the end of this bar
     mutable unsigned multiplicity; //maybe this is bad style, but multiplicity is not involved in comparisons
 
     BarTemplate(unsigned a, unsigned b);

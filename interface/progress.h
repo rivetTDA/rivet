@@ -3,7 +3,7 @@
 //
 #pragma once
 #include <boost/signals2.hpp>
-#include <math/xi_point.h>
+#include <math/template_point.h>
 
 class Progress {
 

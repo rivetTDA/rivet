@@ -1,14 +1,14 @@
-#include "mesh_message.h" //
+#include "arrangement_message.h"
 // Created by Bryn Keller on 7/15/16.
 //
 
-#include "dcel/mesh.h"
-#include "dcel/mesh_message.h"
+#include "dcel/arrangement.h"
+#include "dcel/arrangement_message.h"
 #include <boost/optional.hpp>
 
-MeshMessage::MeshMessage(Mesh const& mesh)
-    : x_grades(mesh.x_grades)
-    , y_grades(mesh.y_grades)
+ArrangementMessage::ArrangementMessage(Arrangement const& arrangement)
+    : x_grades(arrangement.x_grades)
+    , y_grades(arrangement.y_grades)
     , half_edges()
     , vertices()
     , anchors()
@@ -16,47 +16,47 @@ MeshMessage::MeshMessage(Mesh const& mesh)
     , vertical_line_query_list()
 {
     //REALLY slow with all these VID, FID, etc. calls, but will do for now.
-    for (auto face : mesh.faces) {
-        faces.push_back(FaceM{ HalfedgeId(mesh.HID(face->get_boundary())), face->get_barcode() });
+    for (auto face : arrangement.faces) {
+        faces.push_back(FaceM{ HalfedgeId(arrangement.HID(face->get_boundary())), face->get_barcode() });
     }
-    for (auto half : mesh.halfedges) {
+    for (auto half : arrangement.halfedges) {
         half_edges.push_back(HalfedgeM{
-            VertexId(mesh.VID(half->get_origin())),
-            HalfedgeId(mesh.HID(half->get_twin())),
-            HalfedgeId(mesh.HID(half->get_next())),
-            HalfedgeId(mesh.HID(half->get_prev())),
-            FaceId(mesh.FID(half->get_face())),
-            AnchorId(mesh.AID(half->get_anchor())) });
+            VertexId(arrangement.VID(half->get_origin())),
+            HalfedgeId(arrangement.HID(half->get_twin())),
+            HalfedgeId(arrangement.HID(half->get_next())),
+            HalfedgeId(arrangement.HID(half->get_prev())),
+            FaceId(arrangement.FID(half->get_face())),
+            AnchorId(arrangement.AID(half->get_anchor())) });
     }
-    for (auto anchor : mesh.all_anchors) {
+    for (auto anchor : arrangement.all_anchors) {
         std::cerr << "Adding anchor: " << anchor->get_x() << ", " << anchor->get_y() << std::endl;
         anchors.push_back(AnchorM{
             anchor->get_x(),
             anchor->get_y(),
-            HalfedgeId(mesh.HID(anchor->get_line())),
+            HalfedgeId(arrangement.HID(anchor->get_line())),
             anchor->get_position(),
             anchor->is_above(),
             anchor->get_weight() });
     }
-    assert(anchors.size() == mesh.all_anchors.size());
-    for (auto vertex : mesh.vertices) {
+    assert(anchors.size() == arrangement.all_anchors.size());
+    for (auto vertex : arrangement.vertices) {
         vertices.push_back(VertexM{
-            HalfedgeId(mesh.HID(vertex->get_incident_edge())),
+            HalfedgeId(arrangement.HID(vertex->get_incident_edge())),
             vertex->get_x(),
             vertex->get_y() });
     }
 
-    for (auto query : mesh.vertical_line_query_list) {
-        vertical_line_query_list.push_back(HalfedgeId(mesh.HID(query)));
+    for (auto query : arrangement.vertical_line_query_list) {
+        vertical_line_query_list.push_back(HalfedgeId(arrangement.HID(query)));
     }
 
-    topleft = HalfedgeId(mesh.HID(mesh.topleft));
-    topright = HalfedgeId(mesh.HID(mesh.topright));
-    bottomleft = HalfedgeId(mesh.HID(mesh.bottomleft));
-    bottomright = HalfedgeId(mesh.HID(mesh.bottomright));
+    topleft = HalfedgeId(arrangement.HID(arrangement.topleft));
+    topright = HalfedgeId(arrangement.HID(arrangement.topright));
+    bottomleft = HalfedgeId(arrangement.HID(arrangement.bottomleft));
+    bottomright = HalfedgeId(arrangement.HID(arrangement.bottomright));
 }
 
-MeshMessage::MeshMessage()
+ArrangementMessage::ArrangementMessage()
     : x_grades()
     , y_grades()
     , vertical_line_query_list()
@@ -73,7 +73,7 @@ MeshMessage::MeshMessage()
 
 //finds the first anchor that intersects the left edge of the arrangement at a point not less than the specified y-coordinate
 //  if no such anchor, returns nullptr
-boost::optional<MeshMessage::AnchorM> MeshMessage::find_least_upper_anchor(double y_coord)
+boost::optional<ArrangementMessage::AnchorM> ArrangementMessage::find_least_upper_anchor(double y_coord)
 {
     //binary search to find greatest y-grade not greater than than y_coord
     unsigned best = 0;
@@ -110,7 +110,7 @@ boost::optional<MeshMessage::AnchorM> MeshMessage::find_least_upper_anchor(doubl
 } //end find_least_upper_anchor()
 //finds the (unbounded) cell associated to dual point of the vertical line with the given x-coordinate
 //  i.e. finds the Halfedge whose Anchor x-coordinate is the largest such coordinate not larger than than x_coord; returns the Face corresponding to that Halfedge
-MeshMessage::FaceId MeshMessage::find_vertical_line(double x_coord)
+ArrangementMessage::FaceId ArrangementMessage::find_vertical_line(double x_coord)
 {
     //is there an Anchor with x-coordinate not greater than x_coord?
     if (vertical_line_query_list.size() >= 1
@@ -141,7 +141,7 @@ MeshMessage::FaceId MeshMessage::find_vertical_line(double x_coord)
 } //end find_vertical_line()
 
 ////find a 2-cell containing the specified point
-MeshMessage::FaceId MeshMessage::find_point(double x_coord, double y_coord)
+ArrangementMessage::FaceId ArrangementMessage::find_point(double x_coord, double y_coord)
 {
     //start on the left edge of the arrangement, at the correct y-coordinate
     boost::optional<AnchorM> start = find_least_upper_anchor(-1 * y_coord);
@@ -218,24 +218,24 @@ MeshMessage::FaceId MeshMessage::find_point(double x_coord, double y_coord)
 //returns barcode template associated with the specified line (point)
 //REQUIREMENT: 0 <= degrees <= 90
 
-MeshMessage::HalfedgeM& MeshMessage::get(HalfedgeId index)
+ArrangementMessage::HalfedgeM& ArrangementMessage::get(HalfedgeId index)
 {
     return half_edges[static_cast<long>(index)];
 }
-MeshMessage::FaceM& MeshMessage::get(MeshMessage::FaceId index)
+ArrangementMessage::FaceM& ArrangementMessage::get(ArrangementMessage::FaceId index)
 {
     return faces[static_cast<long>(index)];
 }
-MeshMessage::VertexM& MeshMessage::get(MeshMessage::VertexId index)
+ArrangementMessage::VertexM& ArrangementMessage::get(ArrangementMessage::VertexId index)
 {
     return vertices[static_cast<long>(index)];
 }
-MeshMessage::AnchorM& MeshMessage::get(MeshMessage::AnchorId index)
+ArrangementMessage::AnchorM& ArrangementMessage::get(ArrangementMessage::AnchorId index)
 {
     return anchors[static_cast<long>(index)];
 }
 
-BarcodeTemplate MeshMessage::get_barcode_template(double degrees, double offset)
+BarcodeTemplate ArrangementMessage::get_barcode_template(double degrees, double offset)
 {
     ///TODO: store some point/cell to seed the next query
     FaceId cell;
@@ -269,7 +269,7 @@ bool check(bool condition, std::string message)
     return condition;
 }
 
-bool operator==(MeshMessage::HalfedgeM const& left, MeshMessage::HalfedgeM const& right)
+bool operator==(ArrangementMessage::HalfedgeM const& left, ArrangementMessage::HalfedgeM const& right)
 {
     return left.origin == right.origin
         && left.anchor == right.anchor
@@ -279,20 +279,20 @@ bool operator==(MeshMessage::HalfedgeM const& left, MeshMessage::HalfedgeM const
         && left.twin == right.twin;
 }
 
-bool operator==(MeshMessage::VertexM const& left, MeshMessage::VertexM const& right)
+bool operator==(ArrangementMessage::VertexM const& left, ArrangementMessage::VertexM const& right)
 {
     return left.incident_edge == right.incident_edge
         && left.x == right.x
         && left.y == right.y;
 }
 
-bool operator==(MeshMessage::FaceM const& left, MeshMessage::FaceM const& right)
+bool operator==(ArrangementMessage::FaceM const& left, ArrangementMessage::FaceM const& right)
 {
     return left.boundary == right.boundary
         && left.dbc == right.dbc;
 }
 
-bool operator==(MeshMessage::AnchorM const& left, MeshMessage::AnchorM const& right)
+bool operator==(ArrangementMessage::AnchorM const& left, ArrangementMessage::AnchorM const& right)
 {
     return left.above_line == right.above_line
         && left.dual_line == right.dual_line
@@ -302,7 +302,7 @@ bool operator==(MeshMessage::AnchorM const& left, MeshMessage::AnchorM const& ri
         && left.y_coord == right.y_coord;
 }
 
-bool operator==(MeshMessage const& left, MeshMessage const& right)
+bool operator==(ArrangementMessage const& left, ArrangementMessage const& right)
 {
     bool corners = left.topright == right.topright
         && left.topleft == right.topleft
@@ -334,34 +334,34 @@ void set_if_valid(std::function<void(U)> func, std::vector<T> vec, ID id)
         func(vec[static_cast<long>(id)]);
     }
 };
-Mesh MeshMessage::to_mesh() const
+Arrangement ArrangementMessage::to_arrangement() const
 {
-    Mesh mesh;
+    Arrangement arrangement;
     //First create all the objects
     for (auto vertex : vertices) {
-        mesh.vertices.push_back(std::make_shared<::Vertex>(vertex.x, vertex.y));
+        arrangement.vertices.push_back(std::make_shared<::Vertex>(vertex.x, vertex.y));
     }
     for (auto face : faces) {
-        mesh.faces.push_back(std::make_shared<::Face>());
+        arrangement.faces.push_back(std::make_shared<::Face>());
     }
     for (auto edge : half_edges) {
-        mesh.halfedges.push_back(std::make_shared<::Halfedge>());
+        arrangement.halfedges.push_back(std::make_shared<::Halfedge>());
     }
-    std::vector<std::shared_ptr<::Anchor>> temp_anchors; //For indexing, since mesh.all_anchors is a set
+    std::vector<std::shared_ptr<::Anchor>> temp_anchors; //For indexing, since arrangement.all_anchors is a set
     for (auto anchor : anchors) {
         std::shared_ptr<::Anchor> ptr = std::make_shared<::Anchor>(anchor.x_coord, anchor.y_coord);
-        std::clog << "Adding anchor to mesh: " << ptr->get_x() << ", " << ptr->get_y() << std::endl;
+        std::clog << "Adding anchor to arrangement: " << ptr->get_x() << ", " << ptr->get_y() << std::endl;
         assert(anchor.x_coord == ptr->get_x());
         assert(anchor.y_coord == ptr->get_y());
         temp_anchors.push_back(ptr);
     }
 
-    mesh.all_anchors.clear();
-    mesh.all_anchors = std::set<std::shared_ptr<::Anchor>, PointerComparator<::Anchor, Anchor_LeftComparator>>(temp_anchors.begin(), temp_anchors.end());
+    arrangement.all_anchors.clear();
+    arrangement.all_anchors = std::set<std::shared_ptr<::Anchor>, PointerComparator<::Anchor, Anchor_LeftComparator>>(temp_anchors.begin(), temp_anchors.end());
 
-    assert(mesh.all_anchors.size() == anchors.size());
+    assert(arrangement.all_anchors.size() == anchors.size());
 
-    auto it = mesh.all_anchors.begin();
+    auto it = arrangement.all_anchors.begin();
     for (auto i = 0; i < anchors.size(); i++) {
         std::clog << "Checking: ";
         std::clog << anchors[i].x_coord << "-->" << temp_anchors[i]->get_x() << "-->" << (*it)->get_x() << " / ";
@@ -377,53 +377,53 @@ Mesh MeshMessage::to_mesh() const
 
     for (auto i = 0; i < vertices.size(); i++) {
         if (vertices[i].incident_edge != HalfedgeId::invalid()) {
-            mesh.vertices[i]->set_incident_edge(mesh.halfedges[static_cast<long>(vertices[i].incident_edge)]);
+            arrangement.vertices[i]->set_incident_edge(arrangement.halfedges[static_cast<long>(vertices[i].incident_edge)]);
         }
     }
     for (auto i = 0; i < faces.size(); i++) {
-        auto mface = mesh.faces[i];
+        auto mface = arrangement.faces[i];
         auto face = faces[i];
         //TODO: this doesn't seem right, why would a face not have a boundary?
         if (faces[i].boundary != HalfedgeId::invalid()) {
-            mface->set_boundary(mesh.halfedges[static_cast<long>(face.boundary)]);
+            mface->set_boundary(arrangement.halfedges[static_cast<long>(face.boundary)]);
         }
         mface->set_barcode(face.dbc);
     }
     for (auto i = 0; i < half_edges.size(); i++) {
-        ::Halfedge& edge = *(mesh.halfedges[i]);
-        MeshMessage::HalfedgeM ref = half_edges[i];
+        ::Halfedge& edge = *(arrangement.halfedges[i]);
+        ArrangementMessage::HalfedgeM ref = half_edges[i];
         if (ref.face != FaceId::invalid())
-            edge.set_face(mesh.faces[static_cast<long>(ref.face)]);
+            edge.set_face(arrangement.faces[static_cast<long>(ref.face)]);
         if (ref.anchor != AnchorId::invalid()) {
             edge.set_anchor(temp_anchors[static_cast<long>(ref.anchor)]);
         }
         //TODO: shouldn't a halfedge always have a next?
         if (ref.next != HalfedgeId::invalid()) {
-            edge.set_next(mesh.halfedges[static_cast<long>(ref.next)]);
+            edge.set_next(arrangement.halfedges[static_cast<long>(ref.next)]);
         }
         if (ref.origin != VertexId::invalid()) {
-            edge.set_origin(mesh.vertices[static_cast<long>(ref.origin)]);
+            edge.set_origin(arrangement.vertices[static_cast<long>(ref.origin)]);
         }
         if (ref.prev != HalfedgeId::invalid()) {
-            edge.set_prev(mesh.halfedges[static_cast<long>(ref.prev)]);
+            edge.set_prev(arrangement.halfedges[static_cast<long>(ref.prev)]);
         }
         if (ref.twin != HalfedgeId::invalid()) {
-            edge.set_twin(mesh.halfedges[static_cast<long>(ref.twin)]);
+            edge.set_twin(arrangement.halfedges[static_cast<long>(ref.twin)]);
         }
     }
 
     for (auto i = 0; i < vertical_line_query_list.size(); i++) {
-        mesh.vertical_line_query_list.push_back(mesh.halfedges[static_cast<long>(vertical_line_query_list[i])]);
+        arrangement.vertical_line_query_list.push_back(arrangement.halfedges[static_cast<long>(vertical_line_query_list[i])]);
     }
 
-    assert(mesh.all_anchors.size() == anchors.size());
+    assert(arrangement.all_anchors.size() == anchors.size());
 
-    it = mesh.all_anchors.begin();
+    it = arrangement.all_anchors.begin();
     for (auto i = 0; i < anchors.size(); i++) {
         ::Anchor& anchor = **it;
-        MeshMessage::AnchorM ref = anchors[i];
+        ArrangementMessage::AnchorM ref = anchors[i];
         if (ref.dual_line != HalfedgeId::invalid()) {
-            std::shared_ptr<::Halfedge> edge = mesh.halfedges[static_cast<long>(ref.dual_line)];
+            std::shared_ptr<::Halfedge> edge = arrangement.halfedges[static_cast<long>(ref.dual_line)];
             //TODO: why, oh why, should this reset be necessary?
             anchor.get_line().reset();
             anchor.set_line(edge);
@@ -433,19 +433,19 @@ Mesh MeshMessage::to_mesh() const
         }
         anchor.set_weight(ref.weight);
         anchor.set_position(ref.position);
-        if (it != mesh.all_anchors.end()) {
+        if (it != arrangement.all_anchors.end()) {
             ++it;
         }
     }
-    mesh.bottomleft = mesh.halfedges[static_cast<long>(bottomleft)];
-    mesh.bottomright = mesh.halfedges[static_cast<long>(bottomright)];
-    mesh.topright = mesh.halfedges[static_cast<long>(topright)];
-    mesh.topleft = mesh.halfedges[static_cast<long>(topleft)];
+    arrangement.bottomleft = arrangement.halfedges[static_cast<long>(bottomleft)];
+    arrangement.bottomright = arrangement.halfedges[static_cast<long>(bottomright)];
+    arrangement.topright = arrangement.halfedges[static_cast<long>(topright)];
+    arrangement.topleft = arrangement.halfedges[static_cast<long>(topleft)];
 
-    mesh.x_grades = x_grades;
-    mesh.y_grades = y_grades;
+    arrangement.x_grades = x_grades;
+    arrangement.y_grades = y_grades;
 
-    it = mesh.all_anchors.begin();
+    it = arrangement.all_anchors.begin();
     for (auto i = 0; i < anchors.size(); i++) {
         std::clog << "Checking: ";
         assert(anchors[i].x_coord == temp_anchors[i]->get_x());
@@ -458,6 +458,6 @@ Mesh MeshMessage::to_mesh() const
         assert(anchors[i].position == (*it)->get_position());
         ++it;
     }
-    std::clog << "All anchors identical in to_mesh" << std::endl;
-    return mesh;
+    std::clog << "All anchors identical in to_arrangement" << std::endl;
+    return arrangement;
 }

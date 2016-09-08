@@ -8,7 +8,7 @@
 #include "index_matrix.h"
 #include "map_matrix.h"
 #include "simplex_tree.h"
-#include "xi_point.h"
+#include "template_point.h"
 
 #include <interface/progress.h>
 #include <set>
@@ -639,7 +639,7 @@ int MultiBetti::xi1(unsigned x, unsigned y)
 }
 
 //stores the xi support points in xi_supp in lexicographical order
-void MultiBetti::store_support_points(std::vector<xiPoint>& xi_supp)
+void MultiBetti::store_support_points(std::vector<TemplatePoint>& xi_supp)
 {
     for (unsigned i = 0; i < num_x_grades; i++) {
         for (unsigned j = 0; j < num_y_grades; j++) {
@@ -648,7 +648,7 @@ void MultiBetti::store_support_points(std::vector<xiPoint>& xi_supp)
             int xi2 = xi[i][j][2];
 
             if (xi0 != 0 || xi1 != 0 || xi2 != 0) { //then we have found an xi support point
-                xi_supp.push_back(xiPoint(i, j, xi0, xi1, xi2));
+                xi_supp.push_back(TemplatePoint(i, j, xi0, xi1, xi2));
                 debug() << "Added xi support: " << i << " " << j << " " << xi0 << " " << xi1 << " " << xi2;
             }
         }

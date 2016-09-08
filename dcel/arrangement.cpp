@@ -1,8 +1,8 @@
-/* implementation of Mesh class
+/* implementation of Arrangement class
  * Stores and manipulates the DCEL decomposition of the affine Grassmannian.
  */
 
-#include "mesh.h"
+#include "arrangement.h"
 
 #include "../dcel/barcode_template.h"
 #include "../math/multi_betti.h" //this include might not be necessary
@@ -12,18 +12,8 @@
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/graph_traits.hpp>
 #include <boost/graph/kruskal_min_spanning_tree.hpp>
-//#include <boost/graph/metric_tsp_approx.hpp> -- NOT CURRENTLY USED
 
-#include "pointer_comparator.h"
-#include <chrono>
-#include <interface/progress.h>
-#include <limits> //necessary for infinity
-#include <math/simplex_tree.h>
-#include <queue> //for std::priority_queue
-#include <sstream>
-#include <timer.h>
-
-Mesh::Mesh()
+Arrangement::Arrangement()
     : x_exact()
     , y_exact()
     , x_grades()
@@ -41,8 +31,8 @@ Mesh::Mesh()
 {
 }
 
-// Mesh constructor; sets up bounding box (with empty interior) for the affine Grassmannian
-Mesh::Mesh(std::vector<exact> xe,
+// Arrangement constructor; sets up bounding box (with empty interior) for the affine Grassmannian
+Arrangement::Arrangement(std::vector<exact> xe,
     std::vector<exact> ye,
     unsigned verbosity)
     : x_exact(xe)
@@ -98,7 +88,7 @@ Mesh::Mesh(std::vector<exact> xe,
 //inserts a new vertex on the specified edge, with the specified coordinates, and updates all relevant pointers
 //  i.e. new vertex is between initial and termainal points of the specified edge
 //returns pointer to a new halfedge, whose initial point is the new vertex, and that follows the specified edge around its face
-std::shared_ptr<Halfedge> Mesh::insert_vertex(std::shared_ptr<Halfedge> edge, double x, double y)
+std::shared_ptr<Halfedge> Arrangement::insert_vertex(std::shared_ptr<Halfedge> edge, double x, double y)
 {
     //create new vertex
     std::shared_ptr<Vertex> new_vertex = std::make_shared<Vertex>(x, y);
@@ -144,7 +134,7 @@ std::shared_ptr<Halfedge> Mesh::insert_vertex(std::shared_ptr<Halfedge> edge, do
 //creates the first pair of Halfedges in an Anchor line, anchored on the left edge of the strip at origin of specified edge
 //  also creates a new face (the face below the new edge)
 //  CAUTION: leaves nullptr: new_edge.next and new_twin.prev
-std::shared_ptr<Halfedge> Mesh::create_edge_left(std::shared_ptr<Halfedge> edge, std::shared_ptr<Anchor> anchor)
+std::shared_ptr<Halfedge> Arrangement::create_edge_left(std::shared_ptr<Halfedge> edge, std::shared_ptr<Anchor> anchor)
 {
     //create new halfedges
     std::shared_ptr<Halfedge> new_edge(new Halfedge(edge->get_origin(), anchor)); //points AWAY FROM left edge
@@ -178,7 +168,7 @@ std::shared_ptr<Halfedge> Mesh::create_edge_left(std::shared_ptr<Halfedge> edge,
 
 //returns barcode template associated with the specified line (point)
 //REQUIREMENT: 0 <= degrees <= 90
-BarcodeTemplate& Mesh::get_barcode_template(double degrees, double offset)
+BarcodeTemplate& Arrangement::get_barcode_template(double degrees, double offset)
 {
     ///TODO: store some point/cell to seed the next query
     std::shared_ptr<Face> cell;
@@ -214,32 +204,32 @@ BarcodeTemplate& Mesh::get_barcode_template(double degrees, double offset)
 } //end get_barcode_template()
 
 //returns the barcode template associated with faces[i]
-BarcodeTemplate& Mesh::get_barcode_template(unsigned i)
+BarcodeTemplate& Arrangement::get_barcode_template(unsigned i)
 {
     return faces[i]->get_barcode();
 }
 
 //stores (a copy of) the given barcode template in faces[i]
-void Mesh::set_barcode_template(unsigned i, BarcodeTemplate& bt)
+void Arrangement::set_barcode_template(unsigned i, BarcodeTemplate& bt)
 {
     faces[i]->set_barcode(bt);
 }
 
 //returns the number of 2-cells, and thus the number of barcode templates, in the arrangement
-unsigned Mesh::num_faces()
+unsigned Arrangement::num_faces()
 {
     return faces.size();
 }
 
 //creates a new anchor in the vector all_anchors
-void Mesh::add_anchor(Anchor anchor)
+void Arrangement::add_anchor(Anchor anchor)
 {
     all_anchors.insert(std::make_shared<Anchor>(anchor.get_entry()));
 }
 
 //finds the first anchor that intersects the left edge of the arrangement at a point not less than the specified y-coordinate
 //  if no such anchor, returns nullptr
-std::shared_ptr<Anchor> Mesh::find_least_upper_anchor(double y_coord)
+std::shared_ptr<Anchor> Arrangement::find_least_upper_anchor(double y_coord)
 {
     //binary search to find greatest y-grade not greater than than y_coord
     unsigned best = 0;
@@ -277,7 +267,7 @@ std::shared_ptr<Anchor> Mesh::find_least_upper_anchor(double y_coord)
 
 //finds the (unbounded) cell associated to dual point of the vertical line with the given x-coordinate
 //  i.e. finds the Halfedge whose Anchor x-coordinate is the largest such coordinate not larger than than x_coord; returns the Face corresponding to that Halfedge
-std::shared_ptr<Face> Mesh::find_vertical_line(double x_coord)
+std::shared_ptr<Face> Arrangement::find_vertical_line(double x_coord)
 {
     //is there an Anchor with x-coordinate not greater than x_coord?
     if (vertical_line_query_list.size() >= 1
@@ -314,7 +304,7 @@ std::shared_ptr<Face> Mesh::find_vertical_line(double x_coord)
     return bottomright->get_twin()->get_face();
 
 } //end find_vertical_line()
-void Mesh::announce_next_point(std::shared_ptr<Halfedge> finger, std::shared_ptr<Vertex> next_pt)
+void Arrangement::announce_next_point(std::shared_ptr<Halfedge> finger, std::shared_ptr<Vertex> next_pt)
 {
 
     if (verbosity >= 8) {
@@ -326,7 +316,7 @@ void Mesh::announce_next_point(std::shared_ptr<Halfedge> finger, std::shared_ptr
 }
 
 //find a 2-cell containing the specified point
-std::shared_ptr<Face> Mesh::find_point(double x_coord, double y_coord)
+std::shared_ptr<Face> Arrangement::find_point(double x_coord, double y_coord)
 {
     //start on the left edge of the arrangement, at the correct y-coordinate
     std::shared_ptr<Anchor> start = find_least_upper_anchor(-1 * y_coord);
@@ -423,13 +413,13 @@ std::shared_ptr<Face> Mesh::find_point(double x_coord, double y_coord)
 } //end find_point()
 
 //prints a summary of the arrangement information, such as the number of anchors, vertices, halfedges, and faces
-void Mesh::print_stats()
+void Arrangement::print_stats()
 {
     debug() << "The arrangement contains: " << all_anchors.size() << " anchors, " << vertices.size() << " vertices, " << halfedges.size() << " halfedges, and " << faces.size() << " faces";
 }
 
-//print all the data from the mesh
-void Mesh::print()
+//print all the data from the arrangement
+void Arrangement::print()
 {
     debug() << "  Vertices";
     for (unsigned i = 0; i < vertices.size(); i++) {
@@ -484,26 +474,26 @@ long index_of(std::vector<T> const& vec, T const& t)
 
 //look up halfedge ID, used in print() for debugging
 // HID = halfedge ID
-long Mesh::HID(std::shared_ptr<Halfedge> h) const
+long Arrangement::HID(std::shared_ptr<Halfedge> h) const
 {
     return index_of(halfedges, h);
 }
 
 //look up face ID, used in print() for debugging
 // FID = face ID
-long Mesh::FID(std::shared_ptr<Face> f) const
+long Arrangement::FID(std::shared_ptr<Face> f) const
 {
     return index_of(faces, f);
 }
 
 //look up vertex ID, used in print() for debugging
 // VID = vertex ID
-long Mesh::VID(std::shared_ptr<Vertex> v) const
+long Arrangement::VID(std::shared_ptr<Vertex> v) const
 {
     return index_of(vertices, v);
 }
 
-long Mesh::AID(std::shared_ptr<Anchor> a) const
+long Arrangement::AID(std::shared_ptr<Anchor> a) const
 {
     auto it = all_anchors.begin();
 
@@ -518,7 +508,7 @@ long Mesh::AID(std::shared_ptr<Anchor> a) const
 }
 
 //attempts to find inconsistencies in the DCEL arrangement
-void Mesh::test_consistency()
+void Arrangement::test_consistency()
 {
     //check faces
     debug() << "Checking faces:";
@@ -684,7 +674,7 @@ void Mesh::test_consistency()
 
 //Crossing constructor
 //precondition: Anchors a and b must be comparable
-Mesh::Crossing::Crossing(std::shared_ptr<Anchor> a, std::shared_ptr<Anchor> b, std::shared_ptr<Mesh> m)
+Arrangement::Crossing::Crossing(std::shared_ptr<Anchor> a, std::shared_ptr<Anchor> b, std::shared_ptr<Arrangement> m)
     : a(a)
     , b(b)
     , m(m)
@@ -694,9 +684,9 @@ Mesh::Crossing::Crossing(std::shared_ptr<Anchor> a, std::shared_ptr<Anchor> b, s
 }
 
 //returns true iff this Crossing has (exactly) the same x-coordinate as other Crossing
-bool Mesh::Crossing::x_equal(const Crossing* other) const
+bool Arrangement::Crossing::x_equal(const Crossing* other) const
 {
-    if (Mesh::almost_equal(x, other->x)) //then compare exact values
+    if (Arrangement::almost_equal(x, other->x)) //then compare exact values
     {
         //find exact x-values
         exact x1 = (m->y_exact[a->get_y()] - m->y_exact[b->get_y()]) / (m->x_exact[a->get_x()] - m->x_exact[b->get_x()]);
@@ -709,7 +699,7 @@ bool Mesh::Crossing::x_equal(const Crossing* other) const
 }
 
 //CrossingComparator for ordering crossings: first by x (left to right); for a given x, then by y (low to high)
-bool Mesh::CrossingComparator::operator()(const Crossing* c1, const Crossing* c2) const //returns true if c1 comes after c2
+bool Arrangement::CrossingComparator::operator()(const Crossing* c1, const Crossing* c2) const //returns true if c1 comes after c2
 {
     //TESTING
     if (c1->a->get_position() >= c1->b->get_position() || c2->a->get_position() >= c2->b->get_position()) {
@@ -719,11 +709,11 @@ bool Mesh::CrossingComparator::operator()(const Crossing* c1, const Crossing* c2
         throw std::runtime_error("Inverted crossing error");
     }
 
-    std::shared_ptr<Mesh> m = c1->m; //makes it easier to reference arrays in the mesh
+    std::shared_ptr<Arrangement> m = c1->m; //makes it easier to reference arrays in the arrangement
 
     //now do the comparison
     //if the x-coordinates are nearly equal as double values, then compare exact values
-    if (Mesh::almost_equal(c1->x, c2->x)) {
+    if (Arrangement::almost_equal(c1->x, c2->x)) {
         //find exact x-values
         exact x1 = (m->y_exact[c1->a->get_y()] - m->y_exact[c1->b->get_y()]) / (m->x_exact[c1->a->get_x()] - m->x_exact[c1->b->get_x()]);
         exact x2 = (m->y_exact[c2->a->get_y()] - m->y_exact[c2->b->get_y()]) / (m->x_exact[c2->a->get_x()] - m->x_exact[c2->b->get_x()]);
@@ -735,7 +725,7 @@ bool Mesh::CrossingComparator::operator()(const Crossing* c1, const Crossing* c2
             double c2y = m->x_grades[c2->a->get_x()] * (c2->x) - m->y_grades[c2->a->get_y()];
 
             //if the y-values are nearly equal as double values, then compare exact values
-            if (Mesh::almost_equal(c1y, c2y)) {
+            if (Arrangement::almost_equal(c1y, c2y)) {
                 //find exact y-values
                 exact y1 = m->x_exact[c1->a->get_x()] * x1 - m->y_exact[c1->a->get_y()];
                 exact y2 = m->x_exact[c2->a->get_x()] * x2 - m->y_exact[c2->a->get_y()];
@@ -758,10 +748,10 @@ bool Mesh::CrossingComparator::operator()(const Crossing* c1, const Crossing* c2
 }
 
 //epsilon value for use in comparisons
-double Mesh::epsilon = pow(2, -30);
+double Arrangement::epsilon = pow(2, -30);
 
 //test whether two double values are almost equal (indicating that we should do exact comparison)
-bool Mesh::almost_equal(const double a, const double b)
+bool Arrangement::almost_equal(const double a, const double b)
 {
     double diff = std::abs(a - b);
     if (diff <= epsilon)
@@ -772,7 +762,7 @@ bool Mesh::almost_equal(const double a, const double b)
     return false;
 }
 
-std::ostream& operator<<(std::ostream& stream, const Mesh& mesh)
+std::ostream& operator<<(std::ostream& stream, const Arrangement& arrangement)
 {
-    return write_grades(stream, mesh.x_exact, mesh.y_exact);
+    return write_grades(stream, arrangement.x_exact, arrangement.y_exact);
 }

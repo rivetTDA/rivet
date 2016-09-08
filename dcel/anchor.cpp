@@ -1,8 +1,8 @@
 #include "anchor.h"
-#include "../math/xi_support_matrix.h"
+#include "math/template_points_matrix.h"
 #include <ostream>
 
-Anchor::Anchor(std::shared_ptr<xiMatrixEntry> e)
+Anchor::Anchor(std::shared_ptr<TemplatePointsMatrixEntry> e)
     : x_coord(e->x)
     , y_coord(e->y)
     , entry(e)
@@ -114,7 +114,7 @@ void Anchor::toggle()
     above_line = !above_line;
 }
 
-std::shared_ptr<xiMatrixEntry> Anchor::get_entry()
+std::shared_ptr<TemplatePointsMatrixEntry> Anchor::get_entry()
 {
     return entry;
 }

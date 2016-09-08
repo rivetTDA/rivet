@@ -541,7 +541,7 @@ std::unique_ptr<InputData> InputManager::read_RIVET_data(std::ifstream& stream, 
         int zero = std::stoi(line[2]);
         int one = std::stoi(line[3]);
         int two = std::stoi(line[4]);
-        data->xi_support.push_back(xiPoint(x, y, zero, one, two));
+        data->template_points.push_back(TemplatePoint(x, y, zero, one, two));
         line = reader.next_line();
     }
 

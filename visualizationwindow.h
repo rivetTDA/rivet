@@ -4,11 +4,11 @@
 //forward declarations
 class Barcode;
 class BarcodeTemplate;
-class xiPoint;
+class TemplatePoint;
 
 #include "computationthread.h"
 #include "dataselectdialog.h"
-#include "dcel/mesh_message.h"
+#include "dcel/arrangement_message.h"
 #include "interface/aboutmessagebox.h"
 #include "interface/config_parameters.h"
 #include "interface/configuredialog.h"
@@ -44,8 +44,8 @@ protected:
 
 public slots:
     void start_computation(); //begins the computation pipeline
-    void paint_xi_support();
-    void augmented_arrangement_ready(MeshMessage* arrangement);
+    void paint_template_points();
+    void augmented_arrangement_ready(ArrangementMessage* arrangement);
     void set_line_parameters(double angle, double offset);
 
 private slots:
@@ -83,13 +83,13 @@ private:
     std::vector<exact> y_exact;
     std::vector<double> y_grades;
     std::vector<double> x_grades;
-    std::vector<xiPoint> xi_support; //stores discrete coordinates of xi support points, with multiplicities
+    std::vector<TemplatePoint> template_points; //stores discrete coordinates of xi support points, with multiplicities
     unsigned_matrix homology_dimensions; //stores the dimension of homology at each grade
 
     double angle_precise; //sufficiently-precise internal value of the slice-line angle in DEGREES, necessary because QDoubleSpinBox truncates this value
     double offset_precise; //sufficiently-precise internal value of the slice-line offset, necessary because QDoubleSpinBox truncates this value
 
-    MeshMessage* arrangement; //pointer to the DCEL arrangement
+    ArrangementMessage* arrangement; //pointer to the DCEL arrangement
     Barcode* barcode; //pointer to the currently-displayed barcode
 
     //computation items
@@ -108,7 +108,7 @@ private:
     void update_persistence_diagram(); //updates the persistence diagram and barcode after a change in the slice line
 
     Barcode* rescale_barcode_template(BarcodeTemplate& dbc, double angle, double offset);
-    double project(xiPoint& pt, double angle, double offset);
+    double project(TemplatePoint& pt, double angle, double offset);
 
     //computes the projection of the lower-left corner of the line-selection window onto the specified line
     // TESTING AS REPLACEMENT FOR SliceDiagram::get_zero()

@@ -1,6 +1,6 @@
 #include "computation.h"
-#include "dcel/mesh.h"
-#include "dcel/mesh_builder.h"
+#include "dcel/arrangement.h"
+#include "dcel/arrangement_builder.h"
 #include "debug.h"
 #include "math/multi_betti.h"
 #include "timer.h"
@@ -49,9 +49,9 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(ComputationInput& in
     debug() << "  --> xi_i computation took " << timer.elapsed() << " seconds";
 
     //store the xi support points
-    mb.store_support_points(result->xi_support);
+    mb.store_support_points(result->template_points);
 
-    xiSupportReady(XiSupportMessage{ input.x_label, input.y_label, result->xi_support, result->homology_dimensions, input.x_exact, input.y_exact }); //signal that xi support points are ready for visualization
+    template_points_ready(TemplatePointsMessage{ input.x_label, input.y_label, result->template_points, result->homology_dimensions, input.x_exact, input.y_exact }); //signal that xi support points are ready for visualization
     progress.advanceProgressStage(); //update progress box to stage 4
 
     //STAGES 4 and 5: BUILD THE LINE ARRANGEMENT AND COMPUTE BARCODE TEMPLATES
@@ -62,18 +62,18 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(ComputationInput& in
     }
 
     timer.restart();
-    MeshBuilder builder(verbosity);
-    auto arrangement = builder.build_arrangement(mb, input.x_exact, input.y_exact, result->xi_support, progress); ///TODO: update this -- does not need to store list of xi support points in xi_support
+    ArrangementBuilder builder(verbosity);
+    auto arrangement = builder.build_arrangement(mb, input.x_exact, input.y_exact, result->template_points, progress); ///TODO: update this -- does not need to store list of xi support points in xi_support
     //NOTE: this also computes and stores barcode templates in the arrangement
 
     debug() << "   building the line arrangement and computing all barcode templates took"
             << timer.elapsed() << "milliseconds";
 
     //send (a pointer to) the arrangement back to the VisualizationWindow
-    arrangementReady(arrangement);
+    arrangement_ready(arrangement);
     //re-send xi support and other anchors
-    debug() << "Sending" << result->xi_support.size() << "anchors";
-    xiSupportReady(XiSupportMessage{ input.x_label, input.y_label, result->xi_support, result->homology_dimensions, input.x_exact, input.y_exact });
+    debug() << "Sending" << result->template_points.size() << "anchors";
+    template_points_ready(TemplatePointsMessage{ input.x_label, input.y_label, result->template_points, result->homology_dimensions, input.x_exact, input.y_exact });
     arrangement->test_consistency();
     result->arrangement = std::move(arrangement);
     return result;

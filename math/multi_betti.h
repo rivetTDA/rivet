@@ -16,7 +16,7 @@ class ComputationThread;
 class IndexMatrix;
 class MapMatrix;
 class SimplexTree;
-class xiPoint;
+class TemplatePoint;
 
 #include <boost/multi_array.hpp>
 typedef boost::multi_array<unsigned, 2> unsigned_matrix;
@@ -44,7 +44,7 @@ public:
     int xi0(unsigned x, unsigned y); //returns xi_0 at the specified (discrete) multi-grade
     int xi1(unsigned x, unsigned y); //returns xi_1 at the specified (discrete) multi-grade
 
-    void store_support_points(std::vector<xiPoint>& xi_supp); //stores the xi support points in xi_supp in lexicographical order
+    void store_support_points(std::vector<TemplatePoint>& xi_supp); //stores the xi support points in xi_supp in lexicographical order
 
     void print_lows(Vector& lows); //TESTING ONLY
 

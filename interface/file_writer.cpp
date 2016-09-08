@@ -5,11 +5,11 @@
 
 #include <chrono>
 
-FileWriter::FileWriter(InputParameters& ip, InputData& data, Mesh& m, std::vector<xiPoint>& xi)
+FileWriter::FileWriter(InputParameters& ip, InputData& data, Arrangement& m, std::vector<TemplatePoint>& points)
     : input_data(data)
     , input_params(ip)
     , arrangement(m)
-    , xi_support(xi)
+    , template_points(points)
 {
 }
 
@@ -39,9 +39,9 @@ void FileWriter::write_augmented_arrangement(std::ofstream& stream)
 
     //write values of the multigraded Betti numbers
     stream << "xi values" << std::endl;
-    for (std::vector<xiPoint>::iterator it = xi_support.begin(); it != xi_support.end(); ++it) {
-        xiPoint p = *it;
-        if (p.zero > 0 || p.one > 0 || p.two > 0) //necessary because the vector xi_support also stores anchors (template points) that are not xi support points
+    for (std::vector<TemplatePoint>::iterator it = template_points.begin(); it != template_points.end(); ++it) {
+        TemplatePoint p = *it;
+        if (p.zero > 0 || p.one > 0 || p.two > 0) //necessary because the vector template_points also stores anchors (template points) that are not xi support points
             stream << p.x << " " << p.y << " " << p.zero << " " << p.one << " " << p.two << std::endl;
     }
     stream << std::endl;

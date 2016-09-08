@@ -1,13 +1,13 @@
 #include "computationthread.h"
 
-#include "dcel/mesh.h"
-#include "dcel/mesh_message.h"
+#include "dcel/arrangement.h"
+#include "dcel/arrangement_message.h"
 #include "dcel/serialization.h"
 #include "interface/input_manager.h"
 #include "interface/input_parameters.h"
 #include "math/multi_betti.h"
 #include "math/simplex_tree.h"
-#include "math/xi_point.h"
+#include "math/template_point.h"
 
 #include "interface/console_interaction.h"
 
@@ -28,7 +28,7 @@
 ComputationThread::ComputationThread(InputParameters& params, QObject* parent)
     : QThread(parent)
     , params(params)
-    , xi_support()
+    , template_points()
     , x_exact()
     , y_exact()
     , x_label()
@@ -77,11 +77,11 @@ void ComputationThread::load_from_file()
     assert(type == "RIVET_1");
     boost::archive::binary_iarchive archive(file);
 
-    arrangement.reset(new MeshMessage());
+    arrangement.reset(new ArrangementMessage());
     archive >> params;
     archive >> message;
     unpack_message_fields();
-    emit xiSupportReady();
+    emit templatePointsReady();
     archive >> *arrangement;
     emit arrangementReady(&*arrangement);
 }
@@ -90,7 +90,7 @@ void ComputationThread::load_from_file()
 void ComputationThread::unpack_message_fields()
 {
 
-    xi_support = message.xi_support;
+    template_points = message.template_points;
     std::vector<unsigned> dims(message.homology_dimensions.shape(),
         message.homology_dimensions.shape() + message.homology_dimensions.num_dimensions());
     assert(dims.size() == 2);
@@ -141,7 +141,7 @@ void ComputationThread::compute_from_file()
                 }
                 unpack_message_fields();
                 reading_xi = false;
-                emit xiSupportReady();
+                emit templatePointsReady();
             } else {
                 ss << line.toStdString();
             }
@@ -157,17 +157,17 @@ void ComputationThread::compute_from_file()
                 if (type != "RIVET_1") {
                     throw std::runtime_error("Unsupported file format");
                 }
-                qDebug() << "ComputationThread::compute_from_file() : checkpoint A -- xi_support.size() = " << xi_support.size();
+                qDebug() << "ComputationThread::compute_from_file() : checkpoint A -- template_points.size() = " << template_points.size();
                 boost::archive::binary_iarchive archive(input);
-                arrangement.reset(new MeshMessage());
+                arrangement.reset(new ArrangementMessage());
                 InputParameters p;
                 archive >> p;
                 archive >> message;
                 unpack_message_fields();
                 archive >> *arrangement;
-                qDebug() << "ComputationThread::compute_from_file() : checkpoint B -- xi_support.size() = " << xi_support.size();
+                qDebug() << "ComputationThread::compute_from_file() : checkpoint B -- template_points.size() = " << template_points.size();
             }
-            //                qDebug() << "Mesh received: " << arrangement->x_exact.size() << " x " << arrangement->y_exact.size();
+            //                qDebug() << "Arrangement received: " << arrangement->x_exact.size() << " x " << arrangement->y_exact.size();
             emit arrangementReady(&*arrangement);
             return;
         } else if (line.startsWith("PROGRESS ")) {
@@ -182,7 +182,7 @@ void ComputationThread::compute_from_file()
         }
     }
 
-    qDebug() << "Mesh was not delivered";
+    qDebug() << "Arrangement was not delivered";
 
 } //end run()
 
@@ -190,7 +190,7 @@ void ComputationThread::compute_from_file()
 //NOTE this is a copy of a function in the console
 //It has to be here because we get duplicate symbol errors when we use binary_oarchive in a different compilation
 //unit in addition to this one.
-void write_boost_file(QString file_name, InputParameters const& params, XiSupportMessage const& message, MeshMessage const& mesh)
+void write_boost_file(QString file_name, InputParameters const& params, TemplatePointsMessage const& message, ArrangementMessage const& arrangement)
 {
     std::ofstream file(file_name.toStdString(), std::ios::binary);
     if (!file.is_open()) {
@@ -198,6 +198,6 @@ void write_boost_file(QString file_name, InputParameters const& params, XiSuppor
     }
     file << "RIVET_1\n";
     boost::archive::binary_oarchive oarchive(file);
-    oarchive& params& message& mesh;
+    oarchive& params& message& arrangement;
     file.flush();
 }

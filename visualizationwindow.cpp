@@ -2,7 +2,7 @@
 #include "ui_visualizationwindow.h"
 
 #include "dcel/barcode_template.h"
-#include "dcel/mesh_message.h"
+#include "dcel/arrangement_message.h"
 #include "interface/barcode.h"
 #include "interface/config_parameters.h"
 #include "interface/file_writer.h"
@@ -34,7 +34,7 @@ VisualizationWindow::VisualizationWindow(InputParameters& params)
     , x_exact()
     , y_grades()
     , y_exact()
-    , xi_support()
+    , template_points()
     , homology_dimensions()
     , angle_precise(0)
     , offset_precise(0)
@@ -66,7 +66,7 @@ VisualizationWindow::VisualizationWindow(InputParameters& params)
     QObject::connect(&cthread, &ComputationThread::advanceProgressStage, &prog_dialog, &ProgressDialog::advanceToNextStage);
     QObject::connect(&cthread, &ComputationThread::setProgressMaximum, &prog_dialog, &ProgressDialog::setStageMaximum);
     QObject::connect(&cthread, &ComputationThread::setCurrentProgress, &prog_dialog, &ProgressDialog::updateProgress);
-    QObject::connect(&cthread, &ComputationThread::xiSupportReady, this, &VisualizationWindow::paint_xi_support);
+    QObject::connect(&cthread, &ComputationThread::templatePointsReady, this, &VisualizationWindow::paint_template_points);
     QObject::connect(&cthread, &ComputationThread::arrangementReady, this, &VisualizationWindow::augmented_arrangement_ready);
     QObject::connect(&cthread, &ComputationThread::finished, &prog_dialog, &ProgressDialog::setComputationFinished);
 
@@ -106,7 +106,7 @@ void VisualizationWindow::start_computation()
 void VisualizationWindow::copy_fields_from_cthread()
 {
     //TODO: this dataflow is still odd, could use more attention.
-    xi_support = cthread.xi_support;
+    template_points = cthread.template_points;
     x_exact = cthread.x_exact;
     y_exact = cthread.y_exact;
     x_grades = rivet::numeric::to_doubles(x_exact);
@@ -116,12 +116,12 @@ void VisualizationWindow::copy_fields_from_cthread()
 }
 
 //this slot is signaled when the xi support points are ready to be drawn
-void VisualizationWindow::paint_xi_support()
+void VisualizationWindow::paint_template_points()
 {
     //First load our local copies of the data
     copy_fields_from_cthread();
     //send xi support points to the SliceDiagram
-    for (std::vector<xiPoint>::iterator it = xi_support.begin(); it != xi_support.end(); ++it)
+    for (std::vector<TemplatePoint>::iterator it = template_points.begin(); it != template_points.end(); ++it)
         slice_diagram.add_point(x_grades[it->x], y_grades[it->y], it->zero, it->one, it->two);
 
     //create the SliceDiagram
@@ -153,7 +153,7 @@ void VisualizationWindow::paint_xi_support()
 }
 
 //this slot is signaled when the agumented arrangement is ready
-void VisualizationWindow::augmented_arrangement_ready(MeshMessage* arrangement)
+void VisualizationWindow::augmented_arrangement_ready(ArrangementMessage* arrangement)
 {
     //First load our local copies of the data
     copy_fields_from_cthread();
@@ -269,8 +269,8 @@ void VisualizationWindow::update_persistence_diagram()
 
         //TESTING
         qDebug() << "  XI SUPPORT VECTOR:";
-        for (unsigned i = 0; i < xi_support.size(); i++) {
-            xiPoint p = xi_support[i];
+        for (unsigned i = 0; i < template_points.size(); i++) {
+            TemplatePoint p = template_points[i];
             qDebug().nospace() << "    [" << i << "]: (" << p.x << "," << p.y << ") --> (" << x_grades[p.x] << "," << y_grades[p.y] << ")";
         }
         dbc.print();
@@ -293,20 +293,20 @@ Barcode* VisualizationWindow::rescale_barcode_template(BarcodeTemplate& dbc, dou
     //loop through bars
     for (std::set<BarTemplate>::iterator it = dbc.begin(); it != dbc.end(); ++it) {
         qDebug() << "BarTemplate: " << it->begin << " " << it->end;
-        assert(it->begin < xi_support.size());
-        xiPoint begin = xi_support[it->begin];
+        assert(it->begin < template_points.size());
+        TemplatePoint begin = template_points[it->begin];
         double birth = project(begin, angle, offset);
 
         if (birth != INFTY) //then bar exists in this rescaling
         {
-            if (it->end >= xi_support.size()) //then endpoint is at infinity
+            if (it->end >= template_points.size()) //then endpoint is at infinity
             {
                 //                qDebug() << "   ===>   (" << it->begin << ", inf) |---> (" << birth << ", inf)";
                 bc->add_bar(birth, INFTY, it->multiplicity);
             } else //then bar is finite
             {
-                assert(it->end < xi_support.size());
-                xiPoint end = xi_support[it->end];
+                assert(it->end < template_points.size());
+                TemplatePoint end = template_points[it->end];
                 double death = project(end, angle, offset);
                 //                qDebug() << "   ===>>> (" << it->begin << "," << it->end << ") |---> (" << birth << "," << death << ")";
                 bc->add_bar(birth, death, it->multiplicity);
@@ -326,7 +326,7 @@ Barcode* VisualizationWindow::rescale_barcode_template(BarcodeTemplate& dbc, dou
 //computes the projection of an xi support point onto the specified line
 //  NOTE: returns INFTY if the point has no projection (can happen only for horizontal and vertical lines)
 //  NOTE: angle in DEGREES
-double VisualizationWindow::project(xiPoint& pt, double angle, double offset)
+double VisualizationWindow::project(TemplatePoint& pt, double angle, double offset)
 {
     if (angle == 0) //then line is horizontal
     {

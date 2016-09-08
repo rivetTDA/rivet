@@ -14,8 +14,8 @@
 #include "interface/file_input_reader.h"
 #include "interface/input_parameters.h"
 #include "math/simplex_tree.h"
-#include "math/xi_point.h"
-#include "math/xi_support_matrix.h"
+#include "math/template_point.h"
+#include "math/template_points_matrix.h"
 #include "progress.h"
 #include <boost/multiprecision/cpp_int.hpp>
 typedef boost::multiprecision::cpp_rational exact;
@@ -97,7 +97,7 @@ struct InputData {
     std::vector<exact> x_exact; //exact (e.g. rational) values of all x-grades, sorted
     std::vector<exact> y_exact; //exact (e.g. rational) values of all y-grades, sorted
     std::shared_ptr<SimplexTree> simplex_tree; // will be non-null if we read raw data
-    std::vector<xiPoint> xi_support; // will be non-empty if we read RIVET data
+    std::vector<TemplatePoint> template_points; // will be non-empty if we read RIVET data
     std::vector<BarcodeTemplate> barcode_templates; //only used if we read a RIVET data file and need to store the barcode templates before the arrangement is ready
     FileType file_type;
 };

@@ -18,8 +18,8 @@
 #include "anchor.h"
 #include "barcode_template.h"
 #include "dcel.h"
-#include "math/xi_point.h"
-#include "math/xi_support_matrix.h"
+#include "math/template_point.h"
+#include "math/template_points_matrix.h"
 #include "numerics.h"
 #include "type_tag.h"
 //namespace boost {
@@ -68,7 +68,7 @@ void Anchor::serialize(Archive& ar, const unsigned int version)
 }
 
 template <class Archive>
-void serialize(Archive& ar, xiMatrixEntry& x, const unsigned int version)
+void serialize(Archive& ar, TemplatePointsMatrixEntry& x, const unsigned int version)
 {
     ar& x.x& x.y& x.index& x.down& x.left& x.low_simplices& x.high_simplices& x.low_count& x.high_count&
         x.low_index& x.high_index;

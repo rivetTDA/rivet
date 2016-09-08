@@ -1,6 +1,6 @@
-#include "xi_point.h"
+#include "template_point.h"
 
-xiPoint::xiPoint(unsigned xc, unsigned yc, int m0, int m1, int m2)
+TemplatePoint::TemplatePoint(unsigned xc, unsigned yc, int m0, int m1, int m2)
     : x(xc)
     , y(yc)
     , zero(m0)
@@ -9,7 +9,7 @@ xiPoint::xiPoint(unsigned xc, unsigned yc, int m0, int m1, int m2)
 {
 }
 
-xiPoint::xiPoint()
+TemplatePoint::TemplatePoint()
     : x(0)
     , y(0)
     , zero(0)
@@ -18,7 +18,7 @@ xiPoint::xiPoint()
 {
 }
 
-bool operator==(xiPoint const& left, xiPoint const& right)
+bool operator==(TemplatePoint const& left, TemplatePoint const& right)
 {
     return left.one == right.one
         && left.two == right.two

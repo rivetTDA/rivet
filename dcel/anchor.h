@@ -6,7 +6,7 @@
 
 //forward declarations
 class Halfedge;
-struct xiMatrixEntry;
+struct TemplatePointsMatrixEntry;
 
 /**
  * \class	Anchor
@@ -16,7 +16,7 @@ struct xiMatrixEntry;
  */
 class Anchor {
 public:
-    Anchor(std::shared_ptr<xiMatrixEntry> e); //default constructor
+    Anchor(std::shared_ptr<TemplatePointsMatrixEntry> e); //default constructor
     Anchor(unsigned x, unsigned y); //constructor, requires only x- and y-coordinates
     //        Anchor(const Anchor& other);        //copy constructor
     Anchor(); //For serialization
@@ -38,7 +38,7 @@ public:
     bool is_above(); //returns true iff this Anchor is above the current slice line, used for the vineyard-update process of storing persistence data in cells of the arrangement
     void toggle(); //toggles above/below state of this Anchor; called whever the slice line crosses this Anchor in the vineyard-update process of storing persistence data
 
-    std::shared_ptr<xiMatrixEntry> get_entry(); //accessor
+    std::shared_ptr<TemplatePointsMatrixEntry> get_entry(); //accessor
 
     void set_weight(unsigned long w); //sets the estimate of the cost of updating the RU-decomposition when crossing this anchor
     unsigned long get_weight(); //returns estimate of the cost of updating the RU-decomposition when crossing this anchor
@@ -50,7 +50,7 @@ private:
     unsigned x_coord; //discrete x-coordinate
     unsigned y_coord; //discrete y-coordinate
 
-    std::shared_ptr<xiMatrixEntry> entry; //xiMatrixEntry at the position of this anchor
+    std::shared_ptr<TemplatePointsMatrixEntry> entry; //TemplatePointsMatrixEntry at the position of this anchor
 
     std::shared_ptr<Halfedge> dual_line; //pointer to left-most halfedge corresponding to this Anchor in the arrangement
     unsigned position; //relative position of Anchor line at sweep line, used for Bentley-Ottmann DCEL construction algorithm

@@ -206,9 +206,9 @@ Debug& operator<<(Debug& qd, const Face& f)
     return qd;
 }
 
-bool operator==(XiSupportMessage const& left, XiSupportMessage const& right)
+bool operator==(TemplatePointsMessage const& left, TemplatePointsMessage const& right)
 {
-    bool support = left.xi_support == right.xi_support;
+    bool support = left.template_points == right.template_points;
     bool hom = left.homology_dimensions == right.homology_dimensions;
     bool x = left.x_exact == right.x_exact;
     bool y = left.y_exact == right.y_exact;

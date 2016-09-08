@@ -1,6 +1,6 @@
 
 #include "computation.h"
-#include "dcel/mesh.h"
+#include "dcel/arrangement.h"
 #include "debug.h"
 #include "docopt.h"
 #include "interface/input_manager.h"
@@ -13,7 +13,7 @@
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 
-#include "dcel/mesh_message.h"
+#include "dcel/arrangement_message.h"
 #include "dcel/serialization.h"
 
 static const char USAGE[] =
@@ -81,7 +81,7 @@ std::string getcwd()
 }
 
 //TODO: this doesn't really belong here, look for a better place.
-void write_boost_file(InputParameters const& params, XiSupportMessage const& message, MeshMessage const& mesh)
+void write_boost_file(InputParameters const& params, TemplatePointsMessage const& message, ArrangementMessage const& arrangement)
 {
     std::ofstream file(params.outputFile, std::ios::binary);
     if (!file.is_open()) {
@@ -89,7 +89,7 @@ void write_boost_file(InputParameters const& params, XiSupportMessage const& mes
     }
     file << "RIVET_1\n";
     boost::archive::binary_oarchive oarchive(file);
-    oarchive& params& message& mesh;
+    oarchive& params& message& arrangement;
     file.flush();
 }
 
@@ -107,8 +107,8 @@ int main(int argc, char* argv[])
     //   std::cout << arg.first << ":" << arg.second ;
     // }
 
-    MeshMessage* mesh_message = nullptr;
-    XiSupportMessage* xi_supp_message = nullptr;
+    ArrangementMessage* arrangement_message = nullptr;
+    TemplatePointsMessage* points_message = nullptr;
 
     params.fileName = args["<input_file>"].asString();
     docopt::value& out_file_name = args["<output_file>"];
@@ -139,8 +139,8 @@ int main(int argc, char* argv[])
     progress.progress.connect([](int amount) {
         std::cout << "PROGRESS " << amount << std::endl;
     });
-    computation.arrangementReady.connect([&mesh_message, &params](std::shared_ptr<Mesh> mesh) {
-        mesh_message = new MeshMessage(*mesh);
+    computation.arrangement_ready.connect([&arrangement_message, &params](std::shared_ptr<Arrangement> arrangement) {
+        arrangement_message = new ArrangementMessage(*arrangement);
         //TODO: this should become a system test with a known dataset
         //Note we no longer write the arrangement to stdout, it goes to a file at the end
         //of the run. This message just announces the absolute path of the file.
@@ -149,29 +149,29 @@ int main(int argc, char* argv[])
         std::stringstream ss(std::ios_base::binary | std::ios_base::out | std::ios_base::in);
         {
             boost::archive::binary_oarchive archive(ss);
-            archive << *mesh_message;
+            archive << *arrangement_message;
         }
         std::clog << "Testing deserialization locally..." << std::endl;
         std::string original = ss.str();
-        MeshMessage test;
+        ArrangementMessage test;
         {
             boost::archive::binary_iarchive inarch(ss);
             inarch >> test;
             std::clog << "Deserialized!";
         }
-        if (!(*mesh_message == test)) {
+        if (!(*arrangement_message == test)) {
             throw std::runtime_error("Original and deserialized don't match!");
         }
-        Mesh reconstituted = mesh_message->to_mesh();
-        MeshMessage round_trip(reconstituted);
-        if (!(round_trip == *mesh_message)) {
+        Arrangement reconstituted = arrangement_message->to_arrangement();
+        ArrangementMessage round_trip(reconstituted);
+        if (!(round_trip == *arrangement_message)) {
             throw std::runtime_error("Original and reconstituted don't match!");
         }
         std::cout << "ARRANGEMENT: " << params.outputFile << std::endl;
     });
-    computation.xiSupportReady.connect([&xi_supp_message](XiSupportMessage message) {
+    computation.template_points_ready.connect([&points_message](TemplatePointsMessage message) {
         std::cout << "XI" << std::endl;
-        xi_supp_message = new XiSupportMessage(message);
+        points_message = new TemplatePointsMessage(message);
         //            cereal::JSONOutputArchive archive(std::cout);
         //            cereal::BinaryOutputArchive archive(std::cout);
         {
@@ -189,13 +189,13 @@ int main(int argc, char* argv[])
         }
         {
             boost::archive::text_iarchive in(ss);
-            XiSupportMessage result;
+            TemplatePointsMessage result;
             in >> result;
             if (!(message == result)) {
-                throw std::runtime_error("Original XiSupportMessage and reconstituted don't match!");
+                throw std::runtime_error("Original TemplatePointsMessage and reconstituted don't match!");
             }
         }
-        std::cerr << "xi support received: " << message.xi_support.size();
+        std::cerr << "xi support received: " << message.template_points.size();
     });
 
     std::unique_ptr<InputData> input;
@@ -234,10 +234,10 @@ int main(int argc, char* argv[])
             debug() << "Writing file:" << params.outputFile;
 
             if (params.outputFormat == "R0") {
-                FileWriter fw(params, *input, *(arrangement), result->xi_support);
+                FileWriter fw(params, *input, *(arrangement), result->template_points);
                 fw.write_augmented_arrangement(file);
             } else if (params.outputFormat == "R1") {
-                write_boost_file(params, *xi_supp_message, *mesh_message);
+                write_boost_file(params, *points_message, *arrangement_message);
             } else {
                 throw std::runtime_error("Unsupported output format: " + params.outputFormat);
             }

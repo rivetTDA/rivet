@@ -1,5 +1,5 @@
 /**
- * \class	Mesh
+ * \class	Arrangement
  * \brief	Stores and manipulates the DCEL decomposition of the affine Grassmannian.
  * \author	Matthew L. Wright
  * \date	March 2014
@@ -17,7 +17,7 @@ class MultiBetti;
 class PersistenceUpdater;
 class Vertex;
 
-#include "../math/xi_point.h"
+#include "math/template_point.h"
 #include "anchor.h"
 #include "interface/progress.h"
 #include "numerics.h"
@@ -51,18 +51,18 @@ T& write_grades(T& stream, const std::vector<exact>& x_exact, const std::vector<
     return stream;
 }
 
-class MeshMessage;
+class ArrangementMessage;
 
-class Mesh {
-    //TODO: refactor so Mesh doesn't need friends.
+class Arrangement {
+    //TODO: refactor so Arrangement doesn't need friends.
     friend class PersistenceUpdater;
-    friend class MeshBuilder;
-    friend class MeshMessage;
-    friend Mesh to_mesh(MeshMessage const& msg);
+    friend class ArrangementBuilder;
+    friend class ArrangementMessage;
+    friend Arrangement to_arrangement(ArrangementMessage const &msg);
 
 public:
-    Mesh(); //For serialization
-    Mesh(std::vector<exact> xe, std::vector<exact> ye, unsigned verbosity);
+    Arrangement(); //For serialization
+    Arrangement(std::vector<exact> xe, std::vector<exact> ye, unsigned verbosity);
     //constructor; sets up bounding box (with empty interior) for the affine Grassmannian
     //  requires references to vectors of all multi-grade values (both double and exact values)
 
@@ -79,33 +79,33 @@ public:
 
     //TESTING ONLY
     void print_stats(); //prints a summary of the arrangement information, such as the number of anchors, vertices, halfedges, and faces
-    void print(); //prints all the data from the mesh
+    void print(); //prints all the data from the arrangement
     void test_consistency(); //attempts to find inconsistencies in the DCEL arrangement
 
     //references to vectors of multi-grade values
     std::vector<exact> x_exact; //exact values for all x-grades
     std::vector<exact> y_exact; //exact values for all y-grades
 
-    //these are necessary for comparisons, but should they really be static members of Mesh???
+    //these are necessary for comparisons, but should they really be static members of Arrangement???
     static double epsilon;
     static bool almost_equal(const double a, const double b);
 
-    friend std::ostream& operator<<(std::ostream&, const Mesh&);
-    friend std::istream& operator>>(std::istream&, Mesh&);
+    friend std::ostream& operator<<(std::ostream&, const Arrangement&);
+    friend std::istream& operator>>(std::istream&, Arrangement&);
     std::shared_ptr<Halfedge> insert_vertex(std::shared_ptr<Halfedge> edge, double x, double y); //inserts a new vertex on the specified edge, with the specified coordinates, and updates all relevant pointers
 private:
     //data structures
     std::vector<double> x_grades; //floating-point values for x-grades
     std::vector<double> y_grades; //floating-point values for y-grades
-    std::vector<std::shared_ptr<Vertex>> vertices; //all vertices in the mesh
-    std::vector<std::shared_ptr<Halfedge>> halfedges; //all halfedges in the mesh
-    std::vector<std::shared_ptr<Face>> faces; //all faces in the mesh
+    std::vector<std::shared_ptr<Vertex>> vertices; //all vertices in the arrangement
+    std::vector<std::shared_ptr<Halfedge>> halfedges; //all halfedges in the arrangement
+    std::vector<std::shared_ptr<Face>> faces; //all faces in the arrangement
 
     const double INFTY;
 
     unsigned verbosity;
 
-    std::set<std::shared_ptr<Anchor>, PointerComparator<Anchor, Anchor_LeftComparator>> all_anchors; //set of Anchors that are represented in the mesh, ordered by position of curve along left side of the arrangement, from bottom to top
+    std::set<std::shared_ptr<Anchor>, PointerComparator<Anchor, Anchor_LeftComparator>> all_anchors; //set of Anchors that are represented in the arrangement, ordered by position of curve along left side of the arrangement, from bottom to top
 
     std::shared_ptr<Halfedge> topleft; //pointer to Halfedge that points down from top left corner (0,infty)
     std::shared_ptr<Halfedge> topright; //pointer to Halfedge that points down from the top right corner (infty,infty)
@@ -147,9 +147,9 @@ private:
         std::shared_ptr<Anchor> a; //pointer to one line
         std::shared_ptr<Anchor> b; //pointer to the other line -- must ensure that line for anchor a is below line for anchor b just before the crossing point!!!!!
         double x; //x-coordinate of intersection point (floating-point)
-        std::shared_ptr<Mesh> m; //pointer to the mesh, so the Crossing has access to the vectors x_grades, x_exact, y_grades, and y_exact
+        std::shared_ptr<Arrangement> m; //pointer to the arrangement, so the Crossing has access to the vectors x_grades, x_exact, y_grades, and y_exact
 
-        Crossing(std::shared_ptr<Anchor> a, std::shared_ptr<Anchor> b, std::shared_ptr<Mesh> m); //precondition: Anchors a and b must be comparable
+        Crossing(std::shared_ptr<Anchor> a, std::shared_ptr<Anchor> b, std::shared_ptr<Arrangement> m); //precondition: Anchors a and b must be comparable
         bool x_equal(const Crossing* other) const; //returns true iff this Crossing has (exactly) the same x-coordinate as other Crossing
     };
 
@@ -158,6 +158,6 @@ private:
         bool operator()(const Crossing* c1, const Crossing* c2) const; //returns true if c1 comes after c2
     };
 
-}; //end class Mesh
+}; //end class Arrangement
 
 #endif // __DCEL_Mesh_H__

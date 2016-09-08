@@ -5,7 +5,7 @@
 #include "interface/input_manager.h"
 #include "interface/input_parameters.h"
 #include "math/simplex_tree.h"
-#include "math/xi_point.h"
+#include "math/template_point.h"
 #include "numerics.h"
 
 #include "boost/multi_array.hpp"
@@ -42,16 +42,16 @@ protected:
 
 struct ComputationResult {
     unsigned_matrix homology_dimensions;
-    std::vector<xiPoint> xi_support;
-    std::shared_ptr<Mesh> arrangement;
+    std::vector<TemplatePoint> template_points;
+    std::shared_ptr<Arrangement> arrangement;
     std::shared_ptr<SimplexTree> bifiltration;
 };
 
 class Computation {
 public:
     //TODO: these signals are a little strange, they should go away soon
-    boost::signals2::signal<void(std::shared_ptr<Mesh>)> arrangementReady;
-    boost::signals2::signal<void(XiSupportMessage)> xiSupportReady;
+    boost::signals2::signal<void(std::shared_ptr<Arrangement>)> arrangement_ready;
+    boost::signals2::signal<void(TemplatePointsMessage)> template_points_ready;
     Computation(InputParameters& params, Progress& progress);
     ~Computation();
 

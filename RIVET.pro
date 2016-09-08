@@ -24,7 +24,7 @@ SOURCES	+= main.cpp                         \
 		visualizationwindow.cpp             \
 		dataselectdialog.cpp                \
 		dcel/dcel.cpp                       \
-		dcel/mesh.cpp                       \
+		dcel/arrangement.cpp                       \
 		interface/control_dot.cpp           \
 		#interface/input_manager.cpp         \
 		interface/persistence_bar.cpp       \
@@ -40,10 +40,10 @@ SOURCES	+= main.cpp                         \
 		interface/barcode.cpp               \
 		dcel/barcode_template.cpp           \
 		dcel/anchor.cpp                     \
-		dcel/mesh_message.cpp               \
+		dcel/arrangement_message.cpp               \
 		#math/persistence_updater.cpp        \
-		math/xi_support_matrix.cpp          \
-		math/xi_point.cpp                   \
+		math/template_points_matrix.cpp          \
+		math/template_point.cpp                   \
 		interface/progressdialog.cpp        \
 		computationthread.cpp               \
 		interface/aboutmessagebox.cpp       \
@@ -60,7 +60,7 @@ SOURCES	+= main.cpp                         \
 HEADERS  += visualizationwindow.h			\
 		dataselectdialog.h					\
 		dcel/dcel.h							\
-		dcel/mesh.h							\
+		dcel/arrangement.h							\
 		interface/control_dot.h				\
 		interface/input_manager.h			\
 		interface/persistence_bar.h			\
@@ -77,8 +77,8 @@ HEADERS  += visualizationwindow.h			\
 		dcel/barcode_template.h				\
 		dcel/anchor.h						\
 		math/persistence_updater.h			\
-		math/xi_support_matrix.h			\
-		math/xi_point.h \
+		math/template_points_matrix.h			\
+		math/template_point.h \
     interface/progressdialog.h \
     computationthread.h \
     interface/input_parameters.h \

@@ -14,7 +14,7 @@
 class Halfedge;
 
 #include "barcode_template.h"
-#include <math/xi_point.h>
+#include <math/template_point.h>
 #include <memory>
 #include <numerics.h>
 #include <vector>
@@ -115,20 +115,20 @@ private:
 }; //end class Face
 
 //This class exists only for data transfer between console and viewer
-struct XiSupportMessage {
+struct TemplatePointsMessage {
     std::string x_label;
     std::string y_label;
-    std::vector<xiPoint> xi_support;
+    std::vector<TemplatePoint> template_points;
     unsigned_matrix homology_dimensions;
     std::vector<exact> x_exact;
     std::vector<exact> y_exact;
 
-    friend bool operator==(XiSupportMessage const& left, XiSupportMessage const& right);
+    friend bool operator==(TemplatePointsMessage const& left, TemplatePointsMessage const& right);
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int version)
     {
-        ar& x_label& y_label& xi_support& homology_dimensions& x_exact& y_exact;
+        ar& x_label& y_label& template_points& homology_dimensions& x_exact& y_exact;
     }
 };
 
