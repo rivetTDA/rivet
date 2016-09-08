@@ -1,24 +1,39 @@
 #include "computationthread.h"
 
-
 #include "dcel/mesh.h"
 #include "interface/input_manager.h"
 #include "interface/input_parameters.h"
 #include "math/multi_betti.h"
 #include "math/simplex_tree.h"
 #include "math/xi_point.h"
+#include "dcel/serialization.h"
+#include "dcel/mesh_message.h"
 
+#include "interface/console_interaction.h"
+#include "base_64.h"
+
+#include <boost/archive/tmpdir.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
+#include <fstream>
+#include <vector>
+#include <string>
 #include <QDebug>
 #include <QTime>
+#include <QProcess>
+#include <QString>
+#include <QDir>
 
-
-ComputationThread::ComputationThread(int verbosity, InputParameters& params, std::vector<double>& x_grades, std::vector<exact>& x_exact, std::vector<double>& y_grades, std::vector<exact>& y_exact, std::vector<xiPoint>& xi_support, unsigned_matrix& homology_dimensions, QObject *parent) :
+ComputationThread::ComputationThread(InputParameters& params, QObject *parent) :
     QThread(parent),
     params(params),
-    x_grades(x_grades), x_exact(x_exact), y_grades(y_grades), y_exact(y_exact),
-    xi_support(xi_support), homology_dimensions(homology_dimensions),
-    bifiltration(NULL),
-    verbosity(verbosity)
+    xi_support(),
+    x_exact(),
+    y_exact(),
+    x_label(),
+    y_label()
 { }
 
 ComputationThread::~ComputationThread()
@@ -30,158 +45,152 @@ void ComputationThread::compute()
 }
 
 //this function does the work
-void ComputationThread::run()
-{
-  //STAGES 1 and 2: INPUT DATA AND CREATE BIFILTRATION
-
-    QTime timer;    //for timing the computations
-
-    //create the SimplexTree
-    bifiltration = new SimplexTree(params.dim, verbosity);
-
-    //get the data via the InputManager
-    InputManager im(this);      //NOTE: InputManager will fill the vectors x_grades, x_exact, y_grades, and y_exact
-
-    try
-    {
-        im.start();                 //   If the input file is raw data, then InputManager will also build the bifiltration.
-                                    //   If the input file is a RIVET data file, then InputManager will fill xi_support and barcode templates, but bifiltration will remain NULL.
+void ComputationThread::run() {
+    if (is_precomputed(params.fileName)) {
+        load_from_file();
+    } else {
+        compute_from_file();
     }
-    catch(Exception& except)
-    {
-        qDebug() << "Exception caught in ComputationThread::run(): " << except.get_error_string();
-        emit sendException(except.get_error_string());
+}
+
+bool ComputationThread::is_precomputed(std::string file_name) {
+    std::ifstream file(file_name);
+    if (!file.is_open()) {
+        throw std::runtime_error("Couldn't open " + file_name + " for reading");
+    }
+    std::string line;
+    std::getline(file, line);
+    return line == "RIVET_1";
+}
+
+
+void ComputationThread::load_from_file() {
+    std::ifstream file(params.fileName);
+    if (!file.is_open()) {
+        throw std::runtime_error("Couldn't open " + params.fileName + " for reading");
+    }
+    std::string type;
+    std::getline(file, type);
+    assert(type == "RIVET_1");
+    boost::archive::binary_iarchive archive(file);
+
+    arrangement.reset(new MeshMessage());
+    archive >> params;
+    archive >> message;
+    unpack_message_fields();
+    emit xiSupportReady();
+    archive >> *arrangement;
+    emit arrangementReady(&*arrangement);
+}
+
+//TODO: Probably better to not have to unpack all these properties into fields of computationthread.
+void ComputationThread::unpack_message_fields() {
+
+    xi_support = message.xi_support;
+    std::vector<unsigned> dims(message.homology_dimensions.shape(),
+                               message.homology_dimensions.shape() + message.homology_dimensions.num_dimensions());
+    assert(dims.size() == 2);
+    hom_dims.resize(boost::extents[dims[0]][dims[1]]);
+    hom_dims = message.homology_dimensions;
+    qDebug() << "Received hom_dims: " << hom_dims.shape()[0] << " x " << hom_dims.shape()[1];
+    for(int i = 0; i < hom_dims.shape()[0]; i++) {
+        auto row = qDebug();
+        for (int j = 0; j < hom_dims.shape()[1]; j++) {
+            row << hom_dims[i][j];
+        }
+    }
+    x_exact = message.x_exact;
+    y_exact = message.y_exact;
+    x_label = QString::fromStdString(message.x_label);
+    y_label = QString::fromStdString(message.y_label);
+}
+
+void ComputationThread::compute_from_file() {
+    QStringList args;
+
+    args << QString::fromStdString(params.fileName)
+    << QDir(QCoreApplication::applicationDirPath()).filePath("rivet_arrangement_temp")
+    << "-H" << QString::number(params.dim)
+    << "-x" << QString::number(params.x_bins)
+    << "-y" << QString::number(params.y_bins)
+    << "-V" << QString::number(params.verbosity)
+            << "-f" << "R1";
+    auto console = RivetConsoleApp::start(args);
+
+    if (!console->waitForStarted()) {
+        qDebug() << "Error launching rivet_console:" << RivetConsoleApp::errorMessage(console->error()) ;
         return;
     }
 
-
-    //print bifiltration statistics
-    if(verbosity >= 2 && params.raw_data)
-    {
-        qDebug() << "\nBIFILTRATION:";
-        qDebug() << "   Number of simplices of dimension" << params.dim << ":" << bifiltration->get_size(params.dim);
-        qDebug() << "   Number of simplices of dimension" << (params.dim + 1) << ":" << bifiltration->get_size(params.dim + 1);
-        qDebug() << "   Number of x-grades:" << x_grades.size() << "; values" << x_grades.front() << "to" << x_grades.back();
-        qDebug() << "   Number of y-grades:" << y_grades.size() << "; values" << y_grades.front() << "to" << y_grades.back() << "\n";
-    }
-    if(verbosity >= 4)
-    {
-        qDebug() << "x-grades:";
-        for(unsigned i=0; i<x_grades.size(); i++)
-        {
-          std::ostringstream oss;
-          oss << x_exact[i];
-          qDebug() << "  " << x_grades[i] << "=" << oss.str().data();
+    bool reading_xi = false;
+    std::stringstream ss;
+    while(console->canReadLine() || console->waitForReadyRead(-1)) {
+        QString line = console->readLine();
+        qDebug().noquote() << "console: " << line;
+        if (reading_xi) {
+            if (line.startsWith("END XI")) {
+                {
+                    boost::archive::text_iarchive archive(ss);
+                    archive >> message;
+                }
+                unpack_message_fields();
+                reading_xi = false;
+                emit xiSupportReady();
+            } else {
+                ss << line.toStdString();
+            }
+        } else if (line.startsWith("ARRANGEMENT: ")) {
+                {
+                    console->waitForFinished();
+                    std::ifstream input(line.mid(QString("ARRANGEMENT: ").length()).trimmed().toStdString());
+                    if (!input.is_open()) {
+                        throw std::runtime_error("Could not open console arrangement file");
+                    }
+                    std::string type;
+                    std::getline(input, type);
+                    if (type != "RIVET_1") {
+                        throw std::runtime_error("Unsupported file format");
+                    }
+                    qDebug() << "ComputationThread::compute_from_file() : checkpoint A -- xi_support.size() = " << xi_support.size();
+                    boost::archive::binary_iarchive archive(input);
+                    arrangement.reset(new MeshMessage());
+                    InputParameters p;
+                    archive >> p;
+                    archive >> message;
+                    unpack_message_fields();
+                    archive >> *arrangement;
+                    qDebug() << "ComputationThread::compute_from_file() : checkpoint B -- xi_support.size() = " << xi_support.size();
+                }
+//                qDebug() << "Mesh received: " << arrangement->x_exact.size() << " x " << arrangement->y_exact.size();
+            emit arrangementReady(&*arrangement);
+                return;
+        } else if (line.startsWith("PROGRESS ")) {
+            auto progress = line.mid(QString("PROGRESS ").length()).trimmed();
+            qDebug() << "***Progress is: " << progress;
+            setCurrentProgress(progress.toInt());
+        } else if (line.startsWith("STAGE")) {
+            emit advanceProgressStage();
+        } else if (line.startsWith("XI")) {
+            reading_xi = true;
+            ss.clear();
         }
-        qDebug() << "y-grades:";
-        for(unsigned i=0; i<y_grades.size(); i++)
-        {
-          std::ostringstream oss;
-          oss << y_exact[i];
-          qDebug() << "  " << y_grades[i] << "=" << oss.str().data();
-        }
     }
 
-    emit advanceProgressStage(); //update progress box to stage 3
+    qDebug() << "Mesh was not delivered";
 
-    if(params.raw_data)    //then the user selected a raw data file, and we need to do persistence calculations
-    {
-      //STAGE 3: COMPUTE MULTIGRADED BETTI NUMBERS
-
-        //compute xi_0 and xi_1 at all multi-grades
-        if(verbosity >= 2) { qDebug() << "COMPUTING xi_0 AND xi_1 FOR HOMOLOGY DIMENSION " << params.dim << ":"; }
-        MultiBetti mb(bifiltration, params.dim, verbosity);
-
-        timer.start();
-        mb.compute_fast(this, homology_dimensions);
-        qDebug() << "  --> xi_i computation took" << timer.elapsed() << "milliseconds";
-
-        //store the xi support points
-        mb.store_support_points(xi_support);
-
-        emit xiSupportReady();          //signal that xi support points are ready for visualization
-        emit advanceProgressStage();    //update progress box to stage 4
-
-
-      //STAGES 4 and 5: BUILD THE LINE ARRANGEMENT AND COMPUTE BARCODE TEMPLATES
-
-        //build the arrangement
-        if(verbosity >= 2) { qDebug() << "CALCULATING ANCHORS AND BUILDING THE DCEL ARRANGEMENT"; }
-
-        timer.start();
-        arrangement = new Mesh(x_grades, x_exact, y_grades, y_exact, verbosity);    //NOTE: delete later!
-        arrangement->build_arrangement(mb, xi_support, this);     ///TODO: update this -- does not need to store list of xi support points in xi_support
-        //NOTE: this also computes and stores barcode templates in the arrangement
-
-        qDebug() << "   building the line arrangement and computing all barcode templates took" << timer.elapsed() << "milliseconds";
-
-        //send (a pointer to) the arrangement back to the VisualizationWindow
-        emit arrangementReady(arrangement);
-
-        //delete the SimplexTree
-        delete bifiltration;
-    }
-    else    //then the user selected a RIVET file with pre-computed persistence information, and we just need to re-build the arrangement
-    {
-      //STAGE 3: MULTIGRADED BETTI NUMBERS ALREADY COMPUTED, BUT MUST COMPUTE THE DIMENSIONS
-
-        find_dimensions();      //compute the homology dimensions at each grade from the graded Betti numbers
-
-        if(verbosity >= 2) { qDebug() << "INPUT FINISHED: xi support points ready"; }
-
-        emit xiSupportReady();          //signal that xi support points are ready for visualization
-        emit advanceProgressStage();    //update progress box to stage 4
-
-
-      //STAGES 4 and 5: RE-BUILD THE AUGMENTED ARRANGEMENT
-
-        if(verbosity >= 2) { qDebug() << "RE-BUILDING THE AUGMENTED ARRANGEMENT"; }
-
-        timer.start();
-
-        arrangement = new Mesh(x_grades, x_exact, y_grades, y_exact, verbosity);    //NOTE: delete later!
-        arrangement->build_arrangement(xi_support, barcode_templates, this);
-
-        qDebug() << "   re-building the augmented arrangement took" << timer.elapsed() << "milliseconds";
-
-        //send (a pointer to) the arrangement back to the VisualizationWindow
-        emit arrangementReady(arrangement);
-    }
 }//end run()
 
-//computes homology dimensions from the graded Betti numbers (used when data comes from a pre-computed RIVET file)
-void ComputationThread::find_dimensions()
-{
-    homology_dimensions.resize(boost::extents[x_grades.size()][y_grades.size()]);
-    std::vector<xiPoint>::iterator it = xi_support.begin();
-    int col_sum = 0;
-
-    //compute dimensions at (0,y)
-    for(unsigned y = 0; y < y_grades.size(); y++)
-    {
-        if(it != xi_support.end() && it->x == 0 && it->y == y)
-        {
-            col_sum += it->zero - it->one + it->two;
-            ++it;
-        }
-
-        homology_dimensions[0][y] = col_sum;
+//TODO: this doesn't really belong here, look for a better place.
+//NOTE this is a copy of a function in the console
+//It has to be here because we get duplicate symbol errors when we use binary_oarchive in a different compilation
+//unit in addition to this one.
+void write_boost_file(QString file_name, InputParameters const &params, XiSupportMessage const &message, MeshMessage const &mesh) {
+    std::ofstream file(file_name.toStdString(), std::ios::binary);
+    if (!file.is_open()) {
+        throw std::runtime_error("Could not open " + file_name.toStdString() + " for writing");
     }
-
-    //compute dimensions at (x,y) for x > 0
-    for(unsigned x = 1; x < x_grades.size(); x++)
-    {
-        col_sum = 0;
-
-        for(unsigned y = 0; y < y_grades.size(); y++)
-        {
-            if(it != xi_support.end() && it->x == x && it->y == y)
-            {
-                col_sum += it->zero - it->one + it->two;
-                ++it;
-            }
-
-            homology_dimensions[x][y] = homology_dimensions[x-1][y] + col_sum;
-        }
-    }
-}//end find_dimensions()
+    file << "RIVET_1\n";
+    boost::archive::binary_oarchive oarchive(file);
+    oarchive & params & message & mesh;
+    file.flush();
+}

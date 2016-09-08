@@ -6,6 +6,9 @@ GTAGS
 Makefile
 RIVET.app/
 *.o
+.idea
+cmake_install.cmake
+*.txt
 moc_aboutmessagebox.cpp
 moc_computationthread.cpp
 moc_configuredialog.cpp
@@ -20,3 +23,5 @@ ui_configuredialog.h
 ui_dataselectdialog.h
 ui_progressdialog.h
 ui_visualizationwindow.h
+build
+cereal

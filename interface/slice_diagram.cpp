@@ -20,9 +20,11 @@ SliceDiagram::SliceDiagram(ConfigParameters* params, std::vector<double>& x_grad
     config_params(params),
     dot_left(), dot_right(), slice_line(),
     x_grades(x_grades), y_grades(y_grades),
+    line_zero(0),
     max_xi_value(0),
     padding(20),
-    epsilon(pow(2,-30)), PI(3.14159265358979323846)
+    control_dot_moved(false),
+    PI(3.14159265358979323846)
 { }
 
 SliceDiagram::~SliceDiagram()
@@ -44,7 +46,7 @@ void SliceDiagram::add_point(double x_coord, double y_coord, int xi0m, int xi1m,
 }
 
 //NOTE: create_diagram() simply creates all objects; resize_diagram() handles positioning of objects
-void SliceDiagram::create_diagram(QString x_text, QString y_text, double xmin, double xmax, double ymin, double ymax, bool norm_coords, unsigned_matrix& hom_dims)
+void SliceDiagram::create_diagram(const QString x_text, const QString y_text, double xmin, double xmax, double ymin, double ymax, bool norm_coords, unsigned_matrix& hom_dims)
 {
     //set data-dependent parameters
     data_xmin = xmin;
@@ -52,7 +54,7 @@ void SliceDiagram::create_diagram(QString x_text, QString y_text, double xmin, d
     data_ymin = ymin;
     data_ymax = ymax;
     normalized_coords = norm_coords;
-    data_infty = 4*(xmax - xmin + ymax - ymin);
+    data_infty = 10*(xmax - xmin + ymax - ymin);
 
     //pens and brushes
     QPen blackPen(Qt::black);
@@ -104,20 +106,17 @@ void SliceDiagram::create_diagram(QString x_text, QString y_text, double xmin, d
     if(max_hom_dim == 0)
         max_hom_dim = 1;
 
-    //parameters for grayscale values
-    int darkest = 30;   //light gray
-    int lightest = 225; //dark gray (almost black)
-    double gray_slope = ((double)(darkest - lightest)/(max_hom_dim - 1));
-
     //now create the rectangles
     hom_dim_rects.resize(boost::extents[x_grades.size()][y_grades.size()]);
     for(unsigned i = 0; i < x_grades.size(); i++)
     {
         for(unsigned j = 0; j < y_grades.size(); j++)
         {
-            int gray_value = 255;   //white
-            if(hom_dims[i][j] > 0)
-                gray_value = (int)(gray_slope*(hom_dims[i][j] - 1) + lightest);
+            int gray_value = 255; //white
+            if(hom_dims[i][j] > 0 && hom_dims[i][j] < 80)
+                gray_value = (int)(220 - 50*log(hom_dims[i][j]));
+            else if(hom_dims[i][j] >= 80)
+                gray_value = 0; //black
 
             QGraphicsRectItem* item = addRect(QRectF(), Qt::NoPen, QBrush(QColor(gray_value, gray_value, gray_value)));
             item->setToolTip(QString("dimension = ") + QString::number(hom_dims[i][j]));
@@ -182,7 +181,7 @@ void SliceDiagram::create_diagram(QString x_text, QString y_text, double xmin, d
     resize_diagram();
 
     //update angle and offset boxes in VisualizationWindow
-    update_window_controls();
+    update_window_controls(false);
 }//end create_diagram()
 
 //resizes diagram to fill the QGraphicsView
@@ -270,7 +269,6 @@ void SliceDiagram::resize_diagram()
     slice_line->update_position(x, y, line_vert, line_slope*scale_y/scale_x);
 
     //reposition bars
-    double infty = get_zero() + data_infty;
     unsigned count = 1;
     for(unsigned i = 0; i < bars.size(); i++)
     {
@@ -278,9 +276,6 @@ void SliceDiagram::resize_diagram()
         {
             double start = (*it)->get_start();
             double end = (*it)->get_end();
-            if(end == std::numeric_limits<double>::infinity())
-                end = infty;
-
             std::pair<double,double> p1 = compute_endpoint(start, count);
             std::pair<double,double> p2 = compute_endpoint(end, count);
             (*it)->set_line(p1.first, p1.second, p2.first, p2.second);
@@ -357,7 +352,7 @@ void SliceDiagram::redraw_dots()
 }//end redraw_dots()
 
 //updates the diagram after a change in configuration parameters
-void SliceDiagram::receive_parameter_change(QString& xtext, QString& ytext)
+void SliceDiagram::receive_parameter_change(const QString& xtext, const QString& ytext)
 {
     //update colors of the xi dots (necessary because I didn't override their paint() function)
     QBrush xi0brush(config_params->xi0color);
@@ -434,11 +429,8 @@ void SliceDiagram::update_line(double angle, double offset)
 }//end update_line()
 
 //updates controls in the VisualizationWindow in response to a change in the line (also update SliceDiagram data values)
-void SliceDiagram::update_window_controls()
+void SliceDiagram::update_window_controls(bool from_dot)
 {
-    //refresh the scene to avoid artifacts from old lines, which otherwise can occur when the user moves the line quickly
-    update(sceneRect());    //NOTE: this updates more items than necessary, but that is fine as long as it is fast
-
     //update SliceDiagram data values
     line_vert = slice_line->is_vertical();
     line_slope = slice_line->get_slope()*scale_x/scale_y;   //convert pixel units to data units
@@ -473,6 +465,9 @@ void SliceDiagram::update_window_controls()
         angle = angle*180/PI;   //convert to degrees
     }
 
+    //remember whether the source of this change is the move of a ControlDot
+    control_dot_moved = from_dot;
+
     //send updates
     emit set_line_control_elements(angle, offset);
 
@@ -483,14 +478,16 @@ void SliceDiagram::update_window_controls()
 //draws the barcode parallel to the slice line
 void SliceDiagram::draw_barcode(Barcode *bc, double zero_coord, bool show)
 {
+    line_zero = zero_coord;
+
     bars.resize(bc->size());
     unsigned num_bars = 1;
     unsigned index = 0;
 
     for(std::multiset<MultiBar>::iterator it = bc->begin(); it != bc->end(); ++it)
     {
-        double start = it->birth - zero_coord;
-        double end = it->death - zero_coord;
+        double start = it->birth - line_zero;
+        double end = it->death - line_zero;
 
         for(unsigned i=0; i < it->multiplicity; i++)
         {
@@ -539,7 +536,7 @@ std::pair<double,double> SliceDiagram::compute_endpoint(double coordinate, unsig
 
     //handle infinity
     if(coordinate == std::numeric_limits<double>::infinity())
-        coordinate = get_zero() + data_infty;
+        coordinate = data_infty;
 
     //compute x and y relative to slice line (pixel units)
     double x = 0;
@@ -563,8 +560,14 @@ std::pair<double,double> SliceDiagram::compute_endpoint(double coordinate, unsig
     }
 
     //adjust for position of slice line
-    x += dot_left->pos().x();
-    y += dot_left->pos().y();
+    if(control_dot_moved) {
+        x += slice_line->pos().x();
+        y += slice_line->pos().y();
+    }
+    else {
+        x += dot_left->pos().x();
+        y += dot_left->pos().y();
+    }
 
     return std::pair<double,double>(x,y);
 }//end compute_endpoint()
@@ -702,9 +705,6 @@ void SliceDiagram::update_highlight()
     }
 
     //highlight the interval
-    if(end == std::numeric_limits<double>::infinity())
-        end = get_zero() + data_infty;
-
     std::pair<double,double> p1 = compute_endpoint(start, 0);
     std::pair<double,double> p2 = compute_endpoint(end, 0);
 
@@ -768,49 +768,3 @@ double SliceDiagram::get_pd_scale()
     double denominator = sqrt(scale_x*scale_x*sine*sine + scale_y*scale_y*cosine*cosine);
     return scale_x*scale_y/denominator;
 }
-
-//gets the coordinate on the slice line which we consider "zero" for the persistence diagram
-///DEPRECATED -- REPLACED WITH CLEANER, MORE PRECISE FUNCTION VisualizationWindow::project_zero
-///  IF THIS FUNCTION IS DELETED, THEN SliceDiagram::epsilon IS ALSO NOT NEEDED
-double SliceDiagram::get_zero()
-{
-    //handle vertical lines
-    if(slice_line->is_vertical())
-        return data_ymin;
-
-    //handle horizontal lines
-    if(slice_line->get_slope() == 0)
-        return data_xmin;
-
-    //handle lines that are neither vertical nor horizontal
-    //point (x0,y0) is the bottom/left endpoint of the slice line (in data units)
-    double x0 = slice_line->pos().x()/scale_x + data_xmin;
-    double y0 = slice_line->pos().y()/scale_y + data_ymin;
-
-    double radians = atan(line_slope);
-    double offset = cos(radians) * (y0 - tan(radians)*x0);
-
-    //point (x1,y1) is the orthogonal projection of (0,0) onto the slice line (in data units)
-    double x1 = -1*offset * sin(radians);
-    double y1 = offset * cos(radians);
-
-    //find the distance between (x0,y0) and (x1,y1)
-    double dist = sqrt( (x0 - x1)*(x0 - x1) + (y0 - y1)*(y0 - y1) );
-
-    //return the distance with the correct sign
-    if(std::abs(x0 - x1) > epsilon)  //then determine the sign via the x-coordinates
-    {
-        if(x0 > x1)
-            return dist;
-        /*else*/
-        return -1*dist;
-    }
-    if(std::abs(y0 - y1) > epsilon)  //since the x-coordinates are almost equal, determine the sign via the y-coordinates
-    {
-        if(y0 > y1)
-            return dist;
-        /*else*/
-        return -1*dist;
-    }
-    return 0;   //if the x-coordinates are almost equal, and the y-coordinates are almost equal, then the distance is zero
-}//end get_zero()

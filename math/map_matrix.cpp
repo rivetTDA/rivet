@@ -5,7 +5,7 @@
 #include "map_matrix.h"
 #include "debug.h"
 #include <stdexcept>    //for error-checking and debugging
-#include <algorithm>    //for std::accumulate
+#include <numeric>    //for std::accumulate
 
 /********** implementation of base class MapMatrix_Base **********/
 

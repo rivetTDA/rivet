@@ -1,12 +1,12 @@
 #include "visualizationwindow.h"
 #include "ui_visualizationwindow.h"
 
-#include "exception.h"
 #include "dcel/barcode_template.h"
-#include "dcel/mesh.h"
+#include "dcel/mesh_message.h"
 #include "interface/barcode.h"
 #include "interface/config_parameters.h"
 #include "interface/file_writer.h"
+#include "numerics.h"
 
 #include <QDateTime>
 #include <QDebug>
@@ -16,8 +16,8 @@
 #include <QTime>
 
 #include <algorithm>
+#include <fstream>
 #include <sstream>
-
 
 VisualizationWindow::VisualizationWindow(InputParameters& params) :
     QMainWindow(),
@@ -26,9 +26,10 @@ VisualizationWindow::VisualizationWindow(InputParameters& params) :
     data_selected(false), unsaved_data(false),
     input_params(params), config_params(),
     ds_dialog(input_params, this),
-    x_grades(), x_exact(), y_grades(), y_exact(), xi_support(), homology_dimensions(),
+    x_grades(), x_exact(), y_grades(), y_exact(),
+    xi_support(), homology_dimensions(),
     angle_precise(0), offset_precise(0),
-    cthread(verbosity, input_params, x_grades, x_exact, y_grades, y_exact, xi_support, homology_dimensions),
+    cthread(input_params),
     prog_dialog(this),
     line_selection_ready(false), slice_diagram(&config_params, x_grades, y_grades, this), slice_update_lock(false),
     p_diagram(&config_params, this), persistence_diagram_drawn(false)
@@ -46,8 +47,6 @@ VisualizationWindow::VisualizationWindow(InputParameters& params) :
     ui->pdView->scale(1,-1);
     ui->pdView->setRenderHint(QPainter::Antialiasing);
 
- //connect exception
-    QObject::connect(&cthread, &ComputationThread::sendException, this, &VisualizationWindow::receiveException);
     //connect signal from DataSelectDialog to start the computation
     QObject::connect(&ds_dialog, &DataSelectDialog::dataSelected, this, &VisualizationWindow::start_computation);
 
@@ -69,7 +68,7 @@ VisualizationWindow::VisualizationWindow(InputParameters& params) :
 
     //connect other signals and slots
     QObject::connect(&prog_dialog, &ProgressDialog::stopComputation, &cthread, &ComputationThread::terminate);  ///TODO: don't use QThread::terminate()! modify ComputationThread so that it can stop gracefully and clean up after itself
-   
+
 }
 
 VisualizationWindow::~VisualizationWindow()
@@ -89,26 +88,36 @@ void VisualizationWindow::start_computation()
     prog_dialog.raise();
 
     //start the computation in a new thread
-    try
-    {
-        cthread.compute();
-    }
-    catch(Exception& except)
-    {
-        qDebug() << "Exception caught in VisualizationWindow::start_computation: " << except.get_error_string();
-    }
+    cthread.compute();
 
 }//end start_computation()
+
+void VisualizationWindow::copy_fields_from_cthread() {
+    //TODO: this dataflow is still odd, could use more attention.
+    xi_support = cthread.xi_support;
+    x_exact = cthread.x_exact;
+    y_exact = cthread.y_exact;
+    x_grades = rivet::numeric::to_doubles(x_exact);
+    y_grades = rivet::numeric::to_doubles(y_exact);
+    homology_dimensions.resize(std::vector<unsigned>(cthread.hom_dims.shape(), cthread.hom_dims.shape() + cthread.hom_dims.num_dimensions()));
+    homology_dimensions = cthread.hom_dims;
+}
 
 //this slot is signaled when the xi support points are ready to be drawn
 void VisualizationWindow::paint_xi_support()
 {
+    //First load our local copies of the data
+    copy_fields_from_cthread();
     //send xi support points to the SliceDiagram
     for(std::vector<xiPoint>::iterator it = xi_support.begin(); it != xi_support.end(); ++it)
         slice_diagram.add_point(x_grades[it->x], y_grades[it->y], it->zero, it->one, it->two);
 
     //create the SliceDiagram
-    slice_diagram.create_diagram(input_params.x_label, input_params.y_label, x_grades.front(), x_grades.back(), y_grades.front(), y_grades.back(), ui->normCoordCheckBox->isChecked(), homology_dimensions);
+    slice_diagram.create_diagram(cthread.x_label,
+                                 cthread.y_label,
+                                 x_grades.front(), x_grades.back(),
+                                 y_grades.front(), y_grades.back(),
+                                 ui->normCoordCheckBox->isChecked(), homology_dimensions);
 
     //enable control items
     ui->BettiLabel->setEnabled(true);
@@ -132,20 +141,23 @@ void VisualizationWindow::paint_xi_support()
 }
 
 //this slot is signaled when the agumented arrangement is ready
-void VisualizationWindow::augmented_arrangement_ready(Mesh* arrangement)
+void VisualizationWindow::augmented_arrangement_ready(MeshMessage* arrangement)
 {
+    //First load our local copies of the data
+    copy_fields_from_cthread();
+
     //receive the arrangement
     this->arrangement = arrangement;
 
     //TESTING: print arrangement info and verify consistency
-    arrangement->print_stats();
+//    arrangement->print_stats();
 //    arrangement->test_consistency();
 
     //inialize persistence diagram
-    p_diagram.create_diagram(input_params.shortName, input_params.dim);
+    p_diagram.create_diagram(QString::fromStdString(input_params.shortName), input_params.dim);
 
     //get the barcode
-    BarcodeTemplate& dbc = arrangement->get_barcode_template(angle_precise, offset_precise);
+    BarcodeTemplate dbc = arrangement->get_barcode_template(angle_precise, offset_precise);
     barcode = rescale_barcode_template(dbc, angle_precise, offset_precise);
 
     //TESTING
@@ -167,10 +179,12 @@ void VisualizationWindow::augmented_arrangement_ready(Mesh* arrangement)
     ui->statusBar->showMessage("ready for interactive barcode exploration");
 
     //if an output file has been specified, then save the arrangement
-    if(!input_params.outputFile.isEmpty())
-        save_arrangement(input_params.outputFile);
-    else if(input_params.raw_data)
-        unsaved_data = true;
+    if(!input_params.outputFile.empty())
+      save_arrangement(QString::fromStdString(input_params.outputFile));
+    //TODO: we don't have file reading tools here anymore, so we don't know what kind of file it was
+    //Have to rely on console to either a) always save (to tmp file if needed), or b) tell us filetype in the output.
+//    else if(input_params.raw_data)
+//        unsaved_data = true;
 
 }//end augmented_arrangement_ready()
 
@@ -237,12 +251,19 @@ void VisualizationWindow::update_persistence_diagram()
     if(persistence_diagram_drawn)
     {
         //get the barcode
-        BarcodeTemplate& dbc = arrangement->get_barcode_template(angle_precise, offset_precise);
+        qDebug() << "  QUERY: angle =" << angle_precise << ", offset =" << offset_precise;
+        BarcodeTemplate dbc = arrangement->get_barcode_template(angle_precise, offset_precise);
         if(barcode != NULL) //clean up the old barcode
             delete barcode;
         barcode = rescale_barcode_template(dbc, angle_precise, offset_precise);
 
         //TESTING
+        qDebug() << "  XI SUPPORT VECTOR:";
+        for(unsigned i=0; i<xi_support.size(); i++)
+        {
+            xiPoint p = xi_support[i];
+            qDebug().nospace() << "    [" << i << "]: (" << p.x << "," << p.y << ") --> (" << x_grades[p.x] << "," << y_grades[p.y] << ")";
+        }
         dbc.print();
         barcode->print();
 
@@ -263,6 +284,8 @@ Barcode* VisualizationWindow::rescale_barcode_template(BarcodeTemplate& dbc, dou
     //loop through bars
     for(std::set<BarTemplate>::iterator it = dbc.begin(); it != dbc.end(); ++it)
     {
+        qDebug() << "BarTemplate: " << it->begin << " " << it->end;
+        assert(it->begin < xi_support.size());
         xiPoint begin = xi_support[it->begin];
         double birth = project(begin, angle, offset);
 
@@ -275,6 +298,7 @@ Barcode* VisualizationWindow::rescale_barcode_template(BarcodeTemplate& dbc, dou
             }
             else    //then bar is finite
             {
+                assert(it->end < xi_support.size());
                 xiPoint end = xi_support[it->end];
                 double death = project(end, angle, offset);
 //                qDebug() << "   ===>>> (" << it->begin << "," << it->end << ") |---> (" << birth << "," << death << ")";
@@ -425,7 +449,7 @@ void VisualizationWindow::on_actionConfigure_triggered()
 
     if(line_selection_ready)
     {
-        slice_diagram.receive_parameter_change(input_params.x_label, input_params.y_label);
+      slice_diagram.receive_parameter_change(cthread.x_label, cthread.y_label);
 
         if(persistence_diagram_drawn)
             p_diagram.receive_parameter_change();
@@ -458,7 +482,7 @@ void VisualizationWindow::on_actionSave_line_selection_window_as_image_triggered
 
 void VisualizationWindow::on_actionSave_triggered()
 {
-    QString fileName= QFileDialog::getSaveFileName(this, "Save computed data", QCoreApplication::applicationDirPath(), "Text File (*.txt)");
+    QString fileName= QFileDialog::getSaveFileName(this, "Save computed data", QCoreApplication::applicationDirPath());
     if (!fileName.isNull())
     {
         save_arrangement(fileName);
@@ -466,24 +490,16 @@ void VisualizationWindow::on_actionSave_triggered()
     ///TODO: error handling?
 }//end on_actionSave_triggered()
 
-void VisualizationWindow::save_arrangement(QString& filename)
+void VisualizationWindow::save_arrangement(const QString& filename)
 {
-    QFile file(filename);
-    if(file.open(QIODevice::ReadWrite | QIODevice::Truncate))
-    {
-        qDebug() << "Writing file:" << filename;
-
-        FileWriter fw(input_params, arrangement, x_exact, y_exact, xi_support);
-        fw.write_augmented_arrangement(file);
-
-        unsaved_data = false;
+    try {
+        write_boost_file(filename, input_params, cthread.message, *arrangement);
+    } catch (std::exception &e) {
+        QMessageBox errorBox(QMessageBox::Warning, "Error",
+                             QString("Unable to write file: ").append(filename).append(": ")
+                                    .append(e.what()));
+        errorBox.exec();
     }
-    else
-    {
-        QMessageBox errorBox(QMessageBox::Warning, "Error", QString("Unable to write file: ").append(filename));
-        errorBox.exec();    
-    }
-    ///TODO: error handling?
 }//end save_arrangement()
 
 void VisualizationWindow::on_actionOpen_triggered()
@@ -497,17 +513,3 @@ void VisualizationWindow::on_actionOpen_triggered()
 
     ///TODO: open the data select dialog box and load new data
 }//end on_actionOpen_triggered()
-
-//receive excpetion
-
-void VisualizationWindow::receiveException(QString error){
-    qDebug() << "Exception caught in visualizationThread" << error;
-    data_selected = false;
-    QMessageBox msgBox;
-    msgBox.setWindowTitle("RIVET Error");
-    msgBox.setText(error);
-    msgBox.setIcon(QMessageBox::Critical);
-    msgBox.exec();
-    ds_dialog.show();
-    return;
-}

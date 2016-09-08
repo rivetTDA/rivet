@@ -115,17 +115,20 @@ QVariant SliceLine::itemChange(GraphicsItemChange change, const QVariant &value)
             }
         }
 
+        //notify the QGraphicsScene that the line is changing
+        prepareGeometryChange();
+
         //update control dots
         left_dot->set_position(newpos);
         right_dot->set_position(newpos + right_point);
 
         //update ui control objects
-        sdgm->update_window_controls();
+        sdgm->update_window_controls(false);
 
         return newpos;
     }
     return QGraphicsItem::itemChange(change, value);
-}
+}//end itemChange()
 
 //updates left-bottom endpoint
 void SliceLine::update_lb_endpoint(QPointF& newpos)
@@ -147,8 +150,11 @@ void SliceLine::update_lb_endpoint(QPointF& newpos)
         slope = right_point.y()/right_point.x();
     }
 
+    //notify the QGraphicsScene that the line is changing
+    prepareGeometryChange();
+
     //update ui control objects
-    sdgm->update_window_controls();
+    sdgm->update_window_controls(true);
 
     update_lock = false;
 }
@@ -160,7 +166,6 @@ void SliceLine::update_rt_endpoint(QPointF& newpos)
 
     //reposition the right endpoint where it should be
     right_point = newpos - pos();
-    update();
 
     //calculate new slope
     if(right_point.x() <= 0.001)    //caution: floating-point comparison; if line is within 1/1000 pixel of vertical, then we consider it vertical
@@ -171,8 +176,11 @@ void SliceLine::update_rt_endpoint(QPointF& newpos)
         slope = right_point.y()/right_point.x();
     }
 
+    //notify the QGraphicsScene that the line is changing
+    prepareGeometryChange();
+
     //update ui control objects
-    sdgm->update_window_controls();
+    sdgm->update_window_controls(true);
 
     update_lock = false;
 }
@@ -239,8 +247,8 @@ void SliceLine::update_position(double xpos, double ypos, bool vert, double pixe
     //update the picture
     right_dot->set_position(mapToScene(right_point));
 
-    //redraw the line
-    update();
+    //notify the QGraphicsScene that the line is changing
+    prepareGeometryChange();
 
     update_lock = false;
 }
@@ -254,7 +262,10 @@ void SliceLine::mousePressEvent(QGraphicsSceneMouseEvent *event)
     }
 
     pressed = true;
-    update();
+
+    //notify the QGraphicsScene that the line is changing
+    prepareGeometryChange();
+
     QGraphicsItem::mousePressEvent(event);
 }
 
@@ -266,7 +277,10 @@ void SliceLine::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     }
 
     pressed = false;
-    update();
+
+    //notify the QGraphicsScene that the line is changing
+    prepareGeometryChange();
+
     QGraphicsItem::mouseReleaseEvent(event);
 }
 
@@ -292,10 +306,12 @@ void SliceLine::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 
         //update the picture
         right_dot->set_position(mapToScene(right_point));
-        update();
+
+        //notify the QGraphicsScene that the line is changing
+        prepareGeometryChange();
 
         //update ui control objects
-        sdgm->update_window_controls();
+        sdgm->update_window_controls(false);
     }
 
     QGraphicsItem::mouseMoveEvent(event);

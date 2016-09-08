@@ -128,7 +128,7 @@ class SimplexTree {
 
         void update_gi_recursively(STNode* node, int &gic); 		//recursively update global indexes of simplices
 		
-        void build_dim_lists_recursively(STNode* node, int cur_dim, int hom_dim);        //recursively build lists to determine dimension indexes
+        void build_dim_lists_recursively(STNode* node, int cur_dim);        //recursively build lists to determine dimension indexes
 
 		void find_nodes(STNode &node, int level, std::vector<int> &vec, int time, int dist, int dim);	//recursively search tree for simplices of specified dimension that exist at specified multi-index
 		

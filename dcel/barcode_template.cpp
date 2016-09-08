@@ -1,6 +1,6 @@
 #include "barcode_template.h"
 
-#include <QDebug>
+#include "debug.h"
 
 
 BarTemplate::BarTemplate(unsigned a, unsigned b) :
@@ -15,6 +15,8 @@ BarTemplate::BarTemplate(const BarTemplate& other) :
     begin(other.begin), end(other.end), multiplicity(other.multiplicity)
 { }
 
+BarTemplate::BarTemplate(): begin(0), end(0), multiplicity(0) { }
+
 bool BarTemplate::operator<(const BarTemplate other) const
 {
     return (begin < other.begin) || (begin == other.begin && end < other.end);
@@ -22,7 +24,7 @@ bool BarTemplate::operator<(const BarTemplate other) const
 
 
 
-BarcodeTemplate::BarcodeTemplate()
+BarcodeTemplate::BarcodeTemplate(): bars()
 { }
 
 //adds a bar to the barcode (updating multiplicity, if necessary)
@@ -80,13 +82,23 @@ bool BarcodeTemplate::is_empty()
 //for testing only
 void BarcodeTemplate::print()
 {
-    QDebug qd = qDebug().nospace();
-    qd << "      barcode template: ";
+    debug() << "      barcode template: ";
     for(std::set<BarTemplate>::iterator it = bars.begin(); it != bars.end(); ++it)
     {
         BarTemplate b = *it;
-        qd << "(" << b.begin << "," << b.end << ")x" << b.multiplicity << ", ";
+        debug(true) << "(" << b.begin << "," << b.end << ")x" << b.multiplicity << ", ";
     }
+}
+
+bool operator==(BarcodeTemplate const &left, BarcodeTemplate const &right) {
+    return left.bars == right.bars;
+}
+
+bool operator==(BarTemplate const &left, BarTemplate const &right) {
+    return left.begin == right.begin
+           && left.end == right.end
+            && left.multiplicity == right.multiplicity;
+
 }
 
 

@@ -4,7 +4,6 @@
 //forward declarations
 class Barcode;
 class BarcodeTemplate;
-class Mesh;
 class xiPoint;
 
 #include "computationthread.h"
@@ -16,7 +15,7 @@ class xiPoint;
 #include "interface/persistence_diagram.h"
 #include "interface/progressdialog.h"
 #include "interface/slice_diagram.h"
-#include "exception.h"
+#include "dcel/mesh_message.h"
 #include <QMainWindow>
 #include <QtWidgets>
 
@@ -50,7 +49,7 @@ protected:
 public slots:
     void start_computation(); //begins the computation pipeline
     void paint_xi_support();
-    void augmented_arrangement_ready(Mesh* arrangement);
+    void augmented_arrangement_ready(MeshMessage* arrangement);
     void set_line_parameters(double angle, double offset);
 
 private slots:
@@ -69,7 +68,6 @@ private slots:
     void on_actionSave_line_selection_window_as_image_triggered();
     void on_actionSave_triggered();
     void on_actionOpen_triggered();
-    void receiveException(QString error);
 
 private:
     Ui::VisualizationWindow *ui;
@@ -85,17 +83,17 @@ private:
     ConfigParameters config_params;   //parameters that control the visualization
     DataSelectDialog ds_dialog;       //dialog box that gets the input parameters
 
-    std::vector<double> x_grades;     //floating-point x-coordinates of the grades, sorted exactly
-    std::vector<exact> x_exact;       //exact (e.g. rational) values of all x-grades, sorted
-    std::vector<double> y_grades;     //floating-point y-coordinates of the grades
-    std::vector<exact> y_exact;       //exact (e.g. rational) values of all y-grades, sorted
+    std::vector<exact> x_exact;
+    std::vector<exact> y_exact;
+    std::vector<double> y_grades;
+    std::vector<double> x_grades;
     std::vector<xiPoint> xi_support;  //stores discrete coordinates of xi support points, with multiplicities
     unsigned_matrix homology_dimensions;       //stores the dimension of homology at each grade
 
     double angle_precise;       //sufficiently-precise internal value of the slice-line angle in DEGREES, necessary because QDoubleSpinBox truncates this value
     double offset_precise;      //sufficiently-precise internal value of the slice-line offset, necessary because QDoubleSpinBox truncates this value
 
-    Mesh* arrangement; //pointer to the DCEL arrangement
+    MeshMessage* arrangement; //pointer to the DCEL arrangement
     Barcode* barcode;  //pointer to the currently-displayed barcode
 
     //computation items
@@ -121,10 +119,11 @@ private:
     double project_zero(double angle, double offset);
 
     //other items
-    void save_arrangement(QString& filename);
+    void save_arrangement(const QString& filename);
 
     AboutMessageBox aboutBox;       //which is better for these dialog boxes
     ConfigureDialog* configBox;     // -- pointer or no pointer?
+    void copy_fields_from_cthread();
 };
 
 #endif // VISUALIZATIONWINDOW_H

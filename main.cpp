@@ -1,6 +1,5 @@
 #include "interface/input_parameters.h"
 #include "visualizationwindow.h"
-#include "driver.h"
 
 #include <QApplication>
 #include <QScopedPointer>
@@ -57,8 +56,8 @@ int main(int argc, char *argv[])
 
     QStringList args = parser.positionalArguments();
     if(args.size() > 0)
-    params.fileName = args.at(0);
-    params.outputFile = parser.value(outputOption);
+      params.fileName = args.at(0).toUtf8().constData();
+    params.outputFile = parser.value(outputOption).toUtf8().constData();
     params.dim = parser.value(homOption).toInt();
     params.verbosity = parser.value(verbosityOption).toInt();
     params.x_bins = parser.value(xbinOption).toInt();
@@ -73,15 +72,5 @@ int main(int argc, char *argv[])
         QApplication* ap = qobject_cast<QApplication *>(app.data());
         return ap->exec();
     }
-
-    //start non-GUI version
-    qDebug() << "CONSOLE RIVET";
-    Driver driver(params);
-
-    QObject::connect(&driver, SIGNAL(finished()), app.data(), SLOT(quit()));
-    QObject::connect(app.data(), SIGNAL(aboutToQuit()), &driver, SLOT(aboutToQuitApp()));
-
-    QTimer::singleShot(10, &driver, SLOT(run()));  //calls driver.run()
-    return app->exec();                            //   10ms after the Qt messaging application starts
 
 }//end main()

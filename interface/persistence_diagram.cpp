@@ -24,7 +24,7 @@ PersistenceDiagram::PersistenceDiagram(ConfigParameters* params, QObject* parent
 }
 
 //simply creates all objects; resize_diagram() handles positioning of objects
-void PersistenceDiagram::create_diagram(QString& filename, int dim)
+void PersistenceDiagram::create_diagram(const QString& filename, int dim)
 {
     //define pens and brushes
     QPen grayPen(QBrush(Qt::darkGray),2,Qt::DotLine, Qt::RoundCap, Qt::RoundJoin);

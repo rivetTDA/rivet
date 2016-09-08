@@ -3,10 +3,14 @@
 
 #include "interface/file_input_reader.h"
 #include "interface/input_parameters.h"
+#include "interface/console_interaction.h"
 
 #include <QDebug>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QProcess>
+#include <QStringList>
+#include <fstream>
 
 
 DataSelectDialog::DataSelectDialog(InputParameters& params, QWidget *parent) :
@@ -21,7 +25,7 @@ DataSelectDialog::DataSelectDialog(InputParameters& params, QWidget *parent) :
     ui->ybinSpinBox->setSpecialValueText(tr("No bins"));
 
     //set initial values
-    if(!params.fileName.isEmpty())
+    if(!params.fileName.empty())
         detect_file_type();
     ui->homDimSpinBox->setValue(params.dim);
     ui->xbinSpinBox->setValue(params.x_bins);
@@ -61,73 +65,70 @@ void DataSelectDialog::on_openFileButton_clicked()
 
     if(!selected_file.isNull())
     {
-        params.fileName = selected_file;
-        detect_file_type();
+      params.fileName = selected_file.toUtf8().constData();
+      detect_file_type();
     }
 }//end on_openFileButton_clicked()
 
 void DataSelectDialog::detect_file_type()
 {
-    QFile infile(params.fileName);
-    if(infile.open(QIODevice::ReadOnly | QIODevice::Text))
-    {
-        FileInputReader reader(infile);
+  std::ifstream infile(params.fileName);
 
-        //attempt to determine the file type
-        QString filetype = reader.next_line().first(); ///TODO: error handling?
+  if(!infile.is_open()) {
+    invalid_file("Unable to read file.");
+    return;
+  }
 
-        if(filetype == QString("points"))
-        {
-            ui->fileTypeLabel->setText("This file appears to contain point-cloud data.");
-            raw_data_file_selected(infile);
-        }
-        else if(filetype == QString("metric"))
-        {
-            ui->fileTypeLabel->setText("This file appears to contain metric data.");
-            raw_data_file_selected(infile);
-        }
-        else if(filetype == QString("bifiltration"))
-        {
-            ui->fileTypeLabel->setText("This file appears to contain bifiltration data.");
-            raw_data_file_selected(infile);
-        }
-        else if(filetype == QString("RIVET_0"))
-        {
-            ui->fileTypeLabel->setText("This file appears to contain pre-computed RIVET data.");
-            QFileInfo fileInfo(infile);
-            params.shortName = fileInfo.fileName();
-            ui->fileLabel->setText("Selected file: " + params.shortName);
-            params.raw_data = false;
-            ui->parameterFrame->setEnabled(false);
-            ui->computeButton->setEnabled(true);
-        }
-        else    //unrecognized file type
-        {
-            ui->fileTypeLabel->setText("File type not recognized.");
-            ui->parameterFrame->setEnabled(false);
-            ui->computeButton->setEnabled(false);
-        }
-    }
-    else    //error: unable to read file
-    {
-        ui->fileTypeLabel->setText("Unable to read file.");
+  FileInputReader reader(infile);
+  if(!reader.has_next_line()) {
+    invalid_file("Empty file.");
+    return;
+  }
+
+    auto line = reader.next_line();
+    if (line[0] == "RIVET_1") {
+        ui->fileTypeLabel->setText("This file appears to contain pre-computed RIVET data");
         ui->parameterFrame->setEnabled(false);
-        ui->computeButton->setEnabled(false);
+    } else {
+        QStringList args;
+        args.append(QString::fromStdString(params.fileName));
+        args.append("--identify");
+        auto console = RivetConsoleApp::start(args);
+
+        if (!console->waitForStarted()) {
+            invalid_file(RivetConsoleApp::errorMessage(console->error()));
+            return;
+        }
+
+        bool raw = false;
+        while (console->canReadLine() || console->waitForReadyRead()) {
+            QString line = console->readLine();
+            qDebug() << line;
+            if (line.startsWith("RAW DATA: ")) {
+                raw = line.contains("1");
+            } else if (line.startsWith("INPUT ERROR: ")) {
+                invalid_file(line.mid(QString("INPUT ERROR: ").length()));
+                return;
+            } else if (line.startsWith("FILE TYPE DESCRIPTION: ")) {
+
+                ui->fileTypeLabel->setText("This file appears to contain " +
+                                           line.mid(QString("FILE TYPE DESCRIPTION: ").length()).trimmed() + ".");
+                QFileInfo fileInfo(QString::fromStdString(params.fileName));
+                ui->fileLabel->setText("Selected file: " + fileInfo.fileName());
+
+                //TODO: this updating of the params will need to happen in console also, need to refactor
+                params.shortName = fileInfo.fileName().toUtf8().constData();
+            }
+        }
+        ui->parameterFrame->setEnabled(raw);
     }
+
+  ui->computeButton->setEnabled(true);
+
 }//end detect_file_type()
 
-void DataSelectDialog::raw_data_file_selected(const QFile& file)
-{
-    //display file name
-    QFileInfo fileInfo(file);
-    params.shortName = fileInfo.fileName();
-    ui->fileLabel->setText("Selected file: " + params.shortName);
-
-    //save file parameters
-    params.raw_data = true;
-
-    //activate parameter selection items
-    ui->parameterFrame->setEnabled(true);
-    ui->computeButton->setEnabled(true);
+void DataSelectDialog::invalid_file(const QString &message) {
+  ui->parameterFrame->setEnabled(false);
+  ui->computeButton->setEnabled(false);
+  ui->fileTypeLabel->setText(message);
 }
-

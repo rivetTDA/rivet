@@ -12,8 +12,15 @@ struct BarTemplate
     BarTemplate(unsigned a, unsigned b);
     BarTemplate(unsigned a, unsigned b, unsigned m);
     BarTemplate(const BarTemplate& other);
+    BarTemplate(); // for serialization
 
     bool operator<(const BarTemplate other) const;
+
+    template <class Archive>
+    void serialize(Archive & ar, const unsigned int version) {
+        ar & begin & end & multiplicity;
+    }
+    friend bool operator==(BarTemplate const &left, BarTemplate const &right);
 };
 
 
@@ -31,8 +38,14 @@ class BarcodeTemplate
 
         void print();   //for testing only
 
+        template <class Archive>
+                void serialize(Archive &ar, const unsigned int version) {
+            ar & bars;
+        }
+    friend bool operator==(BarcodeTemplate const &left, BarcodeTemplate const &right);
     private:
         std::set<BarTemplate> bars;
 };
+
 
 #endif // __BARCODE_TEMPLATE_H__

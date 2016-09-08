@@ -11,24 +11,23 @@
 #ifndef __InputManager_H__
 #define __InputManager_H__
 
-
-#include "exception.h"
-class ComputationThread;
-class FileInputReader;
-struct InputParameters;
-class SimplexTree;
-
+#include "dcel/barcode_template.h"
+#include "interface/file_input_reader.h"
+#include "interface/input_parameters.h"
+#include "math/simplex_tree.h"
+#include "math/xi_point.h"
+#include "math/xi_support_matrix.h"
+#include "progress.h"
 #include <boost/multiprecision/cpp_int.hpp>
 typedef boost::multiprecision::cpp_rational exact;
-
-#include <QFile>
-#include <QStringList>
 
 #include <math.h>
 #include <set>
 #include <sstream>
+#include <fstream>
 #include <vector>
-
+#include "numerics.h"
+using namespace rivet::numeric;
 
 //first, a struct to help sort multi-grade values
 struct ExactValue
@@ -84,63 +83,88 @@ struct ExactValueComparator
 //ExactSet will help sort grades
 typedef std::set<ExactValue*, ExactValueComparator> ExactSet;
 
+struct InputData;
+
+struct FileType {
+    std::string identifier;
+    std::string description;
+    bool is_data;
+    std::function<std::unique_ptr<InputData> (std::ifstream&, Progress&)> parser;
+};
+
+struct InputData {
+    std::string x_label;
+    std::string y_label;
+    bool is_data;
+  std::vector<exact> x_exact;    //exact (e.g. rational) values of all x-grades, sorted
+  std::vector<exact> y_exact;    //exact (e.g. rational) values of all y-grades, sorted
+  std::shared_ptr<SimplexTree> simplex_tree; // will be non-null if we read raw data
+  std::vector<xiPoint> xi_support; // will be non-empty if we read RIVET data
+  std::vector<BarcodeTemplate> barcode_templates; //only used if we read a RIVET data file and need to store the barcode templates before the arrangement is ready
+    FileType file_type;
+};
+
+
+
+
+//TODO: the input manager doesn't really hold an appreciable
+//amount of state, there's really no reason to instantiate a class
+//for this job, a collection of functions would do.
+
 //now the InputManager class
 class InputManager
 {
 	public:
-        InputManager(ComputationThread* cthread);
+        InputManager(InputParameters &input_params);
 
-        void start();	//function to run the input manager
-		
+        std::unique_ptr<InputData> start(Progress &progress);	//function to run the input manager
+
     private:
-        ComputationThread* cthread;     //pointer to the computation thread object
         InputParameters& input_params;  //parameters supplied by the user
         const int verbosity;			//controls display of output, for debugging
         int hom_dim;                    //dimension of homology to be computed
-        QFile infile;                   //input file
-		
-        std::vector<double>& x_grades;  //floating-point values of all x-grades, sorted exactly
-        std::vector<exact>& x_exact;    //exact (e.g. rational) values of all x-grades, sorted
-        std::vector<double>& y_grades;  //floating-point values of all y-grades, sorted exactly
-        std::vector<exact>& y_exact;    //exact (e.g. rational) values of all y-grades, sorted
 
-        SimplexTree* simplex_tree;		//simplex tree constructed from the input; contains only discrete data (i.e. integer multi-grades)
+        std::vector<FileType> supported_types;
 
-        void read_point_cloud(FileInputReader& reader);		//reads a point cloud and constructs a simplex tree representing the bifiltered Vietoris-Rips complex
-        void read_discrete_metric_space(FileInputReader& reader);   //reads data representing a discrete metric space with a real-valued function and constructs a simplex tree
-        void read_bifiltration(FileInputReader& reader);	//reads a bifiltration and constructs a simplex tree
-        void read_RIVET_data(FileInputReader& reader);      //reads a file of previously-computed data from RIVET
+        std::pair<bool, FileType> get_supported_type(const std::string name) {
+          auto it = std::find_if(supported_types.begin(), supported_types.end(), [name](FileType &t) { return name == t.identifier; });
+          return std::pair<bool,FileType>(it != supported_types.end(), *it);
+        }
 
-        void build_grade_vectors(ExactSet& value_set, std::vector<unsigned>& indexes, std::vector<double>& grades_fp, std::vector<exact>& grades_exact, unsigned num_bins); //converts an ExactSets of values to the vectors of discrete values that SimplexTree uses to build the bifiltration, and also builds the grade vectors (floating-point and exact)
+        void register_file_type(FileType file_type);
+
+        std::unique_ptr<InputData> read_point_cloud(std::ifstream &stream, Progress &progress);		//reads a point cloud and constructs a simplex tree representing the bifiltered Vietoris-Rips complex
+        std::unique_ptr<InputData> read_discrete_metric_space(std::ifstream &stream, Progress &progress);   //reads data representing a discrete metric space with a real-valued function and constructs a simplex tree
+        std::unique_ptr<InputData> read_bifiltration(std::ifstream &stream, Progress &progress);	//reads a bifiltration and constructs a simplex tree
+        std::unique_ptr<InputData> read_RIVET_data(std::ifstream &stream, Progress &progress);      //reads a file of previously-computed data from RIVET
+
+        void build_grade_vectors(InputData &data, ExactSet& value_set, std::vector<unsigned>& indexes, std::vector<exact>& grades_exact, unsigned num_bins); //converts an ExactSets of values to the vectors of discrete values that SimplexTree uses to build the bifiltration, and also builds the grade vectors (floating-point and exact)
 
         exact approx(double x);         //finds a rational approximation of a floating-point value; precondition: x > 0
+    FileType &get_file_type(std::string fileName);
 };
 
-//helper function for converting a string to an exact value
-exact str_to_exact(QString str);
-
-//a struct to store coordinates of a point, along with a "birth time"
+//a struct to store exact coordinates of a point, along with a "birth time"
 struct DataPoint {
 
     std::vector<double> coords;
     exact birth;
 
-    DataPoint(QStringList& list)   //first (size - 1) strings are coordinates, last string is "birth time"
+    DataPoint(std::vector<std::string>& strs)   //first (size - 1) elements of vector are coordinates, last element is birth time
     {
-        coords.reserve(list.size() - 1);
+        coords.reserve(strs.size() - 1);
 
-        for(int i = 0; i < list.size() - 1; i++)
+        for(unsigned i=0; i < strs.size() - 1; i++)
         {
-            bool isDouble;
-            coords.push_back(list.at(i).toDouble(&isDouble));
-            if(!isDouble)
-            {
-                throw Exception(QString("Error: In input file, " + list.at(i) + " is not a number."));
-            }
+            double value;
+            std::stringstream convert(strs[i]);
+            convert >> value;
+            coords.push_back(value);
         }
 
-        birth = str_to_exact(list.back());
+        birth = str_to_exact(strs.back());
     }
+
 };
 
 

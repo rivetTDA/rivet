@@ -19,7 +19,8 @@ typedef boost::multiprecision::cpp_rational exact;
 typedef boost::multi_array<unsigned, 2> unsigned_matrix;
 
 #include <vector>
-#include "exception.h"
+#include "dcel/mesh_message.h"
+
 
 class ComputationThread : public QThread
 {
@@ -28,18 +29,27 @@ class ComputationThread : public QThread
     friend class InputManager;  //so that we don't have to pass all of the data structures from ComputationThread to InputManager
 
     public:
-        ComputationThread(int verbosity, InputParameters& params, std::vector<double>& x_grades, std::vector<exact>& x_exact, std::vector<double>& y_grades, std::vector<exact>& y_exact, std::vector<xiPoint>& xi_support, unsigned_matrix& homology_dimensions, QObject *parent = 0);
+        ComputationThread(InputParameters& params,
+                          QObject *parent = 0);
         ~ComputationThread();
 
         void compute();
+
+    //TODO: these really ought to be delivered via signal rather than read by other classes
+    XiSupportMessage message;
+        std::vector<xiPoint> xi_support;
+        std::vector<exact> x_exact;
+        std::vector<exact> y_exact;
+        unsigned_matrix hom_dims;
+    QString x_label;
+    QString y_label;
 
     signals:
         void advanceProgressStage();
         void setProgressMaximum(unsigned max);
         void setCurrentProgress(unsigned current);
         void xiSupportReady();
-        void arrangementReady(Mesh* arrangement);
-        void sendException (QString error);
+        void arrangementReady(MeshMessage* arrangement);
 
     protected:
         void run() Q_DECL_OVERRIDE;
@@ -47,21 +57,15 @@ class ComputationThread : public QThread
     private:
         InputParameters& params;
 
-        std::vector<double>& x_grades;
-        std::vector<exact>& x_exact;
-        std::vector<double>& y_grades;
-        std::vector<exact>& y_exact;
+        std::shared_ptr<MeshMessage> arrangement;
 
-        std::vector<xiPoint>& xi_support;
-        unsigned_matrix& homology_dimensions;
+    void compute_from_file();
+    void unpack_message_fields();
+    bool is_precomputed(std::string file_name);
+    void load_from_file();
 
-        SimplexTree* bifiltration;
-        Mesh* arrangement;
-        std::vector<BarcodeTemplate> barcode_templates; //only used if we read a RIVET data file and need to store the barcode templates before the arrangement is ready
-
-        const int verbosity;
-
-        void find_dimensions();  //computes homology dimensions from the graded Betti numbers (used when data comes from a pre-computed RIVET file)
 };
 
+//TODO: Move this somewhere. See comments on implementation for details.
+void write_boost_file(QString file_name, InputParameters const &params, XiSupportMessage const &message, MeshMessage const &mesh);
 #endif // COMPUTATIONTHREAD_H

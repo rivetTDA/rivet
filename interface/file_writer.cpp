@@ -1,72 +1,55 @@
 #include "file_writer.h"
 
 #include "../dcel/barcode_template.h"
+#include "input_manager.h"
 
-#include <QTextStream>
-#include <QDateTime>
-
-#include <set>
+#include <chrono>
 
 
-FileWriter::FileWriter(InputParameters& ip, Mesh* m, std::vector<exact>& x, std::vector<exact>& y, std::vector<xiPoint>& xi) :
-    input_params(ip), arrangement(m),
-    x_exact(x), y_exact(y), xi_support(xi)
+FileWriter::FileWriter(InputParameters & ip, InputData& data, Mesh& m, std::vector<xiPoint>& xi) :
+    input_data(data), input_params(ip), arrangement(m), xi_support(xi)
 {
 
 }
 
-void FileWriter::write_augmented_arrangement(QFile& file)
+void FileWriter::write_augmented_arrangement(std::ofstream& stream)
 {
-    QTextStream stream(&file);
 
+    auto now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    //At some point just doing stream << std::ctime(&now) started giving ambiguous operator<< errors,
+    //so let's be explicit.
+    std::string now_as_string = std::ctime(&now);
     //write header info, in comment form
-    stream << "# augmented arrangement data" << endl;
-    stream << "# computed by RIVET from the input file " << input_params.fileName << endl;
-    stream << "# homology dimension: " << input_params.dim << endl;
-    stream << "# bins: " << input_params.x_bins << " " << input_params.y_bins << endl;
-    stream << "# file created at: " << QDateTime::currentDateTime().toString() << endl << endl;
+    stream << "# augmented arrangement data" << std::endl;
+stream << "# computed by RIVET from the input file " << input_params.fileName << std::endl;
+    stream << "# homology dimension: " << input_params.dim << std::endl;
+    stream << "# bins: " << input_params.x_bins << " " << input_params.y_bins << std::endl;
+    stream << "# file created at: "
+            << now_as_string
+            << std::endl;
 
     //write parameters
-    stream << "RIVET_0" << endl;
-    stream << input_params.dim << endl;
-    stream << input_params.x_label << endl;
-    stream << input_params.y_label << endl << endl;
-
-    //write x-grades
-    stream << "x-grades" << endl;
-    for(std::vector<exact>::iterator it = x_exact.begin(); it != x_exact.end(); ++it)
-    {
-        std::ostringstream oss;
-        oss << *it;
-        stream << QString::fromStdString(oss.str()) << endl;
-    }
-    stream << endl;
-
-    //write y-grades
-    stream << "y-grades" << endl;
-    for(std::vector<exact>::iterator it = y_exact.begin(); it != y_exact.end(); ++it)
-    {
-        std::ostringstream oss;
-        oss << *it;
-        stream << QString::fromStdString(oss.str()) << endl;
-    }
-    stream << endl;
+    stream << "RIVET_0" << std::endl;
+    stream << input_params.dim << std::endl;
+stream << input_data.x_label << std::endl;
+stream << input_data.y_label << std::endl << std::endl;
+    stream << arrangement;
 
     //write values of the multigraded Betti numbers
-    stream << "xi values" << endl;
+    stream << "xi values" << std::endl;
     for(std::vector<xiPoint>::iterator it = xi_support.begin(); it != xi_support.end(); ++it)
     {
         xiPoint p = *it;
         if(p.zero > 0 || p.one > 0 || p.two > 0)    //necessary because the vector xi_support also stores anchors (template points) that are not xi support points
-            stream << p.x << " " << p.y << " " << p.zero << " " << p.one << " " << p.two << endl;
+            stream << p.x << " " << p.y << " " << p.zero << " " << p.one << " " << p.two << std::endl;
     }
-    stream << endl;
+    stream << std::endl;
 
     //write barcode templates
-    stream << "barcode templates" << endl;
-    for(unsigned i = 0; i < arrangement->num_faces(); i++)
+    stream << "barcode templates" << std::endl;
+    for(unsigned i = 0; i < arrangement.num_faces(); i++)
     {
-        BarcodeTemplate& bc = arrangement->get_barcode_template(i);
+        BarcodeTemplate& bc = arrangement.get_barcode_template(i);
         if(bc.is_empty())
         {
             stream << "-";  //this denotes an empty barcode (necessary because FileInputReader ignores white space)
@@ -83,8 +66,7 @@ void FileWriter::write_augmented_arrangement(QFile& file)
                 stream << "," << it->multiplicity << " ";
             }
         }
-        stream << endl;
+        stream << std::endl;
     }
-
-    file.close();   //close the file -- this might not be necessary
 }
+

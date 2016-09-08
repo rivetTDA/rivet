@@ -8,17 +8,23 @@
 #include "map_matrix.h"
 #include "st_node.h"
 
-#include <QDebug>
+#include "debug.h"
 
 #include <limits>   //std::numeric_limits
 #include <stdexcept>
 #include <iostream>  //for std::cout, for testing only
 #include <algorithm>
+#include <sstream>
 
 //SimplexTree constructor; requires dimension of homology to be computed and verbosity parameter
 SimplexTree::SimplexTree(int dim, int v) :
     root(new STNode()), x_grades(0), y_grades(0), hom_dim(dim), verbosity(v)
-{ }
+{
+    if (hom_dim > 5) {
+        throw std::runtime_error("Dimensions greater than 5 probably don't make sense");
+    }
+    debug() << "Created SimplexTree(" << hom_dim << ", " << verbosity << ")" ;
+}
 
 //destructor
 SimplexTree::~SimplexTree()
@@ -113,7 +119,7 @@ void SimplexTree::update_gi_recursively(STNode* node, int &gic)
 void SimplexTree::update_dim_indexes()
 {
     //build the lists of pointers to simplices of appropriate dimensions
-    build_dim_lists_recursively(root, 0, hom_dim);
+    build_dim_lists_recursively(root, 0);
 
     //update the dimension indexes in the tree
     int i=0;
@@ -130,7 +136,7 @@ void SimplexTree::update_dim_indexes()
 }
 
 //recursively build lists to determine dimension indexes
-void SimplexTree::build_dim_lists_recursively(STNode* node, int cur_dim, int hom_dim)
+void SimplexTree::build_dim_lists_recursively(STNode* node, int cur_dim)
 {
     //get children of current node
     std::vector<STNode*> kids = node->get_children();
@@ -146,7 +152,7 @@ void SimplexTree::build_dim_lists_recursively(STNode* node, int cur_dim, int hom
     //recurse through children
     for(unsigned i=0; i<kids.size(); i++)
     {
-        build_dim_lists_recursively(kids[i], cur_dim+1, hom_dim);
+        build_dim_lists_recursively(kids[i], cur_dim+1);
     }
 }
 
@@ -162,7 +168,7 @@ void SimplexTree::build_VR_complex(std::vector<unsigned>& times, std::vector<uns
 
     //build simplex tree recursively
 	//this also assigns global indexes to each simplex
-    if(verbosity >= 6) { qDebug() << "BUILDING SIMPLEX TREE"; }
+    if(verbosity >= 6) { debug() << "BUILDING SIMPLEX TREE" ; }
     unsigned gic=0;	//global index counter
     for(unsigned i=0; i<times.size(); i++)
 	{
@@ -245,8 +251,12 @@ MapMatrix* SimplexTree::get_boundary_mx(int dim)
         simplices = &ordered_high_simplices;
         num_rows = ordered_simplices.size();
     }
-    else
-        throw std::runtime_error("attempting to compute boundary matrix for improper dimension");
+    else {
+        std::stringstream ss;
+        ss << "attempting to compute boundary matrix for improper dimension (" << dim << "), expected either "
+        << hom_dim << " or " << hom_dim + 1;
+        throw std::runtime_error(ss.str());
+    }
 
     //create the MapMatrix
     MapMatrix* mat = new MapMatrix(num_rows, simplices->size());			//DELETE this object later!
@@ -697,8 +707,7 @@ SimplexData SimplexTree::get_simplex_data(int index)
 	{
 		if(kids.size() == 0)
 		{
-            qDebug() << "ERROR: vector of size zero in SimplexTree::get_multi_index()\n";
-			throw std::exception();
+			throw std::runtime_error("ERROR: vector of size zero in SimplexTree::get_multi_index()\n");
 		}
 		
 		//binary search for index

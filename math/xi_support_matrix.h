@@ -9,6 +9,7 @@ class Mesh;
 
 #include <list>
 #include <vector>
+#include <memory>
 
 
 //// these are the nodes in the sparse matrix
@@ -19,11 +20,11 @@ struct xiMatrixEntry
     unsigned y;     //discrete y-grade of this support point
     unsigned index; //index of this support point in the vector of support points stored in VisualizationWindow
 
-    xiMatrixEntry* down;     //pointer to the next support point below this one
-    xiMatrixEntry* left;     //pointer to the next support point left of this one
+    std::shared_ptr<xiMatrixEntry> down;     //pointer to the next support point below this one
+    std::shared_ptr<xiMatrixEntry> left;     //pointer to the next support point left of this one
 
-    std::list<Multigrade*> low_simplices;     //associated multigrades for simplices of lower dimension
-    std::list<Multigrade*> high_simplices;    //associated multigrades for simplices of higher dimension
+    std::list<std::shared_ptr<Multigrade>> low_simplices;     //associated multigrades for simplices of lower dimension
+    std::list<std::shared_ptr<Multigrade>> high_simplices;    //associated multigrades for simplices of higher dimension
 
     unsigned low_count;     //number of columns in matrix of simplices of lower dimension that are mapped to this xiMatrixEntry
     unsigned high_count;    //number of columns in matrix of simplices of higher dimension that are mapped to this xiMatrixEntry
@@ -33,13 +34,13 @@ struct xiMatrixEntry
 
   //functions
     xiMatrixEntry();    //empty constructor
-    xiMatrixEntry(unsigned x, unsigned y, unsigned i, xiMatrixEntry* d, xiMatrixEntry* l);  //regular constructor
+    xiMatrixEntry(unsigned x, unsigned y, unsigned i, std::shared_ptr<xiMatrixEntry> d, std::shared_ptr<xiMatrixEntry> l);  //regular constructor
     xiMatrixEntry(unsigned x, unsigned y);      //constructor for temporary entries used in counting switches
 
     void add_multigrade(unsigned x, unsigned y, unsigned num_cols, int index, bool low);  //associates a (new) multigrades to this xi entry
         //the "low" argument is true if this multigrade is for low_simplices, and false if it is for high_simplices
 
-    void insert_multigrade(Multigrade* mg, bool low);  //inserts a Multigrade at the end of the list for the given dimension; does not update column counts!
+    void insert_multigrade(std::shared_ptr<Multigrade> mg, bool low);  //inserts a Multigrade at the end of the list for the given dimension; does not update column counts!
 };
 
 
@@ -54,7 +55,9 @@ struct Multigrade
 
     Multigrade(unsigned x, unsigned y, unsigned num_cols, int simplex_index);   //constructor
 
-    static bool LexComparator(const Multigrade* first, const Multigrade* second);   //comparator for sorting Multigrades lexicographically
+    Multigrade(); // For serialization
+
+    static bool LexComparator(const Multigrade &first, const Multigrade &second);   //comparator for sorting Multigrades lexicographically
 };
 
 
@@ -63,22 +66,21 @@ class xiSupportMatrix
 {
     public:
         xiSupportMatrix(unsigned width, unsigned height);   //constructor
-        ~xiSupportMatrix();     //destructor
 
-        void fill_and_find_anchors(std::vector<xiPoint>& xi_pts, Mesh* mesh);   //stores xi support points in the xiSupportMatrix
+        std::vector<std::shared_ptr<xiMatrixEntry>> fill_and_find_anchors(std::vector<xiPoint>& xi_pts);   //stores xi support points in the xiSupportMatrix
             //also finds anchors, which are stored both in the matrix and in the vector xi_pts
             //precondition: xi_pts contains the support points in lexicographical order
 
-        xiMatrixEntry* get_row(unsigned r); //gets a pointer to the rightmost entry in row r; returns NULL if row r is empty
-        xiMatrixEntry* get_col(unsigned c); //gets a pointer to the top entry in column c; returns NULL if column c is empty
+        std::shared_ptr<xiMatrixEntry> get_row(unsigned r); //gets a pointer to the rightmost entry in row r; returns NULL if row r is empty
+        std::shared_ptr<xiMatrixEntry> get_col(unsigned c); //gets a pointer to the top entry in column c; returns NULL if column c is empty
 
         unsigned height();  //retuns the number of rows;
 
         void clear_grade_lists();   //clears the level set lists for all entries in the matrix
 
     private:
-        std::vector<xiMatrixEntry*> columns;
-        std::vector<xiMatrixEntry*> rows;
+        std::vector<std::shared_ptr<xiMatrixEntry>> columns;
+        std::vector<std::shared_ptr<xiMatrixEntry>> rows;
 };
 
 #endif // XI_SUPPORT_MATRIX_H
