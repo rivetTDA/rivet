@@ -7,29 +7,28 @@
 #include <QDebug>
 #include <QGraphicsView>
 
-#include <cmath>    //for std::round()
+#include <cmath> //for std::round()
 #include <limits>
 #include <map>
 #include <set>
 #include <sstream>
-#include <utility>  // for std::pair
+#include <utility> // for std::pair
 
-
-PersistenceDiagram::PersistenceDiagram(ConfigParameters* params, QObject* parent) :
-    QGraphicsScene(parent),
-    config_params(params),
-    selected(NULL)
+PersistenceDiagram::PersistenceDiagram(ConfigParameters* params, QObject* parent)
+    : QGraphicsScene(parent)
+    , config_params(params)
+    , selected(NULL)
 {
-    setItemIndexMethod(NoIndex);    //not sure why, but this seems to fix the dot update issue (#7 in the issue tracker)
+    setItemIndexMethod(NoIndex); //not sure why, but this seems to fix the dot update issue (#7 in the issue tracker)
 }
 
 //simply creates all objects; resize_diagram() handles positioning of objects
 void PersistenceDiagram::create_diagram(const QString& filename, int dim)
 {
     //define pens and brushes
-    QPen grayPen(QBrush(Qt::darkGray),2,Qt::DotLine, Qt::RoundCap, Qt::RoundJoin);
-    QPen thinPen(QBrush(Qt::darkGray),1,Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
-    QPen slicePen(QBrush(config_params->sliceLineColor),3,Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+    QPen grayPen(QBrush(Qt::darkGray), 2, Qt::DotLine, Qt::RoundCap, Qt::RoundJoin);
+    QPen thinPen(QBrush(Qt::darkGray), 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+    QPen slicePen(QBrush(config_params->sliceLineColor), 3, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
     QBrush purpleBrush(QColor(config_params->persistenceColor.rgb()));
 
     //create persistence diagram structure
@@ -62,18 +61,18 @@ void PersistenceDiagram::create_diagram(const QString& filename, int dim)
     sdim << "homology dimension: " << dim;
     dim_text = addSimpleText(QString(sdim.str().data()));
     dim_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-}//end create_diagram()
+} //end create_diagram()
 
 //resizes diagram to fill the QGraphicsView; called after every window resize
 void PersistenceDiagram::resize_diagram(double slice_length, double diagram_scale)
 {
     //parameters
     int scene_padding = 10; //pixels (minimum white space between diagram objects and edge of viewing window)
-    int text_padding = 4;   //pixels (white space on each side of text items)
-    int number_space = 30;  //pixels (horizontal space reserved for counts of points above diagram)
+    int text_padding = 4; //pixels (white space on each side of text items)
+    int number_space = 30; //pixels (horizontal space reserved for counts of points above diagram)
 
-    line_size = slice_length/sqrt(2);   //divide by sqrt(2) because the line is drawn at a 45-degree angle
-    scale = diagram_scale/sqrt(2);      //similarly, divide by sqrt(2)
+    line_size = slice_length / sqrt(2); //divide by sqrt(2) because the line is drawn at a 45-degree angle
+    scale = diagram_scale / sqrt(2); //similarly, divide by sqrt(2)
 
     //get dimensions of the QGraphicsView
     QList<QGraphicsView*> view_list = views();
@@ -81,8 +80,8 @@ void PersistenceDiagram::resize_diagram(double slice_length, double diagram_scal
     int view_height = view_list[0]->height();
 
     //compute diagram size
-    int available_width = view_width - (lt_inf_text->boundingRect().width() + text_padding + number_space + 2*scene_padding);
-    int available_height = view_height - (2*lt_inf_text->boundingRect().height() + 4*text_padding + 2*scene_padding);
+    int available_width = view_width - (lt_inf_text->boundingRect().width() + text_padding + number_space + 2 * scene_padding);
+    int available_height = view_height - (2 * lt_inf_text->boundingRect().height() + 4 * text_padding + 2 * scene_padding);
     diagram_size = std::min(available_height, available_width);
 
     //resize frame
@@ -90,24 +89,24 @@ void PersistenceDiagram::resize_diagram(double slice_length, double diagram_scal
     diag_line->setLine(0, 0, diagram_size, diagram_size);
     blue_line->setLine(0, 0, line_size, line_size);
 
-    int v_space = lt_inf_text->boundingRect().height() + 2*text_padding;
+    int v_space = lt_inf_text->boundingRect().height() + 2 * text_padding;
     h_line->setLine(-lt_inf_text->boundingRect().width(), diagram_size + v_space, diagram_size + number_space, diagram_size + v_space);
-    v_line->setLine(diagram_size, diagram_size + text_padding, diagram_size, diagram_size + 2*v_space - text_padding);
+    v_line->setLine(diagram_size, diagram_size + text_padding, diagram_size, diagram_size + 2 * v_space - text_padding);
 
     //remove old dots
-    selected = NULL;    //remove any current selection
-    dots_by_bc_index.clear();   //clear index data
-    while(!all_dots.empty())    //delete all dots
+    selected = NULL; //remove any current selection
+    dots_by_bc_index.clear(); //clear index data
+    while (!all_dots.empty()) //delete all dots
     {
         removeItem(all_dots.back());
         all_dots.pop_back();
     }
 
     //draw new dots
-    lt_inf_dot_vpos = diagram_size + v_space/2;
+    lt_inf_dot_vpos = diagram_size + v_space / 2;
     inf_dot_vpos = lt_inf_dot_vpos + v_space;
 
-    if(barcode != NULL)
+    if (barcode != NULL)
         draw_dots();
 
     //move text items
@@ -127,12 +126,12 @@ void PersistenceDiagram::resize_diagram(double slice_length, double diagram_scal
     double scene_rect_x = -lt_inf_text->boundingRect().width() - text_padding;
     double scene_rect_y = 0;
     double scene_rect_w = diagram_size + number_space - scene_rect_x;
-    double scene_rect_h = diagram_size + 2*v_space - scene_rect_y;
+    double scene_rect_h = diagram_size + 2 * v_space - scene_rect_y;
     setSceneRect(scene_rect_x, scene_rect_y, scene_rect_w, scene_rect_h);
-}//end resize_diagram()
+} //end resize_diagram()
 
 //sets the barcode and the zero coordinate
-void PersistenceDiagram::set_barcode(double zero, Barcode *bc)
+void PersistenceDiagram::set_barcode(double zero, Barcode* bc)
 {
     zero_coord = zero;
     barcode = bc;
@@ -152,21 +151,20 @@ void PersistenceDiagram::draw_dots()
     std::map<int, PersistenceDot*> inf_dot_map;
 
     //loop over all bars
-    for(std::multiset<MultiBar>::iterator it = barcode->begin(); it != barcode->end(); ++it)
-    {
-        if(it->death == std::numeric_limits<double>::infinity())    //essential cycle (visualized in the upper horizontal strip of the persistence diagram)
+    for (std::multiset<MultiBar>::iterator it = barcode->begin(); it != barcode->end(); ++it) {
+        if (it->death == std::numeric_limits<double>::infinity()) //essential cycle (visualized in the upper horizontal strip of the persistence diagram)
         {
             //shift coordinate
             double birth = it->birth - zero_coord;
 
             //check to see if a dot already exists in its position
-            int x_pixel = std::round(birth*scale);
+            int x_pixel = std::round(birth * scale);
             std::map<int, PersistenceDot*>::iterator dot_it = inf_dot_map.find(x_pixel);
 
-            if(dot_it == inf_dot_map.end()) //then no such dot exists, so create a new dot
+            if (dot_it == inf_dot_map.end()) //then no such dot exists, so create a new dot
             {
                 //create dot object
-                PersistenceDot* dot = new PersistenceDot(this, config_params, birth, it->death, it->multiplicity, config_params->persistenceDotRadius*sqrt((double) (it->multiplicity)), bc_index);
+                PersistenceDot* dot = new PersistenceDot(this, config_params, birth, it->death, it->multiplicity, config_params->persistenceDotRadius * sqrt((double)(it->multiplicity)), bc_index);
                 dot->setToolTip(QString::number(it->multiplicity));
                 addItem(dot);
                 all_dots.push_back(dot);
@@ -174,91 +172,85 @@ void PersistenceDiagram::draw_dots()
                 inf_dot_map.insert(std::pair<int, PersistenceDot*>(x_pixel, dot));
 
                 //position dot properly
-                if(birth*scale > diagram_size)  //then don't draw the dot, but increase the counter
+                if (birth * scale > diagram_size) //then don't draw the dot, but increase the counter
                 {
                     num_big_cycles += it->multiplicity;
                     dot->setVisible(false);
-                }
-                else //then dot will be visible
+                } else //then dot will be visible
                 {
-                    dot->setPos(birth*scale, inf_dot_vpos);
+                    dot->setPos(birth * scale, inf_dot_vpos);
                 }
-            }
-            else //then such dot exists, so add to its multiplicity
+            } else //then such dot exists, so add to its multiplicity
             {
                 PersistenceDot* dot = dot_it->second;
                 dot->incr_multiplicity(it->multiplicity);
                 dot->setToolTip(QString::number(dot->get_multiplicity()));
-                dot->set_radius(config_params->persistenceDotRadius*sqrt(dot->get_multiplicity()));
-                dots_by_bc_index.push_back(dot);    //necessary for dot lookup when persistence bars are highlighted
+                dot->set_radius(config_params->persistenceDotRadius * sqrt(dot->get_multiplicity()));
+                dots_by_bc_index.push_back(dot); //necessary for dot lookup when persistence bars are highlighted
                 dot->add_index(bc_index);
 
-                if(birth*scale > diagram_size)  //then increase the counter
+                if (birth * scale > diagram_size) //then increase the counter
                 {
                     num_big_cycles += it->multiplicity;
                 }
             }
-        }
-        else    //finite bar (visualized as a dot in the triangular part of the persistence diagram)
+        } else //finite bar (visualized as a dot in the triangular part of the persistence diagram)
         {
             //shift coordinates
             double birth = it->birth - zero_coord;
             double death = it->death - zero_coord;
 
             //check to see if this dot will be in the lt_inf strip
-            if(death*scale > diagram_size)  //dot is in the lt_inf strip
+            if (death * scale > diagram_size) //dot is in the lt_inf strip
             {
                 //check to see if a dot already exists in its position
-                int x_pixel = std::round(birth*scale);
+                int x_pixel = std::round(birth * scale);
                 std::map<int, PersistenceDot*>::iterator dot_it = lt_inf_dot_map.find(x_pixel);
 
-                if(dot_it == lt_inf_dot_map.end()) //then no such dot exists, so create a new dot
+                if (dot_it == lt_inf_dot_map.end()) //then no such dot exists, so create a new dot
                 {
                     //create dot object
-                    PersistenceDot* dot = new PersistenceDot(this, config_params, birth, death, it->multiplicity, config_params->persistenceDotRadius*sqrt(it->multiplicity), bc_index);
+                    PersistenceDot* dot = new PersistenceDot(this, config_params, birth, death, it->multiplicity, config_params->persistenceDotRadius * sqrt(it->multiplicity), bc_index);
                     dot->setToolTip(QString::number(it->multiplicity));
                     addItem(dot);
                     all_dots.push_back(dot);
                     dots_by_bc_index.push_back(dot);
                     lt_inf_dot_map.insert(std::pair<int, PersistenceDot*>(x_pixel, dot));
 
-                    if(birth*scale > diagram_size) //then don't draw the dot, but increase the counter
+                    if (birth * scale > diagram_size) //then don't draw the dot, but increase the counter
                     {
                         num_big_points += it->multiplicity;
                         dot->setVisible(false);
-                    }
-                    else    //then dot will be visible
+                    } else //then dot will be visible
                     {
-                        dot->setPos(birth*scale, lt_inf_dot_vpos);
+                        dot->setPos(birth * scale, lt_inf_dot_vpos);
                     }
 
-                }
-                else    //then such dot exists, so add to its multiplicity
+                } else //then such dot exists, so add to its multiplicity
                 {
                     PersistenceDot* dot = dot_it->second;
                     dot->incr_multiplicity(it->multiplicity);
                     dot->setToolTip(QString::number(dot->get_multiplicity()));
-                    dot->set_radius(config_params->persistenceDotRadius*sqrt(dot->get_multiplicity()));
-                    dots_by_bc_index.push_back(dot);    //necessary for dot lookup when persistence bars are highlighted
+                    dot->set_radius(config_params->persistenceDotRadius * sqrt(dot->get_multiplicity()));
+                    dots_by_bc_index.push_back(dot); //necessary for dot lookup when persistence bars are highlighted
                     dot->add_index(bc_index);
 
-                    if(birth*scale > diagram_size)  //then increase the counter
+                    if (birth * scale > diagram_size) //then increase the counter
                     {
                         num_big_points += it->multiplicity;
                     }
                 }
-            }
-            else //dot is not in the lt_inf strip
+            } else //dot is not in the lt_inf strip
             {
                 //create dot object
-                PersistenceDot* dot = new PersistenceDot(this, config_params, birth, death, it->multiplicity, config_params->persistenceDotRadius*sqrt(it->multiplicity), bc_index);
+                PersistenceDot* dot = new PersistenceDot(this, config_params, birth, death, it->multiplicity, config_params->persistenceDotRadius * sqrt(it->multiplicity), bc_index);
                 dot->setToolTip(QString::number(it->multiplicity));
                 addItem(dot);
                 all_dots.push_back(dot);
                 dots_by_bc_index.push_back(dot);
 
                 //position dot properly
-                dot->setPos(birth*scale, death*scale);
+                dot->setPos(birth * scale, death * scale);
             }
         }
 
@@ -273,25 +265,24 @@ void PersistenceDiagram::draw_dots()
     std::ostringstream spts;
     spts << num_big_points;
     lt_inf_count_text->setText(QString(spts.str().data()));
-}//end draw_dots()
+} //end draw_dots()
 
 //redraws persistence dots; e.g. used after a change in parameters
 void PersistenceDiagram::redraw_dots()
 {
-    for(std::vector<PersistenceDot*>::iterator it = all_dots.begin(); it != all_dots.end(); ++it)
-    {
+    for (std::vector<PersistenceDot*>::iterator it = all_dots.begin(); it != all_dots.end(); ++it) {
         PersistenceDot* dot = *it;
-        dot->set_radius( config_params->persistenceDotRadius*sqrt(dot->get_multiplicity()) );
+        dot->set_radius(config_params->persistenceDotRadius * sqrt(dot->get_multiplicity()));
         //NOTE: PersistenceDot::set_radius() also calls QGraphicsItem::update() to redraw the dots
     }
-}//void redraw_dots()
+} //void redraw_dots()
 
 //updates the diagram after a change in the slice line
 void PersistenceDiagram::update_diagram(double slice_length, double diagram_scale, double zero, Barcode* bc)
 {
     //update parameters
-    line_size = slice_length/sqrt(2);   //divide by sqrt(2) because the line is drawn at a 45-degree angle
-    scale = diagram_scale/sqrt(2);      //similarly, divide by sqrt(2)
+    line_size = slice_length / sqrt(2); //divide by sqrt(2) because the line is drawn at a 45-degree angle
+    scale = diagram_scale / sqrt(2); //similarly, divide by sqrt(2)
     zero_coord = zero;
     barcode = bc;
 
@@ -299,9 +290,9 @@ void PersistenceDiagram::update_diagram(double slice_length, double diagram_scal
     blue_line->setLine(0, 0, line_size, line_size);
 
     //remove old dots
-    selected = NULL;    //remove any current selection
-    dots_by_bc_index.clear();   //clear index data
-    while(!all_dots.empty())    //delete all dots
+    selected = NULL; //remove any current selection
+    dots_by_bc_index.clear(); //clear index data
+    while (!all_dots.empty()) //delete all dots
     {
         removeItem(all_dots.back());
         all_dots.pop_back();
@@ -309,42 +300,41 @@ void PersistenceDiagram::update_diagram(double slice_length, double diagram_scal
 
     //draw new dots
     draw_dots();
-}//end update_diagram()
+} //end update_diagram()
 
 //highlight the specified dot, selected in the persistence diagram, and propagate to the slice diagram
 void PersistenceDiagram::select_dot(PersistenceDot* clicked)
 {
     //remove old selection
-    if(selected != NULL && clicked != selected)
+    if (selected != NULL && clicked != selected)
         selected->deselect();
 
     //remember current selection
     selected = clicked;
 
     //highlight part of the persistence diagram
-    emit persistence_dot_selected( clicked->get_indexes() );
-}//end select_dot()
+    emit persistence_dot_selected(clicked->get_indexes());
+} //end select_dot()
 
 //remove selection; if propagate, then deselect bar in the slice diagram
 void PersistenceDiagram::deselect_dot()
 {
     //remove selection
-    if(selected != NULL)
-    {
+    if (selected != NULL) {
         selected->deselect();
         selected = NULL;
     }
 
     //remove highlighting from slice diagram
     emit persistence_dot_deselected();
-}//end deselect_dot()
+} //end deselect_dot()
 
 //highlight the specified dot, which has been selected externally
 // index refers to the "barcode" index
 void PersistenceDiagram::receive_dot_selection(unsigned index)
 {
     //remove old selection
-    if(selected != NULL && dots_by_bc_index[index] != selected)
+    if (selected != NULL && dots_by_bc_index[index] != selected)
         selected->deselect();
 
     //remember current selection
@@ -354,21 +344,19 @@ void PersistenceDiagram::receive_dot_selection(unsigned index)
     //propagate secondary selection back to the slice diagram
     std::vector<unsigned> primary = selected->get_indexes();
     std::vector<unsigned> secondary;
-    for(unsigned i=0; i < primary.size(); i++)
-    {
-        if(primary[i] != index)
+    for (unsigned i = 0; i < primary.size(); i++) {
+        if (primary[i] != index)
             secondary.push_back(primary[i]);
     }
 
-    if(secondary.size() > 0)
+    if (secondary.size() > 0)
         emit persistence_dot_secondary_selection(secondary);
-}//end receive_dot_selection()
+} //end receive_dot_selection()
 
 //remove dot highlighting in response to external command
 void PersistenceDiagram::receive_dot_deselection()
 {
-    if(selected != NULL)
-    {
+    if (selected != NULL) {
         selected->deselect();
         selected = NULL;
     }
@@ -389,4 +377,3 @@ void PersistenceDiagram::receive_parameter_change()
     inf_count_text->setBrush(persistenceBrush);
     lt_inf_count_text->setBrush(persistenceBrush);
 }
-

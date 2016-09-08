@@ -6,17 +6,15 @@
 
 #include <vector>
 
-
 namespace Ui {
 class ProgressDialog;
 }
 
-class ProgressDialog : public QDialog
-{
+class ProgressDialog : public QDialog {
     Q_OBJECT
 
 public:
-    explicit ProgressDialog(QWidget *parent = 0);
+    explicit ProgressDialog(QWidget* parent = 0);
     ~ProgressDialog();
 
 public slots:
@@ -26,7 +24,7 @@ public slots:
     void setComputationFinished();
 
 protected:
-    void closeEvent(QCloseEvent *);
+    void closeEvent(QCloseEvent*);
 
 signals:
     void stopComputation();
@@ -35,7 +33,7 @@ private slots:
     void on_stopButton_clicked();
 
 private:
-    Ui::ProgressDialog *ui;
+    Ui::ProgressDialog* ui;
     std::vector<unsigned> stage_progress;
     unsigned current_stage;
     unsigned stage_maximum;

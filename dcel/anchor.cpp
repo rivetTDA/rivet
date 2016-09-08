@@ -1,14 +1,24 @@
 #include "anchor.h"
-#include <ostream>
 #include "../math/xi_support_matrix.h"
+#include <ostream>
 
-Anchor::Anchor(std::shared_ptr<xiMatrixEntry> e) :
-    x_coord(e->x), y_coord(e->y), entry(e), above_line(true)
-{ }
+Anchor::Anchor(std::shared_ptr<xiMatrixEntry> e)
+    : x_coord(e->x)
+    , y_coord(e->y)
+    , entry(e)
+    , above_line(true)
+{
+}
 
-Anchor::Anchor(unsigned x, unsigned y) :
-    x_coord(x), y_coord(y), entry(), dual_line(), position(0), above_line(false)
-{ }
+Anchor::Anchor(unsigned x, unsigned y)
+    : x_coord(x)
+    , y_coord(y)
+    , entry()
+    , dual_line()
+    , position(0)
+    , above_line(false)
+{
+}
 
 //Anchor::Anchor(const Anchor& other)
 //{
@@ -37,21 +47,31 @@ Anchor::Anchor(unsigned x, unsigned y) :
 //    return *this;
 //}
 
-std::ostream & operator<<(std::ostream &stream, const Anchor &anchor) {
-    stream << "Anchor(" << anchor.get_x()  << ", " << anchor.get_y() << ")";
+std::ostream& operator<<(std::ostream& stream, const Anchor& anchor)
+{
+    stream << "Anchor(" << anchor.get_x() << ", " << anchor.get_y() << ")";
     return stream;
 }
 
-Anchor::Anchor() : x_coord(0), y_coord(0), entry(), dual_line(), position(), above_line(false), weight(0) { }
+Anchor::Anchor()
+    : x_coord(0)
+    , y_coord(0)
+    , entry()
+    , dual_line()
+    , position()
+    , above_line(false)
+    , weight(0)
+{
+}
 
-bool Anchor::operator== (const Anchor& other) const
+bool Anchor::operator==(const Anchor& other) const
 {
     return (x_coord == other.x_coord && y_coord == other.y_coord);
 }
 
-bool Anchor::comparable(const Anchor &other) const   //tests whether two Anchors are (strongly) comparable
+bool Anchor::comparable(const Anchor& other) const //tests whether two Anchors are (strongly) comparable
 {
-    return ( y_coord > other.get_y() && x_coord > other.get_x() ) || ( y_coord < other.get_y() && x_coord < other.get_x() );
+    return (y_coord > other.get_y() && x_coord > other.get_x()) || (y_coord < other.get_y() && x_coord < other.get_x());
 }
 
 unsigned Anchor::get_x() const

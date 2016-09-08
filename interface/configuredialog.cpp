@@ -6,21 +6,27 @@
 #include <QColorDialog>
 #include <QDebug>
 
-
-ConfigureDialog::ConfigureDialog(ConfigParameters& c_params, InputParameters& i_params, QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::ConfigureDialog),
-    config_params(c_params), input_params(i_params),
-    xi0col(config_params.xi0color), xi1col(config_params.xi1color), xi2col(config_params.xi2color),
-    perCol(config_params.persistenceColor), perHiCol(config_params.persistenceHighlightColor),
-    lineCol(config_params.sliceLineColor), lineHiCol(config_params.sliceLineHighlightColor),
-    bettiRadius(config_params.bettiDotRadius), perRadius(config_params.persistenceDotRadius),
-    autoDots(config_params.autoDotSize),
-    xlabel(QString::fromStdString(input_params.x_label)), ylabel(QString::fromStdString(input_params.y_label))
+ConfigureDialog::ConfigureDialog(ConfigParameters& c_params, InputParameters& i_params, QWidget* parent)
+    : QDialog(parent)
+    , ui(new Ui::ConfigureDialog)
+    , config_params(c_params)
+    , input_params(i_params)
+    , xi0col(config_params.xi0color)
+    , xi1col(config_params.xi1color)
+    , xi2col(config_params.xi2color)
+    , perCol(config_params.persistenceColor)
+    , perHiCol(config_params.persistenceHighlightColor)
+    , lineCol(config_params.sliceLineColor)
+    , lineHiCol(config_params.sliceLineHighlightColor)
+    , bettiRadius(config_params.bettiDotRadius)
+    , perRadius(config_params.persistenceDotRadius)
+    , autoDots(config_params.autoDotSize)
+    , xlabel(QString::fromStdString(input_params.x_label))
+    , ylabel(QString::fromStdString(input_params.y_label))
 {
     ui->setupUi(this);
 
-  //set color selectors to current colors
+    //set color selectors to current colors
     QString qss = QString("border: none; outline: none; background-color: %1;").arg(xi0col.name());
     ui->xi0colorButton->setStyleSheet(qss);
     ui->xi0colorButton->setAutoFillBackground(true);
@@ -63,12 +69,11 @@ ConfigureDialog::ConfigureDialog(ConfigParameters& c_params, InputParameters& i_
     ui->lineHighlightColorButton->setFlat(true);
     ui->lineHighlightSpinBox->setValue(lineHiCol.alpha());
 
-  //set size selectors to current sizes
+    //set size selectors to current sizes
     ui->bettiDotSpinBox->setValue(bettiRadius);
     ui->persistenceDotSpinBox->setValue(perRadius);
 
-    if(autoDots)
-    {
+    if (autoDots) {
         ui->AutoDotSizeCheckBox->setChecked(true);
         ui->bettiDotSpinBox->setEnabled(false);
         ui->bettiDotSizeLabel->setEnabled(false);
@@ -76,11 +81,11 @@ ConfigureDialog::ConfigureDialog(ConfigParameters& c_params, InputParameters& i_
         ui->persistenceDotSizeLabel->setEnabled(false);
     }
 
-  //set labels to current labels
+    //set labels to current labels
     ui->xaxisText->setText(xlabel);
     ui->yaxisText->setText(ylabel);
 
-}//end constructor
+} //end constructor
 
 ConfigureDialog::~ConfigureDialog()
 {
@@ -118,8 +123,7 @@ void ConfigureDialog::on_xi0colorButton_clicked()
 {
     QColor color = QColorDialog::getColor(config_params.xi0color, this); //, "Choose a Color", QColorDialog::ShowAlphaChannel);
 
-    if(color.isValid())
-    {
+    if (color.isValid()) {
         xi0col = color;
         xi0col.setAlpha(ui->xi0spinBox->value());
         QString qss = QString("border: none; outline: none; background-color: %1;").arg(color.name());
@@ -133,8 +137,7 @@ void ConfigureDialog::on_xi1colorButton_clicked()
 {
     QColor color = QColorDialog::getColor(config_params.xi1color, this);
 
-    if(color.isValid())
-    {
+    if (color.isValid()) {
         xi1col = color;
         xi1col.setAlpha(ui->xi1spinBox->value());
         QString qss = QString("border: none; outline: none; background-color: %1;").arg(color.name());
@@ -148,8 +151,7 @@ void ConfigureDialog::on_xi2colorButton_clicked()
 {
     QColor color = QColorDialog::getColor(config_params.xi2color, this);
 
-    if(color.isValid())
-    {
+    if (color.isValid()) {
         xi2col = color;
         xi2col.setAlpha(ui->xi2spinBox->value());
         QString qss = QString("border: none; outline: none; background-color: %1;").arg(color.name());
@@ -163,8 +165,7 @@ void ConfigureDialog::on_persistenceColorButton_clicked()
 {
     QColor color = QColorDialog::getColor(config_params.persistenceColor, this);
 
-    if(color.isValid())
-    {
+    if (color.isValid()) {
         perCol = color;
         perCol.setAlpha(ui->persistenceSpinBox->value());
         QString qss = QString("border: none; outline: none; background-color: %1;").arg(color.name());
@@ -178,8 +179,7 @@ void ConfigureDialog::on_persistenceHighlightColorButton_clicked()
 {
     QColor color = QColorDialog::getColor(config_params.persistenceHighlightColor, this);
 
-    if(color.isValid())
-    {
+    if (color.isValid()) {
         perHiCol = color;
         perHiCol.setAlpha(ui->persistenceHighlightSpinBox->value());
         QString qss = QString("border: none; outline: none; background-color: %1;").arg(color.name());
@@ -193,8 +193,7 @@ void ConfigureDialog::on_lineColorButton_clicked()
 {
     QColor color = QColorDialog::getColor(config_params.sliceLineColor, this);
 
-    if(color.isValid())
-    {
+    if (color.isValid()) {
         lineCol = color;
         lineCol.setAlpha(ui->lineSpinBox->value());
         QString qss = QString("border: none; outline: none; background-color: %1;").arg(color.name());
@@ -208,8 +207,7 @@ void ConfigureDialog::on_lineHighlightColorButton_clicked()
 {
     QColor color = QColorDialog::getColor(config_params.sliceLineHighlightColor, this);
 
-    if(color.isValid())
-    {
+    if (color.isValid()) {
         lineHiCol = color;
         lineHiCol.setAlpha(ui->lineHighlightSpinBox->value());
         QString qss = QString("border: none; outline: none; background-color: %1;").arg(color.name());
@@ -218,7 +216,6 @@ void ConfigureDialog::on_lineHighlightColorButton_clicked()
         ui->lineHighlightColorButton->setFlat(true);
     }
 }
-
 
 void ConfigureDialog::on_xi0spinBox_valueChanged(int arg1)
 {
@@ -319,15 +316,12 @@ void ConfigureDialog::on_AutoDotSizeCheckBox_clicked(bool checked)
 {
     autoDots = checked;
 
-    if(autoDots)
-    {
+    if (autoDots) {
         ui->bettiDotSpinBox->setEnabled(false);
         ui->bettiDotSizeLabel->setEnabled(false);
         ui->persistenceDotSpinBox->setEnabled(false);
         ui->persistenceDotSizeLabel->setEnabled(false);
-    }
-    else
-    {
+    } else {
         ui->bettiDotSpinBox->setEnabled(true);
         ui->bettiDotSizeLabel->setEnabled(true);
         ui->persistenceDotSpinBox->setEnabled(true);

@@ -11,22 +11,43 @@ using Debug = QDebug;
 
 Debug debug(bool nospace = false);
 
-
 #else
 
 struct Debug {
-    std::ostream &os;
+    std::ostream& os;
     bool space;
     bool alive;
 
-    Debug(std::ostream &os = std::clog, bool space = true) : os(os), space(space), alive(true) {}
-    Debug(Debug &&rhs) : os(rhs.os), space(rhs.space), alive(true) { rhs.alive = false; }
-    Debug(Debug &rhs) : os(rhs.os), space(rhs.space), alive(true) { rhs.alive = false; }
-    ~Debug() { if (alive && space) os << std::endl; }
+    Debug(std::ostream& os = std::clog, bool space = true)
+        : os(os)
+        , space(space)
+        , alive(true)
+    {
+    }
+    Debug(Debug&& rhs)
+        : os(rhs.os)
+        , space(rhs.space)
+        , alive(true)
+    {
+        rhs.alive = false;
+    }
+    Debug(Debug& rhs)
+        : os(rhs.os)
+        , space(rhs.space)
+        , alive(true)
+    {
+        rhs.alive = false;
+    }
+    ~Debug()
+    {
+        if (alive && space)
+            os << std::endl;
+    }
 };
 
 template <typename T>
-Debug operator<<(Debug &&d, T const & x) {
+Debug operator<<(Debug&& d, T const& x)
+{
     (d.os) << x;
     if (d.space)
         d.os << " ";
@@ -34,7 +55,8 @@ Debug operator<<(Debug &&d, T const & x) {
 }
 
 template <typename T>
-Debug operator<<(Debug &d, T const & x) {
+Debug operator<<(Debug& d, T const& x)
+{
     d.os << x;
     if (d.space)
         d.os << " ";

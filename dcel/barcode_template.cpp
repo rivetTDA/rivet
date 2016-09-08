@@ -2,30 +2,43 @@
 
 #include "debug.h"
 
+BarTemplate::BarTemplate(unsigned a, unsigned b)
+    : begin(a)
+    , end(b)
+    , multiplicity(1)
+{
+}
 
-BarTemplate::BarTemplate(unsigned a, unsigned b) :
-    begin(a), end(b), multiplicity(1)
-{ }
+BarTemplate::BarTemplate(unsigned a, unsigned b, unsigned m)
+    : begin(a)
+    , end(b)
+    , multiplicity(m)
+{
+}
 
-BarTemplate::BarTemplate(unsigned a, unsigned b, unsigned m) :
-    begin(a), end(b), multiplicity(m)
-{ }
+BarTemplate::BarTemplate(const BarTemplate& other)
+    : begin(other.begin)
+    , end(other.end)
+    , multiplicity(other.multiplicity)
+{
+}
 
-BarTemplate::BarTemplate(const BarTemplate& other) :
-    begin(other.begin), end(other.end), multiplicity(other.multiplicity)
-{ }
-
-BarTemplate::BarTemplate(): begin(0), end(0), multiplicity(0) { }
+BarTemplate::BarTemplate()
+    : begin(0)
+    , end(0)
+    , multiplicity(0)
+{
+}
 
 bool BarTemplate::operator<(const BarTemplate other) const
 {
     return (begin < other.begin) || (begin == other.begin && end < other.end);
 }
 
-
-
-BarcodeTemplate::BarcodeTemplate(): bars()
-{ }
+BarcodeTemplate::BarcodeTemplate()
+    : bars()
+{
+}
 
 //adds a bar to the barcode (updating multiplicity, if necessary)
 void BarcodeTemplate::add_bar(unsigned a, unsigned b)
@@ -34,11 +47,10 @@ void BarcodeTemplate::add_bar(unsigned a, unsigned b)
     BarTemplate bar(a, b);
     std::set<BarTemplate>::iterator it = bars.find(bar);
 
-    if(it == bars.end())    //then the bar doesn't already exist, so insert it
+    if (it == bars.end()) //then the bar doesn't already exist, so insert it
     {
         bars.insert(bar);
-    }
-    else    //then the bar already exists, so increment its multiplicity
+    } else //then the bar already exists, so increment its multiplicity
     {
         (*it).multiplicity++;
     }
@@ -51,11 +63,10 @@ void BarcodeTemplate::add_bar(unsigned a, unsigned b, unsigned m)
     BarTemplate bar(a, b, m);
     std::set<BarTemplate>::iterator it = bars.find(bar);
 
-    if(it == bars.end())    //then the bar doesn't already exist, so insert it
+    if (it == bars.end()) //then the bar doesn't already exist, so insert it
     {
         bars.insert(bar);
-    }
-    else    //then the bar already exists, so increment its multiplicity
+    } else //then the bar already exists, so increment its multiplicity
     {
         (*it).multiplicity += m;
     }
@@ -83,22 +94,20 @@ bool BarcodeTemplate::is_empty()
 void BarcodeTemplate::print()
 {
     debug() << "      barcode template: ";
-    for(std::set<BarTemplate>::iterator it = bars.begin(); it != bars.end(); ++it)
-    {
+    for (std::set<BarTemplate>::iterator it = bars.begin(); it != bars.end(); ++it) {
         BarTemplate b = *it;
         debug(true) << "(" << b.begin << "," << b.end << ")x" << b.multiplicity << ", ";
     }
 }
 
-bool operator==(BarcodeTemplate const &left, BarcodeTemplate const &right) {
+bool operator==(BarcodeTemplate const& left, BarcodeTemplate const& right)
+{
     return left.bars == right.bars;
 }
 
-bool operator==(BarTemplate const &left, BarTemplate const &right) {
+bool operator==(BarTemplate const& left, BarTemplate const& right)
+{
     return left.begin == right.begin
-           && left.end == right.end
-            && left.multiplicity == right.multiplicity;
-
+        && left.end == right.end
+        && left.multiplicity == right.multiplicity;
 }
-
-

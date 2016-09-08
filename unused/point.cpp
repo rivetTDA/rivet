@@ -8,7 +8,6 @@ Point::Point(double* cor, double bir)
     coords = cor;
     //std::cout << "in constructor, coords: " << coords[0] << ", " << coords[1] << "\n";
     birth = bir;
-
 }
 
 double* Point::get_coords()
@@ -27,9 +26,9 @@ void Point::print()
 }
 
 //overloaded less than operator, for sorting a list of Points
-bool Point::operator < (const Point & other) const
+bool Point::operator<(const Point& other) const
 {
-    if(birth < other.birth)
+    if (birth < other.birth)
         return true;
     /* else */
     return false;

@@ -1,9 +1,9 @@
 #include "dataselectdialog.h"
 #include "ui_dataselectdialog.h"
 
+#include "interface/console_interaction.h"
 #include "interface/file_input_reader.h"
 #include "interface/input_parameters.h"
-#include "interface/console_interaction.h"
 
 #include <QDebug>
 #include <QFileDialog>
@@ -12,12 +12,11 @@
 #include <QStringList>
 #include <fstream>
 
-
-DataSelectDialog::DataSelectDialog(InputParameters& params, QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::DataSelectDialog),
-    params(params),
-    data_selected(false)
+DataSelectDialog::DataSelectDialog(InputParameters& params, QWidget* parent)
+    : QDialog(parent)
+    , ui(new Ui::DataSelectDialog)
+    , params(params)
+    , data_selected(false)
 {
     ui->setupUi(this);
 
@@ -25,7 +24,7 @@ DataSelectDialog::DataSelectDialog(InputParameters& params, QWidget *parent) :
     ui->ybinSpinBox->setSpecialValueText(tr("No bins"));
 
     //set initial values
-    if(!params.fileName.empty())
+    if (!params.fileName.empty())
         detect_file_type();
     ui->homDimSpinBox->setValue(params.dim);
     ui->xbinSpinBox->setValue(params.x_bins);
@@ -41,8 +40,8 @@ void DataSelectDialog::closeEvent(QCloseEvent* event)
 {
     event->accept();
 
-    if(!data_selected)
-        qobject_cast<QWidget *>(this->parent())->close();
+    if (!data_selected)
+        qobject_cast<QWidget*>(this->parent())->close();
 }
 
 void DataSelectDialog::on_computeButton_clicked()
@@ -61,29 +60,28 @@ void DataSelectDialog::on_computeButton_clicked()
 void DataSelectDialog::on_openFileButton_clicked()
 {
     //prompt user to select a file
-    QString selected_file = QFileDialog::getOpenFileName(this, tr("Open Data File"), "/ima/home/mlwright/Repos","All files (*.*);;Text files (*.txt)");
+    QString selected_file = QFileDialog::getOpenFileName(this, tr("Open Data File"), "/ima/home/mlwright/Repos", "All files (*.*);;Text files (*.txt)");
 
-    if(!selected_file.isNull())
-    {
-      params.fileName = selected_file.toUtf8().constData();
-      detect_file_type();
+    if (!selected_file.isNull()) {
+        params.fileName = selected_file.toUtf8().constData();
+        detect_file_type();
     }
-}//end on_openFileButton_clicked()
+} //end on_openFileButton_clicked()
 
 void DataSelectDialog::detect_file_type()
 {
-  std::ifstream infile(params.fileName);
+    std::ifstream infile(params.fileName);
 
-  if(!infile.is_open()) {
-    invalid_file("Unable to read file.");
-    return;
-  }
+    if (!infile.is_open()) {
+        invalid_file("Unable to read file.");
+        return;
+    }
 
-  FileInputReader reader(infile);
-  if(!reader.has_next_line()) {
-    invalid_file("Empty file.");
-    return;
-  }
+    FileInputReader reader(infile);
+    if (!reader.has_next_line()) {
+        invalid_file("Empty file.");
+        return;
+    }
 
     auto line = reader.next_line();
     if (line[0] == "RIVET_1") {
@@ -111,8 +109,7 @@ void DataSelectDialog::detect_file_type()
                 return;
             } else if (line.startsWith("FILE TYPE DESCRIPTION: ")) {
 
-                ui->fileTypeLabel->setText("This file appears to contain " +
-                                           line.mid(QString("FILE TYPE DESCRIPTION: ").length()).trimmed() + ".");
+                ui->fileTypeLabel->setText("This file appears to contain " + line.mid(QString("FILE TYPE DESCRIPTION: ").length()).trimmed() + ".");
                 QFileInfo fileInfo(QString::fromStdString(params.fileName));
                 ui->fileLabel->setText("Selected file: " + fileInfo.fileName());
 
@@ -123,12 +120,13 @@ void DataSelectDialog::detect_file_type()
         ui->parameterFrame->setEnabled(raw);
     }
 
-  ui->computeButton->setEnabled(true);
+    ui->computeButton->setEnabled(true);
 
-}//end detect_file_type()
+} //end detect_file_type()
 
-void DataSelectDialog::invalid_file(const QString &message) {
-  ui->parameterFrame->setEnabled(false);
-  ui->computeButton->setEnabled(false);
-  ui->fileTypeLabel->setText(message);
+void DataSelectDialog::invalid_file(const QString& message)
+{
+    ui->parameterFrame->setEnabled(false);
+    ui->computeButton->setEnabled(false);
+    ui->fileTypeLabel->setText(message);
 }

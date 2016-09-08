@@ -5,22 +5,19 @@ struct ConfigParameters;
 
 #include "input_parameters.h"
 
-#include <QDialog>
 #include <QColor>
+#include <QDialog>
 #include <QString>
-
 
 namespace Ui {
 class ConfigureDialog;
 }
 
-
-class ConfigureDialog : public QDialog
-{
+class ConfigureDialog : public QDialog {
     Q_OBJECT
 
 public:
-    explicit ConfigureDialog(ConfigParameters& c_params, InputParameters& i_params, QWidget *parent = 0);
+    explicit ConfigureDialog(ConfigParameters& c_params, InputParameters& i_params, QWidget* parent = 0);
     ~ConfigureDialog();
 
 private slots:
@@ -34,7 +31,6 @@ private slots:
     void on_persistenceHighlightColorButton_clicked();
     void on_lineColorButton_clicked();
     void on_lineHighlightColorButton_clicked();
-
 
     void on_xi0spinBox_valueChanged(int arg1);
     void on_xi1spinBox_valueChanged(int arg1);
@@ -56,7 +52,7 @@ private slots:
     void on_AutoDotSizeCheckBox_clicked(bool checked);
 
 private:
-    Ui::ConfigureDialog *ui;
+    Ui::ConfigureDialog* ui;
     ConfigParameters& config_params;
     InputParameters& input_params;
 

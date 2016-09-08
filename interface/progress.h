@@ -7,10 +7,8 @@
 
 class Progress {
 
-  public:
+public:
     boost::signals2::signal<void(unsigned max)> setProgressMaximum;
     boost::signals2::signal<void()> advanceProgressStage;
     boost::signals2::signal<void(unsigned)> progress;
 };
-
-

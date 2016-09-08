@@ -1,10 +1,9 @@
 // NOTE:  this file will eventually contain more functions necessary for the graph cutting procedures that are in progress
-    // for now, it just contains the adjacency list sorting functions
+// for now, it just contains the adjacency list sorting functions
 
 #include <stack>
-#include <vector>
 #include <utility> // for make_pair()
-
+#include <vector>
 
 // function to sort the children of each node by the weight of the subtree of which each child is the root
 // input:
@@ -13,14 +12,13 @@
 //    start: index of the node in the tree that will be regarded as root
 // output: children[i] is a vector of indexes of the children of node i, in decreasing order of branch weight
 //    (branch weight is total weight of all edges below a given node, plus weight of edge to parent node)
-void sortAdjacencies(std::vector<std::vector<unsigned> > &adjList, std::vector<std::vector<unsigned> > &distances,
-                     unsigned start, std::vector< std::vector<unsigned> >& children)
+void sortAdjacencies(std::vector<std::vector<unsigned>>& adjList, std::vector<std::vector<unsigned>>& distances,
+    unsigned start, std::vector<std::vector<unsigned>>& children)
 {
     bool discovered[adjList.size()]; // boolean array for keeping track of which nodes have been visited
     unsigned branchWeight[adjList.size()]; // this will contain the weight of the edges "hanging" from the node represented by its index in branchWeight
     // populate the boolean array with false and the branchWeight array with 0
-    for (unsigned i = 0; i < adjList.size(); ++i)
-    {
+    for (unsigned i = 0; i < adjList.size(); ++i) {
         discovered[i] = false;
         branchWeight[i] = 0;
     }
@@ -28,7 +26,7 @@ void sortAdjacencies(std::vector<std::vector<unsigned> > &adjList, std::vector<s
     std::stack<unsigned> nodes; // stack for nodes as we do DFS
     nodes.push(start); // push start node onto the node stack
     discovered[start] = true; // mark start node as discovered
-    std::vector<std::pair<unsigned, unsigned> > toBeSorted; // vector of pairs to contain the children of a given node
+    std::vector<std::pair<unsigned, unsigned>> toBeSorted; // vector of pairs to contain the children of a given node
 
     while (!nodes.empty()) // while we have not traversed the whole tree
     {
@@ -36,19 +34,19 @@ void sortAdjacencies(std::vector<std::vector<unsigned> > &adjList, std::vector<s
 
         // find the next undiscovered child of node
         bool found_new_child = false;
-        for(unsigned i = 0; i < adjList[node].size(); ++i) // look for an undiscovered node
+        for (unsigned i = 0; i < adjList[node].size(); ++i) // look for an undiscovered node
         {
-            if( !discovered[ adjList[node][i] ] ) // found a node
+            if (!discovered[adjList[node][i]]) // found a node
             {
-                discovered[ adjList[node][i] ] = true; // discover the next node
-                nodes.push( adjList[node][i]);  // push the next node onto the stack
+                discovered[adjList[node][i]] = true; // discover the next node
+                nodes.push(adjList[node][i]); // push the next node onto the stack
                 found_new_child = true;
                 break;
             }
         }
 
-        if( !found_new_child )
-            // we have found all of node's children, so we can sort them and compute branch weight for node
+        if (!found_new_child)
+        // we have found all of node's children, so we can sort them and compute branch weight for node
         {
             nodes.pop(); // pop node off of the node stack
 
@@ -57,13 +55,13 @@ void sortAdjacencies(std::vector<std::vector<unsigned> > &adjList, std::vector<s
 
             for (unsigned i = 0; i < adjList[node].size(); i++) // loop over all children of node
             {
-                if( !nodes.empty() && nodes.top() == adjList[node][i] ) // then this adjacency is the parent node
+                if (!nodes.empty() && nodes.top() == adjList[node][i]) // then this adjacency is the parent node
                     continue;
 
                 //add this child to the toBeSorted vector
                 unsigned child = adjList[node][i];
                 unsigned cur_branch_weight = branchWeight[child] + distances[node][child];
-                toBeSorted.push_back( std::make_pair(cur_branch_weight, child) );
+                toBeSorted.push_back(std::make_pair(cur_branch_weight, child));
 
                 //add weight of this child's branch to runningSum
                 running_sum += cur_branch_weight;
@@ -75,12 +73,10 @@ void sortAdjacencies(std::vector<std::vector<unsigned> > &adjList, std::vector<s
             std::sort(toBeSorted.begin(), toBeSorted.end());
 
             // copy the children indexes to the children vector in reverse branch-weight order
-            for(std::vector< std::pair<unsigned, unsigned> >::reverse_iterator rit = toBeSorted.rbegin();
-                rit != toBeSorted.rend(); ++rit)
-            {
+            for (std::vector<std::pair<unsigned, unsigned>>::reverse_iterator rit = toBeSorted.rbegin();
+                 rit != toBeSorted.rend(); ++rit) {
                 children[node].push_back(rit->second);
             }
         }
     } // end while
 } // end sortAdjacencies()
-

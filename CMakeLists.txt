@@ -47,7 +47,7 @@ add_executable (rivet_console
         numerics.cpp
         timer.cpp
         debug.cpp
-        base_64.cpp)
+        )
 
 add_dependencies(rivet_console docopt_project)
 

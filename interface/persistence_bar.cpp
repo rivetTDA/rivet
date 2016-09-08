@@ -3,15 +3,15 @@
 #include "config_parameters.h"
 #include "slice_diagram.h"
 
-
-
-
-PersistenceBar::PersistenceBar(SliceDiagram *s_diagram, ConfigParameters* params, double unscaled_start, double unscaled_end, unsigned index) :
-    sdgm(s_diagram),
-    config_params(params),
-    start(unscaled_start), end(unscaled_end),
-    class_index(index),
-    pressed(false), secondary(false), hover(false)
+PersistenceBar::PersistenceBar(SliceDiagram* s_diagram, ConfigParameters* params, double unscaled_start, double unscaled_end, unsigned index)
+    : sdgm(s_diagram)
+    , config_params(params)
+    , start(unscaled_start)
+    , end(unscaled_end)
+    , class_index(index)
+    , pressed(false)
+    , secondary(false)
+    , hover(false)
 {
     setAcceptHoverEvents(true);
 }
@@ -25,23 +25,21 @@ QPainterPath PersistenceBar::shape() const
 {
     QPainterPath path;
     QPainterPathStroker stroker;
-    path.moveTo(0,0);
-    path.lineTo(dx,dy);
+    path.moveTo(0, 0);
+    path.lineTo(dx, dy);
     stroker.setWidth(10);
     return stroker.createStroke(path);
 }
 
-void PersistenceBar::paint(QPainter *painter, const QStyleOptionGraphicsItem * /*unused*/, QWidget * /*unused*/)
+void PersistenceBar::paint(QPainter* painter, const QStyleOptionGraphicsItem* /*unused*/, QWidget* /*unused*/)
 {
     QPen pen(config_params->persistenceColor);
     pen.setWidth(4);
 
-    if(pressed)
-    {
+    if (pressed) {
         pen.setColor(config_params->persistenceHighlightColor);
     }
-    if(secondary)
-    {
+    if (secondary) {
         pen.setStyle(Qt::DashLine);
     }
 
@@ -92,40 +90,39 @@ unsigned PersistenceBar::get_index()
     return class_index;
 }
 
-void PersistenceBar::hoverEnterEvent(QGraphicsSceneHoverEvent * /*unused*/)
+void PersistenceBar::hoverEnterEvent(QGraphicsSceneHoverEvent* /*unused*/)
 {
     hover = true;
     update();
 }
 
-void PersistenceBar::hoverLeaveEvent(QGraphicsSceneHoverEvent * /*unused*/)
+void PersistenceBar::hoverLeaveEvent(QGraphicsSceneHoverEvent* /*unused*/)
 {
     hover = false;
     update();
 }
 
-void PersistenceBar::mousePressEvent(QGraphicsSceneMouseEvent * /*unused*/)
+void PersistenceBar::mousePressEvent(QGraphicsSceneMouseEvent* /*unused*/)
 {
-    if(pressed) //then unselect this bar
+    if (pressed) //then unselect this bar
     {
         pressed = false;
         //call slice diagram unselect function
         sdgm->deselect_bar();
-    }
-    else    //then select this bar
+    } else //then select this bar
     {
         pressed = true;
         //call slice diagram select function
         sdgm->select_bar(this);
     }
 
-//    update();
-//    QGraphicsItem::mousePressEvent(event);
+    //    update();
+    //    QGraphicsItem::mousePressEvent(event);
 }
 
-void PersistenceBar::mouseReleaseEvent(QGraphicsSceneMouseEvent * /*unused*/)
+void PersistenceBar::mouseReleaseEvent(QGraphicsSceneMouseEvent* /*unused*/)
 {
-//    pressed = false;
-//    update();
-//    QGraphicsItem::mouseReleaseEvent(event);
+    //    pressed = false;
+    //    update();
+    //    QGraphicsItem::mouseReleaseEvent(event);
 }

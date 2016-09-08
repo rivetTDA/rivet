@@ -10,27 +10,22 @@
  * \todo	Only the less-than operator is overloaded; other comparison operators should also be overloaded.
  */
 
-
 #ifndef __Point_H__
 #define __Point_H__
 
 //THIS CLASS IS NO LONGER USED!!!
 
 class Point {
-	public:
-		Point(double*, double);		//constructor
-		double* get_coords();		//returns the n-tuple of coordinates
-		double get_birth();		//returns the time that this point appears
-		void print();	//TESTING
-		bool operator < (const Point &) const;	//comparison operator
-		
-	private:
-		double* coords;	//stores the n-tuple of coordinates
-		double birth;		//stores the time that this point appears
-		
+public:
+    Point(double*, double); //constructor
+    double* get_coords(); //returns the n-tuple of coordinates
+    double get_birth(); //returns the time that this point appears
+    void print(); //TESTING
+    bool operator<(const Point&) const; //comparison operator
+
+private:
+    double* coords; //stores the n-tuple of coordinates
+    double birth; //stores the time that this point appears
 };
 
-
 #endif // __Point_H__
-
-

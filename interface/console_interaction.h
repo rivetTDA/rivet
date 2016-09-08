@@ -4,17 +4,15 @@
 
 #ifndef RIVET_CONSOLE_CONSOLE_INTERACTION_H
 #define RIVET_CONSOLE_CONSOLE_INTERACTION_H
-#include <memory>
-#include <QString>
-#include <QProcess>
 #include <QCoreApplication>
+#include <QProcess>
+#include <QString>
+#include <memory>
 
 class RivetConsoleApp {
 public:
     static QString errorMessage(QProcess::ProcessError error);
     static std::unique_ptr<QProcess> start(QStringList args);
-
 };
-
 
 #endif //RIVET_CONSOLE_CONSOLE_INTERACTION_H

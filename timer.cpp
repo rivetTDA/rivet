@@ -4,11 +4,13 @@
 
 #include "timer.h"
 
-Timer::Timer() {
+Timer::Timer()
+{
     start_time = std::chrono::system_clock::now();
 }
 
-long Timer::elapsed() {
+long Timer::elapsed()
+{
     return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start_time).count();
 }
 

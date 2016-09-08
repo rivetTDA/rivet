@@ -7,18 +7,18 @@
 
 #endif //RIVET_CONSOLE_INPUT_MANAGER_TESTS_H
 
-
 #include "catch.hpp"
-#include <vector>
-#include <iostream>
 #include "interface/input_manager.h"
 #include "numerics.h"
+#include <iostream>
+#include <vector>
 
-TEST_CASE( "DataPoint parses correctly", "[InputManager]" ) {
-    std::vector<std::string> data {"1.0", "-1.2", "1.12"};
+TEST_CASE("DataPoint parses correctly", "[InputManager]")
+{
+    std::vector<std::string> data{ "1.0", "-1.2", "1.12" };
     DataPoint point(data);
 
     REQUIRE(point.coords[0] == 1.0);
     REQUIRE(point.coords[1] == -1.2);
-    REQUIRE(point.birth == exact(112,100));
+    REQUIRE(point.birth == exact(112, 100));
 }

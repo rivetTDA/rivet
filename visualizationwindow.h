@@ -8,14 +8,14 @@ class xiPoint;
 
 #include "computationthread.h"
 #include "dataselectdialog.h"
+#include "dcel/mesh_message.h"
 #include "interface/aboutmessagebox.h"
-#include "interface/configuredialog.h"
 #include "interface/config_parameters.h"
+#include "interface/configuredialog.h"
 #include "interface/input_parameters.h"
 #include "interface/persistence_diagram.h"
 #include "interface/progressdialog.h"
 #include "interface/slice_diagram.h"
-#include "dcel/mesh_message.h"
 #include <QMainWindow>
 #include <QtWidgets>
 
@@ -26,26 +26,22 @@ typedef boost::multi_array<unsigned, 2> unsigned_matrix;
 
 #include <vector>
 
-
 namespace Ui {
 class VisualizationWindow;
 }
 
-
-class VisualizationWindow : public QMainWindow
-{
+class VisualizationWindow : public QMainWindow {
     Q_OBJECT
-    
+
 public:
     explicit VisualizationWindow(InputParameters& params);
     ~VisualizationWindow();
 
-
 protected:
-    void showEvent(QShowEvent* event);      //shows the DataSelectDialog and blocks until it is closed
+    void showEvent(QShowEvent* event); //shows the DataSelectDialog and blocks until it is closed
     void resizeEvent(QResizeEvent*);
     void closeEvent(QCloseEvent* event);
-    
+
 public slots:
     void start_computation(); //begins the computation pipeline
     void paint_xi_support();
@@ -70,48 +66,48 @@ private slots:
     void on_actionOpen_triggered();
 
 private:
-    Ui::VisualizationWindow *ui;
+    Ui::VisualizationWindow* ui;
 
     //data items
     const int verbosity;
     const double INFTY;
     const double PI;
 
-    bool data_selected;               //false until user selects data, then true
-    bool unsaved_data;                //false until augmented arrangement is computed, then true until user saves the augmented arrangement
-    InputParameters& input_params;    //parameters set by the user via the DataSelectDialog
-    ConfigParameters config_params;   //parameters that control the visualization
-    DataSelectDialog ds_dialog;       //dialog box that gets the input parameters
+    bool data_selected; //false until user selects data, then true
+    bool unsaved_data; //false until augmented arrangement is computed, then true until user saves the augmented arrangement
+    InputParameters& input_params; //parameters set by the user via the DataSelectDialog
+    ConfigParameters config_params; //parameters that control the visualization
+    DataSelectDialog ds_dialog; //dialog box that gets the input parameters
 
     std::vector<exact> x_exact;
     std::vector<exact> y_exact;
     std::vector<double> y_grades;
     std::vector<double> x_grades;
-    std::vector<xiPoint> xi_support;  //stores discrete coordinates of xi support points, with multiplicities
-    unsigned_matrix homology_dimensions;       //stores the dimension of homology at each grade
+    std::vector<xiPoint> xi_support; //stores discrete coordinates of xi support points, with multiplicities
+    unsigned_matrix homology_dimensions; //stores the dimension of homology at each grade
 
-    double angle_precise;       //sufficiently-precise internal value of the slice-line angle in DEGREES, necessary because QDoubleSpinBox truncates this value
-    double offset_precise;      //sufficiently-precise internal value of the slice-line offset, necessary because QDoubleSpinBox truncates this value
+    double angle_precise; //sufficiently-precise internal value of the slice-line angle in DEGREES, necessary because QDoubleSpinBox truncates this value
+    double offset_precise; //sufficiently-precise internal value of the slice-line offset, necessary because QDoubleSpinBox truncates this value
 
     MeshMessage* arrangement; //pointer to the DCEL arrangement
-    Barcode* barcode;  //pointer to the currently-displayed barcode
+    Barcode* barcode; //pointer to the currently-displayed barcode
 
     //computation items
     ComputationThread cthread;
     ProgressDialog prog_dialog;
 
     //items for slice diagram
-    bool line_selection_ready;      //initially false, but set to true when data is in place for line selection
-    SliceDiagram slice_diagram;     //subclass of QGraphicsScene, contains all of the graphics elements for the line-selection diagram
-    bool slice_update_lock;         //true iff slice diagram is being updated; helps avoid an infinite loop
+    bool line_selection_ready; //initially false, but set to true when data is in place for line selection
+    SliceDiagram slice_diagram; //subclass of QGraphicsScene, contains all of the graphics elements for the line-selection diagram
+    bool slice_update_lock; //true iff slice diagram is being updated; helps avoid an infinite loop
 
     //items for persistence diagram
-    PersistenceDiagram p_diagram;   //subclass of QGraphicsScene, contains all of the graphics elements for the persistence diagram
+    PersistenceDiagram p_diagram; //subclass of QGraphicsScene, contains all of the graphics elements for the persistence diagram
     bool persistence_diagram_drawn;
 
-    void update_persistence_diagram();  //updates the persistence diagram and barcode after a change in the slice line
+    void update_persistence_diagram(); //updates the persistence diagram and barcode after a change in the slice line
 
-    Barcode* rescale_barcode_template(BarcodeTemplate &dbc, double angle, double offset);
+    Barcode* rescale_barcode_template(BarcodeTemplate& dbc, double angle, double offset);
     double project(xiPoint& pt, double angle, double offset);
 
     //computes the projection of the lower-left corner of the line-selection window onto the specified line
@@ -121,8 +117,8 @@ private:
     //other items
     void save_arrangement(const QString& filename);
 
-    AboutMessageBox aboutBox;       //which is better for these dialog boxes
-    ConfigureDialog* configBox;     // -- pointer or no pointer?
+    AboutMessageBox aboutBox; //which is better for these dialog boxes
+    ConfigureDialog* configBox; // -- pointer or no pointer?
     void copy_fields_from_cthread();
 };
 

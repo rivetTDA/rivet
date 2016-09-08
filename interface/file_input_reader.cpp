@@ -3,9 +3,9 @@
 #include <boost/algorithm/string.hpp>
 #include <vector>
 
-FileInputReader::FileInputReader(std::ifstream &file) :
-    in(file),
-    next_line_found(false)
+FileInputReader::FileInputReader(std::ifstream& file)
+    : in(file)
+    , next_line_found(false)
 {
     find_next_line();
 }
@@ -14,16 +14,16 @@ FileInputReader::FileInputReader(std::ifstream &file) :
 //this is the only function that should call in.readLine()
 void FileInputReader::find_next_line()
 {
-  std::string line;
-  while(std::getline(in, line)) {
-    boost::trim(line);
-    if (line.empty() || line[0] == '#')
-      continue;
-    next_line_tokens.clear();
-    boost::split(next_line_tokens, line, boost::is_space(std::locale()), boost::token_compress_on);
-      next_line_found = true;
-      break;
-  }
+    std::string line;
+    while (std::getline(in, line)) {
+        boost::trim(line);
+        if (line.empty() || line[0] == '#')
+            continue;
+        next_line_tokens.clear();
+        boost::split(next_line_tokens, line, boost::is_space(std::locale()), boost::token_compress_on);
+        next_line_found = true;
+        break;
+    }
 }
 
 //indicates whether another line can be returned

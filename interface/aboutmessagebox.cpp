@@ -1,9 +1,9 @@
 #include "aboutmessagebox.h"
 #include "ui_aboutmessagebox.h"
 
-AboutMessageBox::AboutMessageBox(QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::AboutMessageBox)
+AboutMessageBox::AboutMessageBox(QWidget* parent)
+    : QDialog(parent)
+    , ui(new Ui::AboutMessageBox)
 {
     ui->setupUi(this);
 }

@@ -5,41 +5,42 @@
 
 #include <QDebug>
 
-
-PersistenceDot::PersistenceDot(PersistenceDiagram *p_diagram, ConfigParameters* params, double unscaled_x, double unscaled_y, unsigned multiplicity, double radius, unsigned index) :
-    pdgm(p_diagram),
-    config_params(params),
-    x(unscaled_x), y(unscaled_y),
-    multiplicity(multiplicity),
-    radius(radius),
-    pressed(false), hover(false)
+PersistenceDot::PersistenceDot(PersistenceDiagram* p_diagram, ConfigParameters* params, double unscaled_x, double unscaled_y, unsigned multiplicity, double radius, unsigned index)
+    : pdgm(p_diagram)
+    , config_params(params)
+    , x(unscaled_x)
+    , y(unscaled_y)
+    , multiplicity(multiplicity)
+    , radius(radius)
+    , pressed(false)
+    , hover(false)
 {
     indexes.push_back(index);
 
     setAcceptHoverEvents(true);
-//    setFlag(ItemSendsGeometryChanges);
+    //    setFlag(ItemSendsGeometryChanges);
 }
 
 QRectF PersistenceDot::boundingRect() const
 {
-    return QRectF(-radius, -radius, 2*radius, 2*radius);
+    return QRectF(-radius, -radius, 2 * radius, 2 * radius);
 }
 
-void PersistenceDot::paint(QPainter *painter, const QStyleOptionGraphicsItem * /*unused*/, QWidget * /*unused*/)
+void PersistenceDot::paint(QPainter* painter, const QStyleOptionGraphicsItem* /*unused*/, QWidget* /*unused*/)
 {
     QRectF rect = boundingRect();
     QBrush brush(config_params->persistenceColor);
 
-    if(hover)
-        painter->setPen(QPen(QBrush(config_params->persistenceHighlightColor),3));
+    if (hover)
+        painter->setPen(QPen(QBrush(config_params->persistenceHighlightColor), 3));
     else
         painter->setPen(Qt::NoPen);
 
-    if(pressed)
+    if (pressed)
         brush.setColor(config_params->persistenceHighlightColor);
 
     painter->setRenderHint(QPainter::Antialiasing);
-//    painter->setPen(Qt::NoPen);
+    //    painter->setPen(Qt::NoPen);
     painter->setBrush(brush);
     painter->drawEllipse(rect);
 }
@@ -99,27 +100,26 @@ void PersistenceDot::set_radius(double r)
     update(boundingRect());
 }
 
-void PersistenceDot::hoverEnterEvent(QGraphicsSceneHoverEvent * /*unused*/)
+void PersistenceDot::hoverEnterEvent(QGraphicsSceneHoverEvent* /*unused*/)
 {
     hover = true;
     update(boundingRect());
 }
 
-void PersistenceDot::hoverLeaveEvent(QGraphicsSceneHoverEvent * /*unused*/)
+void PersistenceDot::hoverLeaveEvent(QGraphicsSceneHoverEvent* /*unused*/)
 {
     hover = false;
     update(boundingRect());
 }
 
-void PersistenceDot::mousePressEvent(QGraphicsSceneMouseEvent * /*unused*/)
+void PersistenceDot::mousePressEvent(QGraphicsSceneMouseEvent* /*unused*/)
 {
-    if(pressed) //then unselect this dot
+    if (pressed) //then unselect this dot
     {
         pressed = false;
         //call persistence diagram unselect function
         pdgm->deselect_dot();
-    }
-    else    //then select this dot
+    } else //then select this dot
     {
         pressed = true;
         //call persistence diagram select function
@@ -127,12 +127,12 @@ void PersistenceDot::mousePressEvent(QGraphicsSceneMouseEvent * /*unused*/)
     }
 
     update(boundingRect());
-//    QGraphicsItem::mousePressEvent(event);
+    //    QGraphicsItem::mousePressEvent(event);
 }
 
-void PersistenceDot::mouseReleaseEvent(QGraphicsSceneMouseEvent * /*unused*/)
+void PersistenceDot::mouseReleaseEvent(QGraphicsSceneMouseEvent* /*unused*/)
 {
-//    pressed = false;
-//    update();
-//    QGraphicsItem::mouseReleaseEvent(event);
+    //    pressed = false;
+    //    update();
+    //    QGraphicsItem::mouseReleaseEvent(event);
 }

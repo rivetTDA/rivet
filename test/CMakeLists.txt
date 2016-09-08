@@ -25,6 +25,6 @@ add_executable (unit_tests
         ../math/index_matrix.cpp
         ../math/persistence_updater.cpp
         ../dcel/mesh_builder.cpp
-        ../base_64.cpp)
+        )
 
 include_directories("${PROJECT_SOURCE_DIR}/..")

@@ -19,32 +19,44 @@
 #include <fstream>
 #include <sstream>
 
-VisualizationWindow::VisualizationWindow(InputParameters& params) :
-    QMainWindow(),
-    ui(new Ui::VisualizationWindow),
-    verbosity(params.verbosity), INFTY(std::numeric_limits<double>::infinity()), PI(3.14159265358979323846),
-    data_selected(false), unsaved_data(false),
-    input_params(params), config_params(),
-    ds_dialog(input_params, this),
-    x_grades(), x_exact(), y_grades(), y_exact(),
-    xi_support(), homology_dimensions(),
-    angle_precise(0), offset_precise(0),
-    cthread(input_params),
-    prog_dialog(this),
-    line_selection_ready(false), slice_diagram(&config_params, x_grades, y_grades, this), slice_update_lock(false),
-    p_diagram(&config_params, this), persistence_diagram_drawn(false)
+VisualizationWindow::VisualizationWindow(InputParameters& params)
+    : QMainWindow()
+    , ui(new Ui::VisualizationWindow)
+    , verbosity(params.verbosity)
+    , INFTY(std::numeric_limits<double>::infinity())
+    , PI(3.14159265358979323846)
+    , data_selected(false)
+    , unsaved_data(false)
+    , input_params(params)
+    , config_params()
+    , ds_dialog(input_params, this)
+    , x_grades()
+    , x_exact()
+    , y_grades()
+    , y_exact()
+    , xi_support()
+    , homology_dimensions()
+    , angle_precise(0)
+    , offset_precise(0)
+    , cthread(input_params)
+    , prog_dialog(this)
+    , line_selection_ready(false)
+    , slice_diagram(&config_params, x_grades, y_grades, this)
+    , slice_update_lock(false)
+    , p_diagram(&config_params, this)
+    , persistence_diagram_drawn(false)
 {
     ui->setupUi(this);
 
     //set up the slice diagram
     ui->sliceView->setScene(&slice_diagram);
-//    ui->sliceView->setDragMode(QGraphicsView::ScrollHandDrag);
-    ui->sliceView->scale(1,-1);
+    //    ui->sliceView->setDragMode(QGraphicsView::ScrollHandDrag);
+    ui->sliceView->scale(1, -1);
     ui->sliceView->setRenderHint(QPainter::Antialiasing);
 
     //set up the persistence diagram scene
     ui->pdView->setScene(&p_diagram);
-    ui->pdView->scale(1,-1);
+    ui->pdView->scale(1, -1);
     ui->pdView->setRenderHint(QPainter::Antialiasing);
 
     //connect signal from DataSelectDialog to start the computation
@@ -67,8 +79,7 @@ VisualizationWindow::VisualizationWindow(InputParameters& params) :
     QObject::connect(&p_diagram, &PersistenceDiagram::persistence_dot_deselected, &slice_diagram, &SliceDiagram::receive_bar_deselection);
 
     //connect other signals and slots
-    QObject::connect(&prog_dialog, &ProgressDialog::stopComputation, &cthread, &ComputationThread::terminate);  ///TODO: don't use QThread::terminate()! modify ComputationThread so that it can stop gracefully and clean up after itself
-
+    QObject::connect(&prog_dialog, &ProgressDialog::stopComputation, &cthread, &ComputationThread::terminate); ///TODO: don't use QThread::terminate()! modify ComputationThread so that it can stop gracefully and clean up after itself
 }
 
 VisualizationWindow::~VisualizationWindow()
@@ -90,9 +101,10 @@ void VisualizationWindow::start_computation()
     //start the computation in a new thread
     cthread.compute();
 
-}//end start_computation()
+} //end start_computation()
 
-void VisualizationWindow::copy_fields_from_cthread() {
+void VisualizationWindow::copy_fields_from_cthread()
+{
     //TODO: this dataflow is still odd, could use more attention.
     xi_support = cthread.xi_support;
     x_exact = cthread.x_exact;
@@ -109,15 +121,15 @@ void VisualizationWindow::paint_xi_support()
     //First load our local copies of the data
     copy_fields_from_cthread();
     //send xi support points to the SliceDiagram
-    for(std::vector<xiPoint>::iterator it = xi_support.begin(); it != xi_support.end(); ++it)
+    for (std::vector<xiPoint>::iterator it = xi_support.begin(); it != xi_support.end(); ++it)
         slice_diagram.add_point(x_grades[it->x], y_grades[it->y], it->zero, it->one, it->two);
 
     //create the SliceDiagram
     slice_diagram.create_diagram(cthread.x_label,
-                                 cthread.y_label,
-                                 x_grades.front(), x_grades.back(),
-                                 y_grades.front(), y_grades.back(),
-                                 ui->normCoordCheckBox->isChecked(), homology_dimensions);
+        cthread.y_label,
+        x_grades.front(), x_grades.back(),
+        y_grades.front(), y_grades.back(),
+        ui->normCoordCheckBox->isChecked(), homology_dimensions);
 
     //enable control items
     ui->BettiLabel->setEnabled(true);
@@ -132,8 +144,8 @@ void VisualizationWindow::paint_xi_support()
 
     //update offset extents
     ///TODO: maybe these extents should be updated dynamically, based on the slope of the slice line
-    ui->offsetSpinBox->setMinimum( std::min(-1*x_grades.back(), y_grades.front()) );
-    ui->offsetSpinBox->setMaximum( std::max(y_grades.back(), -1*x_grades.front()) );
+    ui->offsetSpinBox->setMinimum(std::min(-1 * x_grades.back(), y_grades.front()));
+    ui->offsetSpinBox->setMaximum(std::max(y_grades.back(), -1 * x_grades.front()));
 
     //update status
     line_selection_ready = true;
@@ -150,8 +162,8 @@ void VisualizationWindow::augmented_arrangement_ready(MeshMessage* arrangement)
     this->arrangement = arrangement;
 
     //TESTING: print arrangement info and verify consistency
-//    arrangement->print_stats();
-//    arrangement->test_consistency();
+    //    arrangement->print_stats();
+    //    arrangement->test_consistency();
 
     //inialize persistence diagram
     p_diagram.create_diagram(QString::fromStdString(input_params.shortName), input_params.dim);
@@ -174,24 +186,25 @@ void VisualizationWindow::augmented_arrangement_ready(MeshMessage* arrangement)
     ui->barcodeCheckBox->setEnabled(true);
 
     //update status
-    if(verbosity >= 2) { qDebug() << "COMPUTATION FINISHED; READY FOR INTERACTIVITY."; }
+    if (verbosity >= 2) {
+        qDebug() << "COMPUTATION FINISHED; READY FOR INTERACTIVITY.";
+    }
     persistence_diagram_drawn = true;
     ui->statusBar->showMessage("ready for interactive barcode exploration");
 
     //if an output file has been specified, then save the arrangement
-    if(!input_params.outputFile.empty())
-      save_arrangement(QString::fromStdString(input_params.outputFile));
+    if (!input_params.outputFile.empty())
+        save_arrangement(QString::fromStdString(input_params.outputFile));
     //TODO: we don't have file reading tools here anymore, so we don't know what kind of file it was
     //Have to rely on console to either a) always save (to tmp file if needed), or b) tell us filetype in the output.
-//    else if(input_params.raw_data)
-//        unsaved_data = true;
+    //    else if(input_params.raw_data)
+    //        unsaved_data = true;
 
-}//end augmented_arrangement_ready()
+} //end augmented_arrangement_ready()
 
 void VisualizationWindow::on_angleDoubleSpinBox_valueChanged(double angle)
 {
-    if(line_selection_ready && !slice_update_lock)
-    {
+    if (line_selection_ready && !slice_update_lock) {
         angle_precise = angle;
         slice_diagram.update_line(angle_precise, ui->offsetSpinBox->value());
     }
@@ -201,8 +214,7 @@ void VisualizationWindow::on_angleDoubleSpinBox_valueChanged(double angle)
 
 void VisualizationWindow::on_offsetSpinBox_valueChanged(double offset)
 {
-    if(line_selection_ready && !slice_update_lock)
-    {
+    if (line_selection_ready && !slice_update_lock) {
         offset_precise = offset;
         slice_diagram.update_line(ui->angleDoubleSpinBox->value(), offset_precise);
     }
@@ -212,55 +224,52 @@ void VisualizationWindow::on_offsetSpinBox_valueChanged(double offset)
 
 void VisualizationWindow::on_normCoordCheckBox_clicked(bool checked)
 {
-    if(line_selection_ready)
-    {
+    if (line_selection_ready) {
         slice_diagram.set_normalized_coords(checked);
         slice_diagram.resize_diagram();
-        if(persistence_diagram_drawn)
+        if (persistence_diagram_drawn)
             p_diagram.resize_diagram(slice_diagram.get_slice_length(), slice_diagram.get_pd_scale());
     }
 }
 
 void VisualizationWindow::on_barcodeCheckBox_clicked(bool checked)
 {
-    if(line_selection_ready)
+    if (line_selection_ready)
         slice_diagram.toggle_barcode(checked);
 }
 
 void VisualizationWindow::on_xi0CheckBox_toggled(bool checked)
 {
-    if(line_selection_ready)
+    if (line_selection_ready)
         slice_diagram.toggle_xi0_points(checked);
 }
 
 void VisualizationWindow::on_xi1CheckBox_toggled(bool checked)
 {
-    if(line_selection_ready)
+    if (line_selection_ready)
         slice_diagram.toggle_xi1_points(checked);
 }
 
 void VisualizationWindow::on_xi2CheckBox_toggled(bool checked)
 {
-    if(line_selection_ready)
+    if (line_selection_ready)
         slice_diagram.toggle_xi2_points(checked);
 }
 
 //updates the persistence diagram and barcode after a change in the slice line
 void VisualizationWindow::update_persistence_diagram()
 {
-    if(persistence_diagram_drawn)
-    {
+    if (persistence_diagram_drawn) {
         //get the barcode
         qDebug() << "  QUERY: angle =" << angle_precise << ", offset =" << offset_precise;
         BarcodeTemplate dbc = arrangement->get_barcode_template(angle_precise, offset_precise);
-        if(barcode != NULL) //clean up the old barcode
+        if (barcode != NULL) //clean up the old barcode
             delete barcode;
         barcode = rescale_barcode_template(dbc, angle_precise, offset_precise);
 
         //TESTING
         qDebug() << "  XI SUPPORT VECTOR:";
-        for(unsigned i=0; i<xi_support.size(); i++)
-        {
+        for (unsigned i = 0; i < xi_support.size(); i++) {
             xiPoint p = xi_support[i];
             qDebug().nospace() << "    [" << i << "]: (" << p.x << "," << p.y << ") --> (" << x_grades[p.x] << "," << y_grades[p.y] << ")";
         }
@@ -279,102 +288,99 @@ void VisualizationWindow::update_persistence_diagram()
 // NOTE: angle in DEGREES
 Barcode* VisualizationWindow::rescale_barcode_template(BarcodeTemplate& dbc, double angle, double offset)
 {
-    Barcode* bc = new Barcode();     //NOTE: delete later!
+    Barcode* bc = new Barcode(); //NOTE: delete later!
 
     //loop through bars
-    for(std::set<BarTemplate>::iterator it = dbc.begin(); it != dbc.end(); ++it)
-    {
+    for (std::set<BarTemplate>::iterator it = dbc.begin(); it != dbc.end(); ++it) {
         qDebug() << "BarTemplate: " << it->begin << " " << it->end;
         assert(it->begin < xi_support.size());
         xiPoint begin = xi_support[it->begin];
         double birth = project(begin, angle, offset);
 
-        if(birth != INFTY)  //then bar exists in this rescaling
+        if (birth != INFTY) //then bar exists in this rescaling
         {
-            if(it->end >= xi_support.size())    //then endpoint is at infinity
+            if (it->end >= xi_support.size()) //then endpoint is at infinity
             {
-//                qDebug() << "   ===>   (" << it->begin << ", inf) |---> (" << birth << ", inf)";
+                //                qDebug() << "   ===>   (" << it->begin << ", inf) |---> (" << birth << ", inf)";
                 bc->add_bar(birth, INFTY, it->multiplicity);
-            }
-            else    //then bar is finite
+            } else //then bar is finite
             {
                 assert(it->end < xi_support.size());
                 xiPoint end = xi_support[it->end];
                 double death = project(end, angle, offset);
-//                qDebug() << "   ===>>> (" << it->begin << "," << it->end << ") |---> (" << birth << "," << death << ")";
+                //                qDebug() << "   ===>>> (" << it->begin << "," << it->end << ") |---> (" << birth << "," << death << ")";
                 bc->add_bar(birth, death, it->multiplicity);
 
                 //testing
-                if(birth > death)
+                if (birth > death)
                     qDebug() << "=====>>>>> ERROR: inverted bar (" << birth << "," << death << ")";
             }
         }
-//        else
-//            qDebug() << "   ===>>> (" << it->begin << "," << it->end << ") DOES NOT EXIST IN THIS PROJECTION";
+        //        else
+        //            qDebug() << "   ===>>> (" << it->begin << "," << it->end << ") DOES NOT EXIST IN THIS PROJECTION";
     }
 
     return bc;
-}//end rescale_barcode_template()
+} //end rescale_barcode_template()
 
 //computes the projection of an xi support point onto the specified line
 //  NOTE: returns INFTY if the point has no projection (can happen only for horizontal and vertical lines)
 //  NOTE: angle in DEGREES
 double VisualizationWindow::project(xiPoint& pt, double angle, double offset)
 {
-    if(angle == 0)  //then line is horizontal
+    if (angle == 0) //then line is horizontal
     {
-        if( y_grades[pt.y] <= offset)   //then point is below the line, so projection exists
+        if (y_grades[pt.y] <= offset) //then point is below the line, so projection exists
             return x_grades[pt.x];
-        else    //then no projection
+        else //then no projection
             return INFTY;
-    }
-    else if(angle == 90)    //then line is vertical
+    } else if (angle == 90) //then line is vertical
     {
-        if( x_grades[pt.x] <= -1*offset)   //then point is left of the line, so projection exists
+        if (x_grades[pt.x] <= -1 * offset) //then point is left of the line, so projection exists
             return y_grades[pt.y];
-        else    //then no projection
+        else //then no projection
             return INFTY;
     }
     //if we get here, then line is neither horizontal nor vertical
-    double radians = angle*PI/180;
+    double radians = angle * PI / 180;
     double x = x_grades[pt.x];
     double y = y_grades[pt.y];
 
-    if( y > x*tan(radians) + offset/cos(radians) )	//then point is above line
-        return y/sin(radians) - offset/tan(radians); //project right
+    if (y > x * tan(radians) + offset / cos(radians)) //then point is above line
+        return y / sin(radians) - offset / tan(radians); //project right
 
-    return x/cos(radians) + offset*tan(radians); //project up
-}//end project()
+    return x / cos(radians) + offset * tan(radians); //project up
+} //end project()
 
 //computes the projection of the lower-left corner of the line-selection window onto the specified line
 /// TESTING AS REPLACEMENT FOR SliceDiagram::get_zero()
 double VisualizationWindow::project_zero(double angle, double offset)
 {
-    if(angle == 0)  //then line is horizontal
+    if (angle == 0) //then line is horizontal
         return x_grades[0];
 
-    if(angle == 90)    //then line is vertical
+    if (angle == 90) //then line is vertical
         return y_grades[0];
 
     //if we get here, then line is neither horizontal nor vertical
-    double radians = angle*PI/180;
+    double radians = angle * PI / 180;
     double x = x_grades[0];
     double y = y_grades[0];
 
-    if( y > x*tan(radians) + offset/cos(radians) )	//then point is above line
-        return y/sin(radians) - offset/tan(radians); //project right
+    if (y > x * tan(radians) + offset / cos(radians)) //then point is above line
+        return y / sin(radians) - offset / tan(radians); //project right
 
-    return x/cos(radians) + offset*tan(radians); //project up
-}//end project_zero()
+    return x / cos(radians) + offset * tan(radians); //project up
+} //end project_zero()
 
 void VisualizationWindow::set_line_parameters(double angle, double offset)
 {
     slice_update_lock = true;
 
     //correct for slight numerical errors that the interface might introduce
-    if(angle < 0 && angle > -45)
+    if (angle < 0 && angle > -45)
         angle = 0;
-    if(angle > 90 || angle < -40)
+    if (angle > 90 || angle < -40)
         angle = 90;
 
     //store values internally
@@ -393,44 +399,36 @@ void VisualizationWindow::set_line_parameters(double angle, double offset)
 void VisualizationWindow::showEvent(QShowEvent* event)
 {
     QMainWindow::showEvent(event);
-    if(!data_selected)
-    {
+    if (!data_selected) {
         ds_dialog.show();
     }
 }
 
 void VisualizationWindow::resizeEvent(QResizeEvent* /*unused*/)
 {
-    if(line_selection_ready)
-    {
+    if (line_selection_ready) {
         slice_diagram.resize_diagram();
 
-        if(persistence_diagram_drawn)
+        if (persistence_diagram_drawn)
             p_diagram.resize_diagram(slice_diagram.get_slice_length(), slice_diagram.get_pd_scale());
     }
 }
 
 void VisualizationWindow::closeEvent(QCloseEvent* event)
 {
-    if(unsaved_data)
-    {
+    if (unsaved_data) {
         QMessageBox::StandardButton reallyExit;
-        reallyExit = QMessageBox::question(this, "Exit?", "Are you sure you want to exit? Your augmented arrangement has not been saved and will be lost!", QMessageBox::Yes|QMessageBox::No);
+        reallyExit = QMessageBox::question(this, "Exit?", "Are you sure you want to exit? Your augmented arrangement has not been saved and will be lost!", QMessageBox::Yes | QMessageBox::No);
 
-        if(reallyExit == QMessageBox::Yes)
-        {
+        if (reallyExit == QMessageBox::Yes) {
             event->accept();
-    //        qDebug() << "User has closed RIVET.";
-        }
-        else
+            //        qDebug() << "User has closed RIVET.";
+        } else
             event->ignore();
-    }
-    else
-    {
+    } else {
         event->accept();
     }
 }
-
 
 void VisualizationWindow::on_actionExit_triggered()
 {
@@ -447,11 +445,10 @@ void VisualizationWindow::on_actionConfigure_triggered()
     configBox = new ConfigureDialog(config_params, input_params, this);
     configBox->exec();
 
-    if(line_selection_ready)
-    {
-      slice_diagram.receive_parameter_change(cthread.x_label, cthread.y_label);
+    if (line_selection_ready) {
+        slice_diagram.receive_parameter_change(cthread.x_label, cthread.y_label);
 
-        if(persistence_diagram_drawn)
+        if (persistence_diagram_drawn)
             p_diagram.receive_parameter_change();
     }
 
@@ -460,9 +457,8 @@ void VisualizationWindow::on_actionConfigure_triggered()
 
 void VisualizationWindow::on_actionSave_persistence_diagram_as_image_triggered()
 {
-    QString fileName= QFileDialog::getSaveFileName(this, "Export persistence diagram as image", QCoreApplication::applicationDirPath(), "PNG Image (*.png)");
-    if (!fileName.isNull())
-    {
+    QString fileName = QFileDialog::getSaveFileName(this, "Export persistence diagram as image", QCoreApplication::applicationDirPath(), "PNG Image (*.png)");
+    if (!fileName.isNull()) {
         QPixmap pixMap = ui->pdView->grab();
         pixMap.save(fileName, "PNG");
     }
@@ -471,9 +467,8 @@ void VisualizationWindow::on_actionSave_persistence_diagram_as_image_triggered()
 
 void VisualizationWindow::on_actionSave_line_selection_window_as_image_triggered()
 {
-    QString fileName= QFileDialog::getSaveFileName(this, "Export line selection window as image", QCoreApplication::applicationDirPath(), "PNG Image (*.png)");
-    if (!fileName.isNull())
-    {
+    QString fileName = QFileDialog::getSaveFileName(this, "Export line selection window as image", QCoreApplication::applicationDirPath(), "PNG Image (*.png)");
+    if (!fileName.isNull()) {
         QPixmap pixMap = ui->sliceView->grab();
         pixMap.save(fileName, "PNG");
     }
@@ -482,25 +477,23 @@ void VisualizationWindow::on_actionSave_line_selection_window_as_image_triggered
 
 void VisualizationWindow::on_actionSave_triggered()
 {
-    QString fileName= QFileDialog::getSaveFileName(this, "Save computed data", QCoreApplication::applicationDirPath());
-    if (!fileName.isNull())
-    {
+    QString fileName = QFileDialog::getSaveFileName(this, "Save computed data", QCoreApplication::applicationDirPath());
+    if (!fileName.isNull()) {
         save_arrangement(fileName);
     }
     ///TODO: error handling?
-}//end on_actionSave_triggered()
+} //end on_actionSave_triggered()
 
 void VisualizationWindow::save_arrangement(const QString& filename)
 {
     try {
         write_boost_file(filename, input_params, cthread.message, *arrangement);
-    } catch (std::exception &e) {
+    } catch (std::exception& e) {
         QMessageBox errorBox(QMessageBox::Warning, "Error",
-                             QString("Unable to write file: ").append(filename).append(": ")
-                                    .append(e.what()));
+            QString("Unable to write file: ").append(filename).append(": ").append(e.what()));
         errorBox.exec();
     }
-}//end save_arrangement()
+} //end save_arrangement()
 
 void VisualizationWindow::on_actionOpen_triggered()
 {
@@ -510,6 +503,5 @@ void VisualizationWindow::on_actionOpen_triggered()
     msgBox.setText("This feature is not implemented yet.");
     msgBox.exec();
 
-
     ///TODO: open the data select dialog box and load new data
-}//end on_actionOpen_triggered()
+} //end on_actionOpen_triggered()
