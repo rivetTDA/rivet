@@ -40,4 +40,17 @@ Bryn Keller (Intel Labs)
 
 TODO: Other contributors please add yourselves!
      
+## Contributing
     
+We welcome your contribution! Code, documentation, unit tests, 
+interesting sample data files are all welcome!
+
+Before submitting your branch for review, please run:
+
+```
+clang-format -i **/*.cpp **/*.h
+```
+
+This will format the source code using the project's established source
+code standards (these are captured in the `.clang-format` file in the
+project root directory).
