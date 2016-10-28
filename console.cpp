@@ -1,11 +1,11 @@
 
 #include "computation.h"
 #include "dcel/arrangement.h"
-#include "debug.h"
 #include "docopt.h"
 #include "interface/input_manager.h"
 #include "interface/input_parameters.h"
 #include <boost/archive/tmpdir.hpp>
+#include <boost/multi_array.hpp> // for print_betti
 #include <interface/file_writer.h>
 
 #include <boost/archive/binary_iarchive.hpp>
@@ -26,17 +26,19 @@ static const char USAGE[] =
       rivet_console (-h | --help)
       rivet_console --version
       rivet_console <input_file> --identify
-      rivet_console <input_file> <output_file> [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [-f <format>]
+      rivet_console <input_file> <output_file> [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [-f <format>] [(-b | --betti)] [--binary]
 
     Options:
       -h --help                                Show this screen
       --version                                Show the version
       --identify                               Parse the file and print filetype information
+      --binary                                 Include binary data (used by RIVET viewer only)
       -H <dimension> --homology=<dimension>    Dimension of homology to compute [default: 0]
       -x <xbins> --xbins=<xbins>               Number of bins in the x direction [default: 0]
       -y <ybins> --ybins=<ybins>               Number of bins in the y direction [default: 0]
       -V <verbosity> --verbosity=<verbosity>   Verbosity level: 0 (no console output) to 10 (lots of output) [default: 2]
       -f <format>                              Output format for file [default: R1]
+      -b --betti                               Print Betti number information and exit.
 )";
 
 unsigned int get_uint_or_die(std::map<std::string, docopt::value>& args, const std::string& key)
@@ -93,6 +95,20 @@ void write_boost_file(InputParameters const& params, TemplatePointsMessage const
     file.flush();
 }
 
+void print_betti(TemplatePointsMessage const &message, std::ostream &ostream) {
+    assert(message.homology_dimensions.dimensionality == 2);
+    auto shape = message.homology_dimensions.shape();
+    auto dims = &message.homology_dimensions;
+    auto data = message.homology_dimensions.data();
+    for(int row = 0; row < shape[0]; row++) {
+        for(int col = 0; col < shape[1]; col++) {
+            unsigned dim = data[row * shape[0] + col];
+           ostream << dim << '\t';
+        }
+        ostream << std::endl;
+    }
+}
+
 //
 int main(int argc, char* argv[])
 {
@@ -120,6 +136,8 @@ int main(int argc, char* argv[])
     params.y_bins = get_uint_or_die(args, "--ybins");
     params.verbosity = get_uint_or_die(args, "--verbosity");
     params.outputFormat = args["-f"].asString();
+    bool betti_only = args["--betti"].isBool() && args["--betti"].asBool();
+    bool binary = args["--binary"].isBool() && args["--binary"].asBool();
     bool identify = args["--identify"].isBool() && args["--identify"].asBool();
     if (identify) {
         params.verbosity = 0;
@@ -139,63 +157,72 @@ int main(int argc, char* argv[])
     progress.progress.connect([](int amount) {
         std::cout << "PROGRESS " << amount << std::endl;
     });
-    computation.arrangement_ready.connect([&arrangement_message, &params](std::shared_ptr<Arrangement> arrangement) {
-        arrangement_message = new ArrangementMessage(*arrangement);
-        //TODO: this should become a system test with a known dataset
-        //Note we no longer write the arrangement to stdout, it goes to a file at the end
-        //of the run. This message just announces the absolute path of the file.
-        //The viewer should capture the file name from the stdout stream, and
-        //then wait for the console program to finish before attempting to read the file.
-        std::stringstream ss(std::ios_base::binary | std::ios_base::out | std::ios_base::in);
-        {
-            boost::archive::binary_oarchive archive(ss);
-            archive << *arrangement_message;
+    computation.arrangement_ready.connect([&arrangement_message, &params, binary](std::shared_ptr<Arrangement> arrangement) {
+        //TODO: add a flag to re-enable this code?
+//        arrangement_message = new ArrangementMessage(*arrangement);
+//        //TODO: this should become a system test with a known dataset
+//        //Note we no longer write the arrangement to stdout, it goes to a file at the end
+//        //of the run. This message just announces the absolute path of the file.
+//        //The viewer should capture the file name from the stdout stream, and
+//        //then wait for the console program to finish before attempting to read the file.
+//        std::stringstream ss(std::ios_base::binary | std::ios_base::out | std::ios_base::in);
+//        {
+//            boost::archive::binary_oarchive archive(ss);
+//            archive << *arrangement_message;
+//        }
+//        std::clog << "Testing deserialization locally..." << std::endl;
+//        std::string original = ss.str();
+//        ArrangementMessage test;
+//        {
+//            boost::archive::binary_iarchive inarch(ss);
+//            inarch >> test;
+//            std::clog << "Deserialized!";
+//        }
+//        if (!(*arrangement_message == test)) {
+//            throw std::runtime_error("Original and deserialized don't match!");
+//        }
+//        Arrangement reconstituted = arrangement_message->to_arrangement();
+//        ArrangementMessage round_trip(reconstituted);
+//        if (!(round_trip == *arrangement_message)) {
+//            throw std::runtime_error("Original and reconstituted don't match!");
+//        }
+        if (binary) {
+            std::cout << "ARRANGEMENT: " << params.outputFile << std::endl;
+        } else {
+            std::cout << "Wrote arrangement to " << params.outputFile << std::endl;
         }
-        std::clog << "Testing deserialization locally..." << std::endl;
-        std::string original = ss.str();
-        ArrangementMessage test;
-        {
-            boost::archive::binary_iarchive inarch(ss);
-            inarch >> test;
-            std::clog << "Deserialized!";
-        }
-        if (!(*arrangement_message == test)) {
-            throw std::runtime_error("Original and deserialized don't match!");
-        }
-        Arrangement reconstituted = arrangement_message->to_arrangement();
-        ArrangementMessage round_trip(reconstituted);
-        if (!(round_trip == *arrangement_message)) {
-            throw std::runtime_error("Original and reconstituted don't match!");
-        }
-        std::cout << "ARRANGEMENT: " << params.outputFile << std::endl;
     });
-    computation.template_points_ready.connect([&points_message](TemplatePointsMessage message) {
-        std::cout << "XI" << std::endl;
-        points_message = new TemplatePointsMessage(message);
-        //            cereal::JSONOutputArchive archive(std::cout);
-        //            cereal::BinaryOutputArchive archive(std::cout);
-        {
-            //                cereal::XMLOutputArchive archive(std::cout);
-            boost::archive::text_oarchive archive(std::cout);
-            archive << message;
-        }
-        std::cout << "END XI" << std::endl;
-        std::cout.flush();
-        std::stringstream ss;
-        {
-            std::cerr << "Local deserialization test" << std::endl;
-            boost::archive::text_oarchive out(ss);
-            out << message;
-        }
-        {
-            boost::archive::text_iarchive in(ss);
-            TemplatePointsMessage result;
-            in >> result;
-            if (!(message == result)) {
-                throw std::runtime_error("Original TemplatePointsMessage and reconstituted don't match!");
+    computation.template_points_ready.connect([&points_message, binary, betti_only](TemplatePointsMessage message) {
+        if (binary) {
+            std::cout << "XI" << std::endl;
+            points_message = new TemplatePointsMessage(message);
+            {
+                boost::archive::text_oarchive archive(std::cout);
+                archive << message;
             }
+            std::cout << "END XI" << std::endl;
+            std::cout.flush();
         }
-        std::cerr << "xi support received: " << message.template_points.size();
+        //TODO: Add a flag to re-enable this code?
+//        std::stringstream ss;
+//        {
+//            std::cerr << "Local deserialization test" << std::endl;
+//            boost::archive::text_oarchive out(ss);
+//            out << message;
+//        }
+//        {
+//            boost::archive::text_iarchive in(ss);
+//            TemplatePointsMessage result;
+//            in >> result;
+//            if (!(message == result)) {
+//                throw std::runtime_error("Original TemplatePointsMessage and reconstituted don't match!");
+//            }
+//        }
+        if (betti_only) {
+            print_betti(message, std::cout);
+            //TODO: this seems a little abrupt...
+            exit(0);
+        }
     });
 
     std::unique_ptr<InputData> input;
