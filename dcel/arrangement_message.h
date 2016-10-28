@@ -5,9 +5,9 @@
 #ifndef RIVET_CONSOLE_MESH_MESSAGE_H
 #define RIVET_CONSOLE_MESH_MESSAGE_H
 #include "dcel/anchor.h"
+#include "dcel/arrangement.h"
 #include "dcel/barcode_template.h"
 #include "dcel/dcel.h"
-#include "dcel/arrangement.h"
 #include "type_tag.h"
 #include <boost/optional.hpp>
 #include <boost/serialization/split_member.hpp>

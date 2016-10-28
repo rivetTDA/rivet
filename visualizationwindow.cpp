@@ -1,8 +1,8 @@
 #include "visualizationwindow.h"
 #include "ui_visualizationwindow.h"
 
-#include "dcel/barcode_template.h"
 #include "dcel/arrangement_message.h"
+#include "dcel/barcode_template.h"
 #include "interface/barcode.h"
 #include "interface/config_parameters.h"
 #include "interface/file_writer.h"

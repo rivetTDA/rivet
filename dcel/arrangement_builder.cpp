@@ -4,8 +4,8 @@
 
 #include "dcel/arrangement_builder.h"
 #include "dcel/anchor.h"
-#include "dcel/dcel.h"
 #include "dcel/arrangement.h"
+#include "dcel/dcel.h"
 #include "debug.h"
 #include "timer.h"
 #include <boost/graph/adjacency_list.hpp>

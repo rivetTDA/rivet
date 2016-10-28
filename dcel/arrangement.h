@@ -17,9 +17,9 @@ class MultiBetti;
 class PersistenceUpdater;
 class Vertex;
 
-#include "math/template_point.h"
 #include "anchor.h"
 #include "interface/progress.h"
+#include "math/template_point.h"
 #include "numerics.h"
 #include "pointer_comparator.h"
 #include <set>
@@ -58,7 +58,7 @@ class Arrangement {
     friend class PersistenceUpdater;
     friend class ArrangementBuilder;
     friend class ArrangementMessage;
-    friend Arrangement to_arrangement(ArrangementMessage const &msg);
+    friend Arrangement to_arrangement(ArrangementMessage const& msg);
 
 public:
     Arrangement(); //For serialization

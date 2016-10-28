@@ -8,9 +8,9 @@
 #define FILEWRITER_H
 
 #include "dcel/arrangement.h"
-#include "math/template_point.h"
 #include "input_manager.h"
 #include "input_parameters.h"
+#include "math/template_point.h"
 
 #include <fstream>
 
