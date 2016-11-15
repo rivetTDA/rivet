@@ -26,7 +26,8 @@ static const char USAGE[] =
       rivet_console (-h | --help)
       rivet_console --version
       rivet_console <input_file> --identify
-      rivet_console <input_file> <output_file> [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [-f <format>] [(-b | --betti)] [--binary]
+      rivet_console <input_file> --betti
+      rivet_console <input_file> <output_file> [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [-f <format>] [--binary] [--betti]
 
     Options:
       -h --help                                Show this screen
@@ -40,6 +41,8 @@ static const char USAGE[] =
       -f <format>                              Output format for file [default: R1]
       -b --betti                               Print Betti number information and exit.
 )";
+
+//TODO: Document the line_file format. In help string or website or...
 
 unsigned int get_uint_or_die(std::map<std::string, docopt::value>& args, const std::string& key)
 {
@@ -95,17 +98,43 @@ void write_boost_file(InputParameters const& params, TemplatePointsMessage const
     file.flush();
 }
 
-void print_betti(TemplatePointsMessage const& message, std::ostream& ostream)
+void print_dims(TemplatePointsMessage const& message, std::ostream& ostream)
 {
     assert(message.homology_dimensions.dimensionality == 2);
     auto shape = message.homology_dimensions.shape();
     auto data = message.homology_dimensions.data();
+    auto x = rivet::numeric::to_doubles(message.x_exact);
+    auto y = rivet::numeric::to_doubles(message.y_exact);
+    ostream << "Dimensions > 0:" << std::endl;
+
     for (int row = 0; row < shape[0]; row++) {
         for (int col = 0; col < shape[1]; col++) {
             unsigned dim = data[row * shape[0] + col];
-            ostream << dim << '\t';
+            if (dim > 0) {
+                ostream << "(" << x[col] << ", " << y[row] << ", " << dim << ")" << std::endl;
+            }
         }
         ostream << std::endl;
+    }
+}
+
+void print_betti(TemplatePointsMessage const& message, std::ostream& ostream)
+{
+    ostream << "Betti numbers:" << std::endl;
+    for (int xi = 0; xi < 3; xi++) {
+        ostream << "xi_" << xi << ":" << std::endl;
+        for(auto point : message.template_points) {
+            auto value = 0;
+            if (xi == 0)
+                value = point.zero;
+            else if (xi == 1)
+                value = point.one;
+            else if (xi == 2)
+                value = point.two;
+            if (value > 0) {
+                ostream << "(" << point.x << ", " << point.y << ", " << value << ")" << std::endl;
+            }
+        }
     }
 }
 
