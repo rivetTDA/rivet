@@ -35,7 +35,7 @@ void FileWriter::write_augmented_arrangement(std::ofstream& stream)
     stream << input_data.x_label << std::endl;
     stream << input_data.y_label << std::endl
            << std::endl;
-    stream << arrangement;
+    write_grades(stream, arrangement.x_exact, arrangement.y_exact);
 
     //write values of the multigraded Betti numbers
     stream << "xi values" << std::endl;

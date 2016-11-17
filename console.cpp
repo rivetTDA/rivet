@@ -98,20 +98,19 @@ void write_boost_file(InputParameters const& params, TemplatePointsMessage const
     file.flush();
 }
 
+
 void print_dims(TemplatePointsMessage const& message, std::ostream& ostream)
 {
     assert(message.homology_dimensions.dimensionality == 2);
     auto shape = message.homology_dimensions.shape();
     auto data = message.homology_dimensions.data();
-    auto x = rivet::numeric::to_doubles(message.x_exact);
-    auto y = rivet::numeric::to_doubles(message.y_exact);
     ostream << "Dimensions > 0:" << std::endl;
 
     for (int row = 0; row < shape[0]; row++) {
         for (int col = 0; col < shape[1]; col++) {
             unsigned dim = data[row * shape[0] + col];
             if (dim > 0) {
-                ostream << "(" << x[col] << ", " << y[row] << ", " << dim << ")" << std::endl;
+                ostream << "(" << col << ", " << row << ", " << dim << ")" << std::endl;
             }
         }
         ostream << std::endl;
@@ -171,6 +170,7 @@ int main(int argc, char* argv[])
     if (identify) {
         params.verbosity = 0;
     }
+    int verbosity = params.verbosity;
 
     //        debug() << "X bins: " << params.x_bins ;
     //        debug() << "Y bins: " << params.y_bins ;
@@ -221,16 +221,22 @@ int main(int argc, char* argv[])
             std::cout << "Wrote arrangement to " << params.outputFile << std::endl;
         }
     });
-    computation.template_points_ready.connect([&points_message, binary, betti_only](TemplatePointsMessage message) {
+    computation.template_points_ready.connect([&points_message, binary, betti_only, verbosity](TemplatePointsMessage message) {
+        points_message = new TemplatePointsMessage(message);
+
         if (binary) {
             std::cout << "XI" << std::endl;
-            points_message = new TemplatePointsMessage(message);
             {
                 boost::archive::text_oarchive archive(std::cout);
                 archive << message;
             }
             std::cout << "END XI" << std::endl;
             std::cout.flush();
+        }
+
+        if (verbosity >= 4 || betti_only) {
+            FileWriter::write_grades(std::cout, message.x_exact, message.y_exact);
+
         }
         //TODO: Add a flag to re-enable this code?
         //        std::stringstream ss;
@@ -248,7 +254,10 @@ int main(int argc, char* argv[])
         //            }
         //        }
         if (betti_only) {
+            print_dims(message, std::cout);
+            std::cout << std::endl;
             print_betti(message, std::cout);
+            std::cout.flush();
             //TODO: this seems a little abrupt...
             exit(0);
         }
