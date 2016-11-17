@@ -90,7 +90,7 @@ private:
     double offset_precise; //sufficiently-precise internal value of the slice-line offset, necessary because QDoubleSpinBox truncates this value
 
     ArrangementMessage* arrangement; //pointer to the DCEL arrangement
-    Barcode* barcode; //pointer to the currently-displayed barcode
+    std::unique_ptr<Barcode> barcode; //pointer to the currently-displayed barcode
 
     //computation items
     ComputationThread cthread;
@@ -107,7 +107,7 @@ private:
 
     void update_persistence_diagram(); //updates the persistence diagram and barcode after a change in the slice line
 
-    Barcode* rescale_barcode_template(BarcodeTemplate& dbc, double angle, double offset);
+    std::unique_ptr<Barcode> rescale_barcode_template(BarcodeTemplate& dbc, double angle, double offset);
     double project(TemplatePoint& pt, double angle, double offset);
 
     //computes the projection of the lower-left corner of the line-selection window onto the specified line

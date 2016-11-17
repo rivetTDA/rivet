@@ -265,7 +265,7 @@ void VisualizationWindow::update_persistence_diagram()
         BarcodeTemplate dbc = arrangement->get_barcode_template(angle_precise, offset_precise);
         if (barcode != NULL) //clean up the old barcode
             delete barcode;
-        barcode = rescale_barcode_template(dbc, angle_precise, offset_precise);
+        barcode = std::move(rescale_barcode_template(dbc, angle_precise, offset_precise));
 
         //TESTING
         qDebug() << "  XI SUPPORT VECTOR:";
@@ -286,9 +286,9 @@ void VisualizationWindow::update_persistence_diagram()
 
 //rescales a barcode template by projecting points onto the specified line
 // NOTE: angle in DEGREES
-Barcode* VisualizationWindow::rescale_barcode_template(BarcodeTemplate& dbc, double angle, double offset)
+std::unique_ptr<Barcode> VisualizationWindow::rescale_barcode_template(BarcodeTemplate& dbc, double angle, double offset)
 {
-    Barcode* bc = new Barcode(); //NOTE: delete later!
+    std::unique_ptr<Barcode> bc = std::unique_ptr<Barcode>(new Barcode());
 
     //loop through bars
     for (std::set<BarTemplate>::iterator it = dbc.begin(); it != dbc.end(); ++it) {
@@ -301,14 +301,12 @@ Barcode* VisualizationWindow::rescale_barcode_template(BarcodeTemplate& dbc, dou
         {
             if (it->end >= template_points.size()) //then endpoint is at infinity
             {
-                //                qDebug() << "   ===>   (" << it->begin << ", inf) |---> (" << birth << ", inf)";
                 bc->add_bar(birth, INFTY, it->multiplicity);
             } else //then bar is finite
             {
                 assert(it->end < template_points.size());
                 TemplatePoint end = template_points[it->end];
                 double death = project(end, angle, offset);
-                //                qDebug() << "   ===>>> (" << it->begin << "," << it->end << ") |---> (" << birth << "," << death << ")";
                 bc->add_bar(birth, death, it->multiplicity);
 
                 //testing
@@ -316,8 +314,6 @@ Barcode* VisualizationWindow::rescale_barcode_template(BarcodeTemplate& dbc, dou
                     qDebug() << "=====>>>>> ERROR: inverted bar (" << birth << "," << death << ")";
             }
         }
-        //        else
-        //            qDebug() << "   ===>>> (" << it->begin << "," << it->end << ") DOES NOT EXIST IN THIS PROJECTION";
     }
 
     return bc;

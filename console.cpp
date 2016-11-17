@@ -26,8 +26,9 @@ static const char USAGE[] =
       rivet_console (-h | --help)
       rivet_console --version
       rivet_console <input_file> --identify
+      rivet_console <input_file> --barcodes <line_file>
       rivet_console <input_file> --betti
-      rivet_console <input_file> <output_file> [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [-f <format>] [--binary] [--betti]
+      rivet_console <input_file> <output_file> [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [-f <format>] [--binary] [--betti] [--barcodes <line_file>]
 
     Options:
       -h --help                                Show this screen
@@ -40,9 +41,25 @@ static const char USAGE[] =
       -V <verbosity> --verbosity=<verbosity>   Verbosity level: 0 (no console output) to 10 (lots of output) [default: 2]
       -f <format>                              Output format for file [default: R1]
       -b --betti                               Print Betti number information and exit.
-)";
+      --barcodes <line_file>                   Print barcodes for the line queries in line_file.
+                                               The line_file contains pairs (m, b) where m is the degree (0 to 90)
+                                               and b the offset, separated by a space. Each pair should appear on
+                                               a line by itself.
 
-//TODO: Document the line_file format. In help string or website or...
+                                               If m < 90, then b is a y-intercept; if m = 90, then b is an x-intercept.
+                                               Coordinates are assumed to be unnormalized.
+
+                                               Example line_file contents:
+                                                    25  0.234
+                                                    47  0.88
+
+                                               RIVET will output one line of barcode information for each line
+                                               in line_file. For example:
+
+                                               0 1, 0 1, 0 1
+                                               2 inf, 3 4, 1 7
+
+)";
 
 unsigned int get_uint_or_die(std::map<std::string, docopt::value>& args, const std::string& key)
 {
@@ -123,7 +140,7 @@ void print_betti(TemplatePointsMessage const& message, std::ostream& ostream)
     ostream << "Betti numbers:" << std::endl;
     for (int xi = 0; xi < 3; xi++) {
         ostream << "xi_" << xi << ":" << std::endl;
-        for(auto point : message.template_points) {
+        for (auto point : message.template_points) {
             auto value = 0;
             if (xi == 0)
                 value = point.zero;
