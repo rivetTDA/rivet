@@ -761,8 +761,3 @@ bool Arrangement::almost_equal(const double a, const double b)
         return true;
     return false;
 }
-
-std::ostream& operator<<(std::ostream& stream, const Arrangement& arrangement)
-{
-    return write_grades(stream, arrangement.x_exact, arrangement.y_exact);
-}

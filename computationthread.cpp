@@ -120,7 +120,8 @@ void ComputationThread::compute_from_file()
          << "-y" << QString::number(params.y_bins)
          << "-V" << QString::number(params.verbosity)
          << "-f"
-         << "R1";
+         << "R1"
+         << "--binary";
     auto console = RivetConsoleApp::start(args);
 
     if (!console->waitForStarted()) {

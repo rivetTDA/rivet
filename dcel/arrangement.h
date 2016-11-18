@@ -25,31 +25,6 @@ class Vertex;
 #include <set>
 #include <vector>
 
-//std::ostream& write_grades(std::ostream &stream, const std::vector<exact> &x_exact, const std::vector<exact> &y_exact);
-
-template <typename T>
-T& write_grades(T& stream, const std::vector<exact>& x_exact, const std::vector<exact>& y_exact)
-{
-
-    //write x-grades
-    stream << "x-grades" << std::endl;
-    for (std::vector<exact>::const_iterator it = x_exact.begin(); it != x_exact.end(); ++it) {
-        std::ostringstream oss;
-        oss << *it;
-        stream << oss.str() << std::endl;
-    }
-    stream << std::endl;
-
-    //write y-grades
-    stream << "y-grades" << std::endl;
-    for (std::vector<exact>::const_iterator it = y_exact.begin(); it != y_exact.end(); ++it) {
-        std::ostringstream oss;
-        oss << *it;
-        stream << oss.str() << std::endl;
-    }
-    stream << std::endl;
-    return stream;
-}
 
 class ArrangementMessage;
 

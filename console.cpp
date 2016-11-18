@@ -115,20 +115,19 @@ void write_boost_file(InputParameters const& params, TemplatePointsMessage const
     file.flush();
 }
 
+
 void print_dims(TemplatePointsMessage const& message, std::ostream& ostream)
 {
     assert(message.homology_dimensions.dimensionality == 2);
     auto shape = message.homology_dimensions.shape();
     auto data = message.homology_dimensions.data();
-    auto x = rivet::numeric::to_doubles(message.x_exact);
-    auto y = rivet::numeric::to_doubles(message.y_exact);
     ostream << "Dimensions > 0:" << std::endl;
 
     for (int row = 0; row < shape[0]; row++) {
         for (int col = 0; col < shape[1]; col++) {
             unsigned dim = data[row * shape[0] + col];
             if (dim > 0) {
-                ostream << "(" << x[col] << ", " << y[row] << ", " << dim << ")" << std::endl;
+                ostream << "(" << col << ", " << row << ", " << dim << ")" << std::endl;
             }
         }
         ostream << std::endl;
@@ -188,6 +187,7 @@ int main(int argc, char* argv[])
     if (identify) {
         params.verbosity = 0;
     }
+    int verbosity = params.verbosity;
 
     //        debug() << "X bins: " << params.x_bins ;
     //        debug() << "Y bins: " << params.y_bins ;
@@ -204,50 +204,55 @@ int main(int argc, char* argv[])
         std::cout << "PROGRESS " << amount << std::endl;
     });
     computation.arrangement_ready.connect([&arrangement_message, &params, binary](std::shared_ptr<Arrangement> arrangement) {
-        //TODO: add a flag to re-enable this code?
-        //        arrangement_message = new ArrangementMessage(*arrangement);
-        //        //TODO: this should become a system test with a known dataset
-        //        //Note we no longer write the arrangement to stdout, it goes to a file at the end
-        //        //of the run. This message just announces the absolute path of the file.
-        //        //The viewer should capture the file name from the stdout stream, and
-        //        //then wait for the console program to finish before attempting to read the file.
-        //        std::stringstream ss(std::ios_base::binary | std::ios_base::out | std::ios_base::in);
-        //        {
-        //            boost::archive::binary_oarchive archive(ss);
-        //            archive << *arrangement_message;
-        //        }
-        //        std::clog << "Testing deserialization locally..." << std::endl;
-        //        std::string original = ss.str();
-        //        ArrangementMessage test;
-        //        {
-        //            boost::archive::binary_iarchive inarch(ss);
-        //            inarch >> test;
-        //            std::clog << "Deserialized!";
-        //        }
-        //        if (!(*arrangement_message == test)) {
-        //            throw std::runtime_error("Original and deserialized don't match!");
-        //        }
-        //        Arrangement reconstituted = arrangement_message->to_arrangement();
-        //        ArrangementMessage round_trip(reconstituted);
-        //        if (!(round_trip == *arrangement_message)) {
-        //            throw std::runtime_error("Original and reconstituted don't match!");
-        //        }
+        arrangement_message = new ArrangementMessage(*arrangement);
+        //TODO: this should become a system test with a known dataset
+        //Note we no longer write the arrangement to stdout, it goes to a file at the end
+        //of the run. This message just announces the absolute path of the file.
+        //The viewer should capture the file name from the stdout stream, and
+        //then wait for the console program to finish before attempting to read the file.
+        std::stringstream ss(std::ios_base::binary | std::ios_base::out | std::ios_base::in);
+        {
+            boost::archive::binary_oarchive archive(ss);
+            archive << *arrangement_message;
+        }
+        std::clog << "Testing deserialization locally..." << std::endl;
+        std::string original = ss.str();
+        ArrangementMessage test;
+        {
+            boost::archive::binary_iarchive inarch(ss);
+            inarch >> test;
+            std::clog << "Deserialized!";
+        }
+        if (!(*arrangement_message == test)) {
+            throw std::runtime_error("Original and deserialized don't match!");
+        }
+        Arrangement reconstituted = arrangement_message->to_arrangement();
+        ArrangementMessage round_trip(reconstituted);
+        if (!(round_trip == *arrangement_message)) {
+            throw std::runtime_error("Original and reconstituted don't match!");
+        }
         if (binary) {
             std::cout << "ARRANGEMENT: " << params.outputFile << std::endl;
         } else {
             std::cout << "Wrote arrangement to " << params.outputFile << std::endl;
         }
     });
-    computation.template_points_ready.connect([&points_message, binary, betti_only](TemplatePointsMessage message) {
+    computation.template_points_ready.connect([&points_message, binary, betti_only, verbosity](TemplatePointsMessage message) {
+        points_message = new TemplatePointsMessage(message);
+
         if (binary) {
             std::cout << "XI" << std::endl;
-            points_message = new TemplatePointsMessage(message);
             {
                 boost::archive::text_oarchive archive(std::cout);
                 archive << message;
             }
             std::cout << "END XI" << std::endl;
             std::cout.flush();
+        }
+
+        if (verbosity >= 4 || betti_only) {
+            FileWriter::write_grades(std::cout, message.x_exact, message.y_exact);
+
         }
         //TODO: Add a flag to re-enable this code?
         //        std::stringstream ss;
@@ -265,7 +270,10 @@ int main(int argc, char* argv[])
         //            }
         //        }
         if (betti_only) {
+            print_dims(message, std::cout);
+            std::cout << std::endl;
             print_betti(message, std::cout);
+            std::cout.flush();
             //TODO: this seems a little abrupt...
             exit(0);
         }
