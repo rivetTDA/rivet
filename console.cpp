@@ -187,34 +187,33 @@ int main(int argc, char* argv[])
         std::cout << "PROGRESS " << amount << std::endl;
     });
     computation.arrangement_ready.connect([&arrangement_message, &params, binary](std::shared_ptr<Arrangement> arrangement) {
-        //TODO: add a flag to re-enable this code?
-        //        arrangement_message = new ArrangementMessage(*arrangement);
-        //        //TODO: this should become a system test with a known dataset
-        //        //Note we no longer write the arrangement to stdout, it goes to a file at the end
-        //        //of the run. This message just announces the absolute path of the file.
-        //        //The viewer should capture the file name from the stdout stream, and
-        //        //then wait for the console program to finish before attempting to read the file.
-        //        std::stringstream ss(std::ios_base::binary | std::ios_base::out | std::ios_base::in);
-        //        {
-        //            boost::archive::binary_oarchive archive(ss);
-        //            archive << *arrangement_message;
-        //        }
-        //        std::clog << "Testing deserialization locally..." << std::endl;
-        //        std::string original = ss.str();
-        //        ArrangementMessage test;
-        //        {
-        //            boost::archive::binary_iarchive inarch(ss);
-        //            inarch >> test;
-        //            std::clog << "Deserialized!";
-        //        }
-        //        if (!(*arrangement_message == test)) {
-        //            throw std::runtime_error("Original and deserialized don't match!");
-        //        }
-        //        Arrangement reconstituted = arrangement_message->to_arrangement();
-        //        ArrangementMessage round_trip(reconstituted);
-        //        if (!(round_trip == *arrangement_message)) {
-        //            throw std::runtime_error("Original and reconstituted don't match!");
-        //        }
+        arrangement_message = new ArrangementMessage(*arrangement);
+        //TODO: this should become a system test with a known dataset
+        //Note we no longer write the arrangement to stdout, it goes to a file at the end
+        //of the run. This message just announces the absolute path of the file.
+        //The viewer should capture the file name from the stdout stream, and
+        //then wait for the console program to finish before attempting to read the file.
+        std::stringstream ss(std::ios_base::binary | std::ios_base::out | std::ios_base::in);
+        {
+            boost::archive::binary_oarchive archive(ss);
+            archive << *arrangement_message;
+        }
+        std::clog << "Testing deserialization locally..." << std::endl;
+        std::string original = ss.str();
+        ArrangementMessage test;
+        {
+            boost::archive::binary_iarchive inarch(ss);
+            inarch >> test;
+            std::clog << "Deserialized!";
+        }
+        if (!(*arrangement_message == test)) {
+            throw std::runtime_error("Original and deserialized don't match!");
+        }
+        Arrangement reconstituted = arrangement_message->to_arrangement();
+        ArrangementMessage round_trip(reconstituted);
+        if (!(round_trip == *arrangement_message)) {
+            throw std::runtime_error("Original and reconstituted don't match!");
+        }
         if (binary) {
             std::cout << "ARRANGEMENT: " << params.outputFile << std::endl;
         } else {
