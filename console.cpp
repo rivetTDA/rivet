@@ -26,9 +26,9 @@ static const char USAGE[] =
       rivet_console (-h | --help)
       rivet_console --version
       rivet_console <input_file> --identify
-      rivet_console <input_file> --barcodes <line_file>
-      rivet_console <input_file> --betti
-      rivet_console <input_file> <output_file> [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [-f <format>] [--binary] [--betti] [--barcodes <line_file>]
+      rivet_console <input_file> --betti [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>]
+      rivet_console <input_file> --barcodes <line_file> [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>]
+      rivet_console <input_file> <output_file> [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [-f <format>] [--binary]
 
     Options:
       -h --help                                Show this screen
@@ -41,7 +41,7 @@ static const char USAGE[] =
       -V <verbosity> --verbosity=<verbosity>   Verbosity level: 0 (no console output) to 10 (lots of output) [default: 2]
       -f <format>                              Output format for file [default: R1]
       -b --betti                               Print Betti number information and exit.
-      --barcodes <line_file>                   Print barcodes for the line queries in line_file.
+      --barcodes <line_file>                   Print barcodes for the line queries in line_file, then exit.
                                                The line_file contains pairs (m, b) where m is the degree (0 to 90)
                                                and b the offset, separated by a space. Each pair should appear on
                                                a line by itself.
