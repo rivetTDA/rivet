@@ -61,6 +61,8 @@ static const char USAGE[] =
 
 )";
 
+void process_barcode_queries(std::string query_file);
+
 unsigned int get_uint_or_die(std::map<std::string, docopt::value>& args, const std::string& key)
 {
     try {
@@ -184,6 +186,10 @@ int main(int argc, char* argv[])
     bool betti_only = args["--betti"].isBool() && args["--betti"].asBool();
     bool binary = args["--binary"].isBool() && args["--binary"].asBool();
     bool identify = args["--identify"].isBool() && args["--identify"].asBool();
+    std::string slices;
+    if (args["--barcodes"].isString()) {
+        slices = args["--barcodes"].asString();
+    }
     if (identify) {
         params.verbosity = 0;
     }
@@ -308,6 +314,10 @@ int main(int argc, char* argv[])
         debug() << "COMPUTATION FINISHED.";
     }
 
+    if (!slices.empty()) {
+        process_barcode_queries(slices);
+        return 0;
+    }
     //if an output file has been specified, then save the arrangement
     if (!params.outputFile.empty()) {
         std::ofstream file(params.outputFile);
@@ -330,4 +340,32 @@ int main(int argc, char* argv[])
     }
     debug() << "CONSOLE RIVET: Goodbye";
     return 0;
+}
+
+void process_barcode_queries(std::string query_file_name, const ComputationResult &computation_result) {
+    std::ifstream query_file(query_file_name);
+    if (!query_file.is_open()) {
+        std::clog << "Could not open " << query_file_name << " for reading";
+        return;
+    }
+    std::string line;
+    std::vector<std::pair<int,double>> queries;
+    int line_number = 0;
+    while(std::getline(query_file, line)) {
+        line_number++;
+        std::istringstream iss(line);
+        int angle;
+        double offset;
+
+        if (iss >> angle >> offset) {
+            queries.push_back(std::pair<int,double>(angle, offset));
+        } else {
+            std::clog << "Parse error on line " << line_number << ", exiting" << std::endl;
+            return;
+        }
+    }
+    for(auto query : queries) {
+        bar
+        std::cout
+    }
 }
