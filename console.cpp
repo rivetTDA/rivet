@@ -167,14 +167,28 @@ void process_barcode_queries(std::string query_file_name, const ComputationResul
     int line_number = 0;
     while(std::getline(query_file, line)) {
         line_number++;
+        line.erase(0, line.find_first_not_of(" \t"));
+        if (line.empty() || line[0] == '#') {
+            std::clog << "Skipped line " << line_number << ", comment or empty" << std::endl;
+            continue;
+        }
         std::istringstream iss(line);
         int angle;
         double offset;
 
         if (iss >> angle >> offset) {
+            if (angle < 0 || angle > 90) {
+                std::clog << "Angle on line " << line_number << " must be between 0 and 90" << std::endl;
+                return;
+            }
+
+            if (offset < 0 || offset > 1) {
+                std::clog << "Offset on line " << line_number << " must be between 0 and 1" << std::endl;
+                return;
+            }
             queries.push_back(std::pair<int,double>(angle, offset));
         } else {
-            std::clog << "Parse error on line " << line_number << ", exiting" << std::endl;
+            std::clog << "Parse error on line " << line_number << std::endl;
             return;
         }
     }
