@@ -55,10 +55,10 @@ static const char USAGE[] =
                                                     47  0.88
 
                                                RIVET will output one line of barcode information for each line
-                                               in line_file. For example:
+                                               in line_file, beginning by repeating the query. For example:
 
-                                               0 1 x3, 1 4 x1
-                                               2 inf x1, 3 4 x2, 1 7 x1
+                                               25 0.234: 0 1 x3, 1 4 x1
+                                               47 0.88: 2 inf x1, 3 4 x2, 1 7 x1
 
 )";
 
