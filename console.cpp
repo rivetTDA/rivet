@@ -177,9 +177,32 @@ void process_barcode_queries(std::string query_file_name, const ComputationResul
             return;
         }
     }
+    auto xs = rivet::numeric::to_doubles(computation_result.arrangement->x_exact);
+    auto ys = rivet::numeric::to_doubles(computation_result.arrangement->y_exact);
+
     for(auto query : queries) {
         std::cout << query.first << " " << query.second << ": ";
+        auto templ = computation_result.arrangement->get_barcode_template(query.first, query.second);
+        auto barcode = templ.rescale(query.first, query.second, computation_result.template_points,
+        xs, ys);
+        bool first = true;
+        for(auto it = barcode->begin(); it != barcode->end(); it++) {
+            auto bar = *it;
+            std::cout << bar.birth << " ";
 
+            if (bar.death == rivet::numeric::INFTY) {
+                std::cout << "inf";
+            } else {
+                std::cout << bar.death;
+            }
+            std::cout << " x" << std::cout << bar.multiplicity;
+            if (first) {
+                first = false;
+            } else {
+                std::cout << ", ";
+            }
+        }
+        std::cout << std::endl;
     }
 }
 //
