@@ -9,6 +9,7 @@ class TemplatePoint;
 #include "computationthread.h"
 #include "dataselectdialog.h"
 #include "dcel/arrangement_message.h"
+#include "dcel/grades.h"
 #include "interface/aboutmessagebox.h"
 #include "interface/config_parameters.h"
 #include "interface/configuredialog.h"
@@ -77,8 +78,7 @@ private:
     ConfigParameters config_params; //parameters that control the visualization
     DataSelectDialog ds_dialog; //dialog box that gets the input parameters
 
-    std::vector<double> y_grades;
-    std::vector<double> x_grades;
+    Grades grades;
 
     double angle_precise; //sufficiently-precise internal value of the slice-line angle in DEGREES, necessary because QDoubleSpinBox truncates this value
     double offset_precise; //sufficiently-precise internal value of the slice-line offset, necessary because QDoubleSpinBox truncates this value

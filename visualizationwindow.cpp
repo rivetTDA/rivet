@@ -28,15 +28,14 @@ VisualizationWindow::VisualizationWindow(InputParameters& params)
     , input_params(params)
     , config_params()
     , ds_dialog(input_params, this)
-    , x_grades()
-    , y_grades()
+    , grades()
     , template_points()
     , angle_precise(0)
     , offset_precise(0)
     , cthread(input_params)
     , prog_dialog(this)
     , line_selection_ready(false)
-    , slice_diagram(&config_params, x_grades, y_grades, this)
+    , slice_diagram(&config_params, grades.x, grades.y, this)
     , slice_update_lock(false)
     , p_diagram(&config_params, this)
     , persistence_diagram_drawn(false)
@@ -103,19 +102,18 @@ void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMe
 {
     template_points = points;
     //First load our local copies of the data
-    x_grades = rivet::numeric::to_doubles(template_points->x_exact);
-    y_grades = rivet::numeric::to_doubles(template_points->y_exact);
+    grades = Grades(template_points->x_exact, template_points->y_exact);
 
     //send xi support points to the SliceDiagram
     for (auto point : template_points-> template_points)
-        slice_diagram.add_point(x_grades[point.x], y_grades[point.y], point.zero, point.one, point.two);
+        slice_diagram.add_point(grades.x[point.x], grades.y[point.y], point.zero, point.one, point.two);
 
     //create the SliceDiagram
     slice_diagram.create_diagram(
             QString::fromStdString(template_points->x_label),
         QString::fromStdString(template_points->y_label),
-        x_grades.front(), x_grades.back(),
-        y_grades.front(), y_grades.back(),
+        grades.x.front(), grades.x.back(),
+        grades.y.front(), grades.y.back(),
         ui->normCoordCheckBox->isChecked(), template_points->homology_dimensions);
 
     //enable control items
@@ -131,8 +129,8 @@ void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMe
 
     //update offset extents
     ///TODO: maybe these extents should be updated dynamically, based on the slope of the slice line
-    ui->offsetSpinBox->setMinimum(std::min(-1 * x_grades.back(), y_grades.front()));
-    ui->offsetSpinBox->setMaximum(std::max(y_grades.back(), -1 * x_grades.front()));
+    ui->offsetSpinBox->setMinimum(grades.min_offset());
+    ui->offsetSpinBox->setMaximum(grades.max_offset());
 
     //update status
     line_selection_ready = true;
@@ -154,13 +152,13 @@ void VisualizationWindow::augmented_arrangement_ready(std::shared_ptr<Arrangemen
 
     //get the barcode
     BarcodeTemplate dbc = arrangement->get_barcode_template(angle_precise, offset_precise);
-    barcode = dbc.rescale(angle_precise, offset_precise, template_points->template_points, x_grades, y_grades);
+    barcode = dbc.rescale(angle_precise, offset_precise, template_points->template_points, grades);
 
     //TESTING
     barcode->print();
 
     //draw the barcode
-    double zero_coord = rivet::numeric::project_zero(angle_precise, offset_precise, x_grades[0], y_grades[0]);
+    double zero_coord = rivet::numeric::project_zero(angle_precise, offset_precise, grades.x[0], grades.y[0]);
     p_diagram.set_barcode(zero_coord, *barcode);
     p_diagram.resize_diagram(slice_diagram.get_slice_length(), slice_diagram.get_pd_scale());
 
@@ -247,18 +245,18 @@ void VisualizationWindow::update_persistence_diagram()
         //get the barcode
         qDebug() << "  QUERY: angle =" << angle_precise << ", offset =" << offset_precise;
         BarcodeTemplate dbc = arrangement->get_barcode_template(angle_precise, offset_precise);
-        barcode = dbc.rescale(angle_precise, offset_precise, template_points->template_points, x_grades, y_grades);
+        barcode = dbc.rescale(angle_precise, offset_precise, template_points->template_points, grades);
 
         //TESTING
         qDebug() << "  XI SUPPORT VECTOR:";
         for (unsigned i = 0; i < template_points->template_points.size(); i++) {
             TemplatePoint p = template_points->template_points[i];
-            qDebug().nospace() << "    [" << i << "]: (" << p.x << "," << p.y << ") --> (" << x_grades[p.x] << "," << y_grades[p.y] << ")";
+            qDebug().nospace() << "    [" << i << "]: (" << p.x << "," << p.y << ") --> (" << grades.x[p.x] << "," << grades.y[p.y] << ")";
         }
         dbc.print();
         barcode->print();
 
-        double zero_coord = rivet::numeric::project_zero(angle_precise, offset_precise, x_grades[0], y_grades[0]);
+        double zero_coord = rivet::numeric::project_zero(angle_precise, offset_precise, grades.x[0], grades.y[0]);
 
         //draw the barcode
         p_diagram.update_diagram(slice_diagram.get_slice_length(), slice_diagram.get_pd_scale(), zero_coord, *barcode);

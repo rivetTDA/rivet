@@ -41,6 +41,7 @@ SOURCES	+= main.cpp                         \
 		dcel/barcode_template.cpp           \
 		dcel/anchor.cpp                     \
 		dcel/arrangement_message.cpp               \
+		dcel/grades.cpp                     \
 		#math/persistence_updater.cpp        \
 		math/template_points_matrix.cpp          \
 		math/template_point.cpp                   \
@@ -76,6 +77,7 @@ HEADERS  += visualizationwindow.h			\
 		interface/barcode.h					\
 		dcel/barcode_template.h				\
 		dcel/anchor.h						\
+		dcel/grades.h                       \
 		math/persistence_updater.h			\
 		math/template_points_matrix.h			\
 		math/template_point.h \

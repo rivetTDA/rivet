@@ -3,7 +3,9 @@
 
 #include <set>
 #include <vector>
+#include <memory>
 #include "barcode.h"
+#include "grades.h"
 #include "math/template_point.h"
 
 struct BarTemplate {
@@ -41,13 +43,11 @@ public:
 // NOTE: angle in DEGREES
     std::unique_ptr<Barcode> rescale(double angle, double offset,
                                                   const std::vector<TemplatePoint> &template_points,
-                                                  const std::vector<double> &x_grades,
-                                                  const std::vector<double> &y_grades);
+                                     const Grades &grades);
 //computes the projection of an xi support point onto the specified line
 //  NOTE: returns INFTY if the point has no projection (can happen only for horizontal and vertical lines)
 //  NOTE: angle in DEGREES
-    double project(TemplatePoint& pt, double angle, double offset,
-                                    std::vector<double> x_grades, std::vector <double> y_grades);
+    double project(const TemplatePoint& pt, double angle, double offset, const Grades &grades);
     void print(); //for testing only
 
     template <class Archive>

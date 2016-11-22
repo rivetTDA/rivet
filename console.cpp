@@ -12,6 +12,7 @@
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
+#include <dcel/grades.h>
 
 #include "dcel/arrangement_message.h"
 #include "dcel/serialization.h"
@@ -56,8 +57,8 @@ static const char USAGE[] =
                                                RIVET will output one line of barcode information for each line
                                                in line_file. For example:
 
-                                               0 1, 0 1, 0 1
-                                               2 inf, 3 4, 1 7
+                                               0 1 x3, 1 4 x1
+                                               2 inf x1, 3 4 x2, 1 7 x1
 
 )";
 
@@ -177,15 +178,13 @@ void process_barcode_queries(std::string query_file_name, const ComputationResul
             return;
         }
     }
-    auto xs = rivet::numeric::to_doubles(computation_result.arrangement->x_exact);
-    auto ys = rivet::numeric::to_doubles(computation_result.arrangement->y_exact);
+    Grades grades(computation_result.arrangement->x_exact, computation_result.arrangement->y_exact);
 
     for(auto query : queries) {
         std::cout << query.first << " " << query.second << ": ";
-        auto templ = computation_result.arrangement->get_barcode_template(query.first, query.second);
-        auto barcode = templ.rescale(query.first, query.second, computation_result.template_points,
-        xs, ys);
-        bool first = true;
+        auto absolute = grades.relative_offset_to_absolute(query.second);
+        auto templ = computation_result.arrangement->get_barcode_template(query.first, absolute);
+        auto barcode = templ.rescale(query.first, absolute, computation_result.template_points, grades);
         for(auto it = barcode->begin(); it != barcode->end(); it++) {
             auto bar = *it;
             std::cout << bar.birth << " ";
@@ -195,10 +194,8 @@ void process_barcode_queries(std::string query_file_name, const ComputationResul
             } else {
                 std::cout << bar.death;
             }
-            std::cout << " x" << std::cout << bar.multiplicity;
-            if (first) {
-                first = false;
-            } else {
+            std::cout << " x" << bar.multiplicity;
+            if(std::next(it) != barcode->end()) {
                 std::cout << ", ";
             }
         }
