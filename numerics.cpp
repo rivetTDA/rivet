@@ -71,5 +71,23 @@ namespace numeric {
         }
         return r;
     }
+//computes the projection of the lower-left corner of the line-selection window onto the specified line
+/// TESTING AS REPLACEMENT FOR SliceDiagram::get_zero()
+    double project_zero(double angle, double offset, double x_0, double y_0)
+    {
+        if (angle == 0) //then line is horizontal
+            return x_0;
+
+        if (angle == 90) //then line is vertical
+            return y_0;
+
+        //if we get here, then line is neither horizontal nor vertical
+        double radians = angle * PI / 180;
+
+        if (y_0 > x_0 * tan(radians) + offset / cos(radians)) //then point is above line
+            return y_0 / sin(radians) - offset / tan(radians); //project right
+
+        return x_0 / cos(radians) + offset * tan(radians); //project up
+    } //end project_zero()
 }
 }

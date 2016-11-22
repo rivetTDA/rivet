@@ -20,11 +20,11 @@ public:
     void create_diagram(const QString& filename, int dim); //simply creates all objects; resize_diagram() handles positioning of objects
     void resize_diagram(double slice_length, double diagram_scale); //resizes diagram to fill the QGraphicsView; called after every window resize
 
-    void set_barcode(double zero, Barcode* bc); //sets the barcode and the zero coordinate
+    void set_barcode(double zero, const Barcode &bc); //sets the barcode and the zero coordinate
     void draw_dots(); //creates and draws persistence dots at the correct locations, using current parameters
     void redraw_dots(); //redraws persistence dots; e.g. used after a change in parameters
 
-    void update_diagram(double slice_length, double diagram_scale, double zero, Barcode* bc); //updates the diagram after a change in the slice line
+    void update_diagram(double slice_length, double diagram_scale, double zero, const Barcode &bc); //updates the diagram after a change in the slice line
 
     void select_dot(PersistenceDot* clicked); //highlight the specified dot, selected in the persistence diagram, and propagate to the slice diagram
     void deselect_dot(); //remove selection and propagate to the slice diagram
@@ -69,7 +69,7 @@ private:
     int inf_dot_vpos; //vertical position (y-coordinate) of dots representing essential cycles
     int lt_inf_dot_vpos; //vertical position (y-coordinate) of dots representing non-infinite pairs above the diagram
 
-    Barcode* barcode; //pointer to the barcode displayed in the persistence diagram
+    const Barcode *barcode; //reference to the barcode displayed in the persistence diagram
 
     QString* filename; //filename, to print on the screen
     int dim; //dimension of homology, to print on the screen

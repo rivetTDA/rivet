@@ -20,11 +20,11 @@ public:
 
     void add_bar(double b, double d, unsigned m); //adds a bar to the barcode
 
-    std::multiset<MultiBar>::iterator begin(); //returns an iterator to the first bar in the barcode
-    std::multiset<MultiBar>::iterator end(); //returns an iterator to the pst-the-end element the barcode
-    unsigned size(); //returns the number of multibars in the barcode
+    std::multiset<MultiBar>::const_iterator begin() const; //returns an iterator to the first bar in the barcode
+    std::multiset<MultiBar>::const_iterator end() const; //returns an iterator to the pst-the-end element the barcode
+    unsigned size() const; //returns the number of multibars in the barcode
 
-    void print(); //for testing only
+    void print() const; //for testing only
 
 private:
     std::multiset<MultiBar> bars; //must be a multiset because the comparison operator for MultiBars might not establish a total order

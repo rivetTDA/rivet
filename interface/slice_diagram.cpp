@@ -1,6 +1,6 @@
 #include "slice_diagram.h"
 
-#include "barcode.h"
+#include "dcel/barcode.h"
 #include "config_parameters.h"
 #include "control_dot.h"
 #include "persistence_bar.h"

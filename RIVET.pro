@@ -37,7 +37,7 @@ SOURCES	+= main.cpp                         \
 		#math/multi_betti.cpp                \
 		#math/simplex_tree.cpp               \
 		#math/st_node.cpp                    \
-		interface/barcode.cpp               \
+		dcel/barcode.cpp               \
 		dcel/barcode_template.cpp           \
 		dcel/anchor.cpp                     \
 		dcel/arrangement_message.cpp               \

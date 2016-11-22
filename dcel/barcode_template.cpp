@@ -1,3 +1,9 @@
+#include <dcel/barcode.h>
+#include <vector>
+#include <math/template_point.h>
+#include <cassert>
+#include <cmath>
+#include <numerics.h>
 #include "barcode_template.h"
 
 #include "debug.h"
@@ -111,3 +117,75 @@ bool operator==(BarTemplate const& left, BarTemplate const& right)
         && left.end == right.end
         && left.multiplicity == right.multiplicity;
 }
+
+
+//rescales a barcode template by projecting points onto the specified line
+// NOTE: angle in DEGREES
+std::unique_ptr<Barcode> BarcodeTemplate::rescale(double angle, double offset,
+                                                  const std::vector<TemplatePoint> &template_points,
+                                                  const std::vector<double> &x_grades,
+                                                  const std::vector<double> &y_grades)
+{
+    std::unique_ptr<Barcode> bc = std::unique_ptr<Barcode>(new Barcode());
+
+    //loop through bars
+    for (std::set<BarTemplate>::iterator it = this->begin(); it != this->end(); ++it) {
+//        qDebug() << "BarTemplate: " << it->begin << " " << it->end;
+        assert(it->begin < template_points.size());
+        TemplatePoint begin = template_points[it->begin];
+        double birth = project(begin, angle, offset, x_grades, y_grades);
+
+        if (birth != rivet::numeric::INFTY) //then bar exists in this rescaling
+        {
+            if (it->end >= template_points.size()) //then endpoint is at infinity
+            {
+                bc->add_bar(birth, rivet::numeric::INFTY, it->multiplicity);
+            } else //then bar is finite
+            {
+                assert(it->end < template_points.size());
+                TemplatePoint end = template_points[it->end];
+                double death = project(end, angle, offset, x_grades, y_grades);
+                bc->add_bar(birth, death, it->multiplicity);
+
+//                //testing
+//                if (birth > death)
+//                    qDebug() << "=====>>>>> ERROR: inverted bar (" << birth << "," << death << ")";
+            }
+        }
+    }
+
+    return bc;
+} //end rescale_barcode_template()
+
+
+//computes the projection of an xi support point onto the specified line
+//  NOTE: returns INFTY if the point has no projection (can happen only for horizontal and vertical lines)
+//  NOTE: angle in DEGREES
+double BarcodeTemplate::project(TemplatePoint& pt, double angle, double offset,
+                                    std::vector<double> x_grades, std::vector <double> y_grades)
+{
+    if (angle == 0) //then line is horizontal
+    {
+        if (y_grades[pt.y] <= offset) //then point is below the line, so projection exists
+            return x_grades[pt.x];
+        else //then no projection
+            return rivet::numeric::INFTY;
+    } else if (angle == 90) //then line is vertical
+    {
+        if (x_grades[pt.x] <= -1 * offset) //then point is left of the line, so projection exists
+            return y_grades[pt.y];
+        else //then no projection
+            return rivet::numeric::INFTY;
+    }
+    //if we get here, then line is neither horizontal nor vertical
+    double radians = angle * rivet::numeric::PI / 180;
+    double x = x_grades[pt.x];
+    double y = y_grades[pt.y];
+
+    if (y > x * tan(radians) + offset / cos(radians)) //then point is above line
+        return y / sin(radians) - offset / tan(radians); //project right
+
+    return x / cos(radians) + offset * tan(radians); //project up
+} //end project()
+
+

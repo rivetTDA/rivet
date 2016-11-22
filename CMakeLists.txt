@@ -30,6 +30,7 @@ add_executable (rivet_console
         interface/file_writer.cpp
         interface/file_input_reader.cpp
         interface/input_manager.cpp
+        dcel/barcode.cpp
         dcel/arrangement.cpp
         dcel/arrangement_builder.cpp
         dcel/anchor.cpp
@@ -65,6 +66,7 @@ add_executable(unit_tests
         dcel/arrangement.cpp
         dcel/arrangement_builder.cpp
         dcel/anchor.cpp
+        dcel/barcode.cpp
         dcel/barcode_template.cpp
         dcel/dcel.cpp
         math/map_matrix.cpp

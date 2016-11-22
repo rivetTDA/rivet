@@ -44,8 +44,8 @@ protected:
 
 public slots:
     void start_computation(); //begins the computation pipeline
-    void paint_template_points();
-    void augmented_arrangement_ready(ArrangementMessage* arrangement);
+    void paint_template_points(std::shared_ptr<TemplatePointsMessage> points);
+    void augmented_arrangement_ready(std::shared_ptr<ArrangementMessage> arrangement);
     void set_line_parameters(double angle, double offset);
 
 private slots:
@@ -70,8 +70,6 @@ private:
 
     //data items
     const int verbosity;
-    const double INFTY;
-    const double PI;
 
     bool data_selected; //false until user selects data, then true
     bool unsaved_data; //false until augmented arrangement is computed, then true until user saves the augmented arrangement
@@ -79,17 +77,14 @@ private:
     ConfigParameters config_params; //parameters that control the visualization
     DataSelectDialog ds_dialog; //dialog box that gets the input parameters
 
-    std::vector<exact> x_exact;
-    std::vector<exact> y_exact;
     std::vector<double> y_grades;
     std::vector<double> x_grades;
-    std::vector<TemplatePoint> template_points; //stores discrete coordinates of xi support points, with multiplicities
-    unsigned_matrix homology_dimensions; //stores the dimension of homology at each grade
 
     double angle_precise; //sufficiently-precise internal value of the slice-line angle in DEGREES, necessary because QDoubleSpinBox truncates this value
     double offset_precise; //sufficiently-precise internal value of the slice-line offset, necessary because QDoubleSpinBox truncates this value
 
-    ArrangementMessage* arrangement; //pointer to the DCEL arrangement
+    std::shared_ptr<TemplatePointsMessage> template_points; //The template points, homology dimensions, and other useful context
+    std::shared_ptr<ArrangementMessage> arrangement; //pointer to the DCEL arrangement
     std::unique_ptr<Barcode> barcode; //pointer to the currently-displayed barcode
 
     //computation items
@@ -107,19 +102,19 @@ private:
 
     void update_persistence_diagram(); //updates the persistence diagram and barcode after a change in the slice line
 
-    std::unique_ptr<Barcode> rescale_barcode_template(BarcodeTemplate& dbc, double angle, double offset);
-    double project(TemplatePoint& pt, double angle, double offset);
+    std::unique_ptr<Barcode> rescale_barcode_template(BarcodeTemplate& dbc, double angle, double offset,
+                                                      std::vector<double> x_grades, std::vector<double> y_grades);
+    double project(TemplatePoint& pt, double angle, double offset, std::vector<double> x_grades, std::vector<double> y_grades);
 
     //computes the projection of the lower-left corner of the line-selection window onto the specified line
     // TESTING AS REPLACEMENT FOR SliceDiagram::get_zero()
-    double project_zero(double angle, double offset);
+    double project_zero(double angle, double offset, double x_0, double y_0);
 
     //other items
     void save_arrangement(const QString& filename);
 
     AboutMessageBox aboutBox; //which is better for these dialog boxes
     ConfigureDialog* configBox; // -- pointer or no pointer?
-    void copy_fields_from_cthread();
 };
 
 #endif // VISUALIZATIONWINDOW_H

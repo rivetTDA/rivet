@@ -28,11 +28,7 @@
 ComputationThread::ComputationThread(InputParameters& params, QObject* parent)
     : QThread(parent)
     , params(params)
-    , template_points()
-    , x_exact()
-    , y_exact()
-    , x_label()
-    , y_label()
+    , message()
 {
 }
 
@@ -78,35 +74,12 @@ void ComputationThread::load_from_file()
     boost::archive::binary_iarchive archive(file);
 
     arrangement.reset(new ArrangementMessage());
+    message.reset(new TemplatePointsMessage());
     archive >> params;
-    archive >> message;
-    unpack_message_fields();
-    emit templatePointsReady();
+    archive >> *message;
+    emit templatePointsReady(message);
     archive >> *arrangement;
-    emit arrangementReady(&*arrangement);
-}
-
-//TODO: Probably better to not have to unpack all these properties into fields of computationthread.
-void ComputationThread::unpack_message_fields()
-{
-
-    template_points = message.template_points;
-    std::vector<unsigned> dims(message.homology_dimensions.shape(),
-        message.homology_dimensions.shape() + message.homology_dimensions.num_dimensions());
-    assert(dims.size() == 2);
-    hom_dims.resize(boost::extents[dims[0]][dims[1]]);
-    hom_dims = message.homology_dimensions;
-    qDebug() << "Received hom_dims: " << hom_dims.shape()[0] << " x " << hom_dims.shape()[1];
-    for (int i = 0; i < hom_dims.shape()[0]; i++) {
-        auto row = qDebug();
-        for (int j = 0; j < hom_dims.shape()[1]; j++) {
-            row << hom_dims[i][j];
-        }
-    }
-    x_exact = message.x_exact;
-    y_exact = message.y_exact;
-    x_label = QString::fromStdString(message.x_label);
-    y_label = QString::fromStdString(message.y_label);
+    emit arrangementReady(arrangement);
 }
 
 void ComputationThread::compute_from_file()
@@ -137,12 +110,12 @@ void ComputationThread::compute_from_file()
         if (reading_xi) {
             if (line.startsWith("END XI")) {
                 {
+                    message.reset(new TemplatePointsMessage());
                     boost::archive::text_iarchive archive(ss);
-                    archive >> message;
+                    archive >> *message;
                 }
-                unpack_message_fields();
                 reading_xi = false;
-                emit templatePointsReady();
+                emit templatePointsReady(message);
             } else {
                 ss << line.toStdString();
             }
@@ -158,18 +131,18 @@ void ComputationThread::compute_from_file()
                 if (type != "RIVET_1") {
                     throw std::runtime_error("Unsupported file format");
                 }
-                qDebug() << "ComputationThread::compute_from_file() : checkpoint A -- template_points.size() = " << template_points.size();
+                qDebug() << "ComputationThread::compute_from_file() : checkpoint A -- template_points.size() = " << message->template_points.size();
                 boost::archive::binary_iarchive archive(input);
+                message.reset(new TemplatePointsMessage());
                 arrangement.reset(new ArrangementMessage());
                 InputParameters p;
                 archive >> p;
-                archive >> message;
-                unpack_message_fields();
+                archive >> *message;
                 archive >> *arrangement;
-                qDebug() << "ComputationThread::compute_from_file() : checkpoint B -- template_points.size() = " << template_points.size();
+                qDebug() << "ComputationThread::compute_from_file() : checkpoint B -- template_points.size() = " << message->template_points.size();
             }
             //                qDebug() << "Arrangement received: " << arrangement->x_exact.size() << " x " << arrangement->y_exact.size();
-            emit arrangementReady(&*arrangement);
+            emit arrangementReady(arrangement);
             return;
         } else if (line.startsWith("PROGRESS ")) {
             auto progress = line.mid(QString("PROGRESS ").length()).trimmed();
