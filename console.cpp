@@ -51,14 +51,21 @@ static const char USAGE[] =
                                                Coordinates are assumed to be unnormalized.
 
                                                Example line_file contents:
-                                                    25  0.234
-                                                    47  0.88
+
+                                                    #A line that starts with a # character will be ignored, as will blank lines
+
+                                                    23 0.22
+                                                    #67 10.88   <-- will error if uncommented, 10.88 > 1
+                                                    67 .88
+                                                    10 0.92
+                                                    #100 0.92   <-- will error if uncommented, 100 > 90
 
                                                RIVET will output one line of barcode information for each line
                                                in line_file, beginning by repeating the query. For example:
 
-                                               25 0.234: 0 1 x3, 1 4 x1
-                                               47 0.88: 2 inf x1, 3 4 x2, 1 7 x1
+                                                    23 0.22: 88.1838 inf x1, 88.1838 91.2549 x5, 88.1838 89.7194 x12
+                                                    67 0.88: 23.3613 inf x1
+                                                    10 0.92: 11.9947 inf x1, 11.9947 19.9461 x2, 11.9947 16.4909 x1, 11.9947 13.0357 x4
 
 )";
 
