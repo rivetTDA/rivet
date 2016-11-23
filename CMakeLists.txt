@@ -48,7 +48,7 @@ add_executable (rivet_console
         numerics.cpp
         timer.cpp
         debug.cpp
-        dcel/grades.cpp dcel/grades.h)
+        dcel/grades.cpp dcel/grades.h math/bool_array.cpp math/bool_array.h)
 
 add_dependencies(rivet_console docopt_project)
 
@@ -80,7 +80,7 @@ add_executable(unit_tests
         numerics.cpp
         timer.cpp
         debug.cpp
-        test/unit_tests.cpp dcel/grades.cpp dcel/grades.h)
+        test/unit_tests.cpp dcel/grades.cpp dcel/grades.h math/bool_array.cpp math/bool_array.h)
 
 
 include_directories("${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/include" ${Boost_INCLUDE_DIR} ${PROJECT_SOURCE_DIR}/test)
