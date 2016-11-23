@@ -2,8 +2,8 @@
 #include "ui_visualizationwindow.h"
 
 #include "dcel/arrangement_message.h"
-#include "dcel/barcode_template.h"
 #include "dcel/barcode.h"
+#include "dcel/barcode_template.h"
 #include "interface/config_parameters.h"
 #include "interface/file_writer.h"
 #include "numerics.h"
@@ -96,7 +96,6 @@ void VisualizationWindow::start_computation()
 
 } //end start_computation()
 
-
 //this slot is signaled when the xi support points are ready to be drawn
 void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMessage> points)
 {
@@ -105,12 +104,12 @@ void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMe
     grades = Grades(template_points->x_exact, template_points->y_exact);
 
     //send xi support points to the SliceDiagram
-    for (auto point : template_points-> template_points)
+    for (auto point : template_points->template_points)
         slice_diagram.add_point(grades.x[point.x], grades.y[point.y], point.zero, point.one, point.two);
 
     //create the SliceDiagram
     slice_diagram.create_diagram(
-            QString::fromStdString(template_points->x_label),
+        QString::fromStdString(template_points->x_label),
         QString::fromStdString(template_points->y_label),
         grades.x.front(), grades.x.back(),
         grades.y.front(), grades.y.back(),
@@ -264,7 +263,6 @@ void VisualizationWindow::update_persistence_diagram()
     }
 }
 
-
 void VisualizationWindow::set_line_parameters(double angle, double offset)
 {
     slice_update_lock = true;
@@ -339,7 +337,7 @@ void VisualizationWindow::on_actionConfigure_triggered()
 
     if (line_selection_ready) {
         slice_diagram.receive_parameter_change(QString::fromStdString(template_points->x_label),
-                                               QString::fromStdString(template_points->y_label));
+            QString::fromStdString(template_points->y_label));
 
         if (persistence_diagram_drawn)
             p_diagram.receive_parameter_change();

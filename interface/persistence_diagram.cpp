@@ -1,7 +1,7 @@
 #include "persistence_diagram.h"
 
-#include "dcel/barcode.h"
 #include "config_parameters.h"
+#include "dcel/barcode.h"
 #include "persistence_dot.h"
 
 #include <QDebug>
@@ -132,7 +132,7 @@ void PersistenceDiagram::resize_diagram(double slice_length, double diagram_scal
 } //end resize_diagram()
 
 //sets the barcode and the zero coordinate
-void PersistenceDiagram::set_barcode(double zero, const Barcode &bc)
+void PersistenceDiagram::set_barcode(double zero, const Barcode& bc)
 {
     zero_coord = zero;
     barcode = &bc;
@@ -279,7 +279,7 @@ void PersistenceDiagram::redraw_dots()
 } //void redraw_dots()
 
 //updates the diagram after a change in the slice line
-void PersistenceDiagram::update_diagram(double slice_length, double diagram_scale, double zero, const Barcode & bc)
+void PersistenceDiagram::update_diagram(double slice_length, double diagram_scale, double zero, const Barcode& bc)
 {
     //update parameters
     line_size = slice_length / sqrt(2); //divide by sqrt(2) because the line is drawn at a 45-degree angle

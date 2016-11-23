@@ -22,7 +22,7 @@ SimplexTree::SimplexTree(int dim, int v)
     , verbosity(v)
     , root(new STNode())
     , x_grades(0)
-        , y_grades(0)
+    , y_grades(0)
 {
     if (hom_dim > 5) {
         throw std::runtime_error("Dimensions greater than 5 probably don't make sense");

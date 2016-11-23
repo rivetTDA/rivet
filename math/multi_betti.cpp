@@ -594,7 +594,7 @@ void MultiBetti::reduce_spliced(MapMatrix* m_left, MapMatrix* m_right, IndexMatr
             first_col_left = last_col_left + 1; //prep for next iteration of the outer loop
 
         //determine end column from right matrix
-       int last_col_right = ind_right->get(grade_y, x);
+        int last_col_right = ind_right->get(grade_y, x);
 
         //reduce columns from the right matrix
         while (cur_col <= last_col_right) {

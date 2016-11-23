@@ -103,7 +103,7 @@ private:
     void update_persistence_diagram(); //updates the persistence diagram and barcode after a change in the slice line
 
     std::unique_ptr<Barcode> rescale_barcode_template(BarcodeTemplate& dbc, double angle, double offset,
-                                                      std::vector<double> x_grades, std::vector<double> y_grades);
+        std::vector<double> x_grades, std::vector<double> y_grades);
     double project(TemplatePoint& pt, double angle, double offset, std::vector<double> x_grades, std::vector<double> y_grades);
 
     //computes the projection of the lower-left corner of the line-selection window onto the specified line

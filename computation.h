@@ -34,11 +34,10 @@ public:
         : data(data)
         , x_exact(data.x_exact)
         , y_exact(data.y_exact)
-            , x_label(data.x_label)
-            , y_label(data.y_label)
+        , x_label(data.x_label)
+        , y_label(data.y_label)
     {
     }
-
 };
 
 struct ComputationResult {

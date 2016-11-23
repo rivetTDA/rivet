@@ -1,12 +1,12 @@
 #ifndef __BARCODE_TEMPLATE_H__
 #define __BARCODE_TEMPLATE_H__
 
-#include <set>
-#include <vector>
-#include <memory>
 #include "barcode.h"
 #include "grades.h"
 #include "math/template_point.h"
+#include <memory>
+#include <set>
+#include <vector>
 
 struct BarTemplate {
     unsigned begin; //index of TemplatePointsMatrixEntry of the equivalence class corresponding to the beginning of this bar
@@ -39,15 +39,15 @@ public:
     std::set<BarTemplate>::iterator end(); //returns an iterator to the past-the-end element of the barcode
     bool is_empty(); //returns true iff this barcode has no bars
 
-//rescales a barcode template by projecting points onto the specified line
-// NOTE: angle in DEGREES
+    //rescales a barcode template by projecting points onto the specified line
+    // NOTE: angle in DEGREES
     std::unique_ptr<Barcode> rescale(double angle, double offset,
-                                                  const std::vector<TemplatePoint> &template_points,
-                                     const Grades &grades);
-//computes the projection of an xi support point onto the specified line
-//  NOTE: returns INFTY if the point has no projection (can happen only for horizontal and vertical lines)
-//  NOTE: angle in DEGREES
-    double project(const TemplatePoint& pt, double angle, double offset, const Grades &grades);
+        const std::vector<TemplatePoint>& template_points,
+        const Grades& grades);
+    //computes the projection of an xi support point onto the specified line
+    //  NOTE: returns INFTY if the point has no projection (can happen only for horizontal and vertical lines)
+    //  NOTE: angle in DEGREES
+    double project(const TemplatePoint& pt, double angle, double offset, const Grades& grades);
     void print(); //for testing only
 
     template <class Archive>

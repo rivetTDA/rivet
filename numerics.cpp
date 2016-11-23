@@ -71,8 +71,8 @@ namespace numeric {
         }
         return r;
     }
-//computes the projection of the lower-left corner of the line-selection window onto the specified line
-/// TESTING AS REPLACEMENT FOR SliceDiagram::get_zero()
+    //computes the projection of the lower-left corner of the line-selection window onto the specified line
+    /// TESTING AS REPLACEMENT FOR SliceDiagram::get_zero()
     double project_zero(double angle, double offset, double x_0, double y_0)
     {
         if (angle == 0) //then line is horizontal

@@ -124,7 +124,7 @@ private:
 
     void build_dim_lists_recursively(STNode* node, unsigned cur_dim); //recursively build lists to determine dimension indexes
 
-//    void find_nodes(STNode& node, int level, std::vector<int>& vec, unsigned time, unsigned dist, unsigned dim); //recursively search tree for simplices of specified dimension that exist at specified multi-index
+    //    void find_nodes(STNode& node, int level, std::vector<int>& vec, unsigned time, unsigned dist, unsigned dim); //recursively search tree for simplices of specified dimension that exist at specified multi-index
 
     void find_vertices_recursively(std::vector<int>& vertices, STNode* node, int key); //recursively search for a global index and keep track of vertices
 

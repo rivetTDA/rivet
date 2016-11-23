@@ -69,7 +69,6 @@ static const char USAGE[] =
 
 )";
 
-
 unsigned int get_uint_or_die(std::map<std::string, docopt::value>& args, const std::string& key)
 {
     try {
@@ -124,7 +123,6 @@ void write_boost_file(InputParameters const& params, TemplatePointsMessage const
     file.flush();
 }
 
-
 void print_dims(TemplatePointsMessage const& message, std::ostream& ostream)
 {
     assert(message.homology_dimensions.dimensionality == 2);
@@ -163,16 +161,17 @@ void print_betti(TemplatePointsMessage const& message, std::ostream& ostream)
     }
 }
 
-void process_barcode_queries(std::string query_file_name, const ComputationResult &computation_result) {
+void process_barcode_queries(std::string query_file_name, const ComputationResult& computation_result)
+{
     std::ifstream query_file(query_file_name);
     if (!query_file.is_open()) {
         std::clog << "Could not open " << query_file_name << " for reading";
         return;
     }
     std::string line;
-    std::vector<std::pair<int,double>> queries;
+    std::vector<std::pair<int, double>> queries;
     int line_number = 0;
-    while(std::getline(query_file, line)) {
+    while (std::getline(query_file, line)) {
         line_number++;
         line.erase(0, line.find_first_not_of(" \t"));
         if (line.empty() || line[0] == '#') {
@@ -193,7 +192,7 @@ void process_barcode_queries(std::string query_file_name, const ComputationResul
                 std::clog << "Offset on line " << line_number << " must be between 0 and 1" << std::endl;
                 return;
             }
-            queries.push_back(std::pair<int,double>(angle, offset));
+            queries.push_back(std::pair<int, double>(angle, offset));
         } else {
             std::clog << "Parse error on line " << line_number << std::endl;
             return;
@@ -201,12 +200,12 @@ void process_barcode_queries(std::string query_file_name, const ComputationResul
     }
     Grades grades(computation_result.arrangement->x_exact, computation_result.arrangement->y_exact);
 
-    for(auto query : queries) {
+    for (auto query : queries) {
         std::cout << query.first << " " << query.second << ": ";
         auto absolute = grades.relative_offset_to_absolute(query.second);
         auto templ = computation_result.arrangement->get_barcode_template(query.first, absolute);
         auto barcode = templ.rescale(query.first, absolute, computation_result.template_points, grades);
-        for(auto it = barcode->begin(); it != barcode->end(); it++) {
+        for (auto it = barcode->begin(); it != barcode->end(); it++) {
             auto bar = *it;
             std::cout << bar.birth << " ";
 
@@ -216,7 +215,7 @@ void process_barcode_queries(std::string query_file_name, const ComputationResul
                 std::cout << bar.death;
             }
             std::cout << " x" << bar.multiplicity;
-            if(std::next(it) != barcode->end()) {
+            if (std::next(it) != barcode->end()) {
                 std::cout << ", ";
             }
         }
@@ -224,7 +223,6 @@ void process_barcode_queries(std::string query_file_name, const ComputationResul
     }
 }
 //
-
 
 int main(int argc, char* argv[])
 {
@@ -327,7 +325,6 @@ int main(int argc, char* argv[])
 
         if (verbosity >= 4 || betti_only) {
             FileWriter::write_grades(std::cout, message.x_exact, message.y_exact);
-
         }
         //TODO: Add a flag to re-enable this code?
         //        std::stringstream ss;
@@ -410,4 +407,3 @@ int main(int argc, char* argv[])
     debug() << "CONSOLE RIVET: Goodbye";
     return 0;
 }
-

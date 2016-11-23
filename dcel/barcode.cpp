@@ -1,7 +1,7 @@
 #include "barcode.h"
 
-#include <math.h>
 #include <debug.h>
+#include <math.h>
 
 MultiBar::MultiBar(double b, double d, unsigned m)
     : birth(b)

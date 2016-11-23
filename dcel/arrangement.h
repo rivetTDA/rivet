@@ -25,7 +25,6 @@ class Vertex;
 #include <set>
 #include <vector>
 
-
 class ArrangementMessage;
 
 class Arrangement {

@@ -21,14 +21,14 @@ Arrangement::Arrangement()
     , x_grades()
     , y_grades()
     , vertices()
-        , halfedges()
+    , halfedges()
     , faces()
-        , verbosity(0)
-        , all_anchors()
-        , topleft()
-        , topright()
-        , bottomleft()
-        , bottomright()
+    , verbosity(0)
+    , all_anchors()
+    , topleft()
+    , topright()
+    , bottomleft()
+    , bottomright()
 {
 }
 
@@ -40,10 +40,10 @@ Arrangement::Arrangement(std::vector<exact> xe,
     , y_exact(ye)
     , x_grades(rivet::numeric::to_doubles(xe))
     , y_grades(rivet::numeric::to_doubles(ye))
-        , vertices()
+    , vertices()
     , halfedges()
     , faces()
-        , verbosity(verbosity)
+    , verbosity(verbosity)
 {
     //create vertices
     vertices.push_back(std::make_shared<Vertex>(0, INFTY)); //index 0

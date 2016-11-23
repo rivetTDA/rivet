@@ -10,10 +10,10 @@ ArrangementMessage::ArrangementMessage(Arrangement const& arrangement)
     : x_grades(arrangement.x_grades)
     , y_grades(arrangement.y_grades)
     , vertical_line_query_list()
-        , half_edges()
-        , vertices()
-        , anchors()
-        , faces()
+    , half_edges()
+    , vertices()
+    , anchors()
+    , faces()
 {
     //REALLY slow with all these VID, FID, etc. calls, but will do for now.
     for (auto face : arrangement.faces) {
@@ -59,15 +59,15 @@ ArrangementMessage::ArrangementMessage(Arrangement const& arrangement)
 ArrangementMessage::ArrangementMessage()
     : x_grades()
     , y_grades()
-        , topleft()
-        , topright()
-        , bottomleft()
-        , bottomright()
+    , topleft()
+    , topright()
+    , bottomleft()
+    , bottomright()
     , vertical_line_query_list()
     , half_edges()
     , vertices()
-        , anchors()
-        , faces()
+    , anchors()
+    , faces()
 {
 }
 
@@ -344,7 +344,7 @@ Arrangement ArrangementMessage::to_arrangement() const
     for (size_t i = 0; i < faces.size(); i++) {
         arrangement.faces.push_back(std::make_shared<::Face>());
     }
-    for (size_t  i = 0; i < half_edges.size(); i++) {
+    for (size_t i = 0; i < half_edges.size(); i++) {
         arrangement.halfedges.push_back(std::make_shared<::Halfedge>());
     }
     std::vector<std::shared_ptr<::Anchor>> temp_anchors; //For indexing, since arrangement.all_anchors is a set

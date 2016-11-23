@@ -1,10 +1,10 @@
-#include <dcel/barcode.h>
-#include <vector>
-#include <math/template_point.h>
+#include "barcode_template.h"
 #include <cassert>
 #include <cmath>
+#include <dcel/barcode.h>
+#include <math/template_point.h>
 #include <numerics.h>
-#include "barcode_template.h"
+#include <vector>
 
 #include "debug.h"
 #include "grades.h"
@@ -119,18 +119,17 @@ bool operator==(BarTemplate const& left, BarTemplate const& right)
         && left.multiplicity == right.multiplicity;
 }
 
-
 //rescales a barcode template by projecting points onto the specified line
 // NOTE: angle in DEGREES
 std::unique_ptr<Barcode> BarcodeTemplate::rescale(double angle, double offset,
-                                                  const std::vector<TemplatePoint> &template_points,
-                                                  const Grades &grades)
+    const std::vector<TemplatePoint>& template_points,
+    const Grades& grades)
 {
     std::unique_ptr<Barcode> bc = std::unique_ptr<Barcode>(new Barcode());
 
     //loop through bars
     for (std::set<BarTemplate>::iterator it = this->begin(); it != this->end(); ++it) {
-//        qDebug() << "BarTemplate: " << it->begin << " " << it->end;
+        //        qDebug() << "BarTemplate: " << it->begin << " " << it->end;
         assert(it->begin < template_points.size());
         TemplatePoint begin = template_points[it->begin];
         double birth = project(begin, angle, offset, grades);
@@ -147,9 +146,9 @@ std::unique_ptr<Barcode> BarcodeTemplate::rescale(double angle, double offset,
                 double death = project(end, angle, offset, grades);
                 bc->add_bar(birth, death, it->multiplicity);
 
-//                //testing
-//                if (birth > death)
-//                    qDebug() << "=====>>>>> ERROR: inverted bar (" << birth << "," << death << ")";
+                //                //testing
+                //                if (birth > death)
+                //                    qDebug() << "=====>>>>> ERROR: inverted bar (" << birth << "," << death << ")";
             }
         }
     }
@@ -157,11 +156,10 @@ std::unique_ptr<Barcode> BarcodeTemplate::rescale(double angle, double offset,
     return bc;
 } //end rescale_barcode_template()
 
-
 //computes the projection of an xi support point onto the specified line
 //  NOTE: returns INFTY if the point has no projection (can happen only for horizontal and vertical lines)
 //  NOTE: angle in DEGREES
-double BarcodeTemplate::project(const TemplatePoint& pt, double angle, double offset, const Grades &grades)
+double BarcodeTemplate::project(const TemplatePoint& pt, double angle, double offset, const Grades& grades)
 {
     if (angle == 0) //then line is horizontal
     {
@@ -186,5 +184,3 @@ double BarcodeTemplate::project(const TemplatePoint& pt, double angle, double of
 
     return x / cos(radians) + offset * tan(radians); //project up
 } //end project()
-
-

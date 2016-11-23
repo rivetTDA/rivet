@@ -20,8 +20,8 @@ PersistenceUpdater::PersistenceUpdater(Arrangement& m, SimplexTree& b, std::vect
     , bifiltration(b)
     , dim(b.hom_dim)
     , verbosity(verbosity)
-        , template_points_matrix(m.x_exact.size(), m.y_exact.size())
-        , testing(false)
+    , template_points_matrix(m.x_exact.size(), m.y_exact.size())
+    , testing(false)
 {
     //fill the xiSupportMatrix with the xi support points and anchors
     //  also stores the anchors in xi_pts
@@ -1284,7 +1284,6 @@ void PersistenceUpdater::do_separations(std::shared_ptr<TemplatePointsMatrixEntr
     lesser->high_count = gr_col - cur_col;
     greater->high_count = greater->high_index - lesser->high_index;
 } //end do_separations
-
 
 //removes entries corresponding to TemplatePointsMatrixEntry head from lift_low and lift_high
 void PersistenceUpdater::remove_lift_entries(std::shared_ptr<TemplatePointsMatrixEntry> entry)

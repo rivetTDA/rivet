@@ -5,8 +5,8 @@
 #ifndef RIVET_CONSOLE_GRADES_H
 #define RIVET_CONSOLE_GRADES_H
 
-#include <vector>
 #include <numerics.h>
+#include <vector>
 
 struct Grades {
     std::vector<double> x;
@@ -20,8 +20,6 @@ struct Grades {
     double max_offset();
 
     double relative_offset_to_absolute(double offset);
-
 };
-
 
 #endif //RIVET_CONSOLE_GRADES_H
