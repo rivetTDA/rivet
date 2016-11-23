@@ -14,12 +14,9 @@
 #include <set>
 
 //constructor
-MultiBetti::MultiBetti(SimplexTree& st, int dim, int v)
-    : bifiltration(st)
-    , //remember location of the simplex tree
-    dimension(dim)
-    , //remember the dimension
-    verbosity(v) //controls the amount of output
+MultiBetti::MultiBetti(SimplexTree& st, int dim)
+    : bifiltration(st) //remember location of the simplex tree
+    , dimension(dim) //remember the dimension
 {
     //ensure that xi matrix is the correct size
     num_x_grades = bifiltration.num_x_grades();
@@ -91,7 +88,7 @@ void MultiBetti::compute_nullities(unsigned_matrix& hom_dims)
         xi[0][1][1] += zero_cols; //adding nullity(boundary C)
 
     //handle the rest of the first column
-    for (int y = 1; y < num_y_grades; y++) {
+    for (unsigned y = 1; y < num_y_grades; y++) {
         zero_cols = 0;
 
         //  do column reduction on columns for multi-grade (0,y) using current_lows
@@ -108,7 +105,7 @@ void MultiBetti::compute_nullities(unsigned_matrix& hom_dims)
     }
 
     //loop through columns after first column
-    for (int x = 1; x < num_x_grades; x++) {
+    for (unsigned x = 1; x < num_x_grades; x++) {
         //handle first multi-grade in this column
         zero_cols = 0;
 
@@ -128,7 +125,7 @@ void MultiBetti::compute_nullities(unsigned_matrix& hom_dims)
             xi[x][1][1] += nullities[0]; //adding nullity(boundary C)
 
         //now loop through rows after first row
-        for (int y = 1; y < num_y_grades; y++) {
+        for (unsigned y = 1; y < num_y_grades; y++) {
             zero_cols = 0;
 
             //  do column reduction on columns for multi-grades (0,y) through (x,y) using current_lows
@@ -177,7 +174,7 @@ void MultiBetti::compute_ranks(unsigned_matrix& hom_dims)
     hom_dims[0][0] -= ranks[0];
 
     //handle the rest of the first column
-    for (int y = 1; y < num_y_grades; y++) {
+    for (unsigned y = 1; y < num_y_grades; y++) {
         zero_cols = 0;
 
         //  do column reduction on columns for multi-grade (0,y) using current_lows
@@ -190,7 +187,7 @@ void MultiBetti::compute_ranks(unsigned_matrix& hom_dims)
     }
 
     //loop through columns after first column
-    for (int x = 1; x < num_x_grades; x++) {
+    for (unsigned x = 1; x < num_x_grades; x++) {
         //handle first multi-grade in this column
         zero_cols = 0;
 
@@ -206,7 +203,7 @@ void MultiBetti::compute_ranks(unsigned_matrix& hom_dims)
         hom_dims[x][0] -= ranks[0];
 
         //now loop through rows after first row
-        for (int y = 1; y < num_y_grades; y++) {
+        for (unsigned y = 1; y < num_y_grades; y++) {
             zero_cols = 0;
 
             //  do column reduction on columns for multi-grades (0,y) through (x,y) using current_lows
@@ -306,7 +303,7 @@ void MultiBetti::compute_alpha()
     current_lows_dm = first_row_lows_dm;
 
     //handle the rest of the first column
-    for (int y = 1; y < num_y_grades; y++) {
+    for (unsigned y = 1; y < num_y_grades; y++) {
         zero_cols_bc = 0;
         zero_cols_dm = 0;
 
@@ -321,7 +318,7 @@ void MultiBetti::compute_alpha()
     }
 
     //loop through columns after first column
-    for (int x = 1; x < num_x_grades; x++) {
+    for (unsigned x = 1; x < num_x_grades; x++) {
         //handle first multi-grade in this column
         zero_cols_bc = 0;
         zero_cols_dm = 0;
@@ -340,7 +337,7 @@ void MultiBetti::compute_alpha()
         current_lows_dm = first_row_lows_dm;
 
         //now loop through rows after first row
-        for (int y = 1; y < num_y_grades; y++) {
+        for (unsigned y = 1; y < num_y_grades; y++) {
             zero_cols_bc = 0;
             zero_cols_dm = 0;
 
@@ -402,7 +399,7 @@ void MultiBetti::compute_eta()
     current_lows_bcs = first_row_lows_bcs;
 
     //handle the rest of the first column
-    for (int y = 1; y < num_y_grades; y++) {
+    for (unsigned y = 1; y < num_y_grades; y++) {
         zero_cols_a = 0;
         zero_cols_bcs = 0;
 
@@ -416,7 +413,7 @@ void MultiBetti::compute_eta()
     }
 
     //loop through columns after first column
-    for (int x = 1; x < num_x_grades; x++) {
+    for (unsigned x = 1; x < num_x_grades; x++) {
         //handle first multi-grade in this column
         zero_cols_a = 0;
         zero_cols_bcs = 0;
@@ -434,7 +431,7 @@ void MultiBetti::compute_eta()
         current_lows_bcs = first_row_lows_bcs;
 
         //now loop through rows after first row
-        for (int y = 1; y < num_y_grades; y++) {
+        for (unsigned y = 1; y < num_y_grades; y++) {
             zero_cols_a = 0;
             zero_cols_bcs = 0;
 
@@ -576,14 +573,15 @@ void MultiBetti::reduce_spliced(MapMatrix* m_left, MapMatrix* m_right, IndexMatr
         for (int i = first_col_left; i <= last_col_left; i++) {
             //while column i is nonempty and its low number is found in the low array, do column operations
             while (m_left->low(i) >= 0 && lows[m_left->low(i)] >= 0) {
-                if (lows[m_left->low(i)] < m_left->width()) //then column to add is in the left matrix
-                    m_left->add_column(lows[m_left->low(i)], i);
+                unsigned left_low = static_cast<unsigned>(lows[m_left->low(i)]);
+                if (left_low < m_left->width()) //then column to add is in the left matrix
+                    m_left->add_column(left_low, i);
                 else //then column to add is in the right matrix
                 {
-                    if (m_right->low(lows[m_left->low(i)] - m_left->width()) == -1) //TESTING ONLY
+                    if (m_right->low(left_low - m_left->width()) == -1) //TESTING ONLY
                         throw std::runtime_error("zero column addition error");
 
-                    m_left->add_column(m_right, lows[m_left->low(i)] - m_left->width(), i);
+                    m_left->add_column(m_right, left_low - m_left->width(), i);
                 }
             }
 
@@ -596,16 +594,17 @@ void MultiBetti::reduce_spliced(MapMatrix* m_left, MapMatrix* m_right, IndexMatr
             first_col_left = last_col_left + 1; //prep for next iteration of the outer loop
 
         //determine end column from right matrix
-        int last_col_right = ind_right->get(grade_y, x);
+       int last_col_right = ind_right->get(grade_y, x);
 
         //reduce columns from the right matrix
         while (cur_col <= last_col_right) {
             //while column is nonempty and its low number is found in the low array, do column operations
             while (m_right->low(cur_col) >= 0 && lows[m_right->low(cur_col)] >= 0) {
-                if (lows[m_right->low(cur_col)] >= m_left->width()) //then column to add is in the right matrix
-                    m_right->add_column(lows[m_right->low(cur_col)] - m_left->width(), cur_col);
+                unsigned right_low = static_cast<unsigned>(lows[m_right->low(cur_col)]);
+                if (right_low >= m_left->width()) //then column to add is in the right matrix
+                    m_right->add_column(right_low - m_left->width(), cur_col);
                 else //then column to add is in the left matrix
-                    m_right->add_column(m_left, lows[m_right->low(cur_col)], cur_col);
+                    m_right->add_column(m_left, right_low, cur_col);
             }
 
             if (m_right->low(cur_col) >= 0) //column is still nonempty, so update lows

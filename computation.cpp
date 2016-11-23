@@ -41,7 +41,7 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(ComputationInput& in
     if (verbosity >= 2) {
         debug() << "COMPUTING xi_0 AND xi_1 FOR HOMOLOGY DIMENSION " << params.dim << ":";
     }
-    MultiBetti mb(input.bifiltration(), params.dim, verbosity);
+    MultiBetti mb(input.bifiltration(), params.dim);
     Timer timer;
     debug() << "Calling compute_fast";
     mb.compute_fast(result->homology_dimensions, progress);

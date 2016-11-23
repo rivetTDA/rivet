@@ -27,11 +27,9 @@ public:
     static T& write_grades(T& stream, const std::vector<exact>& x_exact, const std::vector<exact>& y_exact)
     {
 
-        auto x_float = rivet::numeric::to_doubles(x_exact);
-        auto y_float = rivet::numeric::to_doubles(y_exact);
         //write x-grades
         stream << "x-grades" << std::endl;
-        for (std::vector<double>::const_iterator it = x_float.cbegin(); it != x_float.cend(); ++it) {
+        for (std::vector<exact>::const_iterator it = x_exact.cbegin(); it != x_exact.cend(); ++it) {
             std::ostringstream oss;
             oss << *it;
             stream << oss.str() << std::endl;
@@ -40,7 +38,7 @@ public:
 
         //write y-grades
         stream << "y-grades" << std::endl;
-        for (std::vector<double>::const_iterator it = y_float.cbegin(); it != y_float.cend(); ++it) {
+        for (std::vector<exact>::const_iterator it = y_exact.cbegin(); it != y_exact.cend(); ++it) {
             std::ostringstream oss;
             oss << *it;
             stream << oss.str() << std::endl;
@@ -52,8 +50,8 @@ public:
     void write_augmented_arrangement(std::ofstream& file);
 
 private:
-    InputParameters& input_params;
     InputData& input_data;
+    InputParameters& input_params;
     Arrangement& arrangement; //reference to the DCEL arrangement
     std::vector<TemplatePoint>& template_points; //stores discrete coordinates of xi support points, with multiplicities
 };

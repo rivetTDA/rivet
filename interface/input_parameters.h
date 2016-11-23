@@ -18,7 +18,7 @@ struct InputParameters {
     std::string outputFormat; // Supported values: R0, R1
 
     template <typename Archive>
-    void serialize(Archive& ar, const unsigned int& version)
+    void serialize(Archive& ar, const unsigned int /*version*/)
     {
         ar& fileName& shortName& outputFile& dim& x_bins& y_bins& verbosity& x_label& y_label& outputFormat;
     }

@@ -21,7 +21,7 @@ struct BarTemplate {
     bool operator<(const BarTemplate other) const;
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int version)
+    void serialize(Archive& ar, const unsigned int /*version*/)
     {
         ar& begin& end& multiplicity;
     }
@@ -51,7 +51,7 @@ public:
     void print(); //for testing only
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int version)
+    void serialize(Archive& ar, const unsigned int /*version*/)
     {
         ar& bars;
     }

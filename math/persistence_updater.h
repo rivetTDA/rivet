@@ -18,7 +18,7 @@ class Arrangement;
 class MultiBetti;
 class SimplexTree;
 class TemplatePoint;
-class TemplatePointsMatrixEntry;
+struct TemplatePointsMatrixEntry;
 
 #include "template_points_matrix.h"
 
@@ -122,17 +122,13 @@ private:
     void update_order_and_reset_matrices(std::shared_ptr<TemplatePointsMatrixEntry> first, std::shared_ptr<TemplatePointsMatrixEntry> second, bool from_below, MapMatrix_Perm* RL_initial, MapMatrix_Perm* RH_initial);
 
     //updates the total order on columns, rebuilds the matrices, and computing a new RU-decomposition for a NON-STRICT anchor
-    void update_order_and_reset_matrices(std::shared_ptr<TemplatePointsMatrixEntry> anchor, std::shared_ptr<TemplatePointsMatrixEntry> generator, MapMatrix_Perm* RL_initial, MapMatrix_Perm* RH_initial);
+    void update_order_and_reset_matrices(MapMatrix_Perm* RL_initial, MapMatrix_Perm* RH_initial);
 
     //swaps two blocks of simplices in the total order, and counts switches and separations
     void count_switches_and_separations(std::shared_ptr<TemplatePointsMatrixEntry> at_anchor, bool from_below, unsigned long& switches, unsigned long& seps);
 
     //used by the previous function to split grade lists at each anchor crossing
     void do_separations(std::shared_ptr<TemplatePointsMatrixEntry> greater, std::shared_ptr<TemplatePointsMatrixEntry> lesser, bool horiz);
-
-    //swaps two blocks of columns by using a quicksort to update the matrices, then fixing the RU-decomposition (Gaussian elimination on U followed by reduction of R)
-    ///TODO: IMPLEMENT THIS!
-    void quicksort_and_reduce(std::shared_ptr<TemplatePointsMatrixEntry> first, std::shared_ptr<TemplatePointsMatrixEntry> second, bool from_below);
 
     //removes entries corresponding to an TemplatePointsMatrixEntry from lift_low and lift_high
     void remove_lift_entries(std::shared_ptr<TemplatePointsMatrixEntry> entry);

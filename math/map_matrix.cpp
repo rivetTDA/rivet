@@ -872,13 +872,13 @@ void MapMatrix_Perm::check_lows()
 {
     for (unsigned i = 0; i < num_rows; i++) {
         if (low_by_row[i] != -1) {
-            if (low_by_col[low_by_row[i]] != i)
+            if (low_by_col[low_by_row[i]] != static_cast<int>(i))
                 debug() << "===>>> ERROR: INCONSISTNECY IN LOW ARRAYS";
         }
     }
     for (unsigned j = 0; j < columns.size(); j++) {
         //find the lowest entry in column j
-        unsigned lowest = -1;
+        int lowest = -1;
         if (columns[j] != NULL) {
             //consider the first node
             MapMatrixNode* current = columns[j];
@@ -887,7 +887,7 @@ void MapMatrix_Perm::check_lows()
             //consider all following nodes
             current = current->get_next();
             while (current != NULL) {
-                if (perm[current->get_row()] > lowest)
+                if (static_cast<int>(perm[current->get_row()]) > lowest)
                     lowest = perm[current->get_row()];
 
                 current = current->get_next();
@@ -898,7 +898,7 @@ void MapMatrix_Perm::check_lows()
         if (lowest != low_by_col[j])
             debug() << "===>>> ERROR IN low_by_col[" << j << "]";
         else if (lowest != -1) {
-            if (low_by_row[lowest] != j)
+            if (low_by_row[lowest] != static_cast<int>(j))
                 debug() << "===>>> ERROR: INCONSISTNECY IN LOW ARRAYS";
         }
     }

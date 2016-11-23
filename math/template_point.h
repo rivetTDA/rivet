@@ -13,7 +13,7 @@ public:
     friend bool operator==(TemplatePoint const& left, TemplatePoint const& right);
 
     template <class Archive>
-    void serialize(Archive& archive, const unsigned int version)
+    void serialize(Archive& archive, const unsigned int /*version*/)
     {
         archive& x& y& zero& one& two;
     }

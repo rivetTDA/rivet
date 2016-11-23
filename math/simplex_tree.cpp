@@ -18,11 +18,11 @@
 
 //SimplexTree constructor; requires dimension of homology to be computed and verbosity parameter
 SimplexTree::SimplexTree(int dim, int v)
-    : root(new STNode())
-    , x_grades(0)
-    , y_grades(0)
-    , hom_dim(dim)
+    : hom_dim(dim)
     , verbosity(v)
+    , root(new STNode())
+    , x_grades(0)
+        , y_grades(0)
 {
     if (hom_dim > 5) {
         throw std::runtime_error("Dimensions greater than 5 probably don't make sense");
@@ -137,7 +137,7 @@ void SimplexTree::update_dim_indexes()
 }
 
 //recursively build lists to determine dimension indexes
-void SimplexTree::build_dim_lists_recursively(STNode* node, int cur_dim)
+void SimplexTree::build_dim_lists_recursively(STNode* node, unsigned cur_dim)
 {
     //get children of current node
     std::vector<STNode*> kids = node->get_children();
@@ -233,11 +233,11 @@ void SimplexTree::build_VR_subtree(std::vector<unsigned>& times, std::vector<uns
 
 //returns a matrix of boundary information for simplices of the given dimension (with multi-grade info)
 //columns ordered according to dimension index (reverse-lexicographic order with respect to multi-grades)
-MapMatrix* SimplexTree::get_boundary_mx(int dim)
+MapMatrix* SimplexTree::get_boundary_mx(unsigned dim)
 {
     //select set of simplices of dimension dim
     SimplexSet* simplices;
-    int num_rows;
+    size_t num_rows;
 
     if (dim == hom_dim) {
         simplices = &ordered_simplices;
@@ -355,9 +355,9 @@ DirectSumMatrices SimplexTree::get_merge_mxs()
     SimplexSet::iterator it_c = ordered_simplices.begin(); //iterator for simplices in C component
 
     //loop through multi-grades, writing columns into the matrices
-    for (int y = 0; y <= y_grades; y++) //rows                 <--- CHECK! DO WE WANT <= HERE? FOR NOW, YES.
+    for (unsigned y = 0; y <= y_grades; y++) //rows                 <--- CHECK! DO WE WANT <= HERE? FOR NOW, YES.
     {
-        for (int x = 0; x <= x_grades; x++) //columns          <--- CHECK! DO WE WANT <= HERE? FOR NOW, YES.
+        for (unsigned x = 0; x <= x_grades; x++) //columns          <--- CHECK! DO WE WANT <= HERE? FOR NOW, YES.
         {
             //process simplices for the current multi-grade (x,y)
             //first, insert columns for simplices that appear in B at the multi-grade (x-1,y)
@@ -403,9 +403,9 @@ DirectSumMatrices SimplexTree::get_split_mxs()
     int col = -1; //column counter for boundary matrix
 
     //  loop through multi-grades, writing columns into the matrices
-    for (int y = 0; y <= y_grades; y++) //rows                 <--- CHECK! DO WE WANT <= HERE? FOR NOW, YES.
+    for (unsigned y = 0; y <= y_grades; y++) //rows                 <--- CHECK! DO WE WANT <= HERE? FOR NOW, YES.
     {
-        for (int x = 0; x <= x_grades; x++) //columns          <--- CHECK! DO WE WANT <= HERE? FOR NOW, YES.
+        for (unsigned x = 0; x <= x_grades; x++) //columns          <--- CHECK! DO WE WANT <= HERE? FOR NOW, YES.
         {
             //first, insert columns for simplices that appear in B at the multi-grade (x-1,y)
             while ((it_b != ordered_high_simplices.end()) && ((*it_b)->grade_x() == x - 1) && ((*it_b)->grade_y() == y)) {
@@ -471,7 +471,7 @@ void SimplexTree::write_boundary_column(MapMatrix* mat, STNode* sim, int col, in
 
 //returns a matrix of column indexes to accompany MapMatrices
 //  entry (i,j) gives the last column of the MapMatrix that corresponds to multigrade (i,j)
-IndexMatrix* SimplexTree::get_index_mx(int dim)
+IndexMatrix* SimplexTree::get_index_mx(unsigned dim)
 {
     //select set of simplices of dimension dim
     SimplexSet* simplices;
@@ -484,14 +484,14 @@ IndexMatrix* SimplexTree::get_index_mx(int dim)
         throw std::runtime_error("attempting to compute index matrix for improper dimension");
 
     //create the IndexMatrix
-    int x_size = x_grades;
-    int y_size = y_grades;
+    unsigned x_size = x_grades;
+    unsigned y_size = y_grades;
     IndexMatrix* mat = new IndexMatrix(y_size, x_size); //DELETE this object later!
 
     if (!simplices->empty()) //then there is at least one simplex
     {
         //initialize to -1 the entries of end_col matrix before multigrade of the first simplex
-        int cur_entry = 0; //tracks previously updated multigrade in end-cols
+        unsigned cur_entry = 0; //tracks previously updated multigrade in end-cols
 
         SimplexSet::iterator it = simplices->begin();
         for (; cur_entry < (*it)->grade_x() + (*it)->grade_y() * x_size; cur_entry++)
@@ -502,8 +502,8 @@ IndexMatrix* SimplexTree::get_index_mx(int dim)
         for (; it != simplices->end(); ++it) {
             //get simplex
             STNode* simplex = *it;
-            int cur_x = simplex->grade_x();
-            int cur_y = simplex->grade_y();
+            auto cur_x = simplex->grade_x();
+            auto cur_y = simplex->grade_y();
 
             //if some multigrades were skipped, store previous column number in skipped cells of end_col matrix
             for (; cur_entry < cur_x + cur_y * x_size; cur_entry++)
@@ -521,7 +521,7 @@ IndexMatrix* SimplexTree::get_index_mx(int dim)
             mat->set(cur_entry / x_size, cur_entry % x_size, col - 1);
     } else //then there are no simplices, so fill the IndexMatrix with -1 values
     {
-        for (int i = 0; i < x_size * y_size; i++)
+        for (unsigned i = 0; i < x_size * y_size; i++)
             mat->set(i / x_size, i % x_size, -1);
     }
 
@@ -530,7 +530,7 @@ IndexMatrix* SimplexTree::get_index_mx(int dim)
 } //end get_index_mx()
 
 //returns a matrix of column indexes offset in each direction, for the boundary_A matrix in compute_eta()
-IndexMatrix* SimplexTree::get_offset_index_mx(int dim)
+IndexMatrix* SimplexTree::get_offset_index_mx(unsigned dim)
 {
     //select set of simplices of dimension dim
     SimplexSet* simplices;
@@ -588,26 +588,22 @@ IndexMatrix* SimplexTree::get_offset_index_mx(int dim)
     return mat;
 } //end get_offset_index_mx()
 
-//recursively search tree for simplices of specified dimension that exist at specified multi-index
-void SimplexTree::find_nodes(STNode& node, int level, std::vector<int>& vec, int time, int dist, int dim)
-{
-    //if either time, dist, or dim is negative, then there are no nodes
-    if (time < 0 || dist < 0 || dim < 0) {
-        return;
-    }
-
-    //consider current node
-    if ((level == dim + 1) && (node.grade_x() <= time) && (node.grade_y() <= dist)) {
-        vec.push_back(node.global_index());
-    }
-
-    //move on to children nodes
-    if (level <= dim) {
-        std::vector<STNode*> kids = node.get_children();
-        for (unsigned i = 0; i < kids.size(); i++)
-            find_nodes(*kids[i], level + 1, vec, time, dist, dim);
-    }
-}
+////recursively search tree for simplices of specified dimension that exist at specified multi-index
+//void SimplexTree::find_nodes(STNode& node, int level, std::vector<int>& vec, unsigned time, unsigned dist, unsigned dim)
+//{
+//
+//    //consider current node
+//    if ((level == dim + 1) && (node.grade_x() <= time) && (node.grade_y() <= dist)) {
+//        vec.push_back(node.global_index());
+//    }
+//
+//    //move on to children nodes
+//    if (level <= dim) {
+//        std::vector<STNode*> kids = node.get_children();
+//        for (unsigned i = 0; i < kids.size(); i++)
+//            find_nodes(*kids[i], level + 1, vec, time, dist, dim);
+//    }
+//}
 
 //given a global index, return (a vector containing) the vertices of the simplex
 std::vector<int> SimplexTree::find_vertices(int gi)
@@ -674,7 +670,7 @@ SimplexData SimplexTree::get_simplex_data(int index)
 {
     STNode* target = NULL;
     std::vector<STNode*> kids = root->get_children();
-    int dim = 0;
+    unsigned dim = 0;
 
     while (target == NULL) {
         if (kids.size() == 0) {
@@ -682,9 +678,9 @@ SimplexData SimplexTree::get_simplex_data(int index)
         }
 
         //binary search for index
-        int min = 0;
-        int max = kids.size() - 1;
-        int mid;
+        size_t min = 0;
+        size_t max = kids.size() - 1;
+        size_t mid;
         while (max >= min) {
             mid = (min + max) / 2;
             if (kids[mid]->global_index() == index) //found it at kids[mid]
@@ -720,7 +716,7 @@ unsigned SimplexTree::num_y_grades()
 }
 
 //returns the number of simplices of dimension (hom_dim-1), hom_dim, or (hom_dim+1)
-int SimplexTree::get_size(int dim)
+unsigned SimplexTree::get_size(unsigned dim)
 {
     if (dim == hom_dim - 1)
         return ordered_low_simplices.size();
@@ -729,7 +725,7 @@ int SimplexTree::get_size(int dim)
     else if (dim == hom_dim + 1)
         return ordered_high_simplices.size();
     else
-        return -1;
+        throw std::runtime_error("invalid dimension");
 }
 
 //returns the total number of simplices represented in the simplex tree
@@ -764,6 +760,6 @@ void SimplexTree::print_subtree(STNode* node, int indent)
 
     //print children nodes
     std::vector<STNode*> kids = node->get_children();
-    for (int i = 0; i < kids.size(); i++)
+    for (size_t i = 0; i < kids.size(); i++)
         print_subtree(kids[i], indent + 1);
 }

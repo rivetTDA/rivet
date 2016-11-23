@@ -9,11 +9,11 @@
 ArrangementMessage::ArrangementMessage(Arrangement const& arrangement)
     : x_grades(arrangement.x_grades)
     , y_grades(arrangement.y_grades)
-    , half_edges()
-    , vertices()
-    , anchors()
-    , faces()
     , vertical_line_query_list()
+        , half_edges()
+        , vertices()
+        , anchors()
+        , faces()
 {
     //REALLY slow with all these VID, FID, etc. calls, but will do for now.
     for (auto face : arrangement.faces) {
@@ -59,15 +59,15 @@ ArrangementMessage::ArrangementMessage(Arrangement const& arrangement)
 ArrangementMessage::ArrangementMessage()
     : x_grades()
     , y_grades()
+        , topleft()
+        , topright()
+        , bottomleft()
+        , bottomright()
     , vertical_line_query_list()
     , half_edges()
     , vertices()
-    , anchors()
-    , faces()
-    , topleft()
-    , topright()
-    , bottomleft()
-    , bottomright()
+        , anchors()
+        , faces()
 {
 }
 
@@ -98,7 +98,7 @@ boost::optional<ArrangementMessage::AnchorM> ArrangementMessage::find_least_uppe
     //if we get here, then y_grades[best] is the greatest y-grade not greater than y_coord
     //now find Anchor whose line intersects the left edge of the arrangement lowest, but not below y_grade[best]
     unsigned int zero = 0; //disambiguate the following function call
-    AnchorM test{ zero, best };
+    AnchorM test{ zero, best, HalfedgeId::invalid(), 0, false, 0 };
     auto it = std::lower_bound(anchors.begin(), anchors.end(), test, AnchorStructComparator());
 
     if (it == anchors.end()) //not found
@@ -341,10 +341,10 @@ Arrangement ArrangementMessage::to_arrangement() const
     for (auto vertex : vertices) {
         arrangement.vertices.push_back(std::make_shared<::Vertex>(vertex.x, vertex.y));
     }
-    for (auto face : faces) {
+    for (size_t i = 0; i < faces.size(); i++) {
         arrangement.faces.push_back(std::make_shared<::Face>());
     }
-    for (auto edge : half_edges) {
+    for (size_t  i = 0; i < half_edges.size(); i++) {
         arrangement.halfedges.push_back(std::make_shared<::Halfedge>());
     }
     std::vector<std::shared_ptr<::Anchor>> temp_anchors; //For indexing, since arrangement.all_anchors is a set
@@ -362,7 +362,7 @@ Arrangement ArrangementMessage::to_arrangement() const
     assert(arrangement.all_anchors.size() == anchors.size());
 
     auto it = arrangement.all_anchors.begin();
-    for (auto i = 0; i < anchors.size(); i++) {
+    for (size_t i = 0; i < anchors.size(); i++) {
         std::clog << "Checking: ";
         std::clog << anchors[i].x_coord << "-->" << temp_anchors[i]->get_x() << "-->" << (*it)->get_x() << " / ";
         assert(anchors[i].x_coord == temp_anchors[i]->get_x());
@@ -375,12 +375,12 @@ Arrangement ArrangementMessage::to_arrangement() const
 
     //Now populate all the pointers
 
-    for (auto i = 0; i < vertices.size(); i++) {
+    for (size_t i = 0; i < vertices.size(); i++) {
         if (vertices[i].incident_edge != HalfedgeId::invalid()) {
             arrangement.vertices[i]->set_incident_edge(arrangement.halfedges[static_cast<long>(vertices[i].incident_edge)]);
         }
     }
-    for (auto i = 0; i < faces.size(); i++) {
+    for (size_t i = 0; i < faces.size(); i++) {
         auto mface = arrangement.faces[i];
         auto face = faces[i];
         //TODO: this doesn't seem right, why would a face not have a boundary?
@@ -389,7 +389,7 @@ Arrangement ArrangementMessage::to_arrangement() const
         }
         mface->set_barcode(face.dbc);
     }
-    for (auto i = 0; i < half_edges.size(); i++) {
+    for (size_t i = 0; i < half_edges.size(); i++) {
         ::Halfedge& edge = *(arrangement.halfedges[i]);
         ArrangementMessage::HalfedgeM ref = half_edges[i];
         if (ref.face != FaceId::invalid())
@@ -412,14 +412,14 @@ Arrangement ArrangementMessage::to_arrangement() const
         }
     }
 
-    for (auto i = 0; i < vertical_line_query_list.size(); i++) {
+    for (size_t i = 0; i < vertical_line_query_list.size(); i++) {
         arrangement.vertical_line_query_list.push_back(arrangement.halfedges[static_cast<long>(vertical_line_query_list[i])]);
     }
 
     assert(arrangement.all_anchors.size() == anchors.size());
 
     it = arrangement.all_anchors.begin();
-    for (auto i = 0; i < anchors.size(); i++) {
+    for (size_t i = 0; i < anchors.size(); i++) {
         ::Anchor& anchor = **it;
         ArrangementMessage::AnchorM ref = anchors[i];
         if (ref.dual_line != HalfedgeId::invalid()) {
@@ -446,7 +446,7 @@ Arrangement ArrangementMessage::to_arrangement() const
     arrangement.y_grades = y_grades;
 
     it = arrangement.all_anchors.begin();
-    for (auto i = 0; i < anchors.size(); i++) {
+    for (size_t i = 0; i < anchors.size(); i++) {
         std::clog << "Checking: ";
         assert(anchors[i].x_coord == temp_anchors[i]->get_x());
         assert(anchors[i].x_coord == (*it)->get_x());

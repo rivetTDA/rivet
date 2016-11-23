@@ -126,7 +126,7 @@ struct TemplatePointsMessage {
     friend bool operator==(TemplatePointsMessage const& left, TemplatePointsMessage const& right);
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int version)
+    void serialize(Archive& ar, const unsigned int /*version*/)
     {
         ar& x_label& y_label& template_points& homology_dimensions& x_exact& y_exact;
     }

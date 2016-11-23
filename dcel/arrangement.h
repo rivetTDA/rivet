@@ -76,8 +76,6 @@ private:
     std::vector<std::shared_ptr<Halfedge>> halfedges; //all halfedges in the arrangement
     std::vector<std::shared_ptr<Face>> faces; //all faces in the arrangement
 
-    const double INFTY;
-
     unsigned verbosity;
 
     std::set<std::shared_ptr<Anchor>, PointerComparator<Anchor, Anchor_LeftComparator>> all_anchors; //set of Anchors that are represented in the arrangement, ordered by position of curve along left side of the arrangement, from bottom to top

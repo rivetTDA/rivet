@@ -18,6 +18,8 @@
 #include <cutgraph.h>
 #include <stack> //for find_subpath
 
+using rivet::numeric::INFTY;
+
 ArrangementBuilder::ArrangementBuilder(unsigned verbosity)
     : verbosity(verbosity)
 {
@@ -370,13 +372,13 @@ void ArrangementBuilder::build_interior(std::shared_ptr<Arrangement> arrangement
         {
             cur_x = cur_anchor->get_x();
 
-            double Y = arrangement->INFTY; //default, for lines with positive slope
+            double Y = INFTY; //default, for lines with positive slope
             if (arrangement->x_grades[cur_x] < 0)
                 Y = -1 * Y; //for lines with negative slope
             else if (arrangement->x_grades[cur_x] == 0)
                 Y = 0; //for horizontal lines
 
-            rightedge = arrangement->insert_vertex(rightedge, arrangement->INFTY, Y);
+            rightedge = arrangement->insert_vertex(rightedge, INFTY, Y);
         } else //no new vertex required, but update previous entry for vertical-line queries
             arrangement->vertical_line_query_list.pop_back();
 
@@ -654,7 +656,7 @@ void ArrangementBuilder::find_path(Arrangement& arrangement, std::vector<std::sh
 
     // distance vector for sorting the adjacency list
     std::vector<std::vector<unsigned>> distances(arrangement.faces.size(), std::vector<unsigned>(arrangement.faces.size(), -1));
-    for (int i = 0; i < distances.size(); ++i)
+    for (size_t i = 0; i < distances.size(); ++i)
         distances.at(i).at(i) = 0;
 
     //loop over all arrangement.faces

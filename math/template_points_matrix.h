@@ -26,8 +26,8 @@ struct TemplatePointsMatrixEntry {
 
     unsigned low_count; //number of columns in matrix of simplices of lower dimension that are mapped to this TemplatePointsMatrixEntry
     unsigned high_count; //number of columns in matrix of simplices of higher dimension that are mapped to this TemplatePointsMatrixEntry
-    int low_index; //index of rightmost column in matrix of simplices of lower dimension that is mapped to this TemplatePointsMatrixEntry
-    int high_index; //index of rightmost column in matrix of simplices of higher dimension that is mapped to this TemplatePointsMatrixEntry
+    unsigned low_index; //index of rightmost column in matrix of simplices of lower dimension that is mapped to this TemplatePointsMatrixEntry
+    unsigned high_index; //index of rightmost column in matrix of simplices of higher dimension that is mapped to this TemplatePointsMatrixEntry
     //NOTE: if TemplatePointsMatrixEntry is a LUB-index but there are no low (resp. high) columns mapped to it, then low_index (resp. high_index) is the index of the column just left of where such columns would appear (could be -1)
 
     //functions

@@ -30,7 +30,7 @@ public:
     friend bool operator!=(ID a, ID b) { return a.m_val != b.m_val; }
 
     template <class Archive>
-    void serialize(Archive& ar, unsigned const int& version)
+    void serialize(Archive& ar, unsigned const int /*version*/)
     {
         ar& m_val;
     }

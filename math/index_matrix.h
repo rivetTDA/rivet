@@ -1,6 +1,6 @@
 /**
  * \class	IndexMatrix
- * \brief	Stores a matrix of column indexes, one for each multi-grade (to acompany a MapMatrix).
+ * \brief	Stores a matrix of column indexes, one for each multi-grade (to accompany a MapMatrix).
  * \author	Matthew L. Wright
  * \date	July 2014
  */

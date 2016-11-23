@@ -28,7 +28,7 @@ typedef std::vector<int> Vector;
 
 class MultiBetti {
 public:
-    MultiBetti(SimplexTree& st, int dim, int v); //constructor sets up the data structure but doesn't compute the multi-graded Betti numbers xi_0 and xi_1
+    MultiBetti(SimplexTree& st, int dim); //constructor sets up the data structure but doesn't compute the multi-graded Betti numbers xi_0 and xi_1
 
     void compute_fast(unsigned_matrix& hom_dims, Progress& progress);
     //computes xi_0 and xi_1 at all multi-grades in a fast way; also stores dimension of homology at each grade in the supplied matrix
@@ -57,8 +57,6 @@ private:
     unsigned num_y_grades; //number of grades in secondary direction
 
     boost::multi_array<int, 3> xi; //matrix to hold xi values; indices: xi[x][y][subscript]
-
-    const int verbosity; //controls display of output, for debugging
 
     void reduce(MapMatrix* mm, int first_col, int last_col, Vector& lows, int& zero_cols);
     //column reduction for Edelsbrunner algorithm

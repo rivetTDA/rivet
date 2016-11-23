@@ -23,7 +23,7 @@ double ExactValue::epsilon = pow(2, -30);
 std::string join(const std::vector<std::string>& strings)
 {
     std::stringstream ss;
-    for (int i = 0; i < strings.size(); i++) {
+    for (size_t i = 0; i < strings.size(); i++) {
         if (i > 0)
             ss << " ";
         ss << strings[i];
@@ -74,7 +74,6 @@ using namespace rivet::numeric;
 InputManager::InputManager(InputParameters& params)
     : input_params(params)
     , verbosity(params.verbosity)
-    , hom_dim(input_params.dim)
 {
     register_file_type(FileType{ "points", "point-cloud data", true,
         std::bind(&InputManager::read_point_cloud, this, std::placeholders::_1, std::placeholders::_2) });
@@ -151,7 +150,7 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
         debug() << "There was more than one value in the expected dimension line.  There may be a problem with your input file.  ";
     }
     debug() << "Dimension: " << dimension_line[0];
-    int dimension = std::stoi(dimension_line[0]);
+    unsigned dimension = std::stoi(dimension_line[0]);
 
     //check for invalid input
     if (dimension == 0) {
@@ -236,7 +235,7 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
         for (unsigned j = i + 1; j < num_points; j++) {
             //compute (approximate) distance squared between points[i] and points[j]
             double fp_dist_squared = 0;
-            for (int k = 0; k < dimension; k++)
+            for (unsigned k = 0; k < dimension; k++)
                 fp_dist_squared += (points[i].coords[k] - points[j].coords[k]) * (points[i].coords[k] - points[j].coords[k]);
 
             //find an approximate square root of dist_squared, and store it as an exact value
@@ -316,7 +315,7 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
     std::vector<exact> values;
     values.reserve(line.size());
 
-    for (int i = 0; i < line.size(); i++) {
+    for (size_t i = 0; i < line.size(); i++) {
         values.push_back(str_to_exact(line.at(i)));
     }
 
@@ -553,7 +552,7 @@ std::unique_ptr<InputData> InputManager::read_RIVET_data(std::ifstream& stream, 
 
         if (line[0] != std::string("-")) //then the barcode is nonempty
         {
-            for (int i = 0; i < line.size(); i++) //loop over all bars
+            for (size_t i = 0; i < line.size(); i++) //loop over all bars
             {
                 std::vector<std::string> nums = split(line[i], ",");
                 unsigned a = std::stol(nums[0]);
