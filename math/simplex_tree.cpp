@@ -1,6 +1,21 @@
-/* simplex tree class
- * works together with STNode class
- */
+/**********************************************************************
+Copyright 2014-2016 Matthew L. Wright, Bryn Keller
+
+This file is part of RIVET.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+**********************************************************************/
 
 #include "simplex_tree.h"
 
@@ -27,7 +42,9 @@ SimplexTree::SimplexTree(int dim, int v)
     if (hom_dim > 5) {
         throw std::runtime_error("Dimensions greater than 5 probably don't make sense");
     }
-    debug() << "Created SimplexTree(" << hom_dim << ", " << verbosity << ")";
+    if(verbosity >= 8) {
+        debug() << "Created SimplexTree(" << hom_dim << ", " << verbosity << ")";
+    }
 }
 
 //destructor
@@ -167,13 +184,8 @@ void SimplexTree::build_VR_complex(std::vector<unsigned>& times, std::vector<uns
 
     //build simplex tree recursively
     //this also assigns global indexes to each simplex
-    if (verbosity >= 6) {
-        debug() << "BUILDING SIMPLEX TREE";
-    }
     unsigned gic = 0; //global index counter
     for (unsigned i = 0; i < times.size(); i++) {
-        //        if(times[i] > 11) continue;    ///ONLY FOR DEBUGGING
-
         //create the node and add it as a child of root
         STNode* node = new STNode(i, root, times[i], 0, gic); //delete later!
         root->append_child(node);
@@ -195,8 +207,6 @@ void SimplexTree::build_VR_subtree(std::vector<unsigned>& times, std::vector<uns
 {
     //loop through all points that could be children of this node
     for (unsigned j = parent_indexes.back() + 1; j < times.size(); j++) {
-        //        if(times[j] > 11) continue;    ///ONLY FOR DEBUGGING
-
         //look up distances from point j to each of its parents
         //distance index is maximum of prev_distance and each of these distances
         unsigned current_dist = prev_dist;
@@ -247,7 +257,7 @@ MapMatrix* SimplexTree::get_boundary_mx(int dim)
         num_rows = ordered_simplices.size();
     } else {
         std::stringstream ss;
-        ss << "attempting to compute boundary matrix for improper dimension (" << dim << "), expected either "
+        ss << "Attempting to compute boundary matrix for improper dimension (" << dim << "), expected either "
            << hom_dim << " or " << hom_dim + 1;
         throw std::runtime_error(ss.str());
     }
@@ -325,7 +335,7 @@ MapMatrix_Perm* SimplexTree::get_boundary_mx(std::vector<int>& face_order, unsig
                 //look up order index of the facet
                 STNode* facet_node = find_simplex(facet);
                 if (facet_node == NULL)
-                    throw std::runtime_error("facet simplex not found");
+                    throw std::runtime_error("Facet simplex not found.");
                 int facet_order_index = face_order[facet_node->dim_index()];
 
                 //for this boundary simplex, enter "1" in the appropriate cell in the matrix
@@ -461,7 +471,7 @@ void SimplexTree::write_boundary_column(MapMatrix* mat, STNode* sim, int col, in
         //look up dimension index of the facet
         STNode* facet_node = find_simplex(facet);
         if (facet_node == NULL)
-            throw std::runtime_error("facet simplex not found");
+            throw std::runtime_error("Facet simplex not found.");
         int facet_di = facet_node->dim_index();
 
         //for this boundary simplex, enter "1" in the appropriate cell in the matrix
@@ -481,7 +491,7 @@ IndexMatrix* SimplexTree::get_index_mx(int dim)
     else if (dim == hom_dim + 1)
         simplices = &ordered_high_simplices;
     else
-        throw std::runtime_error("attempting to compute index matrix for improper dimension");
+        throw std::runtime_error("Attempting to compute index matrix for improper dimension.");
 
     //create the IndexMatrix
     int x_size = x_grades;
@@ -540,7 +550,7 @@ IndexMatrix* SimplexTree::get_offset_index_mx(int dim)
     else if (dim == hom_dim + 1)
         simplices = &ordered_high_simplices;
     else
-        throw std::runtime_error("attempting to compute index matrix for improper dimension");
+        throw std::runtime_error("Attempting to compute index matrix for improper dimension.");
 
     //create the IndexMatrix
     int x_size = x_grades + 1; //    <<<==== OPTIMIZE TO GET RID OF THE +1
@@ -678,7 +688,7 @@ SimplexData SimplexTree::get_simplex_data(int index)
 
     while (target == NULL) {
         if (kids.size() == 0) {
-            throw std::runtime_error("ERROR: vector of size zero in SimplexTree::get_multi_index()\n");
+            throw std::runtime_error("Vector of size zero in SimplexTree::get_multi_index()\n");
         }
 
         //binary search for index
@@ -766,4 +776,36 @@ void SimplexTree::print_subtree(STNode* node, int indent)
     std::vector<STNode*> kids = node->get_children();
     for (int i = 0; i < kids.size(); i++)
         print_subtree(kids[i], indent + 1);
+}
+
+//print bifiltration in the RIVET bifiltration input format
+//prints simplices in order of increasing dimension
+void SimplexTree::print_bifiltration() {
+    std::vector<STNode*> kids = root->get_children();
+    for(int d=0; d <= hom_dim + 1; d++) {
+        //print simplices of dimension d
+        for (unsigned i = 0; i < kids.size(); i++) {
+            print_bifiltration(kids[i], std::string(), 0, d);
+        }
+    }
+}
+
+void SimplexTree::print_bifiltration(STNode* node, std::string parent, int cur_dim, int print_dim) {
+    if(cur_dim == print_dim) { //print current node
+        if(cur_dim != 0) {
+            std::cout << parent << " ";
+        }
+        std::cout << node->get_vertex() << " " << node->grade_x() << " " << node->grade_y() << std::endl;
+    }
+    else { //recurse on children nodes
+        std::vector<STNode*> kids = node->get_children();
+        for (unsigned i = 0; i < kids.size(); i++) {
+            std::string simplex = parent;
+            if(cur_dim != 0) {
+                simplex += " ";
+            }
+            simplex += std::to_string(node->get_vertex());
+            print_bifiltration(kids[i], simplex, cur_dim + 1, print_dim);
+        }
+    }
 }

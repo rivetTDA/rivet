@@ -1,3 +1,21 @@
+/**********************************************************************
+Copyright 2014-2016 Bryn Keller, Matthew Wright
+
+This file is part of RIVET.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+**********************************************************************/
 
 #include "computation.h"
 #include "dcel/arrangement.h"
@@ -77,7 +95,7 @@ std::string getcwd()
             // Of course you may choose a different error reporting method
         }
     }
-    throw std::runtime_error("Cannot determine the current path; the path is apparently unreasonably long");
+    throw std::runtime_error("Cannot determine the current path; the path is apparently unreasonably long.");
 }
 
 //TODO: this doesn't really belong here, look for a better place.
@@ -85,7 +103,7 @@ void write_boost_file(InputParameters const& params, TemplatePointsMessage const
 {
     std::ofstream file(params.outputFile, std::ios::binary);
     if (!file.is_open()) {
-        throw std::runtime_error("Could not open " + params.outputFile + " for writing");
+        throw std::runtime_error("Could not open " + params.outputFile + " for writing.");
     }
     file << "RIVET_1\n";
     boost::archive::binary_oarchive oarchive(file);
@@ -96,16 +114,10 @@ void write_boost_file(InputParameters const& params, TemplatePointsMessage const
 //
 int main(int argc, char* argv[])
 {
-    //        debug() << "CONSOLE RIVET" ;
-
     InputParameters params; //parameter values stored here
 
     std::map<std::string, docopt::value> args = docopt::docopt(USAGE, { argv + 1, argv + argc }, true,
         "RIVET Console 0.4");
-
-    // for (auto const &arg : args) {
-    //   std::cout << arg.first << ":" << arg.second ;
-    // }
 
     ArrangementMessage* arrangement_message = nullptr;
     TemplatePointsMessage* points_message = nullptr;
@@ -125,9 +137,11 @@ int main(int argc, char* argv[])
         params.verbosity = 0;
     }
 
-    //        debug() << "X bins: " << params.x_bins ;
-    //        debug() << "Y bins: " << params.y_bins ;
-    //        debug() << "Verbosity: " << params.verbosity ;
+    if(params.verbosity >= 8) {
+        debug() << "X bins: " << params.x_bins ;
+        debug() << "Y bins: " << params.y_bins ;
+        debug() << "Verbosity: " << params.verbosity ;
+    }
 
     InputManager inputManager(params);
     Progress progress;
@@ -211,20 +225,16 @@ int main(int argc, char* argv[])
         std::cout << "RAW DATA: " << input->is_data << std::endl;
         return 0;
     }
-    if (params.verbosity >= 2) {
-        debug() << "Input processed";
+    if (params.verbosity >= 4) {
+        debug() << "Input processed.";
     }
     auto result = computation.compute(*input);
     if (params.verbosity >= 2) {
-        debug() << "Computation complete";
+        debug() << "Computation complete; augmented arrangement ready.";
     }
     auto arrangement = result->arrangement;
-    //TESTING: print arrangement info and verify consistency
-    arrangement->print_stats();
-    arrangement->test_consistency();
-
-    if (params.verbosity >= 2) {
-        debug() << "COMPUTATION FINISHED.";
+    if(params.verbosity >= 4) {
+        arrangement->print_stats();
     }
 
     //if an output file has been specified, then save the arrangement
@@ -247,6 +257,6 @@ int main(int argc, char* argv[])
             throw std::runtime_error(ss.str());
         }
     }
-    debug() << "CONSOLE RIVET: Goodbye";
+    debug() << "CONSOLE RIVET: Goodbye!";
     return 0;
 }
