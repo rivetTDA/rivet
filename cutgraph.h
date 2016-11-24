@@ -15,8 +15,8 @@
 void sortAdjacencies(std::vector<std::vector<unsigned>>& adjList, std::vector<std::vector<unsigned>>& distances,
     unsigned start, std::vector<std::vector<unsigned>>& children)
 {
-    bool discovered[adjList.size()]; // boolean array for keeping track of which nodes have been visited
-    unsigned branchWeight[adjList.size()]; // this will contain the weight of the edges "hanging" from the node represented by its index in branchWeight
+    bool *discovered = new bool[adjList.size()]; // boolean array for keeping track of which nodes have been visited
+    unsigned * branchWeight = new unsigned[adjList.size()]; // this will contain the weight of the edges "hanging" from the node represented by its index in branchWeight
     // populate the boolean array with false and the branchWeight array with 0
     for (unsigned i = 0; i < adjList.size(); ++i) {
         discovered[i] = false;
@@ -79,4 +79,6 @@ void sortAdjacencies(std::vector<std::vector<unsigned>>& adjList, std::vector<st
             }
         }
     } // end while
+    delete[] branchWeight;
+    delete[] discovered;
 } // end sortAdjacencies()

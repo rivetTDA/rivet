@@ -32,6 +32,7 @@ SOURCES	+= main.cpp                         \
 		interface/persistence_dot.cpp       \
 		interface/slice_diagram.cpp         \
 		interface/slice_line.cpp            \
+	    math/bool_array.cpp                 \
 		math/index_matrix.cpp               \
 		math/map_matrix.cpp                 \
 		#math/multi_betti.cpp                \
@@ -58,6 +59,7 @@ SOURCES	+= main.cpp                         \
     interface/console_interaction.cpp \
     numerics.cpp \
 
+
 HEADERS  += visualizationwindow.h			\
 		dataselectdialog.h					\
 		dcel/dcel.h							\
@@ -69,12 +71,13 @@ HEADERS  += visualizationwindow.h			\
 		interface/persistence_dot.h			\
 		interface/slice_diagram.h			\
 		interface/slice_line.h				\
+		math/bool_array.h                 \
 		math/index_matrix.h					\
 		math/map_matrix.h					\
 		math/multi_betti.h					\
 		math/simplex_tree.h					\
 		math/st_node.h						\
-		interface/barcode.h					\
+		dcel/barcode.h	    				\
 		dcel/barcode_template.h				\
 		dcel/anchor.h						\
 		dcel/grades.h                       \
