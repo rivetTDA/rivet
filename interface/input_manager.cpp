@@ -1,5 +1,6 @@
 /**********************************************************************
-Copyright 2014-2016 Matthew L. Wright, Bryn Keller
+Copyright 2014-2016 The RIVET Devlopers. See the COPYRIGHT file at
+the top-level directory of this distribution.
 
 This file is part of RIVET.
 
@@ -304,7 +305,6 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
 
     if(verbosity >= 8) {
         data->simplex_tree->print_bifiltration();
-        throw std::runtime_error("=================== TESTING ===================");
     }
 
     //clean up

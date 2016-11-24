@@ -1,5 +1,6 @@
 /**********************************************************************
-Copyright 2014-2016 Matthew L. Wright, Bryn Keller
+Copyright 2014-2016 The RIVET Devlopers. See the COPYRIGHT file at
+the top-level directory of this distribution.
 
 This file is part of RIVET.
 
