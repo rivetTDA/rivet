@@ -45,6 +45,9 @@ After cloning to $RIVET_DIR:
     make
     
 
+You may see compiler warnings during either of the `make` executions. 
+These can safely be ignored. 
+
 After this, you will have two executables built: the viewer (RIVET.app, 
 on a Mac, RIVET elsewhere), and the computation engine (rivet_console).
 

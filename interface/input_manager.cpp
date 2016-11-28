@@ -437,12 +437,17 @@ std::unique_ptr<InputData> InputManager::read_bifiltration(std::ifstream& stream
     while (reader.has_next_line()) {
         std::vector<std::string> tokens = reader.next_line();
 
+        if (tokens.size() > std::numeric_limits<unsigned>::max()) {
+            throw std::runtime_error("Error, line longer than " +
+                                             std::to_string(std::numeric_limits<unsigned>::max()) + " tokens");
+        }
+
         //read dimension of simplex
-        int dim = tokens.size() - 3; //-3 because a n-simplex has (n+1) vertices, and the line also contains two grade values
+        unsigned dim = static_cast<unsigned>(tokens.size() - 3); //-3 because a n-simplex has (n+1) vertices, and the line also contains two grade values
 
         //read vertices
         std::vector<int> verts;
-        for (int i = 0; i <= dim; i++) {
+        for (unsigned i = 0; i <= dim; i++) {
             int v = std::stoi(tokens[i]);
             verts.push_back(v);
         }

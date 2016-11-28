@@ -13,7 +13,10 @@ public:
     IndexMatrix(unsigned rows, unsigned cols);
     ~IndexMatrix();
 
-    void set(unsigned row, unsigned col, int value); //the entry at (row, col) is to be the greatest dim_index of all simplices that appear at or before this multigrade in reverse lexicographical order, or -1 if there are no such simplices
+    //the entry at (row, col) is to be the greatest dim_index of all simplices that
+    // appear at or before this multigrade in reverse lexicographical order, or -1
+    // if there are no such simplices
+    void set(unsigned row, unsigned col, int value);
     int get(unsigned row, unsigned col) const;
 
     int last() const;
