@@ -1,10 +1,15 @@
 # RIVET
 
+Program to visualize two-parameter persistent homology.
+Designed by Michael Lesnick and Matthew Wright
+Created December 2013.
 
+## Contributors
+Michael Lesnick (Princeton)
+Matthew Wright (St. Olaf College)
+Bryn Keller (Intel Labs)
 
-Program to visualize multi-dimensional persistence.
-by Michael Lesnick and Matthew Wright
-created December 2013
+TODO: Other contributors please add yourselves!
 
 ## Requirements
 
@@ -24,13 +29,12 @@ On Ubuntu:
 
     sudo apt-get install cmake qt5-default qt5-qmake qtbase5-dev-tools libboost-all-dev
 
-Make sure to use the qmake from Qt 5, not Qt 4!  You can 
+## Building
+When running qmake in the steps below, make sure to use the qmake from Qt 5, not Qt 4!  You can 
 check which version of qmake is on your path, if any, with the command:
 
     qmake --version
-    
 
-## Building
 
 After cloning to $RIVET_DIR:
 
@@ -41,7 +45,7 @@ After cloning to $RIVET_DIR:
     cmake ..
     make
     cd .. 
-    qmake  #make sure this is qmake from Qt 5, not Qt 4!
+    qmake
     make
     
 
@@ -63,14 +67,6 @@ On Ubuntu and most other systems:
     
 In the future, all these steps will be automated so that a single cmake
 build will create both executables, and put everything in the right place.
-
-## Contributors
-
-Michael Lesnick (Princeton)
-Matthew Wright (St. Olaf College)
-Bryn Keller (Intel Labs)
-
-TODO: Other contributors please add yourselves!
      
 ## Contributing
     
