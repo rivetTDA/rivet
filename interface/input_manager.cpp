@@ -147,7 +147,8 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
     //read dimension of the points from the first line of the file
     std::vector<std::string> dimension_line = reader.next_line();
     if (dimension_line.size() != 1) {
-        debug() << "There was more than one value in the expected dimension line.  There may be a problem with your input file.  ";
+        debug() << "There was more than one value in the expected dimension line."
+                " There may be a problem with your input file.  ";
     }
     debug() << "Dimension: " << dimension_line[0];
     unsigned dimension = std::stoi(dimension_line[0]);
@@ -161,7 +162,8 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
     //read maximum distance for edges in Vietoris-Rips complex
     std::vector<std::string> distance_line = reader.next_line();
     if (distance_line.size() != 1) {
-        debug() << "There was more than one value in the expected distance line.  There may be a problem with your input file.  ";
+        debug() << "There was more than one value in the expected distance line."
+                " There may be a problem with your input file.  ";
     }
 
     exact max_dist = str_to_exact(distance_line[0]);
@@ -235,10 +237,12 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
         for (unsigned j = i + 1; j < num_points; j++) {
             //compute (approximate) distance squared between points[i] and points[j]
             double fp_dist_squared = 0;
-            for (unsigned k = 0; k < dimension; k++)
-                fp_dist_squared += (points[i].coords[k] - points[j].coords[k]) * (points[i].coords[k] - points[j].coords[k]);
+            for (unsigned k = 0; k < dimension; k++) {
+                double kth_dist = points[i].coords[k] - points[j].coords[k];
+                fp_dist_squared += (kth_dist * kth_dist);
+            }
 
-            //find an approximate square root of dist_squared, and store it as an exact value
+            //find an approximate square root of fp_dist_squared, and store it as an exact value
             exact cur_dist(0);
             if (fp_dist_squared > 0)
                 cur_dist = approx(sqrt(fp_dist_squared)); //OK for now...
@@ -259,11 +263,15 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
     unsigned max_unsigned = std::numeric_limits<unsigned>::max();
 
     //first, times
-    std::vector<unsigned> time_indexes(num_points, max_unsigned); //vector of discrete time indexes for each point; max_unsigned shall represent undefined time (is this reasonable?)
+
+    //vector of discrete time indexes for each point; max_unsigned shall represent undefined time (is this reasonable?)
+    std::vector<unsigned> time_indexes(num_points, max_unsigned);
     build_grade_vectors(*data, time_set, time_indexes, data->x_exact, input_params.x_bins);
 
     //second, distances
-    std::vector<unsigned> dist_indexes((num_points * (num_points - 1)) / 2, max_unsigned); //discrete distance matrix (triangle); max_unsigned shall represent undefined distance
+
+    //discrete distance matrix (triangle); max_unsigned shall represent undefined distance
+    std::vector<unsigned> dist_indexes((num_points * (num_points - 1)) / 2, max_unsigned);
     build_grade_vectors(*data, dist_set, dist_indexes, data->y_exact, input_params.y_bins);
 
     //update progress
@@ -576,7 +584,9 @@ std::unique_ptr<InputData> InputManager::read_RIVET_data(std::ifstream& stream, 
     return data;
 } //end read_RIVET_data()
 
-//converts an ExactSet of values to the vectors of discrete values that SimplexTree uses to build the bifiltration, and also builds the grade vectors (floating-point and exact)
+//converts an ExactSet of values to the vectors of discrete
+// values that SimplexTree uses to build the bifiltration,
+// and also builds the grade vectors (floating-point and exact)
 void InputManager::build_grade_vectors(InputData& data,
     ExactSet& value_set,
     std::vector<unsigned>& discrete_indexes,
@@ -597,7 +607,8 @@ void InputManager::build_grade_vectors(InputData& data,
 
             c++;
         }
-    } else //then use bins: then the number of discrete indexes will equal the number of bins, and exact values will be equally spaced
+    } else //then use bins: then the number of discrete indexes will equal
+        // the number of bins, and exact values will be equally spaced
     {
         //compute bin size
         exact min = (*value_set.begin())->exact_value;
