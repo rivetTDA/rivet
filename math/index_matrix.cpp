@@ -33,12 +33,12 @@ int IndexMatrix::last() const
     return data[num_cols * num_rows - 1];
 }
 
-unsigned IndexMatrix::width()
+unsigned IndexMatrix::width() const
 {
     return num_cols;
 }
 
-unsigned IndexMatrix::height()
+unsigned IndexMatrix::height() const
 {
     return num_rows;
 }
