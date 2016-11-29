@@ -84,7 +84,7 @@ InputManager::InputManager(InputParameters& params)
         std::bind(&InputManager::read_bifiltration, this, std::placeholders::_1, std::placeholders::_2) });
     //    register_file_type(FileType {"RIVET_0", "pre-computed RIVET data", false,
     //                                 std::bind(&InputManager::read_RIVET_data, this, std::placeholders::_1, std::placeholders::_2) });
-};
+}
 
 void InputManager::register_file_type(FileType file_type)
 {
