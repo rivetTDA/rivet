@@ -99,6 +99,7 @@ void VisualizationWindow::start_computation()
 //this slot is signaled when the xi support points are ready to be drawn
 void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMessage> points)
 {
+    qDebug() << "Received template points";
     template_points = points;
     //First load our local copies of the data
     grades = Grades(template_points->x_exact, template_points->y_exact);
