@@ -1,8 +1,8 @@
 # RIVET
 
-Program to visualize two-parameter persistent homology.
-Designed by Michael Lesnick and Matthew Wright
-Created December 2013.
+Program to visualize two-parameter persistent homology. 
+Designed by Michael Lesnick and Matthew Wright. 
+Created December 2013.  
 
 ## Contributors
 Michael Lesnick (Princeton)
@@ -34,6 +34,19 @@ When running qmake in the steps below, make sure to use the qmake from Qt 5, not
 check which version of qmake is on your path, if any, with the command:
 
     qmake --version
+
+In addition, if you are using Mac OS X, in order to ensure that qmake can find where boost is installed, 
+first add the following lines to the bottom of the file RIVET.pro, changing the paths in the last three lines, 
+if necessary, to match the location and version of your copy of Boost.  
+
+    CONFIG += c++11
+    QMAKE_CFLAGS += -std=c++11 -stdlib=libc++ -mmacosx-version-min=10.9
+    QMAKE_CXXFLAGS += -std=c++11 -stdlib=libc++ -mmacosx-version-min=10.9
+
+    LIBS += -L"/usr/local/Cellar/boost/1.60.0_2/lib"
+    INCLUDEPATH += "/usr/local/Cellar/boost/1.60.0_2/include"
+
+    LIBS += -L"/usr/local/Cellar/boost/1.60.0_2/lib" -lboost_random
 
 
 After cloning to $RIVET_DIR:
