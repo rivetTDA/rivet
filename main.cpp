@@ -1,10 +1,18 @@
 #include "interface/input_parameters.h"
 #include "visualizationwindow.h"
 
+#include "dcel/arrangement_message.h"
+#include "dcel/dcel.h"
 #include <QApplication>
+#include <QMetaType>
 #include <QScopedPointer>
-
 #include <iostream>
+
+Q_DECLARE_SMART_POINTER_METATYPE(std::shared_ptr)
+Q_DECLARE_METATYPE(TemplatePointsMessage)
+Q_DECLARE_METATYPE(ArrangementMessage)
+Q_DECLARE_METATYPE(std::shared_ptr<TemplatePointsMessage>)
+Q_DECLARE_METATYPE(std::shared_ptr<ArrangementMessage>)
 
 QCoreApplication* createApplication(int& argc, char* argv[])
 {
@@ -72,6 +80,9 @@ int main(int argc, char* argv[])
     params.verbosity = parser.value(verbosityOption).toInt();
     params.x_bins = parser.value(xbinOption).toInt();
     params.y_bins = parser.value(ybinOption).toInt();
+
+    qRegisterMetaType<std::shared_ptr<ArrangementMessage>>();
+    qRegisterMetaType<std::shared_ptr<TemplatePointsMessage>>();
 
     //now run RIVET
     if (qobject_cast<QApplication*>(app.data())) // start GUI version

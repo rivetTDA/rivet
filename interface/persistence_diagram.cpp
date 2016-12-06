@@ -1,7 +1,7 @@
 #include "persistence_diagram.h"
 
-#include "barcode.h"
 #include "config_parameters.h"
+#include "dcel/barcode.h"
 #include "persistence_dot.h"
 
 #include <QDebug>
@@ -18,6 +18,7 @@ PersistenceDiagram::PersistenceDiagram(ConfigParameters* params, QObject* parent
     : QGraphicsScene(parent)
     , config_params(params)
     , selected(NULL)
+    , barcode()
 {
     setItemIndexMethod(NoIndex); //not sure why, but this seems to fix the dot update issue (#7 in the issue tracker)
 }
@@ -131,10 +132,10 @@ void PersistenceDiagram::resize_diagram(double slice_length, double diagram_scal
 } //end resize_diagram()
 
 //sets the barcode and the zero coordinate
-void PersistenceDiagram::set_barcode(double zero, Barcode* bc)
+void PersistenceDiagram::set_barcode(double zero, const Barcode& bc)
 {
     zero_coord = zero;
-    barcode = bc;
+    barcode = &bc;
 }
 
 //creates and draws persistence dots at the correct locations, using current parameters
@@ -278,13 +279,13 @@ void PersistenceDiagram::redraw_dots()
 } //void redraw_dots()
 
 //updates the diagram after a change in the slice line
-void PersistenceDiagram::update_diagram(double slice_length, double diagram_scale, double zero, Barcode* bc)
+void PersistenceDiagram::update_diagram(double slice_length, double diagram_scale, double zero, const Barcode& bc)
 {
     //update parameters
     line_size = slice_length / sqrt(2); //divide by sqrt(2) because the line is drawn at a 45-degree angle
     scale = diagram_scale / sqrt(2); //similarly, divide by sqrt(2)
     zero_coord = zero;
-    barcode = bc;
+    barcode = &bc;
 
     //modify frame
     blue_line->setLine(0, 0, line_size, line_size);

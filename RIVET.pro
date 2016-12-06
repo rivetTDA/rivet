@@ -37,10 +37,11 @@ SOURCES	+= main.cpp                         \
 		#math/multi_betti.cpp                \
 		#math/simplex_tree.cpp               \
 		#math/st_node.cpp                    \
-		interface/barcode.cpp               \
+		dcel/barcode.cpp               \
 		dcel/barcode_template.cpp           \
 		dcel/anchor.cpp                     \
 		dcel/arrangement_message.cpp               \
+		dcel/grades.cpp                     \
 		#math/persistence_updater.cpp        \
 		math/template_points_matrix.cpp          \
 		math/template_point.cpp                   \
@@ -76,6 +77,7 @@ HEADERS  += visualizationwindow.h			\
 		interface/barcode.h					\
 		dcel/barcode_template.h				\
 		dcel/anchor.h						\
+		dcel/grades.h                       \
 		math/persistence_updater.h			\
 		math/template_points_matrix.h			\
 		math/template_point.h \
@@ -88,8 +90,7 @@ HEADERS  += visualizationwindow.h			\
     interface/file_input_reader.h \
     #driver.h \
     interface/file_writer.h \
-    #exception.h \
-    #cutgraph.h \
+    cutgraph.h \
     dcel/serialization.h \
     interface/console_interaction.h \
     numerics.h \

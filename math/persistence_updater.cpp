@@ -19,9 +19,9 @@ PersistenceUpdater::PersistenceUpdater(Arrangement& m, SimplexTree& b, std::vect
     : arrangement(m)
     , bifiltration(b)
     , dim(b.hom_dim)
+    , verbosity(verbosity)
     , template_points_matrix(m.x_exact.size(), m.y_exact.size())
     , testing(false)
-    , verbosity(verbosity)
 {
     //fill the xiSupportMatrix with the xi support points and anchors
     //  also stores the anchors in xi_pts
@@ -229,7 +229,7 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<std::shared_ptr<H
                 else //then reset the matrices
                 {
                     split_grade_lists_no_vineyards(at_anchor, generator, horiz); //only updates the xiSupportMatrix; no vineyard updates
-                    update_order_and_reset_matrices(at_anchor, generator, R_low_initial, R_high_initial); //recompute the RU-decomposition
+                    update_order_and_reset_matrices(R_low_initial, R_high_initial); //recompute the RU-decomposition
                 }
 
                 add_lift_entries(at_anchor);
@@ -452,7 +452,7 @@ unsigned PersistenceUpdater::build_simplex_order(IndexMatrix* ind, bool low, std
     }
 
     //we will create the map starting by identifying the order index of each simplex, starting with the last simplex
-    int o_index = num_simplices - 1;
+    unsigned o_index = num_simplices - 1;
 
     //prepare the vector
     simplex_order.clear();
@@ -470,7 +470,7 @@ unsigned PersistenceUpdater::build_simplex_order(IndexMatrix* ind, bool low, std
         }
 
         //store index of rightmost column that is mapped to this equivalence class
-        int* cur_ind = (low) ? &(cur->low_index) : &(cur->high_index);
+        auto cur_ind = (low) ? &(cur->low_index) : &(cur->high_index);
         *cur_ind = o_index;
 
         //get the multigrade list for this TemplatePointsMatrixEntry
@@ -734,8 +734,8 @@ unsigned long PersistenceUpdater::move_columns(std::shared_ptr<TemplatePointsMat
     }
 
     //get column indexes (so we know which columns to move)
-    int low_col = first->low_index; //rightmost column index of low simplices for the block that moves
-    int high_col = first->high_index; //rightmost column index of high simplices for the block that moves
+    unsigned low_col = first->low_index; //rightmost column index of low simplices for the block that moves
+    unsigned high_col = first->high_index; //rightmost column index of high simplices for the block that moves
 
     //set column indexes for the first class to their final position
     first->low_index = second->low_index;
@@ -1194,10 +1194,9 @@ void PersistenceUpdater::update_order_and_reset_matrices(std::shared_ptr<Templat
 } //end update_order_and_reset_matrices()
 
 //updates the total order on columns, rebuilds the matrices, and computing a new RU-decomposition for a NON-STRICT anchor
-void PersistenceUpdater::update_order_and_reset_matrices(std::shared_ptr<TemplatePointsMatrixEntry> anchor, std::shared_ptr<TemplatePointsMatrixEntry> generator, MapMatrix_Perm* RL_initial, MapMatrix_Perm* RH_initial)
+void PersistenceUpdater::update_order_and_reset_matrices(MapMatrix_Perm* RL_initial, MapMatrix_Perm* RH_initial)
 {
     //anything to do here?????
-    //anchor and generator?????
 
     //re-build the matrix R based on the new order
     R_low->rebuild(RL_initial, perm_low);
@@ -1285,19 +1284,6 @@ void PersistenceUpdater::do_separations(std::shared_ptr<TemplatePointsMatrixEntr
     lesser->high_count = gr_col - cur_col;
     greater->high_count = greater->high_index - lesser->high_index;
 } //end do_separations
-
-//swaps two blocks of columns by using a quicksort to update the matrices, then fixing the RU-decomposition (Gaussian elimination on U followed by reduction of R)
-void PersistenceUpdater::quicksort_and_reduce(std::shared_ptr<TemplatePointsMatrixEntry> first, std::shared_ptr<TemplatePointsMatrixEntry> second, bool from_below)
-{
-    //update the lift map for all multigrades, storing the current column index for each multigrade
-
-    //traverse grades in the new order and build the new order on matrix columns
-
-    //quicksort the columns to put them in the new order, updating the permutation
-
-    //re-build the matrix R based on the new
-
-} //end quicksort_and_reduce()
 
 //removes entries corresponding to TemplatePointsMatrixEntry head from lift_low and lift_high
 void PersistenceUpdater::remove_lift_entries(std::shared_ptr<TemplatePointsMatrixEntry> entry)
@@ -1393,8 +1379,8 @@ unsigned long PersistenceUpdater::choose_initial_threshold(int time_for_initial_
     MapMatrix_RowPriority_Perm* U_high_copy = new MapMatrix_RowPriority_Perm(*U_high);
 
     //other data structures
-    int num_cols = R_low->width() + R_high->width();
-    std::list<int> trans_list;
+    unsigned num_cols = R_low->width() + R_high->width();
+    std::list<unsigned> trans_list;
 
     //avoid trivial cases
     if (num_cols <= 3) //need either the low or high matrix to have at least 2 columns
@@ -1412,7 +1398,7 @@ unsigned long PersistenceUpdater::choose_initial_threshold(int time_for_initial_
     debug() << "  -->Doing some random vineyard updates...";
     while (timer.elapsed() < trans_time || trans_list.size() == 0) //do a transposition
     {
-        int rand_col = rand() % (num_cols - 1); //random integer in {0, 1, ..., num_cols - 2}
+        unsigned rand_col = rand() % (num_cols - 1); //random integer in {0, 1, ..., num_cols - 2}
 
         if (rand_col + 1 < R_low->width()) //then transpose LOW columns rand_col and (rand_col + 1)
         {
@@ -1428,8 +1414,8 @@ unsigned long PersistenceUpdater::choose_initial_threshold(int time_for_initial_
 
     //do the inverse transpositions
     debug() << "  -->Undoing the random vineyard updates...";
-    for (std::list<int>::reverse_iterator rit = trans_list.rbegin(); rit != trans_list.rend(); ++rit) {
-        int col = *rit;
+    for (auto rit = trans_list.rbegin(); rit != trans_list.rend(); ++rit) {
+        auto col = *rit;
         if (col < R_low->width()) {
             vineyard_update_low(col);
         } else {

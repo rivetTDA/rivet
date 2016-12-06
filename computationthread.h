@@ -33,21 +33,14 @@ public:
 
     void compute();
 
-    //TODO: these really ought to be delivered via signal rather than read by other classes
-    TemplatePointsMessage message;
-    std::vector<TemplatePoint> template_points;
-    std::vector<exact> x_exact;
-    std::vector<exact> y_exact;
-    unsigned_matrix hom_dims;
-    QString x_label;
-    QString y_label;
+    std::shared_ptr<TemplatePointsMessage> message;
 
 signals:
     void advanceProgressStage();
     void setProgressMaximum(unsigned max);
     void setCurrentProgress(unsigned current);
-    void templatePointsReady();
-    void arrangementReady(ArrangementMessage* arrangement);
+    void templatePointsReady(std::shared_ptr<TemplatePointsMessage> template_points);
+    void arrangementReady(std::shared_ptr<ArrangementMessage> arrangement);
 
 protected:
     void run() Q_DECL_OVERRIDE;

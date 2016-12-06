@@ -42,10 +42,10 @@ public:
     int get_vertex(); //returns the vertex index
     STNode get_parent(); //returns a pointer to the parent node
 
-    void set_x(int x); //sets the first component of the multigrade for this simplex
-    int grade_x() const; //returns the first component of the multigrade for this simplex
-    void set_y(int y); //sets the second component of the multigrade for this simplex
-    int grade_y() const; //returns the second component of the multigrade for this simplex
+    void set_x(unsigned x); //sets the first component of the multigrade for this simplex
+    unsigned grade_x() const; //returns the first component of the multigrade for this simplex
+    void set_y(unsigned y); //sets the second component of the multigrade for this simplex
+    unsigned grade_y() const; //returns the second component of the multigrade for this simplex
 
     void set_global_index(int i); //sets the global index for the simplex represented by this node
     int global_index(); //returns the global index for the simplex represented by this node
@@ -65,8 +65,8 @@ private:
     STNode* parent; //pointer to the parent node
     std::vector<STNode*> children; //pointers to children nodes -- these should remain sorted by vertex index
 
-    int mg_x; //first component of the multi-grade for this simplex   (e.g. time)
-    int mg_y; //second component of the multi-grade for this simplex  (e.g. distance)
+    unsigned mg_x; //first component of the multi-grade for this simplex   (e.g. time)
+    unsigned mg_y; //second component of the multi-grade for this simplex  (e.g. distance)
 
     int d_index; //dimension index of this simplex (provides a total order of all simplices of a given dimension, REVERSE-LEXICOGRAPHIC with respect to the multi-grades)
     int g_index; //global index of this simplex (global indexes provide a total ordering of simplices in the tree)

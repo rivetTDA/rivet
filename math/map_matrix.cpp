@@ -4,6 +4,7 @@
 
 #include "map_matrix.h"
 #include "debug.h"
+#include "bool_array.h"
 #include <numeric> //for std::accumulate
 #include <stdexcept> //for error-checking and debugging
 
@@ -509,10 +510,10 @@ std::ostream& operator<<(std::ostream& out, const MapMatrix& matrix)
     }
 
     //create a 2D array of booleans to temporarily store the matrix
-    bool mx[matrix.num_rows][matrix.columns.size()];
+    bool_array mx(matrix.num_rows, matrix.columns.size());
     for (unsigned i = 0; i < matrix.num_rows; i++)
         for (unsigned j = 0; j < matrix.columns.size(); j++)
-            mx[i][j] = false;
+            mx.at(i, j) = false;
 
     //traverse the linked lists in order to fill the 2D array
     MapMatrix::MapMatrixNode* current;
@@ -520,7 +521,7 @@ std::ostream& operator<<(std::ostream& out, const MapMatrix& matrix)
         current = matrix.columns[j];
         while (current != NULL) {
             int row = current->get_row();
-            mx[row][j] = 1;
+            mx.at(row, j) = true;
             current = current->get_next();
         }
     }
@@ -528,7 +529,7 @@ std::ostream& operator<<(std::ostream& out, const MapMatrix& matrix)
     for (unsigned i = 0; i < matrix.num_rows; i++) {
         out << "        |";
         for (unsigned j = 0; j < matrix.columns.size(); j++) {
-            if (mx[i][j])
+            if (mx.at(i, j))
                 out << " 1";
             else
                 out << " 0";
@@ -837,10 +838,10 @@ void MapMatrix_Perm::print()
     }
 
     //create a 2D array of booleans to temporarily store the matrix
-    bool mx[num_rows][columns.size()];
+    bool_array mx(num_rows, columns.size());
     for (unsigned i = 0; i < num_rows; i++)
         for (unsigned j = 0; j < columns.size(); j++)
-            mx[i][j] = false;
+            mx.at(i, j) = false;
 
     //traverse the linked lists in order to fill the 2D array
     MapMatrixNode* current;
@@ -848,7 +849,7 @@ void MapMatrix_Perm::print()
         current = columns[j];
         while (current != NULL) {
             int row = current->get_row();
-            mx[perm[row]][j] = 1;
+            mx.at(perm[row], j) = true;
             current = current->get_next();
         }
     }
@@ -858,7 +859,7 @@ void MapMatrix_Perm::print()
         Debug qd = debug(true);
         qd << "        |";
         for (unsigned j = 0; j < columns.size(); j++) {
-            if (mx[i][j])
+            if (mx.at(i, j))
                 qd << " 1";
             else
                 qd << " 0";
@@ -872,13 +873,13 @@ void MapMatrix_Perm::check_lows()
 {
     for (unsigned i = 0; i < num_rows; i++) {
         if (low_by_row[i] != -1) {
-            if (low_by_col[low_by_row[i]] != i)
+            if (low_by_col[low_by_row[i]] != static_cast<int>(i))
                 debug() << "===>>> ERROR: INCONSISTNECY IN LOW ARRAYS";
         }
     }
     for (unsigned j = 0; j < columns.size(); j++) {
         //find the lowest entry in column j
-        unsigned lowest = -1;
+        int lowest = -1;
         if (columns[j] != NULL) {
             //consider the first node
             MapMatrixNode* current = columns[j];
@@ -887,7 +888,7 @@ void MapMatrix_Perm::check_lows()
             //consider all following nodes
             current = current->get_next();
             while (current != NULL) {
-                if (perm[current->get_row()] > lowest)
+                if (static_cast<int>(perm[current->get_row()]) > lowest)
                     lowest = perm[current->get_row()];
 
                 current = current->get_next();
@@ -898,7 +899,7 @@ void MapMatrix_Perm::check_lows()
         if (lowest != low_by_col[j])
             debug() << "===>>> ERROR IN low_by_col[" << j << "]";
         else if (lowest != -1) {
-            if (low_by_row[lowest] != j)
+            if (low_by_row[lowest] != static_cast<int>(j))
                 debug() << "===>>> ERROR: INCONSISTNECY IN LOW ARRAYS";
         }
     }
@@ -1015,10 +1016,10 @@ void MapMatrix_RowPriority_Perm::print()
     }
 
     //create a 2D array of booleans to temporarily store the matrix
-    bool mx[columns.size()][num_rows];
+    bool_array mx(columns.size(), num_rows);
     for (unsigned i = 0; i < columns.size(); i++)
         for (unsigned j = 0; j < num_rows; j++)
-            mx[i][j] = false;
+            mx.at(i, j) = false;
 
     //traverse the linked lists in order to fill the 2D array
     MapMatrixNode* current;
@@ -1026,7 +1027,7 @@ void MapMatrix_RowPriority_Perm::print()
         current = columns[j];
         while (current != NULL) {
             unsigned row = current->get_row();
-            mx[j][perm[row]] = 1;
+            mx.at(j, perm[row]) = true;
             current = current->get_next();
         }
     }
@@ -1036,7 +1037,7 @@ void MapMatrix_RowPriority_Perm::print()
         Debug qd = debug(true);
         qd << "        |";
         for (unsigned j = 0; j < columns.size(); j++) {
-            if (mx[i][j])
+            if (mx.at(i, j))
                 qd << " 1";
             else
                 qd << " 0";

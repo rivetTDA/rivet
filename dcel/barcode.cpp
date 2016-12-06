@@ -1,7 +1,6 @@
 #include "barcode.h"
 
-#include <QDebug>
-
+#include <debug.h>
 #include <math.h>
 
 MultiBar::MultiBar(double b, double d, unsigned m)
@@ -47,27 +46,27 @@ void Barcode::add_bar(double b, double d, unsigned m)
 }
 
 //returns an iterator to the first bar in the barcode
-std::set<MultiBar>::iterator Barcode::begin()
+std::set<MultiBar>::const_iterator Barcode::begin() const
 {
-    return bars.begin();
+    return bars.cbegin();
 }
 
 //returns an iterator to the pst-the-end element the barcode
-std::set<MultiBar>::iterator Barcode::end()
+std::set<MultiBar>::const_iterator Barcode::end() const
 {
-    return bars.end();
+    return bars.cend();
 }
 
 //returns the number of multibars in the barcode
-unsigned Barcode::size()
+unsigned Barcode::size() const
 {
     return bars.size();
 }
 
 //for testing only
-void Barcode::print()
+void Barcode::print() const
 {
-    QDebug qd = qDebug().nospace();
+    Debug qd = debug(true);
     qd << "      rescaled barcode: ";
     for (std::multiset<MultiBar>::iterator it = bars.begin(); it != bars.end(); ++it) {
         MultiBar b = *it;

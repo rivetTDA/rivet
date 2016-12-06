@@ -20,17 +20,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "computation.h"
 #include "dcel/arrangement.h"
-#include "debug.h"
 #include "docopt.h"
 #include "interface/input_manager.h"
 #include "interface/input_parameters.h"
 #include <boost/archive/tmpdir.hpp>
+#include <boost/multi_array.hpp> // for print_betti
 #include <interface/file_writer.h>
 
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
+#include <dcel/grades.h>
 
 #include "dcel/arrangement_message.h"
 #include "dcel/serialization.h"
@@ -45,17 +46,46 @@ static const char USAGE[] =
       rivet_console (-h | --help)
       rivet_console --version
       rivet_console <input_file> --identify
-      rivet_console <input_file> <output_file> [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [-f <format>]
+      rivet_console <input_file> --betti [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>]
+      rivet_console <input_file> --barcodes <line_file> [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>]
+      rivet_console <input_file> <output_file> [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [-f <format>] [--binary]
 
     Options:
       -h --help                                Show this screen
       --version                                Show the version
       --identify                               Parse the file and print filetype information
+      --binary                                 Include binary data (used by RIVET viewer only)
       -H <dimension> --homology=<dimension>    Dimension of homology to compute [default: 0]
       -x <xbins> --xbins=<xbins>               Number of bins in the x direction [default: 0]
       -y <ybins> --ybins=<ybins>               Number of bins in the y direction [default: 0]
       -V <verbosity> --verbosity=<verbosity>   Verbosity level: 0 (no console output) to 10 (lots of output) [default: 2]
       -f <format>                              Output format for file [default: R1]
+      -b --betti                               Print Betti number information and exit.
+      --barcodes <line_file>                   Print barcodes for the line queries in line_file, then exit.
+                                               The line_file contains pairs (m, b) where m is the degree (0 to 90)
+                                               and b the offset, separated by a space. Each pair should appear on
+                                               a line by itself.
+
+                                               If m < 90, then b is a y-intercept; if m = 90, then b is an x-intercept.
+                                               Coordinates are assumed to be unnormalized.
+
+                                               Example line_file contents:
+
+                                                    #A line that starts with a # character will be ignored, as will blank lines
+
+                                                    23 0.22
+                                                    #67 10.88   <-- will error if uncommented, 10.88 > 1
+                                                    67 .88
+                                                    10 0.92
+                                                    #100 0.92   <-- will error if uncommented, 100 > 90
+
+                                               RIVET will output one line of barcode information for each line
+                                               in line_file, beginning by repeating the query. For example:
+
+                                                    23 0.22: 88.1838 inf x1, 88.1838 91.2549 x5, 88.1838 89.7194 x12
+                                                    67 0.88: 23.3613 inf x1
+                                                    10 0.92: 11.9947 inf x1, 11.9947 19.9461 x2, 11.9947 16.4909 x1, 11.9947 13.0357 x4
+
 )";
 
 unsigned int get_uint_or_die(std::map<std::string, docopt::value>& args, const std::string& key)
@@ -112,7 +142,107 @@ void write_boost_file(InputParameters const& params, TemplatePointsMessage const
     file.flush();
 }
 
+void print_dims(TemplatePointsMessage const& message, std::ostream& ostream)
+{
+    assert(message.homology_dimensions.dimensionality == 2);
+    auto shape = message.homology_dimensions.shape();
+    auto data = message.homology_dimensions.data();
+    ostream << "Dimensions > 0:" << std::endl;
+
+    for (unsigned long row = 0; row < shape[0]; row++) {
+        for (unsigned long col = 0; col < shape[1]; col++) {
+            unsigned dim = data[row * shape[0] + col];
+            if (dim > 0) {
+                ostream << "(" << col << ", " << row << ", " << dim << ")" << std::endl;
+            }
+        }
+        ostream << std::endl;
+    }
+}
+
+void print_betti(TemplatePointsMessage const& message, std::ostream& ostream)
+{
+    ostream << "Betti numbers:" << std::endl;
+    for (int xi = 0; xi < 3; xi++) {
+        ostream << "xi_" << xi << ":" << std::endl;
+        for (auto point : message.template_points) {
+            auto value = 0;
+            if (xi == 0)
+                value = point.zero;
+            else if (xi == 1)
+                value = point.one;
+            else if (xi == 2)
+                value = point.two;
+            if (value > 0) {
+                ostream << "(" << point.x << ", " << point.y << ", " << value << ")" << std::endl;
+            }
+        }
+    }
+}
+
+void process_barcode_queries(std::string query_file_name, const ComputationResult& computation_result)
+{
+    std::ifstream query_file(query_file_name);
+    if (!query_file.is_open()) {
+        std::clog << "Could not open " << query_file_name << " for reading";
+        return;
+    }
+    std::string line;
+    std::vector<std::pair<int, double>> queries;
+    int line_number = 0;
+    while (std::getline(query_file, line)) {
+        line_number++;
+        line.erase(0, line.find_first_not_of(" \t"));
+        if (line.empty() || line[0] == '#') {
+            std::clog << "Skipped line " << line_number << ", comment or empty" << std::endl;
+            continue;
+        }
+        std::istringstream iss(line);
+        int angle;
+        double offset;
+
+        if (iss >> angle >> offset) {
+            if (angle < 0 || angle > 90) {
+                std::clog << "Angle on line " << line_number << " must be between 0 and 90" << std::endl;
+                return;
+            }
+
+            if (offset < 0 || offset > 1) {
+                std::clog << "Offset on line " << line_number << " must be between 0 and 1" << std::endl;
+                return;
+            }
+            queries.push_back(std::pair<int, double>(angle, offset));
+        } else {
+            std::clog << "Parse error on line " << line_number << std::endl;
+            return;
+        }
+    }
+    Grades grades(computation_result.arrangement->x_exact, computation_result.arrangement->y_exact);
+
+    for (auto query : queries) {
+        std::cout << query.first << " " << query.second << ": ";
+        auto absolute = grades.relative_offset_to_absolute(query.second);
+        auto templ = computation_result.arrangement->get_barcode_template(query.first, absolute);
+        auto barcode = templ.rescale(query.first, absolute, computation_result.template_points, grades);
+        for (auto it = barcode->begin(); it != barcode->end(); it++) {
+            auto bar = *it;
+            std::cout << bar.birth << " ";
+
+            if (bar.death == rivet::numeric::INFTY) {
+                std::cout << "inf";
+            } else {
+                std::cout << bar.death;
+            }
+            std::cout << " x" << bar.multiplicity;
+            if (std::next(it) != barcode->end()) {
+                std::cout << ", ";
+            }
+        }
+        std::cout << std::endl;
+    }
+}
 //
+
 int main(int argc, char* argv[])
 {
     InputParameters params; //parameter values stored here
@@ -133,10 +263,17 @@ int main(int argc, char* argv[])
     params.y_bins = get_uint_or_die(args, "--ybins");
     params.verbosity = get_uint_or_die(args, "--verbosity");
     params.outputFormat = args["-f"].asString();
+    bool betti_only = args["--betti"].isBool() && args["--betti"].asBool();
+    bool binary = args["--binary"].isBool() && args["--binary"].asBool();
     bool identify = args["--identify"].isBool() && args["--identify"].asBool();
+    std::string slices;
+    if (args["--barcodes"].isString()) {
+        slices = args["--barcodes"].asString();
+    }
     if (identify) {
         params.verbosity = 0;
     }
+    int verbosity = params.verbosity;
 
     if(params.verbosity >= 8) {
         debug() << "X bins: " << params.x_bins ;
@@ -154,7 +291,7 @@ int main(int argc, char* argv[])
     progress.progress.connect([](int amount) {
         std::cout << "PROGRESS " << amount << std::endl;
     });
-    computation.arrangement_ready.connect([&arrangement_message, &params](std::shared_ptr<Arrangement> arrangement) {
+    computation.arrangement_ready.connect([&arrangement_message, &params, binary](std::shared_ptr<Arrangement> arrangement) {
         arrangement_message = new ArrangementMessage(*arrangement);
         //TODO: this should become a system test with a known dataset
         //Note we no longer write the arrangement to stdout, it goes to a file at the end
@@ -182,35 +319,51 @@ int main(int argc, char* argv[])
         if (!(round_trip == *arrangement_message)) {
             throw std::runtime_error("Original and reconstituted don't match!");
         }
-        std::cout << "ARRANGEMENT: " << params.outputFile << std::endl;
+        if (binary) {
+            std::cout << "ARRANGEMENT: " << params.outputFile << std::endl;
+        } else {
+            std::cout << "Wrote arrangement to " << params.outputFile << std::endl;
+        }
     });
-    computation.template_points_ready.connect([&points_message](TemplatePointsMessage message) {
-        std::cout << "XI" << std::endl;
+    computation.template_points_ready.connect([&points_message, binary, betti_only, verbosity](TemplatePointsMessage message) {
         points_message = new TemplatePointsMessage(message);
-        //            cereal::JSONOutputArchive archive(std::cout);
-        //            cereal::BinaryOutputArchive archive(std::cout);
-        {
-            //                cereal::XMLOutputArchive archive(std::cout);
-            boost::archive::text_oarchive archive(std::cout);
-            archive << message;
-        }
-        std::cout << "END XI" << std::endl;
-        std::cout.flush();
-        std::stringstream ss;
-        {
-            std::cerr << "Local deserialization test" << std::endl;
-            boost::archive::text_oarchive out(ss);
-            out << message;
-        }
-        {
-            boost::archive::text_iarchive in(ss);
-            TemplatePointsMessage result;
-            in >> result;
-            if (!(message == result)) {
-                throw std::runtime_error("Original TemplatePointsMessage and reconstituted don't match!");
+
+        if (binary) {
+            std::cout << "XI" << std::endl;
+            {
+                boost::archive::text_oarchive archive(std::cout);
+                archive << message;
             }
+            std::cout << "END XI" << std::endl;
+            std::cout.flush();
         }
-        std::cerr << "xi support received: " << message.template_points.size();
+
+        if (verbosity >= 4 || betti_only) {
+            FileWriter::write_grades(std::cout, message.x_exact, message.y_exact);
+        }
+        //TODO: Add a flag to re-enable this code?
+        //        std::stringstream ss;
+        //        {
+        //            std::cerr << "Local deserialization test" << std::endl;
+        //            boost::archive::text_oarchive out(ss);
+        //            out << message;
+        //        }
+        //        {
+        //            boost::archive::text_iarchive in(ss);
+        //            TemplatePointsMessage result;
+        //            in >> result;
+        //            if (!(message == result)) {
+        //                throw std::runtime_error("Original TemplatePointsMessage and reconstituted don't match!");
+        //            }
+        //        }
+        if (betti_only) {
+            print_dims(message, std::cout);
+            std::cout << std::endl;
+            print_betti(message, std::cout);
+            std::cout.flush();
+            //TODO: this seems a little abrupt...
+            exit(0);
+        }
     });
 
     std::unique_ptr<InputData> input;
@@ -238,6 +391,10 @@ int main(int argc, char* argv[])
         arrangement->print_stats();
     }
 
+    if (!slices.empty()) {
+        process_barcode_queries(slices, *result);
+        return 0;
+    }
     //if an output file has been specified, then save the arrangement
     if (!params.outputFile.empty()) {
         std::ofstream file(params.outputFile);

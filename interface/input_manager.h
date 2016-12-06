@@ -135,7 +135,6 @@ public:
 private:
     InputParameters& input_params; //parameters supplied by the user
     const int verbosity; //controls display of output, for debugging
-    int hom_dim; //dimension of homology to be computed
 
     std::vector<FileType> supported_types;
 

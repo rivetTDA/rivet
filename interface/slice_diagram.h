@@ -36,8 +36,8 @@ public:
     void update_line(double angle, double offset); //updates the line, in response to a change in the controls in the VisualizationWindow
     void update_window_controls(bool from_dot); //computes new angle and offset in response to a change in the line, emits signal for the VisualizationWindow
 
-    void draw_barcode(Barcode* bc, double zero_coord, bool show); //draws the barcode parallel to the slice line; "show" determines whether or not bars are visible
-    void update_barcode(Barcode* bc, double zero_coord, bool show); //updates the barcode (e.g. after a change in the slice line)
+    void draw_barcode(const Barcode& bc, double zero_coord, bool show); //draws the barcode parallel to the slice line; "show" determines whether or not bars are visible
+    void update_barcode(const Barcode& bc, double zero_coord, bool show); //updates the barcode (e.g. after a change in the slice line)
 
     void select_bar(PersistenceBar* clicked); //highlight the specified class of bars, and propagate to the persistence diagram
     void deselect_bar(); //remove selection and propagate to the persistence diagram

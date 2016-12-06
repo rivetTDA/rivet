@@ -16,6 +16,9 @@
 
 //TODO: Remove either this or InputData, since there's no need for both anymore now that RIVET_0 files aren't supported.
 class ComputationInput {
+protected:
+    InputData data;
+
 public:
     std::vector<exact> x_exact;
     std::vector<exact> y_exact;
@@ -29,15 +32,12 @@ public:
 
     ComputationInput(InputData data)
         : data(data)
-        , x_label(data.x_label)
-        , y_label(data.y_label)
         , x_exact(data.x_exact)
         , y_exact(data.y_exact)
+        , x_label(data.x_label)
+        , y_label(data.y_label)
     {
     }
-
-protected:
-    InputData data;
 };
 
 struct ComputationResult {

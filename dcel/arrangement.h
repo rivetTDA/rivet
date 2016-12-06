@@ -17,39 +17,13 @@ class MultiBetti;
 class PersistenceUpdater;
 class Vertex;
 
-#include "math/template_point.h"
 #include "anchor.h"
 #include "interface/progress.h"
+#include "math/template_point.h"
 #include "numerics.h"
 #include "pointer_comparator.h"
 #include <set>
 #include <vector>
-
-//std::ostream& write_grades(std::ostream &stream, const std::vector<exact> &x_exact, const std::vector<exact> &y_exact);
-
-template <typename T>
-T& write_grades(T& stream, const std::vector<exact>& x_exact, const std::vector<exact>& y_exact)
-{
-
-    //write x-grades
-    stream << "x-grades" << std::endl;
-    for (std::vector<exact>::const_iterator it = x_exact.begin(); it != x_exact.end(); ++it) {
-        std::ostringstream oss;
-        oss << *it;
-        stream << oss.str() << std::endl;
-    }
-    stream << std::endl;
-
-    //write y-grades
-    stream << "y-grades" << std::endl;
-    for (std::vector<exact>::const_iterator it = y_exact.begin(); it != y_exact.end(); ++it) {
-        std::ostringstream oss;
-        oss << *it;
-        stream << oss.str() << std::endl;
-    }
-    stream << std::endl;
-    return stream;
-}
 
 class ArrangementMessage;
 
@@ -58,7 +32,7 @@ class Arrangement {
     friend class PersistenceUpdater;
     friend class ArrangementBuilder;
     friend class ArrangementMessage;
-    friend Arrangement to_arrangement(ArrangementMessage const &msg);
+    friend Arrangement to_arrangement(ArrangementMessage const& msg);
 
 public:
     Arrangement(); //For serialization
@@ -100,8 +74,6 @@ private:
     std::vector<std::shared_ptr<Vertex>> vertices; //all vertices in the arrangement
     std::vector<std::shared_ptr<Halfedge>> halfedges; //all halfedges in the arrangement
     std::vector<std::shared_ptr<Face>> faces; //all faces in the arrangement
-
-    const double INFTY;
 
     unsigned verbosity;
 

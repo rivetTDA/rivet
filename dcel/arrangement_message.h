@@ -5,9 +5,9 @@
 #ifndef RIVET_CONSOLE_MESH_MESSAGE_H
 #define RIVET_CONSOLE_MESH_MESSAGE_H
 #include "dcel/anchor.h"
+#include "dcel/arrangement.h"
 #include "dcel/barcode_template.h"
 #include "dcel/dcel.h"
-#include "dcel/arrangement.h"
 #include "type_tag.h"
 #include <boost/optional.hpp>
 #include <boost/serialization/split_member.hpp>
@@ -20,7 +20,7 @@ public:
     ArrangementMessage();
 
     template <class Archive>
-    void serialize(Archive& ar, const unsigned int& version)
+    void serialize(Archive& ar, const unsigned int /*version*/)
     {
         ar& x_grades& y_grades& half_edges& vertices& anchors& faces& topleft& topright& bottomleft& bottomright& vertical_line_query_list;
     }
@@ -64,7 +64,7 @@ private:
         unsigned long weight; //estimate of the cost of updating the RU-decomposition when crossing this anchor
 
         template <typename Archive>
-        void serialize(Archive& ar, const unsigned int& version)
+        void serialize(Archive& ar, const unsigned int /*version*/)
         {
             ar& x_coord& y_coord& dual_line& position& above_line& weight;
         }
@@ -85,7 +85,7 @@ private:
         AnchorId anchor; //stores the coordinates of the anchor corresponding to this halfedge
 
         template <typename Archive>
-        void serialize(Archive& ar, const unsigned int& version)
+        void serialize(Archive& ar, const unsigned int /*version*/)
         {
             ar& origin& twin& next& prev& face& anchor;
         }
@@ -98,7 +98,7 @@ private:
         BarcodeTemplate dbc; //barcode template stored in this cell
 
         template <typename Archive>
-        void serialize(Archive& ar, const unsigned int& version)
+        void serialize(Archive& ar, const unsigned int /*version*/)
         {
             ar& boundary& dbc;
         }
@@ -112,7 +112,7 @@ private:
         double y; //y-coordinate of this vertex
 
         template <typename Archive>
-        void serialize(Archive& ar, const unsigned int& version)
+        void serialize(Archive& ar, const unsigned int /*version*/)
         {
             ar& incident_edge& x& y;
         }

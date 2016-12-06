@@ -5,8 +5,8 @@
 #ifndef RIVET_CONSOLE_SERIALIZATION_TESTS_H_H
 #define RIVET_CONSOLE_SERIALIZATION_TESTS_H_H
 #include "dcel/anchor.h"
-#include "dcel/dcel.h"
 #include "dcel/arrangement.h"
+#include "dcel/dcel.h"
 #include "dcel/serialization.h"
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>

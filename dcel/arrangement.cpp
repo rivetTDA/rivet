@@ -13,16 +13,17 @@
 #include <boost/graph/graph_traits.hpp>
 #include <boost/graph/kruskal_min_spanning_tree.hpp>
 
+using rivet::numeric::INFTY;
+
 Arrangement::Arrangement()
     : x_exact()
     , y_exact()
     , x_grades()
     , y_grades()
-    , INFTY(std::numeric_limits<double>::infinity())
-    , verbosity(0)
-    , halfedges()
     , vertices()
+    , halfedges()
     , faces()
+    , verbosity(0)
     , all_anchors()
     , topleft()
     , topright()
@@ -39,11 +40,10 @@ Arrangement::Arrangement(std::vector<exact> xe,
     , y_exact(ye)
     , x_grades(rivet::numeric::to_doubles(xe))
     , y_grades(rivet::numeric::to_doubles(ye))
-    , INFTY(std::numeric_limits<double>::infinity())
-    , verbosity(verbosity)
-    , halfedges()
     , vertices()
+    , halfedges()
     , faces()
+    , verbosity(verbosity)
 {
     //create vertices
     vertices.push_back(std::make_shared<Vertex>(0, INFTY)); //index 0
@@ -463,7 +463,7 @@ void Arrangement::print()
 template <typename T>
 long index_of(std::vector<T> const& vec, T const& t)
 {
-    for (long i = 0; i < vec.size(); i++) {
+    for (size_t i = 0; i < vec.size(); i++) {
         if (vec[i] == t)
             return i;
     }
@@ -760,9 +760,4 @@ bool Arrangement::almost_equal(const double a, const double b)
     if (diff <= (std::abs(a) + std::abs(b)) * epsilon)
         return true;
     return false;
-}
-
-std::ostream& operator<<(std::ostream& stream, const Arrangement& arrangement)
-{
-    return write_grades(stream, arrangement.x_exact, arrangement.y_exact);
 }

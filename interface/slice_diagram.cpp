@@ -1,8 +1,8 @@
 #include "slice_diagram.h"
 
-#include "barcode.h"
 #include "config_parameters.h"
 #include "control_dot.h"
+#include "dcel/barcode.h"
 #include "persistence_bar.h"
 #include "slice_line.h"
 
@@ -463,15 +463,15 @@ void SliceDiagram::update_window_controls(bool from_dot)
 } //end update_window_controls()
 
 //draws the barcode parallel to the slice line
-void SliceDiagram::draw_barcode(Barcode* bc, double zero_coord, bool show)
+void SliceDiagram::draw_barcode(Barcode const& bc, double zero_coord, bool show)
 {
     line_zero = zero_coord;
 
-    bars.resize(bc->size());
+    bars.resize(bc.size());
     unsigned num_bars = 1;
     unsigned index = 0;
 
-    for (std::multiset<MultiBar>::iterator it = bc->begin(); it != bc->end(); ++it) {
+    for (std::multiset<MultiBar>::iterator it = bc.begin(); it != bc.end(); ++it) {
         double start = it->birth - line_zero;
         double end = it->death - line_zero;
 
@@ -492,7 +492,7 @@ void SliceDiagram::draw_barcode(Barcode* bc, double zero_coord, bool show)
 
 //updates the barcode (e.g. after a change in the slice line)
 //TODO: would it be better to move bars, instead of deleting and re-creating them?
-void SliceDiagram::update_barcode(Barcode* bc, double zero_coord, bool show)
+void SliceDiagram::update_barcode(Barcode const& bc, double zero_coord, bool show)
 {
     //remove any current selection
     primary_selected.clear();

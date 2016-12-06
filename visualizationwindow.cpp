@@ -1,9 +1,9 @@
 #include "visualizationwindow.h"
 #include "ui_visualizationwindow.h"
 
-#include "dcel/barcode_template.h"
 #include "dcel/arrangement_message.h"
-#include "interface/barcode.h"
+#include "dcel/barcode.h"
+#include "dcel/barcode_template.h"
 #include "interface/config_parameters.h"
 #include "interface/file_writer.h"
 #include "numerics.h"
@@ -23,25 +23,19 @@ VisualizationWindow::VisualizationWindow(InputParameters& params)
     : QMainWindow()
     , ui(new Ui::VisualizationWindow)
     , verbosity(params.verbosity)
-    , INFTY(std::numeric_limits<double>::infinity())
-    , PI(3.14159265358979323846)
     , data_selected(false)
     , unsaved_data(false)
     , input_params(params)
     , config_params()
     , ds_dialog(input_params, this)
-    , x_grades()
-    , x_exact()
-    , y_grades()
-    , y_exact()
+    , grades()
     , template_points()
-    , homology_dimensions()
     , angle_precise(0)
     , offset_precise(0)
     , cthread(input_params)
     , prog_dialog(this)
     , line_selection_ready(false)
-    , slice_diagram(&config_params, x_grades, y_grades, this)
+    , slice_diagram(&config_params, grades.x, grades.y, this)
     , slice_update_lock(false)
     , p_diagram(&config_params, this)
     , persistence_diagram_drawn(false)
@@ -84,7 +78,6 @@ VisualizationWindow::VisualizationWindow(InputParameters& params)
 
 VisualizationWindow::~VisualizationWindow()
 {
-    delete barcode;
     delete ui;
 }
 
@@ -103,33 +96,24 @@ void VisualizationWindow::start_computation()
 
 } //end start_computation()
 
-void VisualizationWindow::copy_fields_from_cthread()
-{
-    //TODO: this dataflow is still odd, could use more attention.
-    template_points = cthread.template_points;
-    x_exact = cthread.x_exact;
-    y_exact = cthread.y_exact;
-    x_grades = rivet::numeric::to_doubles(x_exact);
-    y_grades = rivet::numeric::to_doubles(y_exact);
-    homology_dimensions.resize(std::vector<unsigned>(cthread.hom_dims.shape(), cthread.hom_dims.shape() + cthread.hom_dims.num_dimensions()));
-    homology_dimensions = cthread.hom_dims;
-}
-
 //this slot is signaled when the xi support points are ready to be drawn
-void VisualizationWindow::paint_template_points()
+void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMessage> points)
 {
+    template_points = points;
     //First load our local copies of the data
-    copy_fields_from_cthread();
+    grades = Grades(template_points->x_exact, template_points->y_exact);
+
     //send xi support points to the SliceDiagram
-    for (std::vector<TemplatePoint>::iterator it = template_points.begin(); it != template_points.end(); ++it)
-        slice_diagram.add_point(x_grades[it->x], y_grades[it->y], it->zero, it->one, it->two);
+    for (auto point : template_points->template_points)
+        slice_diagram.add_point(grades.x[point.x], grades.y[point.y], point.zero, point.one, point.two);
 
     //create the SliceDiagram
-    slice_diagram.create_diagram(cthread.x_label,
-        cthread.y_label,
-        x_grades.front(), x_grades.back(),
-        y_grades.front(), y_grades.back(),
-        ui->normCoordCheckBox->isChecked(), homology_dimensions);
+    slice_diagram.create_diagram(
+        QString::fromStdString(template_points->x_label),
+        QString::fromStdString(template_points->y_label),
+        grades.x.front(), grades.x.back(),
+        grades.y.front(), grades.y.back(),
+        ui->normCoordCheckBox->isChecked(), template_points->homology_dimensions);
 
     //enable control items
     ui->BettiLabel->setEnabled(true);
@@ -144,20 +128,17 @@ void VisualizationWindow::paint_template_points()
 
     //update offset extents
     ///TODO: maybe these extents should be updated dynamically, based on the slope of the slice line
-    ui->offsetSpinBox->setMinimum(std::min(-1 * x_grades.back(), y_grades.front()));
-    ui->offsetSpinBox->setMaximum(std::max(y_grades.back(), -1 * x_grades.front()));
+    ui->offsetSpinBox->setMinimum(grades.min_offset());
+    ui->offsetSpinBox->setMaximum(grades.max_offset());
 
     //update status
     line_selection_ready = true;
     ui->statusBar->showMessage("multigraded Betti number visualization ready");
 }
 
-//this slot is signaled when the agumented arrangement is ready
-void VisualizationWindow::augmented_arrangement_ready(ArrangementMessage* arrangement)
+//this slot is signaled when the augmented arrangement is ready
+void VisualizationWindow::augmented_arrangement_ready(std::shared_ptr<ArrangementMessage> arrangement)
 {
-    //First load our local copies of the data
-    copy_fields_from_cthread();
-
     //receive the arrangement
     this->arrangement = arrangement;
 
@@ -170,17 +151,17 @@ void VisualizationWindow::augmented_arrangement_ready(ArrangementMessage* arrang
 
     //get the barcode
     BarcodeTemplate dbc = arrangement->get_barcode_template(angle_precise, offset_precise);
-    barcode = rescale_barcode_template(dbc, angle_precise, offset_precise);
+    barcode = dbc.rescale(angle_precise, offset_precise, template_points->template_points, grades);
 
     //TESTING
     barcode->print();
 
     //draw the barcode
-    double zero_coord = project_zero(angle_precise, offset_precise);
-    p_diagram.set_barcode(zero_coord, barcode);
+    double zero_coord = rivet::numeric::project_zero(angle_precise, offset_precise, grades.x[0], grades.y[0]);
+    p_diagram.set_barcode(zero_coord, *barcode);
     p_diagram.resize_diagram(slice_diagram.get_slice_length(), slice_diagram.get_pd_scale());
 
-    slice_diagram.draw_barcode(barcode, zero_coord, ui->barcodeCheckBox->isChecked());
+    slice_diagram.draw_barcode(*barcode, zero_coord, ui->barcodeCheckBox->isChecked());
 
     //enable control items
     ui->barcodeCheckBox->setEnabled(true);
@@ -263,115 +244,24 @@ void VisualizationWindow::update_persistence_diagram()
         //get the barcode
         qDebug() << "  QUERY: angle =" << angle_precise << ", offset =" << offset_precise;
         BarcodeTemplate dbc = arrangement->get_barcode_template(angle_precise, offset_precise);
-        if (barcode != NULL) //clean up the old barcode
-            delete barcode;
-        barcode = rescale_barcode_template(dbc, angle_precise, offset_precise);
+        barcode = dbc.rescale(angle_precise, offset_precise, template_points->template_points, grades);
 
         //TESTING
         qDebug() << "  XI SUPPORT VECTOR:";
-        for (unsigned i = 0; i < template_points.size(); i++) {
-            TemplatePoint p = template_points[i];
-            qDebug().nospace() << "    [" << i << "]: (" << p.x << "," << p.y << ") --> (" << x_grades[p.x] << "," << y_grades[p.y] << ")";
+        for (unsigned i = 0; i < template_points->template_points.size(); i++) {
+            TemplatePoint p = template_points->template_points[i];
+            qDebug().nospace() << "    [" << i << "]: (" << p.x << "," << p.y << ") --> (" << grades.x[p.x] << "," << grades.y[p.y] << ")";
         }
         dbc.print();
         barcode->print();
 
-        double zero_coord = project_zero(angle_precise, offset_precise);
+        double zero_coord = rivet::numeric::project_zero(angle_precise, offset_precise, grades.x[0], grades.y[0]);
 
         //draw the barcode
-        p_diagram.update_diagram(slice_diagram.get_slice_length(), slice_diagram.get_pd_scale(), zero_coord, barcode);
-        slice_diagram.update_barcode(barcode, zero_coord, ui->barcodeCheckBox->isChecked());
+        p_diagram.update_diagram(slice_diagram.get_slice_length(), slice_diagram.get_pd_scale(), zero_coord, *barcode);
+        slice_diagram.update_barcode(*barcode, zero_coord, ui->barcodeCheckBox->isChecked());
     }
 }
-
-//rescales a barcode template by projecting points onto the specified line
-// NOTE: angle in DEGREES
-Barcode* VisualizationWindow::rescale_barcode_template(BarcodeTemplate& dbc, double angle, double offset)
-{
-    Barcode* bc = new Barcode(); //NOTE: delete later!
-
-    //loop through bars
-    for (std::set<BarTemplate>::iterator it = dbc.begin(); it != dbc.end(); ++it) {
-        qDebug() << "BarTemplate: " << it->begin << " " << it->end;
-        assert(it->begin < template_points.size());
-        TemplatePoint begin = template_points[it->begin];
-        double birth = project(begin, angle, offset);
-
-        if (birth != INFTY) //then bar exists in this rescaling
-        {
-            if (it->end >= template_points.size()) //then endpoint is at infinity
-            {
-                //                qDebug() << "   ===>   (" << it->begin << ", inf) |---> (" << birth << ", inf)";
-                bc->add_bar(birth, INFTY, it->multiplicity);
-            } else //then bar is finite
-            {
-                assert(it->end < template_points.size());
-                TemplatePoint end = template_points[it->end];
-                double death = project(end, angle, offset);
-                //                qDebug() << "   ===>>> (" << it->begin << "," << it->end << ") |---> (" << birth << "," << death << ")";
-                bc->add_bar(birth, death, it->multiplicity);
-
-                //testing
-                if (birth > death)
-                    qDebug() << "=====>>>>> ERROR: inverted bar (" << birth << "," << death << ")";
-            }
-        }
-        //        else
-        //            qDebug() << "   ===>>> (" << it->begin << "," << it->end << ") DOES NOT EXIST IN THIS PROJECTION";
-    }
-
-    return bc;
-} //end rescale_barcode_template()
-
-//computes the projection of an xi support point onto the specified line
-//  NOTE: returns INFTY if the point has no projection (can happen only for horizontal and vertical lines)
-//  NOTE: angle in DEGREES
-double VisualizationWindow::project(TemplatePoint& pt, double angle, double offset)
-{
-    if (angle == 0) //then line is horizontal
-    {
-        if (y_grades[pt.y] <= offset) //then point is below the line, so projection exists
-            return x_grades[pt.x];
-        else //then no projection
-            return INFTY;
-    } else if (angle == 90) //then line is vertical
-    {
-        if (x_grades[pt.x] <= -1 * offset) //then point is left of the line, so projection exists
-            return y_grades[pt.y];
-        else //then no projection
-            return INFTY;
-    }
-    //if we get here, then line is neither horizontal nor vertical
-    double radians = angle * PI / 180;
-    double x = x_grades[pt.x];
-    double y = y_grades[pt.y];
-
-    if (y > x * tan(radians) + offset / cos(radians)) //then point is above line
-        return y / sin(radians) - offset / tan(radians); //project right
-
-    return x / cos(radians) + offset * tan(radians); //project up
-} //end project()
-
-//computes the projection of the lower-left corner of the line-selection window onto the specified line
-/// TESTING AS REPLACEMENT FOR SliceDiagram::get_zero()
-double VisualizationWindow::project_zero(double angle, double offset)
-{
-    if (angle == 0) //then line is horizontal
-        return x_grades[0];
-
-    if (angle == 90) //then line is vertical
-        return y_grades[0];
-
-    //if we get here, then line is neither horizontal nor vertical
-    double radians = angle * PI / 180;
-    double x = x_grades[0];
-    double y = y_grades[0];
-
-    if (y > x * tan(radians) + offset / cos(radians)) //then point is above line
-        return y / sin(radians) - offset / tan(radians); //project right
-
-    return x / cos(radians) + offset * tan(radians); //project up
-} //end project_zero()
 
 void VisualizationWindow::set_line_parameters(double angle, double offset)
 {
@@ -446,7 +336,8 @@ void VisualizationWindow::on_actionConfigure_triggered()
     configBox->exec();
 
     if (line_selection_ready) {
-        slice_diagram.receive_parameter_change(cthread.x_label, cthread.y_label);
+        slice_diagram.receive_parameter_change(QString::fromStdString(template_points->x_label),
+            QString::fromStdString(template_points->y_label));
 
         if (persistence_diagram_drawn)
             p_diagram.receive_parameter_change();
@@ -487,7 +378,7 @@ void VisualizationWindow::on_actionSave_triggered()
 void VisualizationWindow::save_arrangement(const QString& filename)
 {
     try {
-        write_boost_file(filename, input_params, cthread.message, *arrangement);
+        write_boost_file(filename, input_params, *template_points, *arrangement);
     } catch (std::exception& e) {
         QMessageBox errorBox(QMessageBox::Warning, "Error",
             QString("Unable to write file: ").append(filename).append(": ").append(e.what()));

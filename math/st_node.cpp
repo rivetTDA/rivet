@@ -69,25 +69,25 @@ STNode STNode::get_parent()
 }
 
 //sets the first component of the multigrade for this simplex
-void STNode::set_x(int x)
+void STNode::set_x(unsigned x)
 {
     mg_x = x;
 }
 
 //returns the first component of the multigrade for this simplex
-int STNode::grade_x() const
+unsigned STNode::grade_x() const
 {
     return mg_x;
 }
 
 //sets the second component of the multigrade for this simplex
-void STNode::set_y(int y)
+void STNode::set_y(unsigned y)
 {
     mg_y = y;
 }
 
 //returns the second component of the multigrade for this simplex
-int STNode::grade_y() const
+unsigned STNode::grade_y() const
 {
     return mg_y;
 }
@@ -172,7 +172,7 @@ void STNode::print()
     if (children.size() == 0)
 
         std::cout << "NONE";
-    for (int i = 0; i < children.size(); i++) {
+    for (size_t i = 0; i < children.size(); i++) {
         if (i > 0)
             std::cout << ", ";
         std::cout << (*children[i]).get_vertex();
