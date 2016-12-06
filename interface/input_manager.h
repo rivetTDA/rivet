@@ -19,11 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **********************************************************************/
 /**
  * \class	InputManager
- * \brief	Manages input for RIVET.
- * \author	Matthew L. Wright
- * \date	February 2014
- * 
- * The InputManager is able to identify the type of input, read the input, and construct the appropriate bifiltration.
+ * \brief	The InputManager is able to identify the type of input, read the input, and construct the appropriate bifiltration.
  */
 
 #ifndef __InputManager_H__
