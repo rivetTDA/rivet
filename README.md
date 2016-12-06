@@ -18,7 +18,7 @@ Before starting to build RIVET, make sure you have the following installed:
 * A C++ compiler (g++ or clang are what we use)
 * CMake
 * Qt 5
-* Boost (including boost serialization)
+* Boost (including boost serialization; version 1.60 or newer required)
 
 All of these are generally available using your operating systems's package
 manager. For example, on Mac OS X:
