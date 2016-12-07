@@ -291,7 +291,7 @@ void VisualizationWindow::showEvent(QShowEvent* event)
 {
     QMainWindow::showEvent(event);
     if (!data_selected) {
-        ds_dialog.show();
+        ds_dialog.exec(); //show();
     }
 }
 
