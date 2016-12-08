@@ -102,9 +102,7 @@ FileType& InputManager::get_file_type(std::string fileName)
     auto it = std::find_if(supported_types.begin(), supported_types.end(), [filetype_name](FileType t) { return t.identifier == filetype_name; });
 
     if (it == supported_types.end()) {
-        std::stringstream ss;
-        ss << "Unsupported file type: " << filetype_name;
-        throw std::runtime_error(ss.str());
+        throw std::runtime_error("Unsupported file type");
     }
 
     return *it;
