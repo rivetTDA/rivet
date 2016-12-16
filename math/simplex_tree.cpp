@@ -683,7 +683,7 @@ SimplexData SimplexTree::get_simplex_data(int index)
 
     while (target == NULL) {
         if (kids.size() == 0) {
-            throw std::runtime_error("ERROR: vector of size zero in SimplexTree::get_multi_index()\n");
+            throw std::runtime_error("vector of size zero in SimplexTree::get_multi_index()\n");
         }
 
         //binary search for index
