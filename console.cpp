@@ -326,12 +326,14 @@ int main(int argc, char* argv[])
         input = inputManager.start(progress);
     } catch (const std::exception& e) {
         std::cerr << "INPUT ERROR: " << e.what() << std::endl;
+        std::cerr.flush();
         return 1;
     }
     if (identify) {
         std::cout << "FILE TYPE: " << input->file_type.identifier << std::endl;
         std::cout << "FILE TYPE DESCRIPTION: " << input->file_type.description << std::endl;
         std::cout << "RAW DATA: " << input->is_data << std::endl;
+        std::cout.flush();
         return 0;
     }
     if (params.verbosity >= 2) {

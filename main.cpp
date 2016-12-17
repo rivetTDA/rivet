@@ -45,8 +45,7 @@ int main(int argc, char* argv[])
     qRegisterMetaType<std::shared_ptr<TemplatePointsMessage>>();
 
     //now run RIVET
-    if (!(parser.isSet(helpOption) || parser.isSet(versionOption)))
-    {
+    if (!(parser.isSet(helpOption) || parser.isSet(versionOption))) {
         VisualizationWindow v_window(params);
         v_window.show();
 

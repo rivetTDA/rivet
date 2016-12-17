@@ -161,9 +161,9 @@ void SimplexTree::build_dim_lists_recursively(STNode* node, unsigned cur_dim)
 //NOTE: automatically computes global indexes and dimension indexes
 //CONVENTION: the x-coordinate is "birth time" for points and the y-coordinate is "distance" between points
 void SimplexTree::build_VR_complex(std::vector<unsigned>& times,
-                                   std::vector<unsigned>& distances,
-                                   unsigned num_x,
-                                   unsigned num_y)
+    std::vector<unsigned>& distances,
+    unsigned num_x,
+    unsigned num_y)
 {
     x_grades = num_x;
     y_grades = num_y;
@@ -195,13 +195,13 @@ void SimplexTree::build_VR_complex(std::vector<unsigned>& times,
 
 //function to build (recursively) a subtree of the simplex tree
 void SimplexTree::build_VR_subtree(std::vector<unsigned>& times,
-                                   std::vector<unsigned>& distances,
-                                   STNode& parent,
-                                   std::vector<unsigned>& parent_indexes,
-                                   unsigned prev_time,
-                                   unsigned prev_dist,
-                                   unsigned cur_dim,
-                                   unsigned& gic)
+    std::vector<unsigned>& distances,
+    STNode& parent,
+    std::vector<unsigned>& parent_indexes,
+    unsigned prev_time,
+    unsigned prev_dist,
+    unsigned cur_dim,
+    unsigned& gic)
 {
     //loop through all points that could be children of this node
     for (unsigned j = parent_indexes.back() + 1; j < times.size(); j++) {
@@ -459,7 +459,7 @@ void SimplexTree::write_boundary_column(MapMatrix* mat, STNode* sim, int col, in
     if (verts.size() == 1)
         return;
 
-//find all facets of this simplex
+    //find all facets of this simplex
     for (unsigned k = 0; k < verts.size(); k++) {
         //facet vertices are all vertices in verts[] except verts[k]
         std::vector<int> facet;

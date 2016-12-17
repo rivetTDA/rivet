@@ -30,7 +30,7 @@ namespace numeric {
     exact str_to_exact(const std::string& str)
     {
         if (!is_number(str)) {
-            throw std::runtime_error("" + str + " is not a number");
+            throw std::runtime_error("'" + str + "' is not a number");
         }
         exact r;
 

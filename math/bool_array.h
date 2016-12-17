@@ -11,12 +11,11 @@
 class bool_array {
 public:
     bool_array(unsigned long rows, unsigned long cols);
-    bool & at(unsigned long row, unsigned long col);
+    bool& at(unsigned long row, unsigned long col);
 
 private:
     unsigned long cols;
     std::unique_ptr<bool[]> array;
 };
-
 
 #endif //RIVET_CONSOLE_BOOL_ARRAY_H

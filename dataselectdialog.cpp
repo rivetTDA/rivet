@@ -83,7 +83,7 @@ void DataSelectDialog::detect_file_type()
         return;
     }
 
-    auto line = reader.next_line();
+    auto line = reader.next_line().first;
     if (line[0] == "RIVET_1") {
         ui->fileTypeLabel->setText("This file appears to contain pre-computed RIVET data");
         ui->parameterFrame->setEnabled(false);
@@ -126,7 +126,10 @@ void DataSelectDialog::detect_file_type()
 
 void DataSelectDialog::invalid_file(const QString& message)
 {
+    ui->fileLabel->setText("Please select a file.");
     ui->parameterFrame->setEnabled(false);
     ui->computeButton->setEnabled(false);
-    ui->fileTypeLabel->setText(message);
+    ui->fileTypeLabel->setText(nullptr);
+    QMessageBox errorBox(QMessageBox::Warning, "Error", message);
+    errorBox.exec();
 }

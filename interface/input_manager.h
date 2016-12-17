@@ -102,6 +102,11 @@ struct InputData {
     FileType file_type;
 };
 
+class InputError : public std::runtime_error {
+public:
+    InputError(unsigned line, std::string message);
+};
+
 //TODO: the input manager doesn't really hold an appreciable
 //amount of state, there's really no reason to instantiate a class
 //for this job, a collection of functions would do.

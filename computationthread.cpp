@@ -27,7 +27,7 @@
 
 ComputationThread::ComputationThread(InputParameters& params, QObject* parent)
     : QThread(parent)
-        , message()
+    , message()
     , params(params)
 {
 }
