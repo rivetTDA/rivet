@@ -49,7 +49,6 @@ protected:
 
 private:
     SliceLine* slice_line;
-    QGraphicsTextItem* coords;
     ConfigParameters* config_params;
 
     bool pressed;

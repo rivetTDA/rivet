@@ -62,7 +62,7 @@ public:
     bool has_next_token()
     {
         if (it == tokens.end()) {
-            tokens = reader.next_line();
+            tokens = reader.next_line().first;
             it = tokens.begin();
         }
         return it != tokens.end();
@@ -99,7 +99,7 @@ InputManager::InputManager(InputParameters& params)
         std::bind(&InputManager::read_bifiltration, this, std::placeholders::_1, std::placeholders::_2) });
     //    register_file_type(FileType {"RIVET_0", "pre-computed RIVET data", false,
     //                                 std::bind(&InputManager::read_RIVET_data, this, std::placeholders::_1, std::placeholders::_2) });
-};
+}
 
 void InputManager::register_file_type(FileType file_type)
 {
@@ -112,14 +112,12 @@ FileType& InputManager::get_file_type(std::string fileName)
         throw std::runtime_error("Could not open " + fileName);
     }
     FileInputReader reader(stream);
-    std::string filetype_name = reader.next_line()[0];
+    std::string filetype_name = reader.next_line().first[0];
 
     auto it = std::find_if(supported_types.begin(), supported_types.end(), [filetype_name](FileType t) { return t.identifier == filetype_name; });
 
     if (it == supported_types.end()) {
-        std::stringstream ss;
-        ss << "Unsupported file type: " << filetype_name;
-        throw std::runtime_error(ss.str());
+        throw std::runtime_error("Unsupported file type");
     }
 
     return *it;
@@ -145,78 +143,96 @@ std::unique_ptr<InputData> InputManager::start(Progress& progress)
     return data;
 } //end start()
 
+InputError::InputError(unsigned line, std::string message)
+    : std::runtime_error("line " + std::to_string(line) + ": " + message)
+{
+}
+
 //reads a point cloud
 //  points are given by coordinates in Euclidean space, and each point has a "birth time"
 //  constructs a simplex tree representing the bifiltered Vietoris-Rips complex
 std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream, Progress& progress)
 {
+    //TODO : switch to YAML or JSON input or switch to proper parser generator or combinators
     FileInputReader reader(stream);
     auto data = new InputData();
     if (verbosity >= 6) {
         debug() << "InputManager: Found a point cloud file.";
     }
+    unsigned dimension;
+    exact max_dist;
+
+    //read points
+    std::vector<DataPoint> points;
 
     // STEP 1: read data file and store exact (rational) values
     //skip first line
     reader.next_line();
-    //read dimension of the points from the first line of the file
-    std::vector<std::string> dimension_line = reader.next_line();
-    if (dimension_line.size() != 1) {
-        debug() << "WARNING: There was more than one value in the expected dimension line.  There may be a problem with your input file.  ";
-    }
-    if(verbosity >= 4) {
-        debug() << "  Point cloud lives in dimension:" << dimension_line[0];
-    }
-
-    unsigned dimension = std::stoi(dimension_line[0]);
-
-    //check for invalid input
-    if (dimension == 0) {
-        throw std::runtime_error("An invalid input was received for the dimension.");
-    }
-
-    //read maximum distance for edges in Vietoris-Rips complex
-    std::vector<std::string> distance_line = reader.next_line();
-    if (distance_line.size() != 1) {
-        debug() << "WARNING: There was more than one value in the expected distance line.  There may be a problem with your input file.  ";
-    }
-
-    exact max_dist = str_to_exact(distance_line[0]);
-    if (max_dist == 0) {
-        throw std::runtime_error("An invalid input was received for the max distance.");
-    }
-
-    if (verbosity >= 4) {
-        std::ostringstream oss;
-        oss << max_dist;
-        debug() << "  Maximum distance of edges in Vietoris-Rips complex:" << oss.str();
-    }
-
-    //read label for x-axis
-    data->x_label = reader.next_line()[0];
-
-    //set label for y-axis to "distance"
-    data->y_label = "distance";
-
-    //read points
-    std::vector<DataPoint> points;
-    while (reader.has_next_line()) {
-        std::vector<std::string> tokens = reader.next_line();
-        if (tokens.size() != dimension + 1) {
-            std::stringstream ss;
-            ss << "invalid line (should be " << dimension + 1 << " tokens but was " << tokens.size() << ")" << std::endl;
-            ss << "[";
-            for (auto t : tokens) {
-                ss << t << " ";
-            }
-            ss << "]" << std::endl;
-
-            throw std::runtime_error(ss.str());
+    
+    auto line_info = reader.next_line();
+    try {
+        //read dimension of the points from the first line of the file
+        std::vector<std::string> dimension_line = line_info.first;
+        if (dimension_line.size() != 1) {
+            debug() << "There was more than one value in the expected dimension line."
+                    " There may be a problem with your input file.  ";
         }
-        DataPoint p(tokens);
-        points.push_back(p);
-    }
+        if(verbosity >= 4) {
+            debug() << "  Point cloud lives in dimension:" << dimension_line[0];
+        }
 
+        int dim = std::stoi(dimension_line[0]);
+        if (dim < 1) {
+            throw std::runtime_error("Dimension of data must be at least 1");
+        }
+        dimension = static_cast<unsigned>(dim);
+
+        //read maximum distance for edges in Vietoris-Rips complex
+        line_info = reader.next_line();
+        std::vector<std::string> distance_line = line_info.first;
+        if (distance_line.size() != 1) {
+            throw std::runtime_error("There was more than one value in the expected distance line.");
+        }
+
+        max_dist = str_to_exact(distance_line[0]);
+        if (max_dist <= 0) {
+            throw std::runtime_error("An invalid input was received for the max distance.");
+        }
+
+        if (verbosity >= 4) {
+            std::ostringstream oss;
+            oss << max_dist;
+            debug() << "  Maximum distance of edges in Vietoris-Rips complex:" << oss.str();
+        }
+
+        //read label for x-axis
+        line_info = reader.next_line();
+        data->x_label = line_info.first[0];
+
+        //set label for y-axis to "distance"
+        data->y_label = "distance";
+
+        while (reader.has_next_line()) {
+            line_info = reader.next_line();
+            std::vector<std::string> tokens = line_info.first;
+            if (tokens.size() != dimension + 1) {
+                std::stringstream ss;
+                ss << "invalid line (should be " << dimension + 1 << " tokens but was " << tokens.size() << ")"
+                   << std::endl;
+                ss << "[";
+                for (auto t : tokens) {
+                    ss << t << " ";
+                }
+                ss << "]" << std::endl;
+
+                throw std::runtime_error(ss.str());
+            }
+            DataPoint p(tokens);
+            points.push_back(p);
+        }
+    } catch (std::exception &e) {
+        throw InputError(line_info.second, e.what());
+    }
     if (verbosity >= 4) {
         debug() << "  Finished reading" << points.size() << "points. Input finished.";
     }
@@ -252,10 +268,12 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
         for (unsigned j = i + 1; j < num_points; j++) {
             //compute (approximate) distance squared between points[i] and points[j]
             double fp_dist_squared = 0;
-            for (unsigned k = 0; k < dimension; k++)
-                fp_dist_squared += (points[i].coords[k] - points[j].coords[k]) * (points[i].coords[k] - points[j].coords[k]);
+            for (unsigned k = 0; k < dimension; k++) {
+                double kth_dist = points[i].coords[k] - points[j].coords[k];
+                fp_dist_squared += (kth_dist * kth_dist);
+            }
 
-            //find an approximate square root of dist_squared, and store it as an exact value
+            //find an approximate square root of fp_dist_squared, and store it as an exact value
             exact cur_dist(0);
             if (fp_dist_squared > 0)
                 cur_dist = approx(sqrt(fp_dist_squared)); //OK for now...
@@ -276,11 +294,15 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
     unsigned max_unsigned = std::numeric_limits<unsigned>::max();
 
     //first, times
-    std::vector<unsigned> time_indexes(num_points, max_unsigned); //vector of discrete time indexes for each point; max_unsigned shall represent undefined time (is this reasonable?)
+
+    //vector of discrete time indexes for each point; max_unsigned shall represent undefined time (is this reasonable?)
+    std::vector<unsigned> time_indexes(num_points, max_unsigned);
     build_grade_vectors(*data, time_set, time_indexes, data->x_exact, input_params.x_bins);
 
     //second, distances
-    std::vector<unsigned> dist_indexes((num_points * (num_points - 1)) / 2, max_unsigned); //discrete distance matrix (triangle); max_unsigned shall represent undefined distance
+
+    //discrete distance matrix (triangle); max_unsigned shall represent undefined distance
+    std::vector<unsigned> dist_indexes((num_points * (num_points - 1)) / 2, max_unsigned);
     build_grade_vectors(*data, dist_set, dist_indexes, data->y_exact, input_params.y_bins);
 
     //update progress
@@ -328,13 +350,21 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
     std::unique_ptr<InputData> data(new InputData);
     FileInputReader reader(stream);
 
+    //prepare data structures
+    ExactSet value_set; //stores all unique values of the function; must DELETE all elements later
+    ExactSet dist_set; //stores all unique values of the distance metric; must DELETE all elements later
+    unsigned num_points;
+
     // STEP 1: read data file and store exact (rational) values of the function for each point
 
     //first read the label for x-axis
-    data->x_label = reader.next_line()[0];
+    auto line_info = reader.next_line();
+    try {
+    data->x_label = line_info.first[0];
 
     //now read the values
-    std::vector<std::string> line = reader.next_line();
+    line_info = reader.next_line();
+    std::vector<std::string> line = line_info.first;
     std::vector<exact> values;
     values.reserve(line.size());
 
@@ -345,25 +375,25 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
     // STEP 2: read data file and store exact (rational) values for all distances
 
     //first read the label for y-axis
-    data->y_label = join(reader.next_line());
+    line_info = reader.next_line();
+    data->y_label = join(line_info.first);
 
     //read the maximum length of edges to construct
-    exact max_dist = str_to_exact(reader.next_line()[0]);
+    line_info = reader.next_line();
+    exact max_dist;
+        max_dist = str_to_exact(line_info.first[0]);
     if (verbosity >= 4) {
         std::ostringstream oss;
         oss << max_dist;
         debug() << "  Maximum distance of edges in Vietoris-Rips complex:" << oss.str();
     }
 
-    //prepare data structures
-    ExactSet value_set; //stores all unique values of the function; must DELETE all elements later
-    ExactSet dist_set; //stores all unique values of the distance metric; must DELETE all elements later
     std::pair<ExactSet::iterator, bool> ret; //for return value upon insert()
 
     dist_set.insert(new ExactValue(exact(0))); //distance from a point to itself is always zero
 
     //consider all points
-    unsigned num_points = values.size();
+    num_points = values.size();
     for (unsigned i = 0; i < num_points; i++) {
         //store value, if it doesn't exist already
         ret = value_set.insert(new ExactValue(values[i]));
@@ -397,6 +427,9 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
         }
     } //end for
 
+    } catch (std::exception &e) {
+        throw InputError(line_info.second, e.what());
+    }
     progress.advanceProgressStage(); //advance progress box to stage 2: building bifiltration
 
     // STEP 3: build vectors of discrete indexes for constructing the bifiltration
@@ -447,10 +480,10 @@ std::unique_ptr<InputData> InputManager::read_bifiltration(std::ifstream& stream
     }
 
     //read the label for x-axis
-    data->x_label = join(reader.next_line());
+    data->x_label = join(reader.next_line().first);
 
     //read the label for y-axis
-    data->y_label = join(reader.next_line());
+    data->y_label = join(reader.next_line().first);
 
     //temporary data structures to store grades
     ExactSet x_set; //stores all unique x-alues; must DELETE all elements later!
@@ -460,27 +493,39 @@ std::unique_ptr<InputData> InputManager::read_bifiltration(std::ifstream& stream
     //read simplices
     unsigned num_simplices = 0;
     while (reader.has_next_line()) {
-        std::vector<std::string> tokens = reader.next_line();
+        auto line_info = reader.next_line();
+        try {
+            std::vector<std::string> tokens = line_info.first;
 
-        //read dimension of simplex
-        int dim = tokens.size() - 3; //-3 because a n-simplex has (n+1) vertices, and the line also contains two grade values
+            if (tokens.size() > std::numeric_limits<unsigned>::max()) {
+                throw InputError(line_info.second,
+                                 "line longer than " + std::to_string(std::numeric_limits<unsigned>::max()) +
+                                 " tokens");
+            }
 
-        //read vertices
-        std::vector<int> verts;
-        for (int i = 0; i <= dim; i++) {
-            int v = std::stoi(tokens[i]);
-            verts.push_back(v);
+            //read dimension of simplex
+            unsigned dim = static_cast<unsigned>(tokens.size() -
+                                                 3); //-3 because a n-simplex has (n+1) vertices, and the line also contains two grade values
+
+            //read vertices
+            std::vector<int> verts;
+            for (unsigned i = 0; i <= dim; i++) {
+                int v = std::stoi(tokens[i]);
+                verts.push_back(v);
+            }
+
+            //read multigrade and remember that it corresponds to this simplex
+            ret = x_set.insert(new ExactValue(str_to_exact(tokens.at(dim + 1))));
+            (*(ret.first))->indexes.push_back(num_simplices);
+            ret = y_set.insert(new ExactValue(str_to_exact(tokens.at(dim + 2))));
+            (*(ret.first))->indexes.push_back(num_simplices);
+
+            //add the simplex to the simplex tree
+            data->simplex_tree->add_simplex(verts, num_simplices, num_simplices); //multigrade to be set later!
+            num_simplices++;
+        } catch (std::exception& e) {
+            throw InputError(line_info.second, "Could not read vertex: " + std::string(e.what()));
         }
-
-        //read multigrade and remember that it corresponds to this simplex
-        ret = x_set.insert(new ExactValue(str_to_exact(tokens.at(dim + 1))));
-        (*(ret.first))->indexes.push_back(num_simplices);
-        ret = y_set.insert(new ExactValue(str_to_exact(tokens.at(dim + 2))));
-        (*(ret.first))->indexes.push_back(num_simplices);
-
-        //add the simplex to the simplex tree
-        data->simplex_tree->add_simplex(verts, num_simplices, num_simplices); //multigrade to be set later!
-        num_simplices++;
     }
 
     progress.advanceProgressStage(); //advance progress box to stage 2: building bifiltration
@@ -519,72 +564,88 @@ std::unique_ptr<InputData> InputManager::read_RIVET_data(std::ifstream& stream, 
     FileInputReader reader(stream);
 
     //read parameters
-    auto line = reader.next_line();
+    auto line_info = reader.next_line();
+    auto line = line_info.first;
     debug() << join(line);
-    input_params.dim = std::stoi(reader.next_line()[0]);
-    data->x_label = join(reader.next_line());
-    data->y_label = join(reader.next_line());
+    line_info = reader.next_line();
+    try {
+        input_params.dim = std::stoi(line_info.first[0]);
+        data->x_label = join(reader.next_line().first);
+        data->y_label = join(reader.next_line().first);
 
-    //read x-grades
-    reader.next_line(); //this line should say "x-grades"
-    line = reader.next_line();
-    while (line[0][0] != 'y') //stop when we reach "y-grades"
-    {
-        exact num(line[0]);
-        data->x_exact.push_back(num);
-        line = reader.next_line();
-    }
-
-    //read y-grades
-    line = reader.next_line(); //because the current line says "y-grades"
-    while (line[0][0] != 'x') //stop when we reach "xi"
-    {
-        exact num(line[0]);
-        data->y_exact.push_back(num);
-        line = reader.next_line();
-    }
-
-    //read xi values
-    line = reader.next_line(); //because the current line says "xi"
-    while (line[0][0] != 'b') //stop when we reach "barcode templates"
-    {
-        unsigned x = std::stoi(line[0]);
-        unsigned y = std::stoi(line[1]);
-        int zero = std::stoi(line[2]);
-        int one = std::stoi(line[3]);
-        int two = std::stoi(line[4]);
-        data->template_points.push_back(TemplatePoint(x, y, zero, one, two));
-        line = reader.next_line();
-    }
-
-    //read barcode templates
-    //  NOTE: the current line says "barcode templates"
-    while (reader.has_next_line()) {
-        line = reader.next_line();
-        data->barcode_templates.push_back(BarcodeTemplate()); //create a new BarcodeTemplate
-
-        if (line[0] != std::string("-")) //then the barcode is nonempty
+        //read x-grades
+        reader.next_line(); //this line should say "x-grades"
+        line_info = reader.next_line();
+        line = line_info.first;
+        while (line[0][0] != 'y') //stop when we reach "y-grades"
         {
-            for (size_t i = 0; i < line.size(); i++) //loop over all bars
+            exact num(line[0]);
+            data->x_exact.push_back(num);
+            line_info = reader.next_line();
+            line = line_info.first;
+        }
+
+        //read y-grades
+
+        line_info = reader.next_line();
+        line = line_info.first;
+        while (line[0][0] != 'x') //stop when we reach "xi"
+        {
+            exact num(line[0]);
+            data->y_exact.push_back(num);
+            line_info = reader.next_line();
+            line = line_info.first;
+        }
+
+        //read xi values
+        line_info = reader.next_line();
+        line = line_info.first; //because the current line says "xi"
+        while (line[0][0] != 'b') //stop when we reach "barcode templates"
+        {
+            unsigned x = std::stoi(line[0]);
+            unsigned y = std::stoi(line[1]);
+            int zero = std::stoi(line[2]);
+            int one = std::stoi(line[3]);
+            int two = std::stoi(line[4]);
+            data->template_points.push_back(TemplatePoint(x, y, zero, one, two));
+            line_info = reader.next_line();
+            line = line_info.first;
+        }
+
+        //read barcode templates
+        //  NOTE: the current line says "barcode templates"
+        while (reader.has_next_line()) {
+            line_info = reader.next_line();
+            line = line_info.first;
+            data->barcode_templates.push_back(BarcodeTemplate()); //create a new BarcodeTemplate
+
+            if (line[0] != std::string("-")) //then the barcode is nonempty
             {
-                std::vector<std::string> nums = split(line[i], ",");
-                unsigned a = std::stol(nums[0]);
-                unsigned b = -1; //default, for b = infinity
-                if (nums[1][0] != 'i') //then b is finite
-                    b = std::stol(nums[1]);
-                unsigned m = std::stol(nums[2]);
-                data->barcode_templates.back().add_bar(a, b, m);
+                for (size_t i = 0; i < line.size(); i++) //loop over all bars
+                {
+                    std::vector<std::string> nums = split(line[i], ",");
+                    unsigned a = std::stol(nums[0]);
+                    unsigned b = -1; //default, for b = infinity
+                    if (nums[1][0] != 'i') //then b is finite
+                        b = std::stol(nums[1]);
+                    unsigned m = std::stol(nums[2]);
+                    data->barcode_templates.back().add_bar(a, b, m);
+                }
             }
         }
-    }
 
+    } catch (std::exception& e) {
+        throw InputError(line_info.second, e.what());
+    }
     ///TODO: maybe make a different progress box for RIVET input???
     progress.advanceProgressStage(); //advance progress box to stage 2: building bifiltration
 
     return data;
 } //end read_RIVET_data()
 
-//converts an ExactSet of values to the vectors of discrete values that SimplexTree uses to build the bifiltration, and also builds the grade vectors (floating-point and exact)
+//converts an ExactSet of values to the vectors of discrete
+// values that SimplexTree uses to build the bifiltration,
+// and also builds the grade vectors (floating-point and exact)
 void InputManager::build_grade_vectors(InputData& data,
     ExactSet& value_set,
     std::vector<unsigned>& discrete_indexes,
@@ -605,7 +666,8 @@ void InputManager::build_grade_vectors(InputData& data,
 
             c++;
         }
-    } else //then use bins: then the number of discrete indexes will equal the number of bins, and exact values will be equally spaced
+    } else //then use bins: then the number of discrete indexes will equal
+    // the number of bins, and exact values will be equally spaced
     {
         //compute bin size
         exact min = (*value_set.begin())->exact_value;

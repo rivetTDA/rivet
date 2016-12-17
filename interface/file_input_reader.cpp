@@ -22,10 +22,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "file_input_reader.h"
 
 #include <boost/algorithm/string.hpp>
-#include <vector>
 
 FileInputReader::FileInputReader(std::ifstream& file)
     : in(file)
+    , line_number(0)
     , next_line_found(false)
 {
     find_next_line();
@@ -37,6 +37,7 @@ void FileInputReader::find_next_line()
 {
     std::string line;
     while (std::getline(in, line)) {
+        line_number++;
         boost::trim(line);
         if (line.empty() || line[0] == '#')
             continue;
@@ -54,12 +55,13 @@ bool FileInputReader::has_next_line()
 }
 
 //returns the next line as a std::vector<std::string> of tokens
-std::vector<std::string> FileInputReader::next_line()
+std::pair<std::vector<std::string>, unsigned> FileInputReader::next_line()
 {
     std::vector<std::string> current = next_line_tokens;
+    auto num = line_number;
 
     next_line_found = false;
     find_next_line();
 
-    return current;
+    return std::make_pair(current, num);
 }

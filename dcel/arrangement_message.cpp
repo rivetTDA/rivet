@@ -327,13 +327,6 @@ bool operator==(ArrangementMessage const& left, ArrangementMessage const& right)
     return true;
 }
 
-template <typename T, typename U, typename ID>
-void set_if_valid(std::function<void(U)> func, std::vector<T> vec, ID id)
-{
-    if (id != ID::invalid()) {
-        func(vec[static_cast<long>(id)]);
-    }
-};
 Arrangement ArrangementMessage::to_arrangement() const
 {
     Arrangement arrangement;

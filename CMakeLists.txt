@@ -16,7 +16,7 @@ externalproject_add(
   )
 
 
-find_package(Boost COMPONENTS serialization system)
+find_package(Boost "1.60" COMPONENTS serialization system)
 
 #note this must come before add_executable or it will be ignored
 link_directories(${CMAKE_CURRENT_BINARY_DIR}/docopt/src/docopt_project-build)

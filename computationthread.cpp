@@ -27,8 +27,8 @@
 
 ComputationThread::ComputationThread(InputParameters& params, QObject* parent)
     : QThread(parent)
-    , params(params)
     , message()
+    , params(params)
 {
 }
 
@@ -140,6 +140,7 @@ void ComputationThread::compute_from_file()
                 archive >> *message;
                 archive >> *arrangement;
                 qDebug() << "ComputationThread::compute_from_file() : checkpoint B -- template_points.size() = " << message->template_points.size();
+                emit templatePointsReady(message);
             }
             //                qDebug() << "Arrangement received: " << arrangement->x_exact.size() << " x " << arrangement->y_exact.size();
             emit arrangementReady(arrangement);

@@ -160,7 +160,7 @@ void SimplexTree::build_dim_lists_recursively(STNode* node, unsigned cur_dim)
     //get children of current node
     std::vector<STNode*> kids = node->get_children();
 
-    //check dimensions and add childrein to appropriate list
+    //check dimensions and add children to appropriate list
     if (cur_dim == hom_dim - 1)
         ordered_low_simplices.insert(kids.begin(), kids.end());
     else if (cur_dim == hom_dim)
@@ -178,7 +178,10 @@ void SimplexTree::build_dim_lists_recursively(STNode* node, unsigned cur_dim)
 //requires a list of birth times (one for each point) and a list of distances between pairs of points
 //NOTE: automatically computes global indexes and dimension indexes
 //CONVENTION: the x-coordinate is "birth time" for points and the y-coordinate is "distance" between points
-void SimplexTree::build_VR_complex(std::vector<unsigned>& times, std::vector<unsigned>& distances, unsigned num_x, unsigned num_y)
+void SimplexTree::build_VR_complex(std::vector<unsigned>& times,
+    std::vector<unsigned>& distances,
+    unsigned num_x,
+    unsigned num_y)
 {
     x_grades = num_x;
     y_grades = num_y;
@@ -204,7 +207,14 @@ void SimplexTree::build_VR_complex(std::vector<unsigned>& times, std::vector<uns
 } //end build_VR_complex()
 
 //function to build (recursively) a subtree of the simplex tree
-void SimplexTree::build_VR_subtree(std::vector<unsigned>& times, std::vector<unsigned>& distances, STNode& parent, std::vector<unsigned>& parent_indexes, unsigned prev_time, unsigned prev_dist, unsigned cur_dim, unsigned& gic)
+void SimplexTree::build_VR_subtree(std::vector<unsigned>& times,
+    std::vector<unsigned>& distances,
+    STNode& parent,
+    std::vector<unsigned>& parent_indexes,
+    unsigned prev_time,
+    unsigned prev_dist,
+    unsigned cur_dim,
+    unsigned& gic)
 {
     //loop through all points that could be children of this node
     for (unsigned j = parent_indexes.back() + 1; j < times.size(); j++) {
@@ -460,8 +470,7 @@ void SimplexTree::write_boundary_column(MapMatrix* mat, STNode* sim, int col, in
     if (verts.size() == 1)
         return;
 
-//find all facets of this simplex
-#pragma OMP parallel for
+    //find all facets of this simplex
     for (unsigned k = 0; k < verts.size(); k++) {
         //facet vertices are all vertices in verts[] except verts[k]
         std::vector<int> facet;

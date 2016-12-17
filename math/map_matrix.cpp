@@ -3,8 +3,8 @@
  */
 
 #include "map_matrix.h"
-#include "debug.h"
 #include "bool_array.h"
+#include "debug.h"
 #include <numeric> //for std::accumulate
 #include <stdexcept> //for error-checking and debugging
 
