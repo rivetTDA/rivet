@@ -261,6 +261,9 @@ int main(int argc, char* argv[])
     progress.progress.connect([](int amount) {
         std::cout << "PROGRESS " << amount << std::endl;
     });
+    progress.setProgressMaximum.connect([](int amount) {
+        std::cout << "STEPS_IN_STAGE " << amount << std::endl;
+    });
     computation.arrangement_ready.connect([&arrangement_message, &params, binary](std::shared_ptr<Arrangement> arrangement) {
         arrangement_message = new ArrangementMessage(*arrangement);
         //TODO: this should become a system test with a known dataset

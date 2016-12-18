@@ -147,10 +147,12 @@ void ComputationThread::compute_from_file()
             return;
         } else if (line.startsWith("PROGRESS ")) {
             auto progress = line.mid(QString("PROGRESS ").length()).trimmed();
-            qDebug() << "***Progress is: " << progress;
             setCurrentProgress(progress.toInt());
         } else if (line.startsWith("STAGE")) {
             emit advanceProgressStage();
+        } else if (line.startsWith("STEPS_IN_STAGE")) {
+            auto steps = line.mid(QString("STEPS_IN_STAGE ").length()).trimmed();
+            emit setProgressMaximum(steps.toInt());
         } else if (line.startsWith("XI")) {
             reading_xi = true;
             ss.clear();
