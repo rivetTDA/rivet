@@ -42,29 +42,45 @@ class TokenReader {
 public:
     TokenReader(FileInputReader& reader)
         : reader(reader)
+          , tokens()
+            , it(tokens.end())
+            , line(0)
     {
     }
     bool has_next_token()
     {
-        if (it == tokens.end()) {
-            tokens = reader.next_line().first;
-            it = tokens.begin();
+        if (it != tokens.end()) {
+            return true;
         }
-        return it != tokens.end();
+        if (reader.has_next_line()) {
+            auto info = reader.next_line();
+            tokens = info.first;
+            line = info.second;
+            it = tokens.begin();
+            return true;
+        }
+        return false;
     }
 
     std::string next_token()
     {
         if (has_next_token()) {
-            return *it;
+            auto val = *it;
+            it++;
+            return val;
         }
         return "";
+    }
+
+    unsigned line_number() const {
+        return line;
     }
 
 private:
     FileInputReader& reader;
     std::vector<std::string> tokens;
     std::vector<std::string>::iterator it;
+    unsigned line;
 };
 
 //==================== InputManager class ====================
@@ -332,8 +348,10 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
 
     // STEP 1: read data file and store exact (rational) values of the function for each point
 
-    //first read the label for x-axis
+    //skip 'metric'
     auto line_info = reader.next_line();
+    line_info = reader.next_line();
+    //first read the label for x-axis
     try {
     data->x_label = line_info.first[0];
 
@@ -380,28 +398,35 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
         if (i < num_points - 1) //then there is at least one point after point i, and there should be another line to read
         {
             TokenReader tokens(reader);
-            for (unsigned j = i + 1; j < num_points; j++) {
-                //read distance between points i and j
-                if (!tokens.has_next_token())
-                    debug() << "ERROR: no distance between points" << i << "and" << j;
+            try {
+                for (unsigned j = i + 1; j < num_points; j++) {
+                    //read distance between points i and j
+                    if (!tokens.has_next_token())
+                        throw std::runtime_error("no distance between points " + std::to_string(i)
+                                                 + "and" + std::to_string(j));
 
-                std::string str = tokens.next_token();
-                debug() << str;
+                    std::string str = tokens.next_token();
+                    debug() << str;
 
-                exact cur_dist = str_to_exact(str);
+                    exact cur_dist = str_to_exact(str);
 
-                if (cur_dist <= max_dist) //then this distance is allowed
-                {
-                    //store distance value, if it doesn't exist already
-                    ret = dist_set.insert(new ExactValue(cur_dist));
+                    if (cur_dist <= max_dist) //then this distance is allowed
+                    {
+                        //store distance value, if it doesn't exist already
+                        ret = dist_set.insert(new ExactValue(cur_dist));
 
-                    //remember that the pair of points (i,j) has this distance value, which will go in entry j(j-1)/2 + i
-                    (*(ret.first))->indexes.push_back((j * (j - 1)) / 2 + i);
+                        //remember that the pair of points (i,j) has this distance value, which will go in entry j(j-1)/2 + i
+                        (*(ret.first))->indexes.push_back((j * (j - 1)) / 2 + i);
+                    }
                 }
+            } catch (std::exception &e) {
+                throw InputError(tokens.line_number(), e.what());
             }
         }
     } //end for
 
+    } catch (InputError &e) {
+        throw;
     } catch (std::exception &e) {
         throw InputError(line_info.second, e.what());
     }
@@ -429,6 +454,7 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
     }
 
     //build the Vietoris-Rips bifiltration from the discrete index vectors
+    data->simplex_tree.reset(new SimplexTree(input_params.dim, input_params.verbosity));
     data->simplex_tree->build_VR_complex(value_indexes, dist_indexes, data->x_exact.size(), data->y_exact.size());
 
     //clean up
@@ -457,6 +483,8 @@ std::unique_ptr<InputData> InputManager::read_bifiltration(std::ifstream& stream
 
     //read the label for y-axis
     data->y_label = join(reader.next_line().first);
+
+    data->simplex_tree.reset(new SimplexTree(input_params.dim, input_params.verbosity));
 
     //temporary data structures to store grades
     ExactSet x_set; //stores all unique x-alues; must DELETE all elements later!
