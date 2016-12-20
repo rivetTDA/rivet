@@ -45,6 +45,7 @@ SliceDiagram::SliceDiagram(ConfigParameters* params, std::vector<double>& x_grad
     , line_zero(0)
     , max_xi_value(0)
     , padding(20)
+    , created(false)
     , control_dot_moved(false)
     , PI(3.14159265358979323846)
 {
@@ -52,7 +53,11 @@ SliceDiagram::SliceDiagram(ConfigParameters* params, std::vector<double>& x_grad
 
 SliceDiagram::~SliceDiagram()
 {
-    ///TODO: IMPLEMENT THIS!!!
+    clear(); //removes and deletes all items from the QGraphicsScene
+
+    delete dot_left;
+    delete dot_right;
+    delete slice_line;
 }
 
 //receives an xi support point, which will be drawn when create_diagram() is called
@@ -66,6 +71,13 @@ void SliceDiagram::add_point(double x_coord, double y_coord, int xi0m, int xi1m,
         max_xi_value = xi1m;
     if (xi2m > max_xi_value)
         max_xi_value = xi2m;
+}
+
+//removes all previously-created points from the diagram
+void SliceDiagram::clear_points()
+{
+    points.clear();
+    max_xi_value = 0;
 }
 
 //NOTE: create_diagram() simply creates all objects; resize_diagram() handles positioning of objects
@@ -184,12 +196,15 @@ void SliceDiagram::create_diagram(const QString x_text, const QString y_text, do
 
     slice_line = new SliceLine(this, config_params);
     addItem(slice_line);
+    slice_line->hide();
 
     dot_left = new ControlDot(slice_line, true, config_params);
     addItem(dot_left);
+    dot_left->hide();
 
     dot_right = new ControlDot(slice_line, false, config_params);
     addItem(dot_right);
+    dot_right->hide();
 
     slice_line->setDots(dot_left, dot_right);
 
@@ -202,7 +217,23 @@ void SliceDiagram::create_diagram(const QString x_text, const QString y_text, do
 
     //update angle and offset boxes in VisualizationWindow
     update_window_controls(false);
+
+    //remember that the diagram has been created
+    created = true;
 } //end create_diagram()
+
+void SliceDiagram::enable_slice_line() //enables the slice line and control dots
+{
+    slice_line->show();
+    dot_left->show();
+    dot_right->show();
+}
+
+//removes all graphics elements from the diagram
+bool SliceDiagram::is_created()
+{
+    return created;
+}
 
 //resizes diagram to fill the QGraphicsView
 void SliceDiagram::resize_diagram()
