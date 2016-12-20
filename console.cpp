@@ -344,7 +344,7 @@ int main(int argc, char* argv[])
         input = inputManager.start(progress);
     } catch (const std::exception& e) {
         std::cerr << "INPUT ERROR: " << e.what() << std::endl;
-        std::cerr.flush();
+        std::cerr << "Exiting" << std::endl << std::flush;
         return 1;
     }
     if (identify) {
