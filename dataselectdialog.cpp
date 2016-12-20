@@ -99,22 +99,46 @@ void DataSelectDialog::detect_file_type()
         }
 
         bool raw = false;
+        QString partial("");
+        auto error_header_len = QString("INPUT ERROR: ").length();
+        auto error_footer_len = QString(" :END").length();
+        qDebug() << "Reading from console";
         while (console->canReadLine() || console->waitForReadyRead()) {
             QString line = console->readLine();
+            line = line.trimmed();
+            if (line.length() == 0)
+                continue;
             qDebug() << line;
             if (line.startsWith("RAW DATA: ")) {
                 raw = line.contains("1");
             } else if (line.startsWith("INPUT ERROR: ")) {
-                invalid_file(line.mid(QString("INPUT ERROR: ").length()));
+                if (line.endsWith(":END")) {
+                    line = line.mid(error_header_len, line.length() - (error_footer_len + error_header_len));
+                    invalid_file(line);
+                    break;
+                } else {
+                    qDebug() << "Partial:" << line;
+                    partial = line;
+                }
                 return;
             } else if (line.startsWith("FILE TYPE DESCRIPTION: ")) {
 
-                ui->fileTypeLabel->setText("This file appears to contain " + line.mid(QString("FILE TYPE DESCRIPTION: ").length()).trimmed() + ".");
+                ui->fileTypeLabel->setText("This file appears to contain " +
+                                               line.mid(QString("FILE TYPE DESCRIPTION: ").length()).trimmed() + ".");
                 QFileInfo fileInfo(QString::fromStdString(params.fileName));
                 ui->fileLabel->setText("Selected file: " + fileInfo.fileName());
 
                 //TODO: this updating of the params will need to happen in console also, need to refactor
                 params.shortName = fileInfo.fileName().toUtf8().constData();
+            } else if (partial.length() != 0) {
+                if (line.endsWith(":END")) {
+                    line = partial + line;
+                    line = line.mid(error_header_len, line.length() - (error_footer_len + error_header_len));
+                    invalid_file(line);
+                    break;
+                } else {
+                    partial = line;
+                }
             }
         }
         ui->parameterFrame->setEnabled(raw);
