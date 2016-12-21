@@ -37,9 +37,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 SliceDiagram::SliceDiagram(ConfigParameters* params, std::vector<double>& x_grades, std::vector<double>& y_grades, QObject* parent)
     : QGraphicsScene(parent)
     , config_params(params)
-    , dot_left()
-    , dot_right()
-    , slice_line()
+    , dot_left(nullptr)
+    , dot_right(nullptr)
+    , slice_line(nullptr)
     , x_grades(x_grades)
     , y_grades(y_grades)
     , line_zero(0)
@@ -54,10 +54,6 @@ SliceDiagram::SliceDiagram(ConfigParameters* params, std::vector<double>& x_grad
 SliceDiagram::~SliceDiagram()
 {
     clear(); //removes and deletes all items from the QGraphicsScene
-
-    delete dot_left;
-    delete dot_right;
-    delete slice_line;
 }
 
 //receives an xi support point, which will be drawn when create_diagram() is called
