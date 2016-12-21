@@ -1,5 +1,22 @@
-/* InputManager class
- */
+/**********************************************************************
+Copyright 2014-2016 The RIVET Devlopers. See the COPYRIGHT file at
+the top-level directory of this distribution.
+
+This file is part of RIVET.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+**********************************************************************/
 
 #include "input_manager.h"
 #include "../computation.h"
@@ -17,8 +34,6 @@
 
 //epsilon value for use in comparisons
 double ExactValue::epsilon = pow(2, -30);
-
-// function for determining whether or not a string is a number
 
 std::string join(const std::vector<std::string>& strings)
 {
@@ -137,7 +152,7 @@ std::unique_ptr<InputData> InputManager::start(Progress& progress)
     auto file_type = get_file_type(input_params.fileName);
     std::ifstream infile(input_params.fileName); //input file
     if (!infile.is_open()) {
-        throw std::runtime_error("Could not open input file");
+        throw std::runtime_error("Could not open input file.");
     }
     auto data = file_type.parser(infile, progress);
     data->file_type = file_type;
@@ -159,7 +174,7 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
     FileInputReader reader(stream);
     auto data = new InputData();
     if (verbosity >= 6) {
-        debug() << "  Found a point cloud file.";
+        debug() << "InputManager: Found a point cloud file.";
     }
     unsigned dimension;
     exact max_dist;
@@ -170,15 +185,19 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
     // STEP 1: read data file and store exact (rational) values
     //skip first line
     reader.next_line();
-    //read dimension of the points from the first line of the file
+
     auto line_info = reader.next_line();
     try {
+        //read dimension of the points from the first line of the file
         std::vector<std::string> dimension_line = line_info.first;
         if (dimension_line.size() != 1) {
             debug() << "There was more than one value in the expected dimension line."
                        " There may be a problem with your input file.  ";
         }
-        debug() << "Dimension: " << dimension_line[0];
+        if(verbosity >= 4) {
+            debug() << "  Point cloud lives in dimension:" << dimension_line[0];
+        }
+
         int dim = std::stoi(dimension_line[0]);
         if (dim < 1) {
             throw std::runtime_error("Dimension of data must be at least 1");
@@ -189,7 +208,7 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
         line_info = reader.next_line();
         std::vector<std::string> distance_line = line_info.first;
         if (distance_line.size() != 1) {
-            throw std::runtime_error("more than one value in the expected distance line.");
+            throw std::runtime_error("There was more than one value in the expected distance line.");
         }
 
         max_dist = str_to_exact(distance_line[0]);
@@ -200,7 +219,7 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
         if (verbosity >= 4) {
             std::ostringstream oss;
             oss << max_dist;
-            debug() << "  maximum distance: " << oss.str();
+            debug() << "  Maximum distance of edges in Vietoris-Rips complex:" << oss.str();
         }
 
         //read label for x-axis
@@ -232,17 +251,17 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
         throw InputError(line_info.second, e.what());
     }
     if (verbosity >= 4) {
-        debug() << "  read" << points.size() << "points; input finished";
+        debug() << "  Finished reading" << points.size() << "points. Input finished.";
     }
 
     if (points.empty()) {
-        throw std::runtime_error("No points loaded");
+        throw std::runtime_error("No points loaded.");
     }
 
     // STEP 2: compute distance matrix, and create ordered lists of all unique distance and time values
 
-    if (verbosity >= 6) {
-        debug() << "BUILDING DISTANCE AND TIME LISTS";
+    if (verbosity >= 4) {
+        debug() << "  Building lists of grade values.";
     }
     progress.advanceProgressStage();
 
@@ -314,13 +333,18 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
     //  2. a list of k(k-1)/2 discrete distances
     //  3. max dimension of simplices to construct, which is one more than the dimension of homology to be computed
 
-    if (verbosity >= 6) {
-        debug() << "BUILDING VIETORIS-RIPS BIFILTRATION";
+    if(verbosity >= 4) {
+        debug() << "  Building Vietoris-Rips bifiltration.";
+        debug() << "     x-grades: " << data->x_exact.size();
+        debug() << "     y-grades: " << data->y_exact.size();
     }
 
-    debug() << "x grades: " << data->x_exact.size() << " y grades: " << data->y_exact.size();
     data->simplex_tree.reset(new SimplexTree(input_params.dim, input_params.verbosity));
     data->simplex_tree->build_VR_complex(time_indexes, dist_indexes, data->x_exact.size(), data->y_exact.size());
+
+    if(verbosity >= 8) {
+        data->simplex_tree->print_bifiltration();
+    }
 
     //clean up
     for (ExactSet::iterator it = time_set.begin(); it != time_set.end(); ++it) {
@@ -338,10 +362,11 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
 std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstream& stream, Progress& progress)
 {
     if (verbosity >= 2) {
-        debug() << "  Found a discrete metric space file.";
+        debug() << "InputManager: Found a discrete metric space file.";
     }
     std::unique_ptr<InputData> data(new InputData);
     FileInputReader reader(stream);
+
     //prepare data structures
     ExactSet value_set; //stores all unique values of the function; must DELETE all elements later
     ExactSet dist_set; //stores all unique values of the distance metric; must DELETE all elements later
@@ -376,11 +401,11 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
         line_info = reader.next_line();
         exact max_dist;
         max_dist = str_to_exact(line_info.first[0]);
-        if (verbosity >= 4) {
-            std::ostringstream oss;
-            oss << max_dist;
-            debug() << "  maximum distance:" << oss.str();
-        }
+    if (verbosity >= 4) {
+        std::ostringstream oss;
+        oss << max_dist;
+        debug() << "  Maximum distance of edges in Vietoris-Rips complex:" << oss.str();
+    }
 
         std::pair<ExactSet::iterator, bool> ret; //for return value upon insert()
 
@@ -450,8 +475,10 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
 
     // STEP 4: build the bifiltration
 
-    if (verbosity >= 2) {
-        debug() << "BUILDING VIETORIS-RIPS BIFILTRATION";
+    if (verbosity >= 4) {
+        debug() << "  Building Vietoris-Rips bifiltration.";
+        debug() << "     x-grades: " << data->x_exact.size();
+        debug() << "     y-grades: " << data->y_exact.size();
     }
 
     //build the Vietoris-Rips bifiltration from the discrete index vectors
@@ -476,7 +503,7 @@ std::unique_ptr<InputData> InputManager::read_bifiltration(std::ifstream& stream
     std::unique_ptr<InputData> data(new InputData);
     FileInputReader reader(stream);
     if (verbosity >= 2) {
-        debug() << "  Found a bifiltration file.\n";
+        debug() << "InputManager: Found a bifiltration file.\n";
     }
 
     //Skip file type line
@@ -525,7 +552,6 @@ std::unique_ptr<InputData> InputManager::read_bifiltration(std::ifstream& stream
 
             //add the simplex to the simplex tree
             data->simplex_tree->add_simplex(verts, num_simplices, num_simplices); //multigrade to be set later!
-            ///TODO: FIX THE ABOVE FUNCTION!!!
             num_simplices++;
         } catch (std::exception& e) {
             throw InputError(line_info.second, "Could not read vertex: " + std::string(e.what()));
@@ -541,18 +567,6 @@ std::unique_ptr<InputData> InputManager::read_bifiltration(std::ifstream& stream
 
     build_grade_vectors(*data, x_set, x_indexes, data->x_exact, input_params.x_bins);
     build_grade_vectors(*data, y_set, y_indexes, data->y_exact, input_params.y_bins);
-
-    //TESTING
-    //    debug() << "x-grades sorted order:";
-    //    for(ExactSet::iterator it = x_set.begin(); it != x_set.end(); ++it)
-    //    {
-    //        std::ostringstream oss;
-    //        oss << (*it)->exact_value << " = " << (*it)->double_value;
-    //        debug() << "   " << oss.str();
-    //    }
-    //    debug() << "x-index vector:";
-    //    for(std::vector<unsigned>::iterator it = x_indexes.begin(); it != x_indexes.end(); ++it)
-    //        debug() << "   " << *it;
 
     //update simplex tree nodes
     data->simplex_tree->update_xy_indexes(x_indexes, y_indexes, data->x_exact.size(), data->y_exact.size());
@@ -578,6 +592,7 @@ std::unique_ptr<InputData> InputManager::read_RIVET_data(std::ifstream& stream, 
 {
     std::unique_ptr<InputData> data(new InputData);
     FileInputReader reader(stream);
+
     //read parameters
     auto line_info = reader.next_line();
     auto line = line_info.first;

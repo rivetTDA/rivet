@@ -1,3 +1,22 @@
+/**********************************************************************
+Copyright 2014-2016 The RIVET Devlopers. See the COPYRIGHT file at
+the top-level directory of this distribution.
+
+This file is part of RIVET.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+**********************************************************************/
 /**
  * \class	SimplexTree
  * \brief	Stores a bifiltered simplicial complex in a simplex tree structure.
@@ -6,7 +25,7 @@
  * 
  * The SimplexTree class stores a bifiltered simplicial complex in a simplex tree structure.
  * Each node in the simplex tree (implemented by the STNode class) represents one simplex in the bifiltration.
- * Each simplex has a multi-index at which it is born.
+ * Each simplex has a bigrade at which it is born.
  * Implementation is based on a 2012 paper by Boissonnat and Maria.
  */
 
@@ -21,6 +40,7 @@ class MapMatrix_Perm;
 #include "st_node.h"
 
 #include <set>
+#include <string>
 #include <vector>
 
 //struct SimplexData used for return type of SimplexTree::get_simplex_data()
@@ -106,6 +126,10 @@ public:
     //TESTING
     void print();
     void print_subtree(STNode* node, int indent);
+
+    //print bifiltration in the RIVET bifiltration input format
+    void print_bifiltration();
+    void print_bifiltration(STNode* node, std::string parent, int cur_dim, int print_dim);
 
 private:
     STNode* root; //root node of the simplex tree

@@ -1,3 +1,22 @@
+/**********************************************************************
+Copyright 2014-2016 The RIVET Devlopers. See the COPYRIGHT file at
+the top-level directory of this distribution.
+
+This file is part of RIVET.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+**********************************************************************/
 
 #include "computation.h"
 #include "dcel/arrangement.h"
@@ -85,7 +104,7 @@ void write_boost_file(InputParameters const& params, TemplatePointsMessage const
 {
     std::ofstream file(params.outputFile, std::ios::binary);
     if (!file.is_open()) {
-        throw std::runtime_error("Could not open " + params.outputFile + " for writing");
+        throw std::runtime_error("Could not open " + params.outputFile + " for writing.");
     }
     file << "RIVET_1\n";
     boost::archive::binary_oarchive oarchive(file);
@@ -196,16 +215,10 @@ void process_barcode_queries(std::string query_file_name, const ComputationResul
 
 int main(int argc, char* argv[])
 {
-    //        debug() << "CONSOLE RIVET" ;
-
     InputParameters params; //parameter values stored here
 
     std::map<std::string, docopt::value> args = docopt::docopt(USAGE, { argv + 1, argv + argc }, true,
         "RIVET Console 0.4");
-
-    // for (auto const &arg : args) {
-    //   std::cout << arg.first << ":" << arg.second ;
-    // }
 
     ArrangementMessage* arrangement_message = nullptr;
     TemplatePointsMessage* points_message = nullptr;
@@ -232,9 +245,11 @@ int main(int argc, char* argv[])
     }
     int verbosity = params.verbosity;
 
-    //        debug() << "X bins: " << params.x_bins ;
-    //        debug() << "Y bins: " << params.y_bins ;
-    //        debug() << "Verbosity: " << params.verbosity ;
+    if(params.verbosity >= 8) {
+        debug() << "X bins: " << params.x_bins ;
+        debug() << "Y bins: " << params.y_bins ;
+        debug() << "Verbosity: " << params.verbosity ;
+    }
 
     InputManager inputManager(params);
     Progress progress;
@@ -245,6 +260,9 @@ int main(int argc, char* argv[])
     });
     progress.progress.connect([](int amount) {
         std::cout << "PROGRESS " << amount << std::endl;
+    });
+    progress.setProgressMaximum.connect([](int amount) {
+        std::cout << "STEPS_IN_STAGE " << amount << std::endl;
     });
     computation.arrangement_ready.connect([&arrangement_message, &params, binary](std::shared_ptr<Arrangement> arrangement) {
         arrangement_message = new ArrangementMessage(*arrangement);
@@ -337,20 +355,16 @@ int main(int argc, char* argv[])
         std::cout.flush();
         return 0;
     }
-    if (params.verbosity >= 2) {
-        debug() << "Input processed";
+    if (params.verbosity >= 4) {
+        debug() << "Input processed.";
     }
     auto result = computation.compute(*input);
     if (params.verbosity >= 2) {
-        debug() << "Computation complete";
+        debug() << "Computation complete; augmented arrangement ready.";
     }
     auto arrangement = result->arrangement;
-    //TESTING: print arrangement info and verify consistency
-    arrangement->print_stats();
-    arrangement->test_consistency();
-
-    if (params.verbosity >= 2) {
-        debug() << "COMPUTATION FINISHED.";
+    if(params.verbosity >= 4) {
+        arrangement->print_stats();
     }
 
     if (!slices.empty()) {
@@ -377,6 +391,6 @@ int main(int argc, char* argv[])
             throw std::runtime_error(ss.str());
         }
     }
-    debug() << "CONSOLE RIVET: Goodbye";
+    debug() << "CONSOLE RIVET: Goodbye!";
     return 0;
 }

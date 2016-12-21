@@ -1,3 +1,23 @@
+/**********************************************************************
+Copyright 2014-2016 The RIVET Devlopers. See the COPYRIGHT file at
+the top-level directory of this distribution.
+
+This file is part of RIVET.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+**********************************************************************/
+
 #ifndef SLICE_DIAGRAM_H
 #define SLICE_DIAGRAM_H
 
@@ -27,8 +47,11 @@ public:
     ~SliceDiagram();
 
     void add_point(double x_coord, double y_coord, int xi0m, int xi1m, int xi2m); //receives an xi support point, which will be drawn when create_diagram() is called
+    void clear_points(); //removes all previously-created points from the diagram
 
     void create_diagram(const QString x_text, const QString y_text, double xmin, double xmax, double ymin, double ymax, bool norm_coords, unsigned_matrix& hom_dims); //simply creates all objects; resize_diagram() handles positioning of objects
+    void enable_slice_line(); //enables the slice line and control dots
+    bool is_created(); //true if the diagram has been created; false otherwise
     void resize_diagram(); //resizes diagram to fill the QGraphicsView
     void redraw_dim_rects(); //redraws the rectangles for the homology dimension visualization
     void redraw_dots(); //redraws the support points of the multigraded Betti numbers
@@ -134,6 +157,7 @@ private:
 
     const int padding; //distance between xi support point area and control rectangle (on the top and right sides)
 
+    bool created; //true once the diagram has been created
     bool control_dot_moved; //true if line is moved by a ControlDot -- used as part of a hack to make barcode display in the proper position relative to the line
 
     const double PI; //used in get_pd_scale() when the slice line is vertical

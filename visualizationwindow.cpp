@@ -100,21 +100,26 @@ void VisualizationWindow::start_computation()
 void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMessage> points)
 {
     qDebug() << "Received template points";
+
     template_points = points;
-    //First load our local copies of the data
+
+    //first load our local copies of the data
     grades = Grades(template_points->x_exact, template_points->y_exact);
 
     //send xi support points to the SliceDiagram
+    slice_diagram.clear_points();
     for (auto point : template_points->template_points)
         slice_diagram.add_point(grades.x[point.x], grades.y[point.y], point.zero, point.one, point.two);
 
     //create the SliceDiagram
-    slice_diagram.create_diagram(
-        QString::fromStdString(template_points->x_label),
-        QString::fromStdString(template_points->y_label),
-        grades.x.front(), grades.x.back(),
-        grades.y.front(), grades.y.back(),
-        ui->normCoordCheckBox->isChecked(), template_points->homology_dimensions);
+    if(!slice_diagram.is_created()) {
+        slice_diagram.create_diagram(
+            QString::fromStdString(template_points->x_label),
+            QString::fromStdString(template_points->y_label),
+            grades.x.front(), grades.x.back(),
+            grades.y.front(), grades.y.back(),
+            ui->normCoordCheckBox->isChecked(), template_points->homology_dimensions);
+    }
 
     //enable control items
     ui->BettiLabel->setEnabled(true);
@@ -122,10 +127,6 @@ void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMe
     ui->xi1CheckBox->setEnabled(true);
     ui->xi2CheckBox->setEnabled(true);
     ui->normCoordCheckBox->setEnabled(true);
-    ui->angleLabel->setEnabled(true);
-    ui->angleDoubleSpinBox->setEnabled(true);
-    ui->offsetLabel->setEnabled(true);
-    ui->offsetSpinBox->setEnabled(true);
 
     //update offset extents
     ///TODO: maybe these extents should be updated dynamically, based on the slope of the slice line
@@ -164,7 +165,12 @@ void VisualizationWindow::augmented_arrangement_ready(std::shared_ptr<Arrangemen
 
     slice_diagram.draw_barcode(*barcode, zero_coord, ui->barcodeCheckBox->isChecked());
 
-    //enable control items
+    //enable slice diagram control items
+    slice_diagram.enable_slice_line();
+    ui->angleLabel->setEnabled(true);
+    ui->angleDoubleSpinBox->setEnabled(true);
+    ui->offsetLabel->setEnabled(true);
+    ui->offsetSpinBox->setEnabled(true);
     ui->barcodeCheckBox->setEnabled(true);
 
     //update status
