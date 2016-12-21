@@ -25,7 +25,12 @@ int main(int argc, char* argv[])
 
     //define the command line options
     QCommandLineParser parser;
-    parser.setApplicationDescription(QCoreApplication::translate("main", "RIVET: Rank Invariant Visualization and Exploration Tool"));
+    parser.setApplicationDescription(
+            QCoreApplication::translate("main",
+                                        "RIVET: Rank Invariant Visualization and Exploration Tool\n"
+            "This is the RIVET viewer (GUI) application.\n"
+    "There is also a command line tool called rivet_console.\n\n"
+            "for more information, see the RIVET website at https://rivet.online"));
     auto helpOption = parser.addHelpOption();
     auto versionOption = parser.addVersionOption();
     QCommandLineOption verbosityOption(QStringList() << "V"
