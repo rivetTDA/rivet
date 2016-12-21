@@ -136,7 +136,7 @@ void DataSelectDialog::detect_file_type()
                     invalid_file(line);
                     break;
                 } else {
-                    partial = line;
+                    partial += line;
                 }
             }
         }

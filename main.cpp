@@ -35,7 +35,8 @@ int main(int argc, char* argv[])
     auto versionOption = parser.addVersionOption();
     QCommandLineOption verbosityOption(QStringList() << "V"
                                                      << "verbosity",
-        QCoreApplication::translate("main", "Verbosity level: 0 (no console output) to 10 (lots of output)."), QCoreApplication::translate("main", "integer"), "2");
+        QCoreApplication::translate("main", "Verbosity level: 0 (no console output) to 10 (lots of output)."),
+                                       QCoreApplication::translate("main", "integer"), "2");
     parser.addOption(verbosityOption);
 
     //parse the command line options
