@@ -42,9 +42,9 @@ class TokenReader {
 public:
     TokenReader(FileInputReader& reader)
         : reader(reader)
-          , tokens()
-            , it(tokens.end())
-            , line(0)
+        , tokens()
+        , it(tokens.end())
+        , line(0)
     {
     }
     bool has_next_token()
@@ -72,7 +72,8 @@ public:
         return "";
     }
 
-    unsigned line_number() const {
+    unsigned line_number() const
+    {
         return line;
     }
 
@@ -175,7 +176,7 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
         std::vector<std::string> dimension_line = line_info.first;
         if (dimension_line.size() != 1) {
             debug() << "There was more than one value in the expected dimension line."
-                    " There may be a problem with your input file.  ";
+                       " There may be a problem with your input file.  ";
         }
         debug() << "Dimension: " << dimension_line[0];
         int dim = std::stoi(dimension_line[0]);
@@ -227,7 +228,7 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
             DataPoint p(tokens);
             points.push_back(p);
         }
-    } catch (std::exception &e) {
+    } catch (std::exception& e) {
         throw InputError(line_info.second, e.what());
     }
     if (verbosity >= 4) {
@@ -353,81 +354,81 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
     line_info = reader.next_line();
     //first read the label for x-axis
     try {
-    data->x_label = line_info.first[0];
+        data->x_label = line_info.first[0];
 
-    //now read the values
-    line_info = reader.next_line();
-    std::vector<std::string> line = line_info.first;
-    std::vector<exact> values;
-    values.reserve(line.size());
+        //now read the values
+        line_info = reader.next_line();
+        std::vector<std::string> line = line_info.first;
+        std::vector<exact> values;
+        values.reserve(line.size());
 
-    for (size_t i = 0; i < line.size(); i++) {
-        values.push_back(str_to_exact(line.at(i)));
-    }
-
-    // STEP 2: read data file and store exact (rational) values for all distances
-
-    //first read the label for y-axis
-    line_info = reader.next_line();
-    data->y_label = join(line_info.first);
-
-    //read the maximum length of edges to construct
-    line_info = reader.next_line();
-    exact max_dist;
-        max_dist = str_to_exact(line_info.first[0]);
-    if (verbosity >= 4) {
-        std::ostringstream oss;
-        oss << max_dist;
-        debug() << "  maximum distance:" << oss.str();
-    }
-
-    std::pair<ExactSet::iterator, bool> ret; //for return value upon insert()
-
-    dist_set.insert(new ExactValue(exact(0))); //distance from a point to itself is always zero
-
-    //consider all points
-    num_points = values.size();
-    for (unsigned i = 0; i < num_points; i++) {
-        //store value, if it doesn't exist already
-        ret = value_set.insert(new ExactValue(values[i]));
-
-        //remember that point i has this value
-        (*(ret.first))->indexes.push_back(i);
-
-        //read distances from this point to all following points
-        if (i < num_points - 1) //then there is at least one point after point i, and there should be another line to read
-        {
-            TokenReader tokens(reader);
-            try {
-                for (unsigned j = i + 1; j < num_points; j++) {
-                    //read distance between points i and j
-                    if (!tokens.has_next_token())
-                        throw std::runtime_error("no distance between points " + std::to_string(i)
-                                                 + "and" + std::to_string(j));
-
-                    std::string str = tokens.next_token();
-                    debug() << str;
-
-                    exact cur_dist = str_to_exact(str);
-
-                    if (cur_dist <= max_dist) //then this distance is allowed
-                    {
-                        //store distance value, if it doesn't exist already
-                        ret = dist_set.insert(new ExactValue(cur_dist));
-
-                        //remember that the pair of points (i,j) has this distance value, which will go in entry j(j-1)/2 + i
-                        (*(ret.first))->indexes.push_back((j * (j - 1)) / 2 + i);
-                    }
-                }
-            } catch (std::exception &e) {
-                throw InputError(tokens.line_number(), e.what());
-            }
+        for (size_t i = 0; i < line.size(); i++) {
+            values.push_back(str_to_exact(line.at(i)));
         }
-    } //end for
 
-    } catch (InputError &e) {
+        // STEP 2: read data file and store exact (rational) values for all distances
+
+        //first read the label for y-axis
+        line_info = reader.next_line();
+        data->y_label = join(line_info.first);
+
+        //read the maximum length of edges to construct
+        line_info = reader.next_line();
+        exact max_dist;
+        max_dist = str_to_exact(line_info.first[0]);
+        if (verbosity >= 4) {
+            std::ostringstream oss;
+            oss << max_dist;
+            debug() << "  maximum distance:" << oss.str();
+        }
+
+        std::pair<ExactSet::iterator, bool> ret; //for return value upon insert()
+
+        dist_set.insert(new ExactValue(exact(0))); //distance from a point to itself is always zero
+
+        //consider all points
+        num_points = values.size();
+        for (unsigned i = 0; i < num_points; i++) {
+            //store value, if it doesn't exist already
+            ret = value_set.insert(new ExactValue(values[i]));
+
+            //remember that point i has this value
+            (*(ret.first))->indexes.push_back(i);
+
+            //read distances from this point to all following points
+            if (i < num_points - 1) //then there is at least one point after point i, and there should be another line to read
+            {
+                TokenReader tokens(reader);
+                try {
+                    for (unsigned j = i + 1; j < num_points; j++) {
+                        //read distance between points i and j
+                        if (!tokens.has_next_token())
+                            throw std::runtime_error("no distance between points " + std::to_string(i)
+                                + "and" + std::to_string(j));
+
+                        std::string str = tokens.next_token();
+                        debug() << str;
+
+                        exact cur_dist = str_to_exact(str);
+
+                        if (cur_dist <= max_dist) //then this distance is allowed
+                        {
+                            //store distance value, if it doesn't exist already
+                            ret = dist_set.insert(new ExactValue(cur_dist));
+
+                            //remember that the pair of points (i,j) has this distance value, which will go in entry j(j-1)/2 + i
+                            (*(ret.first))->indexes.push_back((j * (j - 1)) / 2 + i);
+                        }
+                    }
+                } catch (std::exception& e) {
+                    throw InputError(tokens.line_number(), e.what());
+                }
+            }
+        } //end for
+
+    } catch (InputError& e) {
         throw;
-    } catch (std::exception &e) {
+    } catch (std::exception& e) {
         throw InputError(line_info.second, e.what());
     }
     progress.advanceProgressStage(); //advance progress box to stage 2: building bifiltration
@@ -500,13 +501,11 @@ std::unique_ptr<InputData> InputManager::read_bifiltration(std::ifstream& stream
 
             if (tokens.size() > std::numeric_limits<unsigned>::max()) {
                 throw InputError(line_info.second,
-                                 "line longer than " + std::to_string(std::numeric_limits<unsigned>::max()) +
-                                 " tokens");
+                    "line longer than " + std::to_string(std::numeric_limits<unsigned>::max()) + " tokens");
             }
 
             //read dimension of simplex
-            unsigned dim = static_cast<unsigned>(tokens.size() -
-                                                 3); //-3 because a n-simplex has (n+1) vertices, and the line also contains two grade values
+            unsigned dim = static_cast<unsigned>(tokens.size() - 3); //-3 because a n-simplex has (n+1) vertices, and the line also contains two grade values
 
             //read vertices
             std::vector<int> verts;

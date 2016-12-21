@@ -123,8 +123,7 @@ void DataSelectDialog::detect_file_type()
                 return;
             } else if (line.startsWith("FILE TYPE DESCRIPTION: ")) {
 
-                ui->fileTypeLabel->setText("This file appears to contain " +
-                                               line.mid(QString("FILE TYPE DESCRIPTION: ").length()).trimmed() + ".");
+                ui->fileTypeLabel->setText("This file appears to contain " + line.mid(QString("FILE TYPE DESCRIPTION: ").length()).trimmed() + ".");
                 QFileInfo fileInfo(QString::fromStdString(params.fileName));
                 ui->fileLabel->setText("Selected file: " + fileInfo.fileName());
 
