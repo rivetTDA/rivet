@@ -479,6 +479,9 @@ std::unique_ptr<InputData> InputManager::read_bifiltration(std::ifstream& stream
         debug() << "  Found a bifiltration file.\n";
     }
 
+    //Skip file type line
+    reader.next_line();
+
     //read the label for x-axis
     data->x_label = join(reader.next_line().first);
 
@@ -488,8 +491,8 @@ std::unique_ptr<InputData> InputManager::read_bifiltration(std::ifstream& stream
     data->simplex_tree.reset(new SimplexTree(input_params.dim, input_params.verbosity));
 
     //temporary data structures to store grades
-    ExactSet x_set; //stores all unique x-alues; must DELETE all elements later!
-    ExactSet y_set; //stores all unique x-alues; must DELETE all elements later!
+    ExactSet x_set; //stores all unique x-values; must DELETE all elements later!
+    ExactSet y_set; //stores all unique x-values; must DELETE all elements later!
     std::pair<ExactSet::iterator, bool> ret; //for return value upon insert()
 
     //read simplices
