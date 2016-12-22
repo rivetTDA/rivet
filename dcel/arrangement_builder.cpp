@@ -217,8 +217,9 @@ void ArrangementBuilder::build_interior(std::shared_ptr<Arrangement> arrangement
         //        }
 
         if (last_pos != first_pos + 1) {
-            debug() << "ERROR: intersection between non-consecutive curves [1]: x = " << sweep->x << "\n";
-            throw std::exception();
+            throw std::runtime_error("intersection between non-consecutive curves [1]: x = "
+                                     + std::to_string(sweep->x) + ", last_pos = " + std::to_string(last_pos)
+            + std::to_string(last_pos) + ", first_pos + 1 = " + std::to_string(first_pos + 1));
         }
 
         //find out if more than two curves intersect at this point
@@ -227,8 +228,7 @@ void ArrangementBuilder::build_interior(std::shared_ptr<Arrangement> arrangement
             crossings.pop();
 
             if (cur->b->get_position() != last_pos + 1) {
-                debug() << "ERROR: intersection between non-consecutive curves [2]\n";
-                throw std::exception();
+                throw std::runtime_error("intersection between non-consecutive curves [2]");
             }
 
             last_pos++; //last_pos = cur->b->get_position();
@@ -348,7 +348,7 @@ void ArrangementBuilder::build_interior(std::shared_ptr<Arrangement> arrangement
         if (verbosity >= 2) {
             status_counter++;
             if (status_counter % status_interval == 0)
-                debug() << "      processed" << status_counter << "intersections; sweep position =" << *sweep;
+                debug() << "      processed" << status_counter << "intersections"; //TODO: adding this makes debug go into an infinite loop: <<  "sweep position =" << *sweep;
         }
     } //end while
 
