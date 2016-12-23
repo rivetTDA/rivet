@@ -132,7 +132,6 @@ std::unique_ptr<Barcode> BarcodeTemplate::rescale(double angle, double offset,
 
     //loop through bars
     for (std::set<BarTemplate>::iterator it = this->begin(); it != this->end(); ++it) {
-        qDebug() << "BarTemplate: " << it->begin << " " << it->end;
         assert(it->begin < template_points.size());
         TemplatePoint begin = template_points[it->begin];
         double birth = project(begin, angle, offset, grades);
@@ -146,11 +145,9 @@ std::unique_ptr<Barcode> BarcodeTemplate::rescale(double angle, double offset,
                     } else { //increment the multiplicity
                         ibit->second += it->multiplicity;
                     }
-                    qDebug() << "   ===>>> added to infinite_bars list; multiplicity" << it->multiplicity;
                 }
                 else { //then add the bar to the barcode -- no combining will be necessary
                     bc->add_bar(birth, rivet::numeric::INFTY, it->multiplicity);
-                    qDebug() << "   ===>>> (" << it->begin << "," << it->end << ") |---> (" << birth << ", INF ) x" << it->multiplicity;
                 }
             } else { //then compute endpoint of bar (may still be infinite, but only for for horizontal or vertical lines)
                 assert(it->end < template_points.size());
@@ -163,15 +160,9 @@ std::unique_ptr<Barcode> BarcodeTemplate::rescale(double angle, double offset,
                     } else { //increment the multiplicity
                         ibit->second += it->multiplicity;
                     }
-                    qDebug() << "   ===>>> added to infinite_bars list; multiplicity" << it->multiplicity;
                 } else { //then add (finite) bar to the barcode
                     bc->add_bar(birth, death, it->multiplicity);
-                    qDebug() << "   ===>>> (" << it->begin << "," << it->end << ") |---> (" << birth << "," << death << ") x" << it->multiplicity;
                 }
-
-                //testing
-                if (birth > death)
-                    qDebug() << "=====>>>>> ERROR: inverted bar (" << birth << "," << death << ")";
             }
         }
     }
@@ -181,7 +172,6 @@ std::unique_ptr<Barcode> BarcodeTemplate::rescale(double angle, double offset,
         for( std::map<unsigned,unsigned>::iterator it = infinite_bars.begin(); it != infinite_bars.end(); ++it ) {
             double birth = project(template_points[it->first], angle, offset, grades);
             bc->add_bar(birth, rivet::numeric::INFTY, it->second);
-            qDebug() << "   ===>>> (" << it->first << ", INF ) |---> (" << birth << ", INF ) x" << it->second;
         }
     }
 
