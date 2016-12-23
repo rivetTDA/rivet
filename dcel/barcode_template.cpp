@@ -4,6 +4,7 @@
 #include <dcel/barcode.h>
 #include <math/template_point.h>
 #include <numerics.h>
+#include <map>
 #include <vector>
 
 #include "debug.h"
@@ -127,29 +128,60 @@ std::unique_ptr<Barcode> BarcodeTemplate::rescale(double angle, double offset,
 {
     std::unique_ptr<Barcode> bc = std::unique_ptr<Barcode>(new Barcode());
 
+    std::map<unsigned, unsigned> infinite_bars; //used for combining infinite bars (only necessary for vertical or horizontal lines)
+
     //loop through bars
     for (std::set<BarTemplate>::iterator it = this->begin(); it != this->end(); ++it) {
-        //        qDebug() << "BarTemplate: " << it->begin << " " << it->end;
+        qDebug() << "BarTemplate: " << it->begin << " " << it->end;
         assert(it->begin < template_points.size());
         TemplatePoint begin = template_points[it->begin];
         double birth = project(begin, angle, offset, grades);
 
-        if (birth != rivet::numeric::INFTY) //then bar exists in this rescaling
-        {
-            if (it->end >= template_points.size()) //then endpoint is at infinity
-            {
-                bc->add_bar(birth, rivet::numeric::INFTY, it->multiplicity);
-            } else //then bar is finite
-            {
+        if (birth != rivet::numeric::INFTY) { //then bar exists in this rescaling
+            if (it->end >= template_points.size()) { //then endpoint is at infinity
+                if(angle == 0 || angle == 90) { //then add bar to the list of infinite bars, since we may need to combine bars
+                    std::map<unsigned, unsigned>::iterator ibit = infinite_bars.find(it->begin);
+                    if(ibit == infinite_bars.end()) { //add a new item
+                        infinite_bars.insert( std::pair<unsigned, unsigned>(it->begin, it->multiplicity) );
+                    } else { //increment the multiplicity
+                        ibit->second += it->multiplicity;
+                    }
+                    qDebug() << "   ===>>> added to infinite_bars list; multiplicity" << it->multiplicity;
+                }
+                else { //then add the bar to the barcode -- no combining will be necessary
+                    bc->add_bar(birth, rivet::numeric::INFTY, it->multiplicity);
+                    qDebug() << "   ===>>> (" << it->begin << "," << it->end << ") |---> (" << birth << ", INF ) x" << it->multiplicity;
+                }
+            } else { //then compute endpoint of bar (may still be infinite, but only for for horizontal or vertical lines)
                 assert(it->end < template_points.size());
                 TemplatePoint end = template_points[it->end];
                 double death = project(end, angle, offset, grades);
-                bc->add_bar(birth, death, it->multiplicity);
+                if(death == rivet::numeric::INFTY) { //add bar to the list of infinite bars
+                    std::map<unsigned, unsigned>::iterator ibit = infinite_bars.find(it->begin);
+                    if(ibit == infinite_bars.end()) { //add a new item
+                        infinite_bars.insert( std::pair<unsigned, unsigned>(it->begin, it->multiplicity) );
+                    } else { //increment the multiplicity
+                        ibit->second += it->multiplicity;
+                    }
+                    qDebug() << "   ===>>> added to infinite_bars list; multiplicity" << it->multiplicity;
+                } else { //then add (finite) bar to the barcode
+                    bc->add_bar(birth, death, it->multiplicity);
+                    qDebug() << "   ===>>> (" << it->begin << "," << it->end << ") |---> (" << birth << "," << death << ") x" << it->multiplicity;
+                }
 
-                //                //testing
-                //                if (birth > death)
-                //                    qDebug() << "=====>>>>> ERROR: inverted bar (" << birth << "," << death << ")";
+                //testing
+                if (birth > death)
+                    qDebug() << "=====>>>>> ERROR: inverted bar (" << birth << "," << death << ")";
             }
+        }
+    }
+
+    //if the line is vertical or horizontal, we must now add the vertical bars
+    if(angle == 0 || angle == 90) {
+        for( std::map<unsigned,unsigned>::iterator it = infinite_bars.begin(); it != infinite_bars.end(); ++it ) {
+            double birth = project(template_points[it->first], angle, offset, grades);
+            bc->add_bar(birth, rivet::numeric::INFTY, it->second);
+            qDebug() << "   ===>>> (" << it->first << ", INF ) |---> (" << birth << ", INF ) x" << it->second;
         }
     }
 
