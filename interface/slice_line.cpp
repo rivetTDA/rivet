@@ -306,6 +306,8 @@ void SliceLine::mouseMoveEvent(QGraphicsSceneMouseEvent* event)
             vertical = false;
             if (event->pos().y() > 0)
                 slope = event->pos().y() / event->pos().x();
+            else
+                slope = 0;
         }
 
         //adjust right endpoint of line to stay on right/top edge of box
