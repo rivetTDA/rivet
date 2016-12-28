@@ -255,14 +255,14 @@ int main(int argc, char* argv[])
     Progress progress;
     Computation computation(params, progress);
     progress.advanceProgressStage.connect([] {
-        std::cout << "STAGE" << std::endl;
+        std::clog << "STAGE" << std::endl;
 
     });
     progress.progress.connect([](int amount) {
-        std::cout << "PROGRESS " << amount << std::endl;
+        std::clog << "PROGRESS " << amount << std::endl;
     });
     progress.setProgressMaximum.connect([](int amount) {
-        std::cout << "STEPS_IN_STAGE " << amount << std::endl;
+        std::clog << "STEPS_IN_STAGE " << amount << std::endl;
     });
     computation.arrangement_ready.connect([&arrangement_message, &params, binary](std::shared_ptr<Arrangement> arrangement) {
         arrangement_message = new ArrangementMessage(*arrangement);
@@ -295,7 +295,7 @@ int main(int argc, char* argv[])
         if (binary) {
             std::cout << "ARRANGEMENT: " << params.outputFile << std::endl;
         } else {
-            std::cout << "Wrote arrangement to " << params.outputFile << std::endl;
+            std::clog << "Wrote arrangement to " << params.outputFile << std::endl;
         }
     });
     computation.template_points_ready.connect([&points_message, binary, betti_only, verbosity](TemplatePointsMessage message) {
