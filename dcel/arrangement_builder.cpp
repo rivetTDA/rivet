@@ -1,3 +1,22 @@
+/**********************************************************************
+Copyright 2014-2016 The RIVET Devlopers. See the COPYRIGHT file at
+the top-level directory of this distribution.
+
+This file is part of RIVET.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+**********************************************************************/
 //
 // Created by Bryn Keller on 6/28/16.
 //
@@ -34,7 +53,6 @@ std::shared_ptr<Arrangement> ArrangementBuilder::build_arrangement(MultiBetti& m
     std::vector<TemplatePoint>& template_points,
     Progress& progress)
 {
-    debug() << "build_arrangement with multibetti";
     Timer timer;
 
     //first, create PersistenceUpdater
@@ -42,27 +60,37 @@ std::shared_ptr<Arrangement> ArrangementBuilder::build_arrangement(MultiBetti& m
     progress.progress(10);
     std::shared_ptr<Arrangement> arrangement(new Arrangement(x_exact, y_exact, verbosity));
     PersistenceUpdater updater(*arrangement, mb.bifiltration, template_points, verbosity); //PersistenceUpdater object is able to do the calculations necessary for finding anchors and computing barcode templates
-    debug() << "  --> finding anchors took " << timer.elapsed() << " milliseconds";
+    if(verbosity >= 2) {
+        debug() << "Anchors found; this took " << timer.elapsed() << " milliseconds.";
+    }
 
     //now that we have all the anchors, we can build the interior of the arrangement
     progress.progress(25);
     timer.restart();
     build_interior(arrangement);
-    debug() << "  --> building the interior of the line arrangement took " << timer.elapsed() << " milliseconds";
-    arrangement->print_stats();
+    if(verbosity >= 2) {
+        debug() << "Line arrangement constructed; this took " << timer.elapsed() << " milliseconds.";
+        if(verbosity >= 4) {
+            arrangement->print_stats();
+        }
+    }
 
     //compute the edge weights
     progress.progress(50);
     timer.restart();
     find_edge_weights(*arrangement, updater);
-    debug() << "  --> computing the edge weights took " << timer.elapsed() << " milliseconds";
+    if(verbosity >= 2) {
+        debug() << "Edge weights computed; this took " << timer.elapsed() << " milliseconds.";
+    }
 
     //now that the arrangement is constructed, we can find a path -- NOTE: path starts with a (near-vertical) line to the right of all multigrades
     progress.progress(75);
     std::vector<std::shared_ptr<Halfedge>> path;
     timer.restart();
     find_path(*arrangement, path);
-    debug() << "  --> finding the path took " << timer.elapsed() << " milliseconds";
+    if(verbosity >= 2) {
+        debug() << "Found path through the arrangement; this took " << timer.elapsed() << " milliseconds.";
+    }
 
     //update the progress dialog box
     progress.advanceProgressStage(); //update now in stage 5 (compute discrete barcodes)
@@ -88,14 +116,20 @@ std::shared_ptr<Arrangement> ArrangementBuilder::build_arrangement(std::vector<e
     SimplexTree dummy_tree(0, 0);
     std::shared_ptr<Arrangement> arrangement(new Arrangement(x_exact, y_exact, verbosity));
     PersistenceUpdater updater(*arrangement, dummy_tree, xi_pts, verbosity); //we only use the PersistenceUpdater to find and store the anchors
-    debug() << "  --> finding anchors took " << timer.elapsed() << " milliseconds";
+    if(verbosity >= 2) {
+        debug() << "Anchors found; this took " << timer.elapsed() << " milliseconds.";
+    }
 
     //now that we have all the anchors, we can build the interior of the arrangement
     progress.progress(30);
     timer.restart();
     build_interior(arrangement); ///TODO: build_interior() should update its status!
-    debug() << "  --> building the interior of the line arrangement took" << timer.elapsed() << "milliseconds";
-    arrangement->print_stats();
+    if(verbosity >= 2) {
+        debug() << "Line arrangement constructed; this took " << timer.elapsed() << " milliseconds.";
+        if(verbosity >= 4) {
+            arrangement->print_stats();
+        }
+    }
 
     //check
     if (arrangement->faces.size() != barcode_templates.size()) {
@@ -103,8 +137,8 @@ std::shared_ptr<Arrangement> ArrangementBuilder::build_arrangement(std::vector<e
         ss << "Number of faces: " << arrangement->faces.size()
            << " does not match number of barcode templates: " << barcode_templates.size();
         throw std::runtime_error(ss.str());
-    } else {
-        debug() << "number of faces = number of barcode templates";
+    } else if(verbosity >= 4) {
+        debug() << "Check: number of faces = number of barcode templates";
     }
 
     //now store the barcode templates
@@ -120,7 +154,7 @@ std::shared_ptr<Arrangement> ArrangementBuilder::build_arrangement(std::vector<e
 //   boundary of the arrangement is created (as in the arrangement constructor)
 void ArrangementBuilder::build_interior(std::shared_ptr<Arrangement> arrangement)
 {
-    if (verbosity >= 6) {
+    if (verbosity >= 8) {
         debug() << "BUILDING ARRANGEMENT:  Anchors sorted for left edge of strip: ";
         for (std::set<std::shared_ptr<Anchor>, Anchor_LeftComparator>::iterator it = arrangement->all_anchors.begin();
              it != arrangement->all_anchors.end(); ++it)
@@ -141,7 +175,7 @@ void ArrangementBuilder::build_interior(std::shared_ptr<Arrangement> arrangement
     std::set<Anchor_pair> considered_pairs;
 
     // PART 1: INSERT VERTICES AND EDGES ALONG LEFT EDGE OF THE ARRANGEMENT
-    if (verbosity >= 6) {
+    if (verbosity >= 8) {
         debug() << "PART 1: LEFT EDGE OF ARRANGEMENT";
     }
 
@@ -152,7 +186,7 @@ void ArrangementBuilder::build_interior(std::shared_ptr<Arrangement> arrangement
          it != arrangement->all_anchors.end(); ++it) {
         std::shared_ptr<Anchor> cur_anchor = *it;
 
-        if (verbosity >= 8) {
+        if (verbosity >= 10) {
             debug() << "  Processing Anchor"
                     << " at (" << cur_anchor->get_x() << "," << cur_anchor->get_y() << ")";
         }
@@ -190,7 +224,7 @@ void ArrangementBuilder::build_interior(std::shared_ptr<Arrangement> arrangement
 
     // PART 2: PROCESS INTERIOR INTERSECTIONS
     //    order: x left to right; for a given x, then y low to high
-    if (verbosity >= 6) {
+    if (verbosity >= 8) {
         debug() << "PART 2: PROCESSING INTERIOR INTERSECTIONS\n";
     }
 
@@ -210,16 +244,10 @@ void ArrangementBuilder::build_interior(std::shared_ptr<Arrangement> arrangement
         unsigned first_pos = cur->a->get_position(); //most recent edge in the curve corresponding to Anchor a
         unsigned last_pos = cur->b->get_position(); //most recent edge in the curve corresponding to Anchor b
 
-        //        if(verbosity >= 8) {
-        //            debug() << " next intersection: Anchor"
-        //                    << *(cur->a) << " (pos" << first_pos << "), Anchor"
-        //                    << *(cur->b) << " (pos" << last_pos;
-        //        }
-
         if (last_pos != first_pos + 1) {
             throw std::runtime_error("intersection between non-consecutive curves [1]: x = "
                                      + std::to_string(sweep->x) + ", last_pos = " + std::to_string(last_pos)
-            + std::to_string(last_pos) + ", first_pos + 1 = " + std::to_string(first_pos + 1));
+                                     + std::to_string(last_pos) + ", first_pos + 1 = " + std::to_string(first_pos + 1));
         }
 
         //find out if more than two curves intersect at this point
@@ -232,14 +260,12 @@ void ArrangementBuilder::build_interior(std::shared_ptr<Arrangement> arrangement
             }
 
             last_pos++; //last_pos = cur->b->get_position();
-
-            //            if(verbosity >= 8) { debug() << " |---also intersects Anchor" << *(cur->b) << "(" << last_pos << ")"; }
         }
 
         //compute y-coordinate of intersection
         double intersect_y = arrangement->x_grades[sweep->a->get_x()] * (sweep->x) - arrangement->y_grades[sweep->a->get_y()];
 
-        if (verbosity >= 8) {
+        if (verbosity >= 10) {
             debug() << "  found intersection between"
                     << (last_pos - first_pos + 1) << "edges at x =" << sweep->x << ", y =" << intersect_y;
         }
@@ -345,7 +371,7 @@ void ArrangementBuilder::build_interior(std::shared_ptr<Arrangement> arrangement
         }
 
         //output status
-        if (verbosity >= 2) {
+        if (verbosity >= 8) {
             status_counter++;
             if (status_counter % status_interval == 0)
                 debug() << "      processed" << status_counter << "intersections"; //TODO: adding this makes debug go into an infinite loop: <<  "sweep position =" << *sweep;
@@ -353,7 +379,7 @@ void ArrangementBuilder::build_interior(std::shared_ptr<Arrangement> arrangement
     } //end while
 
     // PART 3: INSERT VERTICES ON RIGHT EDGE OF ARRANGEMENT AND CONNECT EDGES
-    if (verbosity >= 6) {
+    if (verbosity >= 8) {
         debug() << "PART 3: RIGHT EDGE OF THE ARRANGEMENT";
     }
 
@@ -403,216 +429,9 @@ void ArrangementBuilder::build_interior(std::shared_ptr<Arrangement> arrangement
 
 } //end build_interior()
 
-////finds a pseudo-optimal path through all 2-cells of the arrangement
-//// path consists of a vector of Halfedges
-//// at each step of the path, the Halfedge points to the Anchor being crossed and the 2-cell (Face) being entered
-//void ArrangementBuilder::find_path(Arrangement &arrangement, std::vector<std::shared_ptr<Halfedge>>& pathvec)
-//{
-//    // PART 1: BUILD THE DUAL GRAPH OF THE ARRANGEMENT
-//
-//    typedef boost::property<boost::edge_weight_t, unsigned long> EdgeWeightProperty;
-//    typedef boost::adjacency_list< boost::vecS, boost::vecS, boost::undirectedS,
-//            boost::no_property, EdgeWeightProperty > Graph;  //TODO: probably listS is a better choice than vecS, but I don't know how to make the adjacency_list work with listS
-//    Graph dual_graph;
-//
-//    //make a map for reverse-lookup of face indexes by face pointers -- Is this really necessary? Can I avoid doing this?
-//    std::map<std::shared_ptr<Face>, unsigned> face_indexes;
-//    for(unsigned i=0; i<arrangement.faces.size(); i++)
-//        face_indexes.insert( std::pair<std::shared_ptr<Face>, unsigned>(arrangement.faces[i], i));
-//
-//    //loop over all faces
-//    for(unsigned i=0; i<arrangement.faces.size(); i++)
-//    {
-//        //consider all neighbors of this faces
-//        std::shared_ptr<Halfedge> boundary = (arrangement.faces[i])->get_boundary();
-//        std::shared_ptr<Halfedge> current = boundary;
-//        do
-//        {
-//            //find index of neighbor
-//            std::shared_ptr<Face> neighbor = current->get_twin()->get_face();
-//            if(neighbor != NULL)
-//            {
-//                std::map<std::shared_ptr<Face>, unsigned>::iterator it = face_indexes.find(neighbor);
-//                unsigned j = it->second;
-//
-//                //if i < j, then create an (undirected) edge between these faces
-//                if(i < j)
-//                {
-//                    boost::add_edge(i, j, current->get_anchor()->get_weight(), dual_graph);
-//                }
-//            }
-//            //move to the next neighbor
-//            current = current->get_next();
-//        }while(current != boundary);
-//    }
-//
-//    //TESTING -- print the edges in the dual graph
-////    if(verbosity >= 10)
-////    {
-//////        Debug qd = debug(true);
-////        debug() << "EDGES IN THE DUAL GRAPH OF THE ARRANGEMENT: ";
-////        typedef boost::graph_traits<Graph>::edge_iterator edge_iterator;
-////        std::pair<edge_iterator, edge_iterator> ei = boost::edges(dual_graph);
-////        for(edge_iterator it = ei.first; it != ei.second; ++it)
-////            debug(true) << "  (" << boost::source(*it, dual_graph) << "\t, " << boost::target(*it, dual_graph) << "\t) \tweight = " << boost::get(boost::edge_weight_t(), dual_graph, *it);
-////    }
-//
-//
-//    // PART 2: FIND A MINIMAL SPANNING TREE
-//
-//    typedef boost::graph_traits<Graph>::edge_descriptor Edge;
-//    std::vector<Edge> spanning_tree_edges;
-//    boost::kruskal_minimum_spanning_tree(dual_graph, std::back_inserter(spanning_tree_edges));
-//
-////    if(verbosity >= 10)
-////    {
-//////        Debug qd = debug(true);
-////        debug() << "num MST edges: " << spanning_tree_edges.size() << "\n";
-////        for(unsigned i=0; i<spanning_tree_edges.size(); i++)
-////            debug(true) << "  (" << boost::source(spanning_tree_edges[i], dual_graph) << "\t, " << boost::target(spanning_tree_edges[i], dual_graph) << "\t) \tweight = " << boost::get(boost::edge_weight_t(), dual_graph, spanning_tree_edges[i]);
-////    }
-//
-////  // PART 2-ALTERNATE: FIND A HAMILTONIAN TOUR
-////    ///This doesn't serve our purposes.
-////    ///  It doesn't start at the cell representing a vertical line, but that could be fixed by using metric_tsp_approx_from_vertex(...).
-////    ///  Worse, it always produces a cycle and doesn't give the intermediate nodes between non-adjacent nodes that appear consecutively in the tour.
-//
-////    typedef boost::graph_traits<Graph>::vertex_descriptor Vertex;
-////    std::vector<Vertex> tsp_vertices;
-////    boost::metric_tsp_approx_tour(dual_graph, std::back_inserter(tsp_vertices));
-//
-////    debug() << "num TSP vertices: " << tsp_vertices.size() << "\n";
-////    for(unsigned i=0; i<tsp_vertices.size(); i++)
-////        debug() << "  " << tsp_vertices[i] << "\n";
-//
-//    // PART 3: CONVERT THE OUTPUT OF PART 2 TO A PATH
-//
-//    //organize the edges of the minimal spanning tree so that we can traverse the tree
-//    std::vector< std::set<unsigned> > adjacencies(arrangement.faces.size(), std::set<unsigned>());  //this will store all adjacency relationships in the spanning tree
-//    for(unsigned i=0; i<spanning_tree_edges.size(); i++)
-//    {
-//        unsigned a = boost::source(spanning_tree_edges[i], dual_graph);
-//        unsigned b = boost::target(spanning_tree_edges[i], dual_graph);
-//
-//        (adjacencies[a]).insert(b);
-//        (adjacencies[b]).insert(a);
-//    }
-//
-//    //traverse the tree
-//    //at each step in the traversal, append the corresponding std::shared_ptr<Halfedge> to pathvec
-//    //make sure to start at the proper node (2-cell)
-//    std::shared_ptr<Face> initial_cell = arrangement.topleft->get_twin()->get_face();
-//    unsigned start = (face_indexes.find(initial_cell))->second;
-//
-//    find_subpath(arrangement, start, adjacencies, pathvec, false);
-//
-//    //TESTING -- PRINT PATH
-////    if(verbosity >= 10)
-////    {
-////        debug() << "PATH: " << start << ", ";
-////        for(unsigned i=0; i<pathvec.size(); i++)
-////            debug(true) << (face_indexes.find((pathvec[i])->get_face()))->second << ", ";
-////        debug(true) << "\n";
-////    }
-//}//end find_path()
-
-// Function to find a path through all nodes in a tree, starting at a specified node
-// Iterative version: uses a stack to perform a depth-first search of the tree
-// Input: tree is specified by the 2-D vector children
-//   children[i] is a vector of indexes of the children of node i, in decreasing order of branch weight
-//   (branch weight is total weight of all edges below a given node, plus weight of edge to parent node)
-// Output: vector pathvec contains a Halfedge pointer for each step of the path
-void ArrangementBuilder::find_subpath(Arrangement& arrangement, unsigned start_node, std::vector<std::vector<unsigned>>& children, std::vector<std::shared_ptr<Halfedge>>& pathvec)
-{
-    std::stack<unsigned> nodes; // stack for nodes as we do DFS
-    nodes.push(start_node); // push node onto the node stack
-    std::stack<std::shared_ptr<Halfedge>> backtrack; // stack for storing extra copy of std::shared_ptr<Halfedge>* so we don't have to recalculate when popping
-    unsigned numDiscovered = 1, numNodes = children.size();
-
-    while (numDiscovered != numNodes) // while we have not traversed the whole tree
-    {
-        unsigned node = nodes.top(); // let node be the current node that we are considering
-
-        if (children[node].size() != 0) // if we have not traversed all of node's children
-        {
-            // find the halfedge to be traversed
-            unsigned next_node = children[node].back();
-            children[node].pop_back();
-
-            std::shared_ptr<Halfedge> cur_edge = (arrangement.faces[node])->get_boundary();
-            while (cur_edge->get_twin()->get_face() != arrangement.faces[next_node]) {
-                cur_edge = cur_edge->get_next();
-
-                if (cur_edge == (arrangement.faces[node])->get_boundary()) {
-                    debug() << "ERROR:  cannot find edge between 2-cells " << node << " and " << next_node << "\n";
-                    throw std::exception();
-                }
-            }
-            // and push it onto pathvec
-            pathvec.push_back(cur_edge->get_twin());
-            // push a copy onto the backtracking stack so we don't have to search for this std::shared_ptr<Halfedge>* again when popping
-            backtrack.push(cur_edge);
-            // push the next node onto the stack
-            nodes.push(next_node);
-            // increment the discovered counter
-            ++numDiscovered;
-        } // end if
-        else // we have traversed all of node's children
-        {
-            nodes.pop(); // pop node off of the node stack
-            pathvec.push_back(backtrack.top()); // push the top of backtrack onto pathvec
-            backtrack.pop(); // and pop that std::shared_ptr<Halfedge>* off of backtrack
-        }
-    }
-
-} //end find_subpath()
-////recursive method to build part of the path
-////return_path == TRUE iff we want the path to return to the current node after traversing all of its children
-//void ArrangementBuilder::find_subpath(Arrangement &arrangement, unsigned cur_node, std::vector< std::set<unsigned> >& adj, std::vector<std::shared_ptr<Halfedge>>& pathvec, bool return_path)
-//{
-//
-//    while(!adj[cur_node].empty())   //cur_node still has children to traverse
-//    {
-//        //get the next node that is adjacent to cur_node
-//        unsigned next_node = *(adj[cur_node].begin());
-//
-//        //find the next Halfedge and append it to pathvec
-//        std::shared_ptr<Halfedge> cur_edge = (arrangement.faces[cur_node])->get_boundary();
-//        while(cur_edge->get_twin()->get_face() != arrangement.faces[next_node])     //do we really have to search for the correct edge???
-//        {
-//            cur_edge = cur_edge->get_next();
-//
-//            if(cur_edge == (arrangement.faces[cur_node])->get_boundary())   //THIS SHOULD NEVER HAPPEN
-//            {
-//                debug() << "ERROR: cannot find edge between 2-cells " << cur_node << " and " << next_node << "\n";
-//                throw std::exception();
-//            }
-//        }
-//        pathvec.push_back(cur_edge->get_twin());
-//
-//        //remove adjacencies that have been already processed
-//        adj[cur_node].erase(next_node);     //removes (cur_node, next_node)
-//        adj[next_node].erase(cur_node);     //removes (next_node, cur_node)
-//
-//        //do we need to return to this node?
-//        bool return_here = return_path || !adj[cur_node].empty();
-//
-//        //recurse through the next node
-//        find_subpath(arrangement, next_node, adj, pathvec, return_here);
-//
-//        //if we will return to this node, then add reverse Halfedge to pathvec
-//        if(return_here)
-//            pathvec.push_back(cur_edge);
-//
-//    }//end while
-//
-//}//end find_subpath()
-
 //computes and stores the edge weight for each anchor line
 void ArrangementBuilder::find_edge_weights(Arrangement& arrangement, PersistenceUpdater& updater)
 {
-    debug() << " FINDING EDGE WEIGHTS:";
-
     std::vector<std::shared_ptr<Halfedge>> pathvec;
     std::shared_ptr<Halfedge> cur_edge = arrangement.topright;
 
@@ -698,6 +517,7 @@ void ArrangementBuilder::find_path(Arrangement& arrangement, std::vector<std::sh
     std::vector<Edge> spanning_tree_edges;
     boost::kruskal_minimum_spanning_tree(dual_graph, std::back_inserter(spanning_tree_edges));
 
+    //TESTING -- print the MST
     if (verbosity >= 10) {
         debug() << "num MST edges: " << spanning_tree_edges.size() << "\n";
         for (unsigned i = 0; i < spanning_tree_edges.size(); i++)
@@ -729,8 +549,8 @@ void ArrangementBuilder::find_path(Arrangement& arrangement, std::vector<std::sh
     // now we can find the path
     find_subpath(arrangement, start, children, pathvec);
 
-    //TESTING -- PRINT PATH
-    if (verbosity >= 2) {
+    //TESTING -- print the path
+    if (verbosity >= 10) {
         Debug qd = debug(true);
         qd << "PATH: " << start << ", ";
         for (unsigned i = 0; i < pathvec.size(); i++) {
@@ -740,3 +560,54 @@ void ArrangementBuilder::find_path(Arrangement& arrangement, std::vector<std::sh
         qd << "\n";
     }
 } //end find_path()
+
+// Function to find a path through all nodes in a tree, starting at a specified node
+// Iterative version: uses a stack to perform a depth-first search of the tree
+// Input: tree is specified by the 2-D vector children
+//   children[i] is a vector of indexes of the children of node i, in decreasing order of branch weight
+//   (branch weight is total weight of all edges below a given node, plus weight of edge to parent node)
+// Output: vector pathvec contains a Halfedge pointer for each step of the path
+void ArrangementBuilder::find_subpath(Arrangement& arrangement, unsigned start_node, std::vector<std::vector<unsigned>>& children, std::vector<std::shared_ptr<Halfedge>>& pathvec)
+{
+    std::stack<unsigned> nodes; // stack for nodes as we do DFS
+    nodes.push(start_node); // push node onto the node stack
+    std::stack<std::shared_ptr<Halfedge>> backtrack; // stack for storing extra copy of std::shared_ptr<Halfedge>* so we don't have to recalculate when popping
+    unsigned numDiscovered = 1, numNodes = children.size();
+
+    while (numDiscovered != numNodes) // while we have not traversed the whole tree
+    {
+        unsigned node = nodes.top(); // let node be the current node that we are considering
+
+        if (children[node].size() != 0) // if we have not traversed all of node's children
+        {
+            // find the halfedge to be traversed
+            unsigned next_node = children[node].back();
+            children[node].pop_back();
+
+            std::shared_ptr<Halfedge> cur_edge = (arrangement.faces[node])->get_boundary();
+            while (cur_edge->get_twin()->get_face() != arrangement.faces[next_node]) {
+                cur_edge = cur_edge->get_next();
+
+                if (cur_edge == (arrangement.faces[node])->get_boundary()) {
+                    debug() << "ERROR:  cannot find edge between 2-cells " << node << " and " << next_node << "\n";
+                    throw std::exception();
+                }
+            }
+            // and push it onto pathvec
+            pathvec.push_back(cur_edge->get_twin());
+            // push a copy onto the backtracking stack so we don't have to search for this std::shared_ptr<Halfedge>* again when popping
+            backtrack.push(cur_edge);
+            // push the next node onto the stack
+            nodes.push(next_node);
+            // increment the discovered counter
+            ++numDiscovered;
+        } // end if
+        else // we have traversed all of node's children
+        {
+            nodes.pop(); // pop node off of the node stack
+            pathvec.push_back(backtrack.top()); // push the top of backtrack onto pathvec
+            backtrack.pop(); // and pop that std::shared_ptr<Halfedge>* off of backtrack
+        }
+    }
+
+} //end find_subpath()

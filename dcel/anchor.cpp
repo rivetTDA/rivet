@@ -1,3 +1,23 @@
+/**********************************************************************
+Copyright 2014-2016 The RIVET Devlopers. See the COPYRIGHT file at
+the top-level directory of this distribution.
+
+This file is part of RIVET.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+**********************************************************************/
+
 #include "anchor.h"
 #include "math/template_points_matrix.h"
 #include <ostream>
@@ -19,33 +39,6 @@ Anchor::Anchor(unsigned x, unsigned y)
     , above_line(false)
 {
 }
-
-//Anchor::Anchor(const Anchor& other)
-//{
-//    x_coord = other.x_coord;
-//    y_coord = other.y_coord;
-//    entry = other.entry;
-//    dual_line = other.dual_line;
-//    position = other.position;
-//    above_line = other.above_line;
-//}
-//
-//Anchor& Anchor::operator= (const Anchor& other)
-//{
-//    //check for self-assignment
-//    if(this == &other)
-//        return *this;
-//
-//    //do the copy
-//    x_coord = other.x_coord;
-//    y_coord = other.y_coord;
-//    entry = other.entry;
-//    dual_line = other.dual_line;
-//    position = other.position;
-//    above_line = other.above_line;
-//
-//    return *this;
-//}
 
 std::ostream& operator<<(std::ostream& stream, const Anchor& anchor)
 {

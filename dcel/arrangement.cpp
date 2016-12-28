@@ -1,6 +1,22 @@
-/* implementation of Arrangement class
- * Stores and manipulates the DCEL decomposition of the affine Grassmannian.
- */
+/**********************************************************************
+Copyright 2014-2016 The RIVET Devlopers. See the COPYRIGHT file at
+the top-level directory of this distribution.
+
+This file is part of RIVET.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+**********************************************************************/
 
 #include "arrangement.h"
 
@@ -175,7 +191,7 @@ BarcodeTemplate& Arrangement::get_barcode_template(double degrees, double offset
     if (degrees == 90) //then line is vertical
     {
         cell = find_vertical_line(-1 * offset); //multiply by -1 to correct for orientation of offset
-        if (verbosity >= 3) {
+        if (verbosity >= 8) {
             debug() << " ||| vertical line found in cell " << FID(cell);
         }
 
@@ -187,7 +203,7 @@ BarcodeTemplate& Arrangement::get_barcode_template(double degrees, double offset
         else
             cell = topleft->get_twin()->get_face(); //default
 
-        if (verbosity >= 3) {
+        if (verbosity >= 8) {
             debug() << " --- horizontal line found in cell " << FID(cell);
         }
 
@@ -200,7 +216,7 @@ BarcodeTemplate& Arrangement::get_barcode_template(double degrees, double offset
     }
     ///TODO: REPLACE THIS WITH A SEEDED SEARCH
 
-    return cell->get_barcode(); ////FIX THIS!!!
+    return cell->get_barcode();
 } //end get_barcode_template()
 
 //returns the barcode template associated with faces[i]
@@ -289,25 +305,18 @@ std::shared_ptr<Face> Arrangement::find_vertical_line(double x_coord)
                 max = mid - 1;
         }
 
-        //testing
-        if (verbosity >= 6) {
-            debug() << "----vertical line search: found anchor with x-coordinate " << vertical_line_query_list[best]->get_anchor()->get_x();
-        }
-
         return vertical_line_query_list[best]->get_face();
     }
 
     //if we get here, then either there are no Anchors or x_coord is less than the x-coordinates of all Anchors
-    if (verbosity >= 6) {
-        debug() << "----vertical line search: returning lowest face";
-    }
     return bottomright->get_twin()->get_face();
 
 } //end find_vertical_line()
+
 void Arrangement::announce_next_point(std::shared_ptr<Halfedge> finger, std::shared_ptr<Vertex> next_pt)
 {
 
-    if (verbosity >= 8) {
+    if (verbosity >= 10) {
         if (finger->get_anchor() != nullptr)
             debug() << "     -- next point: (" << next_pt->get_x() << "," << next_pt->get_y() << ") vertex ID" << VID(next_pt) << "; along line corresponding to anchor at (" << finger->get_anchor()->get_x() << "," << finger->get_anchor()->get_y() << ")";
         else
@@ -326,12 +335,12 @@ std::shared_ptr<Face> Arrangement::find_point(double x_coord, double y_coord)
     if (start == nullptr) //then starting point is in the top (unbounded) cell
     {
         finger = topleft->get_twin()->get_next(); //this is the top edge of the top cell (at y=infty)
-        if (verbosity >= 8) {
+        if (verbosity >= 10) {
             debug() << "  Starting in top (unbounded) cell";
         }
     } else {
         finger = start->get_line();
-        if (verbosity >= 8) {
+        if (verbosity >= 10) {
             debug() << "  Reference Anchor: (" << x_grades[start->get_x()] << "," << y_grades[start->get_y()] << "); halfedge" << HID(finger);
         }
     }
@@ -340,7 +349,7 @@ std::shared_ptr<Face> Arrangement::find_point(double x_coord, double y_coord)
 
     while (cell == nullptr) //while not found
     {
-        if (verbosity >= 8) {
+        if (verbosity >= 10) {
             debug() << "  Considering cell " << FID(finger->get_face());
         }
 
@@ -397,7 +406,7 @@ std::shared_ptr<Face> Arrangement::find_point(double x_coord, double y_coord)
                 {
                     finger = finger->get_twin();
 
-                    if (verbosity >= 8) {
+                    if (verbosity >= 10) {
                         debug(true) << "   --- crossing line dual to anchor (" << temp->get_x() << "," << temp->get_y() << ") at x = " << x_pos;
                     }
                 }
@@ -405,12 +414,14 @@ std::shared_ptr<Face> Arrangement::find_point(double x_coord, double y_coord)
         } //end else
     } //end while(cell not found)
 
-    if (verbosity >= 3) {
+    if (verbosity >= 8) {
         debug() << "  Found point (" << x_coord << "," << y_coord << ") in cell" << FID(cell);
     }
 
     return cell;
 } //end find_point()
+
+/********** functions for testing **********/
 
 //prints a summary of the arrangement information, such as the number of anchors, vertices, halfedges, and faces
 void Arrangement::print_stats()
@@ -443,15 +454,6 @@ void Arrangement::print()
         debug() << "    face " << i << ": " << *faces[i];
     }
 
-    /*    debug() << "  Outside (unbounded) region: ";
-	std::shared_ptr<Halfedge> start = halfedges[1];
-	std::shared_ptr<Halfedge> curr = start;
-	do{
-        debug() << *(curr->get_origin()) << "--";
-		curr = curr->get_next();
-	}while(curr != start);
-    debug() << "cycle";
-*/
     debug() << "  Anchor set: ";
     std::set<std::shared_ptr<Anchor>>::iterator it;
     for (it = all_anchors.begin(); it != all_anchors.end(); ++it) {
@@ -469,8 +471,6 @@ long index_of(std::vector<T> const& vec, T const& t)
     }
     return -1;
 }
-
-/********** functions for testing **********/
 
 //look up halfedge ID, used in print() for debugging
 // HID = halfedge ID
@@ -701,7 +701,7 @@ bool Arrangement::Crossing::x_equal(const Crossing* other) const
 //CrossingComparator for ordering crossings: first by x (left to right); for a given x, then by y (low to high)
 bool Arrangement::CrossingComparator::operator()(const Crossing* c1, const Crossing* c2) const //returns true if c1 comes after c2
 {
-    //TESTING
+    //the following error should never occur
     if (c1->a->get_position() >= c1->b->get_position() || c2->a->get_position() >= c2->b->get_position()) {
         //        debug() << "INVERTED CROSSING ERROR\n";
         //        debug() << "crossing 1 involves anchors " << *(c1->a) << " (pos " << c1->a->get_position() << ") and " << *(c1->b) << " (pos " << c1->b->get_position() << "),";
