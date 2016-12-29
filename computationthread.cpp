@@ -104,62 +104,66 @@ void ComputationThread::compute_from_file()
 
     bool reading_xi = false;
     std::stringstream ss;
-    while (console->canReadLine() || console->waitForReadyRead(-1)) {
-        QString line = console->readLine();
-        qDebug().noquote() << "console: " << line;
-        if (reading_xi) {
-            if (line.startsWith("END XI")) {
+    while(console->waitForReadyRead(-1)) {
+        while (console->canReadLine()) {
+            QString line = console->readLine();
+            qDebug().noquote() << "console: " << line;
+            if (reading_xi) {
+                if (line.startsWith("END XI")) {
+                    {
+                        message.reset(new TemplatePointsMessage());
+                        boost::archive::text_iarchive archive(ss);
+                        archive >> *message;
+                    }
+                    reading_xi = false;
+                    emit templatePointsReady(message);
+                } else {
+                    ss << line.toStdString();
+                }
+            } else if (line.startsWith("ARRANGEMENT: ")) {
                 {
+                    console->waitForFinished();
+                    std::ifstream input(line.mid(QString("ARRANGEMENT: ").length()).trimmed().toStdString());
+                    if (!input.is_open()) {
+                        throw std::runtime_error("Could not open console arrangement file");
+                    }
+                    std::string type;
+                    std::getline(input, type);
+                    if (type != "RIVET_1") {
+                        throw std::runtime_error("Unsupported file format");
+                    }
+                    qDebug() << "ComputationThread::compute_from_file() : checkpoint A -- template_points.size() = "
+                             << message->template_points.size();
+                    boost::archive::binary_iarchive archive(input);
                     message.reset(new TemplatePointsMessage());
-                    boost::archive::text_iarchive archive(ss);
+                    arrangement.reset(new ArrangementMessage());
+                    InputParameters p;
+                    archive >> p;
                     archive >> *message;
+                    archive >> *arrangement;
+                    qDebug() << "ComputationThread::compute_from_file() : checkpoint B -- template_points.size() = "
+                             << message->template_points.size();
+                    emit templatePointsReady(message);
                 }
-                reading_xi = false;
-                emit templatePointsReady(message);
-            } else {
-                ss << line.toStdString();
+                //                qDebug() << "Arrangement received: " << arrangement->x_exact.size() << " x " << arrangement->y_exact.size();
+                emit arrangementReady(arrangement);
+                return;
+            } else if (line.startsWith("PROGRESS ")) {
+                auto progress = line.mid(QString("PROGRESS ").length()).trimmed();
+                setCurrentProgress(progress.toInt());
+            } else if (line.startsWith("STAGE")) {
+                emit advanceProgressStage();
+            } else if (line.startsWith("STEPS_IN_STAGE")) {
+                auto steps = line.mid(QString("STEPS_IN_STAGE ").length()).trimmed();
+                emit setProgressMaximum(steps.toInt());
+            } else if (line.startsWith("XI")) {
+                reading_xi = true;
+                ss.clear();
             }
-        } else if (line.startsWith("ARRANGEMENT: ")) {
-            {
-                console->waitForFinished();
-                std::ifstream input(line.mid(QString("ARRANGEMENT: ").length()).trimmed().toStdString());
-                if (!input.is_open()) {
-                    throw std::runtime_error("Could not open console arrangement file");
-                }
-                std::string type;
-                std::getline(input, type);
-                if (type != "RIVET_1") {
-                    throw std::runtime_error("Unsupported file format");
-                }
-                qDebug() << "ComputationThread::compute_from_file() : checkpoint A -- template_points.size() = " << message->template_points.size();
-                boost::archive::binary_iarchive archive(input);
-                message.reset(new TemplatePointsMessage());
-                arrangement.reset(new ArrangementMessage());
-                InputParameters p;
-                archive >> p;
-                archive >> *message;
-                archive >> *arrangement;
-                qDebug() << "ComputationThread::compute_from_file() : checkpoint B -- template_points.size() = " << message->template_points.size();
-                emit templatePointsReady(message);
-            }
-            //                qDebug() << "Arrangement received: " << arrangement->x_exact.size() << " x " << arrangement->y_exact.size();
-            emit arrangementReady(arrangement);
-            return;
-        } else if (line.startsWith("PROGRESS ")) {
-            auto progress = line.mid(QString("PROGRESS ").length()).trimmed();
-            setCurrentProgress(progress.toInt());
-        } else if (line.startsWith("STAGE")) {
-            emit advanceProgressStage();
-        } else if (line.startsWith("STEPS_IN_STAGE")) {
-            auto steps = line.mid(QString("STEPS_IN_STAGE ").length()).trimmed();
-            emit setProgressMaximum(steps.toInt());
-        } else if (line.startsWith("XI")) {
-            reading_xi = true;
-            ss.clear();
         }
     }
 
-    qDebug() << "Arrangement was not delivered";
+    throw std::runtime_error("Arrangement was not delivered");
 
 } //end run()
 
