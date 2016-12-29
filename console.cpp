@@ -264,7 +264,7 @@ int main(int argc, char* argv[])
     progress.setProgressMaximum.connect([](int amount) {
         std::clog << "STEPS_IN_STAGE " << amount << std::endl;
     });
-    computation.arrangement_ready.connect([&arrangement_message, &params, binary](std::shared_ptr<Arrangement> arrangement) {
+    computation.arrangement_ready.connect([&arrangement_message, &params, &binary](std::shared_ptr<Arrangement> arrangement) {
         arrangement_message = new ArrangementMessage(*arrangement);
         //TODO: this should become a system test with a known dataset
         //Note we no longer write the arrangement to stdout, it goes to a file at the end
@@ -298,7 +298,7 @@ int main(int argc, char* argv[])
             std::clog << "Wrote arrangement to " << params.outputFile << std::endl;
         }
     });
-    computation.template_points_ready.connect([&points_message, binary, betti_only, verbosity](TemplatePointsMessage message) {
+    computation.template_points_ready.connect([&points_message, &binary, &betti_only, &verbosity](TemplatePointsMessage message) {
         points_message = new TemplatePointsMessage(message);
 
         if (binary) {
