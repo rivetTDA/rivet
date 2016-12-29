@@ -1,3 +1,23 @@
+/**********************************************************************
+Copyright 2014-2016 The RIVET Devlopers. See the COPYRIGHT file at
+the top-level directory of this distribution.
+
+This file is part of RIVET.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+**********************************************************************/
+
 #include "computation.h"
 #include "dcel/arrangement.h"
 #include "dcel/arrangement_builder.h"
@@ -19,19 +39,19 @@ Computation::~Computation()
 
 std::unique_ptr<ComputationResult> Computation::compute_raw(ComputationInput& input)
 {
-
-    debug() << "entering compute_raw";
     if (verbosity >= 2) {
         debug() << "\nBIFILTRATION:";
         debug() << "   Number of simplices of dimension " << params.dim << " : " << input.bifiltration().get_size(params.dim);
         debug() << "   Number of simplices of dimension " << (params.dim + 1) << " : " << input.bifiltration().get_size(params.dim + 1);
-        debug() << "   Number of x-exact:" << input.x_exact.size();
-        if (input.x_exact.size()) {
-            debug() << "; values " << input.x_exact.front() << " to " << input.x_exact.back();
-        }
-        debug() << "   Number of y-exact:" << input.y_exact.size();
-        if (input.y_exact.size()) {
-            debug() << "; values " << input.y_exact.front() << " to " << input.y_exact.back();
+        if (verbosity >= 4) {
+            debug() << "   Number of x-exact:" << input.x_exact.size();
+            if (input.x_exact.size()) {
+                debug() << "; values " << input.x_exact.front() << " to " << input.x_exact.back();
+            }
+            debug() << "   Number of y-exact:" << input.y_exact.size();
+            if (input.y_exact.size()) {
+                debug() << "; values " << input.y_exact.front() << " to " << input.y_exact.back();
+            }
         }
     }
     //STAGE 3: COMPUTE MULTIGRADED BETTI NUMBERS
@@ -43,10 +63,11 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(ComputationInput& in
     }
     MultiBetti mb(input.bifiltration(), params.dim);
     Timer timer;
-    debug() << "Calling compute_fast";
     mb.compute_fast(result->homology_dimensions, progress);
 
-    debug() << "  --> xi_i computation took " << timer.elapsed() << " seconds";
+    if(verbosity >= 2) {
+        debug() << "  -- xi_i computation took " << timer.elapsed() << " milliseconds";
+    }
 
     //store the xi support points
     mb.store_support_points(result->template_points);
@@ -66,13 +87,17 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(ComputationInput& in
     auto arrangement = builder.build_arrangement(mb, input.x_exact, input.y_exact, result->template_points, progress); ///TODO: update this -- does not need to store list of xi support points in xi_support
     //NOTE: this also computes and stores barcode templates in the arrangement
 
-    debug() << "   building the line arrangement and computing all barcode templates took"
-            << timer.elapsed() << "milliseconds";
+    if (verbosity >= 2) {
+        debug() << "   building the line arrangement and computing all barcode templates took"
+                << timer.elapsed() << "milliseconds";
+    }
 
     //send (a pointer to) the arrangement back to the VisualizationWindow
     arrangement_ready(arrangement);
     //re-send xi support and other anchors
-    debug() << "Sending" << result->template_points.size() << "anchors";
+    if (verbosity >= 8) {
+        debug() << "Sending" << result->template_points.size() << "anchors";
+    }
     template_points_ready(TemplatePointsMessage{ input.x_label, input.y_label, result->template_points, result->homology_dimensions, input.x_exact, input.y_exact });
     arrangement->test_consistency();
     result->arrangement = std::move(arrangement);
@@ -85,6 +110,6 @@ std::unique_ptr<ComputationResult> Computation::compute(InputData data)
 
     auto input = ComputationInput(data);
     //print bifiltration statistics
-    debug() << "Computing from raw data";
+    //debug() << "Computing from raw data";
     return compute_raw(input);
 }

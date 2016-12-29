@@ -1,3 +1,23 @@
+/**********************************************************************
+Copyright 2014-2016 The RIVET Devlopers. See the COPYRIGHT file at
+the top-level directory of this distribution.
+
+This file is part of RIVET.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+**********************************************************************/
+
 #include "computationthread.h"
 
 #include "dcel/arrangement.h"
@@ -132,8 +152,8 @@ void ComputationThread::compute_from_file()
                     if (type != "RIVET_1") {
                         throw std::runtime_error("Unsupported file format");
                     }
-                    qDebug() << "ComputationThread::compute_from_file() : checkpoint A -- template_points.size() = "
-                             << message->template_points.size();
+                    //qDebug() << "ComputationThread::compute_from_file() : checkpoint A -- template_points.size() = "
+                    //         << message->template_points.size();
                     boost::archive::binary_iarchive archive(input);
                     message.reset(new TemplatePointsMessage());
                     arrangement.reset(new ArrangementMessage());
@@ -141,8 +161,8 @@ void ComputationThread::compute_from_file()
                     archive >> p;
                     archive >> *message;
                     archive >> *arrangement;
-                    qDebug() << "ComputationThread::compute_from_file() : checkpoint B -- template_points.size() = "
-                             << message->template_points.size();
+                    //qDebug() << "ComputationThread::compute_from_file() : checkpoint B -- template_points.size() = "
+                    //         << message->template_points.size();
                     emit templatePointsReady(message);
                 }
                 //                qDebug() << "Arrangement received: " << arrangement->x_exact.size() << " x " << arrangement->y_exact.size();

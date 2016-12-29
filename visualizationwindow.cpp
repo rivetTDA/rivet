@@ -1,3 +1,23 @@
+/**********************************************************************
+Copyright 2014-2016 The RIVET Devlopers. See the COPYRIGHT file at
+the top-level directory of this distribution.
+
+This file is part of RIVET.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+**********************************************************************/
+
 #include "visualizationwindow.h"
 #include "ui_visualizationwindow.h"
 
@@ -99,7 +119,7 @@ void VisualizationWindow::start_computation()
 //this slot is signaled when the xi support points are ready to be drawn
 void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMessage> points)
 {
-    qDebug() << "Received template points";
+    qDebug() << "VisualizationWindow: Received template points";
 
     template_points = points;
 
@@ -135,7 +155,7 @@ void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMe
 
     //update status
     line_selection_ready = true;
-    ui->statusBar->showMessage("multigraded Betti number visualization ready");
+    ui->statusBar->showMessage("bigraded Betti number visualization ready");
 }
 
 //this slot is signaled when the augmented arrangement is ready
@@ -249,18 +269,22 @@ void VisualizationWindow::update_persistence_diagram()
 {
     if (persistence_diagram_drawn) {
         //get the barcode
-        qDebug() << "  QUERY: angle =" << angle_precise << ", offset =" << offset_precise;
+        if (verbosity >= 4) {
+            qDebug() << "  QUERY: angle =" << angle_precise << ", offset =" << offset_precise;
+        }
         BarcodeTemplate dbc = arrangement->get_barcode_template(angle_precise, offset_precise);
         barcode = dbc.rescale(angle_precise, offset_precise, template_points->template_points, grades);
 
         //TESTING
-        qDebug() << "  XI SUPPORT VECTOR:";
-        for (unsigned i = 0; i < template_points->template_points.size(); i++) {
-            TemplatePoint p = template_points->template_points[i];
-            qDebug().nospace() << "    [" << i << "]: (" << p.x << "," << p.y << ") --> (" << grades.x[p.x] << "," << grades.y[p.y] << ")";
+        //qDebug() << "  XI SUPPORT VECTOR:";
+        //for (unsigned i = 0; i < template_points->template_points.size(); i++) {
+        //    TemplatePoint p = template_points->template_points[i];
+        //    qDebug().nospace() << "    [" << i << "]: (" << p.x << "," << p.y << ") --> (" << grades.x[p.x] << "," << grades.y[p.y] << ")";
+        //}
+        if (verbosity >= 4) {
+            dbc.print();
+            barcode->print();
         }
-        dbc.print();
-        barcode->print();
 
         double zero_coord = rivet::numeric::project_zero(angle_precise, offset_precise, grades.x[0], grades.y[0]);
 
