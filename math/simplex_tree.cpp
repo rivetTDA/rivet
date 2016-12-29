@@ -41,7 +41,7 @@ SimplexTree::SimplexTree(int dim, int v)
     , y_grades(0)
 {
     if (hom_dim > 5) {
-        throw std::runtime_error("Dimensions greater than 5 probably don't make sense");
+        throw std::runtime_error("SimplexTree: Dimensions greater than 5 probably don't make sense");
     }
     if(verbosity >= 8) {
         debug() << "Created SimplexTree(" << hom_dim << ", " << verbosity << ")";
@@ -268,7 +268,7 @@ MapMatrix* SimplexTree::get_boundary_mx(unsigned dim)
         num_rows = ordered_simplices.size();
     } else {
         std::stringstream ss;
-        ss << "Attempting to compute boundary matrix for improper dimension (" << dim << "), expected either "
+        ss << "SimplexTree::get_boundary_mx(): Attempting to compute boundary matrix for improper dimension (" << dim << "), expected either "
            << hom_dim << " or " << hom_dim + 1;
         throw std::runtime_error(ss.str());
     }
@@ -346,7 +346,7 @@ MapMatrix_Perm* SimplexTree::get_boundary_mx(std::vector<int>& face_order, unsig
                 //look up order index of the facet
                 STNode* facet_node = find_simplex(facet);
                 if (facet_node == NULL)
-                    throw std::runtime_error("Facet simplex not found.");
+                    throw std::runtime_error("SimplexTree::get_boundary_mx(): Facet simplex not found.");
                 int facet_order_index = face_order[facet_node->dim_index()];
 
                 //for this boundary simplex, enter "1" in the appropriate cell in the matrix
@@ -481,7 +481,7 @@ void SimplexTree::write_boundary_column(MapMatrix* mat, STNode* sim, int col, in
         //look up dimension index of the facet
         STNode* facet_node = find_simplex(facet);
         if (facet_node == NULL)
-            throw std::runtime_error("Facet simplex not found.");
+            throw std::runtime_error("SimplexTree::write_boundary_column(): Facet simplex not found.");
         int facet_di = facet_node->dim_index();
 
         //for this boundary simplex, enter "1" in the appropriate cell in the matrix
@@ -501,7 +501,7 @@ IndexMatrix* SimplexTree::get_index_mx(unsigned dim)
     else if (dim == hom_dim + 1)
         simplices = &ordered_high_simplices;
     else
-        throw std::runtime_error("Attempting to compute index matrix for improper dimension.");
+        throw std::runtime_error("SimplexTree::get_index_mx(): Attempting to compute index matrix for improper dimension.");
 
     //create the IndexMatrix
     unsigned x_size = x_grades;
@@ -560,7 +560,7 @@ IndexMatrix* SimplexTree::get_offset_index_mx(unsigned dim)
     else if (dim == hom_dim + 1)
         simplices = &ordered_high_simplices;
     else
-        throw std::runtime_error("Attempting to compute index matrix for improper dimension.");
+        throw std::runtime_error("SimplexTree::get_offset_index_mx(): Attempting to compute index matrix for improper dimension.");
 
     //create the IndexMatrix
     int x_size = x_grades + 1; //    <<<==== OPTIMIZE TO GET RID OF THE +1
@@ -686,42 +686,42 @@ STNode* SimplexTree::find_simplex(std::vector<int>& vertices)
 
 //returns the (time, dist) multi-index of the simplex with given global simplex index
 //also returns the dimension of the simplex
-SimplexData SimplexTree::get_simplex_data(int index)
-{
-    STNode* target = NULL;
-    std::vector<STNode*> kids = root->get_children();
-    unsigned dim = 0;
+// SimplexData SimplexTree::get_simplex_data(int index)
+// {
+//     STNode* target = NULL;
+//     std::vector<STNode*> kids = root->get_children();
+//     unsigned dim = 0;
 
-    while (target == NULL) {
-        if (kids.size() == 0) {
-            throw std::runtime_error("Vector of size zero in SimplexTree::get_multi_index()\n");
-        }
+//     while (target == NULL) {
+//         if (kids.size() == 0) {
+//             throw std::runtime_error("SimplexTree::get_simplex_data(): Vector of size zero in SimplexTree::get_multi_index()\n");
+//         }
 
-        //binary search for index
-        size_t min = 0;
-        size_t max = kids.size() - 1;
-        size_t mid;
-        while (max >= min) {
-            mid = (min + max) / 2;
-            if (kids[mid]->global_index() == index) //found it at kids[mid]
-            {
-                target = kids[mid];
-                break;
-            } else if (kids[mid]->global_index() < index)
-                min = mid + 1;
-            else
-                max = mid - 1;
-        }
-        if (max < min) //didn't find it yet
-        {
-            kids = kids[max]->get_children();
-            dim++;
-        }
-    }
+//         //binary search for index
+//         size_t min = 0;
+//         size_t max = kids.size() - 1;
+//         size_t mid;
+//         while (max >= min) {
+//             mid = (min + max) / 2;
+//             if (kids[mid]->global_index() == index) //found it at kids[mid]
+//             {
+//                 target = kids[mid];
+//                 break;
+//             } else if (kids[mid]->global_index() < index)
+//                 min = mid + 1;
+//             else
+//                 max = mid - 1;
+//         }
+//         if (max < min) //didn't find it yet
+//         {
+//             kids = kids[max]->get_children();
+//             dim++;
+//         }
+//     }
 
-    SimplexData sd = { target->grade_x(), target->grade_y(), dim };
-    return sd; //TODO: is this good design?
-}
+//     SimplexData sd = { target->grade_x(), target->grade_y(), dim };
+//     return sd; //TODO: is this good design?
+// }
 
 //returns the number of unique x-coordinates of the multi-grades
 unsigned SimplexTree::num_x_grades()
@@ -745,7 +745,7 @@ unsigned SimplexTree::get_size(unsigned dim)
     else if (dim == hom_dim + 1)
         return ordered_high_simplices.size();
     else
-        throw std::runtime_error("invalid dimension");
+        throw std::runtime_error("SimplexTree::get_size(): invalid dimension");
 }
 
 //returns the total number of simplices represented in the simplex tree
@@ -788,10 +788,10 @@ void SimplexTree::print_subtree(STNode* node, int indent)
 //prints simplices in order of increasing dimension
 void SimplexTree::print_bifiltration() {
     std::vector<STNode*> kids = root->get_children();
-    for(int d=0; d <= hom_dim + 1; d++) {
+    for(unsigned d=0; d <= hom_dim + 1; d++) {
         //print simplices of dimension d
         for (unsigned i = 0; i < kids.size(); i++) {
-            print_bifiltration(kids[i], std::string(), 0, d);
+            print_bifiltration(kids[i], std::string(), 0, static_cast<int>(d));
         }
     }
 }

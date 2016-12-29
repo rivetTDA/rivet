@@ -1,3 +1,23 @@
+/**********************************************************************
+Copyright 2014-2016 The RIVET Devlopers. See the COPYRIGHT file at
+the top-level directory of this distribution.
+
+This file is part of RIVET.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+**********************************************************************/
+
 #include "persistence_updater.h"
 
 #include "../dcel/anchor.h"
@@ -13,6 +33,8 @@
 #include <chrono>
 #include <stdlib.h> //for rand()
 #include <timer.h>
+#include <stdexcept> //for error-checking and debugging
+
 
 //constructor for when we must compute all of the barcode templates
 PersistenceUpdater::PersistenceUpdater(Arrangement& m, SimplexTree& b, std::vector<TemplatePoint>& xi_pts, unsigned verbosity)
@@ -21,7 +43,7 @@ PersistenceUpdater::PersistenceUpdater(Arrangement& m, SimplexTree& b, std::vect
     , dim(b.hom_dim)
     , verbosity(verbosity)
     , template_points_matrix(m.x_exact.size(), m.y_exact.size())
-    , testing(false)
+//    , testing(false)
 {
     //fill the xiSupportMatrix with the xi support points and anchors
     //  also stores the anchors in xi_pts
@@ -51,13 +73,13 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<std::shared_ptr<H
     Timer timer;
 
     //initialize the lift map from simplex grades to LUB-indexes
-    if (verbosity >= 6) {
+    if (verbosity >= 10) {
         debug() << "  Mapping low simplices:";
     }
     IndexMatrix* ind_low = bifiltration.get_index_mx(dim); //can we improve this with something more efficient than IndexMatrix?
     store_multigrades(ind_low, true);
 
-    if (verbosity >= 6) {
+    if (verbosity >= 10) {
         debug() << "  Mapping high simplices:";
     }
     IndexMatrix* ind_high = bifiltration.get_index_mx(dim + 1); //again, could be improved?
@@ -77,15 +99,19 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<std::shared_ptr<H
     R_high = bifiltration.get_boundary_mx(low_simplex_order, num_low_simplices, high_simplex_order, num_high_simplices);
 
     //print runtime data
-    debug() << "  --> computing initial order on simplices and building the boundary matrices took"
-            << timer.elapsed() << "milliseconds";
+    if (verbosity >= 4) {
+        debug() << "  --> computing initial order on simplices and building the boundary matrices took"
+                << timer.elapsed() << "milliseconds";
+    }
 
     //copy the boundary matrices (R) for fast reset later
     timer.restart();
     MapMatrix_Perm* R_low_initial = new MapMatrix_Perm(*R_low);
     MapMatrix_Perm* R_high_initial = new MapMatrix_Perm(*R_high);
-    debug() << "  --> copying the boundary matrices took"
+    if (verbosity >= 4) {
+        debug() << "  --> copying the boundary matrices took"
             << timer.elapsed() << "milliseconds";
+    }
 
     //initialize the permutation vectors
     perm_low.resize(R_low->width());
@@ -110,23 +136,29 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<std::shared_ptr<H
     U_high = R_high->decompose_RU();
 
     int time_for_initial_decomp = timer.elapsed();
-    debug() << "  --> computing the RU decomposition took" << time_for_initial_decomp << "milliseconds";
+    if (verbosity >= 4) {
+        debug() << "  --> computing the RU decomposition took" << time_for_initial_decomp << "milliseconds";
+    }
 
     //store the barcode template in the first cell
     std::shared_ptr<Face> first_cell = arrangement.topleft->get_twin()->get_face();
     store_barcode_template(first_cell);
 
-    debug() << "Initial persistence computation in cell " << arrangement.FID(first_cell);
-    //    print_perms(perm_high, inv_perm_high);
+    if (verbosity >= 4) {
+        debug() << "Initial persistence computation in cell " << arrangement.FID(first_cell);
+    }
 
     // PART 3: TRAVERSE THE PATH AND UPDATE PERSISTENCE AT EACH STEP
 
-    debug() << "TRAVERSING THE PATH USING THE RESET ALGORITHM: path has" << path.size() << "steps";
-    debug() << "                              ^^^^^^^^^^^^^^^";
+    if (verbosity >= 2) {
+        debug() << "TRAVERSING THE PATH USING THE RESET ALGORITHM: path has" << path.size() << "steps";
+    }
 
     // choose the initial value of the threshold intelligently
     unsigned long threshold = choose_initial_threshold(time_for_initial_decomp); //if the number of swaps might exceed this threshold, then do a persistence calculation from scratch
-    debug() << "initial reset threshold set to" << threshold;
+    if (verbosity >= 4) {
+        debug() << "initial reset threshold set to" << threshold;
+    }
 
     timer.restart();
 
@@ -157,7 +189,9 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<std::shared_ptr<H
         //if this is a strict anchor, then swap simplices
         if (down != nullptr && left != nullptr) //then this is a strict anchor and some simplices swap
         {
-            debug(true) << "  step " << i << " of path: crossing (strict) anchor at (" << cur_anchor->get_x() << ", " << cur_anchor->get_y() << ") into cell " << arrangement.FID((path[i])->get_face()) << "; edge weight: " << cur_anchor->get_weight();
+            if (verbosity >= 6) {
+                debug() << "  step " << i << " of path: crossing (strict) anchor at (" << cur_anchor->get_x() << ", " << cur_anchor->get_y() << ") into cell " << arrangement.FID((path[i])->get_face()) << "; edge weight: " << cur_anchor->get_weight();
+            }
 
             //find out how many transpositions we will have to process if we do vineyard updates
             num_trans = count_transpositions(at_anchor, cur_anchor->is_above());
@@ -201,7 +235,9 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<std::shared_ptr<H
             }
         } else //this is a non-strict anchor, and we just have to split or merge equivalence classes
         {
-            debug(true) << "  step " << i << " of path: crossing (non-strict) anchor at (" << cur_anchor->get_x() << ", " << cur_anchor->get_y() << ") into cell " << arrangement.FID((path[i])->get_face()) << "; edge weight: " << cur_anchor->get_weight();
+            if (verbosity >= 6) {
+                debug() << "  step " << i << " of path: crossing (non-strict) anchor at (" << cur_anchor->get_x() << ", " << cur_anchor->get_y() << ") into cell " << arrangement.FID((path[i])->get_face()) << "; edge weight: " << cur_anchor->get_weight();
+            }
 
             std::shared_ptr<TemplatePointsMatrixEntry> generator = at_anchor->down;
             if (generator == nullptr)
@@ -240,10 +276,6 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<std::shared_ptr<H
         //remember that we have crossed this anchor
         cur_anchor->toggle();
 
-        ///TESTING
-        //        print_perms(perm_high, inv_perm_high);
-        //        print_high_partition();
-
         //if this cell does not yet have a barcode template, then store it now
         std::shared_ptr<Face> cur_face = (path[i])->get_face();
         if (!cur_face->has_been_visited())
@@ -254,9 +286,11 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<std::shared_ptr<H
 
         if (num_trans < threshold) //then we did vineyard-updates
         {
-            debug() << "    --> this step took" << step_time << "milliseconds and involved" << swap_counter << "transpositions; estimate was" << num_trans;
-            if (swap_counter != num_trans)
-                debug() << "    ========>>> ERROR: transposition count doesn't match estimate!";
+            if (verbosity >= 6) {
+                debug() << "  --> this step took" << step_time << "milliseconds and involved" << swap_counter << "transpositions; estimate was" << num_trans;
+            }
+            //TESTING: if (swap_counter != num_trans)
+            //    debug() << "    ========>>> ERROR: transposition count doesn't match estimate!";
 
             if (swap_counter > 0) //don't track time for overhead that doesn't result in any transpositions
             {
@@ -264,9 +298,11 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<std::shared_ptr<H
                 total_time_for_transpositions += step_time;
             }
         } else {
-            debug() << "    --> this step took" << step_time << "milliseconds; reset matrices to avoid" << num_trans << "transpositions";
-            if (swap_counter > 0)
-                debug() << "    ========>>> ERROR: swaps occurred on a matrix reset!";
+            if (verbosity >= 6) {
+                debug() << "  --> this step took" << step_time << "milliseconds; reset matrices to avoid" << num_trans << "transpositions";
+            }
+            //TESTING: if (swap_counter > 0)
+            //    debug() << "    ========>>> ERROR: swaps occurred on a matrix reset!";
             number_of_resets++;
             total_time_for_resets += step_time;
         }
@@ -276,16 +312,23 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<std::shared_ptr<H
 
         //update the treshold
         threshold = (unsigned long)(((double)total_transpositions / total_time_for_transpositions) * ((double)total_time_for_resets / number_of_resets));
-        debug() << "       new threshold:" << threshold;
+        if (verbosity >= 6) {
+            debug() << "  -- new threshold:" << threshold;
+        }
     } //end path traversal
 
     //print runtime data
-    debug() << "DATA: path traversal and persistence updates took" << timer.elapsed() << "milliseconds";
-    debug() << "    max time per anchor crossing:" << max_time;
-    debug() << "    total number of transpositions:" << total_transpositions;
-    debug() << "    matrices were reset" << number_of_resets << "times when estimated number of transpositions exceeded" << threshold;
-    if (number_of_resets > 0)
-        debug() << "    average time for reset:" << (total_time_for_resets / number_of_resets) << "milliseconds";
+    if (verbosity >= 2) {
+        debug() << "BARCODE TEMPLATE COMPUTATION COMPLETE: path traversal and persistence updates took" << timer.elapsed() << "milliseconds";
+        if (verbosity >= 4) {
+            debug() << "    max time per anchor crossing:" << max_time;
+            debug() << "    total number of transpositions:" << total_transpositions;
+            debug() << "    matrices were reset" << number_of_resets << "times when estimated number of transpositions exceeded" << threshold;
+            if (number_of_resets > 0) {
+                debug() << "    average time for reset:" << (total_time_for_resets / number_of_resets) << "milliseconds";
+            }
+        }
+    }
 
     // PART 4: CLEAN UP
 
@@ -302,14 +345,14 @@ void PersistenceUpdater::set_anchor_weights(std::vector<std::shared_ptr<Halfedge
     // PART 1: GET THE PROPER SIMPLEX ORDERING
 
     //initialize the lift map from simplex grades to LUB-indexes
-    if (verbosity >= 6) {
+    if (verbosity >= 10) {
         debug() << "  Mapping low simplices:";
     }
     IndexMatrix* ind_low = bifiltration.get_index_mx(dim); //can we improve this with something more efficient than IndexMatrix?
     store_multigrades(ind_low, true);
     delete ind_low;
 
-    if (verbosity >= 6) {
+    if (verbosity >= 10) {
         debug() << "  Mapping high simplices:";
     }
     IndexMatrix* ind_high = bifiltration.get_index_mx(dim + 1); //again, could be improved?
@@ -326,7 +369,9 @@ void PersistenceUpdater::set_anchor_weights(std::vector<std::shared_ptr<Halfedge
         std::shared_ptr<Anchor> cur_anchor = (path[i])->get_anchor();
         std::shared_ptr<TemplatePointsMatrixEntry> at_anchor = cur_anchor->get_entry();
 
-        debug() << "  step" << i << "of the short path: crossing anchor at (" << cur_anchor->get_x() << "," << cur_anchor->get_y() << ") into cell" << arrangement.FID((path[i])->get_face());
+        if (verbosity >= 8) {
+            debug() << "  step" << i << "of the short path: crossing anchor at (" << cur_anchor->get_x() << "," << cur_anchor->get_y() << ") into cell" << arrangement.FID((path[i])->get_face());
+        }
 
         //if this is a strict anchor, then there can be switches and separations
         if (at_anchor->down != nullptr && at_anchor->left != nullptr) //then this is a strict anchor
@@ -351,7 +396,9 @@ void PersistenceUpdater::set_anchor_weights(std::vector<std::shared_ptr<Halfedge
         //store data
         cur_anchor->set_weight(switches + separations / 4); //we expect that each separation produces a transposition about 25% of the time
 
-        debug() << "     edge weight:" << cur_anchor->get_weight() << "; (" << switches << "," << separations << ")";
+        if (verbosity >= 8) {
+            debug() << "     edge weight:" << cur_anchor->get_weight() << "; (" << switches << "," << separations << ")";
+        }
 
     } //end path traversal
 } //end set_anchor_weights()
@@ -368,7 +415,7 @@ void PersistenceUpdater::clear_levelsets()
 //NOTE: this function has been updated for the new (unfactored) lift map of August 2015
 void PersistenceUpdater::store_multigrades(IndexMatrix* ind, bool low)
 {
-    if (verbosity >= 6) {
+    if (verbosity >= 8) {
         debug() << "STORING MULTIGRADES: low =" << low;
     }
 
@@ -376,7 +423,7 @@ void PersistenceUpdater::store_multigrades(IndexMatrix* ind, bool low)
     typedef std::list<std::shared_ptr<TemplatePointsMatrixEntry>> Frontier;
     Frontier frontier;
 
-    //loop through rows of xiSupportMatrix, from top to bottom
+    //loop through rows of TemplatePointsMatrix, from top to bottom
     for (unsigned y = ind->height(); y-- > 0;) //y counts down from (ind->height() - 1) to 0
     {
         //update the frontier for row y:
@@ -422,7 +469,7 @@ void PersistenceUpdater::store_multigrades(IndexMatrix* ind, bool low)
                 //now map the multigrade to the xi support entry
                 (*it)->add_multigrade(x, y, last_col - first_col, last_col, low);
 
-                if (verbosity >= 6) {
+                if (verbosity >= 10) {
                     debug() << "    simplices at (" << x << "," << y << "), in columns" << (first_col + 1) << "to" << last_col << ", mapped to TemplatePointsMatrixEntry at (" << (*it)->x << ", " << (*it)->y << ")";
                 }
             }
@@ -465,7 +512,7 @@ unsigned PersistenceUpdater::build_simplex_order(IndexMatrix* ind, bool low, std
         if (cur == nullptr)
             continue;
 
-        if (verbosity >= 6) {
+        if (verbosity >= 10) {
             debug() << "----TemplatePointsMatrixEntry (" << cur->x << "," << cur->y << ")";
         }
 
@@ -482,7 +529,7 @@ unsigned PersistenceUpdater::build_simplex_order(IndexMatrix* ind, bool low, std
         //store map values for all simplices at these multigrades
         for (std::list<std::shared_ptr<Multigrade>>::iterator it = mgrades->begin(); it != mgrades->end(); ++it) {
             std::shared_ptr<Multigrade> mg = *it;
-            if (verbosity >= 6) {
+            if (verbosity >= 10) {
                 debug() << "  multigrade (" << mg->x << "," << mg->y << ") has" << mg->num_cols << "simplices with last dim_index" << mg->simplex_index << "which will map to order_index" << o_index;
             }
 
@@ -725,12 +772,11 @@ void PersistenceUpdater::merge_grade_lists(std::shared_ptr<TemplatePointsMatrixE
 //moves columns from an equivalence class given by std::shared_ptr<TemplatePointsMatrixEntry> first to their new positions after or among the columns in the equivalence class given by std::shared_ptr<TemplatePointsMatrixEntry> second
 // the boolean argument indicates whether an anchor is being crossed from below (or from above)
 // this version updates the permutation vectors required for the "reset" approach
-///NOTE: this function has been updated for the July/August 2015 bug fix
 unsigned long PersistenceUpdater::move_columns(std::shared_ptr<TemplatePointsMatrixEntry> first, std::shared_ptr<TemplatePointsMatrixEntry> second, bool from_below)
 {
-    ///DEBUGGING
+    //the following should never occur
     if (first->low_index + second->low_count != second->low_index || first->high_index + second->high_count != second->high_index) {
-        debug() << "  ===>>> ERROR: swapping non-consecutive column blocks!";
+        throw std::runtime_error("PersistenceUpdater::move_columns(): swapping non-consecutive column blocks");
     }
 
     //get column indexes (so we know which columns to move)
@@ -775,7 +821,7 @@ unsigned long PersistenceUpdater::move_columns(std::shared_ptr<TemplatePointsMat
     {
         std::shared_ptr<Multigrade> cur_grade = *it;
 
-        //        debug() << "  ====>>>> moving high simplices at grade (" << cur_grade->x << "," << cur_grade->y << ")";
+        // debug() << "  ====>>>> moving high simplices at grade (" << cur_grade->x << "," << cur_grade->y << ")";
 
         if ((from_below && cur_grade->x > second->x) || (!from_below && cur_grade->y > second->y))
         //then move columns at cur_grade past columns at TemplatePointsMatrixEntry second; lift map does not change ( lift : multigrades --> xiSupportElements )
@@ -785,7 +831,7 @@ unsigned long PersistenceUpdater::move_columns(std::shared_ptr<TemplatePointsMat
             ++it;
         } else //then cur_grade now lifts to TemplatePointsMatrixEntry second; columns don't move
         {
-            //            debug() << "====>>>> simplex at (" << cur_grade->x << "," << cur_grade->y << ") now lifts to (" << second->x << "," << second->y << ")";
+            // debug() << "====>>>> simplex at (" << cur_grade->x << "," << cur_grade->y << ") now lifts to (" << second->x << "," << second->y << ")";
 
             //associate cur_grade with second
             second->insert_multigrade(cur_grade, false);
@@ -800,9 +846,9 @@ unsigned long PersistenceUpdater::move_columns(std::shared_ptr<TemplatePointsMat
         high_col -= cur_grade->num_cols;
     } //end "high" simplex loop
 
-    ///DEBUGGING
+    //the following should never occur
     if (second->low_index + first->low_count != first->low_index || second->high_index + first->high_count != first->high_index) {
-        debug() << "  ===>>> ERROR: swap resulted in non-consecutive column blocks!";
+        throw std::runtime_error("PersistenceUpdater::move_columns(): swap resulted in non-consecutive column blocks");
     }
     return swap_counter;
 } //end move_columns()
@@ -811,9 +857,11 @@ unsigned long PersistenceUpdater::move_columns(std::shared_ptr<TemplatePointsMat
 // this version maintains the permutation arrays required for the "reset" approach
 unsigned long PersistenceUpdater::move_low_columns(int s, unsigned n, int t)
 {
-    //    debug() << "   --Transpositions for low simplices: [" << s << "," << n << "," << t << "]:" << (n*(t-s)) << "total";
+    // debug() << "   --Transpositions for low simplices: [" << s << "," << n << "," << t << "]:" << (n*(t-s)) << "total";
+    
+    //the following should never occur
     if (s > t) {
-        debug() << "    ===>>> ERROR: illegal column move";
+        throw std::runtime_error("PersistenceUpdater::move_low_columns(): illegal column move");
     }
 
     for (unsigned c = 0; c < n; c++) //move column that starts at s-c
@@ -834,10 +882,10 @@ unsigned long PersistenceUpdater::move_low_columns(int s, unsigned n, int t)
             vineyard_update_low(a);
 
             /// TESTING ONLY - FOR CHECKING THAT D=RU
-            if (testing) {
-                D_low->swap_columns(a, false);
-                D_high->swap_rows(a, false);
-            }
+            //if (testing) {
+            //    D_low->swap_columns(a, false);
+            //    D_high->swap_rows(a, false);
+            //}
         } //end for(i=...)
     } //end for(c=...)
 
@@ -849,8 +897,10 @@ unsigned long PersistenceUpdater::move_low_columns(int s, unsigned n, int t)
 unsigned long PersistenceUpdater::move_high_columns(int s, unsigned n, int t)
 {
     //    debug() << "   --Transpositions for high simplices: [" << s << "," << n << "," << t << "]:" << (n*(t-s)) << "total";
+    
+    //the following should never occur
     if (s > t) {
-        debug() << "    ===>>> ERROR: illegal column move";
+        throw std::runtime_error("PersistenceUpdater::move_high_columns(): illegal column move");
     }
 
     for (unsigned c = 0; c < n; c++) //move column that starts at s-c
@@ -871,9 +921,9 @@ unsigned long PersistenceUpdater::move_high_columns(int s, unsigned n, int t)
             vineyard_update_high(a);
 
             /// TESTING ONLY - FOR CHECKING THAT D=RU
-            if (testing) {
-                D_high->swap_columns(a, false);
-            }
+            //if (testing) {
+            //    D_high->swap_columns(a, false);
+            //}
         } //end for(i=...)
     } //end for(c=...)
 
@@ -1288,7 +1338,7 @@ void PersistenceUpdater::do_separations(std::shared_ptr<TemplatePointsMatrixEntr
 //removes entries corresponding to TemplatePointsMatrixEntry head from lift_low and lift_high
 void PersistenceUpdater::remove_lift_entries(std::shared_ptr<TemplatePointsMatrixEntry> entry)
 {
-    if (verbosity >= 9) {
+    if (verbosity >= 10) {
         debug() << "    ----removing partition entries for TemplatePointsMatrixEntry" << entry->index << "(" << entry->low_index << ";" << entry->high_index << ")";
     }
 
@@ -1307,7 +1357,7 @@ void PersistenceUpdater::remove_lift_entries(std::shared_ptr<TemplatePointsMatri
 //if the equivalence class corresponding to TemplatePointsMatrixEntry head has nonempty sets of "low" or "high" simplices, then this function creates the appropriate entries in lift_low and lift_high
 void PersistenceUpdater::add_lift_entries(std::shared_ptr<TemplatePointsMatrixEntry> entry)
 {
-    if (verbosity >= 9) {
+    if (verbosity >= 10) {
         debug() << "    ----adding partition entries for TemplatePointsMatrixEntry" << entry->index << "(" << entry->low_index << ";" << entry->high_index << ")";
     }
 
@@ -1325,8 +1375,10 @@ void PersistenceUpdater::add_lift_entries(std::shared_ptr<TemplatePointsMatrixEn
 /// Is there a better way to handle endpoints at infinity?
 void PersistenceUpdater::store_barcode_template(std::shared_ptr<Face> cell)
 {
-    //    QDebug debug(true) = debug().nospace();
-    //    debug(true) << "  -----barcode: ";
+    Debug qd = debug(true);
+    if (verbosity >= 6) {
+        qd << "  -- barcode: ";
+    }
 
     //mark this cell as visited
     cell->mark_as_visited();
@@ -1341,7 +1393,6 @@ void PersistenceUpdater::store_barcode_template(std::shared_ptr<Face> cell)
             //find index of template point corresponding to simplex c
             std::map<unsigned, std::shared_ptr<TemplatePointsMatrixEntry>>::iterator tp1 = lift_low.lower_bound(c);
             unsigned a = (tp1 != lift_low.end()) ? tp1->second->index : -1; //index is -1 iff the simplex maps to infinity
-            ///TODO: CHECK -- SIMPLICES NEVER LIFT TO INFINITY NOW, RIGHT????
 
             //is simplex s paired?
             int s = R_high->find_low(c);
@@ -1350,27 +1401,34 @@ void PersistenceUpdater::store_barcode_template(std::shared_ptr<Face> cell)
                 //find index of xi support point corresponding to simplex s
                 std::map<unsigned, std::shared_ptr<TemplatePointsMatrixEntry>>::iterator tp2 = lift_high.lower_bound(s);
                 unsigned b = (tp2 != lift_high.end()) ? tp2->second->index : -1; //index is -1 iff the simplex maps to infinity
-                ///TODO: CHECK -- SIMPLICES NEVER LIFT TO INFINITY NOW, RIGHT????
 
                 if (a != b) //then we have a bar of positive length
                 {
-                    //                    debug(true) << "(" << c << "," << s << ")-->(" << a << "," << b << ") ";
                     dbc.add_bar(a, b);
+                    if (verbosity >= 6) {
+                        qd << "(" << c << "," << s << ")-->(" << a << "," << b << ") ";
+                    }
                 }
             } else //then simplex c generates an essential cycle
             {
-                //                debug(true) << c << "-->" << a << " ";
-
                 dbc.add_bar(a, -1); //b = -1 = MAX_UNSIGNED indicates this is an essential cycle
+                if (verbosity >= 6) {
+                    qd << c << "-->" << a << " ";
+                }
             }
         }
+    }
+    if (verbosity >= 6) {
+        qd << "\n ";
     }
 } //end store_barcode_template()
 
 //chooses an initial threshold by timing vineyard updates corresponding to random transpositions
 unsigned long PersistenceUpdater::choose_initial_threshold(int time_for_initial_decomp)
 {
-    debug() << "RANDOM VINEYARD UPDATES TO CHOOSE THE INITIAL THRESHOLD";
+    if(verbosity >= 4) {
+        debug() << "RANDOM VINEYARD UPDATES TO CHOOSE THE INITIAL THRESHOLD";
+    }
 
     //make a copy of the matrices
     MapMatrix_Perm* R_low_copy = new MapMatrix_Perm(*R_low);
@@ -1395,7 +1453,9 @@ unsigned long PersistenceUpdater::choose_initial_threshold(int time_for_initial_
     Timer timer;
 
     //do transpositions
-    debug() << "  -->Doing some random vineyard updates...";
+    if (verbosity >= 8) {
+        debug() << "  -->Doing some random vineyard updates...";
+    }
     while (timer.elapsed() < trans_time || trans_list.size() == 0) //do a transposition
     {
         unsigned rand_col = rand() % (num_cols - 1); //random integer in {0, 1, ..., num_cols - 2}
@@ -1413,7 +1473,9 @@ unsigned long PersistenceUpdater::choose_initial_threshold(int time_for_initial_
     }
 
     //do the inverse transpositions
-    debug() << "  -->Undoing the random vineyard updates...";
+    if (verbosity >= 8) {
+        debug() << "  -->Undoing the random vineyard updates...";
+    }
     for (auto rit = trans_list.rbegin(); rit != trans_list.rend(); ++rit) {
         auto col = *rit;
         if (col < R_low->width()) {
@@ -1426,7 +1488,9 @@ unsigned long PersistenceUpdater::choose_initial_threshold(int time_for_initial_
     //record the time
     trans_time = timer.elapsed();
 
-    debug() << "  -->Did" << (2 * trans_list.size()) << "vineyard updates in" << trans_time << "milliseconds.";
+    if (verbosity >= 8) {
+        debug() << "  -->Did" << (2 * trans_list.size()) << "vineyard updates in" << trans_time << "milliseconds.";
+    }
 
     //restore the matrices to the copies made at the beginning of this function
     ///TODO: is this good style?
@@ -1445,47 +1509,47 @@ unsigned long PersistenceUpdater::choose_initial_threshold(int time_for_initial_
 
 ///TESTING ONLY
 /// functions to check that D=RU
-void PersistenceUpdater::check_low_matrix(MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL)
-{
-    bool err_low = false;
-    for (unsigned row = 0; row < D_low->height(); row++) {
-        for (unsigned col = 0; col < D_low->width(); col++) {
-            bool temp = false;
-            for (unsigned e = 0; e < D_low->width(); e++)
-                temp = (temp != (RL->entry(row, e) && UL->entry(e, col)));
-            if (temp != D_low->entry(row, col))
-                err_low = true;
-        }
-    }
-    if (err_low) {
-        debug() << "====>>>> MATRIX ERROR (low) AT THIS STEP!";
-        //        debug() << "  Reduced matrix for low simplices:";
-        //        RL->print();
-        //        debug() << "  Matrix U for low simplices:";
-        //        UL->print();
-        //        debug() << "  Matrix D for low simplices:";
-        //        D_low->print();
-    } else
-        debug() << "low matrix ok";
-}
+// void PersistenceUpdater::check_low_matrix(MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL)
+// {
+//     bool err_low = false;
+//     for (unsigned row = 0; row < D_low->height(); row++) {
+//         for (unsigned col = 0; col < D_low->width(); col++) {
+//             bool temp = false;
+//             for (unsigned e = 0; e < D_low->width(); e++)
+//                 temp = (temp != (RL->entry(row, e) && UL->entry(e, col)));
+//             if (temp != D_low->entry(row, col))
+//                 err_low = true;
+//         }
+//     }
+//     if (err_low) {
+//         debug() << "====>>>> MATRIX ERROR (low) AT THIS STEP!";
+//         //        debug() << "  Reduced matrix for low simplices:";
+//         //        RL->print();
+//         //        debug() << "  Matrix U for low simplices:";
+//         //        UL->print();
+//         //        debug() << "  Matrix D for low simplices:";
+//         //        D_low->print();
+//     } else
+//         debug() << "low matrix ok";
+// }
 
-void PersistenceUpdater::check_high_matrix(MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH)
-{
-    bool err_high = false;
-    for (unsigned row = 0; row < D_high->height(); row++) {
-        for (unsigned col = 0; col < D_high->width(); col++) {
-            bool temp = false;
-            for (unsigned e = 0; e < D_high->width(); e++)
-                temp = (temp != (RH->entry(row, e) && UH->entry(e, col)));
-            if (temp != D_high->entry(row, col))
-                err_high = true;
-        }
-    }
-    if (err_high)
-        debug() << "====>>>> MATRIX ERROR (high) AT THIS STEP!\n";
-    else
-        debug() << "high matrix ok";
-}
+// void PersistenceUpdater::check_high_matrix(MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH)
+// {
+//     bool err_high = false;
+//     for (unsigned row = 0; row < D_high->height(); row++) {
+//         for (unsigned col = 0; col < D_high->width(); col++) {
+//             bool temp = false;
+//             for (unsigned e = 0; e < D_high->width(); e++)
+//                 temp = (temp != (RH->entry(row, e) && UH->entry(e, col)));
+//             if (temp != D_high->entry(row, col))
+//                 err_high = true;
+//         }
+//     }
+//     if (err_high)
+//         debug() << "====>>>> MATRIX ERROR (high) AT THIS STEP!\n";
+//     else
+//         debug() << "high matrix ok";
+// }
 
 void PersistenceUpdater::print_perms(Perm& per, Perm& inv)
 {

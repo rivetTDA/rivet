@@ -44,11 +44,11 @@ class MapMatrix_Perm;
 #include <vector>
 
 //struct SimplexData used for return type of SimplexTree::get_simplex_data()
-struct SimplexData {
-    unsigned x; //integer (relative) x-coordinate of multi-grade
-    unsigned y; //integer (relative) y-coordinate of multi-grade
-    unsigned dim;
-};
+// struct SimplexData {
+//     unsigned x; //integer (relative) x-coordinate of multi-grade
+//     unsigned y; //integer (relative) y-coordinate of multi-grade
+//     unsigned dim;
+// };
 
 //struct DirectSumMatrices used for return type of SimplexTree::get_merge_mxs()
 struct DirectSumMatrices {
@@ -116,9 +116,9 @@ public:
     unsigned get_size(unsigned dim); //returns the number of simplices of dimension (hom_dim-1), hom_dim, or (hom_dim+1)
 
     ///// THESE FUNCTIONS ARE UNUSED AND MIGHT NEED TO BE UPDATED
-    SimplexData get_simplex_data(int index); //returns the multi-grade of the simplex with given global simplex index, as well as the dimension of the simplex
+    //SimplexData get_simplex_data(int index); //returns the multi-grade of the simplex with given global simplex index, as well as the dimension of the simplex
     int get_num_simplices(); //returns the total number of simplices represented in the simplex tree
-    //TODO: would it be more efficient to store the total number of simplices???
+      //TODO: would it be more efficient to store the total number of simplices???
 
     const unsigned hom_dim; //the dimension of homology to be computed; max dimension of simplices is one more than this
     const unsigned verbosity; //controls display of output, for debugging

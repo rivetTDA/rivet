@@ -1,3 +1,23 @@
+/**********************************************************************
+Copyright 2014-2016 The RIVET Devlopers. See the COPYRIGHT file at
+the top-level directory of this distribution.
+
+This file is part of RIVET.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+**********************************************************************/
+
 #include "template_points_matrix.h"
 #include "dcel/arrangement.h"
 
@@ -138,13 +158,11 @@ std::vector<std::shared_ptr<TemplatePointsMatrixEntry>> TemplatePointsMatrix::fi
             auto insertion_point = -1;
 
             if (xi_pt) {
-                debug() << "  creating TemplatePointsMatrixEntry at (" << i << ", " << j << ") for xi point " << next_xi_pt;
-
+                // debug() << "  creating TemplatePointsMatrixEntry at (" << i << ", " << j << ") for xi point " << next_xi_pt;
                 insertion_point = next_xi_pt++;
             } else {
                 insertion_point = xi_pts.size();
-
-                debug() << "  creating TemplatePointsMatrixEntry at (" << i << "," << j << ") for an anchor; index = " << insertion_point;
+                //debug() << "  creating TemplatePointsMatrixEntry at (" << i << "," << j << ") for an anchor; index = " << insertion_point;
 
                 //add this point to xi_pts
                 xi_pts.push_back(TemplatePoint(i, j, 0, 0, 0));

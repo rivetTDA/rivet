@@ -1,5 +1,25 @@
-#ifndef XI_SUPPORT_MATRIX_H
-#define XI_SUPPORT_MATRIX_H
+/**********************************************************************
+Copyright 2014-2016 The RIVET Devlopers. See the COPYRIGHT file at
+the top-level directory of this distribution.
+
+This file is part of RIVET.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+**********************************************************************/
+
+#ifndef TEMPLATE_POINT_MATRIX_H
+#define TEMPLATE_POINT_MATRIX_H
 
 //forward declarations
 class MultiBetti;
@@ -41,7 +61,7 @@ struct TemplatePointsMatrixEntry {
     void insert_multigrade(std::shared_ptr<Multigrade> mg, bool low); //inserts a Multigrade at the end of the list for the given dimension; does not update column counts!
 };
 
-//// each node in the sparse matrix maintains two lists of multigrades
+//// each TemplatePointsMatrixEntry maintains two lists of multigrades
 struct Multigrade {
     unsigned x; //x-coordinate of this multigrade
     unsigned y; //y-coordinate of this multigrade
@@ -78,4 +98,4 @@ private:
     std::vector<std::shared_ptr<TemplatePointsMatrixEntry>> rows;
 };
 
-#endif // XI_SUPPORT_MATRIX_H
+#endif // TEMPLATE_POINT_MATRIX_H

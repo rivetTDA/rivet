@@ -1,3 +1,22 @@
+/**********************************************************************
+Copyright 2014-2016 The RIVET Devlopers. See the COPYRIGHT file at
+the top-level directory of this distribution.
+
+This file is part of RIVET.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+**********************************************************************/
 /**
  * \class	PersistenceUpdater
  * \brief	Computes barcode templates (using the mathematics of "vineyard updates" to store in the Arrangement)
@@ -68,9 +87,9 @@ private:
     std::vector<unsigned> inv_perm_high; //inverse of the previous map
 
     ///TESTING ONLY
-    bool testing;
-    MapMatrix_Perm* D_low;
-    MapMatrix_Perm* D_high;
+    //bool testing;
+    //MapMatrix_Perm* D_low;
+    //MapMatrix_Perm* D_high;
 
     //functions
 
@@ -144,9 +163,8 @@ private:
     unsigned long choose_initial_threshold(int time_for_initial_decomp);
 
     ///TESTING ONLY
-    void check_low_matrix(MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL);
-    void check_high_matrix(MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH);
-
+    //void check_low_matrix(MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL);
+    //void check_high_matrix(MapMatrix_Perm* RH, MapMatrix_RowPriority_Perm* UH);
     void print_perms(Perm& per, Perm& inv);
     void print_high_partition();
 };

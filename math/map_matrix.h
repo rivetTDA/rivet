@@ -1,3 +1,22 @@
+/**********************************************************************
+Copyright 2014-2016 The RIVET Devlopers. See the COPYRIGHT file at
+the top-level directory of this distribution.
+
+This file is part of RIVET.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+**********************************************************************/
 /**
  * \class	MapMatrix and related classes
  * \brief	Stores a matrix representing a simplicial map and provides operations for persistence calculations.
@@ -118,8 +137,6 @@ protected:
     std::vector<unsigned> mrep; //inverse permutation vector
     std::vector<int> low_by_row; //stores index of column with each low number, or -1 if no such column exists -- NOTE: only accurate after decompose_RU() is called
     std::vector<int> low_by_col; //stores the low number for each column, or -1 if the column is empty -- NOTE: only accurate after decompose_RU() is called
-
-    //        std::vector<unsigned> col_perm; ///column permutation vector -- FOR TESTING ONLY
 };
 
 //MapMatrix stored in row-priority format, with row/column permutations, designed for upper-triangular matrices in vineyard updates
@@ -141,6 +158,7 @@ public:
     void swap_rows(unsigned i); //transposes rows i and i+1
     void swap_columns(unsigned j); //transposes columns j and j+1
 
+    ///FOR TESTING ONLY
     void print(); //prints the matrix to qDebug() for testing
     void print_perm(); //prints the permutation vectors to qDebug() for testing
 

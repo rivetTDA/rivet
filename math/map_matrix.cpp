@@ -1,3 +1,22 @@
+/**********************************************************************
+Copyright 2014-2016 The RIVET Devlopers. See the COPYRIGHT file at
+the top-level directory of this distribution.
+
+This file is part of RIVET.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+**********************************************************************/
 /* map matrix class
  * stores a matrix representing a simplicial map
  */
@@ -80,9 +99,9 @@ void MapMatrix_Base::set(unsigned i, unsigned j)
 {
     //make sure this operation is valid
     if (columns.size() <= j)
-        throw std::runtime_error("attempting to set column past end of matrix");
+        throw std::runtime_error("MapMatrix_Base::set(): attempting to set column past end of matrix");
     if (num_rows <= i)
-        throw std::runtime_error("attempting to set row past end of matrix");
+        throw std::runtime_error("MapMatrix_Base::set(): attempting to set row past end of matrix");
 
     //if the column is empty, then create a node
     if (columns[j] == NULL) {
@@ -138,9 +157,9 @@ void MapMatrix_Base::clear(unsigned i, unsigned j)
 {
     //make sure this entry is valid
     if (columns.size() <= j)
-        throw std::runtime_error("attempting to clear entry in a column past end of matrix");
+        throw std::runtime_error("MapMatrix_Base::clear(): attempting to clear entry in a column past end of matrix");
     if (num_rows <= i)
-        throw std::runtime_error("attempting to clear entry in a row row past end of matrix");
+        throw std::runtime_error("MapMatrix_Base::clear(): attempting to clear entry in a row past end of matrix");
 
     //if column is empty, then do nothing
     if (columns[j] == NULL)
@@ -183,9 +202,9 @@ bool MapMatrix_Base::entry(unsigned i, unsigned j)
 {
     //make sure this entry is valid
     if (columns.size() <= j)
-        throw std::runtime_error("attempting to check entry in a column past end of matrix");
+        throw std::runtime_error("MapMatrix_Base::entry(): attempting to check entry in a column past end of matrix");
     if (num_rows <= i)
-        throw std::runtime_error("attempting to check entry in a row row past end of matrix");
+        throw std::runtime_error("MapMatrix_Base::entry(): attempting to check entry in a row past end of matrix");
 
     //get initial node pointer
     MapMatrixNode* np = columns[j];
@@ -212,9 +231,9 @@ void MapMatrix_Base::add_column(unsigned j, unsigned k)
 {
     //make sure this operation is valid
     if (columns.size() <= j || columns.size() <= k)
-        throw std::runtime_error("attempting to access column past end of matrix");
+        throw std::runtime_error("MapMatrix_Base::add_column(): attempting to access column past end of matrix");
     if (j == k)
-        throw std::runtime_error("adding a column to itself");
+        throw std::runtime_error("MapMatrix_Base::add_column(): adding a column to itself");
 
     //pointers
     MapMatrixNode* jnode = columns[j]; //points to next node from column j that we will add to column k
@@ -377,7 +396,7 @@ int MapMatrix::low(unsigned j)
 {
     //make sure this query is valid
     if (columns.size() <= j)
-        throw std::runtime_error("attempting to check low number of a column past end of matrix");
+        throw std::runtime_error("MapMatrix::low(): attempting to check low number of a column past end of matrix");
 
     //if the column is empty, then return -1
     if (columns[j] == NULL)
@@ -404,7 +423,7 @@ void MapMatrix::add_column(MapMatrix* other, unsigned j, unsigned k)
 {
     //make sure this operation is valid
     if (other->columns.size() <= j || columns.size() <= k)
-        throw std::runtime_error("attempting to access column(s) past end of matrix");
+        throw std::runtime_error("MapMatrix::add_column(): attempting to access column(s) past end of matrix");
 
     //pointers
     MapMatrixNode* jnode = other->columns[j]; //points to next node from column j that we will add to column k
@@ -553,9 +572,6 @@ MapMatrix_Perm::MapMatrix_Perm(unsigned rows, unsigned cols)
         perm[i] = i;
         mrep[i] = i;
     }
-
-    //    for(unsigned j=0; j < cols; j++)
-    //        col_perm[j] = j;
 }
 
 MapMatrix_Perm::MapMatrix_Perm(unsigned size)
@@ -710,11 +726,6 @@ void MapMatrix_Perm::swap_columns(unsigned j, bool update_lows)
         if (k != -1)
             low_by_row[k] = j;
     }
-
-    ///TESTING ONLY
-    //    unsigned a = col_perm[j];
-    //    col_perm[j] = col_perm[j+1];
-    //    col_perm[j+1] = a;
 }
 
 //clears the matrix, then rebuilds it from reference with columns permuted according to col_order
@@ -722,16 +733,6 @@ void MapMatrix_Perm::swap_columns(unsigned j, bool update_lows)
 //  col_order is a map: (column index in reference matrix) -> (column index in rebuilt matrix)
 void MapMatrix_Perm::rebuild(MapMatrix_Perm* reference, std::vector<unsigned>& col_order)
 {
-    ///TESTING: check the permutation
-    //    std::vector<bool> check(columns.size(), false);
-    //    for(unsigned j=0; j < columns.size(); j++)
-    //        check[col_order[j]] = true;
-    //    for(unsigned j=0; j < columns.size(); j++)
-    //        if(check[j] == false)
-    //        {
-    //            debug() << "ERROR: column permutation skipped" << j;
-    //        }
-
     //clear the matrix
     for (unsigned j = 0; j < columns.size(); j++) {
         MapMatrixNode* current = columns[j];
@@ -816,12 +817,6 @@ void MapMatrix_Perm::rebuild(MapMatrix_Perm* reference, std::vector<unsigned>& c
     for (unsigned j = 0; j < columns.size(); j++) {
         MapMatrixNode* ref_node = reference->columns[j];
         while (ref_node != NULL) {
-            //            if(j==153915 || j==14897 || j==40016)
-            //            {
-            //                MapMatrixNode* test = columns[col_order[j]];
-            //                test->get_next();
-            //            }
-
             MapMatrix::set(row_order[ref_node->get_row()], col_order[j]);
             ref_node = ref_node->get_next();
         }
@@ -868,7 +863,7 @@ void MapMatrix_Perm::print()
     }
 } //end print()
 
-//check for inconsistencies in low arrays
+//check for inconsistencies in low arrays, for testing purposes
 void MapMatrix_Perm::check_lows()
 {
     for (unsigned i = 0; i < num_rows; i++) {
