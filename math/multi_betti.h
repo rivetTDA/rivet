@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * \author	Matthew L. Wright
  * \date	February 2014
  * 
- * Given a bifiltration and a dimension of homology, this class computes the multi-graded Betti numbers (xi_0 and xi_1).
+ * Given a bifiltration and a dimension of homology, this class computes the biraded Betti numbers (xi_0 and xi_1).
  */
 
 #ifndef __MultiBetti_H__
@@ -41,50 +41,73 @@ class TemplatePoint;
 typedef boost::multi_array<unsigned, 2> unsigned_matrix;
 
 #include <interface/progress.h>
-#include <vector>
 
+#include <vector>
 typedef std::vector<int> Vector;
 
 class MultiBetti {
 public:
-    MultiBetti(SimplexTree& st, int dim); //constructor sets up the data structure but doesn't compute the multi-graded Betti numbers xi_0 and xi_1
+    //constructor: sets up the data structure but does not compute xi_0 or xi_1
+    MultiBetti(SimplexTree& st, int dim); 
 
-    void compute_fast(unsigned_matrix& hom_dims, Progress& progress);
-    //computes xi_0 and xi_1 at all multi-grades in a fast way; also stores dimension of homology at each grade in the supplied matrix
+    //computes xi_0 and xi_1, and also stores dimension of homology at each grade in the supplied matrix
+    void compute(unsigned_matrix& hom_dims, Progress& progress);
 
-    //functions to compute xi_0 and xi_1    ----later, make these private and access them via compute_fast();
-    void compute_nullities(unsigned_matrix& hom_dims);
-    void compute_ranks(unsigned_matrix& hom_dims);
-    void compute_alpha();
-    void compute_eta();
+    //computes xi_2 from the values of xi_0, xi_1 and the dimensions
+    void compute_xi2(unsigned_matrix& hom_dims);
 
-    void compute_xi2(unsigned_matrix& hom_dims); //computes xi_2 from the values of xi_0, xi_1 and the dimensions
+    //returns xi_0 at the specified grade
+    int xi0(unsigned x, unsigned y);
 
-    int xi0(unsigned x, unsigned y); //returns xi_0 at the specified (discrete) multi-grade
-    int xi1(unsigned x, unsigned y); //returns xi_1 at the specified (discrete) multi-grade
+    //returns xi_1 at the specified grade
+    int xi1(unsigned x, unsigned y);
 
-    void store_support_points(std::vector<TemplatePoint>& xi_supp); //stores the xi support points in xi_supp in lexicographical order
+    //stores the xi support points in lexicographical order
+    void store_support_points(std::vector<TemplatePoint>& tpts);
 
-    void print_lows(Vector& lows); //TESTING ONLY
-
-    SimplexTree& bifiltration; //pointer to the bifiltration
-
-    const int dimension; //dimension of homology to compute
+    SimplexTree* bifiltration; //pointer to the bifiltration
 
 private:
+    const int dimension; //dimension of homology to compute
     unsigned num_x_grades; //number of grades in primary direction
     unsigned num_y_grades; //number of grades in secondary direction
-
     boost::multi_array<int, 3> xi; //matrix to hold xi values; indices: xi[x][y][subscript]
+    const int verbosity; //controls display of output, for debugging
 
-    void reduce(MapMatrix* mm, int first_col, int last_col, Vector& lows, int& zero_cols);
-    //column reduction for Edelsbrunner algorithm
+    //simple column reduction algorithm
+    //  pivot columns are first_col to last_col, inclusive
+    //  increments nonzero_cols by the number of columns in [first_col, last_col] that remained nonzero
+    void reduce(MapMatrix* mm, int first_col, int last_col, Vector& lows, long& nonzero_cols);
 
-    void reduce_also(MapMatrix* mm, MapMatrix* m2, int first_col, int last_col, Vector& lows, int y_grade, ColumnList& zero_list, int& zero_cols);
-    //column reduction for Edelsbrunner algorithm, also performs column additions on a second matrix
+    //column reduction algorithm that also performs column operations on a slave matrix
+    //  pivot columns are first_col to last_col, inclusive
+    //  increments zero_cols by the number of zero-columns in [first_col, last_col], regardless of whether they
+    //      were zeroed out in this reduction or zero before this function was called
+    //  indexes of columns that are zeroed out are inserted into zero_list
+    void reduce_slave(MapMatrix* mm, MapMatrix* slave1, MapMatrix* slave2, int first_col, int last_col, Vector& lows,
+                          unsigned y_grade, ColumnList& zero_list, long& zero_cols);
 
-    void reduce_spliced(MapMatrix* m_left, MapMatrix* m_right, IndexMatrix* ind_left, IndexMatrix* ind_right, ColumnList& right_cols, int grade_x, int grade_y, Vector& lows, int& zero_cols);
-    //column reduction for Edelsbrunner algorithm on a two-part matrix (two matrices spliced together, treated as one matrix for the column reduction)
+    //column reduction of two matrices spliced together by y-grade
+    //  pivot columns are ... FIXME: WRITE THIS!!!!!!!!!!!!!!!!!!!!!!!!!!
+    //  returns ...
+    void reduce_spliced(MapMatrix* m_left, MapMatrix* m_right, IndexMatrix* ind_left, IndexMatrix* ind_right,
+                        ColumnList& right_cols, unsigned grade_x, unsigned grade_y, Vector& lows,
+                        long& nonzero_cols_steps12, long& nonzero_cols_step3);
+
+    //version of reduce_spliced for computing dim(U) for xi_1
+    ///FIXME: NOT SURE IF THIS SHOULD BE A SEPARATE FUNCTION FROM THE ABOVE
+    void reduce_spliced(MapMatrix* m_left, MapMatrix* m_right, IndexMatrix* ind_left, IndexMatrix* ind_right,
+                        ColumnList& right_cols, unsigned grade_x, unsigned grade_y, Vector& lows, long& nonzero_cols);
+
+    //builds the bdry2 matrix of the direct sum B + C
+    //  input: matrix bdry2, corresponding index matrix ind2
+    //  output: matrix bdry2sum, corresponding index matrix ind2sum
+    void build_bdry2s_mx(MapMatrix* bdry2, IndexMatrix* ind2, MapMatrix* bdry2sum, IndexMatrix* ind2sum);
+
+    //builds the split matrix
+    //  input: number of columns in the matrix
+    //  output: matrix containing size columns and 2*size rows; matrix is two stacked copies of the (size x size) identity matrix
+    MapMatrix* build_split_mx(unsigned size);
 };
 
 #endif // __MultiBetti_H__

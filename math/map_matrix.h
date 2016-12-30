@@ -41,7 +41,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef __MapMatrix_H__
 #define __MapMatrix_H__
 
-#include <iostream>
+class IndexMatrix;
+
 #include <vector>
 
 //base class simply implements features common to all MapMatrices, whether column-priority or row-priority
@@ -92,6 +93,8 @@ public:
     unsigned width() const; //returns the number of columns in the matrix
     unsigned height() const; //returns the number of rows in the matrix
 
+    void reserve_cols(unsigned num_cols); //requests that the columns vector have enough capacity for num_cols columns
+
     virtual void set(unsigned i, unsigned j); //sets (to 1) the entry in row i, column j
     virtual bool entry(unsigned i, unsigned j); //returns true if entry (i,j) is 1, false otherwise
 
@@ -101,7 +104,16 @@ public:
     void add_column(unsigned j, unsigned k); //adds column j to column k; RESULT: column j is not changed, column k contains sum of columns j and k (with mod-2 arithmetic)
     void add_column(MapMatrix* other, unsigned j, unsigned k); //adds column j from MapMatrix* other to column k of this matrix
 
-    void col_reduce(); //applies the column reduction algorithm to this matrix
+    //copies NONZERO columns with indexes in [first, last] from other, appending them to this matrix to the right of all existing columns
+    //  all row indexes in copied columns are increased by offset
+    void copy_cols_from(MapMatrix* other, int first, int last, unsigned offset);
+
+    //copies columns with indexes in [first, last] from other, inserting them in this matrix with the same column indexes
+    void copy_cols_same_indexes(MapMatrix* other, int first, int last);
+          
+    //removes zero columns from this matrix
+    //  ind_old gives grades of columns before zero columns are removed; new grade info stored in ind_new
+    void remove_zero_cols(IndexMatrix* ind_old, IndexMatrix* ind_new);
 };
 
 //MapMatrix with row/column permutations and low array, designed for "vineyard updates"
@@ -116,8 +128,9 @@ public:
     void set(unsigned i, unsigned j); //sets (to 1) the entry in row i, column j
     bool entry(unsigned i, unsigned j); //returns true if entry (i,j) is 1, false otherwise
 
-    MapMatrix_RowPriority_Perm* decompose_RU(); //reduces this matrix, fills the low array, and returns the corresponding upper-triangular matrix for the RU-decomposition
-    //NOTE -- only to be called before any rows are swapped!
+    //reduces this matrix, fills the low array, and returns the corresponding upper-triangular matrix for the RU-decomposition
+    //  NOTE: only to be called before any rows are swapped!
+    MapMatrix_RowPriority_Perm* decompose_RU(); 
 
     int low(unsigned j); //returns the "low" index in the specified column, or -1 if the column is empty
     int find_low(unsigned l); //returns the index of the column with low l, or -1 if there is no such column
@@ -125,8 +138,11 @@ public:
     void swap_rows(unsigned i, bool update_lows); //transposes rows i and i+1, optionally updates low array
     void swap_columns(unsigned j, bool update_lows); //transposes columns j and j+1, optionally updates low array
 
-    void rebuild(MapMatrix_Perm* reference, std::vector<unsigned>& col_order); //clears the matrix, then rebuilds it from reference with columns permuted according to col_order
-    void rebuild(MapMatrix_Perm* reference, std::vector<unsigned>& col_order, std::vector<unsigned>& row_order); //clears the matrix, then rebuilds it from reference with columns permuted according to col_order and rows permuted according to row_order
+    //clears the matrix, then rebuilds it from reference with columns permuted according to col_order
+    void rebuild(MapMatrix_Perm* reference, std::vector<unsigned>& col_order); 
+    
+    //clears the matrix, then rebuilds it from reference with columns permuted according to col_order and rows permuted according to row_order
+    void rebuild(MapMatrix_Perm* reference, std::vector<unsigned>& col_order, std::vector<unsigned>& row_order); 
 
     ///FOR TESTING ONLY
     virtual void print(); //prints the matrix to standard output (for testing)

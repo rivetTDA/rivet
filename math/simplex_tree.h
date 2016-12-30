@@ -43,19 +43,6 @@ class MapMatrix_Perm;
 #include <string>
 #include <vector>
 
-//struct SimplexData used for return type of SimplexTree::get_simplex_data()
-// struct SimplexData {
-//     unsigned x; //integer (relative) x-coordinate of multi-grade
-//     unsigned y; //integer (relative) y-coordinate of multi-grade
-//     unsigned dim;
-// };
-
-//struct DirectSumMatrices used for return type of SimplexTree::get_merge_mxs()
-struct DirectSumMatrices {
-    MapMatrix* boundary_matrix; //points to a boundary matrix for B+C
-    MapMatrix* map_matrix; //points to a matrix for a merge or split map
-    IndexMatrix* column_indexes; //points to a matrix of column indexes, one for each multi-grade
-};
 
 //comparison functor for sorting std::set<STNode*> by REVERSE-LEXICOGRAPHIC multi-grade order
 struct NodeComparator {
@@ -81,7 +68,7 @@ public:
 
     //builds SimplexTree representing a bifiltered Vietoris-Rips complex from discrete data
     //requires a list of birth times (one for each point), a list of distances between pairs
-    //of points, max dimension of simplices to construct, and number of grade values in x- and y-directions
+    //  of points, max dimension of simplices to construct, and number of grade values in x- and y-directions
     //NOTE: automatically computes global indexes and dimension indexes
     //CONVENTION: the x-coordinate is "birth time" for points and the y-coordinate is "distance" between points
     void build_VR_complex(std::vector<unsigned>& times, std::vector<unsigned>& distances, unsigned num_x, unsigned num_y);
@@ -90,33 +77,39 @@ public:
     //WARNING: doesn't update global data structures (e.g. global indexes)
     void add_simplex(std::vector<int>& vertices, int x, int y);
 
-    void update_xy_indexes(std::vector<unsigned>& x_ind, std::vector<unsigned>& y_ind, unsigned num_x, unsigned num_y);
     //updates multigrades; for use when building simplexTree from a bifiltration file
     //also requires the number of x- and y-grades that exist in the bifiltration
+    void update_xy_indexes(std::vector<unsigned>& x_ind, std::vector<unsigned>& y_ind, unsigned num_x, unsigned num_y);
+    
+    //updates the global indexes of all simplices in this simplex tree
+    void update_global_indexes(); 
 
-    void update_global_indexes(); //updates the global indexes of all simplices in this simplex tree
-    void update_dim_indexes(); //updates the dimension indexes (reverse-lexicographical multi-grade order) for simplices of dimension (hom_dim-1), hom_dim, and (hom_dim+1)
+    //updates the dimension indexes (reverse-lexicographical multi-grade order) for simplices of dimension (hom_dim-1), hom_dim, and (hom_dim+1)
+    void update_dim_indexes(); 
 
-    MapMatrix* get_boundary_mx(unsigned dim); //returns a matrix of boundary information for simplices
-    MapMatrix_Perm* get_boundary_mx(std::vector<int>& coface_order, unsigned num_simplices); //returns a boundary matrix for hom_dim-simplices with columns in a specified order -- for vineyard-update algorithm
-    MapMatrix_Perm* get_boundary_mx(std::vector<int>& face_order, unsigned num_faces, std::vector<int>& coface_order, unsigned num_cofaces); //returns a boundary matrix for (hom_dim+1)-simplices with columns and rows a specified orders -- for vineyard-update algorithm
+    //returns a matrix of boundary information for simplices
+    MapMatrix* get_boundary_mx(unsigned dim); 
 
-    DirectSumMatrices get_merge_mxs(); //returns matrices for the merge map [B+C,D], the boundary map B+C, and the multi-grade information
-    DirectSumMatrices get_split_mxs(); //returns matrices for the split map [A,B+C], the boundary map B+C, and the multi-grade information
+    //returns a boundary matrix for hom_dim-simplices with columns in a specified order -- for vineyard-update algorithm
+    MapMatrix_Perm* get_boundary_mx(std::vector<int>& coface_order, unsigned num_simplices); 
 
-    IndexMatrix* get_index_mx(unsigned dim); //returns a matrix of column indexes to accompany MapMatrices
-    IndexMatrix* get_offset_index_mx(unsigned dim); //returns a matrix of column indexes offset in each direction, for the boundary_A matrix in compute_eta()
+    //returns a boundary matrix for (hom_dim+1)-simplices with columns and rows a specified orders -- for vineyard-update algorithm
+    MapMatrix_Perm* get_boundary_mx(std::vector<int>& face_order, unsigned num_faces, std::vector<int>& coface_order, unsigned num_cofaces); 
 
-    std::vector<int> find_vertices(int gi); //given a global index, return (a vector containing) the vertices of the simplex
-    STNode* find_simplex(std::vector<int>& vertices); //given a sorted vector of vertex indexes, return a pointer to the node representing the corresponding simplex
+    //returns a matrix of column indexes to accompany MapMatrices
+    IndexMatrix* get_index_mx(unsigned dim); 
+
+    //given a global index, return (a vector containing) the vertices of the simplex
+    std::vector<int> find_vertices(int gi); 
+
+    //given a sorted vector of vertex indexes, return a pointer to the node representing the corresponding simplex
+    STNode* find_simplex(std::vector<int>& vertices); 
 
     unsigned num_x_grades(); //returns the number of unique x-coordinates of the multi-grades
     unsigned num_y_grades(); //returns the number of unique y-coordinates of the multi-grades
 
     unsigned get_size(unsigned dim); //returns the number of simplices of dimension (hom_dim-1), hom_dim, or (hom_dim+1)
 
-    ///// THESE FUNCTIONS ARE UNUSED AND MIGHT NEED TO BE UPDATED
-    //SimplexData get_simplex_data(int index); //returns the multi-grade of the simplex with given global simplex index, as well as the dimension of the simplex
     int get_num_simplices(); //returns the total number of simplices represented in the simplex tree
       //TODO: would it be more efficient to store the total number of simplices???
 

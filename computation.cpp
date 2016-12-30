@@ -57,13 +57,14 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(ComputationInput& in
     //STAGE 3: COMPUTE MULTIGRADED BETTI NUMBERS
 
     std::unique_ptr<ComputationResult> result(new ComputationResult);
-    //compute xi_0 and xi_1 at all multi-grades
+    //compute xi_0 and xi_1 at all bigrades
     if (verbosity >= 2) {
-        debug() << "COMPUTING xi_0 AND xi_1 FOR HOMOLOGY DIMENSION " << params.dim << ":";
+        debug() << "COMPUTING xi_0, xi_1, AND xi_2 FOR HOMOLOGY DIMENSION " << params.dim << ":";
     }
     MultiBetti mb(input.bifiltration(), params.dim);
     Timer timer;
-    mb.compute_fast(result->homology_dimensions, progress);
+    mb.compute(result->homology_dimensions, progress);
+    mb.compute_xi2(result->homology_dimensions);
 
     if(verbosity >= 2) {
         debug() << "  -- xi_i computation took " << timer.elapsed() << " milliseconds";
