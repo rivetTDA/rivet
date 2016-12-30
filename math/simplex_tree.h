@@ -118,7 +118,7 @@ public:
     ///// THESE FUNCTIONS ARE UNUSED AND MIGHT NEED TO BE UPDATED
     //SimplexData get_simplex_data(int index); //returns the multi-grade of the simplex with given global simplex index, as well as the dimension of the simplex
     int get_num_simplices(); //returns the total number of simplices represented in the simplex tree
-      //TODO: would it be more efficient to store the total number of simplices???
+    //TODO: would it be more efficient to store the total number of simplices???
 
     const unsigned hom_dim; //the dimension of homology to be computed; max dimension of simplices is one more than this
     const unsigned verbosity; //controls display of output, for debugging

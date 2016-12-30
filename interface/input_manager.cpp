@@ -194,7 +194,7 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
             debug() << "There was more than one value in the expected dimension line."
                        " There may be a problem with your input file.  ";
         }
-        if(verbosity >= 4) {
+        if (verbosity >= 4) {
             debug() << "  Point cloud lives in dimension:" << dimension_line[0];
         }
 
@@ -333,7 +333,7 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
     //  2. a list of k(k-1)/2 discrete distances
     //  3. max dimension of simplices to construct, which is one more than the dimension of homology to be computed
 
-    if(verbosity >= 4) {
+    if (verbosity >= 4) {
         debug() << "  Building Vietoris-Rips bifiltration.";
         debug() << "     x-grades: " << data->x_exact.size();
         debug() << "     y-grades: " << data->y_exact.size();
@@ -342,7 +342,7 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
     data->simplex_tree.reset(new SimplexTree(input_params.dim, input_params.verbosity));
     data->simplex_tree->build_VR_complex(time_indexes, dist_indexes, data->x_exact.size(), data->y_exact.size());
 
-    if(verbosity >= 8) {
+    if (verbosity >= 8) {
         data->simplex_tree->print_bifiltration();
     }
 
@@ -401,11 +401,11 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
         line_info = reader.next_line();
         exact max_dist;
         max_dist = str_to_exact(line_info.first[0]);
-    if (verbosity >= 4) {
-        std::ostringstream oss;
-        oss << max_dist;
-        debug() << "  Maximum distance of edges in Vietoris-Rips complex:" << oss.str();
-    }
+        if (verbosity >= 4) {
+            std::ostringstream oss;
+            oss << max_dist;
+            debug() << "  Maximum distance of edges in Vietoris-Rips complex:" << oss.str();
+        }
 
         std::pair<ExactSet::iterator, bool> ret; //for return value upon insert()
 

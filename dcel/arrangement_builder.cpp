@@ -17,9 +17,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **********************************************************************/
-//
-// Created by Bryn Keller on 6/28/16.
-//
 
 #include "dcel/arrangement_builder.h"
 #include "dcel/anchor.h"
@@ -37,7 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cutgraph.h>
 #include <stack> //for find_subpath
 
-using rivet::numeric::INFTY;
+    using rivet::numeric::INFTY;
 
 ArrangementBuilder::ArrangementBuilder(unsigned verbosity)
     : verbosity(verbosity)
@@ -60,7 +57,7 @@ std::shared_ptr<Arrangement> ArrangementBuilder::build_arrangement(MultiBetti& m
     progress.progress(10);
     std::shared_ptr<Arrangement> arrangement(new Arrangement(x_exact, y_exact, verbosity));
     PersistenceUpdater updater(*arrangement, mb.bifiltration, template_points, verbosity); //PersistenceUpdater object is able to do the calculations necessary for finding anchors and computing barcode templates
-    if(verbosity >= 2) {
+    if (verbosity >= 2) {
         debug() << "Anchors found; this took " << timer.elapsed() << " milliseconds.";
     }
 
@@ -68,9 +65,9 @@ std::shared_ptr<Arrangement> ArrangementBuilder::build_arrangement(MultiBetti& m
     progress.progress(25);
     timer.restart();
     build_interior(arrangement);
-    if(verbosity >= 2) {
+    if (verbosity >= 2) {
         debug() << "Line arrangement constructed; this took " << timer.elapsed() << " milliseconds.";
-        if(verbosity >= 4) {
+        if (verbosity >= 4) {
             arrangement->print_stats();
         }
     }
@@ -79,7 +76,7 @@ std::shared_ptr<Arrangement> ArrangementBuilder::build_arrangement(MultiBetti& m
     progress.progress(50);
     timer.restart();
     find_edge_weights(*arrangement, updater);
-    if(verbosity >= 2) {
+    if (verbosity >= 2) {
         debug() << "Edge weights computed; this took " << timer.elapsed() << " milliseconds.";
     }
 
@@ -88,7 +85,7 @@ std::shared_ptr<Arrangement> ArrangementBuilder::build_arrangement(MultiBetti& m
     std::vector<std::shared_ptr<Halfedge>> path;
     timer.restart();
     find_path(*arrangement, path);
-    if(verbosity >= 2) {
+    if (verbosity >= 2) {
         debug() << "Found path through the arrangement; this took " << timer.elapsed() << " milliseconds.";
     }
 
@@ -116,7 +113,7 @@ std::shared_ptr<Arrangement> ArrangementBuilder::build_arrangement(std::vector<e
     SimplexTree dummy_tree(0, 0);
     std::shared_ptr<Arrangement> arrangement(new Arrangement(x_exact, y_exact, verbosity));
     PersistenceUpdater updater(*arrangement, dummy_tree, xi_pts, verbosity); //we only use the PersistenceUpdater to find and store the anchors
-    if(verbosity >= 2) {
+    if (verbosity >= 2) {
         debug() << "Anchors found; this took " << timer.elapsed() << " milliseconds.";
     }
 
@@ -124,9 +121,9 @@ std::shared_ptr<Arrangement> ArrangementBuilder::build_arrangement(std::vector<e
     progress.progress(30);
     timer.restart();
     build_interior(arrangement); ///TODO: build_interior() should update its status!
-    if(verbosity >= 2) {
+    if (verbosity >= 2) {
         debug() << "Line arrangement constructed; this took " << timer.elapsed() << " milliseconds.";
-        if(verbosity >= 4) {
+        if (verbosity >= 4) {
             arrangement->print_stats();
         }
     }
@@ -137,7 +134,7 @@ std::shared_ptr<Arrangement> ArrangementBuilder::build_arrangement(std::vector<e
         ss << "Number of faces: " << arrangement->faces.size()
            << " does not match number of barcode templates: " << barcode_templates.size();
         throw std::runtime_error(ss.str());
-    } else if(verbosity >= 4) {
+    } else if (verbosity >= 4) {
         debug() << "Check: number of faces = number of barcode templates";
     }
 
@@ -246,8 +243,8 @@ void ArrangementBuilder::build_interior(std::shared_ptr<Arrangement> arrangement
 
         if (last_pos != first_pos + 1) {
             throw std::runtime_error("intersection between non-consecutive curves [1]: x = "
-                                     + std::to_string(sweep->x) + ", last_pos = " + std::to_string(last_pos)
-                                     + std::to_string(last_pos) + ", first_pos + 1 = " + std::to_string(first_pos + 1));
+                + std::to_string(sweep->x) + ", last_pos = " + std::to_string(last_pos)
+                + std::to_string(last_pos) + ", first_pos + 1 = " + std::to_string(first_pos + 1));
         }
 
         //find out if more than two curves intersect at this point

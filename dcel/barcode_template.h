@@ -69,7 +69,7 @@ public:
     //  NOTE: returns INFTY if the point has no projection (can happen only for horizontal and vertical lines)
     //  NOTE: angle in DEGREES
     double project(const TemplatePoint& pt, double angle, double offset, const Grades& grades);
-    
+
     void print(); //for testing only
 
     template <class Archive>

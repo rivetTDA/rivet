@@ -245,10 +245,10 @@ int main(int argc, char* argv[])
     }
     int verbosity = params.verbosity;
 
-    if(params.verbosity >= 8) {
-        debug() << "X bins: " << params.x_bins ;
-        debug() << "Y bins: " << params.y_bins ;
-        debug() << "Verbosity: " << params.verbosity ;
+    if (params.verbosity >= 8) {
+        debug() << "X bins: " << params.x_bins;
+        debug() << "Y bins: " << params.y_bins;
+        debug() << "Verbosity: " << params.verbosity;
     }
 
     InputManager inputManager(params);
@@ -363,7 +363,7 @@ int main(int argc, char* argv[])
         debug() << "Computation complete; augmented arrangement ready.";
     }
     auto arrangement = result->arrangement;
-    if(params.verbosity >= 4) {
+    if (params.verbosity >= 4) {
         arrangement->print_stats();
     }
 

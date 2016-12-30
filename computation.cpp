@@ -65,7 +65,7 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(ComputationInput& in
     Timer timer;
     mb.compute_fast(result->homology_dimensions, progress);
 
-    if(verbosity >= 2) {
+    if (verbosity >= 2) {
         debug() << "  -- xi_i computation took " << timer.elapsed() << " milliseconds";
     }
 

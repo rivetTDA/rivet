@@ -90,7 +90,7 @@ namespace numeric {
         }
         return r;
     }
-    
+
     //computes the projection of the lower-left corner of the line-selection window onto the specified line
     double project_zero(double angle, double offset, double x_0, double y_0)
     {

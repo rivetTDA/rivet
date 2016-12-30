@@ -22,9 +22,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cassert>
 #include <cmath>
 #include <dcel/barcode.h>
+#include <map>
 #include <math/template_point.h>
 #include <numerics.h>
-#include <map>
 #include <vector>
 
 #include "debug.h"
@@ -158,25 +158,24 @@ std::unique_ptr<Barcode> BarcodeTemplate::rescale(double angle, double offset,
 
         if (birth != rivet::numeric::INFTY) { //then bar exists in this rescaling
             if (it->end >= template_points.size()) { //then endpoint is at infinity
-                if(angle == 0 || angle == 90) { //then add bar to the list of infinite bars, since we may need to combine bars
+                if (angle == 0 || angle == 90) { //then add bar to the list of infinite bars, since we may need to combine bars
                     std::map<unsigned, unsigned>::iterator ibit = infinite_bars.find(it->begin);
-                    if(ibit == infinite_bars.end()) { //add a new item
-                        infinite_bars.insert( std::pair<unsigned, unsigned>(it->begin, it->multiplicity) );
+                    if (ibit == infinite_bars.end()) { //add a new item
+                        infinite_bars.insert(std::pair<unsigned, unsigned>(it->begin, it->multiplicity));
                     } else { //increment the multiplicity
                         ibit->second += it->multiplicity;
                     }
-                }
-                else { //then add the bar to the barcode -- no combining will be necessary
+                } else { //then add the bar to the barcode -- no combining will be necessary
                     bc->add_bar(birth, rivet::numeric::INFTY, it->multiplicity);
                 }
             } else { //then compute endpoint of bar (may still be infinite, but only for for horizontal or vertical lines)
                 assert(it->end < template_points.size());
                 TemplatePoint end = template_points[it->end];
                 double death = project(end, angle, offset, grades);
-                if(death == rivet::numeric::INFTY) { //add bar to the list of infinite bars
+                if (death == rivet::numeric::INFTY) { //add bar to the list of infinite bars
                     std::map<unsigned, unsigned>::iterator ibit = infinite_bars.find(it->begin);
-                    if(ibit == infinite_bars.end()) { //add a new item
-                        infinite_bars.insert( std::pair<unsigned, unsigned>(it->begin, it->multiplicity) );
+                    if (ibit == infinite_bars.end()) { //add a new item
+                        infinite_bars.insert(std::pair<unsigned, unsigned>(it->begin, it->multiplicity));
                     } else { //increment the multiplicity
                         ibit->second += it->multiplicity;
                     }
@@ -188,8 +187,8 @@ std::unique_ptr<Barcode> BarcodeTemplate::rescale(double angle, double offset,
     }
 
     //if the line is vertical or horizontal, we must now add the vertical bars
-    if(angle == 0 || angle == 90) {
-        for( std::map<unsigned,unsigned>::iterator it = infinite_bars.begin(); it != infinite_bars.end(); ++it ) {
+    if (angle == 0 || angle == 90) {
+        for (std::map<unsigned, unsigned>::iterator it = infinite_bars.begin(); it != infinite_bars.end(); ++it) {
             double birth = project(template_points[it->first], angle, offset, grades);
             bc->add_bar(birth, rivet::numeric::INFTY, it->second);
         }
