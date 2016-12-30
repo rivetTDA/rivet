@@ -218,8 +218,8 @@ void ArrangementBuilder::build_interior(std::shared_ptr<Arrangement> arrangement
 
         if (last_pos != first_pos + 1) {
             throw std::runtime_error("intersection between non-consecutive curves [1]: x = "
-                                     + std::to_string(sweep->x) + ", last_pos = " + std::to_string(last_pos)
-            + std::to_string(last_pos) + ", first_pos + 1 = " + std::to_string(first_pos + 1));
+                + std::to_string(sweep->x) + ", last_pos = " + std::to_string(last_pos)
+                + std::to_string(last_pos) + ", first_pos + 1 = " + std::to_string(first_pos + 1));
         }
 
         //find out if more than two curves intersect at this point

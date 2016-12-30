@@ -42,6 +42,7 @@ protected:
     void showEvent(QShowEvent* event); //shows the DataSelectDialog and blocks until it is closed
     void resizeEvent(QResizeEvent*);
     void closeEvent(QCloseEvent* event);
+    QString suggestedName(QString extension);
 
 public slots:
     void start_computation(); //begins the computation pipeline
@@ -67,6 +68,8 @@ private slots:
     void on_actionOpen_triggered();
 
 private:
+    static const QString DEFAULT_SAVE_DIR_KEY;
+
     Ui::VisualizationWindow* ui;
 
     //data items

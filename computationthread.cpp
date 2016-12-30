@@ -104,7 +104,7 @@ void ComputationThread::compute_from_file()
 
     bool reading_xi = false;
     std::stringstream ss;
-    while(console->waitForReadyRead(-1)) {
+    while (console->waitForReadyRead(-1)) {
         while (console->canReadLine()) {
             QString line = console->readLine();
             qDebug().noquote() << "console: " << line;

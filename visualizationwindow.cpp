@@ -19,6 +19,8 @@
 #include <fstream>
 #include <sstream>
 
+const QString VisualizationWindow::DEFAULT_SAVE_DIR_KEY("default_save_dir");
+
 VisualizationWindow::VisualizationWindow(InputParameters& params)
     : QMainWindow()
     , ui(new Ui::VisualizationWindow)
@@ -112,7 +114,7 @@ void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMe
         slice_diagram.add_point(grades.x[point.x], grades.y[point.y], point.zero, point.one, point.two);
 
     //create the SliceDiagram
-    if(!slice_diagram.is_created()) {
+    if (!slice_diagram.is_created()) {
         slice_diagram.create_diagram(
             QString::fromStdString(template_points->x_label),
             QString::fromStdString(template_points->y_label),
@@ -355,8 +357,13 @@ void VisualizationWindow::on_actionConfigure_triggered()
 
 void VisualizationWindow::on_actionSave_persistence_diagram_as_image_triggered()
 {
-    QString fileName = QFileDialog::getSaveFileName(this, "Export persistence diagram as image", QCoreApplication::applicationDirPath(), "PNG Image (*.png)");
+    QString fileName = QFileDialog::getSaveFileName(this, "Export persistence diagram as image",
+        suggestedName("persist_offset_" + QString::number(offset_precise)
+            + "_angle_" + QString::number(angle_precise) + ".png"),
+        "PNG Image (*.png)");
     if (!fileName.isNull()) {
+        QSettings settings;
+        settings.setValue(DEFAULT_SAVE_DIR_KEY, QFileInfo(fileName).absolutePath());
         QPixmap pixMap = ui->pdView->grab();
         pixMap.save(fileName, "PNG");
     }
@@ -365,8 +372,14 @@ void VisualizationWindow::on_actionSave_persistence_diagram_as_image_triggered()
 
 void VisualizationWindow::on_actionSave_line_selection_window_as_image_triggered()
 {
-    QString fileName = QFileDialog::getSaveFileName(this, "Export line selection window as image", QCoreApplication::applicationDirPath(), "PNG Image (*.png)");
+
+    QString fileName = QFileDialog::getSaveFileName(this, "Export line selection window as image",
+        suggestedName("line_offset_" + QString::number(offset_precise)
+            + "_angle_" + QString::number(angle_precise) + ".png"),
+        "PNG Image (*.png)");
     if (!fileName.isNull()) {
+        QSettings settings;
+        settings.setValue(DEFAULT_SAVE_DIR_KEY, QFileInfo(fileName).absolutePath());
         QPixmap pixMap = ui->sliceView->grab();
         pixMap.save(fileName, "PNG");
     }
@@ -375,8 +388,11 @@ void VisualizationWindow::on_actionSave_line_selection_window_as_image_triggered
 
 void VisualizationWindow::on_actionSave_triggered()
 {
-    QString fileName = QFileDialog::getSaveFileName(this, "Save computed data", QCoreApplication::applicationDirPath());
+
+    QString fileName = QFileDialog::getSaveFileName(this, "Save computed data", suggestedName("rivet"));
     if (!fileName.isNull()) {
+        QSettings settings;
+        settings.setValue(DEFAULT_SAVE_DIR_KEY, QFileInfo(fileName).absolutePath());
         save_arrangement(fileName);
     }
     ///TODO: error handling?
@@ -403,3 +419,16 @@ void VisualizationWindow::on_actionOpen_triggered()
 
     ///TODO: open the data select dialog box and load new data
 } //end on_actionOpen_triggered()
+
+QString VisualizationWindow::suggestedName(QString extension)
+{
+    QSettings settings;
+    auto name = QString::fromStdString(input_params.fileName + ".H"
+                    + std::to_string(input_params.dim)
+                    + "_" + std::to_string(input_params.x_bins)
+                    + "_" + std::to_string(input_params.y_bins)
+                    + ".")
+        + extension;
+    auto suggested = QDir(settings.value(DEFAULT_SAVE_DIR_KEY).toString()).filePath(name);
+    return suggested;
+}
