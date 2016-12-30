@@ -80,7 +80,7 @@ void DataSelectDialog::on_computeButton_clicked()
 void DataSelectDialog::on_openFileButton_clicked()
 {
     //prompt user to select a file
-    QString selected_file = QFileDialog::getOpenFileName(this, tr("Open Data File"), "/ima/home/mlwright/Repos", "All files (*.*);;Text files (*.txt)");
+    QString selected_file = QFileDialog::getOpenFileName(this, tr("Open Data File"), QDir::currentPath(), "All files (*);;Text files (*.txt)");
 
     if (!selected_file.isNull()) {
         params.fileName = selected_file.toUtf8().constData();
