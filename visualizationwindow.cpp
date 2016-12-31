@@ -202,6 +202,8 @@ void VisualizationWindow::augmented_arrangement_ready(std::shared_ptr<Arrangemen
     persistence_diagram_drawn = true;
     ui->statusBar->showMessage("ready for interactive barcode exploration");
 
+    //Enable save menu item
+    ui->actionSave->setEnabled(true);
     //if an output file has been specified, then save the arrangement
     if (!input_params.outputFile.empty())
         save_arrangement(QString::fromStdString(input_params.outputFile));
