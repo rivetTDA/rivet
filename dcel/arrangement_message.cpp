@@ -29,8 +29,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 template<typename T>
 struct Ptr_Compare {
-    bool operator()(const std::shared_ptr<T> left, const std::shared_ptr<T> right) {
-        return *left < *right;
+    bool operator()(const std::shared_ptr<T> left, const std::shared_ptr<T> right) const {
+        return &(*left) < &(*right);
     }
 };
 

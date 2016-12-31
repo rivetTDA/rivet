@@ -517,8 +517,11 @@ void Arrangement::test_consistency()
 
     for (std::vector<std::shared_ptr<Face>>::iterator it = faces.begin(); it != faces.end(); ++it) {
         std::shared_ptr<Face> face = *it;
-        debug() << "  Checking face " << FID(face);
-
+        if (verbosity >= 10) {
+            //FID calls are expensive
+            //TODO put an ID field in Face and others?
+            debug() << "  Checking face " << FID(face);
+        }
         if (face->get_boundary() == nullptr) {
             debug() << "    PROBLEM: face" << FID(face) << "has null edge pointer.";
             face_problem = true;
