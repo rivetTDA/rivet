@@ -182,9 +182,7 @@ void MultiBetti::compute(unsigned_matrix& hom_dims, Progress& progress)
 //    debug() << "bdry2s index matrix:";
 //    ind2s->print();
 
-
     //CALCULATIONS AT GRADE (0,0)
-
     //reduce bdry2 and merge at (0,0) and record dimension (nonzero_b2m_step3 will remain 0)
     reduce_spliced(bdry2m, merge, ind2m, ind1, zero_list_bdry1, 0, 0, lows_b2merge, nonzero_b2m_steps12, nonzero_b2m_step3);
     dim_bdry2_y0 = nonzero_b2m_steps12;
@@ -437,13 +435,14 @@ void MultiBetti::reduce_spliced(MapMatrix* m_left, MapMatrix* m_right, IndexMatr
         while(cur_col <= last_col) {
             int cur_low = m_right->low(cur_col);
             while( cur_low >= 0 && lows[cur_low] >= 0 ) { //column is nonempty and its low number is found in the low array
+                unsigned ulow = static_cast<unsigned>(lows[cur_low]); //from the previous line, we know lows[cur_low] is nonnegative
                 if( lows[cur_low] <= ind_left->get(grade_y - 1, grade_x) ) {
                     //then column to add is in the left matrix and occurs before cur_col in the spliced matrix
-                    m_right->add_column(m_left, lows[cur_low], cur_col);
+                    m_right->add_column(m_left, ulow, cur_col);
 //                    debug() << "  --> Step 1: added column" << lows[cur_low] << "left to " << cur_col << "right";
-                } else if( lows[cur_low] >= m_left->width() && lows[cur_low] < (m_left->width() + cur_col) ) {
+                } else if( ulow >= m_left->width() && ulow < (m_left->width() + cur_col) ) {
                     //then column to add is in the right matrix and occurs before cur_col
-                    m_right->add_column(lows[cur_low] - m_left->width(), cur_col);
+                    m_right->add_column(ulow - m_left->width(), cur_col);
 //                    debug() << "  --> Step 1: added column" << lows[cur_low] - m_left->width() << "right to " << cur_col << "right";
                 } else { //then there is no valid column to add to cur_col
                     break;
@@ -479,13 +478,15 @@ void MultiBetti::reduce_spliced(MapMatrix* m_left, MapMatrix* m_right, IndexMatr
     for(int j = first_col_left; j <= last_col_left; j++) {
         int cur_low = m_left->low(j);
         while(cur_low >= 0 && lows[cur_low] >= 0) { //column is nonempty and its low number is found in the low array
+            unsigned ulow = static_cast<unsigned>(lows[cur_low]); //from the previous line, we know lows[cur_low] is nonnegative
             if( lows[cur_low] < j ) {
                 //then column to add is in the left matrix and occurs before column j in the spliced matrix
-                m_left->add_column(lows[cur_low], j);
+                m_left->add_column(ulow, j);
 //                debug() << "  --> Step 2: added column" << lows[cur_low] << "left to " << j << "left";
-            } else if( lows[cur_low] >= m_left->width() && grade_y > 0 && lows[cur_low] - m_left->width() <= ind_right->get(grade_y - 1, grade_x) ) {
+            } else if( ulow >= m_left->width() && grade_y > 0 && ind_right->get(grade_y - 1, grade_x) >= 0 &&
+                       ulow <= (ind_right->get(grade_y - 1, grade_x) + m_left->width()) ) {
                 //then column to add is in the right matrix
-                m_left->add_column(m_right, lows[cur_low] - m_left->width(), j);
+                m_left->add_column(m_right, ulow - m_left->width(), j);
 //                debug() << "  --> Step 2: added column" << lows[cur_low] - m_left->width() << "right to " << j << "left";
             } else { //then there is no valid column to add to column j
                 break;
@@ -514,13 +515,14 @@ void MultiBetti::reduce_spliced(MapMatrix* m_left, MapMatrix* m_right, IndexMatr
         while(cur_col <= last_col) {
             int cur_low = m_right->low(cur_col);
             while( cur_low >= 0 && lows[cur_low] >= 0 ) { //column is nonempty and its low number is found in the low array
+                unsigned ulow = static_cast<unsigned>(lows[cur_low]); //from the previous line, we know lows[cur_low] is nonnegative
                 if( lows[cur_low] <= ind_left->get(grade_y, grade_x) ) {
                     //then column to add is in the left matrix and occurs before cur_col in the spliced matrix
-                    m_right->add_column(m_left, lows[cur_low], cur_col);
+                    m_right->add_column(m_left, ulow, cur_col);
 //                    debug() << "  --> Step 3: added column" << lows[cur_low] << "left to " << cur_col << "right";
-                } else if( lows[cur_low] >= m_left->width() && lows[cur_low] < (m_left->width() + cur_col) ) {
+                } else if( ulow >= m_left->width() && ulow < (m_left->width() + cur_col) ) {
                     //then column to add is in the right matrix and occurs before cur_col
-                    m_right->add_column(lows[cur_low] - m_left->width(), cur_col);
+                    m_right->add_column(ulow - m_left->width(), cur_col);
 //                    debug() << "  --> Step 3: added column" << lows[cur_low] - m_left->width() << "right to " << cur_col << "right";
                 } else { //then there is no valid column to add to cur_col
                     break;
@@ -567,13 +569,15 @@ void MultiBetti::reduce_spliced(MapMatrix* m_left, MapMatrix* m_right, IndexMatr
 //        debug() << "  reducing LEFT column" << j;
         int cur_low = m_left->low(j);
         while(cur_low >= 0 && lows[cur_low] >= 0) { //column is nonempty and its low number is found in the low array
+            unsigned ulow = static_cast<unsigned>(lows[cur_low]); //from the previous line, we know lows[cur_low] is nonnegative
             if( lows[cur_low] < j ) {
                 //then column to add is in the left matrix and occurs before column j in the spliced matrix
-                m_left->add_column(lows[cur_low], j);
+                m_left->add_column(ulow, j);
 //                debug() << "  --> Step 2: added column" << lows[cur_low] << "left to " << j << "left";
-            } else if( lows[cur_low] >= m_left->width() && grade_y > 0 && lows[cur_low] - m_left->width() <= ind_right->get(grade_y - 1, grade_x) ) {
+            } else if( ulow >= m_left->width() && grade_y > 0 && ind_right->get(grade_y - 1, grade_x) >= 0 &&
+                       ulow <= (ind_right->get(grade_y - 1, grade_x) + m_left->width()) ) {
                 //then column to add is in the right matrix
-                m_left->add_column(m_right, lows[cur_low] - m_left->width(), j);
+                m_left->add_column(m_right, ulow - m_left->width(), j);
 //                debug() << "  --> Step 2: added column" << lows[cur_low] - m_left->width() << "right to " << j << "left";
             } else { //then there is no valid column to add to column j
                 break;
@@ -609,13 +613,14 @@ void MultiBetti::reduce_spliced(MapMatrix* m_left, MapMatrix* m_right, IndexMatr
 //        debug() << "  reducing RIGHT column" << cur_col;
         int cur_low = m_right->low(cur_col);
         while( cur_low >= 0 && lows[cur_low] >= 0 ) { //column is nonempty and its low number is found in the low array
+            unsigned ulow = static_cast<unsigned>(lows[cur_low]); //from the previous line, we know lows[cur_low] is nonnegative
             if( lows[cur_low] <= ind_left->get(grade_y, grade_x) ) {
                 //then column to add is in the left matrix and occurs before cur_col in the spliced matrix
-                m_right->add_column(m_left, lows[cur_low], cur_col);
+                m_right->add_column(m_left, ulow, cur_col);
 //                    debug() << "  --> Step 3: added column" << lows[cur_low] << "left to " << cur_col << "right";
-            } else if( lows[cur_low] >= m_left->width() && lows[cur_low] < (m_left->width() + cur_col) ) {
+            } else if( ulow >= m_left->width() && ulow < (m_left->width() + cur_col) ) {
                 //then column to add is in the right matrix and occurs before cur_col
-                m_right->add_column(lows[cur_low] - m_left->width(), cur_col);
+                m_right->add_column(ulow - m_left->width(), cur_col);
 //                    debug() << "  --> Step 3: added column" << lows[cur_low] - m_left->width() << "right to " << cur_col << "right";
             } else { //then there is no valid column to add to cur_col
                 break;
@@ -654,13 +659,13 @@ void MultiBetti::build_bdry2s_mx(MapMatrix* bdry2, IndexMatrix* ind2, MapMatrix*
     //ensure bdry2sum is of the correct size
     int num_cols = ind2->get(num_y_grades - 2, num_x_grades - 1) + 1; //total number of columns in C component
     num_cols += ind2->get(0, num_x_grades - 2) + 1; //number of columns in B component at y=0 grades
-    for(int y = 1; y < num_y_grades; y++)
+    for(unsigned y = 1; y < num_y_grades; y++)
         num_cols += ind2->get(y, num_x_grades - 2) - ind2->get(y - 1, num_x_grades - 1); //number of columns in B component at y
     bdry2sum->reserve_cols(num_cols);
 
     //write columns at grades (x,y) for y > 0
-    for(int y = 0; y < num_y_grades - 1; y++) { //not necessary to consider y = num_y_grades - 1
-        for(int x = 0; x < num_x_grades - 1; x++) { //not necessary to consider x = num_x_grades - 1
+    for(unsigned y = 0; y + 1 < num_y_grades; y++) { //not necessary to consider y = num_y_grades - 1
+        for(unsigned x = 0; x < num_x_grades - 1; x++) { //not necessary to consider x = num_x_grades - 1
             //columns in the B summand live at <= (x,y+1), and are copied without offset
             if(y == 0) { //copy columns at (x,0)
                 if(x > 0)
@@ -692,15 +697,15 @@ void MultiBetti::build_bdry2s_mx(MapMatrix* bdry2, IndexMatrix* ind2, MapMatrix*
     }
 
     //record last column index grades y = num_y_grades - 1 --- TODO: eliminate the need to do this!
-    for(int x = 0; x < num_x_grades; x++) {
+    for(unsigned x = 0; x < num_x_grades; x++) {
         ind2sum->set(num_y_grades - 1, x, bdry2sum->width() - 1);
     }
 
     ///TESTING ONLY
-    if(num_cols == bdry2sum->width())
-        debug() << "build_bdry2s_mx(): num_cols OK";
-    else
-        debug() << "=====>>>>> build_bdry2s_mx(): ERROR: num_cols DOES NOT MATCH bdry2sum->width()";
+    //if(num_cols == bdry2sum->width())
+    //    debug() << "build_bdry2s_mx(): num_cols OK";
+    //else
+    //    debug() << "=====>>>>> build_bdry2s_mx(): ERROR: num_cols DOES NOT MATCH bdry2sum->width()";
 }//end build_bdry2s_mx
 
 //builds the split matrix
