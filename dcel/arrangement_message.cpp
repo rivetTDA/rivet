@@ -65,26 +65,47 @@ ArrangementMessage::ArrangementMessage(Arrangement const& arrangement)
         vertex_map.emplace(vertex, id_counter++);
     }
 
+    auto HID = [&halfedge_map](const std::shared_ptr<Halfedge> &ptr) {
+        auto it = halfedge_map.find(ptr);
+        return it == halfedge_map.end() ? -1 : it->second;
+    };
+
+    auto AID = [&anchor_map](const std::shared_ptr<Anchor> &ptr) {
+        auto it = anchor_map.find(ptr);
+        return it == anchor_map.end() ? -1 : it->second;
+    };
+
+    auto VID = [&vertex_map](const std::shared_ptr<Vertex> &ptr) {
+        auto it = vertex_map.find(ptr);
+        return it == vertex_map.end() ? -1 : it->second;
+    };
+
+    auto FID = [&face_map](const std::shared_ptr<Face> &ptr) {
+        auto it = face_map.find(ptr);
+        return it == face_map.end() ? -1 : it->second;
+    };
+
+
     //build data structures
 
     for (auto face : arrangement.faces) {
-        faces.push_back(FaceM{ HalfedgeId(halfedge_map[face->get_boundary()]), face->get_barcode() });
+        faces.push_back(FaceM{ HalfedgeId(HID(face->get_boundary())), face->get_barcode() });
     }
     for (auto half : arrangement.halfedges) {
         half_edges.push_back(HalfedgeM{
-            VertexId(vertex_map[half->get_origin()]),
-            HalfedgeId(halfedge_map[half->get_twin()]),
-            HalfedgeId(halfedge_map[half->get_next()]),
-            HalfedgeId(halfedge_map[half->get_prev()]),
-            FaceId(face_map[half->get_face()]),
-            AnchorId(anchor_map[half->get_anchor()]) });
+            VertexId(VID(half->get_origin())),
+            HalfedgeId(HID(half->get_twin())),
+            HalfedgeId(HID(half->get_next())),
+            HalfedgeId(HID(half->get_prev())),
+            FaceId(FID(half->get_face())),
+            AnchorId(AID(half->get_anchor())) });
     }
     for (auto anchor : arrangement.all_anchors) {
         std::cerr << "Adding anchor: " << anchor->get_x() << ", " << anchor->get_y() << std::endl;
         anchors.push_back(AnchorM{
             anchor->get_x(),
             anchor->get_y(),
-            HalfedgeId(halfedge_map[anchor->get_line()]),
+            HalfedgeId(HID(anchor->get_line())),
             anchor->get_position(),
             anchor->is_above(),
             anchor->get_weight() });
@@ -92,19 +113,19 @@ ArrangementMessage::ArrangementMessage(Arrangement const& arrangement)
     assert(anchors.size() == arrangement.all_anchors.size());
     for (auto vertex : arrangement.vertices) {
         vertices.push_back(VertexM{
-            HalfedgeId(halfedge_map[vertex->get_incident_edge()]),
+            HalfedgeId(HID(vertex->get_incident_edge())),
             vertex->get_x(),
             vertex->get_y() });
     }
 
     for (auto query : arrangement.vertical_line_query_list) {
-        vertical_line_query_list.push_back(HalfedgeId(halfedge_map[query]));
+        vertical_line_query_list.push_back(HalfedgeId(HID(query)));
     }
 
-    topleft = HalfedgeId(halfedge_map[arrangement.topleft]);
-    topright = HalfedgeId(halfedge_map[arrangement.topright]);
-    bottomleft = HalfedgeId(halfedge_map[arrangement.bottomleft]);
-    bottomright = HalfedgeId(halfedge_map[arrangement.bottomright]);
+    topleft = HalfedgeId(HID(arrangement.topleft));
+    topright = HalfedgeId(HID(arrangement.topright));
+    bottomleft = HalfedgeId(HID(arrangement.bottomleft));
+    bottomright = HalfedgeId(HID(arrangement.bottomright));
 }
 
 ArrangementMessage::ArrangementMessage()
