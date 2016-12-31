@@ -65,14 +65,14 @@ public:
     //stores the xi support points in lexicographical order
     void store_support_points(std::vector<TemplatePoint>& tpts);
 
-    SimplexTree* bifiltration; //pointer to the bifiltration
+    SimplexTree& bifiltration; //reference to the bifiltration
 
 private:
     const int dimension; //dimension of homology to compute
     unsigned num_x_grades; //number of grades in primary direction
     unsigned num_y_grades; //number of grades in secondary direction
     boost::multi_array<int, 3> xi; //matrix to hold xi values; indices: xi[x][y][subscript]
-    const int verbosity; //controls display of output, for debugging
+    const unsigned verbosity; //controls display of output, for debugging
 
     //simple column reduction algorithm
     //  pivot columns are first_col to last_col, inclusive

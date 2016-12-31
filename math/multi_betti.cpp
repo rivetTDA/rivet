@@ -67,11 +67,12 @@ struct ColumnList {
 
 
 //constructor: sets up the data structure but does not compute xi_0 or xi_1
-MultiBetti::MultiBetti(SimplexTree* st, int dim)
+MultiBetti::MultiBetti(SimplexTree& st, int dim)
     : bifiltration(st)
     , dimension(dim)
-    , num_x_grades(bifiltration->num_x_grades())
-    , num_y_grades(bifiltration->num_y_grades())
+    , num_x_grades(bifiltration.num_x_grades())
+    , num_y_grades(bifiltration.num_y_grades())
+    , verbosity(st.verbosity)
 {
     xi.resize(boost::extents[num_x_grades][num_y_grades][3]);
 }//end constructor
@@ -84,11 +85,11 @@ void MultiBetti::compute(unsigned_matrix& hom_dims, Progress& progress)
     hom_dims.resize(boost::extents[num_x_grades][num_y_grades]);
 
     //input to the algorithm: two boundary matrices, with index data
-    MapMatrix* bdry1 = bifiltration->get_boundary_mx(dimension);
-    IndexMatrix* ind1 = bifiltration->get_index_mx(dimension);
+    MapMatrix* bdry1 = bifiltration.get_boundary_mx(dimension);
+    IndexMatrix* ind1 = bifiltration.get_index_mx(dimension);
 
-    MapMatrix* bdry2 = bifiltration->get_boundary_mx(dimension + 1);
-    IndexMatrix* ind2 = bifiltration->get_index_mx(dimension + 1);
+    MapMatrix* bdry2 = bifiltration.get_boundary_mx(dimension + 1);
+    IndexMatrix* ind2 = bifiltration.get_index_mx(dimension + 1);
 
 
     // STEP 1: reduce bdry2, record its pointwise rank, and build a partially-reduced copy for later use
@@ -357,7 +358,7 @@ void MultiBetti::store_support_points(std::vector<TemplatePoint>& tpts)
             int xi2 = xi[i][j][2];
 
             if(xi0 != 0 || xi1 != 0 || xi2 != 0) //then we have found an xi support point
-                xi_supp.push_back( TemplatePoint(i, j, xi0, xi1, xi2) );
+                tpts.push_back( TemplatePoint(i, j, xi0, xi1, xi2) );
         }
     }
 }//end store_support_points()
