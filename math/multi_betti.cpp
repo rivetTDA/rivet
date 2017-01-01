@@ -546,7 +546,6 @@ void MultiBetti::reduce_spliced(MapMatrix* m_left, MapMatrix* m_right, IndexMatr
 
 //version of reduce_spliced for computing dim(U) for xi_1
 // increments nonzero_cols by the number of columns that were reduced and remained nonzero
-///FIXME: NOT SURE IF THIS SHOULD BE A SEPARATE FUNCTION FROM THE ABOVE
 void MultiBetti::reduce_spliced(MapMatrix* m_left, MapMatrix* m_right, IndexMatrix* ind_left, IndexMatrix* ind_right,
                     ColumnList& right_cols, unsigned grade_x, unsigned grade_y, Vector& lows, long& nonzero_cols)
 {

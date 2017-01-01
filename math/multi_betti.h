@@ -88,14 +88,19 @@ private:
                           unsigned y_grade, ColumnList& zero_list, long& zero_cols);
 
     //column reduction of two matrices spliced together by y-grade
-    //  pivot columns are ... FIXME: WRITE THIS!!!!!!!!!!!!!!!!!!!!!!!!!!
-    //  returns ...
+    //  pivot columns are:
+    //      step 1: if grade_y > 0, then reduce right matrix at (0...grade_x, grade_y - 1)
+    //      step 2: reduce left matrix at (0...grade_x, grade_y)
+    //      step 3: if grade_x > 0, then reduce right matrix at (0...grade_x - 1, grade_y)
+    //  returns values:
+    //      nonzero_cols_steps12: of the columns reduced in steps 1 and 2, the number that remained nonzero
+    //      nonzero_cols_step3: of the columns reduced in step 3, the number that remained nonzero.
     void reduce_spliced(MapMatrix* m_left, MapMatrix* m_right, IndexMatrix* ind_left, IndexMatrix* ind_right,
                         ColumnList& right_cols, unsigned grade_x, unsigned grade_y, Vector& lows,
                         long& nonzero_cols_steps12, long& nonzero_cols_step3);
 
-    //version of reduce_spliced for computing dim(U) for xi_1
-    ///FIXME: NOT SURE IF THIS SHOULD BE A SEPARATE FUNCTION FROM THE ABOVE
+    //another version of reduce_spliced for computing dim(U) for xi_1
+    //  increments nonzero_cols by the number of columns that were reduced and remained nonzero
     void reduce_spliced(MapMatrix* m_left, MapMatrix* m_right, IndexMatrix* ind_left, IndexMatrix* ind_right,
                         ColumnList& right_cols, unsigned grade_x, unsigned grade_y, Vector& lows, long& nonzero_cols);
 
