@@ -29,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QProcess>
+#include <QSettings>
 #include <QStringList>
 #include <fstream>
 
@@ -79,11 +80,18 @@ void DataSelectDialog::on_computeButton_clicked()
 
 void DataSelectDialog::on_openFileButton_clicked()
 {
+    const QString DEFAULT_DIR_KEY("default_load_dir");
+
+    QSettings settings;
+
     //prompt user to select a file
-    QString selected_file = QFileDialog::getOpenFileName(this, tr("Open Data File"), "/ima/home/mlwright/Repos", "All files (*.*);;Text files (*.txt)");
+    auto selected_file = QFileDialog::getOpenFileName(
+        this, tr("Open Data File"), settings.value(DEFAULT_DIR_KEY).toString(), "");
 
     if (!selected_file.isNull()) {
         params.fileName = selected_file.toUtf8().constData();
+        QDir current_dir;
+        settings.setValue(DEFAULT_DIR_KEY, current_dir.absoluteFilePath(selected_file));
         detect_file_type();
     }
 } //end on_openFileButton_clicked()

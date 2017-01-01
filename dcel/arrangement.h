@@ -59,18 +59,18 @@ public:
     //constructor; sets up bounding box (with empty interior) for the affine Grassmannian
     //  requires references to vectors of all multi-grade values (both double and exact values)
     Arrangement(std::vector<exact> xe, std::vector<exact> ye, unsigned verbosity);
-    
+
     //returns barcode template associated with the specified line (point)
     BarcodeTemplate& get_barcode_template(double degrees, double offset);
-    
+
     //returns the barcode template associated with faces[i]
     BarcodeTemplate& get_barcode_template(unsigned i);
-    
+
     //returns the number of 2-cells, and thus the number of barcode templates, in the arrangement
-    unsigned num_faces(); 
+    unsigned num_faces();
 
     //creates a new anchor in the vector all_anchors
-    void add_anchor(Anchor anchor); 
+    void add_anchor(Anchor anchor);
 
     //FUNCTIONS FOR TESTING
     void print_stats(); //prints a summary of the arrangement information, such as the number of anchors, vertices, halfedges, and faces
@@ -100,7 +100,7 @@ private:
     unsigned verbosity;
 
     //set of Anchors that are represented in the arrangement, ordered by position of curve along left side of the arrangement, from bottom to top
-    std::set<std::shared_ptr<Anchor>, PointerComparator<Anchor, Anchor_LeftComparator>> all_anchors; 
+    std::set<std::shared_ptr<Anchor>, PointerComparator<Anchor, Anchor_LeftComparator>> all_anchors;
 
     std::shared_ptr<Halfedge> topleft; //pointer to Halfedge that points down from top left corner (0,infty)
     std::shared_ptr<Halfedge> topright; //pointer to Halfedge that points down from the top right corner (infty,infty)
@@ -108,36 +108,36 @@ private:
     std::shared_ptr<Halfedge> bottomright; //pointer to Halfedge that points up from bottom right corner (infty,-infty)
 
     //stores a pointer to the rightmost Halfedge of the "top" line of each unique slope, ordered from small slopes to big slopes (each Halfedge points to Anchor and Face for vertical-line queries)
-    std::vector<std::shared_ptr<Halfedge>> vertical_line_query_list; 
+    std::vector<std::shared_ptr<Halfedge>> vertical_line_query_list;
 
     ///// functions for creating the arrangement /////
 
     //creates the first pair of Halfedges in an anchor line, anchored on the left edge of the strip
-    std::shared_ptr<Halfedge> create_edge_left(std::shared_ptr<Halfedge> edge, std::shared_ptr<Anchor> anchor); 
+    std::shared_ptr<Halfedge> create_edge_left(std::shared_ptr<Halfedge> edge, std::shared_ptr<Anchor> anchor);
 
     //computes and stores the edge weight for each anchor line
-    void find_edge_weights(PersistenceUpdater& updater); 
+    void find_edge_weights(PersistenceUpdater& updater);
 
     //finds a pseudo-optimal path through all 2-cells of the arrangement
-    void find_path(std::vector<std::shared_ptr<Halfedge>>& pathvec); 
+    void find_path(std::vector<std::shared_ptr<Halfedge>>& pathvec);
 
     //builds the path recursively
     void find_subpath(unsigned cur_node, std::vector<std::vector<unsigned>>& adj, std::vector<std::shared_ptr<Halfedge>>& pathvec, bool return_path);
 
     //stores (a copy of) the given barcode template in faces[i]; used for re-building the arrangement from a RIVET data file
-    void set_barcode_template(unsigned i, BarcodeTemplate& bt); 
+    void set_barcode_template(unsigned i, BarcodeTemplate& bt);
 
     ///// functions for searching the arrangement /////
 
     //finds the first anchor that intersects the left edge of the arrangement at a point not less than the specified y-coordinate; if no such anchor, returns NULL
-    std::shared_ptr<Anchor> find_least_upper_anchor(double y_coord); 
+    std::shared_ptr<Anchor> find_least_upper_anchor(double y_coord);
 
     //finds the (unbounded) cell associated to dual point of the vertical line with the given x-coordinate
     //  i.e. finds the Halfedge whose anchor x-coordinate is the largest such coordinate not larger than than x_coord; returns the Face corresponding to that Halfedge
-    std::shared_ptr<Face> find_vertical_line(double x_coord); 
+    std::shared_ptr<Face> find_vertical_line(double x_coord);
 
     //finds a 2-cell containing the specified point
-    std::shared_ptr<Face> find_point(double x_coord, double y_coord); 
+    std::shared_ptr<Face> find_point(double x_coord, double y_coord);
 
     ///// functions for testing /////
 
@@ -148,7 +148,6 @@ private:
     long VID(std::shared_ptr<Vertex> v) const; //vertex ID, for printing and debugging
 
     void announce_next_point(std::shared_ptr<Halfedge> finder, std::shared_ptr<Vertex> next_pt);
-
 
     //struct to hold a future intersection event -- used when building the arrangement
     struct Crossing {

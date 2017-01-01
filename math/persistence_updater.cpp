@@ -31,10 +31,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "simplex_tree.h"
 
 #include <chrono>
+#include <stdexcept> //for error-checking and debugging
 #include <stdlib.h> //for rand()
 #include <timer.h>
-#include <stdexcept> //for error-checking and debugging
-
 
 //constructor for when we must compute all of the barcode templates
 PersistenceUpdater::PersistenceUpdater(Arrangement& m, SimplexTree& b, std::vector<TemplatePoint>& xi_pts, unsigned verbosity)
@@ -110,7 +109,7 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<std::shared_ptr<H
     MapMatrix_Perm* R_high_initial = new MapMatrix_Perm(*R_high);
     if (verbosity >= 4) {
         debug() << "  --> copying the boundary matrices took"
-            << timer.elapsed() << "milliseconds";
+                << timer.elapsed() << "milliseconds";
     }
 
     //initialize the permutation vectors
@@ -858,7 +857,7 @@ unsigned long PersistenceUpdater::move_columns(std::shared_ptr<TemplatePointsMat
 unsigned long PersistenceUpdater::move_low_columns(int s, unsigned n, int t)
 {
     // debug() << "   --Transpositions for low simplices: [" << s << "," << n << "," << t << "]:" << (n*(t-s)) << "total";
-    
+
     //the following should never occur
     if (s > t) {
         throw std::runtime_error("PersistenceUpdater::move_low_columns(): illegal column move");
@@ -897,7 +896,7 @@ unsigned long PersistenceUpdater::move_low_columns(int s, unsigned n, int t)
 unsigned long PersistenceUpdater::move_high_columns(int s, unsigned n, int t)
 {
     //    debug() << "   --Transpositions for high simplices: [" << s << "," << n << "," << t << "]:" << (n*(t-s)) << "total";
-    
+
     //the following should never occur
     if (s > t) {
         throw std::runtime_error("PersistenceUpdater::move_high_columns(): illegal column move");
@@ -1426,7 +1425,7 @@ void PersistenceUpdater::store_barcode_template(std::shared_ptr<Face> cell)
 //chooses an initial threshold by timing vineyard updates corresponding to random transpositions
 unsigned long PersistenceUpdater::choose_initial_threshold(int time_for_initial_decomp)
 {
-    if(verbosity >= 4) {
+    if (verbosity >= 4) {
         debug() << "RANDOM VINEYARD UPDATES TO CHOOSE THE INITIAL THRESHOLD";
     }
 

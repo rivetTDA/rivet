@@ -43,7 +43,7 @@ SimplexTree::SimplexTree(int dim, int v)
     if (hom_dim > 5) {
         throw std::runtime_error("SimplexTree: Dimensions greater than 5 probably don't make sense");
     }
-    if(verbosity >= 8) {
+    if (verbosity >= 8) {
         debug() << "Created SimplexTree(" << hom_dim << ", " << verbosity << ")";
     }
 }
@@ -588,9 +588,10 @@ void SimplexTree::print_subtree(STNode* node, int indent)
 
 //print bifiltration in the RIVET bifiltration input format
 //prints simplices in order of increasing dimension
-void SimplexTree::print_bifiltration() {
+void SimplexTree::print_bifiltration()
+{
     std::vector<STNode*> kids = root->get_children();
-    for(unsigned d=0; d <= hom_dim + 1; d++) {
+    for (unsigned d = 0; d <= hom_dim + 1; d++) {
         //print simplices of dimension d
         for (unsigned i = 0; i < kids.size(); i++) {
             print_bifiltration(kids[i], std::string(), 0, static_cast<int>(d));
@@ -598,18 +599,18 @@ void SimplexTree::print_bifiltration() {
     }
 }
 
-void SimplexTree::print_bifiltration(STNode* node, std::string parent, int cur_dim, int print_dim) {
-    if(cur_dim == print_dim) { //print current node
-        if(cur_dim != 0) {
+void SimplexTree::print_bifiltration(STNode* node, std::string parent, int cur_dim, int print_dim)
+{
+    if (cur_dim == print_dim) { //print current node
+        if (cur_dim != 0) {
             std::cout << parent << " ";
         }
         std::cout << node->get_vertex() << " " << node->grade_x() << " " << node->grade_y() << std::endl;
-    }
-    else { //recurse on children nodes
+    } else { //recurse on children nodes
         std::vector<STNode*> kids = node->get_children();
         for (unsigned i = 0; i < kids.size(); i++) {
             std::string simplex = parent;
-            if(cur_dim != 0) {
+            if (cur_dim != 0) {
                 simplex += " ";
             }
             simplex += std::to_string(node->get_vertex());

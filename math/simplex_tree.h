@@ -111,7 +111,7 @@ public:
     unsigned get_size(unsigned dim); //returns the number of simplices of dimension (hom_dim-1), hom_dim, or (hom_dim+1)
 
     int get_num_simplices(); //returns the total number of simplices represented in the simplex tree
-      //TODO: would it be more efficient to store the total number of simplices???
+    //TODO: would it be more efficient to store the total number of simplices???
 
     const unsigned hom_dim; //the dimension of homology to be computed; max dimension of simplices is one more than this
     const unsigned verbosity; //controls display of output, for debugging

@@ -66,7 +66,7 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(ComputationInput& in
     mb.compute(result->homology_dimensions, progress);
     mb.compute_xi2(result->homology_dimensions);
 
-    if(verbosity >= 2) {
+    if (verbosity >= 2) {
         debug() << "  -- xi_i computation took " << timer.elapsed() << " milliseconds";
     }
 
@@ -99,8 +99,12 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(ComputationInput& in
     if (verbosity >= 8) {
         debug() << "Sending" << result->template_points.size() << "anchors";
     }
-    template_points_ready(TemplatePointsMessage{ input.x_label, input.y_label, result->template_points, result->homology_dimensions, input.x_exact, input.y_exact });
-    arrangement->test_consistency();
+    template_points_ready(TemplatePointsMessage{ input.x_label, input.y_label, result->template_points,
+                                                 result->homology_dimensions, input.x_exact, input.y_exact });
+    if (verbosity >= 10) {
+        //TODO: Make this a separate flag, rather than using verbosity?
+        arrangement->test_consistency();
+    }
     result->arrangement = std::move(arrangement);
     return result;
 }

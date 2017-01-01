@@ -33,7 +33,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 class Halfedge;
 struct TemplatePointsMatrixEntry;
 
-
 class Anchor {
 public:
     Anchor(std::shared_ptr<TemplatePointsMatrixEntry> e); //default constructor

@@ -17,7 +17,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **********************************************************************/
-// 
+//
 // Created by Bryn Keller on 7/15/16.
 //
 
@@ -26,6 +26,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "dcel/arrangement.h"
 #include "dcel/arrangement_message.h"
 #include <boost/optional.hpp>
+
+template<typename T>
+struct Ptr_Compare {
+    bool operator()(const std::shared_ptr<T> left, const std::shared_ptr<T> right) const {
+        return &(*left) < &(*right);
+    }
+};
 
 ArrangementMessage::ArrangementMessage(Arrangement const& arrangement)
     : x_grades(arrangement.x_grades)
@@ -36,25 +43,69 @@ ArrangementMessage::ArrangementMessage(Arrangement const& arrangement)
     , anchors()
     , faces()
 {
-    //TODO: REALLY slow with all these VID, FID, etc. calls, but will do for now.
+    std::map<std::shared_ptr<Face>, long, Ptr_Compare<Face>> face_map;
+    std::map<std::shared_ptr<Halfedge>, long, Ptr_Compare<Halfedge>> halfedge_map;
+    std::map<std::shared_ptr<Anchor>, long, Ptr_Compare<Anchor>> anchor_map;
+    std::map<std::shared_ptr<Vertex>, long, Ptr_Compare<Vertex>> vertex_map;
+    //Build maps
+    long id_counter = 0;
+    for(auto face : arrangement.faces) {
+        face_map.emplace(face, id_counter++);
+    }
+    id_counter = 0;
+    for(auto half : arrangement.halfedges) {
+       halfedge_map.emplace(half, id_counter++);
+    }
+    id_counter = 0;
+    for(auto anchor : arrangement.all_anchors) {
+        anchor_map.emplace(anchor, id_counter++);
+    }
+    id_counter = 0;
+    for(auto vertex: arrangement.vertices) {
+        vertex_map.emplace(vertex, id_counter++);
+    }
+
+    auto HID = [&halfedge_map](const std::shared_ptr<Halfedge> &ptr) {
+        auto it = halfedge_map.find(ptr);
+        return it == halfedge_map.end() ? -1 : it->second;
+    };
+
+    auto AID = [&anchor_map](const std::shared_ptr<Anchor> &ptr) {
+        auto it = anchor_map.find(ptr);
+        return it == anchor_map.end() ? -1 : it->second;
+    };
+
+    auto VID = [&vertex_map](const std::shared_ptr<Vertex> &ptr) {
+        auto it = vertex_map.find(ptr);
+        return it == vertex_map.end() ? -1 : it->second;
+    };
+
+    auto FID = [&face_map](const std::shared_ptr<Face> &ptr) {
+        auto it = face_map.find(ptr);
+        return it == face_map.end() ? -1 : it->second;
+    };
+
+
+    //build data structures
+
     for (auto face : arrangement.faces) {
-        faces.push_back(FaceM{ HalfedgeId(arrangement.HID(face->get_boundary())), face->get_barcode() });
+        faces.push_back(FaceM{ HalfedgeId(HID(face->get_boundary())), face->get_barcode() });
     }
     for (auto half : arrangement.halfedges) {
         half_edges.push_back(HalfedgeM{
-            VertexId(arrangement.VID(half->get_origin())),
-            HalfedgeId(arrangement.HID(half->get_twin())),
-            HalfedgeId(arrangement.HID(half->get_next())),
-            HalfedgeId(arrangement.HID(half->get_prev())),
-            FaceId(arrangement.FID(half->get_face())),
-            AnchorId(arrangement.AID(half->get_anchor())) });
+            VertexId(VID(half->get_origin())),
+            HalfedgeId(HID(half->get_twin())),
+            HalfedgeId(HID(half->get_next())),
+            HalfedgeId(HID(half->get_prev())),
+            FaceId(FID(half->get_face())),
+            AnchorId(AID(half->get_anchor())) });
     }
     for (auto anchor : arrangement.all_anchors) {
         std::cerr << "Adding anchor: " << anchor->get_x() << ", " << anchor->get_y() << std::endl;
         anchors.push_back(AnchorM{
             anchor->get_x(),
             anchor->get_y(),
-            HalfedgeId(arrangement.HID(anchor->get_line())),
+            HalfedgeId(HID(anchor->get_line())),
             anchor->get_position(),
             anchor->is_above(),
             anchor->get_weight() });
@@ -62,19 +113,19 @@ ArrangementMessage::ArrangementMessage(Arrangement const& arrangement)
     assert(anchors.size() == arrangement.all_anchors.size());
     for (auto vertex : arrangement.vertices) {
         vertices.push_back(VertexM{
-            HalfedgeId(arrangement.HID(vertex->get_incident_edge())),
+            HalfedgeId(HID(vertex->get_incident_edge())),
             vertex->get_x(),
             vertex->get_y() });
     }
 
     for (auto query : arrangement.vertical_line_query_list) {
-        vertical_line_query_list.push_back(HalfedgeId(arrangement.HID(query)));
+        vertical_line_query_list.push_back(HalfedgeId(HID(query)));
     }
 
-    topleft = HalfedgeId(arrangement.HID(arrangement.topleft));
-    topright = HalfedgeId(arrangement.HID(arrangement.topright));
-    bottomleft = HalfedgeId(arrangement.HID(arrangement.bottomleft));
-    bottomright = HalfedgeId(arrangement.HID(arrangement.bottomright));
+    topleft = HalfedgeId(HID(arrangement.topleft));
+    topright = HalfedgeId(HID(arrangement.topright));
+    bottomleft = HalfedgeId(HID(arrangement.bottomleft));
+    bottomright = HalfedgeId(HID(arrangement.bottomright));
 }
 
 ArrangementMessage::ArrangementMessage()
