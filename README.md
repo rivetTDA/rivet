@@ -49,7 +49,7 @@ if necessary, to match the location and version of your copy of Boost.
     LIBS += -L"/usr/local/Cellar/boost/1.60.0_2/lib" -lboost_random
 
 
-After cloning to $RIVET_DIR:
+After <a href="https://help.github.com/articles/cloning-a-repository/" target="_blank">cloning</a> to $RIVET_DIR:
 
 
     cd $RIVET_DIR
