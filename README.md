@@ -20,6 +20,10 @@ Before starting to build RIVET, make sure you have the following installed:
 * Qt 5
 * Boost (including boost serialization; version 1.60 or newer required)
 
+*NOTE* that currently CMake does not recognize Boost 1.63 or newer 
+(see https://gitlab.kitware.com/cmake/cmake/merge_requests/361), 
+please use Boost 1.60-1.62 to avoid this problem.
+
 All of these are generally available using your operating systems's package
 manager.
 
@@ -68,8 +72,19 @@ For the remaining packages, we recommend using Homebrew, which must be
 installed separately using the instructions at the [Homebrew web site](http://brew.sh/).
     
     # now install the needed packages 
-    brew install cmake qt5 boost
-
+    brew install cmake qt5
+    
+Since boost 1.63 (which is currently the version that brew installs) or greater 
+isn't recognized by CMake 
+[details here again](https://gitlab.kitware.com/cmake/cmake/merge_requests/361),
+we need to select a specific version for Mac:
+    
+    # Make older versions available to homebrew
+    brew tap homebrew/versions
+    
+    # Install a CMake-findable version of Boost
+    brew install boost160 
+    
 Please note that, as of the time of writing, brew installs `qmake` in a version-specific folder under 
 /usr/local/Cellar/opt/qt5/bin, and does not add it to your `PATH`. You can find
 the folder where qmake is installed using this command:
