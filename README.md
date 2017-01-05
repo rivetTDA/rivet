@@ -12,8 +12,7 @@ Bryn Keller (Intel Labs)
 TODO: Other contributors please add yourselves!
 
 ## Requirements
-
-Before starting to build RIVET, make sure you have the following installed:
+Before starting to build RIVET, you will need to have the following installed:
  
 * A C++ compiler (g++ or clang are what we use)
 * CMake
@@ -24,15 +23,18 @@ Before starting to build RIVET, make sure you have the following installed:
 (see https://gitlab.kitware.com/cmake/cmake/merge_requests/361), 
 please use Boost 1.60-1.62 to avoid this problem.
 
-All of these are generally available using your operating systems's package
-manager.
+Below we give step-by-step instructions for installing these required dependencies and building RIVET on Ubuntu and Mac OS X.  
+TODO: Add instructions for Windows.  
 
-### Ubuntu
+## Building On Ubuntu
 
+### Installing Dependencies
 On Ubuntu, installation of dependencies should be relatively simple:
 
     sudo apt-get install cmake qt5-default qt5-qmake qtbase5-dev-tools libboost-all-dev
-    
+
+### Building RIVET 
+
 After <a href="https://help.github.com/articles/cloning-a-repository/" target="_blank">cloning</a> to $RIVET_DIR:
 
     cd $RIVET_DIR
@@ -43,7 +45,6 @@ After <a href="https://help.github.com/articles/cloning-a-repository/" target="_
     cd .. 
     qmake 
     make
-    
 
 You may see compiler warnings during either of the `make` executions.
 These can safely be ignored. 
@@ -56,19 +57,29 @@ where the viewer was built. On Ubuntu and most other systems:
 
     ln -s build/rivet_console
     
-In the future, all these steps will be automated so that a single cmake
-build will create both executables, and put everything in the right place.
-     
-### Mac OS X
-On Mac OS X, it is necessary to fist install XCode from the app store if you've not done so already.
+In the future, all these steps will be automated so that a single cmake build will create both executables, and put everything in the right place.    
 
-Also, ensure you have the XCode command line tools installed by running:
+## Building On Mac OS X
+
+### Installing Dependencies
+
+First,  ensure you have the XCode Command Line Tools installed by running:
 
     # only needed if you've never run it before, (running it again doesn't hurt anything)
-    # installs XCode command line tools
+    # installs XCode Command Line Tools
     xcode-select --install
-    
-For the remaining packages, we recommend using Homebrew, which must be 
+
+Next, install XCode from the App Store, if you've not done so already.
+
+TODO: Does this process require the user to accept a license agreement?  (I suspect so.)  Should this be mentioned?
+
+To configure XCode to run as required by qt5, enter
+
+    sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
+
+TODO: Is the above necessary?  I think so but, I'm not sure.  It was for me, but I proceeded in a different order, installing Brew first.
+
+To install the remaining packages, we recommend using Homebrew, which must be 
 installed separately using the instructions at the [Homebrew web site](http://brew.sh/).
     
     # now install the needed packages 
@@ -86,8 +97,8 @@ we need to select a specific version for Mac:
     brew install boost160 
     
 Please note that, as of the time of writing, brew installs `qmake` in a version-specific folder under 
-/usr/local/Cellar/opt/qt5/bin, and does not add it to your `PATH`. You can find
-the folder where qmake is installed using this command:
+/usr/local/Cellar/qt5/[my_version_#]/bin, and does not add it to your `PATH`. You can find
+the folder where qt5 is installed using this command:
 
     brew info qt5 | grep Cellar | cut -d' ' -f1
 
@@ -95,8 +106,7 @@ In fact, let's store that in a variable so we can use it below:
     
     export QT_BASE=`brew info qt5 | grep Cellar | cut -d' ' -f1`
 
-In addition, if you are using Mac OS X, in order to ensure that qmake can find where boost is installed, 
-first add the following lines to the bottom of the file RIVET.pro, changing the paths in the last three lines, 
+Finally, in order to ensure that qmake can find where boost is installed, add the following lines to the bottom of the file RIVET.pro, changing the paths in the last three lines, 
 if necessary, to match the location and version of your copy of Boost.  
 
     CONFIG += c++11
@@ -108,6 +118,7 @@ if necessary, to match the location and version of your copy of Boost.
 
     LIBS += -L"/usr/local/Cellar/boost/1.60.0_2/lib" -lboost_random
 
+### Building RIVET
 After <a href="https://help.github.com/articles/cloning-a-repository/" target="_blank">cloning</a> to $RIVET_DIR:
 
     cd $RIVET_DIR
@@ -117,24 +128,21 @@ After <a href="https://help.github.com/articles/cloning-a-repository/" target="_
     make
     cd .. 
     $QT_BASE/bin/qmake
-    make
+    make    
     
-
 You may see compiler warnings during either of the `make` executions.
 These can safely be ignored. 
 
 After this, you will have two executables built: the viewer (RIVET.app),
 and the computation engine (rivet_console).
-
-It is then necessary to move or symlink the console into the same folder
-where the viewer was built. 
+   
+It is then necessary to move or symlink the console into the same folder where the viewer was built:
 
     cd RIVET.app/Contents/MacOS
-    ln -s ../../../build/rivet_console
-    
-In the future, all these steps will be automated so that a single cmake
-build will create both executables, and put everything in the right place.
-     
+    ln -s ../../../build/rivet_console   
+
+In the future, all these steps will be automated so that a single cmake build will create both executables, and put everything in the right place.
+
 ## Contributing
     
 We welcome your contribution! Code, documentation, unit tests, 
