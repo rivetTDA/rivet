@@ -24,7 +24,7 @@ Before starting to build RIVET, you will need to have the following installed:
 please use Boost 1.60-1.62 to avoid this problem.
 
 Below we give step-by-step instructions for installing these required dependencies and building RIVET on Ubuntu and Mac OS X.  
-TODO: Add instructions for Windows.  
+TODO: Add build instructions for Windows.  
 
 ## Building On Ubuntu
 
@@ -79,15 +79,16 @@ To configure XCode to run as required by qt5, enter
 
 TODO: Is the above necessary?  I think so but, I'm not sure.  It was for me, but I proceeded in a different order, installing Brew first.
 
-To install the remaining packages, we recommend using Homebrew, which must be 
-installed separately using the instructions at the [Homebrew web site](http://brew.sh/).
+To install the remaining packages, we recommend using the package manager [Homebrew](http://brew.sh/).  To install Homebrew:
+
+    /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"    
     
-    # now install the needed packages 
+Now install cmake and qt5:
+    
     brew install cmake qt5
     
 Since boost 1.63 (which is currently the version that brew installs) or greater 
-isn't recognized by CMake 
-[details here again](https://gitlab.kitware.com/cmake/cmake/merge_requests/361),
+[isn't recognized by CMake](https://gitlab.kitware.com/cmake/cmake/merge_requests/361),
 we need to select a specific version for Mac:
     
     # Make older versions available to homebrew
