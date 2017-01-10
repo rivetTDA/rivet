@@ -86,7 +86,7 @@ Arrangement::Arrangement(std::vector<exact> xe,
     }
 
     //create face
-    faces.push_back(std::make_shared<Face>(halfedges[0]));
+    faces.push_back(std::make_shared<Face>(halfedges[0], faces.size()));
 
     //set the remaining pointers on the halfedges
     for (int i = 0; i < 4; i++) {
@@ -159,7 +159,7 @@ std::shared_ptr<Halfedge> Arrangement::create_edge_left(std::shared_ptr<Halfedge
     halfedges.push_back(new_twin);
 
     //create new face
-    std::shared_ptr<Face> new_face(new Face(new_edge));
+    std::shared_ptr<Face> new_face(new Face(new_edge, faces.size()));
     faces.push_back(new_face);
 
     //update Halfedge pointers

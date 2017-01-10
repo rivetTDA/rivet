@@ -108,7 +108,7 @@ private:
 
 class Face {
 public:
-    Face(std::shared_ptr<Halfedge> e); //constructor: requires pointer to a boundary halfedge
+    Face(std::shared_ptr<Halfedge> e, unsigned long id); //constructor: requires pointer to a boundary halfedge
     Face(); // For serialization
     ~Face(); //destructor: destroys barcode template
 
@@ -126,11 +126,13 @@ public:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int version);
 
+    unsigned long id() const;
+
 private:
     std::shared_ptr<Halfedge> boundary; //pointer to one halfedge in the boundary of this cell
     BarcodeTemplate dbc; //barcode template stored in this cell
     bool visited; //initially false, set to true after this cell has been visited in the vineyard-update process (so that we can distinguish a cell with an empty barcode from an unvisited cell)
-
+    unsigned long identifier; // Arrangement-specific ID for this face
 }; //end class Face
 
 //This class exists only for data transfer between console and viewer

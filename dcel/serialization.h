@@ -78,7 +78,7 @@ void Halfedge::serialize(Archive& ar, const unsigned int /*version*/)
 template <class Archive>
 void Face::serialize(Archive& ar, const unsigned int /*version*/)
 {
-    ar& boundary& dbc& visited;
+    ar& boundary& dbc& visited & identifier;
 }
 
 template <class Archive>

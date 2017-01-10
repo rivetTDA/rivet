@@ -168,15 +168,17 @@ Debug& operator<<(Debug& qd, const Halfedge& e)
 
 /*** implementation of class Face ***/
 
-Face::Face(std::shared_ptr<Halfedge> e)
+Face::Face(std::shared_ptr<Halfedge> e, unsigned long id)
     : boundary(e)
     , visited(false)
+, identifier(id)
 {
 }
 
 Face::Face()
     : boundary()
     , visited(false)
+, identifier(-1)
 {
 }
 
@@ -224,6 +226,10 @@ Debug& operator<<(Debug& qd, const Face& f)
     } while (curr != start);
     qd << "cycle; ";
     return qd;
+}
+
+unsigned long Face::id() const {
+    return this->identifier;
 }
 
 bool operator==(TemplatePointsMessage const& left, TemplatePointsMessage const& right)

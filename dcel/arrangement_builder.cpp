@@ -301,7 +301,7 @@ void ArrangementBuilder::build_interior(std::shared_ptr<Arrangement> arrangement
                 incoming->set_next(prev_incoming->get_twin());
                 incoming->get_next()->set_prev(incoming);
 
-                std::shared_ptr<Face> new_face(new Face(new_twin));
+                std::shared_ptr<Face> new_face(new Face(new_twin, arrangement->faces.size()));
                 arrangement->faces.push_back(new_face);
 
                 new_twin->set_face(new_face);
@@ -465,11 +465,6 @@ void ArrangementBuilder::find_path(Arrangement& arrangement, std::vector<std::sh
         Graph; //TODO: probably listS is a better choice than vecS, but I don't know how to make the adjacency_list work with listS
     Graph dual_graph;
 
-    //make a map for reverse-lookup of face indexes by face pointers -- Is this really necessary? Can I avoid doing this?
-    std::map<std::shared_ptr<Face>, unsigned> face_indexes;
-    for (unsigned i = 0; i < arrangement.faces.size(); i++)
-        face_indexes.insert(std::pair<std::shared_ptr<Face>, unsigned>(arrangement.faces[i], i));
-
     // distance vector for sorting the adjacency list
     std::vector<std::vector<unsigned>> distances(arrangement.faces.size(), std::vector<unsigned>(arrangement.faces.size(), -1));
     for (size_t i = 0; i < distances.size(); ++i)
@@ -484,8 +479,7 @@ void ArrangementBuilder::find_path(Arrangement& arrangement, std::vector<std::sh
             //find index of neighbor
             std::shared_ptr<Face> neighbor = current->get_twin()->get_face();
             if (neighbor != NULL) {
-                std::map<std::shared_ptr<Face>, unsigned>::iterator it = face_indexes.find(neighbor);
-                unsigned j = it->second;
+                unsigned long j = neighbor->id();
 
                 //if i < j, then create an (undirected) edge between these arrangement.faces
                 if (i < j) {
@@ -535,7 +529,7 @@ void ArrangementBuilder::find_path(Arrangement& arrangement, std::vector<std::sh
 
     //make sure to start at the proper node (2-cell)
     std::shared_ptr<Face> initial_cell = arrangement.topleft->get_twin()->get_face();
-    unsigned start = (face_indexes.find(initial_cell))->second;
+    unsigned long start = initial_cell->id();
 
     //store the children of each node (with initial_cell regarded as the root of the tree)
     std::vector<std::vector<unsigned>> children(arrangement.faces.size(), std::vector<unsigned>());
@@ -551,7 +545,7 @@ void ArrangementBuilder::find_path(Arrangement& arrangement, std::vector<std::sh
         Debug qd = debug(true);
         qd << "PATH: " << start << ", ";
         for (unsigned i = 0; i < pathvec.size(); i++) {
-            unsigned cur = (face_indexes.find((pathvec[i])->get_face()))->second;
+            unsigned long cur = pathvec[i]->get_face()->id();
             qd << "<" << pathvec[i]->get_anchor()->get_weight() << ">" << cur << ", "; //edge weight appears in angle brackets
         }
         qd << "\n";

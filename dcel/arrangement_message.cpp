@@ -81,8 +81,7 @@ ArrangementMessage::ArrangementMessage(Arrangement const& arrangement)
     };
 
     auto FID = [&face_map](const std::shared_ptr<Face> &ptr) {
-        auto it = face_map.find(ptr);
-        return it == face_map.end() ? -1 : it->second;
+        return ptr == nullptr ? -1 : ptr->id();
     };
 
 
@@ -407,7 +406,7 @@ Arrangement ArrangementMessage::to_arrangement() const
         arrangement.vertices.push_back(std::make_shared<::Vertex>(vertex.x, vertex.y));
     }
     for (size_t i = 0; i < faces.size(); i++) {
-        arrangement.faces.push_back(std::make_shared<::Face>());
+        arrangement.faces.push_back(std::make_shared<::Face>(nullptr, i));
     }
     for (size_t i = 0; i < half_edges.size(); i++) {
         arrangement.halfedges.push_back(std::make_shared<::Halfedge>());
