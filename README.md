@@ -19,10 +19,6 @@ Before starting to build RIVET, you will need to have the following installed:
 * Qt 5
 * Boost (including boost serialization; version 1.60 or newer required)
 
-*NOTE* that currently CMake does not recognize Boost 1.63 or newer 
-(see https://gitlab.kitware.com/cmake/cmake/merge_requests/361), 
-please use Boost 1.60-1.62 to avoid this problem.
-
 Below we give step-by-step instructions for installing these required dependencies and building RIVET on Ubuntu and Mac OS X.  
 TODO: Add build instructions for Windows.  
 
@@ -68,34 +64,20 @@ First,  ensure you have the XCode Command Line Tools installed by running:
     # only needed if you've never run it before, (running it again doesn't hurt anything)
     # installs XCode Command Line Tools
     xcode-select --install
+    
+If a popup window appears, click the "Install" button, and accept the license agreement.  
 
-Next, install XCode from the App Store, if you've not done so already.
+Next, install XCode from the App Store, if you've not done so already.  You will also need accept the license agreement for XCode, which you can do from the command line by running:
 
-TODO: Does this process require the user to accept a license agreement?  (I suspect so.)  Should this be mentioned?
-
-To configure XCode to run as required by qt5, enter
-
-    sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
-
-TODO: Is the above necessary?  I think so but, I'm not sure.  It was for me, but I proceeded in a different order, installing Brew first.
+    sudo xcodebuild -license
 
 To install the remaining packages, we recommend using the package manager [Homebrew](http://brew.sh/).  To install Homebrew:
 
     /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"    
     
-Now install cmake and qt5:
+Now install cmake, qt5, and boost:
     
-    brew install cmake qt5
-    
-Since boost 1.63 (which is currently the version that brew installs) or greater 
-[isn't recognized by CMake](https://gitlab.kitware.com/cmake/cmake/merge_requests/361),
-we need to select a specific version for Mac:
-    
-    # Make older versions available to homebrew
-    brew tap homebrew/versions
-    
-    # Install a CMake-findable version of Boost
-    brew install boost160 
+    brew install cmake qt5 boost
     
 Please note that, as of the time of writing, brew installs `qmake` in a version-specific folder under 
 /usr/local/Cellar/qt5/[my_version_#]/bin, and does not add it to your `PATH`. You can find
@@ -107,15 +89,14 @@ In fact, let's store that in a variable so we can use it below:
     
     export QT_BASE=`brew info qt5 | grep Cellar | cut -d' ' -f1`
 
-Finally, in order to ensure that qmake can find where boost is installed, add the following lines to the bottom of the file RIVET.pro, changing the paths in the last three lines, 
-if necessary, to match the location and version of your copy of Boost.  
+Finally, in order to ensure that qmake can find where boost is installed, add the following lines to the bottom of the file RIVET.pro, changing the paths in the last three lines, if necessary, to match the location and version of your copy of Boost.  
 
     CONFIG += c++11
     QMAKE_CFLAGS += -std=c++11 -stdlib=libc++ -mmacosx-version-min=10.9
     QMAKE_CXXFLAGS += -std=c++11 -stdlib=libc++ -mmacosx-version-min=10.9
 
-    LIBS += -L"/usr/local/Cellar/boost/1.60.0_2/lib"
-    INCLUDEPATH += "/usr/local/Cellar/boost/1.60.0_2/include"
+    LIBS += -L"/usr/local/Cellar/boost/1.63.0_/lib"
+    INCLUDEPATH += "/usr/local/Cellar/boost/1.63.0/include"
 
     LIBS += -L"/usr/local/Cellar/boost/1.60.0_2/lib" -lboost_random
 
