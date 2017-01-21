@@ -19,8 +19,7 @@ Before starting to build RIVET, you will need to have the following installed:
 * Qt 5
 * Boost (including boost serialization; version 1.60 or newer required)
 
-Below we give step-by-step instructions for installing these required dependencies and building RIVET on Ubuntu and Mac OS X.  
-TODO: Add build instructions for Windows.  
+Below we give step-by-step instructions for installing these required dependencies and building RIVET on Ubuntu and Mac OS X.  Currently, use of RIVET in Windows is not supported; we are working on this.
 
 ## Building On Ubuntu
 
@@ -98,7 +97,7 @@ Finally, in order to ensure that qmake can find where boost is installed, add th
     LIBS += -L"/usr/local/Cellar/boost/1.63.0_/lib"
     INCLUDEPATH += "/usr/local/Cellar/boost/1.63.0/include"
 
-    LIBS += -L"/usr/local/Cellar/boost/1.60.0_2/lib" -lboost_random
+    LIBS += -L"/usr/local/Cellar/boost/1.63.0/lib" -lboost_random
 
 ### Building RIVET
 After <a href="https://help.github.com/articles/cloning-a-repository/" target="_blank">cloning</a> to $RIVET_DIR:
