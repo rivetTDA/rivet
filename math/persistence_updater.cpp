@@ -134,9 +134,9 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<std::shared_ptr<H
     U_low = R_low->decompose_RU();
     U_high = R_high->decompose_RU();
 
-    int time_for_initial_decomp = timer.elapsed();
+    unsigned total_time_for_resets = timer.elapsed();
     if (verbosity >= 4) {
-        debug() << "  --> computing the RU decomposition took" << time_for_initial_decomp << "milliseconds";
+        debug() << "  --> computing the RU decomposition took" << total_time_for_resets << "milliseconds";
     }
 
     //store the barcode template in the first cell
@@ -153,20 +153,21 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<std::shared_ptr<H
         debug() << "TRAVERSING THE PATH USING THE RESET ALGORITHM: path has" << path.size() << "steps";
     }
 
+    //data members for analyzing the computation
+    unsigned long total_transpositions = 0;
+    unsigned total_time_for_transpositions = 0; //NEW
+    unsigned number_of_resets = 1; //we count the initial RU-decomposition as the first reset
+    int max_time = 0;
+
     // choose the initial value of the threshold intelligently
-    unsigned long threshold = choose_initial_threshold(time_for_initial_decomp); //if the number of swaps might exceed this threshold, then do a persistence calculation from scratch
+    unsigned long threshold = choose_initial_threshold(total_time_for_resets, total_transpositions, total_time_for_transpositions); 
+        //if the number of swaps might exceed this threshold, then we will do a persistence calculation from scratch instead of vineyard updates
     if (verbosity >= 4) {
         debug() << "initial reset threshold set to" << threshold;
     }
 
     timer.restart();
 
-    //data structures for analyzing the computation
-    unsigned long total_transpositions = 0;
-    unsigned total_time_for_transpositions = 0; //NEW
-    unsigned number_of_resets = 1; //we count the initial RU-decomposition as the first reset
-    unsigned total_time_for_resets = time_for_initial_decomp;
-    int max_time = 0;
 
     //traverse the path
     Timer steptimer;
@@ -310,9 +311,16 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<std::shared_ptr<H
             max_time = step_time;
 
         //update the treshold
-        threshold = (unsigned long)(((double)total_transpositions / total_time_for_transpositions) * ((double)total_time_for_resets / number_of_resets));
-        if (verbosity >= 6) {
-            debug() << "  -- new threshold:" << threshold;
+        if(swap_counter > 0 || num_trans >= threshold) {
+            threshold = (unsigned long)(((double)total_transpositions / total_time_for_transpositions) * ((double)total_time_for_resets / number_of_resets));
+            if (verbosity >= 6) {
+                // debug() << "===>>> UPDATING THRESHOLD:";
+                // debug() << "    total_trans: " << total_transpositions;
+                // debug() << "    total_time_for_trans: " << total_time_for_transpositions;
+                // debug() << "    total time for resets: " << total_time_for_resets;
+                // debug() << "    number of resets:" << number_of_resets;
+                debug() << "  -- new threshold:" << threshold;
+            }
         }
     } //end path traversal
 
@@ -1423,17 +1431,11 @@ void PersistenceUpdater::store_barcode_template(std::shared_ptr<Face> cell)
 } //end store_barcode_template()
 
 //chooses an initial threshold by timing vineyard updates corresponding to random transpositions
-unsigned long PersistenceUpdater::choose_initial_threshold(int time_for_initial_decomp)
+unsigned long PersistenceUpdater::choose_initial_threshold(unsigned decomp_time, unsigned long & num_trans, unsigned & trans_time)
 {
     if (verbosity >= 4) {
         debug() << "RANDOM VINEYARD UPDATES TO CHOOSE THE INITIAL THRESHOLD";
     }
-
-    //make a copy of the matrices
-    MapMatrix_Perm* R_low_copy = new MapMatrix_Perm(*R_low);
-    MapMatrix_Perm* R_high_copy = new MapMatrix_Perm(*R_high);
-    MapMatrix_RowPriority_Perm* U_low_copy = new MapMatrix_RowPriority_Perm(*U_low);
-    MapMatrix_RowPriority_Perm* U_high_copy = new MapMatrix_RowPriority_Perm(*U_high);
 
     //other data structures
     unsigned num_cols = R_low->width() + R_high->width();
@@ -1444,9 +1446,9 @@ unsigned long PersistenceUpdater::choose_initial_threshold(int time_for_initial_
         return 1000;
 
     //determine the time for which we will do transpositions
-    int trans_time = time_for_initial_decomp / 20;
-    if (trans_time < 100)
-        trans_time = 100; //run for at least 100 milliseconds
+    int runtime = decomp_time / 20;
+    if (runtime < 100)
+        runtime = 100; //run for at least 100 milliseconds
 
     //start the timer
     Timer timer;
@@ -1455,7 +1457,8 @@ unsigned long PersistenceUpdater::choose_initial_threshold(int time_for_initial_
     if (verbosity >= 8) {
         debug() << "  -->Doing some random vineyard updates...";
     }
-    while (timer.elapsed() < trans_time || trans_list.size() == 0) //do a transposition
+    while ( (timer.elapsed() < runtime || trans_list.size() == 0) &&
+        (timer.elapsed() < 5 || trans_list.size() < 5000) ) //do a transposition
     {
         unsigned rand_col = rand() % (num_cols - 1); //random integer in {0, 1, ..., num_cols - 2}
 
@@ -1484,26 +1487,16 @@ unsigned long PersistenceUpdater::choose_initial_threshold(int time_for_initial_
         }
     }
 
-    //record the time
+    //record the time and number of transpositions
     trans_time = timer.elapsed();
+    num_trans = 2 * trans_list.size();
 
     if (verbosity >= 8) {
-        debug() << "  -->Did" << (2 * trans_list.size()) << "vineyard updates in" << trans_time << "milliseconds.";
+        debug() << "  -->Did" << num_trans << "vineyard updates in" << trans_time << "milliseconds.";
     }
 
-    //restore the matrices to the copies made at the beginning of this function
-    ///TODO: is this good style?
-    delete R_low;
-    R_low = R_low_copy;
-    delete R_high;
-    R_high = R_high_copy;
-    delete U_low;
-    U_low = U_low_copy;
-    delete U_high;
-    U_high = U_high_copy;
-
     //return the threshold
-    return (unsigned long)(((double)(2 * trans_list.size()) / (double)trans_time) * time_for_initial_decomp);
+    return (unsigned long)(((double)num_trans / (double)trans_time) * decomp_time);
 } //end choose_initial_threshold()
 
 ///TESTING ONLY
