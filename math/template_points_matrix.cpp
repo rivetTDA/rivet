@@ -119,20 +119,19 @@ bool Multigrade::LexComparator(const Multigrade& first, const Multigrade& second
     return first.x > second.x || (first.x == second.x && first.y > second.y);
 }
 
-/********** xiSupportMatrix **********/
+/********** TemplatePointsMatrix **********/
 
-//constructor for xiSupportMatrix
+//constructor for TemplatePointsMatrix
 TemplatePointsMatrix::TemplatePointsMatrix(unsigned width, unsigned height)
     : columns(width)
     , rows(height)
 {
 }
 
-//stores the supplied xi support points in the xiSupportMatrix
-//  also finds anchors, which are stored in the matrix, the vector xi_pts, AND in the Arrangement
+//stores the supplied xi support points in the TemplatePointsMatrix
+//  also finds anchors, which are stored in the matrix and in the vector xi_pts
 //  precondition: xi_pts contains the support points in lexicographical order
-///NOTE: WRITTEN FOR JULY 2015 BUG FIX
-///      Runtime complexity of this function is O(n_x * n_y). We can probably do better, but it probably doesn't matter.
+//  Runtime complexity of this function is O(n_x * n_y). We can probably do better, but it probably doesn't matter.
 std::vector<std::shared_ptr<TemplatePointsMatrixEntry>> TemplatePointsMatrix::fill_and_find_anchors(std::vector<TemplatePoint>& xi_pts)
 {
     unsigned next_xi_pt = 0; //tracks the index of the next xi support point to insert
