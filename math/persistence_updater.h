@@ -160,7 +160,7 @@ private:
     void store_barcode_template(std::shared_ptr<Face> cell);
 
     //chooses an initial threshold by timing vineyard updates corresponding to random transpositions
-    unsigned long choose_initial_threshold(unsigned decomp_time, unsigned long & num_trans, unsigned & trans_time);
+    void choose_initial_threshold(unsigned decomp_time, unsigned long & num_trans, unsigned & trans_time, unsigned long & threshold);
 
     ///TESTING ONLY
     //void check_low_matrix(MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL);

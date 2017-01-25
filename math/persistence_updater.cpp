@@ -160,7 +160,8 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<std::shared_ptr<H
     int max_time = 0;
 
     // choose the initial value of the threshold intelligently
-    unsigned long threshold = choose_initial_threshold(total_time_for_resets, total_transpositions, total_time_for_transpositions); 
+    unsigned long threshold;
+    choose_initial_threshold(total_time_for_resets, total_transpositions, total_time_for_transpositions, threshold); 
         //if the number of swaps might exceed this threshold, then we will do a persistence calculation from scratch instead of vineyard updates
     if (verbosity >= 4) {
         debug() << "initial reset threshold set to" << threshold;
@@ -1431,7 +1432,7 @@ void PersistenceUpdater::store_barcode_template(std::shared_ptr<Face> cell)
 } //end store_barcode_template()
 
 //chooses an initial threshold by timing vineyard updates corresponding to random transpositions
-unsigned long PersistenceUpdater::choose_initial_threshold(unsigned decomp_time, unsigned long & num_trans, unsigned & trans_time)
+void PersistenceUpdater::choose_initial_threshold(unsigned decomp_time, unsigned long & num_trans, unsigned & trans_time, unsigned long & threshold)
 {
     if (verbosity >= 4) {
         debug() << "RANDOM VINEYARD UPDATES TO CHOOSE THE INITIAL THRESHOLD";
@@ -1442,8 +1443,10 @@ unsigned long PersistenceUpdater::choose_initial_threshold(unsigned decomp_time,
     std::list<unsigned> trans_list;
 
     //avoid trivial cases
-    if (num_cols <= 3) //need either the low or high matrix to have at least 2 columns
-        return 1000;
+    if (num_cols <= 3) { //if neither the low or high matrix has at least 2 columns, then we can't do transpositions
+        threshold = 1000;
+        return;
+    }
 
     //determine the time for which we will do transpositions
     int runtime = decomp_time / 20;
@@ -1495,8 +1498,8 @@ unsigned long PersistenceUpdater::choose_initial_threshold(unsigned decomp_time,
         debug() << "  -->Did" << num_trans << "vineyard updates in" << trans_time << "milliseconds.";
     }
 
-    //return the threshold
-    return (unsigned long)(((double)num_trans / (double)trans_time) * decomp_time);
+    //compute the threshold
+    threshold = (unsigned long)(((double)num_trans / (double)trans_time) * decomp_time);
 } //end choose_initial_threshold()
 
 ///TESTING ONLY
