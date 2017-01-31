@@ -736,3 +736,7 @@ exact InputManager::approx(double x)
     long denom = pow(10, d - log);
     return exact((long)floor(x * denom), denom);
 }
+
+FileType InputManager::identify() {
+    return this->get_file_type(this->input_params.fileName);
+}

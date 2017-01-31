@@ -133,6 +133,8 @@ public:
 
     std::unique_ptr<InputData> start(Progress& progress); //function to run the input manager
 
+    FileType identify();
+
 private:
     InputParameters& input_params; //parameters supplied by the user
     const int verbosity; //controls display of output, for debugging

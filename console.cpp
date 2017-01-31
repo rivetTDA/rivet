@@ -339,6 +339,14 @@ int main(int argc, char* argv[])
         }
     });
 
+    if (identify) {
+        auto file_type = inputManager.identify();
+        std::cout << "FILE TYPE: " << file_type.identifier << std::endl;
+        std::cout << "FILE TYPE DESCRIPTION: " << file_type.description << std::endl;
+        std::cout << "RAW DATA: " << file_type.is_data << std::endl;
+        std::cout.flush();
+        return 0;
+    }
     std::unique_ptr<InputData> input;
     try {
         input = inputManager.start(progress);
@@ -347,13 +355,6 @@ int main(int argc, char* argv[])
         std::cerr << "Exiting" << std::endl
                   << std::flush;
         return 1;
-    }
-    if (identify) {
-        std::cout << "FILE TYPE: " << input->file_type.identifier << std::endl;
-        std::cout << "FILE TYPE DESCRIPTION: " << input->file_type.description << std::endl;
-        std::cout << "RAW DATA: " << input->is_data << std::endl;
-        std::cout.flush();
-        return 0;
     }
     if (params.verbosity >= 4) {
         debug() << "Input processed.";
