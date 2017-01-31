@@ -113,7 +113,11 @@ void DataSelectDialog::detect_file_type()
 
     auto line = reader.next_line().first;
     if (line[0] == "RIVET_1") {
+        //TODO: It would be nice to support RIVET_1 in the console like other file types
+        // rather than having this special case here
         ui->fileTypeLabel->setText("This file appears to contain pre-computed RIVET data");
+        QFileInfo fileInfo(QString::fromStdString(params.fileName));
+        ui->fileLabel->setText("Selected file: " + fileInfo.fileName());
         ui->parameterFrame->setEnabled(false);
     } else {
         QStringList args;
@@ -148,7 +152,6 @@ void DataSelectDialog::detect_file_type()
                     qDebug() << "Partial:" << line;
                     partial = line;
                 }
-                return;
             } else if (line.startsWith("FILE TYPE DESCRIPTION: ")) {
 
                 ui->fileTypeLabel->setText("This file appears to contain " + line.mid(QString("FILE TYPE DESCRIPTION: ").length()).trimmed() + ".");
@@ -172,6 +175,9 @@ void DataSelectDialog::detect_file_type()
     }
 
     ui->computeButton->setEnabled(true);
+    //force black text because on Mac Qt autodefault buttons have white text when enabled,
+    //so they still look like they're disabled or weird in some way.
+    ui->computeButton->setStyleSheet("QPushButton { color: black; }");
 
 } //end detect_file_type()
 
