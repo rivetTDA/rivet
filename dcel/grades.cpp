@@ -52,11 +52,3 @@ double Grades::max_offset()
     return std::max(y.back(), -1 * x.front());
 }
 
-double Grades::relative_offset_to_absolute(double offset)
-{
-    if (offset < 0 || offset > 1) {
-        throw std::runtime_error("offset must be between 0 and 1 (inclusive)");
-    }
-    auto diff = max_offset() - min_offset();
-    return min_offset() + (diff * offset);
-}

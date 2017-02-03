@@ -190,10 +190,11 @@ void process_barcode_queries(std::string query_file_name, const ComputationResul
     Grades grades(computation_result.arrangement->x_exact, computation_result.arrangement->y_exact);
 
     for (auto query : queries) {
-        std::cout << query.first << " " << query.second << ": ";
-        auto absolute = grades.relative_offset_to_absolute(query.second);
-        auto templ = computation_result.arrangement->get_barcode_template(query.first, absolute);
-        auto barcode = templ.rescale(query.first, absolute, computation_result.template_points, grades);
+        auto angle = query.first;
+        auto offset = query.second;
+        std::cout << angle << " " << offset << ": ";
+        auto templ = computation_result.arrangement->get_barcode_template(angle, offset);
+        auto barcode = templ.rescale(angle, offset, computation_result.template_points, grades);
         for (auto it = barcode->begin(); it != barcode->end(); it++) {
             auto bar = *it;
             std::cout << bar.birth << " ";
