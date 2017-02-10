@@ -1,5 +1,5 @@
 /**********************************************************************
-Copyright 2014-2016 The RIVET Devlopers. See the COPYRIGHT file at
+Copyright 2014-2016 The RIVET Developers. See the COPYRIGHT file at
 the top-level directory of this distribution.
 
 This file is part of RIVET.
