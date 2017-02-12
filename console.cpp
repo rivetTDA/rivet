@@ -62,19 +62,16 @@ static const char USAGE[] =
       -f <format>                              Output format for file [default: R1]
       -b --betti                               Print Betti number information and exit.
       --barcodes <line_file>                   Print barcodes for the line queries in line_file, then exit.
-                                               The line_file contains pairs (m, b) where m is the degree (0 to 90)
-                                               and b the offset, separated by a space. Each pair should appear on
-                                               a line by itself.
-
-                                               If m < 90, then b is a y-intercept; if m = 90, then b is an x-intercept.
-                                               Coordinates are assumed to be unnormalized.
+                                               line_file consists of pairs "m b", each representing a querly line. 
+                                               m is the slope of the query line, given in degrees (0 to 90); b is the 
+                                               signed distance from the query line to the origin, where the sign is 
+                                               positive if the line is above/left of the origin and negative otherwise.
 
                                                Example line_file contents:
 
                                                     #A line that starts with a # character will be ignored, as will blank lines
 
                                                     23 0.22
-                                                    #67 10.88   <-- will error if uncommented, 10.88 > 1
                                                     67 .88
                                                     10 0.92
                                                     #100 0.92   <-- will error if uncommented, 100 > 90
