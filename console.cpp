@@ -62,17 +62,20 @@ static const char USAGE[] =
       -f <format>                              Output format for file [default: R1]
       -b --betti                               Print Betti number information and exit.
       --barcodes <line_file>                   Print barcodes for the line queries in line_file, then exit.
-                                               line_file consists of pairs "m b", each representing a querly line. 
+                                               line_file consists of pairs "m b", each representing a query line.
                                                m is the slope of the query line, given in degrees (0 to 90); b is the 
                                                signed distance from the query line to the origin, where the sign is 
                                                positive if the line is above/left of the origin and negative otherwise.
+                                               Note that the output of the --betti option will include information on
+                                               the x and y grades that can be used to determine the bounds for the offset,
+                                               or they can be determined using the RIVET viewer.
 
                                                Example line_file contents:
 
                                                     #A line that starts with a # character will be ignored, as will blank lines
 
-                                                    23 0.22
-                                                    67 .88
+                                                    23 -0.22
+                                                    67 1.88
                                                     10 0.92
                                                     #100 0.92   <-- will error if uncommented, 100 > 90
 
@@ -174,10 +177,6 @@ void process_barcode_queries(std::string query_file_name, const ComputationResul
                 return;
             }
 
-            if (offset < 0 || offset > 1) {
-                std::clog << "Offset on line " << line_number << " must be between 0 and 1" << std::endl;
-                return;
-            }
             queries.push_back(std::pair<int, double>(angle, offset));
         } else {
             std::clog << "Parse error on line " << line_number << std::endl;
