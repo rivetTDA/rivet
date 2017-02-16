@@ -37,6 +37,8 @@ struct Ptr_Compare {
 ArrangementMessage::ArrangementMessage(Arrangement const& arrangement)
     : x_grades(arrangement.x_grades)
     , y_grades(arrangement.y_grades)
+      , x_exact(arrangement.x_exact)
+      ,y_exact(arrangement.y_exact)
     , vertical_line_query_list()
     , half_edges()
     , vertices()
@@ -505,6 +507,9 @@ Arrangement ArrangementMessage::to_arrangement() const
     arrangement.bottomright = arrangement.halfedges[static_cast<long>(bottomright)];
     arrangement.topright = arrangement.halfedges[static_cast<long>(topright)];
     arrangement.topleft = arrangement.halfedges[static_cast<long>(topleft)];
+
+    arrangement.x_exact = x_exact;
+    arrangement.y_exact = y_exact;
 
     arrangement.x_grades = x_grades;
     arrangement.y_grades = y_grades;

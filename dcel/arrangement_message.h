@@ -41,7 +41,8 @@ public:
     template <class Archive>
     void serialize(Archive& ar, const unsigned int /*version*/)
     {
-        ar& x_grades& y_grades& half_edges& vertices& anchors& faces& topleft& topright& bottomleft& bottomright& vertical_line_query_list;
+        ar& x_grades& y_grades& x_exact & y_exact & half_edges& vertices
+        & anchors& faces& topleft& topright& bottomleft& bottomright& vertical_line_query_list;
     }
 
     BarcodeTemplate get_barcode_template(double degrees, double offset);
@@ -60,6 +61,9 @@ private:
 
     std::vector<double> x_grades; //floating-point values for x-grades
     std::vector<double> y_grades; //floating-point values for y-grades
+
+    std::vector<exact> x_exact; //exact values for x-grades
+    std::vector<exact> y_exact; //exact values for y-grades
 
     HalfedgeId topleft; //pointer to Halfedge that points down from top left corner (0,infty)
     HalfedgeId topright; //pointer to Halfedge that points down from the top right corner (infty,infty)

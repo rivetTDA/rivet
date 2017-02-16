@@ -47,7 +47,7 @@ static const char USAGE[] =
       rivet_console --version
       rivet_console <input_file> --identify
       rivet_console <input_file> --betti [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>]
-      rivet_console <input_file> --barcodes <line_file> [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>]
+      rivet_console <input_file> --barcodes <line_file>
       rivet_console <input_file> <output_file> [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [-f <format>] [--binary]
 
     Options:
@@ -62,6 +62,7 @@ static const char USAGE[] =
       -f <format>                              Output format for file [default: R1]
       -b --betti                               Print Betti number information and exit.
       --barcodes <line_file>                   Print barcodes for the line queries in line_file, then exit.
+                                               NOTE that <input_file> must be a precomputed RIVET output file in this case!
                                                line_file consists of pairs "m b", each representing a query line.
                                                m is the slope of the query line, given in degrees (0 to 90); b is the 
                                                signed distance from the query line to the origin, where the sign is 
@@ -208,7 +209,47 @@ void process_barcode_queries(std::string query_file_name, const ComputationResul
         std::cout << std::endl;
     }
 }
-//
+
+bool is_precomputed(std::string file_name)
+{
+    std::ifstream file(file_name);
+    if (!file.is_open()) {
+        throw std::runtime_error("Couldn't open " + file_name + " for reading");
+    }
+    std::string line;
+    std::getline(file, line);
+    return line == "RIVET_1";
+}
+
+std::unique_ptr<ComputationResult> load_from_precomputed(std::string file_name)
+{
+    std::ifstream file(file_name);
+    if (!file.is_open()) {
+        throw std::runtime_error("Couldn't open " + file_name + " for reading");
+    }
+    std::string type;
+    std::getline(file, type);
+    if (type != "RIVET_1") {
+        throw std::runtime_error("Expected a precomputed RIVET file");
+    }
+    boost::archive::binary_iarchive archive(file);
+    InputParameters params;
+    TemplatePointsMessage templatePointsMessage;
+    ArrangementMessage arrangementMessage;
+    archive >> params;
+    archive >> templatePointsMessage;
+    archive >> arrangementMessage;
+    std::unique_ptr<ComputationResult> result(new ComputationResult);
+    result->arrangement.reset(new Arrangement);
+    *(result->arrangement) = arrangementMessage.to_arrangement();
+    std::vector<size_t> ex;
+    const size_t* shape = templatePointsMessage.homology_dimensions.shape();
+    ex.assign(shape, shape + templatePointsMessage.homology_dimensions.num_dimensions());
+    result->homology_dimensions.resize(ex);
+    result->homology_dimensions = templatePointsMessage.homology_dimensions;
+    result->template_points = templatePointsMessage.template_points;
+    return result;
+}
 
 int main(int argc, char* argv[])
 {
@@ -233,8 +274,9 @@ int main(int argc, char* argv[])
     bool betti_only = args["--betti"].isBool() && args["--betti"].asBool();
     bool binary = args["--binary"].isBool() && args["--binary"].asBool();
     bool identify = args["--identify"].isBool() && args["--identify"].asBool();
+    bool barcodes = args["--barcodes"].isString();
     std::string slices;
-    if (args["--barcodes"].isString()) {
+    if (barcodes) {
         slices = args["--barcodes"].asString();
     }
     if (identify) {
@@ -344,49 +386,56 @@ int main(int argc, char* argv[])
         std::cout.flush();
         return 0;
     }
-    std::unique_ptr<InputData> input;
-    try {
-        input = inputManager.start(progress);
-    } catch (const std::exception& e) {
-        std::cerr << "INPUT ERROR: " << e.what() << " :END" << std::endl;
-        std::cerr << "Exiting" << std::endl
-                  << std::flush;
-        return 1;
-    }
-    if (params.verbosity >= 4) {
-        debug() << "Input processed.";
-    }
-    auto result = computation.compute(*input);
-    if (params.verbosity >= 2) {
-        debug() << "Computation complete; augmented arrangement ready.";
-    }
-    auto arrangement = result->arrangement;
-    if (params.verbosity >= 4) {
-        arrangement->print_stats();
-    }
+    std::unique_ptr<ComputationResult> result;
 
-    if (!slices.empty()) {
-        process_barcode_queries(slices, *result);
-        return 0;
-    }
-    //if an output file has been specified, then save the arrangement
-    if (!params.outputFile.empty()) {
-        std::ofstream file(params.outputFile);
-        if (file.is_open()) {
-            debug() << "Writing file:" << params.outputFile;
+    if (barcodes) {
+        result = load_from_precomputed(params.fileName);
+        if (!slices.empty()) {
+            process_barcode_queries(slices, *result);
+            return 0;
+        }
+    } else {
 
-            if (params.outputFormat == "R0") {
-                FileWriter fw(params, *input, *(arrangement), result->template_points);
-                fw.write_augmented_arrangement(file);
-            } else if (params.outputFormat == "R1") {
-                write_boost_file(params, *points_message, *arrangement_message);
+        std::unique_ptr<InputData> input;
+        try {
+            input = inputManager.start(progress);
+        } catch (const std::exception& e) {
+            std::cerr << "INPUT ERROR: " << e.what() << " :END" << std::endl;
+            std::cerr << "Exiting" << std::endl
+                      << std::flush;
+            return 1;
+        }
+        if (params.verbosity >= 4) {
+            debug() << "Input processed.";
+        }
+        result = computation.compute(*input);
+        if (params.verbosity >= 2) {
+            debug() << "Computation complete; augmented arrangement ready.";
+        }
+        auto arrangement = result->arrangement;
+        if (params.verbosity >= 4) {
+            arrangement->print_stats();
+        }
+
+        //if an output file has been specified, then save the arrangement
+        if (!params.outputFile.empty()) {
+            std::ofstream file(params.outputFile);
+            if (file.is_open()) {
+                debug() << "Writing file:" << params.outputFile;
+
+                if (params.outputFormat == "R0") {
+                    FileWriter fw(params, *input, *(arrangement), result->template_points);
+                    fw.write_augmented_arrangement(file);
+                } else if (params.outputFormat == "R1") {
+                    write_boost_file(params, *points_message, *arrangement_message);
+                } else {
+                    throw std::runtime_error("Unsupported output format: " + params.outputFormat);
+                }
             } else {
-                throw std::runtime_error("Unsupported output format: " + params.outputFormat);
+                std::stringstream ss;
+                ss << "Error: Unable to write file:" << params.outputFile;
+                throw std::runtime_error(ss.str());
             }
-        } else {
-            std::stringstream ss;
-            ss << "Error: Unable to write file:" << params.outputFile;
-            throw std::runtime_error(ss.str());
         }
     }
     debug() << "CONSOLE RIVET: Goodbye!";
