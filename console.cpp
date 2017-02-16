@@ -39,8 +39,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 static const char USAGE[] =
     R"(RIVET: Rank Invariant Visualization and Exploration Tool
 
-     The RIVET console  application computes an augmented arrangement for
+     The RIVET console application computes an augmented arrangement for
      2D persistent homology, which can be visualized with the RIVET GUI app.
+     It also can perform standalone computation of Betti numbers, as well as 
+     queries of an augmented arrangement for the barcodes of 1-D slices of a 2-D 
+     persistence module.
 
     Usage:
       rivet_console (-h | --help)
@@ -60,16 +63,14 @@ static const char USAGE[] =
       -y <ybins> --ybins=<ybins>               Number of bins in the y direction [default: 0]
       -V <verbosity> --verbosity=<verbosity>   Verbosity level: 0 (no console output) to 10 (lots of output) [default: 2]
       -f <format>                              Output format for file [default: R1]
-      -b --betti                               Print Betti number information and exit.
-      --barcodes <line_file>                   Print barcodes for the line queries in line_file, then exit.
+      -b --betti                               Print dimension and Betti number information, then exit.        
+      --barcodes <line_file>                   Print barcodes for the line queries in line_file, then exit.  
                                                NOTE that <input_file> must be a precomputed RIVET output file in this case!
                                                line_file consists of pairs "m b", each representing a query line.
                                                m is the slope of the query line, given in degrees (0 to 90); b is the 
                                                signed distance from the query line to the origin, where the sign is 
                                                positive if the line is above/left of the origin and negative otherwise.
-                                               Note that the output of the --betti option will include information on
-                                               the x and y grades that can be used to determine the bounds for the offset,
-                                               or they can be determined using the RIVET viewer.
+                                               
 
                                                Example line_file contents:
 
