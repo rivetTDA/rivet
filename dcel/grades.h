@@ -36,8 +36,8 @@ struct Grades {
 
     Grades(std::vector<exact> x, std::vector<exact> y);
 
-    double min_offset();
-    double max_offset();
+    double min_offset() const;
+    double max_offset() const;
 
 };
 

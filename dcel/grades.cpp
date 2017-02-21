@@ -36,7 +36,7 @@ Grades::Grades(std::vector<exact> x, std::vector<exact> y)
 {
 }
 
-double Grades::min_offset()
+double Grades::min_offset() const
 {
     if (x.empty() || y.empty()) {
         return 0;
@@ -44,7 +44,7 @@ double Grades::min_offset()
     return std::min(-1 * x.back(), y.front());
 }
 
-double Grades::max_offset()
+double Grades::max_offset() const
 {
     if (x.empty() || y.empty()) {
         return 0;

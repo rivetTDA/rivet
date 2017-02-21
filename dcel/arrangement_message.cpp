@@ -416,7 +416,7 @@ Arrangement ArrangementMessage::to_arrangement() const
     std::vector<std::shared_ptr<::Anchor>> temp_anchors; //For indexing, since arrangement.all_anchors is a set
     for (auto anchor : anchors) {
         std::shared_ptr<::Anchor> ptr = std::make_shared<::Anchor>(anchor.x_coord, anchor.y_coord);
-        std::clog << "Adding anchor to arrangement: " << ptr->get_x() << ", " << ptr->get_y() << std::endl;
+//        std::clog << "Adding anchor to arrangement: " << ptr->get_x() << ", " << ptr->get_y() << std::endl;
         assert(anchor.x_coord == ptr->get_x());
         assert(anchor.y_coord == ptr->get_y());
         temp_anchors.push_back(ptr);
@@ -429,11 +429,11 @@ Arrangement ArrangementMessage::to_arrangement() const
 
     auto it = arrangement.all_anchors.begin();
     for (size_t i = 0; i < anchors.size(); i++) {
-        std::clog << "Checking: ";
-        std::clog << anchors[i].x_coord << "-->" << temp_anchors[i]->get_x() << "-->" << (*it)->get_x() << " / ";
+//        std::clog << "Checking: ";
+//        std::clog << anchors[i].x_coord << "-->" << temp_anchors[i]->get_x() << "-->" << (*it)->get_x() << " / ";
         assert(anchors[i].x_coord == temp_anchors[i]->get_x());
         assert(anchors[i].x_coord == (*it)->get_x());
-        std::clog << anchors[i].y_coord << "-->" << temp_anchors[i]->get_y() << "-->" << (*it)->get_y() << std::endl;
+//        std::clog << anchors[i].y_coord << "-->" << temp_anchors[i]->get_y() << "-->" << (*it)->get_y() << std::endl;
         assert(anchors[i].y_coord == temp_anchors[i]->get_y());
         assert(anchors[i].y_coord == (*it)->get_y());
         ++it;
@@ -516,17 +516,17 @@ Arrangement ArrangementMessage::to_arrangement() const
 
     it = arrangement.all_anchors.begin();
     for (size_t i = 0; i < anchors.size(); i++) {
-        std::clog << "Checking: ";
+//        std::clog << "Checking: ";
         assert(anchors[i].x_coord == temp_anchors[i]->get_x());
         assert(anchors[i].x_coord == (*it)->get_x());
-        std::clog << anchors[i].x_coord << " ";
+//        std::clog << anchors[i].x_coord << " ";
         assert(anchors[i].y_coord == temp_anchors[i]->get_y());
         assert(anchors[i].y_coord == (*it)->get_y());
-        std::clog << anchors[i].y_coord << std::endl;
+//        std::clog << anchors[i].y_coord << std::endl;
         assert(anchors[i].above_line == (*it)->is_above());
         assert(anchors[i].position == (*it)->get_position());
         ++it;
     }
-    std::clog << "All anchors identical in to_arrangement" << std::endl;
+//    std::clog << "All anchors identical in to_arrangement" << std::endl;
     return arrangement;
 }
