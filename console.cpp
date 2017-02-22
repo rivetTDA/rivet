@@ -297,7 +297,7 @@ int main(int argc, char* argv[])
     bool betti_only = args["--betti"].isBool() && args["--betti"].asBool();
     bool binary = args["--binary"].isBool() && args["--binary"].asBool();
     bool identify = args["--identify"].isBool() && args["--identify"].asBool();
-    bool bounds = args["--bounds"].isBool();
+    bool bounds = args["--bounds"].isBool() && args["--bounds"].asBool();
     bool barcodes = args["--barcodes"].isString();
     std::string slices;
     if (barcodes) {
