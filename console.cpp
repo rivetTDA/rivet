@@ -157,9 +157,9 @@ void print_betti(TemplatePointsMessage const& message, std::ostream& ostream)
 }
 
 void process_bounds(const ComputationResult &computation_result) {
-    const auto x_low = 0; // computation_result.arrangement->x_exact[0];
-    const auto y_low = 0; // computation_result.arrangement->y_exact[0];
     const auto grades = Grades(computation_result.arrangement->x_exact, computation_result.arrangement->y_exact);
+    const auto x_low = grades.x.front();
+    const auto y_low = grades.y.front();
     const auto x_high = grades.x.back();
     const auto y_high = grades.y.back();
     std::cout << "low: " << x_low << ", " << y_low << std::endl;
