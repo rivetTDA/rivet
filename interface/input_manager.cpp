@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "input_manager.h"
 #include "../computation.h"
 #include "../math/simplex_tree.h"
+#include "../math/bifiltration_data.h"
 #include "file_input_reader.h"
 #include "input_parameters.h"
 
@@ -107,13 +108,17 @@ InputManager::InputManager(InputParameters& params)
     : input_params(params)
     , verbosity(params.verbosity)
 {
-    register_file_type(FileType{ "points", "point-cloud data", true,
-        std::bind(&InputManager::read_point_cloud, this, std::placeholders::_1, std::placeholders::_2) });
+    register_file_type(FileType{ "pointsVR", "point-cloud data", true,
+        std::bind(&InputManager::read_point_cloud_VR, this, std::placeholders::_1, std::placeholders::_2) });
+    register_file_type(FileType{ "pointsBR", "point-cloud data", true,
+        std::bind(&InputManager::read_point_cloud_BR, this, std::placeholders::_1, std::placeholders::_2) });
 
     register_file_type(FileType{ "metric", "metric data", true,
         std::bind(&InputManager::read_discrete_metric_space, this, std::placeholders::_1, std::placeholders::_2) });
     register_file_type(FileType{ "bifiltration", "bifiltration data", true,
         std::bind(&InputManager::read_bifiltration, this, std::placeholders::_1, std::placeholders::_2) });
+    register_file_type(FileType{ "brips", "bifiltration data", true,
+        std::bind(&InputManager::read_brips, this, std::placeholders::_1, std::placeholders::_2) });
     //    register_file_type(FileType {"RIVET_0", "pre-computed RIVET data", false,
     //                                 std::bind(&InputManager::read_RIVET_data, this, std::placeholders::_1, std::placeholders::_2) });
 }
@@ -170,8 +175,8 @@ InputError::InputError(unsigned line, std::string message)
 
 //reads a point cloud
 //  points are given by coordinates in Euclidean space, and each point has a "birth time"
-//  constructs a simplex tree representing the bifiltered Vietoris-Rips complex
-std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream, Progress& progress)
+//  stores the bifiltered Vietoris-Rips complex in BifiltrationData
+std::unique_ptr<InputData> InputManager::read_point_cloud_VR(std::ifstream& stream, Progress& progress)
 {
     //TODO : switch to YAML or JSON input or switch to proper parser generator or combinators
     FileInputReader reader(stream);
@@ -342,11 +347,11 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
         debug() << "     y-grades: " << data->y_exact.size();
     }
 
-    data->simplex_tree.reset(new SimplexTree(input_params.dim, input_params.verbosity));
-    data->simplex_tree->build_VR_complex(time_indexes, dist_indexes, data->x_exact.size(), data->y_exact.size());
+    data->bifiltration_data.reset(new BifiltrationData(input_params.dim, input_params.verbosity));
+    data->bifiltration_data->build_VR_complex(time_indexes, dist_indexes, data->x_exact.size(), data->y_exact.size());
 
     if (verbosity >= 8) {
-        data->simplex_tree->print_bifiltration();
+        data->bifiltration_data->print_bifiltration();
     }
 
     //clean up
@@ -359,9 +364,211 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
         delete p;
     }
     return std::unique_ptr<InputData>(data);
-} //end read_point_cloud()
+} //end read_point_cloud_VR()
 
-//reads data representing a discrete metric space with a real-valued function and constructs a simplex tree
+//reads a point cloud
+//  points are given by coordinates in Euclidean space, and each point has a "birth time"
+//  stores the bifiltered Bifiltration-Rips complex in BifiltrationData
+std::unique_ptr<InputData> InputManager::read_point_cloud_BR(std::ifstream& stream, Progress& progress)
+{
+    //TODO : switch to YAML or JSON input or switch to proper parser generator or combinators
+    FileInputReader reader(stream);
+    auto data = new InputData();
+    if (verbosity >= 6) {
+        debug() << "InputManager: Found a point cloud file.";
+    }
+    unsigned dimension;
+    exact max_dist;
+
+    //read points
+    std::vector<DataPoint> points;
+
+    // STEP 1: read data file and store exact (rational) values
+    //skip first line
+    reader.next_line();
+
+    auto line_info = reader.next_line();
+    try {
+        //read dimension of the points from the first line of the file
+        std::vector<std::string> dimension_line = line_info.first;
+        if (dimension_line.size() != 1) {
+            debug() << "There was more than one value in the expected dimension line."
+                       " There may be a problem with your input file.  ";
+        }
+        if (verbosity >= 4) {
+            debug() << "  Point cloud lives in dimension:" << dimension_line[0];
+        }
+
+        int dim = std::stoi(dimension_line[0]);
+        if (dim < 1) {
+            throw std::runtime_error("Dimension of data must be at least 1");
+        }
+        dimension = static_cast<unsigned>(dim);
+
+        //read maximum distance for edges in Bifiltration-Rips complex
+        line_info = reader.next_line();
+        std::vector<std::string> distance_line = line_info.first;
+        if (distance_line.size() != 1) {
+            throw std::runtime_error("There was more than one value in the expected distance line.");
+        }
+
+        max_dist = str_to_exact(distance_line[0]);
+        if (max_dist <= 0) {
+            throw std::runtime_error("An invalid input was received for the max distance.");
+        }
+
+        if (verbosity >= 4) {
+            std::ostringstream oss;
+            oss << max_dist;
+            debug() << "  Maximum distance of edges in Bifiltration-Rips complex:" << oss.str();
+        }
+
+        //set label for x-axis to "degree"
+        data->x_label = "degree";
+
+        //set label for y-axis to "distance"
+        data->y_label = "distance";
+
+        while (reader.has_next_line()) {
+            line_info = reader.next_line();
+            std::vector<std::string> tokens = line_info.first;
+            if (tokens.size() != dimension + 1) {
+                std::stringstream ss;
+                ss << "invalid line (should be " << dimension + 1 << " tokens but was " << tokens.size() << ")"
+                   << std::endl;
+                ss << "[";
+                for (auto t : tokens) {
+                    ss << t << " ";
+                }
+                ss << "]" << std::endl;
+
+                throw std::runtime_error(ss.str());
+            }
+            DataPoint p(tokens);
+            points.push_back(p);
+        }
+    } catch (std::exception& e) {
+        throw InputError(line_info.second, e.what());
+    }
+    if (verbosity >= 4) {
+        debug() << "  Finished reading" << points.size() << "points. Input finished.";
+    }
+
+    if (points.empty()) {
+        throw std::runtime_error("No points loaded.");
+    }
+
+    // STEP 2: compute distance matrix, and create ordered lists of all unique distance and time values
+
+    if (verbosity >= 4) {
+        debug() << "  Building lists of grade values.";
+    }
+    progress.advanceProgressStage();
+
+    unsigned num_points = points.size();
+
+    ExactSet dist_set; //stores all unique distance values; must DELETE all elements later
+    std::pair<ExactSet::iterator, bool> ret; //for return value upon insert()
+    unsigned* degree = new unsigned[num_points]; //stores the degree of each point; must FREE later
+
+    dist_set.insert(new ExactValue(exact(0))); //distance from a point to itself is always zero
+
+    //consider all points
+    for (unsigned i = 0; i < num_points; i++) 
+    {
+        //compute (approximate) distances from this point to all following points
+        for (unsigned j = i + 1; j < num_points; j++) {
+            //compute (approximate) distance squared between points[i] and points[j]
+            double fp_dist_squared = 0;
+            for (unsigned k = 0; k < dimension; k++) {
+                double kth_dist = points[i].coords[k] - points[j].coords[k];
+                fp_dist_squared += (kth_dist * kth_dist);
+            }
+
+            //find an approximate square root of fp_dist_squared, and store it as an exact value
+            exact cur_dist(0);
+            if (fp_dist_squared > 0)
+                cur_dist = approx(sqrt(fp_dist_squared)); //OK for now...
+
+            if (cur_dist <= max_dist) //then this distance is allowed
+            {
+                //store distance value, if it doesn't exist already
+                ret = dist_set.insert(new ExactValue(cur_dist));
+
+                //remember that the pair of points (i,j) has this distance value, which will go in entry j(j-1)/2 + i
+                (*(ret.first))->indexes.push_back((j * (j - 1)) / 2 + i);
+
+                //there is an edge between i and j so update degree
+                degree[i]++;
+                degree[j]++;
+            }
+        }
+    } //end for
+
+    // STEP 3: build vectors of discrete indexes for constructing the bifiltration
+
+    //determine the max degree
+    unsigned maxDegree = 0;
+    for (unsigned i = 0; i < num_points; i++)
+        if (maxDegree < degree[i])
+            maxDegree = degree[i];
+
+    //build vector of discrete degree indices from 0 to maxDegree and bins those degree values
+    //WARNING: assumes that the number of distinct degree grades will be equal to maxDegree which may not hold
+    ExactSet degree_set;
+    for (unsigned i = 0; i <= maxDegree; i++)
+    {
+        ret = degree_set.insert(new ExactValue(i)); //store degree i
+        (*(ret.first))->indexes.push_back(i); //degree i is stored at index i
+    }
+    //make degrees
+    std::vector<unsigned> degree_indexes(maxDegree + 1, 0);
+    build_grade_vectors(*data, degree_set, degree_indexes, data->x_exact, input_params.x_bins);
+
+    unsigned max_unsigned = std::numeric_limits<unsigned>::max();
+
+    //discrete distance matrix (triangle); max_unsigned shall represent undefined distance
+    std::vector<unsigned> dist_indexes((num_points * (num_points - 1)) / 2, max_unsigned);
+    build_grade_vectors(*data, dist_set, dist_indexes, data->y_exact, input_params.y_bins);
+
+    //update progress
+    progress.progress(30);
+
+    // STEP 4: build the bifiltration
+
+    //simplex_tree stores only DISCRETE information!
+    //this only requires (suppose there are k points):
+    //  1. a list of k discrete times
+    //  2. a list of k(k-1)/2 discrete distances
+    //  3. max dimension of simplices to construct, which is one more than the dimension of homology to be computed
+
+    if (verbosity >= 4) {
+        debug() << "  Building Bifiltration-Rips bifiltration.";
+        debug() << "     x-grades: " << data->x_exact.size();
+        debug() << "     y-grades: " << data->y_exact.size();
+    }
+
+    data->bifiltration_data.reset(new BifiltrationData(input_params.dim, input_params.verbosity));
+    data->bifiltration_data->build_BR_complex(num_points, dist_indexes, degree_indexes, data->x_exact.size(), data->y_exact.size());
+
+    if (verbosity >= 8) {
+        data->bifiltration_data->print_bifiltration();
+    }
+
+    //clean up
+    for (ExactSet::iterator it = degree_set.begin(); it != degree_set.end(); ++it) {
+        ExactValue* p = *it;
+        delete p;
+    }
+    for (ExactSet::iterator it = dist_set.begin(); it != dist_set.end(); ++it) {
+        ExactValue* p = *it;
+        delete p;
+    }
+    delete degree;
+    return std::unique_ptr<InputData>(data);
+} //end read_point_cloud_BR()
+
+//reads data representing a discrete metric space with a real-valued function and stores in a BifiltrationData
 std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstream& stream, Progress& progress)
 {
     if (verbosity >= 2) {
@@ -485,8 +692,8 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
     }
 
     //build the Vietoris-Rips bifiltration from the discrete index vectors
-    data->simplex_tree.reset(new SimplexTree(input_params.dim, input_params.verbosity));
-    data->simplex_tree->build_VR_complex(value_indexes, dist_indexes, data->x_exact.size(), data->y_exact.size());
+    data->bifiltration_data.reset(new BifiltrationData(input_params.dim, input_params.verbosity));
+    data->bifiltration_data->build_VR_complex(value_indexes, dist_indexes, data->x_exact.size(), data->y_exact.size());
 
     //clean up
     for (ExactSet::iterator it = value_set.begin(); it != value_set.end(); ++it) {
@@ -500,7 +707,7 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
     return data;
 } //end read_discrete_metric_space()
 
-//reads a bifiltration and constructs a simplex tree
+//reads a bifiltration and stores in BifiltrationData
 std::unique_ptr<InputData> InputManager::read_bifiltration(std::ifstream& stream, Progress& progress)
 {
     std::unique_ptr<InputData> data(new InputData);
@@ -518,7 +725,7 @@ std::unique_ptr<InputData> InputManager::read_bifiltration(std::ifstream& stream
     //read the label for y-axis
     data->y_label = join(reader.next_line().first);
 
-    data->simplex_tree.reset(new SimplexTree(input_params.dim, input_params.verbosity));
+    data->bifiltration_data.reset(new BifiltrationData(input_params.dim, input_params.verbosity));
 
     //temporary data structures to store grades
     ExactSet x_set; //stores all unique x-values; must DELETE all elements later!
@@ -526,7 +733,7 @@ std::unique_ptr<InputData> InputManager::read_bifiltration(std::ifstream& stream
     std::pair<ExactSet::iterator, bool> ret; //for return value upon insert()
 
     //read simplices
-    unsigned num_simplices = 0;
+    std::vector<std::vector<int> > simplexList;
     while (reader.has_next_line()) {
         auto line_info = reader.next_line();
         try {
@@ -549,13 +756,11 @@ std::unique_ptr<InputData> InputManager::read_bifiltration(std::ifstream& stream
 
             //read multigrade and remember that it corresponds to this simplex
             ret = x_set.insert(new ExactValue(str_to_exact(tokens.at(dim + 1))));
-            (*(ret.first))->indexes.push_back(num_simplices);
+            (*(ret.first))->indexes.push_back(simplexList.size());
             ret = y_set.insert(new ExactValue(str_to_exact(tokens.at(dim + 2))));
-            (*(ret.first))->indexes.push_back(num_simplices);
+            (*(ret.first))->indexes.push_back(simplexList.size());
 
-            //add the simplex to the simplex tree
-            data->simplex_tree->add_simplex(verts, num_simplices, num_simplices); //multigrade to be set later!
-            num_simplices++;
+            simplexList.push_back(verts);
         } catch (std::exception& e) {
             throw InputError(line_info.second, "Could not read vertex: " + std::string(e.what()));
         }
@@ -565,18 +770,122 @@ std::unique_ptr<InputData> InputManager::read_bifiltration(std::ifstream& stream
 
     //build vectors of discrete grades, using bins
     unsigned max_unsigned = std::numeric_limits<unsigned>::max();
-    std::vector<unsigned> x_indexes(num_simplices, max_unsigned); //x_indexes[i] gives the discrete x-index for simplex i in the input order
-    std::vector<unsigned> y_indexes(num_simplices, max_unsigned); //y_indexes[i] gives the discrete y-index for simplex i in the input order
+    std::vector<unsigned> x_indexes(simplexList.size(), max_unsigned); //x_indexes[i] gives the discrete x-index for simplex i in the input order
+    std::vector<unsigned> y_indexes(simplexList.size(), max_unsigned); //y_indexes[i] gives the discrete y-index for simplex i in the input order
 
     build_grade_vectors(*data, x_set, x_indexes, data->x_exact, input_params.x_bins);
     build_grade_vectors(*data, y_set, y_indexes, data->y_exact, input_params.y_bins);
 
-    //update simplex tree nodes
-    data->simplex_tree->update_xy_indexes(x_indexes, y_indexes, data->x_exact.size(), data->y_exact.size());
+    for (unsigned i = 0; i < simplexList.size(); i++)
+    {
+        AppearanceGrades gradesOfApp;
+        gradesOfApp.push_back(Grade(x_indexes[i], y_indexes[i])); //Each simplex only has one grade of appearanace
+        data->bifiltration_data->add_simplex(simplexList[i], gradesOfApp);
+    }
+    data->bifiltration_data->createGradeInfo();
+    data->bifiltration_data->set_xy_grades(data->x_exact.size(), data->y_exact.size());
 
-    //compute indexes
-    data->simplex_tree->update_global_indexes();
-    data->simplex_tree->update_dim_indexes();
+    //clean up
+    for (ExactSet::iterator it = x_set.begin(); it != x_set.end(); ++it) {
+        ExactValue* p = *it;
+        delete p;
+    }
+    for (ExactSet::iterator it = y_set.begin(); it != y_set.end(); ++it) {
+        ExactValue* p = *it;
+        delete p;
+    }
+    return data;
+} //end read_bifiltration()
+
+//reads a BRips filtration and stores in BifiltrationData
+std::unique_ptr<InputData> InputManager::read_brips(std::ifstream& stream, Progress& progress)
+{
+    std::unique_ptr<InputData> data(new InputData);
+    FileInputReader reader(stream);
+    if (verbosity >= 2) {
+        debug() << "InputManager: Found a brips file.\n";
+    }
+
+    //Skip file type line
+    reader.next_line();
+
+    //read the label for x-axis
+    data->x_label = join(reader.next_line().first);
+
+    //read the label for y-axis
+    data->y_label = join(reader.next_line().first);
+
+    data->bifiltration_data.reset(new BifiltrationData(input_params.dim, input_params.verbosity));
+
+    //temporary data structures to store grades
+    ExactSet x_set; //stores all unique x-values; must DELETE all elements later!
+    ExactSet y_set; //stores all unique x-values; must DELETE all elements later!
+    std::pair<ExactSet::iterator, bool> ret; //for return value upon insert()
+
+    //read simplices
+    std::vector<std::pair<std::vector<int>, unsigned> > simplexList;
+    unsigned num_grades = 0;
+    while (reader.has_next_line()) {
+        auto line_info = reader.next_line();
+        try {
+            std::vector<std::string> tokens = line_info.first;
+
+            if (tokens.size() > std::numeric_limits<unsigned>::max()) {
+                throw InputError(line_info.second,
+                    "line longer than " + std::to_string(std::numeric_limits<unsigned>::max()) + " tokens");
+            }
+
+            //read vertices
+            unsigned dim = 0;
+            std::vector<int> verts;
+            while(tokens[dim].at(0) != ';') {
+                int v = std::stoi(tokens[dim]);
+                verts.push_back(v);
+                dim++;
+            }
+
+            unsigned grades = (tokens.size() - dim) / 2; //remaining tokens are xy pairs
+
+            for (unsigned i = 0; i < grades; i++) {
+                //read multigrade and remember that it corresponds to this grade
+                ret = x_set.insert(new ExactValue(str_to_exact(tokens.at(dim + 1))));
+                (*(ret.first))->indexes.push_back(num_grades);
+                ret = y_set.insert(new ExactValue(str_to_exact(tokens.at(dim + 2))));
+                (*(ret.first))->indexes.push_back(num_grades);
+                num_grades++;
+            }
+
+            simplexList.push_back({verts, grades});
+        } catch (std::exception& e) {
+            throw InputError(line_info.second, "Could not read vertex: " + std::string(e.what()));
+        }
+    }
+
+    progress.advanceProgressStage(); //advance progress box to stage 2: building bifiltration
+
+    //build vectors of discrete grades, using bins
+    unsigned max_unsigned = std::numeric_limits<unsigned>::max();
+    std::vector<unsigned> x_indexes(num_grades, max_unsigned); //x_indexes[i] gives the discrete x-index for simplex i in the input order
+    std::vector<unsigned> y_indexes(num_grades, max_unsigned); //y_indexes[i] gives the discrete y-index for simplex i in the input order
+
+    build_grade_vectors(*data, x_set, x_indexes, data->x_exact, input_params.x_bins);
+    build_grade_vectors(*data, y_set, y_indexes, data->y_exact, input_params.y_bins);
+
+
+    int current_grade = 0;
+    for (std::vector<std::pair<std::vector<int>, unsigned> >::iterator it = simplexList.begin(); it != simplexList.end(); it++)
+    {
+        unsigned appearances = it->second;
+        AppearanceGrades gradesOfApp;
+        for (unsigned i = 0; i < appearances; i++)
+        {
+            gradesOfApp.push_back(Grade(x_indexes[current_grade], y_indexes[current_grade]));
+            current_grade++;
+        }
+        data->bifiltration_data->add_simplex(it->first, gradesOfApp);
+    }
+    data->bifiltration_data->createGradeInfo();
+    data->bifiltration_data->set_xy_grades(data->x_exact.size(), data->y_exact.size());
 
     //clean up
     for (ExactSet::iterator it = x_set.begin(); it != x_set.end(); ++it) {
