@@ -102,7 +102,7 @@ ArrangementMessage::ArrangementMessage(Arrangement const& arrangement)
             AnchorId(AID(half->get_anchor())) });
     }
     for (auto anchor : arrangement.all_anchors) {
-        std::cerr << "Adding anchor: " << anchor->get_x() << ", " << anchor->get_y() << std::endl;
+//        std::cerr << "Adding anchor: " << anchor->get_x() << ", " << anchor->get_y() << std::endl;
         anchors.push_back(AnchorM{
             anchor->get_x(),
             anchor->get_y(),

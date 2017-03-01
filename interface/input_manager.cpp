@@ -129,6 +129,9 @@ FileType& InputManager::get_file_type(std::string fileName)
         throw std::runtime_error("Could not open " + fileName);
     }
     FileInputReader reader(stream);
+    if (!reader.has_next_line()) {
+        throw std::runtime_error("Empty file: " + fileName);
+    }
     std::string filetype_name = reader.next_line().first[0];
 
     auto it = std::find_if(supported_types.begin(), supported_types.end(), [filetype_name](FileType t) { return t.identifier == filetype_name; });

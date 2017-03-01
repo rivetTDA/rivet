@@ -317,47 +317,49 @@ int main(int argc, char* argv[])
     InputManager inputManager(params);
     Progress progress;
     Computation computation(params, progress);
-    progress.advanceProgressStage.connect([] {
-        std::clog << "STAGE" << std::endl;
+    if (binary || verbosity > 0) {
+        progress.advanceProgressStage.connect([] {
+            std::clog << "STAGE" << std::endl;
 
-    });
-    progress.progress.connect([](int amount) {
-        std::clog << "PROGRESS " << amount << std::endl;
-    });
-    progress.setProgressMaximum.connect([](int amount) {
-        std::clog << "STEPS_IN_STAGE " << amount << std::endl;
-    });
-    computation.arrangement_ready.connect([&arrangement_message, &params, &binary](std::shared_ptr<Arrangement> arrangement) {
+        });
+        progress.progress.connect([](int amount) {
+            std::clog << "PROGRESS " << amount << std::endl;
+        });
+        progress.setProgressMaximum.connect([](int amount) {
+            std::clog << "STEPS_IN_STAGE " << amount << std::endl;
+        });
+    }
+    computation.arrangement_ready.connect([&arrangement_message, &params, &binary, &verbosity](std::shared_ptr<Arrangement> arrangement) {
         arrangement_message = new ArrangementMessage(*arrangement);
         //TODO: this should become a system test with a known dataset
         //Note we no longer write the arrangement to stdout, it goes to a file at the end
         //of the run. This message just announces the absolute path of the file.
         //The viewer should capture the file name from the stdout stream, and
         //then wait for the console program to finish before attempting to read the file.
-        std::stringstream ss(std::ios_base::binary | std::ios_base::out | std::ios_base::in);
-        {
-            boost::archive::binary_oarchive archive(ss);
-            archive << *arrangement_message;
-        }
-        std::clog << "Testing deserialization locally..." << std::endl;
-        std::string original = ss.str();
-        ArrangementMessage test;
-        {
-            boost::archive::binary_iarchive inarch(ss);
-            inarch >> test;
-            std::clog << "Deserialized!";
-        }
-        if (!(*arrangement_message == test)) {
-            throw std::runtime_error("Original and deserialized don't match!");
-        }
-        Arrangement reconstituted = arrangement_message->to_arrangement();
-        ArrangementMessage round_trip(reconstituted);
-        if (!(round_trip == *arrangement_message)) {
-            throw std::runtime_error("Original and reconstituted don't match!");
-        }
+//        std::stringstream ss(std::ios_base::binary | std::ios_base::out | std::ios_base::in);
+//        {
+//            boost::archive::binary_oarchive archive(ss);
+//            archive << *arrangement_message;
+//        }
+//        std::clog << "Testing deserialization locally..." << std::endl;
+//        std::string original = ss.str();
+//        ArrangementMessage test;
+//        {
+//            boost::archive::binary_iarchive inarch(ss);
+//            inarch >> test;
+//            std::clog << "Deserialized!";
+//        }
+//        if (!(*arrangement_message == test)) {
+//            throw std::runtime_error("Original and deserialized don't match!");
+//        }
+//        Arrangement reconstituted = arrangement_message->to_arrangement();
+//        ArrangementMessage round_trip(reconstituted);
+//        if (!(round_trip == *arrangement_message)) {
+//            throw std::runtime_error("Original and reconstituted don't match!");
+//        }
         if (binary) {
             std::cout << "ARRANGEMENT: " << params.outputFile << std::endl;
-        } else {
+        } else if (verbosity > 0) {
             std::clog << "Wrote arrangement to " << params.outputFile << std::endl;
         }
     });
@@ -449,8 +451,9 @@ int main(int argc, char* argv[])
         if (!params.outputFile.empty()) {
             std::ofstream file(params.outputFile);
             if (file.is_open()) {
-                debug() << "Writing file:" << params.outputFile;
-
+                if (verbosity > 0) {
+                    debug() << "Writing file:" << params.outputFile;
+                }
                 if (params.outputFormat == "R0") {
                     FileWriter fw(params, *input, *(arrangement), result->template_points);
                     fw.write_augmented_arrangement(file);
