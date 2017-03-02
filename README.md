@@ -24,7 +24,7 @@ Below we give step-by-step instructions for installing these required dependenci
 ## Building On Ubuntu
 
 ### Installing Dependencies
-To install dependencies on Ubuntu, we suggest that you first upgrade to Ubuntu 16.10; the Ubuntu 16.04 package manager only installs Boost 1.58, whereas RIVET requires version 1.60 or higher.
+To install dependencies on Ubuntu, we suggest that you first upgrade to Ubuntu 16.10; the Ubuntu 16.04 package manager only installs Boost 1.58, whereas RIVET requires Boost version 1.60 or higher.
 
 On Ubuntu 16.10, installation of dependencies should be relatively simple:
 
