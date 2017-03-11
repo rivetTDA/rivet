@@ -127,11 +127,11 @@ It is then necessary to move or symlink the console into the same folder where t
 In the future, all these steps will be automated so that a single cmake build will create both executables, and put everything in the right place.
 
 ### Troubleshooting
-Our experience has been that if Homebrew is installed before XCode, then running qmake during the build process returns an error
+Our experience has been that if Homebrew is installed before XCode, then running qmake during the build process returns an error:
 
     Project ERROR: Could not resolve SDK Path for 'macosx'
     
-To solve the problem, try running      
+To solve the problem, try running:      
 
     sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
 
