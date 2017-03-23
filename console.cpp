@@ -164,7 +164,6 @@ void process_bounds(const ComputationResult &computation_result) {
     const auto y_high = grades.y.back();
     std::cout << "low: " << x_low << ", " << y_low << std::endl;
     std::cout << "high: " << x_high << ", " << y_high << std::endl;
-    std::cout << "offset: " << grades.min_offset() << ", " << grades.max_offset() << std::endl;
 }
 
 void process_barcode_queries(std::string query_file_name, const ComputationResult& computation_result)
