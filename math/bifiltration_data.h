@@ -8,12 +8,6 @@
 #ifndef BIFILTRATION_DATA_H
 #define BIFILTRATION_DATA_H
 
-
-//forward declarations
-class IndexMatrix;
-class MapMatrix;
-class MapMatrix_Perm;
-
 #include <set>
 #include <vector>
 #include <boost/unordered_map.hpp>
@@ -23,6 +17,7 @@ struct Grade
 {
     int x;
     int y;
+    int dim_index; //The index of this point relative to other grades of appearance in the same dimension
     bool operator<(Grade other) const
     {
         if (y != other.y)
@@ -36,7 +31,7 @@ struct Grade
         return (y == other.y) && (x == other.x);
     }
 
-    Grade(int set_x, int set_y) : x(set_x), y(set_y)
+    Grade(int set_x, int set_y) : x(set_x), y(set_y), dim_index(0)
     { }
 };
 
@@ -45,7 +40,7 @@ struct GradeHash
 {
     std::size_t operator()(Grade const& grade) const
     {
-        return boost::hash<int>()(grade.x) ^ boost::hash<int>()(grade.y);
+        return (boost::hash<int>()(grade.x) * 0x0f0f0f0f) ^ boost::hash<int>()(grade.y); //Make hash non-commutative
     }
 };
 

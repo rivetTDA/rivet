@@ -24,7 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "dcel/dcel.h"
 #include "interface/input_manager.h"
 #include "interface/input_parameters.h"
-#include "math/simplex_tree.h"
+#include "math/bifiltration_data.h"
+#include "math/firep.h"
 #include "math/template_point.h"
 #include "numerics.h"
 
@@ -45,9 +46,9 @@ public:
     std::string x_label;
     std::string y_label;
 
-    SimplexTree& bifiltration()
+    BifiltrationData& bifiltration()
     {
-        return *(data.simplex_tree);
+        return *(data.bifiltration_data);
     }
 
     ComputationInput(InputData data)
@@ -64,7 +65,7 @@ struct ComputationResult {
     unsigned_matrix homology_dimensions;
     std::vector<TemplatePoint> template_points;
     std::shared_ptr<Arrangement> arrangement;
-    std::shared_ptr<SimplexTree> bifiltration;
+    //std::shared_ptr<FIRep> bifiltration;
 };
 
 class Computation {

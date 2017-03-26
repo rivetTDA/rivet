@@ -42,6 +42,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define __MapMatrix_H__
 
 class IndexMatrix;
+class FIRep;
 
 #include <ostream> //for testing
 #include <vector>
@@ -83,6 +84,7 @@ protected:
 
 //MapMatrix is a column-priority matrix designed for standard persistence calculations
 class MapMatrix : public MapMatrix_Base {
+friend class FIRep;
 public:
     MapMatrix(unsigned rows, unsigned cols); //constructor to create matrix of specified size (all entries zero)
     MapMatrix(unsigned size); //constructor to create a (square) identity matrix
@@ -115,6 +117,9 @@ public:
     //removes zero columns from this matrix
     //  ind_old gives grades of columns before zero columns are removed; new grade info stored in ind_new
     void remove_zero_cols(IndexMatrix* ind_old, IndexMatrix* ind_new);
+
+    //FOR TESTING ONLY
+    virtual void print(); //prints the matrix to standard output (for testing)
 };
 
 //MapMatrix with row/column permutations and low array, designed for "vineyard updates"

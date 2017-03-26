@@ -27,7 +27,6 @@ struct InputParameters;
 class Arrangement;
 
 #include "dcel/barcode_template.h"
-#include "math/simplex_tree.h"
 #include "math/template_point.h"
 
 #include <QObject>

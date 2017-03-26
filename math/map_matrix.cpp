@@ -631,6 +631,48 @@ std::ostream& operator<<(std::ostream& out, const MapMatrix& matrix)
     return out;
 }
 
+//function to print the matrix to standard output, for testing purposes
+void MapMatrix::print()
+{
+    //handle empty matrix
+    if (num_rows == 0 || columns.size() == 0) {
+        debug() << "        (empty matrix:" << num_rows << "rows by" << columns.size() << "columns)";
+        return;
+    }
+
+    debug() << "        (matrix:" << num_rows << "rows by" << columns.size() << "columns)";
+
+    //create a 2D array of booleans to temporarily store the matrix
+    bool_array mx(num_rows, columns.size());
+    for (unsigned i = 0; i < num_rows; i++)
+        for (unsigned j = 0; j < columns.size(); j++)
+            mx.at(i, j) = false;
+
+    //traverse the linked lists in order to fill the 2D array
+    MapMatrixNode* current;
+    for (unsigned j = 0; j < columns.size(); j++) {
+        current = columns[j];
+        while (current != NULL) {
+            int row = current->get_row();
+            mx.at(row, j) = true;
+            current = current->get_next();
+        }
+    }
+
+    //print the matrix
+    for (unsigned i = 0; i < num_rows; i++) {
+        Debug qd = debug(true);
+        qd << "        |";
+        for (unsigned j = 0; j < columns.size(); j++) {
+            if (mx.at(i, j))
+                qd << " 1";
+            else
+                qd << " 0";
+        }
+        qd << " |\n";
+    }
+} //end print()
+
 /********** implementation of class MapMatrix_Perm, supports row swaps (and stores a low array) **********/
 
 MapMatrix_Perm::MapMatrix_Perm(unsigned rows, unsigned cols)

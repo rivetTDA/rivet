@@ -39,8 +39,8 @@ add_executable (rivet_console
         dcel/arrangement_message.cpp
         math/map_matrix.cpp
         math/multi_betti.cpp
-        math/simplex_tree.cpp
-        math/st_node.cpp
+	math/bifiltration_data.cpp
+	math/firep.cpp
         math/template_point.cpp
         math/template_points_matrix.cpp
         math/index_matrix.cpp
@@ -71,8 +71,8 @@ add_executable(unit_tests
         dcel/dcel.cpp
         math/map_matrix.cpp
         math/multi_betti.cpp
-        math/simplex_tree.cpp
-        math/st_node.cpp
+	math/bifiltration_data.cpp
+	math/firep.cpp
         math/template_point.cpp
         math/template_points_matrix.cpp
         math/index_matrix.cpp

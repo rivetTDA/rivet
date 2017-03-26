@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "index_matrix.h"
 #include "map_matrix.h"
 #include "multi_betti.h"
-#include "simplex_tree.h"
+#include "firep.h"
 
 #include <chrono>
 #include <stdexcept> //for error-checking and debugging
@@ -36,7 +36,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <timer.h>
 
 //constructor for when we must compute all of the barcode templates
-PersistenceUpdater::PersistenceUpdater(Arrangement& m, SimplexTree& b, std::vector<TemplatePoint>& xi_pts, unsigned verbosity)
+PersistenceUpdater::PersistenceUpdater(Arrangement& m, FIRep& b, std::vector<TemplatePoint>& xi_pts, unsigned verbosity)
     : arrangement(m)
     , bifiltration(b)
     , dim(b.hom_dim)

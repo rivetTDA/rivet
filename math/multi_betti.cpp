@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "debug.h"
 #include "index_matrix.h"
 #include "map_matrix.h"
-#include "simplex_tree.h"
+#include "firep.h"
 #include "template_point.h"
 
 #include <interface/progress.h>
@@ -67,12 +67,12 @@ struct ColumnList {
 
 
 //constructor: sets up the data structure but does not compute xi_0 or xi_1
-MultiBetti::MultiBetti(SimplexTree& st, int dim)
-    : bifiltration(st)
+MultiBetti::MultiBetti(FIRep& rep, int dim)
+    : bifiltration(rep)
     , dimension(dim)
     , num_x_grades(bifiltration.num_x_grades())
     , num_y_grades(bifiltration.num_y_grades())
-    , verbosity(st.verbosity)
+    , verbosity(bifiltration.verbosity)
 {
     xi.resize(boost::extents[num_x_grades][num_y_grades][3]);
 }//end constructor

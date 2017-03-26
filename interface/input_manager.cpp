@@ -20,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "input_manager.h"
 #include "../computation.h"
-#include "../math/simplex_tree.h"
 #include "../math/bifiltration_data.h"
 #include "file_input_reader.h"
 #include "input_parameters.h"

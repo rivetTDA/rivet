@@ -12,8 +12,14 @@
 
 //BifiltrationData constructor; requires dimension of homology to be computed and verbosity parameter
 BifiltrationData::BifiltrationData(int dim, int v) :
-    x_grades(0), y_grades(0), hom_dim(dim), verbosity(v)
+     hom_dim(dim), verbosity(v), x_grades(0), y_grades(0)
 {
+    if (hom_dim > 5) {
+        throw std::runtime_error("BifiltrationData: Dimensions greater than 5 probably don't make sense");
+    }
+    if (verbosity >= 8) {
+        debug() << "Created BifiltrationData(" << hom_dim << ", " << verbosity << ")";
+    }
     ordered_low_simplices = new SimplexInfo;
     ordered_simplices = new SimplexInfo;
     ordered_high_simplices = new SimplexInfo;
@@ -53,7 +59,11 @@ void BifiltrationData::add_faces(std::vector<int>& vertices, AppearanceGrades& g
 {
     SimplexInfo::iterator ret;
     //Store the simplex info if it is of dimension (hom_dim - 1), hom_dim, or hom_dim+1. Dimension is parent_indexes.size() - 1
-    if (vertices.size() == (unsigned)hom_dim) //simplex of dimension hom_dim - 1
+    if (vertices.size() == 0)
+    {
+        return;
+    }
+    else if (vertices.size() == (unsigned)hom_dim) //simplex of dimension hom_dim - 1
     {
         ret = ordered_low_simplices->find(vertices);
         if (ret == ordered_low_simplices->end()) //Grade not found
@@ -96,11 +106,12 @@ void BifiltrationData::add_faces(std::vector<int>& vertices, AppearanceGrades& g
     }
 
     //Iterate for each face
-    for(int i = 0; i < vertices.size(); i++)
+    for(unsigned i = 0; i < vertices.size(); i++)
     {
         //form vector consisting of all the vertices except for vertices[i]
         std::vector<int> face;
-        for(int k = i + 1; k < vertices.size(); k++)
+        for(unsigned k = 0; k < vertices.size(); k++)
+            if(k != i)
                 face.push_back(vertices[k]);
 
         //add the face simplex to the BifiltrationData
@@ -157,7 +168,7 @@ void BifiltrationData::build_VR_subcomplex(std::vector<unsigned>& times, std::ve
     }
 
     //loop through all points that could be children of this node
-    for(int j = vertices.back() + 1; j < times.size(); j++)
+    for(unsigned j = vertices.back() + 1; j < times.size(); j++)
     {
         //look up distances from point j to each of the vertices in the simplex
         //distance index is maximum of prev_distance and each of these distances
@@ -202,14 +213,14 @@ void BifiltrationData::build_BR_complex(unsigned num_vertices, std::vector<unsig
     generateVertexMultigrades(vertexMultigrades, num_vertices, distances, degrees);
 
     std::vector<int> simplex_indices;
-    for(int i = 0; i < num_vertices; i++)
+    for(unsigned i = 0; i < num_vertices; i++)
     {
         //Look at simplex with smallest vertex vertex i
         simplex_indices.push_back(i);
 
         //Determine the neighbors of vertex i
         std::vector<int> candidates;
-        for (int j = i + 1; j < num_vertices; j++)//Dist of (i, j) with i < j stored in distances[j(j - 1)/2 + i]
+        for (unsigned j = i + 1; j < num_vertices; j++)//Dist of (i, j) with i < j stored in distances[j(j - 1)/2 + i]
         {
             if (distances[j * (j - 1)/2 + i] < std::numeric_limits<unsigned>::max()) //if an edge is between i and j
                 candidates.push_back(j);
