@@ -106,8 +106,12 @@ void MultiBetti::compute(unsigned_matrix& hom_dims, Progress& progress)
     nonzero_cols_bdry2 = nonzero_cols_b2_y0;
     xi[0][0][1] += nonzero_cols_bdry2; //adding rank(bdry2_D)
     hom_dims[0][0] -= nonzero_cols_bdry2; //subtracting rank(bdry2) at (0,0)
-    xi[1][0][1] -= nonzero_cols_bdry2; //subtracting dim(U)=rank(bdry2_B) at (1,0)
-    xi[0][1][1] -= nonzero_cols_bdry2; //subtracting dim(U)=rank(bdry2_C) at (0,1)
+    if (num_x_grades > 1) {
+        xi[1][0][1] -= nonzero_cols_bdry2;//subtracting dim(U)=rank(bdry2_B) at (1,0)
+    }
+    if (num_y_grades > 1) {
+        xi[0][1][1] -= nonzero_cols_bdry2;//subtracting dim(U)=rank(bdry2_C) at (0,1)
+    }
     bdry2m->copy_cols_same_indexes(bdry2, 0, ind2->get(0, 0));
 
     for(unsigned y = 1; y < num_y_grades; y++) { //reduce bdry2 at (0,y) for y > 0 and record rank
@@ -203,8 +207,9 @@ void MultiBetti::compute(unsigned_matrix& hom_dims, Progress& progress)
 
     //reduce bdry2 and split at (0,0) and record dimension of U
     reduce_spliced(bdry2s, split, ind2s, ind1, zero_list_bdry1, 0, 0, lows_b2split, nonzero_cols_b2split);
-    xi[1][1][1] -= nonzero_cols_b2split; //subtracting dim(U)
-
+    if (num_x_grades > 1) {
+        xi[1][1][1] -= nonzero_cols_b2split; //subtracting dim(U)
+    }
 
     //CALCULATIONS AT GRADES (0,y) FOR y > 0
     for(unsigned y = 1; y < num_y_grades; y++) {
@@ -227,7 +232,7 @@ void MultiBetti::compute(unsigned_matrix& hom_dims, Progress& progress)
 
         //reduce bdry2 and split at (0,y) and record dimension of U
         reduce_spliced(bdry2s, split, ind2s, ind1, zero_list_bdry1, 0, y, lows_b2split, nonzero_cols_b2split);
-        if(y + 1 < num_y_grades) {
+        if(y + 1 < num_y_grades && num_x_grades > 1) {
             xi[1][y+1][1] -= nonzero_cols_b2split; //subtracting dim(U) at (1,y+1)
         }
     }
@@ -656,10 +661,15 @@ void MultiBetti::build_bdry2s_mx(MapMatrix* bdry2, IndexMatrix* ind2, MapMatrix*
 //    ind2->print();
 
     //ensure bdry2sum is of the correct size
-    int num_cols = ind2->get(num_y_grades - 2, num_x_grades - 1) + 1; //total number of columns in C component
-    num_cols += ind2->get(0, num_x_grades - 2) + 1; //number of columns in B component at y=0 grades
-    for(unsigned y = 1; y < num_y_grades; y++)
-        num_cols += ind2->get(y, num_x_grades - 2) - ind2->get(y - 1, num_x_grades - 1); //number of columns in B component at y
+    int num_cols = 1;
+    if (num_y_grades > 1) {
+        num_cols = ind2->get(num_y_grades - 2, num_x_grades - 1) + 1;//total number of columns in C component
+    }
+    if (num_x_grades >= 2) {
+        num_cols += ind2->get(0, num_x_grades - 2) + 1;//number of columns in B component at y=0 grades
+        for(unsigned y = 1; y < num_y_grades; y++)
+            num_cols += ind2->get(y, num_x_grades - 2) - ind2->get(y - 1, num_x_grades - 1); //number of columns in B component at y
+    }
     bdry2sum->reserve_cols(num_cols);
 
     //write columns at grades (x,y) for y > 0
