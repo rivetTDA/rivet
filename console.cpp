@@ -174,7 +174,7 @@ void process_barcode_queries(std::string query_file_name, const ComputationResul
         return;
     }
     std::string line;
-    std::vector<std::pair<int, double>> queries;
+    std::vector<std::pair<double, double>> queries;
     int line_number = 0;
     while (std::getline(query_file, line)) {
         line_number++;
@@ -184,7 +184,7 @@ void process_barcode_queries(std::string query_file_name, const ComputationResul
             continue;
         }
         std::istringstream iss(line);
-        int angle;
+        double angle;
         double offset;
 
         if (iss >> angle >> offset) {
@@ -193,7 +193,7 @@ void process_barcode_queries(std::string query_file_name, const ComputationResul
                 return;
             }
 
-            queries.push_back(std::pair<int, double>(angle, offset));
+            queries.push_back(std::make_pair(angle, offset));
         } else {
             std::clog << "Parse error on line " << line_number << std::endl;
             return;
