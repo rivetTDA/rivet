@@ -109,7 +109,9 @@ void MultiBetti::compute(unsigned_matrix& hom_dims, Progress& progress)
     if (num_x_grades > 1) {
         xi[1][0][1] -= nonzero_cols_bdry2;//subtracting dim(U)=rank(bdry2_B) at (1,0)
     }
-    xi[0][1][1] -= nonzero_cols_bdry2; //subtracting dim(U)=rank(bdry2_C) at (0,1)
+    if (num_y_grades > 1) {
+        xi[0][1][1] -= nonzero_cols_bdry2;//subtracting dim(U)=rank(bdry2_C) at (0,1)
+    }
     bdry2m->copy_cols_same_indexes(bdry2, 0, ind2->get(0, 0));
 
     for(unsigned y = 1; y < num_y_grades; y++) { //reduce bdry2 at (0,y) for y > 0 and record rank
@@ -659,7 +661,10 @@ void MultiBetti::build_bdry2s_mx(MapMatrix* bdry2, IndexMatrix* ind2, MapMatrix*
 //    ind2->print();
 
     //ensure bdry2sum is of the correct size
-    int num_cols = ind2->get(num_y_grades - 2, num_x_grades - 1) + 1; //total number of columns in C component
+    int num_cols = 1;
+    if (num_y_grades > 1) {
+        num_cols = ind2->get(num_y_grades - 2, num_x_grades - 1) + 1;//total number of columns in C component
+    }
     if (num_x_grades >= 2) {
         num_cols += ind2->get(0, num_x_grades - 2) + 1;//number of columns in B component at y=0 grades
         for(unsigned y = 1; y < num_y_grades; y++)
