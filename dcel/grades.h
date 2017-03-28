@@ -36,10 +36,9 @@ struct Grades {
 
     Grades(std::vector<exact> x, std::vector<exact> y);
 
-    double min_offset();
-    double max_offset();
+    double min_offset() const;
+    double max_offset() const;
 
-    double relative_offset_to_absolute(double offset);
 };
 
 #endif //RIVET_CONSOLE_GRADES_H
