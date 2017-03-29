@@ -131,9 +131,8 @@ FIRep::FIRep(BifiltrationData& bd, int v)
             generator g;
             g.x = it2->x;
             g.y = (it2 + 1)->y;
-            std::vector<int> boundary;
-            boundary.push_back(it2->dim_index);
-            boundary.push_back((it2 + 1)->dim_index);
+            g.boundary.push_back(it2->dim_index);
+            g.boundary.push_back((it2 + 1)->dim_index);
             high_generators.push_back(g);
         }
     }

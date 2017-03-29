@@ -835,23 +835,23 @@ std::unique_ptr<InputData> InputManager::read_brips(std::ifstream& stream, Progr
             }
 
             //read vertices
-            unsigned dim = 0;
+            unsigned pos = 0;
             std::vector<int> verts;
-            while(tokens[dim].at(0) != ';') {
-                int v = std::stoi(tokens[dim]);
+            while(tokens[pos].at(0) != ';') {
+                int v = std::stoi(tokens[pos]);
                 verts.push_back(v);
-                dim++;
+                pos++;
             }
-
-            unsigned grades = (tokens.size() - dim) / 2; //remaining tokens are xy pairs
-
+            pos++;
+            unsigned grades = (tokens.size() - pos) / 2; //remaining tokens are xy pairs
             for (unsigned i = 0; i < grades; i++) {
                 //read multigrade and remember that it corresponds to this grade
-                ret = x_set.insert(new ExactValue(str_to_exact(tokens.at(dim + 1))));
+                ret = x_set.insert(new ExactValue(str_to_exact(tokens.at(pos))));
                 (*(ret.first))->indexes.push_back(num_grades);
-                ret = y_set.insert(new ExactValue(str_to_exact(tokens.at(dim + 2))));
+                ret = y_set.insert(new ExactValue(str_to_exact(tokens.at(pos + 1))));
                 (*(ret.first))->indexes.push_back(num_grades);
                 num_grades++;
+                pos += 2;
             }
 
             simplexList.push_back({verts, grades});
@@ -882,6 +882,10 @@ std::unique_ptr<InputData> InputManager::read_brips(std::ifstream& stream, Progr
             current_grade++;
         }
         data->bifiltration_data->add_simplex(it->first, gradesOfApp);
+    }
+    if (verbosity >= 10)
+    {
+        data->bifiltration_data->print_bifiltration();
     }
     data->bifiltration_data->createGradeInfo();
     data->bifiltration_data->set_xy_grades(data->x_exact.size(), data->y_exact.size());
