@@ -166,7 +166,8 @@ void ArrangementBuilder::build_interior(std::shared_ptr<Arrangement> arrangement
 
     //data structure for queue of future intersections
     std::priority_queue<std::shared_ptr<Arrangement::Crossing>,
-            std::vector<std::shared_ptr<Arrangement::Crossing>>, Arrangement::CrossingComparator> crossings;
+            std::vector<std::shared_ptr<Arrangement::Crossing>>,
+            PointerComparator<Arrangement::Crossing, Arrangement::CrossingComparator>> crossings;
 
     //data structure for all pairs of Anchors whose potential crossings have been considered
     typedef std::pair<std::shared_ptr<Anchor>, std::shared_ptr<Anchor>> Anchor_pair;
@@ -230,11 +231,11 @@ void ArrangementBuilder::build_interior(std::shared_ptr<Arrangement> arrangement
     int status_interval = 10000; //controls frequency of output
 
     //current position of sweep line
-    Arrangement::Crossing* sweep = NULL;
+    std::shared_ptr<Arrangement::Crossing> sweep = NULL;
 
     while (!crossings.empty()) {
         //get the next intersection from the queue
-        Arrangement::Crossing* cur = crossings.top();
+        auto cur = crossings.top();
         crossings.pop();
 
         //process the intersection
@@ -249,7 +250,7 @@ void ArrangementBuilder::build_interior(std::shared_ptr<Arrangement> arrangement
         }
 
         //find out if more than two curves intersect at this point
-        while (!crossings.empty() && sweep->x_equal(crossings.top()) && (cur->b == crossings.top()->a)) {
+        while (!crossings.empty() && sweep->x_equal(crossings.top().get()) && (cur->b == crossings.top()->a)) {
             cur = crossings.top();
             crossings.pop();
 
