@@ -165,7 +165,8 @@ void ArrangementBuilder::build_interior(std::shared_ptr<Arrangement> arrangement
     lines.reserve(arrangement->all_anchors.size());
 
     //data structure for queue of future intersections
-    std::priority_queue<Arrangement::Crossing*, std::vector<Arrangement::Crossing*>, Arrangement::CrossingComparator> crossings;
+    std::priority_queue<std::shared_ptr<Arrangement::Crossing>,
+            std::vector<std::shared_ptr<Arrangement::Crossing>>, Arrangement::CrossingComparator> crossings;
 
     //data structure for all pairs of Anchors whose potential crossings have been considered
     typedef std::pair<std::shared_ptr<Anchor>, std::shared_ptr<Anchor>> Anchor_pair;

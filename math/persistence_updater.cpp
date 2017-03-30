@@ -345,6 +345,8 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<std::shared_ptr<H
     delete U_low;
     delete U_high;
 
+    delete R_low_initial;
+    delete R_high_initial;
 } //end store_barcodes_with_reset()
 
 //function to set the "edge weights" for each anchor line

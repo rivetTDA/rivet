@@ -31,6 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <set>
 #include <sstream>
 #include <vector>
+#include <memory>
 
 //epsilon value for use in comparisons
 double ExactValue::epsilon = pow(2, -30);
@@ -175,7 +176,7 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
 {
     //TODO : switch to YAML or JSON input or switch to proper parser generator or combinators
     FileInputReader reader(stream);
-    auto data = new InputData();
+    auto data = std::make_unique<InputData>();
     if (verbosity >= 6) {
         debug() << "InputManager: Found a point cloud file.";
     }
@@ -358,7 +359,7 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
         ExactValue* p = *it;
         delete p;
     }
-    return std::unique_ptr<InputData>(data);
+    return data;
 } //end read_point_cloud()
 
 //reads data representing a discrete metric space with a real-valued function and constructs a simplex tree
