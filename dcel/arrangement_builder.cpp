@@ -215,7 +215,7 @@ void ArrangementBuilder::build_interior(std::shared_ptr<Arrangement> arrangement
         std::shared_ptr<Anchor> a = lines[i]->get_anchor();
         std::shared_ptr<Anchor> b = lines[i + 1]->get_anchor();
         if (a->comparable(*b)) //then the Anchors are (strongly) comparable, so we must store an intersection
-            crossings.push(new Arrangement::Crossing(a, b, arrangement));
+            crossings.push(std::make_shared<Arrangement::Crossing>(a, b, arrangement));
 
         //remember that we have now considered this intersection
         considered_pairs.insert(Anchor_pair(a, b));
@@ -351,7 +351,7 @@ void ArrangementBuilder::build_interior(std::shared_ptr<Arrangement> arrangement
             {
                 considered_pairs.insert(Anchor_pair(a, b));
                 if (a->comparable(*b)) //then the Anchors are (strongly) comparable, so we have found an intersection to store
-                    crossings.push(new Arrangement::Crossing(a, b, arrangement));
+                    crossings.push(std::make_shared<Arrangement::Crossing>(a, b, arrangement));
             }
         }
 
@@ -365,7 +365,7 @@ void ArrangementBuilder::build_interior(std::shared_ptr<Arrangement> arrangement
             {
                 considered_pairs.insert(Anchor_pair(a, b));
                 if (a->comparable(*b)) //then the Anchors are (strongly) comparable, so we have found an intersection to store
-                    crossings.push(new Arrangement::Crossing(a, b, arrangement));
+                    crossings.push(std::make_shared<Arrangement::Crossing>(a, b, arrangement));
             }
         }
 

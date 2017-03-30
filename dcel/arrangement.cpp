@@ -702,40 +702,40 @@ bool Arrangement::Crossing::x_equal(const Crossing* other) const
 }
 
 //CrossingComparator for ordering crossings: first by x (left to right); for a given x, then by y (low to high)
-bool Arrangement::CrossingComparator::operator()(const Crossing* c1, const Crossing* c2) const //returns true if c1 comes after c2
+bool Arrangement::CrossingComparator::operator()(const Crossing& c1, const Crossing& c2) const //returns true if c1 comes after c2
 {
     //the following error should never occur
-    if (c1->a->get_position() >= c1->b->get_position() || c2->a->get_position() >= c2->b->get_position()) {
+    if (c1.a->get_position() >= c1.b->get_position() || c2.a->get_position() >= c2.b->get_position()) {
         //        debug() << "INVERTED CROSSING ERROR\n";
         //        debug() << "crossing 1 involves anchors " << *(c1->a) << " (pos " << c1->a->get_position() << ") and " << *(c1->b) << " (pos " << c1->b->get_position() << "),";
         //        debug() << "crossing 2 involves anchors " << *(c2->a) << " (pos " << c2->a->get_position() << ") and " << *(c2->b) << " (pos " << c2->b->get_position() << "),";
         throw std::runtime_error("Inverted crossing error");
     }
 
-    std::shared_ptr<Arrangement> m = c1->m; //makes it easier to reference arrays in the arrangement
+    std::shared_ptr<Arrangement> m = c1.m; //makes it easier to reference arrays in the arrangement
 
     //now do the comparison
     //if the x-coordinates are nearly equal as double values, then compare exact values
-    if (Arrangement::almost_equal(c1->x, c2->x)) {
+    if (Arrangement::almost_equal(c1.x, c2.x)) {
         //find exact x-values
-        exact x1 = (m->y_exact[c1->a->get_y()] - m->y_exact[c1->b->get_y()]) / (m->x_exact[c1->a->get_x()] - m->x_exact[c1->b->get_x()]);
-        exact x2 = (m->y_exact[c2->a->get_y()] - m->y_exact[c2->b->get_y()]) / (m->x_exact[c2->a->get_x()] - m->x_exact[c2->b->get_x()]);
+        exact x1 = (m->y_exact[c1.a->get_y()] - m->y_exact[c1.b->get_y()]) / (m->x_exact[c1.a->get_x()] - m->x_exact[c1.b->get_x()]);
+        exact x2 = (m->y_exact[c2.a->get_y()] - m->y_exact[c2.b->get_y()]) / (m->x_exact[c2.a->get_x()] - m->x_exact[c2.b->get_x()]);
 
         //if the x-values are exactly equal, then consider the y-values
         if (x1 == x2) {
             //find the y-values
-            double c1y = m->x_grades[c1->a->get_x()] * (c1->x) - m->y_grades[c1->a->get_y()];
-            double c2y = m->x_grades[c2->a->get_x()] * (c2->x) - m->y_grades[c2->a->get_y()];
+            double c1y = m->x_grades[c1.a->get_x()] * (c1.x) - m->y_grades[c1.a->get_y()];
+            double c2y = m->x_grades[c2.a->get_x()] * (c2.x) - m->y_grades[c2.a->get_y()];
 
             //if the y-values are nearly equal as double values, then compare exact values
             if (Arrangement::almost_equal(c1y, c2y)) {
                 //find exact y-values
-                exact y1 = m->x_exact[c1->a->get_x()] * x1 - m->y_exact[c1->a->get_y()];
-                exact y2 = m->x_exact[c2->a->get_x()] * x2 - m->y_exact[c2->a->get_y()];
+                exact y1 = m->x_exact[c1.a->get_x()] * x1 - m->y_exact[c1.a->get_y()];
+                exact y2 = m->x_exact[c2.a->get_x()] * x2 - m->y_exact[c2.a->get_y()];
 
                 //if the y-values are exactly equal, then sort by relative position of the lines
                 if (y1 == y2)
-                    return c1->a->get_position() > c2->a->get_position(); //Is there a better way???
+                    return c1.a->get_position() > c2.a->get_position(); //Is there a better way???
 
                 //otherwise, the y-values are not equal
                 return y1 > y2;
@@ -747,7 +747,7 @@ bool Arrangement::CrossingComparator::operator()(const Crossing* c1, const Cross
         return x1 > x2;
     }
     //otherwise, the x-values are not almost equal
-    return c1->x > c2->x;
+    return c1.x > c2.x;
 }
 
 //epsilon value for use in comparisons

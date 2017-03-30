@@ -162,7 +162,7 @@ private:
 
     //comparator class for ordering crossings: first by x (left to right); for a given x, then by y (low to high)
     struct CrossingComparator {
-        bool operator()(const Crossing* c1, const Crossing* c2) const; //returns true if c1 comes after c2
+        bool operator()(const Crossing& c1, const Crossing& c2) const; //returns true if c1 comes after c2
     };
 
 }; //end class Arrangement
