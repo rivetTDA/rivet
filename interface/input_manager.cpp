@@ -427,7 +427,6 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
                                 + "and" + std::to_string(j));
 
                         std::string str = tokens.next_token();
-                        debug() << str;
 
                         exact cur_dist = str_to_exact(str);
 
