@@ -149,11 +149,9 @@ private:
 
     void register_file_type(FileType file_type);
 
-    std::unique_ptr<InputData> read_point_cloud_VR(std::ifstream& stream, Progress& progress); //reads a point cloud and constructs a simplex tree representing the bifiltered Vietoris-Rips complex
-    std::unique_ptr<InputData> read_point_cloud_BR(std::ifstream& stream, Progress& progress); //reads a point cloud and constructs a BifiltrationData representing the bifiltered rips complex
+    std::unique_ptr<InputData> read_point_cloud(std::ifstream& stream, Progress& progress); //reads a point cloud and constructs a simplex tree representing the bifiltered Bifiltration/Vietoris-Rips complex
     std::unique_ptr<InputData> read_discrete_metric_space(std::ifstream& stream, Progress& progress); //reads data representing a discrete metric space with a real-valued function and constructs a simplex tree
-    std::unique_ptr<InputData> read_bifiltration(std::ifstream& stream, Progress& progress); //reads a bifiltration and constructs a simplex tree
-    std::unique_ptr<InputData> read_brips(std::ifstream& stream, Progress& progress); //reads a BRips filtration and constructs a BifiltrationData
+    std::unique_ptr<InputData> read_bifiltration(std::ifstream& stream, Progress& progress); //reads a bifiltration and constructs a BifiltrationData
     std::unique_ptr<InputData> read_RIVET_data(std::ifstream& stream, Progress& progress); //reads a file of previously-computed data from RIVET
 
     void build_grade_vectors(InputData& data, ExactSet& value_set, std::vector<unsigned>& indexes, std::vector<exact>& grades_exact, unsigned num_bins); //converts an ExactSets of values to the vectors of discrete values that BifiltrationData uses to build the bifiltration, and also builds the grade vectors (floating-point and exact)

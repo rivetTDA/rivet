@@ -111,6 +111,9 @@ public:
     //  all row indexes in copied columns are increased by offset
     void copy_cols_from(MapMatrix* other, int first, int last, unsigned offset);
 
+    //copies column with index src_col from other to column dest_col in this matrix
+    void copy_cols_from(MapMatrix* other, int src_col, int dest_col);
+
     //copies columns with indexes in [first, last] from other, inserting them in this matrix with the same column indexes
     void copy_cols_same_indexes(MapMatrix* other, int first, int last);
           

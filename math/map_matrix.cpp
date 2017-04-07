@@ -534,14 +534,53 @@ void MapMatrix::copy_cols_from(MapMatrix* other, int first, int last, unsigned o
     }
 }//end copy_cols_from()
 
+//copies column with index src_col from other to column dest_col in this matrix
+void MapMatrix::copy_cols_from(MapMatrix* other, int src_col, int dest_col)
+{
+    //First free memory in destination column
+    MapMatrixNode* cur_node = columns[dest_col];
+    while (cur_node != NULL) {
+        MapMatrixNode* next = cur_node->get_next();
+        delete cur_node;
+        cur_node = next;
+    }
+
+    MapMatrixNode* other_node = other->columns[src_col];
+    if (other_node != NULL) {
+        //create the first node in this column
+        cur_node = new MapMatrixNode(other_node->get_row());
+        columns[dest_col] = (cur_node);
+
+        //create all other nodes in this column
+        other_node = other_node->get_next();
+        while (other_node != NULL)
+        {
+            MapMatrixNode* new_node = new MapMatrixNode(other_node->get_row());
+            cur_node->set_next(new_node);
+            cur_node = new_node;
+            other_node = other_node->get_next();
+        }
+    }
+    else
+        columns[src_col] = NULL; //this shouldn't be necessary
+}//end copy_cols_from()
+
 //copies columns with indexes in [first, last] from other, inserting them in this matrix with the same column indexes
 void MapMatrix::copy_cols_same_indexes(MapMatrix* other, int first, int last)
 {
     for (int j = first; j <= last; j++) {
+        //First free current column memory
+        MapMatrixNode* cur_node = columns[j];
+        while (cur_node != NULL) {
+            MapMatrixNode* next = cur_node->get_next();
+            delete cur_node;
+            cur_node = next;
+        }
+
         MapMatrixNode* other_node = other->columns[j];
         if (other_node != NULL) {
             //create the first node in this column
-            MapMatrixNode* cur_node = new MapMatrixNode(other_node->get_row());
+            cur_node = new MapMatrixNode(other_node->get_row());
             columns[j] = (cur_node);
 
             //create all other nodes in this column
