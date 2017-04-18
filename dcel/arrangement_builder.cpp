@@ -55,7 +55,7 @@ std::shared_ptr<Arrangement> ArrangementBuilder::build_arrangement(MultiBetti& m
     //first, create PersistenceUpdater
     //this also finds anchors and stores them in the vector Arrangement::all_anchors -- JULY 2015 BUG FIX
     progress.progress(10);
-    std::shared_ptr<Arrangement> arrangement(new Arrangement(x_exact, y_exact, verbosity));
+    auto arrangement = std::make_shared<Arrangement>(x_exact, y_exact, verbosity);
     PersistenceUpdater updater(*arrangement, mb.bifiltration, template_points, verbosity); //PersistenceUpdater object is able to do the calculations necessary for finding anchors and computing barcode templates
     if (verbosity >= 2) {
         debug() << "Anchors found; this took " << timer.elapsed() << " milliseconds.";
@@ -165,7 +165,9 @@ void ArrangementBuilder::build_interior(std::shared_ptr<Arrangement> arrangement
     lines.reserve(arrangement->all_anchors.size());
 
     //data structure for queue of future intersections
-    std::priority_queue<Arrangement::Crossing*, std::vector<Arrangement::Crossing*>, Arrangement::CrossingComparator> crossings;
+    std::priority_queue<std::shared_ptr<Arrangement::Crossing>,
+            std::vector<std::shared_ptr<Arrangement::Crossing>>,
+            PointerComparator<Arrangement::Crossing, Arrangement::CrossingComparator>> crossings;
 
     //data structure for all pairs of Anchors whose potential crossings have been considered
     typedef std::pair<std::shared_ptr<Anchor>, std::shared_ptr<Anchor>> Anchor_pair;
@@ -213,7 +215,7 @@ void ArrangementBuilder::build_interior(std::shared_ptr<Arrangement> arrangement
         std::shared_ptr<Anchor> a = lines[i]->get_anchor();
         std::shared_ptr<Anchor> b = lines[i + 1]->get_anchor();
         if (a->comparable(*b)) //then the Anchors are (strongly) comparable, so we must store an intersection
-            crossings.push(new Arrangement::Crossing(a, b, arrangement));
+            crossings.push(std::make_shared<Arrangement::Crossing>(a, b, arrangement));
 
         //remember that we have now considered this intersection
         considered_pairs.insert(Anchor_pair(a, b));
@@ -229,11 +231,11 @@ void ArrangementBuilder::build_interior(std::shared_ptr<Arrangement> arrangement
     int status_interval = 10000; //controls frequency of output
 
     //current position of sweep line
-    Arrangement::Crossing* sweep = NULL;
+    std::shared_ptr<Arrangement::Crossing> sweep = NULL;
 
     while (!crossings.empty()) {
         //get the next intersection from the queue
-        Arrangement::Crossing* cur = crossings.top();
+        auto cur = crossings.top();
         crossings.pop();
 
         //process the intersection
@@ -248,7 +250,7 @@ void ArrangementBuilder::build_interior(std::shared_ptr<Arrangement> arrangement
         }
 
         //find out if more than two curves intersect at this point
-        while (!crossings.empty() && sweep->x_equal(crossings.top()) && (cur->b == crossings.top()->a)) {
+        while (!crossings.empty() && sweep->x_equal(crossings.top().get()) && (cur->b == crossings.top()->a)) {
             cur = crossings.top();
             crossings.pop();
 
@@ -349,7 +351,7 @@ void ArrangementBuilder::build_interior(std::shared_ptr<Arrangement> arrangement
             {
                 considered_pairs.insert(Anchor_pair(a, b));
                 if (a->comparable(*b)) //then the Anchors are (strongly) comparable, so we have found an intersection to store
-                    crossings.push(new Arrangement::Crossing(a, b, arrangement));
+                    crossings.push(std::make_shared<Arrangement::Crossing>(a, b, arrangement));
             }
         }
 
@@ -363,7 +365,7 @@ void ArrangementBuilder::build_interior(std::shared_ptr<Arrangement> arrangement
             {
                 considered_pairs.insert(Anchor_pair(a, b));
                 if (a->comparable(*b)) //then the Anchors are (strongly) comparable, so we have found an intersection to store
-                    crossings.push(new Arrangement::Crossing(a, b, arrangement));
+                    crossings.push(std::make_shared<Arrangement::Crossing>(a, b, arrangement));
             }
         }
 

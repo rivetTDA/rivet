@@ -31,6 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <set>
 #include <sstream>
 #include <vector>
+#include <memory>
 
 //epsilon value for use in comparisons
 double ExactValue::epsilon = pow(2, -30);
@@ -175,7 +176,7 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
 {
     //TODO : switch to YAML or JSON input or switch to proper parser generator or combinators
     FileInputReader reader(stream);
-    auto data = new InputData();
+    auto data = std::make_unique<InputData>();
     if (verbosity >= 6) {
         debug() << "InputManager: Found a point cloud file.";
     }
@@ -270,19 +271,19 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
 
     unsigned num_points = points.size();
 
-    ExactSet dist_set; //stores all unique distance values; must DELETE all elements later
-    ExactSet time_set; //stores all unique time values; must DELETE all elements later
+    ExactSet dist_set; //stores all unique distance values
+    ExactSet time_set; //stores all unique time values
     std::pair<ExactSet::iterator, bool> ret; //for return value upon insert()
 
-    dist_set.insert(new ExactValue(exact(0))); //distance from a point to itself is always zero
+    dist_set.insert(ExactValue(exact(0))); //distance from a point to itself is always zero
 
     //consider all points
     for (unsigned i = 0; i < num_points; i++) {
         //store time value, if it doesn't exist already
-        ret = time_set.insert(new ExactValue(points[i].birth));
+        ret = time_set.insert(ExactValue(points[i].birth));
 
         //remember that point i has this birth time value
-        (*(ret.first))->indexes.push_back(i);
+        (ret.first)->indexes.push_back(i);
 
         //compute (approximate) distances from this point to all following points
         for (unsigned j = i + 1; j < num_points; j++) {
@@ -301,10 +302,10 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
             if (cur_dist <= max_dist) //then this distance is allowed
             {
                 //store distance value, if it doesn't exist already
-                ret = dist_set.insert(new ExactValue(cur_dist));
+                ret = dist_set.insert(ExactValue(cur_dist));
 
                 //remember that the pair of points (i,j) has this distance value, which will go in entry j(j-1)/2 + i
-                (*(ret.first))->indexes.push_back((j * (j - 1)) / 2 + i);
+                (ret.first)->indexes.push_back((j * (j - 1)) / 2 + i);
             }
         }
     } //end for
@@ -349,16 +350,7 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
         data->simplex_tree->print_bifiltration();
     }
 
-    //clean up
-    for (ExactSet::iterator it = time_set.begin(); it != time_set.end(); ++it) {
-        ExactValue* p = *it;
-        delete p;
-    }
-    for (ExactSet::iterator it = dist_set.begin(); it != dist_set.end(); ++it) {
-        ExactValue* p = *it;
-        delete p;
-    }
-    return std::unique_ptr<InputData>(data);
+    return data;
 } //end read_point_cloud()
 
 //reads data representing a discrete metric space with a real-valued function and constructs a simplex tree
@@ -412,16 +404,16 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
 
         std::pair<ExactSet::iterator, bool> ret; //for return value upon insert()
 
-        dist_set.insert(new ExactValue(exact(0))); //distance from a point to itself is always zero
+        dist_set.insert(ExactValue(exact(0))); //distance from a point to itself is always zero
 
         //consider all points
         num_points = values.size();
         for (unsigned i = 0; i < num_points; i++) {
             //store value, if it doesn't exist already
-            ret = value_set.insert(new ExactValue(values[i]));
+            ret = value_set.insert(ExactValue(values[i]));
 
             //remember that point i has this value
-            (*(ret.first))->indexes.push_back(i);
+            (ret.first)->indexes.push_back(i);
 
             //read distances from this point to all following points
             if (i < num_points - 1) //then there is at least one point after point i, and there should be another line to read
@@ -435,17 +427,16 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
                                 + "and" + std::to_string(j));
 
                         std::string str = tokens.next_token();
-                        debug() << str;
 
                         exact cur_dist = str_to_exact(str);
 
                         if (cur_dist <= max_dist) //then this distance is allowed
                         {
                             //store distance value, if it doesn't exist already
-                            ret = dist_set.insert(new ExactValue(cur_dist));
+                            ret = dist_set.insert(ExactValue(cur_dist));
 
                             //remember that the pair of points (i,j) has this distance value, which will go in entry j(j-1)/2 + i
-                            (*(ret.first))->indexes.push_back((j * (j - 1)) / 2 + i);
+                            (ret.first)->indexes.push_back((j * (j - 1)) / 2 + i);
                         }
                     }
                 } catch (std::exception& e) {
@@ -488,15 +479,6 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
     data->simplex_tree.reset(new SimplexTree(input_params.dim, input_params.verbosity));
     data->simplex_tree->build_VR_complex(value_indexes, dist_indexes, data->x_exact.size(), data->y_exact.size());
 
-    //clean up
-    for (ExactSet::iterator it = value_set.begin(); it != value_set.end(); ++it) {
-        ExactValue* p = *it;
-        delete p;
-    }
-    for (ExactSet::iterator it = dist_set.begin(); it != dist_set.end(); ++it) {
-        ExactValue* p = *it;
-        delete p;
-    }
     return data;
 } //end read_discrete_metric_space()
 
@@ -548,10 +530,10 @@ std::unique_ptr<InputData> InputManager::read_bifiltration(std::ifstream& stream
             }
 
             //read multigrade and remember that it corresponds to this simplex
-            ret = x_set.insert(new ExactValue(str_to_exact(tokens.at(dim + 1))));
-            (*(ret.first))->indexes.push_back(num_simplices);
-            ret = y_set.insert(new ExactValue(str_to_exact(tokens.at(dim + 2))));
-            (*(ret.first))->indexes.push_back(num_simplices);
+            ret = x_set.insert(ExactValue(str_to_exact(tokens.at(dim + 1))));
+            (ret.first)->indexes.push_back(num_simplices);
+            ret = y_set.insert(ExactValue(str_to_exact(tokens.at(dim + 2))));
+            (ret.first)->indexes.push_back(num_simplices);
 
             //add the simplex to the simplex tree
             data->simplex_tree->add_simplex(verts, num_simplices, num_simplices); //multigrade to be set later!
@@ -578,15 +560,6 @@ std::unique_ptr<InputData> InputManager::read_bifiltration(std::ifstream& stream
     data->simplex_tree->update_global_indexes();
     data->simplex_tree->update_dim_indexes();
 
-    //clean up
-    for (ExactSet::iterator it = x_set.begin(); it != x_set.end(); ++it) {
-        ExactValue* p = *it;
-        delete p;
-    }
-    for (ExactSet::iterator it = y_set.begin(); it != y_set.end(); ++it) {
-        ExactValue* p = *it;
-        delete p;
-    }
     return data;
 } //end read_bifiltration()
 
@@ -692,10 +665,10 @@ void InputManager::build_grade_vectors(InputData& data,
         unsigned c = 0; //counter for indexes
         for (ExactSet::iterator it = value_set.begin(); it != value_set.end(); ++it) //loop through all UNIQUE values
         {
-            grades_exact.push_back((*it)->exact_value);
+            grades_exact.push_back(it->exact_value);
 
-            for (unsigned i = 0; i < (*it)->indexes.size(); i++) //loop through all point indexes for this value
-                discrete_indexes[(*it)->indexes[i]] = c; //store discrete index
+            for (unsigned i = 0; i < it->indexes.size(); i++) //loop through all point indexes for this value
+                discrete_indexes[it->indexes[i]] = c; //store discrete index
 
             c++;
         }
@@ -703,8 +676,8 @@ void InputManager::build_grade_vectors(InputData& data,
     // the number of bins, and exact values will be equally spaced
     {
         //compute bin size
-        exact min = (*value_set.begin())->exact_value;
-        exact max = (*value_set.rbegin())->exact_value;
+        exact min = value_set.begin()->exact_value;
+        exact max = value_set.rbegin()->exact_value;
         exact bin_size = (max - min) / num_bins;
 
         //store bin values
@@ -717,9 +690,9 @@ void InputManager::build_grade_vectors(InputData& data,
             grades_exact.push_back(cur_bin.exact_value);
 
             //store bin index for all points whose time value is in this bin
-            while (it != value_set.end() && **it <= cur_bin) {
-                for (unsigned i = 0; i < (*it)->indexes.size(); i++) //loop through all point indexes for this value
-                    discrete_indexes[(*it)->indexes[i]] = c; //store discrete index
+            while (it != value_set.end() && *it <= cur_bin) {
+                for (unsigned i = 0; i < it->indexes.size(); i++) //loop through all point indexes for this value
+                    discrete_indexes[it->indexes[i]] = c; //store discrete index
                 ++it;
             }
         }
