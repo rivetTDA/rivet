@@ -40,16 +40,17 @@ DataSelectDialog::DataSelectDialog(InputParameters& params, QWidget* parent)
     , data_selected(false)
 {
     ui->setupUi(this);
-
-    ui->xbinSpinBox->setSpecialValueText(tr("No bins"));
-    ui->ybinSpinBox->setSpecialValueText(tr("No bins"));
-
     //set initial values
-    if (!params.fileName.empty())
+    if (!params.fileName.empty()) {
         detect_file_type();
-    ui->homDimSpinBox->setValue(params.dim);
-    ui->xbinSpinBox->setValue(params.x_bins);
-    ui->ybinSpinBox->setValue(params.y_bins);
+        ui->homDimSpinBox->setValue(params.dim);
+        ui->xbinSpinBox->setValue(params.x_bins);
+        ui->ybinSpinBox->setValue(params.y_bins);
+    } else {
+        ui->homDimSpinBox->setValue(0);
+        ui->xbinSpinBox->setValue(10);
+        ui->ybinSpinBox->setValue(10);
+    }
 }
 
 DataSelectDialog::~DataSelectDialog()
