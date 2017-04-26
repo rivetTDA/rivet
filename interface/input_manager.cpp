@@ -300,7 +300,7 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
     std::pair<ExactSet::iterator, bool> ret; //for return value upon insert()
     unsigned* degree; //stores the degree of each point; must FREE later if used
     if (!hasFunction) {
-        degree = new unsigned[num_points];
+        degree = new unsigned[num_points]();
     }
 
     dist_set.insert(new ExactValue(exact(0))); //distance from a point to itself is always zero
@@ -366,7 +366,7 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
         //WARNING: assumes that the number of distinct degree grades will be equal to maxDegree which may not hold
         for (unsigned i = 0; i <= maxDegree; i++)
         {
-            ret = degree_set.insert(new ExactValue(i)); //store degree i
+            ret = degree_set.insert(new ExactValue(-i)); //store degree -i because degree is wrt opposite ordering on R
             (*(ret.first))->indexes.push_back(i); //degree i is stored at index i
         }
         //make degrees
@@ -527,7 +527,7 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
         }
 
         if (!hasFunction) {
-            degree = new unsigned[num_points];
+            degree = new unsigned[num_points]();
         }
 
         dist_set.insert(new ExactValue(exact(0))); //distance from a point to itself is always zero
@@ -585,7 +585,6 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
         throw InputError(line_info.second, e.what());
     }
     progress.advanceProgressStage(); //advance progress box to stage 2: building bifiltration
-
     // STEP 3: build vectors of discrete indexes for constructing the bifiltration
 
     std::vector<unsigned> value_indexes, degree_indexes;
@@ -604,8 +603,8 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
         //WARNING: assumes that the number of distinct degree grades will be equal to maxDegree which may not hold
         for (unsigned i = 0; i <= maxDegree; i++)
         {
-            ret = degree_set.insert(new ExactValue(i)); //store degree i
-            (*(ret.first))->indexes.push_back(i); //degree i is stored at index i
+            ret = degree_set.insert(new ExactValue(-i)); //store degree -i because degree is wrt opposite ordering on R
+            (*(ret.first))->indexes.push_back(i); //degree -i is stored at index i
         }
         //make degrees
         degree_indexes = std::vector<unsigned>(maxDegree + 1, 0);
@@ -871,7 +870,7 @@ std::unique_ptr<InputData> InputManager::read_RIVET_data(std::ifstream& stream, 
 } //end read_RIVET_data()
 
 //converts an ExactSet of values to the vectors of discrete
-// values that SimplexTree uses to build the bifiltration,
+// values that BifiltrationTree uses to build the bifiltration,
 // and also builds the grade vectors (floating-point and exact)
 void InputManager::build_grade_vectors(InputData& data,
     ExactSet& value_set,

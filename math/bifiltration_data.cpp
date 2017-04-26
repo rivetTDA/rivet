@@ -199,7 +199,7 @@ void BifiltrationData::build_VR_subcomplex(std::vector<unsigned>& times, std::ve
 
 //builds BifiltrationData representing a bifiltered Vietoris-Rips complex from discrete data
 //requires a list of vertices and a list of distances between pairs of points
-//CONVENTION: the x-coordinate is "scale threshold" for points and the y-coordinate is "degree threshold"
+//CONVENTION: the x-coordinate is "degree threshold" for points and the y-coordinate is "scale threshold"
 void BifiltrationData::build_BR_complex(unsigned num_vertices, std::vector<unsigned>& distances, std::vector<unsigned>& degrees, unsigned num_x, unsigned num_y)
 {
     x_grades = num_x;
@@ -262,9 +262,9 @@ void BifiltrationData::build_BR_subcomplex(std::vector<unsigned>& distances, std
     {
         //Determine the grades of appearance of the clique with parent_indexes and *it
         //First determine the minimal scale parameter necessary for all the edges between the clique parent_indexes, and *it to appear
-        unsigned minDist = std::numeric_limits<unsigned>::max();
+        unsigned minDist = distances[0];
         for (std::vector<int>::iterator it2 = parent_indexes.begin(); it2 != parent_indexes.end(); it2++)
-            if (distances[(*it) * (*it - 1) / 2 + *it2] < minDist) //By construction, each of the parent indices are strictly less than *it
+            if (distances[(*it) * (*it - 1) / 2 + *it2] > minDist) //By construction, each of the parent indices are strictly less than *it
                 minDist = distances[(*it) * (*it - 1) / 2 + *it2];
         AppearanceGrades newGrades;
         combineMultigrades(newGrades, parent_grades, vertexMultigrades[*it], minDist);
@@ -287,6 +287,7 @@ void BifiltrationData::build_BR_subcomplex(std::vector<unsigned>& distances, std
 }//end build_subcomplex()
 
 //For each point in a BRips bifiltration, generates an array of incomparable grades of appearance. distances should be of size vertices(vertices - 1)/2
+//Degrees are stored in negative form to align with correct ordering on R
 //Stores result in the vector container "multigrades". Each vector of grades is sorted in reverse lexicographic order
 void BifiltrationData::generateVertexMultigrades(std::vector<AppearanceGrades>& multigrades, unsigned vertices, std::vector<unsigned>& distances, std::vector<unsigned>& degrees)
 {
@@ -299,19 +300,20 @@ void BifiltrationData::generateVertexMultigrades(std::vector<AppearanceGrades>& 
             {
                 neighborDists.push_back(distances[i * (i - 1)/2 + j]);
             }
-            else if (j > i && distances[j * (j - 1)/2 + j] < std::numeric_limits<unsigned>::max())
+            else if (j > i && distances[j * (j - 1)/2 + i] < std::numeric_limits<unsigned>::max())
             {
-                neighborDists.push_back(distances[j * (j - 1)/2 + j]);
+                neighborDists.push_back(distances[j * (j - 1)/2 + i]);
             }
         }
         std::sort(neighborDists.begin(), neighborDists.end(), std::greater<unsigned>()); //Sort the distances in descending order because grades should be in reverse lexicographic order
         AppearanceGrades iGrades; //Stores grades of appearance for vertex i
         unsigned minScale;
+        iGrades.push_back(Grade(degrees[0], distances[0])); //Every point has a grade of appearance at degree = 0, scale = 0
         for (int j = neighborDists.size() - 1; j >= 0;)
         {
             minScale = neighborDists[j];
-            iGrades.push_back(Grade(-degrees[j + 1], minScale)); //If the scale parameter is >= minScale, then vertex i has j+1 neighbors. Negative because degree is sorted opposite of the usual ordering on R
-            while (j >= 0 && neighborDists[j] == minScale) j--; //Iterate until the next distance is < minScale
+            while (j >= 0 && neighborDists[j] == minScale) j--; //Iterate until the next distance is > minScale
+            iGrades.push_back(Grade(degrees[neighborDists.size() - (j + 1)], minScale)); //If the scale parameter is >= minScale, then vertex i has at least neighborDists.size() - (j + 1) neighbors.
         }
         update_grades(iGrades); //Makes sure all of them are incomparable after the binning
         multigrades.push_back(iGrades);
@@ -320,25 +322,33 @@ void BifiltrationData::generateVertexMultigrades(std::vector<AppearanceGrades>& 
 
 //Determines the grades of appearance of when both simplices exist subject to some minimal distance parameter mindist
 //Grade arrays are assumed to be sorted in reverse lexicographic order, output will be sorted in reverse lexicographic order
-void BifiltrationData::combineMultigrades(AppearanceGrades& merged, AppearanceGrades& grades1, AppearanceGrades& grades2, unsigned mindist)
+//Takes the intersection of the grades of appearances and the half plan y >= minDist
+void BifiltrationData::combineMultigrades(AppearanceGrades& merged, AppearanceGrades& grades1, AppearanceGrades& grades2, unsigned minDist)
 {
-    int maxScale = std::numeric_limits<int>::max();
-    int max1 = maxScale, max2 = maxScale;
     int maxY, from; //from tells us which vector the grade we are considering comes from (1, 2, or 3(both))
     AppearanceGrades::iterator it1 = grades1.begin();
     AppearanceGrades::iterator it2 = grades2.begin();
-    while (it1 != grades1.end() || it2 != grades2.end())
+    int currXMax = std::max(it1->x, it2->x), currYMax = std::max(std::max(it1->y, it2->y), (int)minDist);
+    while ((it1 + 1) != grades1.end() || (it2 + 1) != grades2.end())
     {
         maxY = std::numeric_limits<int>::max();
-        if (it1 != grades1.end())
+        //Consider the reverse lexicographically first point
+        if ((it1 + 1) != grades1.end())
         {
             maxY = it1->y;
             from = 1;
         }
-        if (it2 != grades2.end() && maxY >= it2->y)
+        if ((it2 + 1) != grades2.end() && maxY >= it2->y)
         {
             if (maxY == it2->y)
-                from = 3;
+            {
+                if (it1->x < it2->x)
+                    from = 1;
+                else if (it1->x > it2->x)
+                    from = 2;
+                else // equal points
+                    from = 3;
+            }
             else
             {
                 maxY = it2->y;
@@ -349,46 +359,40 @@ void BifiltrationData::combineMultigrades(AppearanceGrades& merged, AppearanceGr
         {
         case 1:
         {
-            int temp = maxScale; //Store maxScale for now
-            max1 = std::max(it1->x, (int)mindist);
-            maxScale = std::max(max1, max2);
-            if (temp > maxScale) //max rightmost entry changed
-            {
-                merged.push_back(Grade(maxY, maxScale));
-            }
             it1++;
+            if (it1->y > currYMax) //y level increased
+            {
+                merged.push_back(Grade(currXMax, currYMax));
+                currYMax = it1->y;
+            }
+            currXMax = std::max(it1->x, it2->x);
             break;
         }
         case 2:
         {
-            int temp = maxScale; //Store maxScale for now
-            max2 = std::max(it2->x, (int)mindist);
-            maxScale = std::max(max1, max2);
-            if (temp > maxScale) //max rightmost entry changed
-            {
-                merged.push_back(Grade(maxY, maxScale));
-            }
             it2++;
+            if (it2->y > currYMax) //y level increased
+            {
+                merged.push_back(Grade(currXMax, currYMax));
+                currYMax = it2->y;
+            }
+            currXMax = std::max(it1->x, it2->x);
             break;
         }
         case 3:
         {
-            int temp = maxScale; //Store maxScale for now
-            max1 = std::max(it1->x, (int)mindist);
-            max2 = std::max(it2->x, (int)mindist);
-            maxScale = std::max(max1, max2);
-            if (temp > maxScale) //max rightmost entry changed
+            it1++; it2++;
+            if (it1->y > currYMax || it2->y > currYMax) //y level increased, need to check because it is possible that currMax=minDist > it1->y, it2->y
             {
-                merged.push_back(Grade(maxY, maxScale));
+                merged.push_back(Grade(currXMax, currYMax));
+                currYMax = std::max(std::max(it1->y, it2->y), currYMax);
             }
-            it1++;
-            it2++;
+            currXMax = std::max(it1->x, it2->x);
             break;
         }
         }
-        if (maxScale == (int)mindist)
-            break;
     }
+    merged.push_back(Grade(currXMax, currYMax)); //Add final grade
 }//end combineMultigrades
 
 //Takes a simplex and its grades of appearance and adds it to ordered_high_grades, ordered_grades, or ordered_low_grades
