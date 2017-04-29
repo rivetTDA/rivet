@@ -303,7 +303,8 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
         degree = new unsigned[num_points]();
     }
 
-    dist_set.insert(new ExactValue(exact(0))); //distance from a point to itself is always zero
+    ret = dist_set.insert(new ExactValue(exact(0))); //distance from a point to itself is always zero
+    (*(ret.first))->indexes.push_back(0); //store distance 0 at 0th index
 
     //consider all points
     for (unsigned i = 0; i < num_points; i++) 
@@ -335,8 +336,8 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
                 //store distance value, if it doesn't exist already
                 ret = dist_set.insert(new ExactValue(cur_dist));
 
-                //remember that the pair of points (i,j) has this distance value, which will go in entry j(j-1)/2 + i
-                (*(ret.first))->indexes.push_back((j * (j - 1)) / 2 + i);
+                //remember that the pair of points (i,j) has this distance value, which will go in entry j(j-1)/2 + i + 1
+                (*(ret.first))->indexes.push_back((j * (j - 1)) / 2 + i + 1);
 
                 //need to keep track of degree for bifiltration-rips complex
                 if (!hasFunction) {
@@ -347,6 +348,9 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
             }
         }
     } //end for
+    if (verbosity >= 4) {
+        debug() << "  Finished reading data.";
+    }
 
     // STEP 3: build vectors of discrete indexes for constructing the bifiltration
 
@@ -366,7 +370,7 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
         //WARNING: assumes that the number of distinct degree grades will be equal to maxDegree which may not hold
         for (unsigned i = 0; i <= maxDegree; i++)
         {
-            ret = degree_set.insert(new ExactValue(-i)); //store degree -i because degree is wrt opposite ordering on R
+            ret = degree_set.insert(new ExactValue(maxDegree - i)); //store degree -i because degree is wrt opposite ordering on R
             (*(ret.first))->indexes.push_back(i); //degree i is stored at index i
         }
         //make degrees
@@ -381,7 +385,7 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
     }
 
     //discrete distance matrix (triangle); max_unsigned shall represent undefined distance
-    std::vector<unsigned> dist_indexes((num_points * (num_points - 1)) / 2, max_unsigned);
+    std::vector<unsigned> dist_indexes((num_points * (num_points - 1)) / 2 + 1, max_unsigned);
     build_grade_vectors(*data, dist_set, dist_indexes, data->y_exact, input_params.y_bins);
 
     //update progress
@@ -530,7 +534,9 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
             degree = new unsigned[num_points]();
         }
 
-        dist_set.insert(new ExactValue(exact(0))); //distance from a point to itself is always zero
+        ret = dist_set.insert(new ExactValue(exact(0))); //distance from a point to itself is always zero
+        //store distance 0 at index 0
+        (*(ret.first))->indexes.push_back(0);
 
         //consider all points
         for (unsigned i = 0; i < num_points; i++) {
@@ -562,8 +568,8 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
                             //store distance value, if it doesn't exist already
                             ret = dist_set.insert(new ExactValue(cur_dist));
 
-                            //remember that the pair of points (i,j) has this distance value, which will go in entry j(j-1)/2 + i
-                            (*(ret.first))->indexes.push_back((j * (j - 1)) / 2 + i);
+                            //remember that the pair of points (i,j) has this distance value, which will go in entry j(j-1)/2 + i + 1
+                            (*(ret.first))->indexes.push_back((j * (j - 1)) / 2 + i + 1);
 
                             //need to keep track of degree for bifiltration-rips complex
                             if (!hasFunction) {
@@ -584,6 +590,10 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
     } catch (std::exception& e) {
         throw InputError(line_info.second, e.what());
     }
+    if (verbosity >= 4) {
+        debug() << "  Finished reading data.";
+    }
+
     progress.advanceProgressStage(); //advance progress box to stage 2: building bifiltration
     // STEP 3: build vectors of discrete indexes for constructing the bifiltration
 
@@ -603,7 +613,7 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
         //WARNING: assumes that the number of distinct degree grades will be equal to maxDegree which may not hold
         for (unsigned i = 0; i <= maxDegree; i++)
         {
-            ret = degree_set.insert(new ExactValue(-i)); //store degree -i because degree is wrt opposite ordering on R
+            ret = degree_set.insert(new ExactValue(maxDegree - i)); //store degree -i because degree is wrt opposite ordering on R
             (*(ret.first))->indexes.push_back(i); //degree -i is stored at index i
         }
         //make degrees
@@ -618,7 +628,7 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
     }
 
     //second, distances
-    std::vector<unsigned> dist_indexes((num_points * (num_points - 1)) / 2, max_unsigned); //discrete distance matrix (triangle); max_unsigned shall represent undefined distance
+    std::vector<unsigned> dist_indexes((num_points * (num_points - 1)) / 2 + 1, max_unsigned); //discrete distance matrix (triangle); max_unsigned shall represent undefined distance
     build_grade_vectors(*data, dist_set, dist_indexes, data->y_exact, input_params.y_bins);
 
     //update progress
@@ -739,6 +749,10 @@ std::unique_ptr<InputData> InputManager::read_bifiltration(std::ifstream& stream
         } catch (std::exception& e) {
             throw InputError(line_info.second, "Could not read vertex: " + std::string(e.what()));
         }
+    }
+
+    if (verbosity >= 4) {
+        debug() << "  Finished reading data.";
     }
 
     progress.advanceProgressStage(); //advance progress box to stage 2: building bifiltration

@@ -176,7 +176,7 @@ void BifiltrationData::build_VR_subcomplex(std::vector<unsigned>& times, std::ve
         for(unsigned k = 0; k < vertices.size(); k++)
         {
                 int p = vertices[k];
-                unsigned d = distances[ (j*(j-1))/2 + p ]; //the distance between points p and j, with p < j
+                unsigned d = distances[(j*(j-1))/2 + p + 1]; //the distance between points p and j, with p < j
                 if(d > current_dist)
                     current_dist = d;
         }
@@ -222,7 +222,7 @@ void BifiltrationData::build_BR_complex(unsigned num_vertices, std::vector<unsig
         std::vector<int> candidates;
         for (unsigned j = i + 1; j < num_vertices; j++)//Dist of (i, j) with i < j stored in distances[j(j - 1)/2 + i]
         {
-            if (distances[j * (j - 1)/2 + i] < std::numeric_limits<unsigned>::max()) //if an edge is between i and j
+            if (distances[j * (j - 1)/2 + i + 1] < std::numeric_limits<unsigned>::max()) //if an edge is between i and j
                 candidates.push_back(j);
         }
 
@@ -264,8 +264,8 @@ void BifiltrationData::build_BR_subcomplex(std::vector<unsigned>& distances, std
         //First determine the minimal scale parameter necessary for all the edges between the clique parent_indexes, and *it to appear
         unsigned minDist = distances[0];
         for (std::vector<int>::iterator it2 = parent_indexes.begin(); it2 != parent_indexes.end(); it2++)
-            if (distances[(*it) * (*it - 1) / 2 + *it2] > minDist) //By construction, each of the parent indices are strictly less than *it
-                minDist = distances[(*it) * (*it - 1) / 2 + *it2];
+            if (distances[(*it) * (*it - 1) / 2 + *it2 + 1] > minDist) //By construction, each of the parent indices are strictly less than *it
+                minDist = distances[(*it) * (*it - 1) / 2 + *it2 + 1];
         AppearanceGrades newGrades;
         combineMultigrades(newGrades, parent_grades, vertexMultigrades[*it], minDist);
 
@@ -273,7 +273,7 @@ void BifiltrationData::build_BR_subcomplex(std::vector<unsigned>& distances, std
         std::vector<int> newCandidates;
         for (std::vector<int>::iterator it2 = it + 1; it2 != candidates.end(); it2++)
         {
-            if (distances[(*it2) * (*it2 - 1) / 2 + *it] < std::numeric_limits<unsigned>::max()) //We know that *it2 > *it
+            if (distances[(*it2) * (*it2 - 1) / 2 + *it + 1] < std::numeric_limits<unsigned>::max()) //We know that *it2 > *it
             {
                 newCandidates.push_back(*it2); //We knew there was connection between *it2 and all of parent_index, and now also to *it as well
             }
@@ -298,22 +298,22 @@ void BifiltrationData::generateVertexMultigrades(std::vector<AppearanceGrades>& 
         {
             if (j < i && distances[i * (i - 1)/2 + j] < std::numeric_limits<unsigned>::max()) //If i and j are neighbors
             {
-                neighborDists.push_back(distances[i * (i - 1)/2 + j]);
+                neighborDists.push_back(distances[i * (i - 1)/2 + j + 1]);
             }
             else if (j > i && distances[j * (j - 1)/2 + i] < std::numeric_limits<unsigned>::max())
             {
-                neighborDists.push_back(distances[j * (j - 1)/2 + i]);
+                neighborDists.push_back(distances[j * (j - 1)/2 + i + 1]);
             }
         }
-        std::sort(neighborDists.begin(), neighborDists.end(), std::greater<unsigned>()); //Sort the distances in descending order because grades should be in reverse lexicographic order
+        std::sort(neighborDists.begin(), neighborDists.end());
         AppearanceGrades iGrades; //Stores grades of appearance for vertex i
         unsigned minScale;
         iGrades.push_back(Grade(degrees[0], distances[0])); //Every point has a grade of appearance at degree = 0, scale = 0
-        for (int j = neighborDists.size() - 1; j >= 0;)
+        for (unsigned j = 0; j < neighborDists.size();)
         {
             minScale = neighborDists[j];
-            while (j >= 0 && neighborDists[j] == minScale) j--; //Iterate until the next distance is > minScale
-            iGrades.push_back(Grade(degrees[neighborDists.size() - (j + 1)], minScale)); //If the scale parameter is >= minScale, then vertex i has at least neighborDists.size() - (j + 1) neighbors.
+            while (j < neighborDists.size() && neighborDists[j] == minScale) j++; //Iterate until the next distance is > minScale
+            iGrades.push_back(Grade(degrees[j], minScale)); //If the scale parameter is >= minScale, then vertex i has at least neighborDists.size() - (j + 1) neighbors.
         }
         update_grades(iGrades); //Makes sure all of them are incomparable after the binning
         multigrades.push_back(iGrades);
