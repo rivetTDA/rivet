@@ -296,11 +296,11 @@ void BifiltrationData::generateVertexMultigrades(std::vector<AppearanceGrades>& 
         std::vector<unsigned> neighborDists; //Generate list of how far the neighbors are, vertex of the neighbor does not matter
         for (unsigned j = 0; j < vertices; j++) //Dist of (i, j) with i < j stored in distances[j(j - 1)/2 + i]
         {
-            if (j < i && distances[i * (i - 1)/2 + j] < std::numeric_limits<unsigned>::max()) //If i and j are neighbors
+            if (j < i && distances[i * (i - 1)/2 + j + 1] < std::numeric_limits<unsigned>::max()) //If i and j are neighbors
             {
                 neighborDists.push_back(distances[i * (i - 1)/2 + j + 1]);
             }
-            else if (j > i && distances[j * (j - 1)/2 + i] < std::numeric_limits<unsigned>::max())
+            else if (j > i && distances[j * (j - 1)/2 + i + 1] < std::numeric_limits<unsigned>::max())
             {
                 neighborDists.push_back(distances[j * (j - 1)/2 + i + 1]);
             }
