@@ -430,7 +430,7 @@ void VisualizationWindow::save_arrangement(const QString& filename)
         write_boost_file(filename, input_params, *template_points, *arrangement);
     } catch (std::exception& e) {
         QMessageBox errorBox(QMessageBox::Warning, "Error",
-            QString("Unable to write file: ").append(filename).append(": ").append(e.what()));
+            QString("Unable to save arrangement: ").append(filename).append(": ").append(e.what()));
         errorBox.exec();
     }
 } //end save_arrangement()

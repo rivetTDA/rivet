@@ -96,6 +96,9 @@ void ComputationThread::load_from_file()
     arrangement.reset(new ArrangementMessage());
     message.reset(new TemplatePointsMessage());
     archive >> params;
+    //We're not interested in the output file from the original invocation, and if it is non-empty,
+    //the viewer will try to save the output also, which will most likely fail.
+    params.outputFile = "";
     archive >> *message;
     emit templatePointsReady(message);
     archive >> *arrangement;
