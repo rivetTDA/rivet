@@ -169,9 +169,12 @@ void VisualizationWindow::augmented_arrangement_ready(std::shared_ptr<Arrangemen
     //TESTING: print arrangement info and verify consistency
     //    arrangement->print_stats();
     //    arrangement->test_consistency();
+    auto shortName = QString::fromStdString(input_params.shortName);
+
+    this->setWindowTitle("RIVET - " + shortName);
 
     //inialize persistence diagram
-    p_diagram.create_diagram(QString::fromStdString(input_params.shortName), input_params.dim);
+    p_diagram.create_diagram(shortName, input_params.dim);
 
     //get the barcode
     BarcodeTemplate dbc = arrangement->get_barcode_template(angle_precise, offset_precise);
