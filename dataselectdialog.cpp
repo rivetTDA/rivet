@@ -119,6 +119,8 @@ void DataSelectDialog::detect_file_type()
         ui->fileTypeLabel->setText("This file appears to contain pre-computed RIVET data");
         QFileInfo fileInfo(QString::fromStdString(params.fileName));
         ui->fileLabel->setText("Selected file: " + fileInfo.fileName());
+        //TODO: this updating of the params will need to happen in console also, need to refactor
+        params.shortName = fileInfo.fileName().toUtf8().constData();
         ui->parameterFrame->setEnabled(false);
     } else {
         QStringList args;

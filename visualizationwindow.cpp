@@ -169,9 +169,12 @@ void VisualizationWindow::augmented_arrangement_ready(std::shared_ptr<Arrangemen
     //TESTING: print arrangement info and verify consistency
     //    arrangement->print_stats();
     //    arrangement->test_consistency();
+    auto shortName = QString::fromStdString(input_params.shortName);
+
+    this->setWindowTitle("RIVET - " + shortName);
 
     //inialize persistence diagram
-    p_diagram.create_diagram(QString::fromStdString(input_params.shortName), input_params.dim);
+    p_diagram.create_diagram(shortName, input_params.dim);
 
     //get the barcode
     BarcodeTemplate dbc = arrangement->get_barcode_template(angle_precise, offset_precise);
@@ -430,7 +433,7 @@ void VisualizationWindow::save_arrangement(const QString& filename)
         write_boost_file(filename, input_params, *template_points, *arrangement);
     } catch (std::exception& e) {
         QMessageBox errorBox(QMessageBox::Warning, "Error",
-            QString("Unable to write file: ").append(filename).append(": ").append(e.what()));
+            QString("Unable to save arrangement: ").append(filename).append(": ").append(e.what()));
         errorBox.exec();
     }
 } //end save_arrangement()
