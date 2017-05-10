@@ -58,7 +58,7 @@ void BifiltrationData::add_simplex(std::vector<int>& vertices, AppearanceGrades&
 void BifiltrationData::add_faces(std::vector<int>& vertices, AppearanceGrades& grades)
 {
     SimplexInfo::iterator ret;
-    //Store the simplex info if it is of dimension (hom_dim - 1), hom_dim, or hom_dim+1. Dimension is parent_indexes.size() - 1
+    //Store the simplex info if it is of dimension (hom_dim - 1), hom_dim, or hom_dim+1. Dimension is parent_vertices.size() - 1
     if (vertices.size() == 0)
     {
         return;
@@ -146,19 +146,19 @@ void BifiltrationData::build_VR_subcomplex(std::vector<unsigned>& times, std::ve
     if (vertices.size() == (unsigned)hom_dim) //simplex of dimension hom_dim - 1
     {
         AppearanceGrades grades = AppearanceGrades(1, Grade(prev_time, prev_dist));
-        ordered_low_simplices->emplace(vertices, grades); //makes copy of parent_indexes so we can still edit it
+        ordered_low_simplices->emplace(vertices, grades); //makes copy of parent_vertices so we can still edit it
         addSimplicesToGrade(ordered_low_grades, vertices, grades);
     }
     else if (vertices.size() == (unsigned)hom_dim + 1) //simplex of dimension hom_dim - 1
     {
         AppearanceGrades grades = AppearanceGrades(1, Grade(prev_time, prev_dist));
-        ordered_simplices->emplace(vertices, grades); //makes copy of parent_indexes so we can still edit it
+        ordered_simplices->emplace(vertices, grades); //makes copy of parent_vertices so we can still edit it
         addSimplicesToGrade(ordered_grades, vertices, grades);
     }
     else if (vertices.size() == (unsigned)hom_dim + 2) //simplex of dimension hom_dim - 1
     {
         AppearanceGrades grades = AppearanceGrades(1, Grade(prev_time, prev_dist));
-        ordered_high_simplices->emplace(vertices, grades); //makes copy of parent_indexes so we can still edit it
+        ordered_high_simplices->emplace(vertices, grades); //makes copy of parent_vertices so we can still edit it
         addSimplicesToGrade(ordered_high_grades, vertices, grades);
         return;
     }
@@ -233,26 +233,26 @@ void BifiltrationData::build_BR_complex(unsigned num_vertices, std::vector<unsig
 }//end build_BR_complex()
 
 //function to build (recursively) a subcomplex for the BRips complex
-void BifiltrationData::build_BR_subcomplex(std::vector<unsigned>& distances, std::vector<int>& parent_indexes, std::vector<int>& candidates, AppearanceGrades& parent_grades, std::vector<AppearanceGrades>& vertexMultigrades)
+void BifiltrationData::build_BR_subcomplex(std::vector<unsigned>& distances, std::vector<int>& parent_vertices, std::vector<int>& candidates, AppearanceGrades& parent_grades, std::vector<AppearanceGrades>& vertexMultigrades)
 {
-    //Store the simplex info if it is of dimension (hom_dim - 1), hom_dim, or hom_dim+1. Dimension is parent_indexes.size() - 1
-    if (parent_indexes.size() == (unsigned)hom_dim) //simplex of dimension hom_dim - 1
+    //Store the simplex info if it is of dimension (hom_dim - 1), hom_dim, or hom_dim+1. Dimension is parent_vertices.size() - 1
+    if (parent_vertices.size() == (unsigned)hom_dim) //simplex of dimension hom_dim - 1
     {
-        ordered_low_simplices->emplace(parent_indexes, parent_grades); //makes copy of parent_indexes so we can still edit it
-        addSimplicesToGrade(ordered_low_grades, parent_indexes, parent_grades);
+        ordered_low_simplices->emplace(parent_vertices, parent_grades); //makes copy of parent_vertices so we can still edit it
+        addSimplicesToGrade(ordered_low_grades, parent_vertices, parent_grades);
     }
-    else if (parent_indexes.size() == (unsigned)hom_dim + 1) //simplex of dimension hom_dim - 1
+    else if (parent_vertices.size() == (unsigned)hom_dim + 1) //simplex of dimension hom_dim - 1
     {
-        ordered_simplices->emplace(parent_indexes, parent_grades); //makes copy of parent_indexes so we can still edit it
-        addSimplicesToGrade(ordered_grades, parent_indexes, parent_grades);
+        ordered_simplices->emplace(parent_vertices, parent_grades); //makes copy of parent_vertices so we can still edit it
+        addSimplicesToGrade(ordered_grades, parent_vertices, parent_grades);
     }
-    else if (parent_indexes.size() == (unsigned)hom_dim + 2) //simplex of dimension hom_dim - 1
+    else if (parent_vertices.size() == (unsigned)hom_dim + 2) //simplex of dimension hom_dim - 1
     {
-        ordered_high_simplices->emplace(parent_indexes, parent_grades); //makes copy of parent_indexes so we can still edit it
-        addSimplicesToGrade(ordered_high_grades, parent_indexes, parent_grades);
+        ordered_high_simplices->emplace(parent_vertices, parent_grades); //makes copy of parent_vertices so we can still edit it
+        addSimplicesToGrade(ordered_high_grades, parent_vertices, parent_grades);
         return;
     }
-    else if (parent_indexes.size() > (unsigned)hom_dim + 2) //looking at dimension at least hom_dim + 2 and we do not care about those simplices
+    else if (parent_vertices.size() > (unsigned)hom_dim + 2) //looking at dimension at least hom_dim + 2 and we do not care about those simplices
     {
         return;
     }
@@ -260,10 +260,10 @@ void BifiltrationData::build_BR_subcomplex(std::vector<unsigned>& distances, std
     //loop through all points that could be added to form a larger simplex (candidates)
     for(std::vector<int>::iterator it = candidates.begin(); it != candidates.end(); it++)
     {
-        //Determine the grades of appearance of the clique with parent_indexes and *it
-        //First determine the minimal scale parameter necessary for all the edges between the clique parent_indexes, and *it to appear
+        //Determine the grades of appearance of the clique with parent_vertices and *it
+        //First determine the minimal scale parameter necessary for all the edges between the clique parent_vertices, and *it to appear
         unsigned minDist = distances[0];
-        for (std::vector<int>::iterator it2 = parent_indexes.begin(); it2 != parent_indexes.end(); it2++)
+        for (std::vector<int>::iterator it2 = parent_vertices.begin(); it2 != parent_vertices.end(); it2++)
             if (distances[(*it) * (*it - 1) / 2 + *it2 + 1] > minDist) //By construction, each of the parent indices are strictly less than *it
                 minDist = distances[(*it) * (*it - 1) / 2 + *it2 + 1];
         AppearanceGrades newGrades;
@@ -279,10 +279,10 @@ void BifiltrationData::build_BR_subcomplex(std::vector<unsigned>& distances, std
             }
         }
 
-        parent_indexes.push_back(*it);
+        parent_vertices.push_back(*it);
         //recurse
-        build_BR_subcomplex(distances, parent_indexes, newCandidates, newGrades, vertexMultigrades);
-        parent_indexes.pop_back(); //Finished looking at cliques adding *it as well
+        build_BR_subcomplex(distances, parent_vertices, newCandidates, newGrades, vertexMultigrades);
+        parent_vertices.pop_back(); //Finished looking at cliques adding *it as well
     }
 }//end build_subcomplex()
 
@@ -323,35 +323,33 @@ void BifiltrationData::generateVertexMultigrades(std::vector<AppearanceGrades>& 
 //Determines the grades of appearance of when both simplices exist subject to some minimal distance parameter mindist
 //Grade arrays are assumed to be sorted in reverse lexicographic order, output will be sorted in reverse lexicographic order
 //Takes the intersection of the grades of appearances and the half plan y >= minDist
-void BifiltrationData::combineMultigrades(AppearanceGrades& merged, AppearanceGrades& grades1, AppearanceGrades& grades2, unsigned minDist)
+void BifiltrationData::combineMultigrades(AppearanceGrades& merged, const AppearanceGrades& grades1, const AppearanceGrades& grades2, const unsigned minDist)
 {
-    int maxY, from; //from tells us which vector the grade we are considering comes from (1, 2, or 3(both))
-    AppearanceGrades::iterator it1 = grades1.begin();
-    AppearanceGrades::iterator it2 = grades2.begin();
+    int maxX, from; //from tells us which vector the grade we are considering comes from (1, 2, or 3(both))
+    AppearanceGrades::const_iterator it1 = grades1.begin();
+    AppearanceGrades::const_iterator it2 = grades2.begin();
     int currXMax = std::max(it1->x, it2->x), currYMax = std::max(std::max(it1->y, it2->y), (int)minDist);
-    while ((it1 + 1) != grades1.end() || (it2 + 1) != grades2.end())
+    Grade lastGrade(currXMax, currYMax);
+    while (it1 != grades1.end() || it2 != grades2.end())
     {
-        maxY = std::numeric_limits<int>::max();
+        maxX = std::numeric_limits<int>::min();
         //Consider the reverse lexicographically first point
-        if ((it1 + 1) != grades1.end())
+        if (it1 != grades1.end())
         {
-            maxY = it1->y;
+            maxX = it1->x;
             from = 1;
         }
-        if ((it2 + 1) != grades2.end() && maxY >= it2->y)
+        if (it2 != grades2.end())
         {
-            if (maxY == it2->y)
+            if (maxX == it2->x)
             {
-                if (it1->x < it2->x)
+                if (it1->y <= it2->y)
                     from = 1;
-                else if (it1->x > it2->x)
+                else
                     from = 2;
-                else // equal points
-                    from = 3;
             }
-            else
+            else if (maxX < it2->x)
             {
-                maxY = it2->y;
                 from = 2;
             }
         }
@@ -359,40 +357,58 @@ void BifiltrationData::combineMultigrades(AppearanceGrades& merged, AppearanceGr
         {
         case 1:
         {
-            it1++;
-            if (it1->y > currYMax) //y level increased
+            if (it2 != grades2.end())
             {
-                merged.push_back(Grade(currXMax, currYMax));
-                currYMax = it1->y;
+                currXMax = std::max(it1->x, it2->x);
+                currYMax = std::max(std::max(it1->y, it2->y), currYMax);
             }
-            currXMax = std::max(it1->x, it2->x);
+            else
+            {
+                currXMax = std::max(it1->x, (it2 - 1)->x);
+                currYMax = std::max(it1->y, (it2 - 1)->y);
+            }
+            if (currYMax == lastGrade.y)
+            {
+                lastGrade.x = currXMax;
+            }
+            else if (currYMax > lastGrade.y && currXMax < lastGrade.x)
+            {
+                merged.push_back(lastGrade);
+                lastGrade.x = currXMax;
+                lastGrade.y = currYMax;
+            }
+            it1++;
             break;
         }
         case 2:
         {
-            it2++;
-            if (it2->y > currYMax) //y level increased
+            if (it1 != grades1.end())
             {
-                merged.push_back(Grade(currXMax, currYMax));
-                currYMax = it2->y;
-            }
-            currXMax = std::max(it1->x, it2->x);
-            break;
-        }
-        case 3:
-        {
-            it1++; it2++;
-            if (it1->y > currYMax || it2->y > currYMax) //y level increased, need to check because it is possible that currMax=minDist > it1->y, it2->y
-            {
-                merged.push_back(Grade(currXMax, currYMax));
+                currXMax = std::max(it1->x, it2->x);
                 currYMax = std::max(std::max(it1->y, it2->y), currYMax);
             }
-            currXMax = std::max(it1->x, it2->x);
+            else
+            {
+                currXMax = std::max((it1 - 1)->x, it2->x);
+                currYMax = std::max((it1 - 1)->y, it2->y);
+            }
+            if (currYMax == lastGrade.y)
+            {
+                lastGrade.x = currXMax;
+            }
+            else if (currYMax > lastGrade.y && currXMax < lastGrade.x)
+            {
+                merged.push_back(lastGrade);
+                lastGrade.x = currXMax;
+                lastGrade.y = currYMax;
+            }
+            it2++;
             break;
         }
         }
     }
-    merged.push_back(Grade(currXMax, currYMax)); //Add final grade
+    if (merged.empty() || lastGrade.y > merged.back().y)
+        merged.push_back(lastGrade);
 }//end combineMultigrades
 
 //Takes a simplex and its grades of appearance and adds it to ordered_high_grades, ordered_grades, or ordered_low_grades

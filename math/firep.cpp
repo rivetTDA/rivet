@@ -164,7 +164,7 @@ FIRep::FIRep(BifiltrationData& bd, int v)
             SimplexInfo::iterator facet_node = simplices->find(facet);
             if (facet_node == simplices->end())
                 throw std::runtime_error("FIRep::FIRep: Facet simplex not found.");
-            facets.push_back(&facet_node->second);
+            facets.push_back(&(facet_node->second));
         }
 
         for (AppearanceGrades::iterator it2 = it->second.begin(); it2 != it->second.end(); it2++)
@@ -179,7 +179,7 @@ FIRep::FIRep(BifiltrationData& bd, int v)
                 for (l = 0; l < facets[k]->size(); l++)
                 {
                     Grade& grade = facets[k]->at(l);
-                    if (grade.x <= g.x && grade.y <= g.y)
+                    if ((grade.x <= g.x) && (grade.y <= g.y))
                     {
                         g.boundary.push_back(grade.dim_index);
                         break;

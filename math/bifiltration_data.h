@@ -106,7 +106,7 @@ class BifiltrationData {
 
         void generateVertexMultigrades(std::vector<AppearanceGrades>& multigrades, unsigned vertices, std::vector<unsigned>& distances, std::vector<unsigned>& degrees); //Generates required multigrades for build_BR_complex()
 
-        void combineMultigrades(AppearanceGrades& merged, AppearanceGrades& grades1, AppearanceGrades& grades2, unsigned mindist); //Finds the grades of appearance of when both simplices exist subject to minimal scale parameter, used in build_BR_complex()
+        void combineMultigrades(AppearanceGrades& merged, const AppearanceGrades& grades1, const AppearanceGrades& grades2, const unsigned mindist); //Finds the grades of appearance of when both simplices exist subject to minimal scale parameter, used in build_BR_complex()
 
         void addSimplicesToGrade(GradeInfo* orderedGrades, std::vector<int> simplex, AppearanceGrades& grades); //Takes a simplex and its grades of appearance and adds it to ordered_high_grades, ordered_grades, or ordered_low_grades
 
