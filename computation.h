@@ -51,6 +51,11 @@ public:
         return *(data.bifiltration_data);
     }
 
+    FIRep& rep()
+    {
+        return *(data.free_implicit_rep);
+    }
+
     ComputationInput(InputData data)
         : data(data)
         , x_exact(data.x_exact)

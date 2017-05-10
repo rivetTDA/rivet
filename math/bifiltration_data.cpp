@@ -45,7 +45,7 @@ BifiltrationData::~BifiltrationData()
 //if simplex or any of its faces already exist, their new grades are added
 //WARNING: doesn't verify multigrades are non-comparable
 //We don't need to add simplexes of dimension greater than hom_dim+1
-void BifiltrationData::add_simplex(std::vector<int>& vertices, AppearanceGrades& grades)
+void BifiltrationData::add_simplex(std::vector<int>& vertices, const AppearanceGrades& grades)
 {
     //make sure vertices are sorted
     std::sort(vertices.begin(), vertices.end());
@@ -55,7 +55,7 @@ void BifiltrationData::add_simplex(std::vector<int>& vertices, AppearanceGrades&
 }//end add_simplex()
 
 //recursively adds faces of a simplex to the BifiltrationData
-void BifiltrationData::add_faces(std::vector<int>& vertices, AppearanceGrades& grades)
+void BifiltrationData::add_faces(const std::vector<int>& vertices, const AppearanceGrades& grades)
 {
     SimplexInfo::iterator ret;
     //Store the simplex info if it is of dimension (hom_dim - 1), hom_dim, or hom_dim+1. Dimension is parent_vertices.size() - 1
@@ -123,7 +123,7 @@ void BifiltrationData::add_faces(std::vector<int>& vertices, AppearanceGrades& g
 //requires a list of birth times (one for each point) and a list of distances between pairs of points
 //NOTE: automatically computes global indexes and dimension indexes
 //CONVENTION: the x-coordinate is "birth time" for points and the y-coordinate is "distance" between points
-void BifiltrationData::build_VR_complex(std::vector<unsigned>& times, std::vector<unsigned>& distances, unsigned num_x, unsigned num_y)
+void BifiltrationData::build_VR_complex(const std::vector<unsigned>& times, const std::vector<unsigned>& distances, const unsigned num_x, const unsigned num_y)
 {
     x_grades = num_x;
     y_grades = num_y;
@@ -140,7 +140,7 @@ void BifiltrationData::build_VR_complex(std::vector<unsigned>& times, std::vecto
 }//end build_VR_complex()
 
 //function to add (recursively) a subcomplex of the bifiltration data
-void BifiltrationData::build_VR_subcomplex(std::vector<unsigned>& times, std::vector<unsigned>& distances, std::vector<int>& vertices, unsigned prev_time, unsigned prev_dist)
+void BifiltrationData::build_VR_subcomplex(const std::vector<unsigned>& times, const std::vector<unsigned>& distances, std::vector<int>& vertices, const unsigned prev_time, const unsigned prev_dist)
 {
     //Store the simplex info if it is of dimension (hom_dim - 1), hom_dim, or hom_dim+1. Dimension is vertices.size() - 1
     if (vertices.size() == (unsigned)hom_dim) //simplex of dimension hom_dim - 1
@@ -200,7 +200,7 @@ void BifiltrationData::build_VR_subcomplex(std::vector<unsigned>& times, std::ve
 //builds BifiltrationData representing a bifiltered Vietoris-Rips complex from discrete data
 //requires a list of vertices and a list of distances between pairs of points
 //CONVENTION: the x-coordinate is "degree threshold" for points and the y-coordinate is "scale threshold"
-void BifiltrationData::build_BR_complex(unsigned num_vertices, std::vector<unsigned>& distances, std::vector<unsigned>& degrees, unsigned num_x, unsigned num_y)
+void BifiltrationData::build_BR_complex(const unsigned num_vertices, const std::vector<unsigned>& distances, const std::vector<unsigned>& degrees, const unsigned num_x, const unsigned num_y)
 {
     x_grades = num_x;
     y_grades = num_y;
@@ -233,7 +233,7 @@ void BifiltrationData::build_BR_complex(unsigned num_vertices, std::vector<unsig
 }//end build_BR_complex()
 
 //function to build (recursively) a subcomplex for the BRips complex
-void BifiltrationData::build_BR_subcomplex(std::vector<unsigned>& distances, std::vector<int>& parent_vertices, std::vector<int>& candidates, AppearanceGrades& parent_grades, std::vector<AppearanceGrades>& vertexMultigrades)
+void BifiltrationData::build_BR_subcomplex(const std::vector<unsigned>& distances, std::vector<int>& parent_vertices, const std::vector<int>& candidates, const AppearanceGrades& parent_grades, const std::vector<AppearanceGrades>& vertexMultigrades)
 {
     //Store the simplex info if it is of dimension (hom_dim - 1), hom_dim, or hom_dim+1. Dimension is parent_vertices.size() - 1
     if (parent_vertices.size() == (unsigned)hom_dim) //simplex of dimension hom_dim - 1
@@ -258,12 +258,12 @@ void BifiltrationData::build_BR_subcomplex(std::vector<unsigned>& distances, std
     }
 
     //loop through all points that could be added to form a larger simplex (candidates)
-    for(std::vector<int>::iterator it = candidates.begin(); it != candidates.end(); it++)
+    for(std::vector<int>::const_iterator it = candidates.begin(); it != candidates.end(); it++)
     {
         //Determine the grades of appearance of the clique with parent_vertices and *it
         //First determine the minimal scale parameter necessary for all the edges between the clique parent_vertices, and *it to appear
         unsigned minDist = distances[0];
-        for (std::vector<int>::iterator it2 = parent_vertices.begin(); it2 != parent_vertices.end(); it2++)
+        for (std::vector<int>::const_iterator it2 = parent_vertices.begin(); it2 != parent_vertices.end(); it2++)
             if (distances[(*it) * (*it - 1) / 2 + *it2 + 1] > minDist) //By construction, each of the parent indices are strictly less than *it
                 minDist = distances[(*it) * (*it - 1) / 2 + *it2 + 1];
         AppearanceGrades newGrades;
@@ -271,7 +271,7 @@ void BifiltrationData::build_BR_subcomplex(std::vector<unsigned>& distances, std
 
         //Determine subset of candidates which are still candidates after adding *it
         std::vector<int> newCandidates;
-        for (std::vector<int>::iterator it2 = it + 1; it2 != candidates.end(); it2++)
+        for (std::vector<int>::const_iterator it2 = it + 1; it2 != candidates.end(); it2++)
         {
             if (distances[(*it2) * (*it2 - 1) / 2 + *it + 1] < std::numeric_limits<unsigned>::max()) //We know that *it2 > *it
             {
@@ -289,7 +289,7 @@ void BifiltrationData::build_BR_subcomplex(std::vector<unsigned>& distances, std
 //For each point in a BRips bifiltration, generates an array of incomparable grades of appearance. distances should be of size vertices(vertices - 1)/2
 //Degrees are stored in negative form to align with correct ordering on R
 //Stores result in the vector container "multigrades". Each vector of grades is sorted in reverse lexicographic order
-void BifiltrationData::generateVertexMultigrades(std::vector<AppearanceGrades>& multigrades, unsigned vertices, std::vector<unsigned>& distances, std::vector<unsigned>& degrees)
+void BifiltrationData::generateVertexMultigrades(std::vector<AppearanceGrades>& multigrades, const unsigned vertices, const std::vector<unsigned>& distances, const std::vector<unsigned>& degrees)
 {
     for (unsigned i = 0; i < vertices; i++)
     {
@@ -412,10 +412,10 @@ void BifiltrationData::combineMultigrades(AppearanceGrades& merged, const Appear
 }//end combineMultigrades
 
 //Takes a simplex and its grades of appearance and adds it to ordered_high_grades, ordered_grades, or ordered_low_grades
-void BifiltrationData::addSimplicesToGrade(GradeInfo* orderedGrades, std::vector<int> simplex, AppearanceGrades& grades)
+void BifiltrationData::addSimplicesToGrade(GradeInfo* orderedGrades, const std::vector<int> simplex, const AppearanceGrades& grades)
 {
     GradeInfo::iterator ret;
-    for (AppearanceGrades::iterator it = grades.begin(); it != grades.end(); it++)
+    for (AppearanceGrades::const_iterator it = grades.begin(); it != grades.end(); it++)
     {
         ret = orderedGrades->find(*it);
         if (ret == orderedGrades->end()) //Grade not found

@@ -427,6 +427,8 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
         debug() << "There are" << simplices->size() << "simplices of dimension" << input_params.dim + 1;
     }
 
+    data->free_implicit_rep.reset(new FIRep(*(data->bifiltration_data), input_params.verbosity));
+
     //clean up
     if (hasFunction)
     {
@@ -664,6 +666,7 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
         simplices = data->bifiltration_data->getSimplices(input_params.dim + 1);
         debug() << "There are" << simplices->size() << "simplices of dimension" << input_params.dim + 1;
     }
+    data->free_implicit_rep.reset(new FIRep(*(data->bifiltration_data), input_params.verbosity));
 
     //clean up
     if (hasFunction)
@@ -784,6 +787,8 @@ std::unique_ptr<InputData> InputManager::read_bifiltration(std::ifstream& stream
     }
     data->bifiltration_data->createGradeInfo();
     data->bifiltration_data->set_xy_grades(data->x_exact.size(), data->y_exact.size());
+
+    data->free_implicit_rep.reset(new FIRep(*(data->bifiltration_data), input_params.verbosity));
 
     //clean up
     for (ExactSet::iterator it = x_set.begin(); it != x_set.end(); ++it) {
