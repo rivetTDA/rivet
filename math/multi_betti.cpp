@@ -84,6 +84,10 @@ void MultiBetti::compute(unsigned_matrix& hom_dims, Progress& progress)
     //ensure hom_dims is the correct size
     hom_dims.resize(boost::extents[num_x_grades][num_y_grades]);
 
+    if (num_x_grades <= 0 || num_y_grades <= 0) {
+        return;
+    }
+
     //input to the algorithm: two boundary matrices, with index data
     MapMatrix* bdry1 = bifiltration.get_boundary_mx(dimension);
     IndexMatrix* ind1 = bifiltration.get_index_mx(dimension);
@@ -207,7 +211,7 @@ void MultiBetti::compute(unsigned_matrix& hom_dims, Progress& progress)
 
     //reduce bdry2 and split at (0,0) and record dimension of U
     reduce_spliced(bdry2s, split, ind2s, ind1, zero_list_bdry1, 0, 0, lows_b2split, nonzero_cols_b2split);
-    if (num_x_grades > 1) {
+    if (num_x_grades > 1 && num_y_grades > 1) {
         xi[1][1][1] -= nonzero_cols_b2split; //subtracting dim(U)
     }
 
@@ -310,6 +314,9 @@ void MultiBetti::compute(unsigned_matrix& hom_dims, Progress& progress)
 //computes xi_2 from the values of xi_0, xi_1 and the dimensions
 void MultiBetti::compute_xi2(unsigned_matrix& hom_dims)
 {
+    if (hom_dims.size() == 0) {
+        return;
+    }
     //calculate xi_2 at (0,0)
     int row_sum = xi[0][0][0] - xi[0][0][1];
     xi[0][0][2] = hom_dims[0][0] - row_sum;
