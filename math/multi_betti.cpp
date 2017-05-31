@@ -266,7 +266,7 @@ void MultiBetti::compute(unsigned_matrix& hom_dims, Progress& progress)
         //reduce bdry2 and split at (x,0) and record dimension of U
         nonzero_cols_b2split = 0;
         reduce_spliced(bdry2s, split, ind2s, ind1, zero_list_bdry1, x, 0, lows_b2split, nonzero_cols_b2split);
-        if(x + 1 < num_x_grades) {
+        if(x + 1 < num_x_grades && 1 < num_y_grades) {
             xi[x+1][1][1] -= nonzero_cols_b2split; //subtracting dim(U) at (x+1,1)
         }
 
