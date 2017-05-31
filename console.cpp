@@ -71,8 +71,8 @@ static const char USAGE[] =
       -b --betti                               Print dimension and Betti number information, then exit.        
       --bounds                                 Print lower and upper bounds for the module in <precomputed_file> and exit
       --barcodes <line_file>                   Print barcodes for the line queries in line_file, then exit.
-                                               line_file consists of pairs "m b", each representing a query line.
-                                               m is the slope of the query line, given in degrees (0 to 90); b is the 
+                                               line_file consists of pairs "m o", each representing a query line.
+                                               m is the slope of the query line, given in degrees (0 to 90); o is the
                                                signed distance from the query line to the origin, where the sign is 
                                                positive if the line is above/left of the origin and negative otherwise.
 
