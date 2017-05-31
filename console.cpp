@@ -74,7 +74,7 @@ static const char USAGE[] =
                                                line_file consists of pairs "m b", each representing a query line.
                                                m is the slope of the query line, given in degrees (0 to 90); b is the 
                                                signed distance from the query line to the origin, where the sign is 
-                                               positive if the line is below/right of the origin and negative otherwise.
+                                               positive if the line is above/left of the origin and negative otherwise.
 
                                                Example line_file contents:
 
