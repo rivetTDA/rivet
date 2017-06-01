@@ -523,13 +523,9 @@ void SliceDiagram::draw_barcode(Barcode const& bc, double zero_coord, bool show)
         double start = it->birth - line_zero;
         double end = it->death - line_zero;
 
-        qDebug() << "=====>>>> bar: (" << start << "," << end << ")";
-
         for (unsigned i = 0; i < it->multiplicity; i++) {
             std::pair<double, double> p1 = compute_endpoint(start, num_bars);
             std::pair<double, double> p2 = compute_endpoint(end, num_bars);
-
-            qDebug() << "      (" << p1.first << "," << p1.second << ") --- (" << p2.first << "," << p2.second << ")";
 
             PersistenceBar* bar = new PersistenceBar(this, config_params, start, end, index);
             bar->set_line(p1.first, p1.second, p2.first, p2.second);
@@ -573,33 +569,28 @@ std::pair<double, double> SliceDiagram::compute_endpoint(double coordinate, unsi
     double x = 0;
     double y = 0;
     if (line_vert) {
-    	if (coordinate == std::numeric_limits<double>::infinity()) {
-        	//choose y outside of the viewable window
-    		y = view_length;
-		} else {
-			//find y along the line
-	        y = coordinate * scale_y;
-    	    
-    	}
+        if (coordinate == std::numeric_limits<double>::infinity()) {
+            //choose y outside of the viewable window
+            y = view_length;
+        } else {
+            //find y along the line
+            y = coordinate * scale_y;
+        }
 
-    	//offset from slice line
-    	x = -1 * (int)(step_size * offset);
+        //offset from slice line
+        x = -1 * (int)(step_size * offset);
     } else {
         double angle = atan(line_slope); //angle (data)      NOTE: it would be slightly more efficient to only compute this once per barcode update
         
         if (coordinate == std::numeric_limits<double>::infinity()) {
-        	//choose (x,y) to be along the line, but outside of the viewable window
-        	coordinate = view_length / std::min(scale_x, scale_y);
-        	x = coordinate * cos(angle) * scale_x;
-        	y = coordinate * sin(angle) * scale_y;
-        	qDebug() << "          angle: " << angle << "; view_length: " << view_length << "; x: " << x << "; y:" << y;
-        } else {
-        	//find (x,y) along the line
-			x = coordinate * cos(angle) * scale_x;
-        	y = coordinate * sin(angle) * scale_y;
-        	qDebug() << "          angle: " << angle << "; scale_x: " << scale_x << "; scale_y: " << scale_y << "; x: " << x << "; y:" << y;
+            //set coordinate so that it will be outside the viewable window
+            coordinate = view_length / std::min(scale_x, scale_y);
         }
-
+        
+        //find (x,y) along the line
+        x = coordinate * cos(angle) * scale_x;
+        y = coordinate * sin(angle) * scale_y;
+        
         //offset from slice line
         double pixel_angle = atan(line_slope * scale_y / scale_x); //angle (pixels)    NOTE: it would be slightly more efficient to only compute this once per barcode update
         x -= step_size * offset * sin(pixel_angle);

@@ -289,7 +289,7 @@ void VisualizationWindow::update_persistence_diagram()
         //    TemplatePoint p = template_points->template_points[i];
         //    qDebug().nospace() << "    [" << i << "]: (" << p.x << "," << p.y << ") --> (" << grades.x[p.x] << "," << grades.y[p.y] << ")";
         //}
-        if (verbosity >= 1) {
+        if (verbosity >= 4) {
             dbc.print();
             barcode->print();
         }

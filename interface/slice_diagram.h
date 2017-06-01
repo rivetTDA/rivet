@@ -144,7 +144,6 @@ private:
     ///TODO: the next four values can be obtained from x_grades and y_grades
     double data_xmin, data_xmax, data_ymin, data_ymax; //min and max coordinates of the data
     double line_zero; //coordinate of projection of lower-left corner of line-selection window onto selected line
-//    double data_infty; //data position that is outside of the window, used for drawing bars that extend to infinity
     int view_length;    //width + height of the QGraphicsView that displays the diagram; used for drawing infinite bars
     int max_xi_value; //max value of the bigraded betti numbers
 
