@@ -29,7 +29,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QDebug>
 #include <QGraphicsView>
 
-#include <cmath> //c++ version of math.h; includes overloaded absolute value functions
+#include <algorithm> // std::min
+#include <cmath> 	 // c++ version of math.h; includes overloaded absolute value functions
 #include <limits>
 #include <set>
 #include <sstream>
@@ -85,7 +86,6 @@ void SliceDiagram::create_diagram(const QString x_text, const QString y_text, do
     data_ymin = ymin;
     data_ymax = ymax;
     normalized_coords = norm_coords;
-    data_infty = 10 * (xmax - xmin + ymax - ymin);
 
     //pens and brushes
     QPen blackPen(Qt::black);
@@ -242,6 +242,7 @@ void SliceDiagram::resize_diagram()
     QList<QGraphicsView*> view_list = views();
     int view_width = view_list[0]->width();
     int view_height = view_list[0]->height();
+    view_length = view_width + view_height;
 
     //determine scale
     double left_text_width = std::max(data_ymin_text->boundingRect().width(), data_ymax_text->boundingRect().width());
@@ -252,12 +253,12 @@ void SliceDiagram::resize_diagram()
     if (data_xmax > data_xmin)
         scale_x = diagram_max_width / (data_xmax - data_xmin);
     else //then there is only one x-grade
-        scale_x = 1; ///IS THIS WHAT WE WANT???
+        scale_x = 100; //only matters if there is one x-grade and a few y-grades
 
     if (data_ymax > data_ymin)
         scale_y = diagram_max_height / (data_ymax - data_ymin);
     else //then there is only one x-grade
-        scale_y = 1; ///IS THIS WHAT WE WANT???
+        scale_y = 100; //only matters if there is one y-grade and a few x-grades
 
     if (!normalized_coords) //then we want scale_x and scale_y to be the same (choose the smaller of the two)
     {
@@ -522,9 +523,13 @@ void SliceDiagram::draw_barcode(Barcode const& bc, double zero_coord, bool show)
         double start = it->birth - line_zero;
         double end = it->death - line_zero;
 
+        qDebug() << "=====>>>> bar: (" << start << "," << end << ")";
+
         for (unsigned i = 0; i < it->multiplicity; i++) {
             std::pair<double, double> p1 = compute_endpoint(start, num_bars);
             std::pair<double, double> p2 = compute_endpoint(end, num_bars);
+
+            qDebug() << "      (" << p1.first << "," << p1.second << ") --- (" << p2.first << "," << p2.second << ")";
 
             PersistenceBar* bar = new PersistenceBar(this, config_params, start, end, index);
             bar->set_line(p1.first, p1.second, p2.first, p2.second);
@@ -564,21 +569,36 @@ std::pair<double, double> SliceDiagram::compute_endpoint(double coordinate, unsi
     //difference in offset between consecutive bars (pixel units)
     int step_size = 10;
 
-    //handle infinity
-    if (coordinate == std::numeric_limits<double>::infinity())
-        coordinate = data_infty;
-
     //compute x and y relative to slice line (pixel units)
     double x = 0;
     double y = 0;
     if (line_vert) {
-        y = coordinate * scale_y; //position along the line
-        x = -1 * (int)(step_size * offset);
+    	if (coordinate == std::numeric_limits<double>::infinity()) {
+        	//choose y outside of the viewable window
+    		y = view_length;
+		} else {
+			//find y along the line
+	        y = coordinate * scale_y;
+    	    
+    	}
+
+    	//offset from slice line
+    	x = -1 * (int)(step_size * offset);
     } else {
-        //position along the line
         double angle = atan(line_slope); //angle (data)      NOTE: it would be slightly more efficient to only compute this once per barcode update
-        x = coordinate * cos(angle) * scale_x;
-        y = coordinate * sin(angle) * scale_y;
+        
+        if (coordinate == std::numeric_limits<double>::infinity()) {
+        	//choose (x,y) to be along the line, but outside of the viewable window
+        	coordinate = view_length / std::min(scale_x, scale_y);
+        	x = coordinate * cos(angle) * scale_x;
+        	y = coordinate * sin(angle) * scale_y;
+        	qDebug() << "          angle: " << angle << "; view_length: " << view_length << "; x: " << x << "; y:" << y;
+        } else {
+        	//find (x,y) along the line
+			x = coordinate * cos(angle) * scale_x;
+        	y = coordinate * sin(angle) * scale_y;
+        	qDebug() << "          angle: " << angle << "; scale_x: " << scale_x << "; scale_y: " << scale_y << "; x: " << x << "; y:" << y;
+        }
 
         //offset from slice line
         double pixel_angle = atan(line_slope * scale_y / scale_x); //angle (pixels)    NOTE: it would be slightly more efficient to only compute this once per barcode update
