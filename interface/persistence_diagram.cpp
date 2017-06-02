@@ -44,7 +44,7 @@ PersistenceDiagram::PersistenceDiagram(ConfigParameters* params, QObject* parent
 }
 
 //simply creates all objects; resize_diagram() handles positioning of objects
-void PersistenceDiagram::create_diagram(const QString& filename, int dim)
+void PersistenceDiagram::create_diagram()
 {
     //define pens and brushes
     QPen grayPen(QBrush(Qt::darkGray), 2, Qt::DotLine, Qt::RoundCap, Qt::RoundJoin);
@@ -63,25 +63,21 @@ void PersistenceDiagram::create_diagram(const QString& filename, int dim)
     //create text objects
     inf_text = addSimpleText("inf");
     inf_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+    inf_text->setFont(config_params->diagramFont);
 
     lt_inf_text = addSimpleText("<inf");
     lt_inf_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+    lt_inf_text->setFont(config_params->diagramFont);
 
     inf_count_text = addSimpleText("0");
     inf_count_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
     inf_count_text->setBrush(purpleBrush);
+    inf_count_text->setFont(config_params->diagramFont);
 
     lt_inf_count_text = addSimpleText("0");
     lt_inf_count_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
     lt_inf_count_text->setBrush(purpleBrush);
-
-    file_text = addSimpleText(filename);
-    file_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-
-    std::ostringstream sdim;
-    sdim << "homology dimension: " << dim;
-    dim_text = addSimpleText(QString(sdim.str().data()));
-    dim_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+    lt_inf_count_text->setFont(config_params->diagramFont);
 } //end create_diagram()
 
 //resizes diagram to fill the QGraphicsView; called after every window resize
@@ -139,9 +135,6 @@ void PersistenceDiagram::resize_diagram(double slice_length, double diagram_scal
 
     inf_count_text->setPos(diagram_size + text_padding, inf_text_vpos);
     lt_inf_count_text->setPos(diagram_size + text_padding, lt_inf_text_vpos);
-
-    file_text->setPos(diagram_size - file_text->boundingRect().width() - text_padding, file_text->boundingRect().height() + text_padding);
-    dim_text->setPos(diagram_size - dim_text->boundingRect().width() - text_padding, file_text->pos().y() + dim_text->boundingRect().height() + text_padding);
 
     //set scene rectangle (necessary to prevent auto-scrolling)
     double scene_rect_x = -lt_inf_text->boundingRect().width() - text_padding;

@@ -116,6 +116,13 @@ void VisualizationWindow::start_computation()
     //start the computation in a new thread
     cthread.compute();
 
+    //update text items
+    auto shortName = QString::fromStdString(input_params.shortName);
+    this->setWindowTitle("RIVET - " + shortName);
+    ui->filenameLabel->setText( QStringLiteral("Input file: ").append(shortName) );
+    ui->homdimLabel->setText( QStringLiteral("Homology dimension: %1").arg(input_params.dim) );
+
+
 } //end start_computation()
 
 //this slot is signaled when the xi support points are ready to be drawn
@@ -169,12 +176,9 @@ void VisualizationWindow::augmented_arrangement_ready(std::shared_ptr<Arrangemen
     //TESTING: print arrangement info and verify consistency
     //    arrangement->print_stats();
     //    arrangement->test_consistency();
-    auto shortName = QString::fromStdString(input_params.shortName);
 
-    this->setWindowTitle("RIVET - " + shortName);
-
-    //inialize persistence diagram
-    p_diagram.create_diagram(shortName, input_params.dim);
+    //create persistence diagram
+    p_diagram.create_diagram();
 
     //get the barcode
     BarcodeTemplate dbc = arrangement->get_barcode_template(angle_precise, offset_precise);

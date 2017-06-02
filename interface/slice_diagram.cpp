@@ -102,30 +102,36 @@ void SliceDiagram::create_diagram(const QString x_text, const QString y_text, do
     s_xmin << data_xmin;
     data_xmin_text = addSimpleText(QString(s_xmin.str().data()));
     data_xmin_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+    data_xmin_text->setFont(config_params->diagramFont);
 
     std::ostringstream s_xmax;
     s_xmax.precision(4);
     s_xmax << data_xmax;
     data_xmax_text = addSimpleText(QString(s_xmax.str().data()));
     data_xmax_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+    data_xmax_text->setFont(config_params->diagramFont);
 
     std::ostringstream s_ymin;
     s_ymin.precision(4);
     s_ymin << data_ymin;
     data_ymin_text = addSimpleText(QString(s_ymin.str().data()));
     data_ymin_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+    data_ymin_text->setFont(config_params->diagramFont);
 
     std::ostringstream s_ymax;
     s_ymax.precision(4);
     s_ymax << data_ymax;
     data_ymax_text = addSimpleText(QString(s_ymax.str().data()));
     data_ymax_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+    data_ymax_text->setFont(config_params->diagramFont);
 
     x_label = addSimpleText(x_text);
     x_label->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+    x_label->setFont(config_params->diagramFont);
 
     y_label = addSimpleText(y_text);
     y_label->setTransform(QTransform(0, 1, 1, 0, 0, 0));
+    y_label->setFont(config_params->diagramFont);
 
     //create rectangles for visualizing homology dimensions
     //first, find max dimension

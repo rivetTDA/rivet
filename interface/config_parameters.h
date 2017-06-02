@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define CONFIG_PARAMETERS_H
 
 #include <QColor>
+#include <QFont>
 
 //these parameters control the visualization and are (mostly) user-customizable through the Configure dialog box
 struct ConfigParameters {
@@ -38,6 +39,9 @@ struct ConfigParameters {
     int bettiDotRadius;
     int persistenceDotRadius;
     bool autoDotSize;
+
+    //fonts
+    QFont diagramFont;
 
     //constructor
     ConfigParameters();
