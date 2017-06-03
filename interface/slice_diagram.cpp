@@ -94,7 +94,7 @@ void SliceDiagram::create_diagram(const QString x_text, const QString y_text, do
     QBrush xi1brush(config_params->xi1color);
     QBrush xi2brush(config_params->xi2color);
     QPen grayPen(Qt::gray);
-    QPen highlighter(QBrush(config_params->persistenceHighlightColor), 6);
+    QPen highlighter(QBrush(config_params->persistenceHighlightColor), config_params->sliceLineWidth/2);
 
     //draw labels
     std::ostringstream s_xmin;
@@ -286,6 +286,8 @@ void SliceDiagram::resize_diagram()
         int auto_radius = (int)min_grid / sqrt(max_xi_value);
         if (auto_radius < 3)
             auto_radius = 3;
+        if (auto_radius > 50)
+            auto_radius = 50;
 
         config_params->bettiDotRadius = auto_radius;
         config_params->persistenceDotRadius = auto_radius;
@@ -413,12 +415,20 @@ void SliceDiagram::receive_parameter_change(const QString& xtext, const QString&
         (*it)->setBrush(xi2brush);
 
     //update the slice line highlight
-    QPen highlighter(QBrush(config_params->persistenceHighlightColor), 6);
+    QPen highlighter(QBrush(config_params->persistenceHighlightColor), config_params->sliceLineWidth/2);
     highlight_line->setPen(highlighter);
 
     //update axis labels
     x_label->setText(xtext);
     y_label->setText(ytext);
+
+    //update fonts
+    data_xmin_text->setFont(config_params->diagramFont);
+    data_xmax_text->setFont(config_params->diagramFont);
+    data_ymin_text->setFont(config_params->diagramFont);
+    data_ymax_text->setFont(config_params->diagramFont);
+    x_label->setFont(config_params->diagramFont);
+    y_label->setFont(config_params->diagramFont);
 
     //update diagram
     resize_diagram();
@@ -568,7 +578,7 @@ void SliceDiagram::update_barcode(Barcode const& bc, double zero_coord, bool sho
 std::pair<double, double> SliceDiagram::compute_endpoint(double coordinate, unsigned offset)
 {
     //difference in offset between consecutive bars (pixel units)
-    int step_size = 10;
+    int step_size = config_params->persistenceBarWidth + config_params->persistenceBarSpace;
 
     //handle infinity
     if (coordinate == std::numeric_limits<double>::infinity())

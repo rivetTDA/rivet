@@ -49,7 +49,7 @@ void PersistenceDiagram::create_diagram()
     //define pens and brushes
     QPen grayPen(QBrush(Qt::darkGray), 2, Qt::DotLine, Qt::RoundCap, Qt::RoundJoin);
     QPen thinPen(QBrush(Qt::darkGray), 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
-    QPen slicePen(QBrush(config_params->sliceLineColor), 3, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+    QPen slicePen(QBrush(config_params->sliceLineColor), config_params->sliceLineWidth, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
     QBrush purpleBrush(QColor(config_params->persistenceColor.rgb()));
 
     //create persistence diagram structure
@@ -83,13 +83,19 @@ void PersistenceDiagram::create_diagram()
 //resizes diagram to fill the QGraphicsView; called after every window resize
 void PersistenceDiagram::resize_diagram(double slice_length, double diagram_scale)
 {
+    line_size = slice_length / sqrt(2); //divide by sqrt(2) because the line is drawn at a 45-degree angle
+    scale = diagram_scale / sqrt(2); //similarly, divide by sqrt(2)
+
+    resize_diagram();
+}
+
+//resizes diagram to fill the QGraphicsView; called after every window resize
+void PersistenceDiagram::resize_diagram()
+{
     //parameters
     int scene_padding = 10; //pixels (minimum white space between diagram objects and edge of viewing window)
     int text_padding = 4; //pixels (white space on each side of text items)
     int number_space = 30; //pixels (horizontal space reserved for counts of points above diagram)
-
-    line_size = slice_length / sqrt(2); //divide by sqrt(2) because the line is drawn at a 45-degree angle
-    scale = diagram_scale / sqrt(2); //similarly, divide by sqrt(2)
 
     //get dimensions of the QGraphicsView
     QList<QGraphicsView*> view_list = views();
@@ -380,7 +386,7 @@ void PersistenceDiagram::receive_dot_deselection()
 void PersistenceDiagram::receive_parameter_change()
 {
     //update the line highlight
-    QPen slicePen(QBrush(config_params->sliceLineColor), 3);
+    QPen slicePen(QBrush(config_params->sliceLineColor), config_params->sliceLineWidth);
     blue_line->setPen(slicePen);
 
     //update persistence dots
@@ -390,4 +396,13 @@ void PersistenceDiagram::receive_parameter_change()
     QBrush persistenceBrush(QColor(config_params->persistenceColor.rgb()));
     inf_count_text->setBrush(persistenceBrush);
     lt_inf_count_text->setBrush(persistenceBrush);
+
+    //update fonts
+    inf_text->setFont(config_params->diagramFont);
+    lt_inf_text->setFont(config_params->diagramFont);
+    inf_count_text->setFont(config_params->diagramFont);
+    lt_inf_count_text->setFont(config_params->diagramFont);
+
+    //update diagram
+    resize_diagram();
 }

@@ -27,6 +27,7 @@ struct ConfigParameters;
 
 #include <QColor>
 #include <QDialog>
+#include <QFont>
 #include <QString>
 
 namespace Ui {
@@ -71,6 +72,8 @@ private slots:
 
     void on_AutoDotSizeCheckBox_clicked(bool checked);
 
+    void on_fontSizeSpinBox_valueChanged(int arg1);
+
 private:
     Ui::ConfigureDialog* ui;
     ConfigParameters& config_params;
@@ -89,6 +92,7 @@ private:
     bool autoDots;
     QString xlabel;
     QString ylabel;
+    QFont dgmFont;
 };
 
 #endif // CONFIGUREDIALOG_H

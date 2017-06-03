@@ -32,7 +32,10 @@ ConfigParameters::ConfigParameters()
     , bettiDotRadius(5) //radius of dot representing xi_0 = 1 or xi_1 = 1
     , persistenceDotRadius(5) //radius of dot representing one homology class in persistence diagram
     , autoDotSize(true) //automatic dot sizing is initially on
+    , sliceLineWidth(5) //width of selected line (pixels)
+    , persistenceBarWidth(4) //width of persistence bars (pixels)
+    , persistenceBarSpace(5) //space between persistence bars(pixels)
     , diagramFont() //system default font
 {
-    diagramFont.setPointSize(14);   // SET DEFAULT FONT SIZE HERE
+    diagramFont.setPointSize(12);   // SET DEFAULT FONT SIZE HERE
 }

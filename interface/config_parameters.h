@@ -39,6 +39,9 @@ struct ConfigParameters {
     int bettiDotRadius;
     int persistenceDotRadius;
     bool autoDotSize;
+    int sliceLineWidth;
+    int persistenceBarWidth;
+    int persistenceBarSpace;
 
     //fonts
     QFont diagramFont;

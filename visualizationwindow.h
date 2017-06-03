@@ -130,7 +130,6 @@ private:
     double project(TemplatePoint& pt, double angle, double offset, std::vector<double> x_grades, std::vector<double> y_grades);
 
     //computes the projection of the lower-left corner of the line-selection window onto the specified line
-    // TESTING AS REPLACEMENT FOR SliceDiagram::get_zero()
     double project_zero(double angle, double offset, double x_0, double y_0);
 
     //other items

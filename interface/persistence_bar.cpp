@@ -47,14 +47,14 @@ QPainterPath PersistenceBar::shape() const
     QPainterPathStroker stroker;
     path.moveTo(0, 0);
     path.lineTo(dx, dy);
-    stroker.setWidth(10);
+    stroker.setWidth(config_params->persistenceBarWidth);
     return stroker.createStroke(path);
 }
 
 void PersistenceBar::paint(QPainter* painter, const QStyleOptionGraphicsItem* /*unused*/, QWidget* /*unused*/)
 {
     QPen pen(config_params->persistenceColor);
-    pen.setWidth(4);
+    pen.setWidth(config_params->persistenceBarWidth);
 
     if (pressed) {
         pen.setColor(config_params->persistenceHighlightColor);
