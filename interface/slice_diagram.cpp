@@ -284,10 +284,11 @@ void SliceDiagram::resize_diagram()
         int min_grid = (x_grid < y_grid) ? x_grid : y_grid;
 
         int auto_radius = (int)min_grid / sqrt(max_xi_value);
+        int max_radius = (int)( std::min(diagram_max_height, diagram_max_width)/20 );
         if (auto_radius < 3)
             auto_radius = 3;
-        if (auto_radius > 50)
-            auto_radius = 50;
+        if (auto_radius > max_radius)
+            auto_radius = max_radius;
 
         config_params->bettiDotRadius = auto_radius;
         config_params->persistenceDotRadius = auto_radius;
