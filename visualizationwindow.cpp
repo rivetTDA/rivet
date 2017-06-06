@@ -141,10 +141,12 @@ void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMe
         slice_diagram.add_point(grades.x[point.x], grades.y[point.y], point.zero, point.one, point.two);
 
     //create the SliceDiagram
+    config_params.xLabel = QString::fromStdString(template_points->x_label);
+    config_params.yLabel = QString::fromStdString(template_points->y_label);
     if (!slice_diagram.is_created()) {
         slice_diagram.create_diagram(
-            QString::fromStdString(template_points->x_label),
-            QString::fromStdString(template_points->y_label),
+            config_params.xLabel,
+            config_params.yLabel,
             grades.x.front(), grades.x.back(),
             grades.y.front(), grades.y.back(),
             ui->normCoordCheckBox->isChecked(), template_points->homology_dimensions);
@@ -378,8 +380,7 @@ void VisualizationWindow::on_actionConfigure_triggered()
     configBox->exec();
 
     if (line_selection_ready) {
-        slice_diagram.receive_parameter_change(QString::fromStdString(template_points->x_label),
-            QString::fromStdString(template_points->y_label));
+        slice_diagram.receive_parameter_change();
 
         if (persistence_diagram_drawn)
             p_diagram.receive_parameter_change();

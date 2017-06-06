@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QColor>
 #include <QFont>
+#include <QString>
 
 //these parameters control the visualization and are (mostly) user-customizable through the Configure dialog box
 struct ConfigParameters {
@@ -42,6 +43,10 @@ struct ConfigParameters {
     int sliceLineWidth;
     int persistenceBarWidth;
     int persistenceBarSpace;
+
+    //text
+    QString xLabel;
+    QString yLabel;
 
     //fonts
     QFont diagramFont;

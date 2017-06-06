@@ -41,8 +41,6 @@ ConfigureDialog::ConfigureDialog(ConfigParameters& c_params, InputParameters& i_
     , bettiRadius(config_params.bettiDotRadius)
     , perRadius(config_params.persistenceDotRadius)
     , autoDots(config_params.autoDotSize)
-    , xlabel(QString::fromStdString(input_params.x_label))
-    , ylabel(QString::fromStdString(input_params.y_label))
     , dgmFont(config_params.diagramFont)
 {
     ui->setupUi(this);
@@ -107,8 +105,8 @@ ConfigureDialog::ConfigureDialog(ConfigParameters& c_params, InputParameters& i_
     ui->barSpacingSpinBox->setValue(config_params.persistenceBarSpace);
 
     //set labels to current labels
-    ui->xaxisText->setText(xlabel);
-    ui->yaxisText->setText(ylabel);
+    ui->xaxisText->setText(config_params.xLabel);
+    ui->yaxisText->setText(config_params.yLabel);
 
     //set font properties
     ui->fontSizeSpinBox->setValue(dgmFont.pointSize());
@@ -143,10 +141,8 @@ void ConfigureDialog::on_okButton_clicked()
     config_params.persistenceBarWidth = ui->barWidthSpinBox->value();
     config_params.persistenceBarSpace = ui->barSpacingSpinBox->value();
     config_params.diagramFont = dgmFont;
-
-    //update axis labels in input_params
-    input_params.x_label = xlabel.toUtf8().constData();
-    input_params.y_label = ylabel.toUtf8().constData();
+    config_params.xLabel = ui->xaxisText->text();
+    config_params.yLabel = ui->yaxisText->text();
 
     //close the dialog box
     close();
@@ -333,16 +329,6 @@ void ConfigureDialog::on_bettiDotSpinBox_valueChanged(int arg1)
 void ConfigureDialog::on_persistenceDotSpinBox_valueChanged(int arg1)
 {
     perRadius = arg1;
-}
-
-void ConfigureDialog::on_xaxisText_editingFinished()
-{
-    xlabel = ui->xaxisText->text();
-}
-
-void ConfigureDialog::on_yaxisText_editingFinished()
-{
-    ylabel = ui->yaxisText->text();
 }
 
 void ConfigureDialog::on_AutoDotSizeCheckBox_clicked(bool checked)

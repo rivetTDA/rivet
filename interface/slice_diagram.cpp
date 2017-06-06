@@ -77,7 +77,7 @@ void SliceDiagram::clear_points()
 }
 
 //NOTE: create_diagram() simply creates all objects; resize_diagram() handles positioning of objects
-void SliceDiagram::create_diagram(const QString x_text, const QString y_text, double xmin, double xmax, double ymin, double ymax, bool norm_coords, unsigned_matrix& hom_dims)
+void SliceDiagram::create_diagram(const QString& x_text, const QString& y_text, double xmin, double xmax, double ymin, double ymax, bool norm_coords, unsigned_matrix& hom_dims)
 {
     //set data-dependent parameters
     data_xmin = xmin;
@@ -402,7 +402,7 @@ void SliceDiagram::redraw_dots()
 } //end redraw_dots()
 
 //updates the diagram after a change in configuration parameters
-void SliceDiagram::receive_parameter_change(const QString& xtext, const QString& ytext)
+void SliceDiagram::receive_parameter_change()
 {
     //update colors of the xi dots (necessary because I didn't override their paint() function)
     QBrush xi0brush(config_params->xi0color);
@@ -420,8 +420,8 @@ void SliceDiagram::receive_parameter_change(const QString& xtext, const QString&
     highlight_line->setPen(highlighter);
 
     //update axis labels
-    x_label->setText(xtext);
-    y_label->setText(ytext);
+    x_label->setText(config_params->xLabel);
+    y_label->setText(config_params->yLabel);
 
     //update fonts
     data_xmin_text->setFont(config_params->diagramFont);
