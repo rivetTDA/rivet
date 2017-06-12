@@ -119,7 +119,7 @@ FIRep::FIRep(BifiltrationData& bd, int v)
     {
         int x;
         int y;
-        std::vector<int> boundary;
+        std::vector<unsigned> boundary;
 
         bool operator<(generator other) const
         {
@@ -228,6 +228,33 @@ FIRep::FIRep(BifiltrationData& bd, int v)
     if (verbosity >= 8) {
         debug() << "Created FIRep";
     }
+    if (verbosity >= 10) {
+        boundary_mx_0->print();
+        boundary_mx_1->print();
+    }
+}
+
+FIRep::FIRep(BifiltrationData& bd, int t, int s, int r, const std::vector<std::vector<unsigned> >& d2, const std::vector<std::vector<unsigned> >& d1,
+            const std::vector<unsigned> x_values, const std::vector<unsigned> y_values, int v)
+            : hom_dim(bd.hom_dim), verbosity(v), x_grades(bd.num_x_grades()), y_grades(bd.num_y_grades()), bifiltration_data(bd)
+{
+    boundary_mx_1 = new MapMatrix(s, t);
+    for (int i = 0; i < t; i++)
+    {
+        write_boundary_column(boundary_mx_1, d2[i], i);
+        indexes_1.push_back(Grade(x_values[i], y_values[i]));
+    }
+
+    boundary_mx_0 = new MapMatrix(r, s);
+    for (int i = 0; i < s; i++)
+    {
+        write_boundary_column(boundary_mx_0, d1[i], i);
+        indexes_0.push_back(Grade(x_values[i + t], y_values[i + t]));
+    }
+
+    if (verbosity >= 8)
+        debug() << "Created FIRep";
+
     if (verbosity >= 10) {
         boundary_mx_0->print();
         boundary_mx_1->print();
@@ -344,7 +371,7 @@ void FIRep::write_boundary_column(MapMatrix* mat, const std::vector<int>& vertic
 } //end write_col();
 
 //writes boundary information given boundary entries in column col of matrix mat
-void FIRep::write_boundary_column(MapMatrix* mat, const std::vector<int>& entries, int col)
+void FIRep::write_boundary_column(MapMatrix* mat, const std::vector<unsigned>& entries, unsigned col)
 {
     //find all facets of this simplex
     for (unsigned k = 0; k < entries.size(); k++) {

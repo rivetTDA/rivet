@@ -17,7 +17,7 @@ struct Grade
 {
     int x;
     int y;
-    int dim_index; //The index of this point relative to other grades of appearance in the same dimension
+    unsigned dim_index; //The index of this point relative to other grades of appearance in the same dimension
     bool operator<(Grade other) const
     {
         if (y != other.y)

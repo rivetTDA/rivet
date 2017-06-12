@@ -42,6 +42,9 @@ class FIRep {
 public:
     FIRep(BifiltrationData& bd, int v); //constructor; requires verbosity parameter
 
+    FIRep(BifiltrationData& bd, int t, int s, int r, const std::vector<std::vector<unsigned> >& d2, const std::vector<std::vector<unsigned> >& d1,
+            const std::vector<unsigned> x_values, const std::vector<unsigned> y_values, int v); //constructor
+
     ~FIRep(); //destructor
 
     //returns a matrix of boundary information for simplices
@@ -75,7 +78,7 @@ private:
 
     void write_boundary_column(MapMatrix* mat, const std::vector<int>& vertices, SimplexInfo* low_simplices, int col); //writes boundary information for simplex represented by sim in column col of matrix mat
 
-    void write_boundary_column(MapMatrix* mat, const std::vector<int>& entries, int col); //writes boundary information given boundary entries in column col of matrix mat
+    void write_boundary_column(MapMatrix* mat, const std::vector<unsigned>& entries, unsigned col); //writes boundary information given boundary entries in column col of matrix mat
 };
 
 #endif // __SimplexTree_H__

@@ -113,6 +113,8 @@ InputManager::InputManager(InputParameters& params)
         std::bind(&InputManager::read_discrete_metric_space, this, std::placeholders::_1, std::placeholders::_2) });
     register_file_type(FileType{ "bifiltration", "bifiltration data", true,
         std::bind(&InputManager::read_bifiltration, this, std::placeholders::_1, std::placeholders::_2) });
+    register_file_type(FileType{ "firep", "free implicit representation data", true,
+        std::bind(&InputManager::read_firep, this, std::placeholders::_1, std::placeholders::_2) });
     //    register_file_type(FileType {"RIVET_0", "pre-computed RIVET data", false,
     //                                 std::bind(&InputManager::read_RIVET_data, this, std::placeholders::_1, std::placeholders::_2) });
 }
@@ -801,6 +803,150 @@ std::unique_ptr<InputData> InputManager::read_bifiltration(std::ifstream& stream
     }
     return data;
 } //end read_bifiltration()
+
+//reads a firep and stores in FIRep, does not create BifiltrationData
+std::unique_ptr<InputData> InputManager::read_firep(std::ifstream& stream, Progress& progress)
+{
+    std::unique_ptr<InputData> data(new InputData);
+    FileInputReader reader(stream);
+    if (verbosity >= 2) {
+        debug() << "InputManager: Found a firep file.\n";
+    }
+
+    //Skip file type line
+    reader.next_line();
+
+    data->bifiltration_data.reset(new BifiltrationData(input_params.dim, input_params.verbosity)); //Will be dummy bifiltration with no stored data
+
+    //temporary data structures to store grades
+    ExactSet x_set; //stores all unique x-values; must DELETE all elements later!
+    ExactSet y_set; //stores all unique x-values; must DELETE all elements later!
+    std::pair<ExactSet::iterator, bool> ret; //for return value upon insert()
+
+    //Temporary data structures to store matrices
+    int t, s, r;
+    std::vector<exact> x_values, y_values;
+    std::vector<std::vector<unsigned> > d2, d1; //matrices d2: hom_dim+1->hom_dim, d1: hom_dim->hom_dim-1
+
+    //read simplices
+    while (reader.has_next_line()) {
+        auto line_info = reader.next_line();
+        try {
+            //read the label for x-axis
+            data->x_label = join(line_info.first);
+            line_info = reader.next_line();
+            //read the label for y-axis
+            data->y_label = join(line_info.first);
+
+            //Read dimensions of matrices
+            line_info = reader.next_line();
+            std::vector<std::string> tokens = line_info.first;
+
+            if (tokens.size() != 3) {
+                throw InputError(line_info.second,
+                    "Expected 3 tokens");
+            }
+
+            t = std::stoi(line_info.first[0]);
+            s = std::stoi(line_info.first[1]);
+            r = std::stoi(line_info.first[2]);
+
+            //read matrices
+            //Read d2 first
+            x_values.reserve(t + s);
+            y_values.reserve(t + s);
+            for (int i = 0; i < t; i++) {
+                d2.push_back(std::vector<unsigned>());
+                line_info = reader.next_line();
+                tokens = line_info.first;
+                x_values.push_back(str_to_exact(tokens.at(0)));
+                y_values.push_back(str_to_exact(tokens.at(1)));
+                //store value, if it doesn't exist already
+                ret = x_set.insert(new ExactValue(x_values[i]));
+                //remember that point i has this value
+                (*(ret.first))->indexes.push_back(i);
+
+                //store value, if it doesn't exist already
+                ret = y_set.insert(new ExactValue(y_values[i]));
+                //remember that point i has this value
+                (*(ret.first))->indexes.push_back(i);
+
+                //Process ith column
+                if (tokens.at(2).at(0) != ';') {
+                    throw InputError(line_info.second, "Expected ';' after coordinates");
+                }
+                for (unsigned pos = 3; pos < tokens.size(); pos++) {
+                    int v = std::stoi(tokens[pos]);
+                    if (v < 0 || v >= s) {
+                        throw InputError(line_info.second, "Matrix index input out of bounds.");
+                    }
+                    d2[i].push_back(v);
+                }
+            }
+
+            //read d1
+            for (int i = 0; i < s; i++) {
+                d1.push_back(std::vector<unsigned>());
+                line_info = reader.next_line();
+                tokens = line_info.first;
+                x_values.push_back(str_to_exact(tokens.at(0)));
+                y_values.push_back(str_to_exact(tokens.at(1)));
+                //store value, if it doesn't exist already
+                ret = x_set.insert(new ExactValue(x_values[i + t]));
+                //remember that point i has this value
+                (*(ret.first))->indexes.push_back(i + t);
+
+                //store value, if it doesn't exist already
+                ret = y_set.insert(new ExactValue(y_values[i + t]));
+                //remember that point i has this value
+                (*(ret.first))->indexes.push_back(i + t);
+
+                //Process ith column
+                if (tokens.at(2).at(0) != ';') {
+                    throw InputError(line_info.second, "Expected ';' after coordinates");
+                }
+                for (unsigned pos = 3; pos < tokens.size(); pos++) {
+                    int v = std::stoi(tokens[pos]);
+                    if (v < 0 || v >= r) {
+                        throw InputError(line_info.second, "Matrix index input out of bounds.");
+                    }
+                    d1[i].push_back(v);
+                }
+            }
+        } catch (std::exception& e) {
+            throw InputError(line_info.second, "Could not read matrix: " + std::string(e.what()));
+        }
+    }
+
+    if (verbosity >= 4) {
+        debug() << "  Finished reading data.";
+    }
+
+    progress.advanceProgressStage(); //advance progress box to stage 2: building bifiltration
+
+    //build vectors of discrete grades, using bins
+    unsigned max_unsigned = std::numeric_limits<unsigned>::max();
+    std::vector<unsigned> x_indexes(t + s, max_unsigned); //x_indexes[i] gives the discrete x-index for simplex i in the input order
+    std::vector<unsigned> y_indexes(t + s, max_unsigned); //y_indexes[i] gives the discrete y-index for simplex i in the input order
+
+    build_grade_vectors(*data, x_set, x_indexes, data->x_exact, input_params.x_bins);
+    build_grade_vectors(*data, y_set, y_indexes, data->y_exact, input_params.y_bins);
+
+    //Set x_grades and y_grades
+    data->bifiltration_data->set_xy_grades(data->x_exact.size(), data->y_exact.size());
+    data->free_implicit_rep.reset(new FIRep(*(data->bifiltration_data), t, s, r, d2, d1, x_indexes, y_indexes, input_params.verbosity));
+
+    //clean up
+    for (ExactSet::iterator it = x_set.begin(); it != x_set.end(); ++it) {
+        ExactValue* p = *it;
+        delete p;
+    }
+    for (ExactSet::iterator it = y_set.begin(); it != y_set.end(); ++it) {
+        ExactValue* p = *it;
+        delete p;
+    }
+    return data;
+} //end read_firep()
 
 //reads a file of previously-computed data from RIVET
 std::unique_ptr<InputData> InputManager::read_RIVET_data(std::ifstream& stream, Progress& progress)
