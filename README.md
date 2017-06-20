@@ -143,29 +143,29 @@ Open the Bash shell and install dependencies. Use the following command to insta
 
     sudo apt-get install cmake build-essential qt5-default qt5-qmake qtbase5-dev-tools 
 
-The Ubuntu 16.04 repositories include Boost 1.58, but RIVET requires Boost 1.60 or newer. The following instructions install Boost 1.64 into `/usr/local/boost_1_60_4/`:
+The Ubuntu 16.04 repositories include Boost 1.58, but RIVET requires Boost 1.60 or newer. The following instructions install Boost 1.64 into `/usr/local/boost_1_64_0/`:
 
-1. Download a compressed Boost into your home directory:
+1. Download a compressed Boost file into your home directory:
 
-    cd ~
-    wget "https://dl.bintray.com/boostorg/release/1.64.0/source/boost_1_64_0.tar.bz2"
+        cd ~
+        wget "https://dl.bintray.com/boostorg/release/1.64.0/source/boost_1_64_0.tar.bz2"
 
 2. Unpack Boost to `/usr/local/`:
 
-		  cd /usr/local
-		  sudo tar xvjf ~/boost_1_64_0.tar.bz2
-		  cd boost_1_64_0
+        cd /usr/local
+        sudo tar xvjf ~/boost_1_64_0.tar.bz2
+        cd boost_1_64_0
 
 3. Setup Boost:
 
-  		sudo ./boostrap.sh --prefix=/usr/local
-		  sudo ./b2
-	  	sudo ./b2 install
+        sudo ./boostrap.sh --prefix=/usr/local
+        sudo ./b2
+        sudo ./b2 install
 
-4.	Return to home directory and delete the compressed Boost file.
+4. Return to home directory and delete the compressed Boost file.
 
-    cd ~
-    rm boost_1_64_0.tar.bz2
+        cd ~
+        rm boost_1_64_0.tar.bz2
 
 In order to use the RIVET viewer, you must install an X server such as [Xming](https://sourceforge.net/projects/xming/).
 
@@ -176,7 +176,7 @@ It is also necessary to set two environment variables, as follows:
 
 These environment variables will be reset when you close the Bash shell. To avoid having to run the two lines above when you reopen the shell, add these lines to the end of the file `~/.bashrc`.
 
-You are now ready to build RIVET. Follow the instructions under [Building on Ubuntu: Building RIVET](https://github.com/rivetTDA/rivet/#building-rivet).
+You are now ready to build RIVET. Follow the instructions in the section of this readme under the heading [Building on Ubuntu: Building RIVET](https://github.com/rivetTDA/rivet/#building-rivet).
 
 
 ## Contributing
