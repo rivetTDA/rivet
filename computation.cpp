@@ -54,7 +54,11 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(ComputationInput& in
             }
         }
     }
-    input.bifiltration().print_bifiltration();   //TESTING ONLY
+
+    if (verbosity >= 10)
+    {
+        input.bifiltration().print_bifiltration();   //TESTING ONLY
+    }
 
 
 
