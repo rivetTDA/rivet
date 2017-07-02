@@ -257,7 +257,13 @@ FIRep::FIRep(BifiltrationData& bd, int t, int s, int r, const std::vector<std::v
 
     if (verbosity >= 10) {
         boundary_mx_0->print();
+        for (int i = 0; i < s; i++) {
+            debug() << indexes_0[i].x << " " << indexes_0[i].y;
+        }
         boundary_mx_1->print();
+        for (int i = 0; i < t; i++) {
+            debug() << indexes_1[i].x << " " << indexes_1[i].y;
+        }
     }
 }
 
