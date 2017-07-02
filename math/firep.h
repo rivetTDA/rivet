@@ -64,6 +64,8 @@ public:
     unsigned num_x_grades();                     //returns the number of unique x-coordinates of the multi-grades
     unsigned num_y_grades();                     //returns the number of unique y-coordinates of the multi-grades
 
+    void print(); //Print the matrices and appearance grades
+
     const int hom_dim;      //the dimension of homology to be computed; max dimension of simplices is one more than this
     const unsigned verbosity; //controls display of output, for debugging
 

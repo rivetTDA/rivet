@@ -562,7 +562,7 @@ void MapMatrix::copy_cols_from(MapMatrix* other, int src_col, int dest_col)
         }
     }
     else
-        columns[src_col] = NULL; //this shouldn't be necessary
+        columns[dest_col] = NULL; //this shouldn't be necessary
 }//end copy_cols_from()
 
 //copies columns with indexes in [first, last] from other, inserting them in this matrix with the same column indexes

@@ -229,8 +229,7 @@ FIRep::FIRep(BifiltrationData& bd, int v)
         debug() << "Created FIRep";
     }
     if (verbosity >= 10) {
-        boundary_mx_0->print();
-        boundary_mx_1->print();
+        print();
     }
 }
 
@@ -256,14 +255,7 @@ FIRep::FIRep(BifiltrationData& bd, int t, int s, int r, const std::vector<std::v
         debug() << "Created FIRep";
 
     if (verbosity >= 10) {
-        boundary_mx_0->print();
-        for (int i = 0; i < s; i++) {
-            debug() << indexes_0[i].x << " " << indexes_0[i].y;
-        }
-        boundary_mx_1->print();
-        for (int i = 0; i < t; i++) {
-            debug() << indexes_1[i].x << " " << indexes_1[i].y;
-        }
+        print();
     }
 }
 
@@ -329,6 +321,7 @@ MapMatrix_Perm* FIRep::get_boundary_mx(std::vector<int>& coface_order, unsigned 
 //    each vector is a map : dim_index --> order_index for simplices of the given dimension
 //        if order[i] == -1, then simplex with dim_index i is NOT represented in the boundary matrix
 //    each unsigned is the number of simplices in the corresponding order (i.e., the number of entries in the vector that are NOT -1)
+//TODO: Optimize
 MapMatrix_Perm* FIRep::get_boundary_mx(std::vector<int>& face_order, unsigned num_faces, std::vector<int>& coface_order, unsigned num_cofaces)
 {
     //create the matrix
@@ -463,4 +456,13 @@ unsigned FIRep::num_x_grades()
 unsigned FIRep::num_y_grades()
 {
     return y_grades;
+}
+
+//Print the matrices and appearance grades
+void FIRep::print()
+{
+    boundary_mx_0->print();
+    get_index_mx(hom_dim)->print();
+    boundary_mx_1->print();
+    get_index_mx(hom_dim + 1)->print();
 }
