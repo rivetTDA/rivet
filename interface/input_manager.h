@@ -49,7 +49,7 @@ struct ExactValue {
     double double_value;
     exact exact_value;
 
-    std::vector<unsigned> indexes; //indexes of points corresponding to this value (e.g. points whose birth time is this value)
+    mutable std::vector<unsigned> indexes; //indexes of points corresponding to this value (e.g. points whose birth time is this value)
 
     static double epsilon;
 
@@ -83,19 +83,19 @@ struct ExactValue {
 
 //comparator for ExactValue pointers
 struct ExactValueComparator {
-    bool operator()(const ExactValue* lhs, const ExactValue* rhs) const
+    bool operator()(const ExactValue& lhs, const ExactValue& rhs) const
     {
         //if the two double values are nearly equal, then compare exact values
-        if (ExactValue::almost_equal(lhs->double_value, rhs->double_value))
-            return lhs->exact_value < rhs->exact_value;
+        if (ExactValue::almost_equal(lhs.double_value, rhs.double_value))
+            return lhs.exact_value < rhs.exact_value;
 
         //otherwise, compare double values
-        return lhs->double_value < rhs->double_value;
+        return lhs.double_value < rhs.double_value;
     }
 };
 
 //ExactSet will help sort grades
-typedef std::set<ExactValue*, ExactValueComparator> ExactSet;
+typedef std::set<ExactValue, ExactValueComparator> ExactSet;
 
 struct InputData;
 

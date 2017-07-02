@@ -19,7 +19,7 @@ Before starting to build RIVET, you will need to have the following installed:
 * Qt 5
 * Boost (including boost serialization; version 1.60 or newer required)
 
-Below we give step-by-step instructions for installing these required dependencies and building RIVET on Ubuntu and Mac OS X.  Currently, use of RIVET in Windows is not supported; we are working on this.
+Below we give step-by-step instructions for installing these required dependencies and building RIVET on Ubuntu and Mac OS X.  Building RIVET on Windows is not yet supported (we are working on this), but it is possible to build RIVET using the Bash shell on Windows 10.
 
 ## Building On Ubuntu
 
@@ -134,6 +134,50 @@ Our experience has been that if Homebrew is installed before XCode, then running
 To solve the problem, try running:      
 
     sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
+
+## Building in the Bash Shell on Windows 10
+
+First, ensure that you have the [Windows 10 Creators Update](https://support.microsoft.com/en-us/instantanswers/d4efb316-79f0-1aa1-9ef3-dcada78f3fa0/get-the-windows-10-creators-update). Then activate the [Windows 10 Bash Shell](https://www.howtogeek.com/249966/how-to-install-and-use-the-linux-bash-shell-on-windows-10/). This will provide a Bash shell with Ubuntu 16.04 inside of Windows 10.
+
+Open the Bash shell and install dependencies. Use the following command to install cmake, a compiler, and Qt5:
+
+    sudo apt-get install cmake build-essential qt5-default qt5-qmake qtbase5-dev-tools 
+
+The Ubuntu 16.04 repositories include Boost 1.58, but RIVET requires Boost 1.60 or newer. The following instructions install Boost 1.64 into `/usr/local/boost_1_64_0/`:
+
+1. Download a compressed Boost file into your home directory:
+
+        cd ~
+        wget "https://dl.bintray.com/boostorg/release/1.64.0/source/boost_1_64_0.tar.bz2"
+
+2. Unpack Boost to `/usr/local/`:
+
+        cd /usr/local
+        sudo tar xvjf ~/boost_1_64_0.tar.bz2
+        cd boost_1_64_0
+
+3. Setup Boost:
+
+        sudo ./boostrap.sh --prefix=/usr/local
+        sudo ./b2
+        sudo ./b2 install
+
+4. Return to home directory and delete the compressed Boost file.
+
+        cd ~
+        rm boost_1_64_0.tar.bz2
+
+In order to use the RIVET viewer, you must install an X server such as [Xming](https://sourceforge.net/projects/xming/).
+
+It is also necessary to set two environment variables, as follows:
+
+    export LD_LIBRARY_PATH=/usr/local/boost_1_64_0/stage/lib/:$LD_LIBRARY_PATH
+    export DISPLAY=:0
+
+These environment variables will be reset when you close the Bash shell. To avoid having to run the two lines above when you reopen the shell, add these lines to the end of the file `~/.bashrc`.
+
+You are now ready to build RIVET. Follow the instructions in the section of this readme under the heading [Building on Ubuntu: Building RIVET](https://github.com/rivetTDA/rivet/#building-rivet).
+
 
 ## Contributing
     

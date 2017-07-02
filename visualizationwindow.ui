@@ -291,6 +291,9 @@
             <property name="text">
              <string>&amp;Fit to window</string>
             </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
            </widget>
           </item>
           <item>
@@ -300,6 +303,9 @@
             </property>
             <property name="text">
              <string>Show &amp;barcode</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
             </property>
            </widget>
           </item>

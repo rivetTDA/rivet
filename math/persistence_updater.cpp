@@ -345,6 +345,8 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<std::shared_ptr<H
     delete U_low;
     delete U_high;
 
+    delete R_low_initial;
+    delete R_high_initial;
 } //end store_barcodes_with_reset()
 
 //function to set the "edge weights" for each anchor line
@@ -494,6 +496,9 @@ void PersistenceUpdater::store_multigrades(IndexMatrix* ind, bool low)
 //  RETURN VALUE: the number of simplices in the order
 unsigned PersistenceUpdater::build_simplex_order(IndexMatrix* ind, bool low, std::vector<int>& simplex_order)
 {
+    if (ind->width() == 0 || ind->height() == 0) {
+        return 0;
+    }
     //count the number of simplices that will be in the order (i.e. simplices with grades less than the LUB of all xi support points)
     unsigned num_simplices = 0;
     for (unsigned row = 0; row < template_points_matrix.height(); row++) {

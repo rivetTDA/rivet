@@ -95,7 +95,16 @@ void ComputationThread::load_from_file()
 
     arrangement.reset(new ArrangementMessage());
     message.reset(new TemplatePointsMessage());
+    std::string oldFileName = params.fileName;
+    std::string oldShortName = params.shortName;
     archive >> params;
+    //We're not interested in the output file from the original invocation, and if it is non-empty,
+    //the viewer will try to save the output also, which will most likely fail.
+    params.outputFile = "";
+    //Copy the input names from the original params, since we care what the user selected, not what previous input
+    //files were called
+    params.fileName = oldFileName;
+    params.shortName = oldShortName;
     archive >> *message;
     emit templatePointsReady(message);
     archive >> *arrangement;

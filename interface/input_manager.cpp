@@ -31,6 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <set>
 #include <sstream>
 #include <vector>
+#include <memory>
 
 //epsilon value for use in comparisons
 double ExactValue::epsilon = pow(2, -30);
@@ -176,8 +177,8 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
 {
     //TODO : switch to YAML or JSON input or switch to proper parser generator or combinators
     FileInputReader reader(stream);
-    auto data = new InputData();
-    if (verbosity >= 2) {
+    auto data = std::make_unique<InputData>();
+    if (verbosity >= 6) {
         debug() << "InputManager: Found a point cloud file.";
     }
     unsigned dimension;
@@ -297,26 +298,26 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
 
     unsigned num_points = points.size();
 
-    ExactSet dist_set; //stores all unique distance values; must DELETE all elements later
-    ExactSet time_set; //stores all unique time values; must DELETE all elements later. Not used if no function provided
+    ExactSet dist_set; //stores all unique distance values
+    ExactSet time_set; //stores all unique time values
     std::pair<ExactSet::iterator, bool> ret; //for return value upon insert()
     unsigned* degree; //stores the degree of each point; must FREE later if used
     if (!hasFunction) {
         degree = new unsigned[num_points]();
     }
 
-    ret = dist_set.insert(new ExactValue(exact(0))); //distance from a point to itself is always zero
-    (*(ret.first))->indexes.push_back(0); //store distance 0 at 0th index
+    ret = dist_set.insert(ExactValue(exact(0))); //distance from a point to itself is always zero
+    (ret.first)->indexes.push_back(0); //store distance 0 at 0th index
 
     //consider all points
     for (unsigned i = 0; i < num_points; i++) 
     {
         if (hasFunction) {
             //store time value, if it doesn't exist already
-            ret = time_set.insert(new ExactValue(points[i].birth));
+            ret = time_set.insert(ExactValue(points[i].birth));
 
             //remember that point i has this birth time value
-            (*(ret.first))->indexes.push_back(i);
+            (ret.first)->indexes.push_back(i);
         }
 
         //compute (approximate) distances from this point to all following points
@@ -336,10 +337,10 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
             if (cur_dist <= max_dist) //then this distance is allowed
             {
                 //store distance value, if it doesn't exist already
-                ret = dist_set.insert(new ExactValue(cur_dist));
+                ret = dist_set.insert(ExactValue(cur_dist));
 
                 //remember that the pair of points (i,j) has this distance value, which will go in entry j(j-1)/2 + i + 1
-                (*(ret.first))->indexes.push_back((j * (j - 1)) / 2 + i + 1);
+                (ret.first)->indexes.push_back((j * (j - 1)) / 2 + i + 1);
 
                 //need to keep track of degree for bifiltration-rips complex
                 if (!hasFunction) {
@@ -372,8 +373,8 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
         //WARNING: assumes that the number of distinct degree grades will be equal to maxDegree which may not hold
         for (unsigned i = 0; i <= maxDegree; i++)
         {
-            ret = degree_set.insert(new ExactValue(maxDegree - i)); //store degree -i because degree is wrt opposite ordering on R
-            (*(ret.first))->indexes.push_back(i); //degree i is stored at index i
+            ret = degree_set.insert(ExactValue(maxDegree - i)); //store degree -i because degree is wrt opposite ordering on R
+            (ret.first)->indexes.push_back(i); //degree i is stored at index i
         }
         //make degrees
         degree_indexes = std::vector<unsigned>(maxDegree + 1, 0);
@@ -431,26 +432,7 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
 
     data->free_implicit_rep.reset(new FIRep(*(data->bifiltration_data), input_params.verbosity));
 
-    //clean up
-    if (hasFunction)
-    {
-        for (ExactSet::iterator it = time_set.begin(); it != time_set.end(); ++it) {
-            ExactValue* p = *it;
-            delete p;
-        }
-    }
-    else {
-        for (ExactSet::iterator it = degree_set.begin(); it != degree_set.end(); ++it) {
-            ExactValue* p = *it;
-            delete p;
-        }
-        delete degree;
-    }
-    for (ExactSet::iterator it = dist_set.begin(); it != dist_set.end(); ++it) {
-        ExactValue* p = *it;
-        delete p;
-    }
-    return std::unique_ptr<InputData>(data);
+    return data;
 } //end read_point_cloud()
 
 //reads data representing a discrete metric space with a real-valued function and stores in a BifiltrationData
@@ -538,18 +520,18 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
             degree = new unsigned[num_points]();
         }
 
-        ret = dist_set.insert(new ExactValue(exact(0))); //distance from a point to itself is always zero
+        ret = dist_set.insert(ExactValue(exact(0))); //distance from a point to itself is always zero
         //store distance 0 at index 0
-        (*(ret.first))->indexes.push_back(0);
+        (ret.first)->indexes.push_back(0);
 
         //consider all points
         for (unsigned i = 0; i < num_points; i++) {
             if (hasFunction) {
                 //store value, if it doesn't exist already
-                ret = value_set.insert(new ExactValue(values[i]));
+                ret = value_set.insert(ExactValue(values[i]));
 
                 //remember that point i has this value
-                (*(ret.first))->indexes.push_back(i);
+                (ret.first)->indexes.push_back(i);
             }
 
             //read distances from this point to all following points
@@ -570,10 +552,10 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
                         if (cur_dist <= max_dist) //then this distance is allowed
                         {
                             //store distance value, if it doesn't exist already
-                            ret = dist_set.insert(new ExactValue(cur_dist));
+                            ret = dist_set.insert(ExactValue(cur_dist));
 
                             //remember that the pair of points (i,j) has this distance value, which will go in entry j(j-1)/2 + i + 1
-                            (*(ret.first))->indexes.push_back((j * (j - 1)) / 2 + i + 1);
+                            (ret.first)->indexes.push_back((j * (j - 1)) / 2 + i + 1);
 
                             //need to keep track of degree for bifiltration-rips complex
                             if (!hasFunction) {
@@ -617,8 +599,8 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
         //WARNING: assumes that the number of distinct degree grades will be equal to maxDegree which may not hold
         for (unsigned i = 0; i <= maxDegree; i++)
         {
-            ret = degree_set.insert(new ExactValue(maxDegree - i)); //store degree -i because degree is wrt opposite ordering on R
-            (*(ret.first))->indexes.push_back(i); //degree -i is stored at index i
+            ret = degree_set.insert(ExactValue(maxDegree - i)); //store degree -i because degree is wrt opposite ordering on R
+            (ret.first)->indexes.push_back(i); //degree -i is stored at index i
         }
         //make degrees
         degree_indexes = std::vector<unsigned>(maxDegree + 1, 0);
@@ -671,23 +653,8 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
     data->free_implicit_rep.reset(new FIRep(*(data->bifiltration_data), input_params.verbosity));
 
     //clean up
-    if (hasFunction)
-    {
-        for (ExactSet::iterator it = value_set.begin(); it != value_set.end(); ++it) {
-            ExactValue* p = *it;
-            delete p;
-        }
-    }
-    else {
-        for (ExactSet::iterator it = degree_set.begin(); it != degree_set.end(); ++it) {
-            ExactValue* p = *it;
-            delete p;
-        }
+    if (!hasFunction) {
         delete degree;
-    }
-    for (ExactSet::iterator it = dist_set.begin(); it != dist_set.end(); ++it) {
-        ExactValue* p = *it;
-        delete p;
     }
     return data;
 } //end read_discrete_metric_space()
@@ -742,10 +709,10 @@ std::unique_ptr<InputData> InputManager::read_bifiltration(std::ifstream& stream
             unsigned grades = (tokens.size() - pos) / 2; //remaining tokens are xy pairs
             for (unsigned i = 0; i < grades; i++) {
                 //read multigrade and remember that it corresponds to this grade
-                ret = x_set.insert(new ExactValue(str_to_exact(tokens.at(pos))));
-                (*(ret.first))->indexes.push_back(num_grades);
-                ret = y_set.insert(new ExactValue(str_to_exact(tokens.at(pos + 1))));
-                (*(ret.first))->indexes.push_back(num_grades);
+                ret = x_set.insert(ExactValue(str_to_exact(tokens.at(pos))));
+                (ret.first)->indexes.push_back(num_grades);
+                ret = y_set.insert(ExactValue(str_to_exact(tokens.at(pos + 1))));
+                (ret.first)->indexes.push_back(num_grades);
                 num_grades++;
                 pos += 2;
             }
@@ -792,15 +759,6 @@ std::unique_ptr<InputData> InputManager::read_bifiltration(std::ifstream& stream
 
     data->free_implicit_rep.reset(new FIRep(*(data->bifiltration_data), input_params.verbosity));
 
-    //clean up
-    for (ExactSet::iterator it = x_set.begin(); it != x_set.end(); ++it) {
-        ExactValue* p = *it;
-        delete p;
-    }
-    for (ExactSet::iterator it = y_set.begin(); it != y_set.end(); ++it) {
-        ExactValue* p = *it;
-        delete p;
-    }
     return data;
 } //end read_bifiltration()
 
@@ -862,14 +820,14 @@ std::unique_ptr<InputData> InputManager::read_firep(std::ifstream& stream, Progr
                 x_values.push_back(str_to_exact(tokens.at(0)));
                 y_values.push_back(str_to_exact(tokens.at(1)));
                 //store value, if it doesn't exist already
-                ret = x_set.insert(new ExactValue(x_values[i]));
+                ret = x_set.insert(ExactValue(x_values[i]));
                 //remember that point i has this value
-                (*(ret.first))->indexes.push_back(i);
+                (ret.first)->indexes.push_back(i);
 
                 //store value, if it doesn't exist already
-                ret = y_set.insert(new ExactValue(y_values[i]));
+                ret = y_set.insert(ExactValue(y_values[i]));
                 //remember that point i has this value
-                (*(ret.first))->indexes.push_back(i);
+                (ret.first)->indexes.push_back(i);
 
                 //Process ith column
                 if (tokens.at(2).at(0) != ';') {
@@ -892,14 +850,14 @@ std::unique_ptr<InputData> InputManager::read_firep(std::ifstream& stream, Progr
                 x_values.push_back(str_to_exact(tokens.at(0)));
                 y_values.push_back(str_to_exact(tokens.at(1)));
                 //store value, if it doesn't exist already
-                ret = x_set.insert(new ExactValue(x_values[i + t]));
+                ret = x_set.insert(ExactValue(x_values[i + t]));
                 //remember that point i has this value
-                (*(ret.first))->indexes.push_back(i + t);
+                (ret.first)->indexes.push_back(i + t);
 
                 //store value, if it doesn't exist already
-                ret = y_set.insert(new ExactValue(y_values[i + t]));
+                ret = y_set.insert(ExactValue(y_values[i + t]));
                 //remember that point i has this value
-                (*(ret.first))->indexes.push_back(i + t);
+                (ret.first)->indexes.push_back(i + t);
 
                 //Process ith column
                 if (tokens.at(2).at(0) != ';') {
@@ -936,15 +894,6 @@ std::unique_ptr<InputData> InputManager::read_firep(std::ifstream& stream, Progr
     data->bifiltration_data->set_xy_grades(data->x_exact.size(), data->y_exact.size());
     data->free_implicit_rep.reset(new FIRep(*(data->bifiltration_data), t, s, r, d2, d1, x_indexes, y_indexes, input_params.verbosity));
 
-    //clean up
-    for (ExactSet::iterator it = x_set.begin(); it != x_set.end(); ++it) {
-        ExactValue* p = *it;
-        delete p;
-    }
-    for (ExactSet::iterator it = y_set.begin(); it != y_set.end(); ++it) {
-        ExactValue* p = *it;
-        delete p;
-    }
     return data;
 } //end read_firep()
 
@@ -1050,10 +999,10 @@ void InputManager::build_grade_vectors(InputData& data,
         unsigned c = 0; //counter for indexes
         for (ExactSet::iterator it = value_set.begin(); it != value_set.end(); ++it) //loop through all UNIQUE values
         {
-            grades_exact.push_back((*it)->exact_value);
+            grades_exact.push_back(it->exact_value);
 
-            for (unsigned i = 0; i < (*it)->indexes.size(); i++) //loop through all point indexes for this value
-                discrete_indexes[(*it)->indexes[i]] = c; //store discrete index
+            for (unsigned i = 0; i < it->indexes.size(); i++) //loop through all point indexes for this value
+                discrete_indexes[it->indexes[i]] = c; //store discrete index
 
             c++;
         }
@@ -1061,8 +1010,8 @@ void InputManager::build_grade_vectors(InputData& data,
     // the number of bins, and exact values will be equally spaced
     {
         //compute bin size
-        exact min = (*value_set.begin())->exact_value;
-        exact max = (*value_set.rbegin())->exact_value;
+        exact min = value_set.begin()->exact_value;
+        exact max = value_set.rbegin()->exact_value;
         exact bin_size = (max - min) / num_bins;
 
         //store bin values
@@ -1075,9 +1024,9 @@ void InputManager::build_grade_vectors(InputData& data,
             grades_exact.push_back(cur_bin.exact_value);
 
             //store bin index for all points whose time value is in this bin
-            while (it != value_set.end() && **it <= cur_bin) {
-                for (unsigned i = 0; i < (*it)->indexes.size(); i++) //loop through all point indexes for this value
-                    discrete_indexes[(*it)->indexes[i]] = c; //store discrete index
+            while (it != value_set.end() && *it <= cur_bin) {
+                for (unsigned i = 0; i < it->indexes.size(); i++) //loop through all point indexes for this value
+                    discrete_indexes[it->indexes[i]] = c; //store discrete index
                 ++it;
             }
         }

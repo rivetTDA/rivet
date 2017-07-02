@@ -71,10 +71,10 @@ static const char USAGE[] =
       -b --betti                               Print dimension and Betti number information, then exit.        
       --bounds                                 Print lower and upper bounds for the module in <precomputed_file> and exit
       --barcodes <line_file>                   Print barcodes for the line queries in line_file, then exit.
-                                               line_file consists of pairs "m b", each representing a query line.
-                                               m is the slope of the query line, given in degrees (0 to 90); b is the 
+                                               line_file consists of pairs "m o", each representing a query line.
+                                               m is the slope of the query line, given in degrees (0 to 90); o is the
                                                signed distance from the query line to the origin, where the sign is 
-                                               positive if the line is below/right of the origin and negative otherwise.
+                                               positive if the line is above/left of the origin and negative otherwise.
 
                                                Example line_file contents:
 
@@ -273,8 +273,8 @@ int main(int argc, char* argv[])
     std::map<std::string, docopt::value> args = docopt::docopt(USAGE, { argv + 1, argv + argc }, true,
         "RIVET Console 0.4");
 
-    ArrangementMessage* arrangement_message = nullptr;
-    TemplatePointsMessage* points_message = nullptr;
+    std::shared_ptr<ArrangementMessage> arrangement_message;
+    std::shared_ptr<TemplatePointsMessage> points_message;
 
     if (args["<input_file>"].isString()) {
         params.fileName = args["<input_file>"].asString();
@@ -329,7 +329,7 @@ int main(int argc, char* argv[])
         });
     }
     computation.arrangement_ready.connect([&arrangement_message, &params, &binary, &verbosity](std::shared_ptr<Arrangement> arrangement) {
-        arrangement_message = new ArrangementMessage(*arrangement);
+        arrangement_message.reset(new ArrangementMessage(*arrangement));
         //TODO: this should become a system test with a known dataset
         //Note we no longer write the arrangement to stdout, it goes to a file at the end
         //of the run. This message just announces the absolute path of the file.
@@ -363,7 +363,7 @@ int main(int argc, char* argv[])
         }
     });
     computation.template_points_ready.connect([&points_message, &binary, &betti_only, &verbosity](TemplatePointsMessage message) {
-        points_message = new TemplatePointsMessage(message);
+        points_message.reset(new TemplatePointsMessage(message));
 
         if (binary) {
             std::cout << "XI" << std::endl;

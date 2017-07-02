@@ -134,7 +134,7 @@ void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMe
         slice_diagram.add_point(grades.x[point.x], grades.y[point.y], point.zero, point.one, point.two);
 
     //create the SliceDiagram
-    if (!slice_diagram.is_created()) {
+    if (!slice_diagram.is_created() && !grades.x.empty() && !grades.y.empty()) {
         slice_diagram.create_diagram(
             QString::fromStdString(template_points->x_label),
             QString::fromStdString(template_points->y_label),
@@ -169,9 +169,12 @@ void VisualizationWindow::augmented_arrangement_ready(std::shared_ptr<Arrangemen
     //TESTING: print arrangement info and verify consistency
     //    arrangement->print_stats();
     //    arrangement->test_consistency();
+    auto shortName = QString::fromStdString(input_params.shortName);
+
+    this->setWindowTitle("RIVET - " + shortName);
 
     //inialize persistence diagram
-    p_diagram.create_diagram(QString::fromStdString(input_params.shortName), input_params.dim);
+    p_diagram.create_diagram(shortName, input_params.dim);
 
     //get the barcode
     BarcodeTemplate dbc = arrangement->get_barcode_template(angle_precise, offset_precise);
@@ -180,38 +183,39 @@ void VisualizationWindow::augmented_arrangement_ready(std::shared_ptr<Arrangemen
     //TESTING
     barcode->print();
 
-    //draw the barcode
-    double zero_coord = rivet::numeric::project_zero(angle_precise, offset_precise, grades.x[0], grades.y[0]);
-    p_diagram.set_barcode(zero_coord, *barcode);
-    p_diagram.resize_diagram(slice_diagram.get_slice_length(), slice_diagram.get_pd_scale());
+    if (!grades.x.empty() && !grades.y.empty()) {
+        //draw the barcode
+        double zero_coord = rivet::numeric::project_zero(angle_precise, offset_precise, grades.x[0], grades.y[0]);
+        p_diagram.set_barcode(zero_coord, *barcode);
+        p_diagram.resize_diagram(slice_diagram.get_slice_length(), slice_diagram.get_pd_scale());
 
-    slice_diagram.draw_barcode(*barcode, zero_coord, ui->barcodeCheckBox->isChecked());
+        slice_diagram.draw_barcode(*barcode, zero_coord, ui->barcodeCheckBox->isChecked());
 
-    //enable slice diagram control items
-    slice_diagram.enable_slice_line();
-    ui->angleLabel->setEnabled(true);
-    ui->angleDoubleSpinBox->setEnabled(true);
-    ui->offsetLabel->setEnabled(true);
-    ui->offsetSpinBox->setEnabled(true);
-    ui->barcodeCheckBox->setEnabled(true);
+        //enable slice diagram control items
+        slice_diagram.enable_slice_line();
+        ui->angleLabel->setEnabled(true);
+        ui->angleDoubleSpinBox->setEnabled(true);
+        ui->offsetLabel->setEnabled(true);
+        ui->offsetSpinBox->setEnabled(true);
+        ui->barcodeCheckBox->setEnabled(true);
 
-    //update status
-    if (verbosity >= 2) {
-        qDebug() << "COMPUTATION FINISHED; READY FOR INTERACTIVITY.";
+        //update status
+        if (verbosity >= 2) {
+            qDebug() << "COMPUTATION FINISHED; READY FOR INTERACTIVITY.";
+        }
+        persistence_diagram_drawn = true;
+        ui->statusBar->showMessage("ready for interactive barcode exploration");
+
+        //Enable save menu item
+        ui->actionSave->setEnabled(true);
+        //if an output file has been specified, then save the arrangement
+        if (!input_params.outputFile.empty())
+            save_arrangement(QString::fromStdString(input_params.outputFile));
+        //TODO: we don't have file reading tools here anymore, so we don't know what kind of file it was
+        //Have to rely on console to either a) always save (to tmp file if needed), or b) tell us filetype in the output.
+        //    else if(input_params.raw_data)
+        //        unsaved_data = true;
     }
-    persistence_diagram_drawn = true;
-    ui->statusBar->showMessage("ready for interactive barcode exploration");
-
-    //Enable save menu item
-    ui->actionSave->setEnabled(true);
-    //if an output file has been specified, then save the arrangement
-    if (!input_params.outputFile.empty())
-        save_arrangement(QString::fromStdString(input_params.outputFile));
-    //TODO: we don't have file reading tools here anymore, so we don't know what kind of file it was
-    //Have to rely on console to either a) always save (to tmp file if needed), or b) tell us filetype in the output.
-    //    else if(input_params.raw_data)
-    //        unsaved_data = true;
-
 } //end augmented_arrangement_ready()
 
 void VisualizationWindow::on_angleDoubleSpinBox_valueChanged(double angle)
@@ -430,7 +434,7 @@ void VisualizationWindow::save_arrangement(const QString& filename)
         write_boost_file(filename, input_params, *template_points, *arrangement);
     } catch (std::exception& e) {
         QMessageBox errorBox(QMessageBox::Warning, "Error",
-            QString("Unable to write file: ").append(filename).append(": ").append(e.what()));
+            QString("Unable to save arrangement: ").append(filename).append(": ").append(e.what()));
         errorBox.exec();
     }
 } //end save_arrangement()
