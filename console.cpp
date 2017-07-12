@@ -125,11 +125,17 @@ void print_dims(TemplatePointsMessage const& message, std::ostream& ostream)
     auto data = message.homology_dimensions.data();
     ostream << "Dimensions > 0:" << std::endl;
 
-    for (unsigned long row = 0; row < shape[0]; row++) {
-        for (unsigned long col = 0; col < shape[1]; col++) {
-            unsigned dim = data[row * shape[0] + col];
+    ostream << "shape: " << shape[0] << ", " << shape[1] << std::endl;
+
+    for(unsigned i=0; i<shape[0]*shape[1]; i++)
+        ostream << data[i] << " ";
+    ostream << std::endl;
+
+    for (unsigned long col = 0; col < shape[0]; col++) {
+        for (unsigned long row = 0; row < shape[1]; row++) {
+            unsigned dim = data[col * shape[1] + row];
             if (dim > 0) {
-                ostream << "(" << col << ", " << row << ", " << dim << ")" << std::endl;
+                ostream << "(" << col << ", " << row << ", " << dim << ") -- position " << (col * shape[1] + row) << std::endl;
             }
         }
         ostream << std::endl;
