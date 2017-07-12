@@ -54,9 +54,6 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(ComputationInput& in
             }
         }
     }
-    input.bifiltration().print();   //TESTING ONLY
-
-
 
     //STAGE 3: COMPUTE MULTIGRADED BETTI NUMBERS
 
