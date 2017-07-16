@@ -31,6 +31,8 @@ struct Grade
         return (y == other.y) && (x == other.x);
     }
 
+    Grade() {}
+
     Grade(int set_x, int set_y) : x(set_x), y(set_y), dim_index(0)
     { }
 };

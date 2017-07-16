@@ -231,24 +231,64 @@ FIRep::FIRep(BifiltrationData& bd, int v)
     if (verbosity >= 10) {
         print();
     }
+
+    if (verbosity >= 6)
+    {
+        if (!std::is_sorted(indexes_0.begin(), indexes_0.end()))
+        {
+            debug() << "Low indexes not sorted.";
+        }
+        if (!std::is_sorted(indexes_1.begin(), indexes_1.end()))
+        {
+            debug() << "High indexes not sorted.";
+        }
+    }
 }
 
 FIRep::FIRep(BifiltrationData& bd, int t, int s, int r, std::vector<std::vector<unsigned> >& d2, std::vector<std::vector<unsigned> >& d1,
             const std::vector<unsigned> x_values, const std::vector<unsigned> y_values, int v)
             : verbosity(v), x_grades(bd.num_x_grades()), y_grades(bd.num_y_grades()), bifiltration_data(bd)
 {
-    boundary_mx_1 = new MapMatrix(s, t);
-    for (int i = 0; i < t; i++)
+    AppearanceGrades low_indexes;
+    Grade temp_grade;
+    for (int i = 0; i < s; i++)
     {
-        write_boundary_column(boundary_mx_1, d2[i], i);
-        indexes_1.push_back(Grade(x_values[i], y_values[i]));
+        temp_grade = Grade(x_values[i + t], y_values[i + t]);
+        temp_grade.dim_index = i;
+        low_indexes.push_back(temp_grade);
+    }
+    std::sort(low_indexes.begin(), low_indexes.end());
+    std::vector<unsigned> inverse_map(s);
+    for (int i = 0; i < s; i++) {
+        inverse_map[low_indexes[i].dim_index] = i;
     }
 
     boundary_mx_0 = new MapMatrix(r, s);
     for (int i = 0; i < s; i++)
     {
-        write_boundary_column(boundary_mx_0, d1[i], i);
-        indexes_0.push_back(Grade(x_values[i + t], y_values[i + t]));
+        write_boundary_column(boundary_mx_0, d1[low_indexes[i].dim_index], i);
+        indexes_0.push_back(low_indexes[i]);
+    }
+
+    AppearanceGrades high_indexes;
+    for (int i = 0; i < t; i++)
+    {
+        temp_grade = Grade(x_values[i], y_values[i]);
+        temp_grade.dim_index = i;
+        high_indexes.push_back(temp_grade);
+    }
+    std::sort(high_indexes.begin(), high_indexes.end());
+
+    boundary_mx_1 = new MapMatrix(s, t);
+    for (int i = 0; i < t; i++)
+    {
+        std::vector<unsigned> entries = d2[high_indexes[i].dim_index];
+        for (unsigned j = 0; j < entries.size(); j++)
+        {
+            entries[j] = inverse_map[entries[j]];
+        }
+        write_boundary_column(boundary_mx_1, entries, i);
+        indexes_1.push_back(high_indexes[i]);
     }
 
     if (verbosity >= 8)
@@ -256,6 +296,18 @@ FIRep::FIRep(BifiltrationData& bd, int t, int s, int r, std::vector<std::vector<
 
     if (verbosity >= 10) {
         print();
+    }
+
+    if (verbosity >= 6)
+    {
+        if (!std::is_sorted(indexes_0.begin(), indexes_0.end()))
+        {
+            debug() << "Low indexes not sorted.";
+        }
+        if (!std::is_sorted(indexes_1.begin(), indexes_1.end()))
+        {
+            debug() << "High indexes not sorted.";
+        }
     }
 }
 
