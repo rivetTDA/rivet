@@ -89,12 +89,11 @@ void MultiBetti::compute(unsigned_matrix& hom_dims, Progress& progress)
     }
 
     //input to the algorithm: two boundary matrices, with index data
-    MapMatrix* bdry1 = bifiltration.get_boundary_mx(dimension);
-    IndexMatrix* ind1 = bifiltration.get_index_mx(dimension);
+    MapMatrix* bdry1 = bifiltration.get_low_boundary_mx();
+    IndexMatrix* ind1 = bifiltration.get_low_index_mx();
 
-    MapMatrix* bdry2 = bifiltration.get_boundary_mx(dimension + 1);
-    IndexMatrix* ind2 = bifiltration.get_index_mx(dimension + 1);
-
+    MapMatrix* bdry2 = bifiltration.get_high_boundary_mx();
+    IndexMatrix* ind2 = bifiltration.get_high_index_mx();
 
     // STEP 1: reduce bdry2, record its pointwise rank, and build a partially-reduced copy for later use
     //   this approach aims to maximize memory usage by deleting bdry2 matrix before building bdry2s matrix
@@ -158,7 +157,7 @@ void MultiBetti::compute(unsigned_matrix& hom_dims, Progress& progress)
 
 
     // STEP 2: reduce bdry1, applying column operations to merge and split as "slave" matrices
-    //   recurd pointwise nullity of bdry1
+    //   record pointwise nullity of bdry1
     //   also reduce "spliced" matrices and record pointwise dimension of vector spaces U and V
 
     //data structures used for reducing bdry1 matrix
@@ -680,7 +679,7 @@ void MultiBetti::build_bdry2s_mx(MapMatrix* bdry2, IndexMatrix* ind2, MapMatrix*
     bdry2sum->reserve_cols(num_cols);
 
     //write columns at grades (x,y) for y > 0
-    for(unsigned y = 0; y + 1 < num_y_grades; y++) { //not necessary to consider y = num_y_grades - 1
+    for(unsigned y = 0; y < num_y_grades - 1; y++) { //not necessary to consider y = num_y_grades - 1
         for(unsigned x = 0; x < num_x_grades - 1; x++) { //not necessary to consider x = num_x_grades - 1
             //columns in the B summand live at <= (x,y+1), and are copied without offset
             if(y == 0) { //copy columns at (x,0)

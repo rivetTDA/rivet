@@ -32,7 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 //FIRep constructor; requires dimension of homology to be computed and verbosity parameter
 FIRep::FIRep(BifiltrationData& bd, int v)
-    : hom_dim(bd.hom_dim), verbosity(v), x_grades(bd.num_x_grades()), y_grades(bd.num_y_grades()), bifiltration_data(bd)
+    : verbosity(v), x_grades(bd.num_x_grades()), y_grades(bd.num_y_grades()), bifiltration_data(bd)
 {
     if (verbosity >= 10) {
         bd.print_bifiltration();
@@ -41,7 +41,7 @@ FIRep::FIRep(BifiltrationData& bd, int v)
     //Create the boundary matrices and index lists
     //First start in dim-1
     std::vector<AppearanceGrades*> low_simplices;
-    SimplexInfo* simplices = bd.getSimplices(hom_dim - 1);
+    SimplexInfo* simplices = bd.getSimplices(bd.hom_dim - 1);
     SimplexInfo::iterator it;
     for(it = simplices->begin(); it != simplices->end(); it++)
     {
@@ -66,7 +66,7 @@ FIRep::FIRep(BifiltrationData& bd, int v)
 
     //Now deal with dimension dim
     std::vector<Grade*> mid_simplex_grades;
-    simplices = bd.getSimplices(hom_dim);
+    simplices = bd.getSimplices(bd.hom_dim);
     for (it = simplices->begin(); it != simplices->end(); it++)
     {
         for (AppearanceGrades::iterator it2 = (it->second).begin(); it2 != (it->second).end(); it2++)
@@ -80,7 +80,7 @@ FIRep::FIRep(BifiltrationData& bd, int v)
     indexes_0.clear();
     if (verbosity >= 10)
     {
-        debug() << "Printing generators of dimension " << hom_dim;
+        debug() << "Printing generators of dimension " << bd.hom_dim;
         for (unsigned i = 0; i < mid_simplex_grades.size(); i++)
         {
             debug() << mid_simplex_grades[i]->x << mid_simplex_grades[i]->y;
@@ -103,7 +103,7 @@ FIRep::FIRep(BifiltrationData& bd, int v)
     {
         for (AppearanceGrades::iterator it2 = (it->second).begin(); it2 != (it->second).end(); it2++)
         {
-            write_boundary_column(boundary_mx_0, it->first, bd.getSimplices(hom_dim - 1), (*it2).dim_index);
+            write_boundary_column(boundary_mx_0, it->first, bd.getSimplices(bd.hom_dim - 1), (*it2).dim_index);
         }
     }
 
@@ -145,7 +145,7 @@ FIRep::FIRep(BifiltrationData& bd, int v)
         }
     }
     //Add generators of dim+1
-    SimplexInfo* high_simplices = bd.getSimplices(hom_dim + 1);
+    SimplexInfo* high_simplices = bd.getSimplices(bd.hom_dim + 1);
     for (it = high_simplices->begin(); it != high_simplices->end(); it++)
     {
         const std::vector<int>& vertices = it->first;
@@ -197,7 +197,7 @@ FIRep::FIRep(BifiltrationData& bd, int v)
     indexes_1.clear();
     if (verbosity >= 10)
     {
-        debug() << "Printing generators of dimension " << hom_dim + 1;
+        debug() << "Printing generators of dimension " << bd.hom_dim + 1;
         Debug qd = debug(true);
         for (unsigned i = 0; i < high_generators.size(); i++)
         {
@@ -233,9 +233,9 @@ FIRep::FIRep(BifiltrationData& bd, int v)
     }
 }
 
-FIRep::FIRep(BifiltrationData& bd, int t, int s, int r, const std::vector<std::vector<unsigned> >& d2, const std::vector<std::vector<unsigned> >& d1,
+FIRep::FIRep(BifiltrationData& bd, int t, int s, int r, std::vector<std::vector<unsigned> >& d2, std::vector<std::vector<unsigned> >& d1,
             const std::vector<unsigned> x_values, const std::vector<unsigned> y_values, int v)
-            : hom_dim(bd.hom_dim), verbosity(v), x_grades(bd.num_x_grades()), y_grades(bd.num_y_grades()), bifiltration_data(bd)
+            : verbosity(v), x_grades(bd.num_x_grades()), y_grades(bd.num_y_grades()), bifiltration_data(bd)
 {
     boundary_mx_1 = new MapMatrix(s, t);
     for (int i = 0; i < t; i++)
@@ -266,33 +266,33 @@ FIRep::~FIRep()
     free(boundary_mx_1);
 }
 
-//returns a matrix of boundary information for simplices of the given dimension (with multi-grade info)
+//returns a matrix of boundary information for simplices of dimension dim (with multi-grade info)
 //columns ordered according to dimension index (reverse-lexicographic order with respect to multi-grades)
-MapMatrix* FIRep::get_boundary_mx(int dim)
+MapMatrix* FIRep::get_low_boundary_mx()
 {
-    MapMatrix* src;
-    if (dim == hom_dim) {
-        src = boundary_mx_0;
-    } else if (dim == hom_dim + 1) {
-        src = boundary_mx_1;
-    } else {
-        std::stringstream ss;
-        ss << "FIRep::get_boundary_mx(): Attempting to compute boundary matrix for improper dimension (" << dim << "), expected either "
-           << hom_dim << " or " << hom_dim + 1;
-        throw std::runtime_error(ss.str());
-    }
+    MapMatrix* src = boundary_mx_0;
 
     //create the MapMatrix
     MapMatrix* mat = new MapMatrix(src->height(), src->width()); //DELETE this object later!
 
-    //if we want a matrix for 0-simplices, then we are done
-    if (dim == 0)
-        return mat;
+    //Copy boundary matrix to new matrix
+    mat->copy_cols_same_indexes(src, 0, src->width() - 1);
+    return mat;
+} //end get_low_boundary_mx()
+
+//returns a matrix of boundary information for simplices of dimension dim+1 (with multi-grade info)
+//columns ordered according to dimension index (reverse-lexicographic order with respect to multi-grades)
+MapMatrix* FIRep::get_high_boundary_mx()
+{
+    MapMatrix* src = boundary_mx_1;
+
+    //create the MapMatrix
+    MapMatrix* mat = new MapMatrix(src->height(), src->width()); //DELETE this object later!
 
     //Copy boundary matrix to new matrix
     mat->copy_cols_same_indexes(src, 0, src->width() - 1);
     return mat;
-} //end get_boundary_mx(int)
+} //end get_low_boundary_mx()
 
 //returns a boundary matrix for hom_dim-simplices with columns in a specified order -- for vineyard-update algorithm
 //    simplex_order is a map : dim_index --> order_index for simplices of the given dimension
@@ -321,7 +321,6 @@ MapMatrix_Perm* FIRep::get_boundary_mx(std::vector<int>& coface_order, unsigned 
 //    each vector is a map : dim_index --> order_index for simplices of the given dimension
 //        if order[i] == -1, then simplex with dim_index i is NOT represented in the boundary matrix
 //    each unsigned is the number of simplices in the corresponding order (i.e., the number of entries in the vector that are NOT -1)
-//TODO: Optimize
 MapMatrix_Perm* FIRep::get_boundary_mx(std::vector<int>& face_order, unsigned num_faces, std::vector<int>& coface_order, unsigned num_cofaces)
 {
     //create the matrix
@@ -351,6 +350,7 @@ void FIRep::write_boundary_column(MapMatrix* mat, const std::vector<int>& vertic
     if (vertices.size() == 1)
         return;
 
+    std::vector<unsigned> row_indices;
     //find all facets of this simplex
     for (unsigned k = 0; k < vertices.size(); k++) {
         //facet vertices are all vertices in verts[] except verts[k]
@@ -363,36 +363,45 @@ void FIRep::write_boundary_column(MapMatrix* mat, const std::vector<int>& vertic
         SimplexInfo::iterator facet_node = low_simplices->find(facet);
         if (facet_node == low_simplices->end())
             throw std::runtime_error("FIRep::write_boundary_column(): Facet simplex not found.");
-
-        //for this boundary simplex, enter "1" in the appropriate cell in the matrix
-        mat->set(facet_node->second.at(0).dim_index, col);
+        //for this boundary simplex, add the appropriate row index
+        row_indices.push_back(facet_node->second.at(0).dim_index);
     }
-} //end write_col();
+
+    //We sort because it take O(n) time to insert if the indices are sorted, and O(n^2) for a random ordering
+    std::sort(row_indices.begin(), row_indices.end());
+    for (unsigned i = 0; i < row_indices.size(); i++)
+        mat->set(row_indices[i], col);
+} //end write_boundary_column();
 
 //writes boundary information given boundary entries in column col of matrix mat
-void FIRep::write_boundary_column(MapMatrix* mat, const std::vector<unsigned>& entries, unsigned col)
+void FIRep::write_boundary_column(MapMatrix* mat, std::vector<unsigned>& entries, unsigned col)
 {
-    //find all facets of this simplex
+    //fastest insertion time if entries are sorted
+    std::sort(entries.begin(), entries.end());
     for (unsigned k = 0; k < entries.size(); k++) {
         //for this boundary simplex, enter "1" in the appropriate cell in the matrix
         mat->set(entries[k], col);
     }
-} //end write_col();
+} //end write_boundary_column();
 
 //returns a matrix of column indexes to accompany MapMatrices
 //  entry (i,j) gives the last column of the MapMatrix that corresponds to multigrade (i,j)
-IndexMatrix* FIRep::get_index_mx(int dim)
+IndexMatrix* FIRep::get_low_index_mx()
 {
-    //select set of simplices of dimension dim
-    AppearanceGrades* grades;
+    return get_index_mx(&indexes_0);
+}
 
-    if (dim == hom_dim)
-        grades = &indexes_0;
-    else if (dim == hom_dim + 1)
-        grades = &indexes_1;
-    else
-        throw std::runtime_error("FIRep::get_index_mx(): Attempting to compute index matrix for improper dimension.");
+//returns a matrix of column indexes to accompany MapMatrices
+//  entry (i,j) gives the last column of the MapMatrix that corresponds to multigrade (i,j)
+IndexMatrix* FIRep::get_high_index_mx()
+{
+    return get_index_mx(&indexes_1);
+}
 
+//returns a matrix of column indexes to accompany MapMatrices
+//  entry (i,j) gives the last column of the MapMatrix that corresponds to multigrade (i,j)
+IndexMatrix* FIRep::get_index_mx(AppearanceGrades* grades)
+{
     //create the IndexMatrix
     unsigned x_size = x_grades;
     unsigned y_size = y_grades;
@@ -433,19 +442,6 @@ IndexMatrix* FIRep::get_index_mx(int dim)
     return mat;
 } //end get_index_mx()
 
-//returns the number of simplices of dimension (hom_dim-1), hom_dim, or (hom_dim+1)
-unsigned FIRep::get_size(int dim)
-{
-    if (dim == hom_dim - 1)
-        return boundary_mx_0->height();
-    else if (dim == hom_dim)
-        return indexes_0.size();
-    else if (dim == hom_dim + 1)
-        return indexes_1.size();
-    else
-        throw std::runtime_error("FIRep::get_size(): invalid dimension");
-}
-
 //returns the number of unique x-coordinates of the multi-grades
 unsigned FIRep::num_x_grades()
 {
@@ -462,7 +458,7 @@ unsigned FIRep::num_y_grades()
 void FIRep::print()
 {
     boundary_mx_0->print();
-    get_index_mx(hom_dim)->print();
+    get_low_index_mx()->print();
     boundary_mx_1->print();
-    get_index_mx(hom_dim + 1)->print();
+    get_high_index_mx()->print();
 }

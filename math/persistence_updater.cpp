@@ -39,7 +39,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 PersistenceUpdater::PersistenceUpdater(Arrangement& m, FIRep& b, std::vector<TemplatePoint>& xi_pts, unsigned verbosity)
     : arrangement(m)
     , bifiltration(b)
-    , dim(b.hom_dim)
     , verbosity(verbosity)
     , template_points_matrix(m.x_exact.size(), m.y_exact.size())
 //    , testing(false)
@@ -75,13 +74,13 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<std::shared_ptr<H
     if (verbosity >= 10) {
         debug() << "  Mapping low simplices:";
     }
-    IndexMatrix* ind_low = bifiltration.get_index_mx(dim); //can we improve this with something more efficient than IndexMatrix?
+    IndexMatrix* ind_low = bifiltration.get_low_index_mx(); //can we improve this with something more efficient than IndexMatrix?
     store_multigrades(ind_low, true);
 
     if (verbosity >= 10) {
         debug() << "  Mapping high simplices:";
     }
-    IndexMatrix* ind_high = bifiltration.get_index_mx(dim + 1); //again, could be improved?
+    IndexMatrix* ind_high = bifiltration.get_high_index_mx(); //again, could be improved?
     store_multigrades(ind_high, false);
 
     //get the proper simplex ordering
@@ -358,14 +357,14 @@ void PersistenceUpdater::set_anchor_weights(std::vector<std::shared_ptr<Halfedge
     if (verbosity >= 10) {
         debug() << "  Mapping low simplices:";
     }
-    IndexMatrix* ind_low = bifiltration.get_index_mx(dim); //can we improve this with something more efficient than IndexMatrix?
+    IndexMatrix* ind_low = bifiltration.get_low_index_mx(); //can we improve this with something more efficient than IndexMatrix?
     store_multigrades(ind_low, true);
     delete ind_low;
 
     if (verbosity >= 10) {
         debug() << "  Mapping high simplices:";
     }
-    IndexMatrix* ind_high = bifiltration.get_index_mx(dim + 1); //again, could be improved?
+    IndexMatrix* ind_high = bifiltration.get_high_index_mx(); //again, could be improved?
     store_multigrades(ind_high, false);
     delete ind_high;
 

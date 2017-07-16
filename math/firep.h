@@ -42,13 +42,16 @@ class FIRep {
 public:
     FIRep(BifiltrationData& bd, int v); //constructor; requires verbosity parameter
 
-    FIRep(BifiltrationData& bd, int t, int s, int r, const std::vector<std::vector<unsigned> >& d2, const std::vector<std::vector<unsigned> >& d1,
+    FIRep(BifiltrationData& bd, int t, int s, int r, std::vector<std::vector<unsigned> >& d2, std::vector<std::vector<unsigned> >& d1,
             const std::vector<unsigned> x_values, const std::vector<unsigned> y_values, int v); //constructor
 
     ~FIRep(); //destructor
 
-    //returns a matrix of boundary information for simplices
-    MapMatrix* get_boundary_mx(int dim); 
+    //returns a matrix of boundary information for dim to dim-1
+    MapMatrix* get_low_boundary_mx(); 
+
+    //returns a matrix of boundary information for dim+1 to dim
+    MapMatrix* get_high_boundary_mx(); 
 
     //returns a boundary matrix for hom_dim-simplices with columns in a specified order -- for vineyard-update algorithm
     MapMatrix_Perm* get_boundary_mx(std::vector<int>& coface_order, unsigned num_simplices); 
@@ -57,16 +60,16 @@ public:
     MapMatrix_Perm* get_boundary_mx(std::vector<int>& face_order, unsigned num_faces, std::vector<int>& coface_order, unsigned num_cofaces); 
 
     //returns a matrix of column indexes to accompany MapMatrices
-    IndexMatrix* get_index_mx(int dim); 
+    IndexMatrix* get_low_index_mx(); 
 
-    unsigned get_size(int dim); //returns the number of simplices of dimension (hom_dim-1), hom_dim, or (hom_dim+1)
+    //returns a matrix of column indexes to accompany MapMatrices
+    IndexMatrix* get_high_index_mx(); 
 
     unsigned num_x_grades();                     //returns the number of unique x-coordinates of the multi-grades
     unsigned num_y_grades();                     //returns the number of unique y-coordinates of the multi-grades
 
     void print(); //Print the matrices and appearance grades
-
-    const int hom_dim;      //the dimension of homology to be computed; max dimension of simplices is one more than this
+    
     const unsigned verbosity; //controls display of output, for debugging
 
 private:
@@ -74,13 +77,18 @@ private:
     unsigned y_grades;  //the number of y-grades that exist in this bifiltration
     MapMatrix* boundary_mx_0; //boundary matrix from dim to dim-1
     MapMatrix* boundary_mx_1; //boundary matrix from dim+1 to dim
+
+    //Indexes of simplices. Grades are stored in discrete indexes, real ExactValues are stored in InputData.x_exact and y_exact
     AppearanceGrades indexes_0; //indexes of simplices in dimension dim
     AppearanceGrades indexes_1; //indexes of simplices in dimension dim+1
-    BifiltrationData& bifiltration_data;
+    //TODO: Delete reference once Alex's code is merged
+    BifiltrationData& bifiltration_data; //Associated bifiltration data is kept only for Alex's dendrogram code
 
     void write_boundary_column(MapMatrix* mat, const std::vector<int>& vertices, SimplexInfo* low_simplices, int col); //writes boundary information for simplex represented by sim in column col of matrix mat
 
-    void write_boundary_column(MapMatrix* mat, const std::vector<unsigned>& entries, unsigned col); //writes boundary information given boundary entries in column col of matrix mat
+    void write_boundary_column(MapMatrix* mat, std::vector<unsigned>& entries, unsigned col); //writes boundary information given boundary entries in column col of matrix mat
+
+    IndexMatrix* get_index_mx(AppearanceGrades* source_grades); //Gets the index matrix associated with a list of grades
 };
 
 #endif // __SimplexTree_H__

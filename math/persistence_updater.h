@@ -66,7 +66,6 @@ private:
 
     Arrangement& arrangement; //pointer to the DCEL arrangement in which the barcodes will be stored
     FIRep& bifiltration; //pointer to the bifiltration
-    int dim; //dimension of homology to be computed
 
     unsigned verbosity;
 

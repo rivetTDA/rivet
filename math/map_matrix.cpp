@@ -242,7 +242,7 @@ void MapMatrix_Base::add_column(unsigned j, unsigned k)
 
     //loop through all entries in column j
     while (jnode != NULL) {
-        //now it is save to dereference jnode (*jnode)...
+        //now it is safe to dereference jnode (*jnode)...
         unsigned row = jnode->get_row();
 
         //loop through entries in column k, starting at the current position
@@ -259,13 +259,13 @@ void MapMatrix_Base::add_column(unsigned j, unsigned k)
 
         if (!added && khandle == NULL) //then we haven't yet added anything to column k (but if we get here, column k is nonempty)
         {
-            if ((*columns[k]).get_row() == row) //then remove this node (since 1+1=0)
+            if (columns[k]->get_row() == row) //then remove this node (since 1+1=0)
             {
-                MapMatrixNode* next = (*columns[k]).get_next();
+                MapMatrixNode* next = columns[k]->get_next();
                 delete columns[k];
                 columns[k] = next;
                 added = true; //proceed with next element from column j
-            } else if ((*columns[k]).get_row() < row) //then insert new initial node into column k
+            } else if (columns[k]->get_row() < row) //then insert new initial node into column k
             {
                 MapMatrixNode* newnode = new MapMatrixNode(row);
                 newnode->set_next(columns[k]);
@@ -455,13 +455,13 @@ void MapMatrix::add_column(MapMatrix* other, unsigned j, unsigned k)
 
         if (!added && khandle == NULL) //then we haven't yet added anything to column k (but if we get here, column k is nonempty)
         {
-            if ((*columns[k]).get_row() == row) //then remove this node (since 1+1=0)
+            if (columns[k]->get_row() == row) //then remove this node (since 1+1=0)
             {
                 MapMatrixNode* next = (*columns[k]).get_next();
                 delete columns[k];
                 columns[k] = next;
                 added = true; //proceed with next element from column j
-            } else if ((*columns[k]).get_row() < row) //then insert new initial node into column k
+            } else if (columns[k]->get_row() < row) //then insert new initial node into column k
             {
                 MapMatrixNode* newnode = new MapMatrixNode(row);
                 newnode->set_next(columns[k]);
@@ -549,7 +549,7 @@ void MapMatrix::copy_cols_from(MapMatrix* other, int src_col, int dest_col)
     if (other_node != NULL) {
         //create the first node in this column
         cur_node = new MapMatrixNode(other_node->get_row());
-        columns[dest_col] = (cur_node);
+        columns[dest_col] = cur_node;
 
         //create all other nodes in this column
         other_node = other_node->get_next();
@@ -581,7 +581,7 @@ void MapMatrix::copy_cols_same_indexes(MapMatrix* other, int first, int last)
         if (other_node != NULL) {
             //create the first node in this column
             cur_node = new MapMatrixNode(other_node->get_row());
-            columns[j] = (cur_node);
+            columns[j] = cur_node;
 
             //create all other nodes in this column
             other_node = other_node->get_next();
