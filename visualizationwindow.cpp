@@ -185,11 +185,10 @@ void VisualizationWindow::augmented_arrangement_ready(std::shared_ptr<Arrangemen
 
     if (!grades.x.empty() && !grades.y.empty()) {
         //draw the barcode
-        double zero_coord = rivet::numeric::project_zero(angle_precise, offset_precise, grades.x[0], grades.y[0]);
-        p_diagram.set_barcode(zero_coord, *barcode);
+        p_diagram.set_barcode(*barcode);
         p_diagram.resize_diagram(slice_diagram.get_slice_length(), slice_diagram.get_pd_scale());
 
-        slice_diagram.draw_barcode(*barcode, zero_coord, ui->barcodeCheckBox->isChecked());
+        slice_diagram.draw_barcode(*barcode, ui->barcodeCheckBox->isChecked());
 
         //enable slice diagram control items
         slice_diagram.enable_slice_line();
@@ -294,11 +293,9 @@ void VisualizationWindow::update_persistence_diagram()
             barcode->print();
         }
 
-        double zero_coord = rivet::numeric::project_zero(angle_precise, offset_precise, grades.x[0], grades.y[0]);
-
         //draw the barcode
-        p_diagram.update_diagram(slice_diagram.get_slice_length(), slice_diagram.get_pd_scale(), zero_coord, *barcode);
-        slice_diagram.update_barcode(*barcode, zero_coord, ui->barcodeCheckBox->isChecked());
+        p_diagram.update_diagram(slice_diagram.get_slice_length(), slice_diagram.get_pd_scale(), *barcode);
+        slice_diagram.update_barcode(*barcode, ui->barcodeCheckBox->isChecked());
     }
 }
 
