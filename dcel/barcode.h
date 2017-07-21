@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef __BARCODE_H__
 #define __BARCODE_H__
 
+#include <memory>
 #include <set>
 
 struct MultiBar {
@@ -39,6 +40,8 @@ public:
     Barcode();
 
     void add_bar(double b, double d, unsigned m); //adds a bar to the barcode
+
+    std::unique_ptr<Barcode> shift(double amount); //shifts the barcode by adding amount to each endpoint of each bar
 
     std::multiset<MultiBar>::const_iterator begin() const; //returns an iterator to the first bar in the barcode
     std::multiset<MultiBar>::const_iterator end() const; //returns an iterator to the pst-the-end element the barcode
