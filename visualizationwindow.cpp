@@ -184,12 +184,15 @@ void VisualizationWindow::augmented_arrangement_ready(std::shared_ptr<Arrangemen
     barcode->print();
 
     if (!grades.x.empty() && !grades.y.empty()) {
-        //draw the barcode
-        double zero_coord = rivet::numeric::project_zero(angle_precise, offset_precise, grades.x[0], grades.y[0]);
-        p_diagram.set_barcode(zero_coord, *barcode);
+        //shift the barcode so that "zero" is where the selected line crosses the bottom or left side of the viewing window
+    	double ll_corner = rivet::numeric::project_to_line(angle_precise, offset_precise, grades.x[0], grades.y[0]); //lower-left corner of line selection window
+    	barcode = barcode->shift(-1*ll_corner);
+
+    	//draw the barcode
+        p_diagram.set_barcode(*barcode);
         p_diagram.resize_diagram(slice_diagram.get_slice_length(), slice_diagram.get_pd_scale());
 
-        slice_diagram.draw_barcode(*barcode, zero_coord, ui->barcodeCheckBox->isChecked());
+        slice_diagram.draw_barcode(*barcode, ui->barcodeCheckBox->isChecked());
 
         //enable slice diagram control items
         slice_diagram.enable_slice_line();
@@ -277,11 +280,19 @@ void VisualizationWindow::update_persistence_diagram()
 {
     if (persistence_diagram_drawn) {
         //get the barcode
-        if (verbosity >= 4) {
+        if (verbosity >= 0) {
             qDebug() << "  QUERY: angle =" << angle_precise << ", offset =" << offset_precise;
         }
         BarcodeTemplate dbc = arrangement->get_barcode_template(angle_precise, offset_precise);
         barcode = dbc.rescale(angle_precise, offset_precise, template_points->template_points, grades);
+
+        qDebug() << "Unshifted barcode:";
+        barcode->print();
+
+        //shift the barcode so that "zero" is where the selected line crosses the bottom or left side of the viewing window
+    	double ll_corner = rivet::numeric::project_to_line(angle_precise, offset_precise, grades.x[0], grades.y[0]); //lower-left corner of line selection window
+    	qDebug() << "ll_corner: " << ll_corner;
+    	barcode = barcode->shift(-1*ll_corner);
 
         //TESTING
         //qDebug() << "  XI SUPPORT VECTOR:";
@@ -289,16 +300,14 @@ void VisualizationWindow::update_persistence_diagram()
         //    TemplatePoint p = template_points->template_points[i];
         //    qDebug().nospace() << "    [" << i << "]: (" << p.x << "," << p.y << ") --> (" << grades.x[p.x] << "," << grades.y[p.y] << ")";
         //}
-        if (verbosity >= 4) {
+        if (verbosity >= 0) {
             dbc.print();
             barcode->print();
         }
 
-        double zero_coord = rivet::numeric::project_zero(angle_precise, offset_precise, grades.x[0], grades.y[0]);
-
         //draw the barcode
-        p_diagram.update_diagram(slice_diagram.get_slice_length(), slice_diagram.get_pd_scale(), zero_coord, *barcode);
-        slice_diagram.update_barcode(*barcode, zero_coord, ui->barcodeCheckBox->isChecked());
+        p_diagram.update_diagram(slice_diagram.get_slice_length(), slice_diagram.get_pd_scale(), *barcode);
+        slice_diagram.update_barcode(*barcode, ui->barcodeCheckBox->isChecked());
     }
 }
 

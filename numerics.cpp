@@ -92,7 +92,9 @@ namespace numeric {
     }
 
     //computes the projection of the lower-left corner of the line-selection window onto the specified line
-    double project_zero(double angle, double offset, double x_0, double y_0)
+    //  NOTE: parametrization of the line is as in the RIVET paper
+    //  this function is similar to BarcodeTemplate::project()
+    double project_to_line(double angle, double offset, double x_0, double y_0)
     {
         if (angle == 0) //then line is horizontal
             return x_0;
@@ -103,10 +105,18 @@ namespace numeric {
         //if we get here, then line is neither horizontal nor vertical
         double radians = angle * PI / 180;
 
-        if (y_0 > x_0 * tan(radians) + offset / cos(radians)) //then point is above line
-            return y_0 / sin(radians) - offset / tan(radians); //project right
+        double yL = x_0 * tan(radians) + offset / cos(radians); // the point (x_0, yL) is on the line
 
-        return x_0 / cos(radians) + offset * tan(radians); //project up
+        if (y_0 >= yL) { //then point is above line, so project to the right
+            if (offset >= 0) {
+                return (y_0 * cos(radians) - offset) / (sin(radians) * cos(radians));
+            } //else
+            return y_0 / sin(radians);
+        } //else: point is below the line, so project up
+        if (offset >= 0) {
+            return x_0 / cos(radians);
+        } //else 
+        return yL / sin(radians);
     } //end project_zero()
 }
 }

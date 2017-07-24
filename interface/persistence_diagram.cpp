@@ -152,9 +152,8 @@ void PersistenceDiagram::resize_diagram(double slice_length, double diagram_scal
 } //end resize_diagram()
 
 //sets the barcode and the zero coordinate
-void PersistenceDiagram::set_barcode(double zero, const Barcode& bc)
+void PersistenceDiagram::set_barcode(const Barcode& bc)
 {
-    zero_coord = zero;
     barcode = &bc;
 }
 
@@ -175,8 +174,7 @@ void PersistenceDiagram::draw_dots()
     for (std::multiset<MultiBar>::iterator it = barcode->begin(); it != barcode->end(); ++it) {
         if (it->death == std::numeric_limits<double>::infinity()) //essential cycle (visualized in the upper horizontal strip of the persistence diagram)
         {
-            //shift coordinate
-            double birth = it->birth - zero_coord;
+            double birth = it->birth;
 
             //check to see if a dot already exists in its position
             int x_pixel = std::round(birth * scale);
@@ -217,9 +215,8 @@ void PersistenceDiagram::draw_dots()
             }
         } else //finite bar (visualized as a dot in the triangular part of the persistence diagram)
         {
-            //shift coordinates
-            double birth = it->birth - zero_coord;
-            double death = it->death - zero_coord;
+            double birth = it->birth;
+            double death = it->death;
 
             //check to see if this dot will be in the lt_inf strip
             if (death * scale > diagram_size) //dot is in the lt_inf strip
@@ -299,12 +296,11 @@ void PersistenceDiagram::redraw_dots()
 } //void redraw_dots()
 
 //updates the diagram after a change in the slice line
-void PersistenceDiagram::update_diagram(double slice_length, double diagram_scale, double zero, const Barcode& bc)
+void PersistenceDiagram::update_diagram(double slice_length, double diagram_scale, const Barcode& bc)
 {
     //update parameters
     line_size = slice_length / sqrt(2); //divide by sqrt(2) because the line is drawn at a 45-degree angle
     scale = diagram_scale / sqrt(2); //similarly, divide by sqrt(2)
-    zero_coord = zero;
     barcode = &bc;
 
     //modify frame
