@@ -65,6 +65,19 @@ void Barcode::add_bar(double b, double d, unsigned m)
     bars.insert(MultiBar(b, d, m));
 }
 
+//shifts the barcode by adding amount to each endpoint of each bar
+std::unique_ptr<Barcode> Barcode::shift(double amount)
+{
+    std::unique_ptr<Barcode> bc = std::unique_ptr<Barcode>(new Barcode());
+
+    for (std::multiset<MultiBar>::iterator it = bars.begin(); it != bars.end(); ++it) {
+        MultiBar mb = *it;
+        bc->add_bar(mb.birth + amount, mb.death + amount, mb.multiplicity);
+    }
+
+    return bc;
+}
+
 //returns an iterator to the first bar in the barcode
 std::set<MultiBar>::const_iterator Barcode::begin() const
 {

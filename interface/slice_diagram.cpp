@@ -43,7 +43,6 @@ SliceDiagram::SliceDiagram(ConfigParameters* params, std::vector<double>& x_grad
     , slice_line(nullptr)
     , x_grades(x_grades)
     , y_grades(y_grades)
-    , line_zero(0)
     , max_xi_value(0)
     , padding(20)
     , created(false)
@@ -511,17 +510,15 @@ void SliceDiagram::update_window_controls(bool from_dot)
 } //end update_window_controls()
 
 //draws the barcode parallel to the slice line
-void SliceDiagram::draw_barcode(Barcode const& bc, double zero_coord, bool show)
+void SliceDiagram::draw_barcode(Barcode const& bc, bool show)
 {
-    line_zero = zero_coord;
-
     bars.resize(bc.size());
     unsigned num_bars = 1;
     unsigned index = 0;
 
     for (std::multiset<MultiBar>::iterator it = bc.begin(); it != bc.end(); ++it) {
-        double start = it->birth - line_zero;
-        double end = it->death - line_zero;
+        double start = it->birth;
+        double end = it->death;
 
         for (unsigned i = 0; i < it->multiplicity; i++) {
             std::pair<double, double> p1 = compute_endpoint(start, num_bars);
@@ -540,7 +537,7 @@ void SliceDiagram::draw_barcode(Barcode const& bc, double zero_coord, bool show)
 
 //updates the barcode (e.g. after a change in the slice line)
 //TODO: would it be better to move bars, instead of deleting and re-creating them?
-void SliceDiagram::update_barcode(Barcode const& bc, double zero_coord, bool show)
+void SliceDiagram::update_barcode(Barcode const& bc, bool show)
 {
     //remove any current selection
     primary_selected.clear();
@@ -556,7 +553,7 @@ void SliceDiagram::update_barcode(Barcode const& bc, double zero_coord, bool sho
     }
 
     //draw new bars
-    draw_barcode(bc, zero_coord, show);
+    draw_barcode(bc, show);
 }
 
 //computes an endpoint of a bar in the barcode
