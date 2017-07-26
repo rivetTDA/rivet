@@ -440,38 +440,38 @@ void FIRep::write_boundary_column(MapMatrix* mat, std::vector<unsigned>& entries
 //  entry (i,j) gives the last column of the MapMatrix that corresponds to multigrade (i,j)
 IndexMatrix* FIRep::get_low_index_mx()
 {
-    return get_index_mx(&indexes_0);
+    return get_index_mx(indexes_0);
 }
 
 //returns a matrix of column indexes to accompany MapMatrices
 //  entry (i,j) gives the last column of the MapMatrix that corresponds to multigrade (i,j)
 IndexMatrix* FIRep::get_high_index_mx()
 {
-    return get_index_mx(&indexes_1);
+    return get_index_mx(indexes_1);
 }
 
 //returns a matrix of column indexes to accompany MapMatrices
 //  entry (i,j) gives the last column of the MapMatrix that corresponds to multigrade (i,j)
-IndexMatrix* FIRep::get_index_mx(AppearanceGrades* grades)
+IndexMatrix* FIRep::get_index_mx(AppearanceGrades& grades)
 {
     //create the IndexMatrix
     unsigned x_size = x_grades;
     unsigned y_size = y_grades;
     IndexMatrix* mat = new IndexMatrix(y_size, x_size); //DELETE this object later!
 
-    if (!grades->empty()) //then there is at least one simplex
+    if (!grades.empty()) //then there is at least one simplex
     {
         //initialize to -1 the entries of end_col matrix before multigrade of the first simplex
         unsigned cur_entry = 0; //tracks previously updated multigrade in end-cols
 
         unsigned cur_grade = 0;
-        for (; cur_entry < grades->at(0).x + grades->at(0).y * x_size; cur_entry++)
+        for (; cur_entry < grades.at(0).x + grades.at(0).y * x_size; cur_entry++)
             mat->set(cur_entry / x_size, cur_entry % x_size, -1);
 
         //loop through simplices
-        for (; cur_grade < grades->size(); cur_grade++) {
-            int cur_x = grades->at(cur_grade).x;
-            int cur_y = grades->at(cur_grade).y;
+        for (; cur_grade < grades.size(); cur_grade++) {
+            int cur_x = grades.at(cur_grade).x;
+            int cur_y = grades.at(cur_grade).y;
 
             //if some multigrades were skipped, store previous column number in skipped cells of end_col matrix
             for (; cur_entry < cur_x + cur_y * x_size; cur_entry++)

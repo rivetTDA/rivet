@@ -88,7 +88,7 @@ private:
 
     void write_boundary_column(MapMatrix* mat, std::vector<unsigned>& entries, unsigned col); //writes boundary information given boundary entries in column col of matrix mat
 
-    IndexMatrix* get_index_mx(AppearanceGrades* source_grades); //Gets the index matrix associated with a list of grades
+    IndexMatrix* get_index_mx(AppearanceGrades& source_grades); //Gets the index matrix associated with a list of grades
 };
 
 #endif // __SimplexTree_H__
