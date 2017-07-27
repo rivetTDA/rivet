@@ -286,12 +286,8 @@ void VisualizationWindow::update_persistence_diagram()
         BarcodeTemplate dbc = arrangement->get_barcode_template(angle_precise, offset_precise);
         barcode = dbc.rescale(angle_precise, offset_precise, template_points->template_points, grades);
 
-        qDebug() << "Unshifted barcode:";
-        barcode->print();
-
         //shift the barcode so that "zero" is where the selected line crosses the bottom or left side of the viewing window
     	double ll_corner = rivet::numeric::project_to_line(angle_precise, offset_precise, grades.x[0], grades.y[0]); //lower-left corner of line selection window
-    	qDebug() << "ll_corner: " << ll_corner;
     	barcode = barcode->shift(-1*ll_corner);
 
         //TESTING

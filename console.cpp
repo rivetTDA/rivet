@@ -363,7 +363,7 @@ int main(int argc, char* argv[])
             std::clog << "Wrote arrangement to " << params.outputFile << std::endl;
         }
     });
-    computation.template_points_ready.connect([&points_message, &binary, &betti_only, &verbosity](TemplatePointsMessage message) {
+    computation.template_points_ready.connect([&points_message, &binary, &betti_only, &verbosity, &params](TemplatePointsMessage message) {
         points_message.reset(new TemplatePointsMessage(message));
 
         if (binary) {
@@ -398,8 +398,27 @@ int main(int argc, char* argv[])
             print_dims(message, std::cout);
             std::cout << std::endl;
             print_betti(message, std::cout);
-            std::cout.flush();
+            
+            //if an output file has been specified, then save the Betti numbers in an arrangement file (with no barcode templates)
+            if (!params.outputFile.empty()) {
+                std::ofstream file(params.outputFile);
+                if (file.is_open()) {
+                    std::vector<exact> emptyvec;
+                    std::shared_ptr<Arrangement> temp_arrangement = std::make_shared<Arrangement>(emptyvec, emptyvec, verbosity);
+                    std::shared_ptr<ArrangementMessage> temp_am = std::make_shared<ArrangementMessage>(*temp_arrangement);
+                    if (verbosity > 0) {
+                        debug() << "Writing file:" << params.outputFile;
+                    }
+                    write_boost_file(params, *points_message, *temp_am);
+                } else {
+                    std::stringstream ss;
+                    ss << "Error: Unable to write file:" << params.outputFile;
+                    throw std::runtime_error(ss.str());
+                }
+            }
+
             //TODO: this seems a little abrupt...
+            std::cout.flush();
             exit(0);
         }
     });
