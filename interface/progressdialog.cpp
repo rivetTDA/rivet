@@ -81,15 +81,18 @@ void ProgressDialog::updateProgress(unsigned current)
 void ProgressDialog::setComputationFinished()
 {
     computation_finished = true;
-    close();
+    QThread::msleep(200); //seems to prevent ProgressDialog from sticking around after it is supposed to have been closed
+    done(0);
 }
 
 void ProgressDialog::closeEvent(QCloseEvent* event)
 {
     if (!computation_finished)
         event->ignore();
-    else
+    else {
         event->accept();
+        QWidget::closeEvent(event);
+    }
 }
 
 QLabel* ProgressDialog::getLabel(unsigned i)
