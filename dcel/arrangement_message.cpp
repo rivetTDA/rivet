@@ -530,3 +530,8 @@ Arrangement ArrangementMessage::to_arrangement() const
 //    std::clog << "All anchors identical in to_arrangement" << std::endl;
     return arrangement;
 }
+
+bool ArrangementMessage::is_empty() const
+{
+    return ( x_exact.empty() && y_exact.empty() );
+}

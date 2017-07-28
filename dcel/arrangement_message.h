@@ -51,6 +51,8 @@ public:
 
     Arrangement to_arrangement() const;
 
+    bool is_empty() const;
+
 private:
     friend class boost::serialization::access;
 

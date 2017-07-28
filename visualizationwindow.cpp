@@ -166,6 +166,10 @@ void VisualizationWindow::augmented_arrangement_ready(std::shared_ptr<Arrangemen
     //receive the arrangement
     this->arrangement = arrangement;
 
+    if(arrangement->is_empty()) { //e.g. the arrangement contains only Betti numbers and no barcode templates
+        return;
+    }
+
     //TESTING: print arrangement info and verify consistency
     //    arrangement->print_stats();
     //    arrangement->test_consistency();
