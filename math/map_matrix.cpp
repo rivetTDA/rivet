@@ -712,6 +712,25 @@ void MapMatrix::print()
     }
 } //end print()
 
+//check for inconsistencies in matrix column, for testing purposes
+void MapMatrix::assert_cols_correct()
+{
+    for (unsigned j = 0; j < columns.size(); j++) {
+        //consider the first node
+        MapMatrixNode* current = columns[j];
+        MapMatrixNode* next_node;
+
+        //consider all following nodes
+        while (current != NULL) {
+            next_node = current->get_next();
+            if (next_node != NULL && current->get_row() <= next_node->get_row()) {
+                debug() << "===>>> ERROR IN COLUMN " << j;
+            }
+            current = next_node;
+        }
+    }
+}
+
 /********** implementation of class MapMatrix_Perm, supports row swaps (and stores a low array) **********/
 
 MapMatrix_Perm::MapMatrix_Perm(unsigned rows, unsigned cols)
@@ -793,7 +812,6 @@ MapMatrix_RowPriority_Perm* MapMatrix_Perm::decompose_RU()
 {
     //create the matrix U
     MapMatrix_RowPriority_Perm* U = new MapMatrix_RowPriority_Perm(columns.size()); //NOTE: must be deleted later!
-
     //loop through columns
     for (unsigned j = 0; j < columns.size(); j++) {
         //while column j is nonempty and its low number is found in the low array, do column operations
@@ -809,7 +827,6 @@ MapMatrix_RowPriority_Perm* MapMatrix_Perm::decompose_RU()
             low_by_row[columns[j]->get_row()] = j;
         }
     }
-
     //return the matrix U
     return U;
 } //end decompose_RU()

@@ -123,6 +123,9 @@ public:
 
     //FOR TESTING ONLY
     virtual void print(); //prints the matrix to standard output (for testing)
+
+    //check for inconsistencies in matrix column, for testing purposes
+    void assert_cols_correct();
 };
 
 //MapMatrix with row/column permutations and low array, designed for "vineyard updates"

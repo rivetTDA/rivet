@@ -38,6 +38,44 @@ class MapMatrix_Perm;
 #include <string>
 #include <vector>
 
+//structure which represents a generalized simplex whose information will be stored in boundary matrices
+struct Generator
+{
+    int x;
+    int y;
+    Grade* grade; //reference to grade that this generator represents, if applicable
+    std::vector<unsigned> boundary; //Boundary should be in sorted order
+
+    Generator(Grade* set_grade) : x(set_grade->x), y(set_grade->y), grade(set_grade), boundary(std::vector<unsigned>()) {}
+
+    Generator(int set_x, int set_y) : x(set_x), y(set_y), grade(NULL), boundary(std::vector<unsigned>()) {}
+
+    bool operator<(Generator other) const
+    {
+        if (y != other.y)
+            return y < other.y;
+        else if (x != other.x)
+            return x < other.x;
+        else {
+            int currIndex = boundary.size() - 1;
+            int otherIndex = other.boundary.size() - 1;
+            while (currIndex != -1 && otherIndex != -1) {
+                if (boundary[currIndex] != other.boundary[otherIndex])
+                {
+                    return boundary[currIndex] < other.boundary[otherIndex];
+                }
+                currIndex--;
+                otherIndex--;
+            }
+            if (otherIndex == -1)
+            {
+                return false;
+            }
+            return true;
+        }
+    }
+};
+
 class FIRep {
 public:
     FIRep(BifiltrationData& bd, int v); //constructor; requires verbosity parameter
@@ -84,7 +122,8 @@ private:
     //TODO: Delete reference once Alex's code is merged
     BifiltrationData& bifiltration_data; //Associated bifiltration data is kept only for Alex's dendrogram code
 
-    void write_boundary_column(MapMatrix* mat, const std::vector<int>& vertices, SimplexInfo* low_simplices, int col); //writes boundary information for simplex represented by sim in column col of matrix mat
+    //writes boundary vector for simplex represented by sim in column col of matrix mat
+    void set_boundary_vector(Generator& generator, const std::vector<int>& vertices, SimplexInfo* low_simplices);
 
     void write_boundary_column(MapMatrix* mat, std::vector<unsigned>& entries, unsigned col); //writes boundary information given boundary entries in column col of matrix mat
 

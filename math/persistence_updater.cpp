@@ -1241,7 +1241,6 @@ void PersistenceUpdater::update_order_and_reset_matrices(std::shared_ptr<Templat
         inv_perm_high[perm_high[i]] = i;
 
     //STEP 3: re-build the matrix R based on the new order
-
     R_low->rebuild(RL_initial, perm_low);
     R_high->rebuild(RH_initial, perm_high, perm_low);
 
