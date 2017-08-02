@@ -404,6 +404,7 @@ void SliceDiagram::redraw_dots()
 //updates the diagram after a change in configuration parameters
 void SliceDiagram::receive_parameter_change()
 {
+    qDebug() << "Inside receive_parameter_change()";
     //update colors of the xi dots (necessary because I didn't override their paint() function)
     QBrush xi0brush(config_params->xi0color);
     QBrush xi1brush(config_params->xi1color);
@@ -434,6 +435,7 @@ void SliceDiagram::receive_parameter_change()
     //update diagram
     resize_diagram();
 
+    qDebug() << "Finishing receive_parameter_change()";
 } //end update_diagram()
 
 //updates the line, in response to a change in the controls in the VisualizationWindow
