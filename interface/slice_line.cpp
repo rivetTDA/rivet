@@ -178,6 +178,7 @@ void SliceLine::update_lb_endpoint(QPointF& newpos)
 //updates right-top endpoint
 void SliceLine::update_rt_endpoint(QPointF& newpos)
 {
+    qDebug() << "Inside SliceLine::update_rt_endpoint()";
     update_lock = true;
 
     //reposition the right endpoint where it should be
@@ -198,6 +199,7 @@ void SliceLine::update_rt_endpoint(QPointF& newpos)
     sdgm->update_window_controls(true);
 
     update_lock = false;
+    qDebug() << "Finishing SliceLine::update_rt_endpoint()";
 }
 
 //gets x-coordinate of right-top endpoint

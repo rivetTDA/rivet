@@ -280,6 +280,7 @@ void VisualizationWindow::on_xi2CheckBox_toggled(bool checked)
 //updates the persistence diagram and barcode after a change in the slice line
 void VisualizationWindow::update_persistence_diagram()
 {
+    qDebug() << "Inside VisualizationWindow::update_persistence_diagram()";
     if (persistence_diagram_drawn) {
         //get the barcode
         if (verbosity >= 4) {
@@ -305,6 +306,7 @@ void VisualizationWindow::update_persistence_diagram()
         p_diagram.update_diagram(slice_diagram.get_slice_length(), slice_diagram.get_pd_scale(), zero_coord, *barcode);
         slice_diagram.update_barcode(*barcode, zero_coord, ui->barcodeCheckBox->isChecked());
     }
+    qDebug() << "Finishing VisualizationWindow::update_persistence_diagram()";
 }
 
 void VisualizationWindow::set_line_parameters(double angle, double offset)

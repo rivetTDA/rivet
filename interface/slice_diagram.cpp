@@ -488,6 +488,7 @@ void SliceDiagram::update_line(double angle, double offset)
 //updates controls in the VisualizationWindow in response to a change in the line (also update SliceDiagram data values)
 void SliceDiagram::update_window_controls(bool from_dot)
 {
+    qDebug() << "Inside SliceDiagram::update_window_controls()";
     //update SliceDiagram data values
     line_vert = slice_line->is_vertical();
     line_slope = slice_line->get_slope() * scale_x / scale_y; //convert pixel units to data units
@@ -526,6 +527,8 @@ void SliceDiagram::update_window_controls(bool from_dot)
 
     //since the line has changed, the highlighting is no longer valid
     highlight_line->hide();
+
+    qDebug() << "Finishing SliceDiagram::update_window_controls()";
 } //end update_window_controls()
 
 //draws the barcode parallel to the slice line
@@ -560,6 +563,7 @@ void SliceDiagram::draw_barcode(Barcode const& bc, double zero_coord, bool show)
 //TODO: would it be better to move bars, instead of deleting and re-creating them?
 void SliceDiagram::update_barcode(Barcode const& bc, double zero_coord, bool show)
 {
+    qDebug() << "Inside SliceDiagram::update_barcode()";
     //remove any current selection
     primary_selected.clear();
     secondary_selected.clear();
@@ -572,9 +576,11 @@ void SliceDiagram::update_barcode(Barcode const& bc, double zero_coord, bool sho
             it->pop_back();
         }
     }
+    qDebug() << "    deleted old bars; ready to draw new bars";
 
     //draw new bars
     draw_barcode(bc, zero_coord, show);
+    qDebug() << "Finishing SliceDiagram::update_barcode()";
 }
 
 //computes an endpoint of a bar in the barcode
