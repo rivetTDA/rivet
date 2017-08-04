@@ -49,7 +49,7 @@ public:
     void add_point(double x_coord, double y_coord, int xi0m, int xi1m, int xi2m); //receives an xi support point, which will be drawn when create_diagram() is called
     void clear_points(); //removes all previously-created points from the diagram
 
-    void create_diagram(const QString x_text, const QString y_text, double xmin, double xmax, double ymin, double ymax, bool norm_coords, unsigned_matrix& hom_dims); //simply creates all objects; resize_diagram() handles positioning of objects
+    void create_diagram(const QString& x_text, const QString& y_text, double xmin, double xmax, double ymin, double ymax, bool norm_coords, unsigned_matrix& hom_dims); //simply creates all objects; resize_diagram() handles positioning of objects
     void enable_slice_line(); //enables the slice line and control dots
     bool is_created(); //true if the diagram has been created; false otherwise
     void resize_diagram(); //resizes diagram to fill the QGraphicsView
@@ -76,7 +76,7 @@ public:
     double get_slice_length(); //gets the length of the slice, for scaling the persistence diagram
     double get_pd_scale(); //gets the number of pixels per unit, for the persistence diagram
 
-    void receive_parameter_change(const QString& xtext, const QString& ytext); //updates the diagram after a change in configuration parameters
+    void receive_parameter_change(); //updates the diagram after a change in configuration parameters
 
 public slots:
     void receive_bar_selection(std::vector<unsigned> indexes); //highlight the specified class of bars, which has been selected externally

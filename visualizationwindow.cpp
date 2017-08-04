@@ -116,6 +116,13 @@ void VisualizationWindow::start_computation()
     //start the computation in a new thread
     cthread.compute();
 
+    //update text items
+    auto shortName = QString::fromStdString(input_params.shortName);
+    this->setWindowTitle("RIVET - " + shortName);
+    ui->filenameLabel->setText( QStringLiteral("Input file: ").append(shortName) );
+    ui->homdimLabel->setText( QStringLiteral("Homology dimension: %1").arg(input_params.dim) );
+
+
 } //end start_computation()
 
 //this slot is signaled when the xi support points are ready to be drawn
@@ -134,10 +141,12 @@ void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMe
         slice_diagram.add_point(grades.x[point.x], grades.y[point.y], point.zero, point.one, point.two);
 
     //create the SliceDiagram
+    config_params.xLabel = QString::fromStdString(template_points->x_label);
+    config_params.yLabel = QString::fromStdString(template_points->y_label);
     if (!slice_diagram.is_created() && !grades.x.empty() && !grades.y.empty()) {
         slice_diagram.create_diagram(
-            QString::fromStdString(template_points->x_label),
-            QString::fromStdString(template_points->y_label),
+            config_params.xLabel,
+            config_params.yLabel,
             grades.x.front(), grades.x.back(),
             grades.y.front(), grades.y.back(),
             ui->normCoordCheckBox->isChecked(), template_points->homology_dimensions);
@@ -173,12 +182,9 @@ void VisualizationWindow::augmented_arrangement_ready(std::shared_ptr<Arrangemen
     //TESTING: print arrangement info and verify consistency
     //    arrangement->print_stats();
     //    arrangement->test_consistency();
-    auto shortName = QString::fromStdString(input_params.shortName);
 
-    this->setWindowTitle("RIVET - " + shortName);
-
-    //inialize persistence diagram
-    p_diagram.create_diagram(shortName, input_params.dim);
+    //create persistence diagram
+    p_diagram.create_diagram();
 
     //get the barcode
     BarcodeTemplate dbc = arrangement->get_barcode_template(angle_precise, offset_precise);
@@ -384,8 +390,7 @@ void VisualizationWindow::on_actionConfigure_triggered()
     configBox->exec();
 
     if (line_selection_ready) {
-        slice_diagram.receive_parameter_change(QString::fromStdString(template_points->x_label),
-            QString::fromStdString(template_points->y_label));
+        slice_diagram.receive_parameter_change();
 
         if (persistence_diagram_drawn)
             p_diagram.receive_parameter_change();
