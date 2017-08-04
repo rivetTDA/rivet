@@ -54,6 +54,7 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(ComputationInput& in
             }
         }
     }
+
     //STAGE 3: COMPUTE MULTIGRADED BETTI NUMBERS
 
     std::unique_ptr<ComputationResult> result(new ComputationResult);

@@ -29,7 +29,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QDebug>
 #include <QGraphicsView>
 
-#include <cmath> //c++ version of math.h; includes overloaded absolute value functions
+#include <algorithm> // std::min
+#include <cmath> 	 // c++ version of math.h; includes overloaded absolute value functions
 #include <limits>
 #include <set>
 #include <sstream>
@@ -42,7 +43,6 @@ SliceDiagram::SliceDiagram(ConfigParameters* params, std::vector<double>& x_grad
     , slice_line(nullptr)
     , x_grades(x_grades)
     , y_grades(y_grades)
-    , line_zero(0)
     , max_xi_value(0)
     , padding(20)
     , created(false)
@@ -85,7 +85,6 @@ void SliceDiagram::create_diagram(const QString& x_text, const QString& y_text, 
     data_ymin = ymin;
     data_ymax = ymax;
     normalized_coords = norm_coords;
-    data_infty = 10 * (xmax - xmin + ymax - ymin);
 
     //pens and brushes
     QPen blackPen(Qt::black);
@@ -248,6 +247,7 @@ void SliceDiagram::resize_diagram()
     QList<QGraphicsView*> view_list = views();
     int view_width = view_list[0]->width();
     int view_height = view_list[0]->height();
+    view_length = view_width + view_height;
 
     //determine scale
     double left_text_width = std::max(data_ymin_text->boundingRect().width(), data_ymax_text->boundingRect().width());
@@ -258,12 +258,12 @@ void SliceDiagram::resize_diagram()
     if (data_xmax > data_xmin)
         scale_x = diagram_max_width / (data_xmax - data_xmin);
     else //then there is only one x-grade
-        scale_x = 1; ///IS THIS WHAT WE WANT???
+        scale_x = 100; //only matters if there is one x-grade and a few y-grades
 
     if (data_ymax > data_ymin)
         scale_y = diagram_max_height / (data_ymax - data_ymin);
     else //then there is only one x-grade
-        scale_y = 1; ///IS THIS WHAT WE WANT???
+        scale_y = 100; //only matters if there is one y-grade and a few x-grades
 
     if (!normalized_coords) //then we want scale_x and scale_y to be the same (choose the smaller of the two)
     {
@@ -534,17 +534,15 @@ void SliceDiagram::update_window_controls(bool from_dot)
 } //end update_window_controls()
 
 //draws the barcode parallel to the slice line
-void SliceDiagram::draw_barcode(Barcode const& bc, double zero_coord, bool show)
+void SliceDiagram::draw_barcode(Barcode const& bc, bool show)
 {
-    line_zero = zero_coord;
-
     bars.resize(bc.size());
     unsigned num_bars = 1;
     unsigned index = 0;
 
     for (std::multiset<MultiBar>::iterator it = bc.begin(); it != bc.end(); ++it) {
-        double start = it->birth - line_zero;
-        double end = it->death - line_zero;
+        double start = it->birth;
+        double end = it->death;
 
         for (unsigned i = 0; i < it->multiplicity; i++) {
             std::pair<double, double> p1 = compute_endpoint(start, num_bars);
@@ -563,7 +561,7 @@ void SliceDiagram::draw_barcode(Barcode const& bc, double zero_coord, bool show)
 
 //updates the barcode (e.g. after a change in the slice line)
 //TODO: would it be better to move bars, instead of deleting and re-creating them?
-void SliceDiagram::update_barcode(Barcode const& bc, double zero_coord, bool show)
+void SliceDiagram::update_barcode(Barcode const& bc, bool show)
 {
     //remove any current selection
     primary_selected.clear();
@@ -579,7 +577,7 @@ void SliceDiagram::update_barcode(Barcode const& bc, double zero_coord, bool sho
     }
 
     //draw new bars
-    draw_barcode(bc, zero_coord, show);
+    draw_barcode(bc, show);
 }
 
 //computes an endpoint of a bar in the barcode
@@ -588,22 +586,32 @@ std::pair<double, double> SliceDiagram::compute_endpoint(double coordinate, unsi
     //difference in offset between consecutive bars (pixel units)
     int step_size = config_params->persistenceBarWidth + config_params->persistenceBarSpace;
 
-    //handle infinity
-    if (coordinate == std::numeric_limits<double>::infinity())
-        coordinate = data_infty;
-
     //compute x and y relative to slice line (pixel units)
     double x = 0;
     double y = 0;
     if (line_vert) {
-        y = coordinate * scale_y; //position along the line
+        if (coordinate == std::numeric_limits<double>::infinity()) {
+            //choose y outside of the viewable window
+            y = view_length;
+        } else {
+            //find y along the line
+            y = coordinate * scale_y;
+        }
+
+        //offset from slice line
         x = -1 * (int)(step_size * offset);
     } else {
-        //position along the line
         double angle = atan(line_slope); //angle (data)      NOTE: it would be slightly more efficient to only compute this once per barcode update
+        
+        if (coordinate == std::numeric_limits<double>::infinity()) {
+            //set coordinate so that it will be outside the viewable window
+            coordinate = view_length / std::min(scale_x, scale_y);
+        }
+        
+        //find (x,y) along the line
         x = coordinate * cos(angle) * scale_x;
         y = coordinate * sin(angle) * scale_y;
-
+        
         //offset from slice line
         double pixel_angle = atan(line_slope * scale_y / scale_x); //angle (pixels)    NOTE: it would be slightly more efficient to only compute this once per barcode update
         x -= step_size * offset * sin(pixel_angle);

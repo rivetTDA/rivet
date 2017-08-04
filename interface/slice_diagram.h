@@ -59,8 +59,8 @@ public:
     void update_line(double angle, double offset); //updates the line, in response to a change in the controls in the VisualizationWindow
     void update_window_controls(bool from_dot); //computes new angle and offset in response to a change in the line, emits signal for the VisualizationWindow
 
-    void draw_barcode(const Barcode& bc, double zero_coord, bool show); //draws the barcode parallel to the slice line; "show" determines whether or not bars are visible
-    void update_barcode(const Barcode& bc, double zero_coord, bool show); //updates the barcode (e.g. after a change in the slice line)
+    void draw_barcode(const Barcode& bc, bool show); //draws the barcode parallel to the slice line; "show" determines whether or not bars are visible
+    void update_barcode(const Barcode& bc, bool show); //updates the barcode (e.g. after a change in the slice line)
 
     void select_bar(PersistenceBar* clicked); //highlight the specified class of bars, and propagate to the persistence diagram
     void deselect_bar(); //remove selection and propagate to the persistence diagram
@@ -143,8 +143,7 @@ private:
 
     ///TODO: the next four values can be obtained from x_grades and y_grades
     double data_xmin, data_xmax, data_ymin, data_ymax; //min and max coordinates of the data
-    double line_zero; //coordinate of projection of lower-left corner of line-selection window onto selected line
-    double data_infty; //data position that is outside of the window, used for drawing bars that extend to infinity
+    int view_length;    //width + height of the QGraphicsView that displays the diagram; used for drawing infinite bars
     int max_xi_value; //max value of the bigraded betti numbers
 
     int diagram_width, diagram_height; //pixel size of the diagram

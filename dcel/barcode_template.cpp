@@ -140,7 +140,8 @@ bool operator==(BarTemplate const& left, BarTemplate const& right)
         && left.multiplicity == right.multiplicity;
 }
 
-//rescales a barcode template by projecting points onto the specified line
+//rescales a barcode template by projecting points onto the line specificed by angle and offset
+// NOTE: parametrization of the line is as in the RIVET paper
 // NOTE: angle in DEGREES
 std::unique_ptr<Barcode> BarcodeTemplate::rescale(double angle, double offset,
     const std::vector<TemplatePoint>& template_points,
@@ -186,7 +187,7 @@ std::unique_ptr<Barcode> BarcodeTemplate::rescale(double angle, double offset,
         }
     }
 
-    //if the line is vertical or horizontal, we must now add the vertical bars
+    //if the line is vertical or horizontal, we must now add the infinite bars
     if (angle == 0 || angle == 90) {
         for (std::map<unsigned, unsigned>::iterator it = infinite_bars.begin(); it != infinite_bars.end(); ++it) {
             double birth = project(template_points[it->first], angle, offset, grades);
@@ -197,31 +198,40 @@ std::unique_ptr<Barcode> BarcodeTemplate::rescale(double angle, double offset,
     return bc;
 } //end rescale_barcode_template()
 
-//computes the projection of an xi support point onto the specified line
+//computes the projection of an xi support point onto the line specificed by angle and offset
+//  NOTE: parametrization of the line is as in the RIVET paper
 //  NOTE: returns INFTY if the point has no projection (can happen only for horizontal and vertical lines)
 //  NOTE: angle in DEGREES
 double BarcodeTemplate::project(const TemplatePoint& pt, double angle, double offset, const Grades& grades)
 {
-    if (angle == 0) //then line is horizontal
-    {
-        if (grades.y[pt.y] <= offset) //then point is below the line, so projection exists
+    if (angle == 0) { //then line is horizontal
+        if (grades.y[pt.y] <= offset) { //then point is below the line, so projection exists
             return grades.x[pt.x];
-        else //then no projection
-            return rivet::numeric::INFTY;
-    } else if (angle == 90) //then line is vertical
-    {
-        if (grades.x[pt.x] <= -1 * offset) //then point is left of the line, so projection exists
+        } //else: no projection
+        return rivet::numeric::INFTY;
+    } else if (angle == 90) { //then line is vertical
+        if (grades.x[pt.x] <= -1 * offset) { //then point is left of the line, so projection exists
             return grades.y[pt.y];
-        else //then no projection
-            return rivet::numeric::INFTY;
+        } //else: no projection
+        return rivet::numeric::INFTY;
     }
+    
     //if we get here, then line is neither horizontal nor vertical
     double radians = angle * rivet::numeric::PI / 180;
     double x = grades.x[pt.x];
     double y = grades.y[pt.y];
 
-    if (y > x * tan(radians) + offset / cos(radians)) //then point is above line
-        return y / sin(radians) - offset / tan(radians); //project right
+    double yL = x * tan(radians) + offset / cos(radians); // the point (x, yL) is on the line
 
-    return x / cos(radians) + offset * tan(radians); //project up
+    if (y >= yL) { //then point is above line, so project to the right
+        if (offset >= 0) {
+            return (y * cos(radians) - offset) / (sin(radians) * cos(radians));
+        } //else
+        return y / sin(radians);
+    } //else: point is below the line, so project up
+    if (offset >= 0) {
+        return x / cos(radians);
+    } //else 
+    return yL / sin(radians);
+
 } //end project()

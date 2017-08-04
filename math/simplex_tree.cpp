@@ -380,8 +380,16 @@ void SimplexTree::write_boundary_column(MapMatrix* mat, STNode* sim, int col, in
 
         //look up dimension index of the facet
         STNode* facet_node = find_simplex(facet);
-        if (facet_node == NULL)
-            throw std::runtime_error("SimplexTree::write_boundary_column(): Facet simplex not found.");
+        if (facet_node == NULL) {
+            std::stringstream ss;
+            for(unsigned i = 0; i < facet.size(); i++) {
+                if(i != 0)
+                    ss << ",";
+                ss << facet[i];
+            }
+
+            throw std::runtime_error("SimplexTree::write_boundary_column(): Facet simplex not found: " + ss.str());
+        }
         int facet_di = facet_node->dim_index();
 
         //for this boundary simplex, enter "1" in the appropriate cell in the matrix
@@ -508,12 +516,9 @@ STNode* SimplexTree::find_simplex(std::vector<int>& vertices)
     if (size == 0)
         return root; //root is associated with the null simpex
 
-    //First node can be indexed directly from the root:
-    STNode* node = root->get_children()[vertices[0]];
-
     //search the vector of children nodes for each vertex
-    //starting from index 1
-    for (unsigned i = 1; i < size && nullptr != node; i++) {
+    STNode* node = root;
+    for (unsigned i = 0; i < size && nullptr != node; i++) {
         std::vector<STNode*>& kids = node->get_children();
         int key = vertices[i];
         node = *(std::find_if(kids.begin(),
