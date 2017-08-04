@@ -67,7 +67,6 @@ void ControlDot::paint(QPainter* painter, const QStyleOptionGraphicsItem* /*unus
 
 QVariant ControlDot::itemChange(GraphicsItemChange change, const QVariant& value)
 {
-    qDebug() << "Inside ControlDot::itemChange()";
     if (change == QGraphicsItem::ItemPositionChange && !update_lock) {
         QPointF mouse = value.toPointF();
         QPointF newpos(mouse);
@@ -136,7 +135,7 @@ QVariant ControlDot::itemChange(GraphicsItemChange change, const QVariant& value
         //return
         return newpos;
     }
-    qDebug() << "Finishing ControlDot::itemChange()";
+    
     return QGraphicsItem::itemChange(change, value);
 }
 
