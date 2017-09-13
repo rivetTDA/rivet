@@ -8,6 +8,7 @@
 #include <limits>   //std::numeric_limits
 #include <stdexcept>
 #include <iostream>  //for std::cout, for testing only
+#include <algorithm> //for std::sort
 
 
 //BifiltrationData constructor; requires dimension of homology to be computed and verbosity parameter
@@ -325,11 +326,11 @@ void BifiltrationData::generateVertexMultigrades(std::vector<AppearanceGrades>& 
 //Takes the intersection of the grades of appearances and the half plan y >= minDist
 void BifiltrationData::combineMultigrades(AppearanceGrades& merged, const AppearanceGrades& grades1, const AppearanceGrades& grades2, const unsigned minDist)
 {
-    int maxX, from; //from tells us which vector the grade we are considering comes from (1, 2, or 3(both))
     AppearanceGrades::const_iterator it1 = grades1.begin();
     AppearanceGrades::const_iterator it2 = grades2.begin();
-    int currXMax = std::max(it1->x, it2->x), currYMax = std::max(std::max(it1->y, it2->y), (int)minDist);
-    Grade lastGrade(currXMax, currYMax);
+    int y1 = it1->y, y2 = it2->y, maxX;
+    int currYMax = std::max(std::max(y1, y2), (int)minDist);
+    Grade lastGrade;
     while (it1 != grades1.end() || it2 != grades2.end())
     {
         maxX = std::numeric_limits<int>::min();
@@ -337,78 +338,41 @@ void BifiltrationData::combineMultigrades(AppearanceGrades& merged, const Appear
         if (it1 != grades1.end())
         {
             maxX = it1->x;
-            from = 1;
         }
-        if (it2 != grades2.end())
+        if (it2 != grades2.end() && maxX <= it2->x)
         {
-            if (maxX == it2->x)
-            {
-                if (it1->y <= it2->y)
-                    from = 1;
-                else
-                    from = 2;
-            }
-            else if (maxX < it2->x)
-            {
-                from = 2;
-            }
-        }
-        switch(from)
-        {
-        case 1:
-        {
+            maxX = it2->x;
+            it2++;
             if (it2 != grades2.end())
             {
-                currXMax = std::max(it1->x, it2->x);
-                currYMax = std::max(std::max(it1->y, it2->y), currYMax);
+                y2 = it2->y;
             }
             else
             {
-                currXMax = std::max(it1->x, (it2 - 1)->x);
-                currYMax = std::max(it1->y, (it2 - 1)->y);
+                y2 = std::numeric_limits<int>::max();
             }
-            if (currYMax == lastGrade.y)
-            {
-                lastGrade.x = currXMax;
-            }
-            else if (currYMax > lastGrade.y && currXMax < lastGrade.x)
-            {
-                merged.push_back(lastGrade);
-                lastGrade.x = currXMax;
-                lastGrade.y = currYMax;
-            }
-            it1++;
-            break;
         }
-        case 2:
+        if (it1 != grades1.end() && maxX == it1->x)
         {
+            it1++;
             if (it1 != grades1.end())
             {
-                currXMax = std::max(it1->x, it2->x);
-                currYMax = std::max(std::max(it1->y, it2->y), currYMax);
+                y1 = it1->y;
             }
             else
             {
-                currXMax = std::max((it1 - 1)->x, it2->x);
-                currYMax = std::max((it1 - 1)->y, it2->y);
+                y1 = std::numeric_limits<int>::max();
             }
-            if (currYMax == lastGrade.y)
-            {
-                lastGrade.x = currXMax;
-            }
-            else if (currYMax > lastGrade.y && currXMax < lastGrade.x)
-            {
-                merged.push_back(lastGrade);
-                lastGrade.x = currXMax;
-                lastGrade.y = currYMax;
-            }
-            it2++;
-            break;
         }
+        int newYMax = std::max(std::max(y1, y2), (int)minDist);
+        if (newYMax > currYMax)
+        {
+            lastGrade.x = maxX;
+            lastGrade.y = currYMax;
+            merged.push_back(lastGrade);
+            currYMax = newYMax;
         }
     }
-    if (merged.empty() || lastGrade.y > merged.back().y)
-        merged.push_back(lastGrade);
 }//end combineMultigrades
 
 //Takes a simplex and its grades of appearance and adds it to ordered_high_grades, ordered_grades, or ordered_low_grades
