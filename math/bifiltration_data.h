@@ -10,7 +10,8 @@
 
 #include <set>
 #include <vector>
-#include <boost/unordered_map.hpp>
+#include <unordered_map>
+#include <boost/functional/hash.hpp>
 
 //Pair of coordinates specifying grade of appearance with additional sorting operator. Sorted first by y then x grade in REVERSE-LEXICOGRAPHIC ORDER.
 struct Grade
@@ -38,18 +39,28 @@ struct Grade
 };
 
 struct GradeHash
-    : std::unary_function<Grade, std::size_t>
 {
     std::size_t operator()(Grade const& grade) const
     {
-        return (boost::hash<int>()(grade.x) * 0x0f0f0f0f) ^ boost::hash<int>()(grade.y); //Make hash non-commutative
+        size_t seed = 0;
+        boost::hash_combine(seed, grade.x);
+        boost::hash_combine(seed, grade.y);
+        return seed;
+    }
+};
+
+struct VectorHash
+{
+    std::size_t operator()(std::vector<int> const& v) const
+    {
+        return boost::hash_range(v.begin(), v.end());
     }
 };
 
 //typedef
 typedef std::vector<Grade> AppearanceGrades;
-typedef boost::unordered::unordered_map<std::vector<int>, AppearanceGrades> SimplexInfo; //vector key is list of vertices in the simplex, value is grades of appearance of simplex
-typedef boost::unordered::unordered_map<Grade, std::vector<std::vector<int> >, GradeHash> GradeInfo; //Grade key is a grade, value is the list of simplices which are born at that grade.
+typedef std::unordered_map<std::vector<int>, AppearanceGrades, VectorHash> SimplexInfo; //vector key is list of vertices in the simplex, value is grades of appearance of simplex
+typedef std::unordered_map<Grade, std::vector<std::vector<int> >, GradeHash> GradeInfo; //Grade key is a grade, value is the list of simplices which are born at that grade.
 
 //now the BifiltrationData class
 class BifiltrationData {
