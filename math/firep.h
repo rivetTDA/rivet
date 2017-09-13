@@ -38,44 +38,6 @@ class MapMatrix_Perm;
 #include <string>
 #include <vector>
 
-//structure which represents a generalized simplex whose information will be stored in boundary matrices
-struct Generator
-{
-    int x;
-    int y;
-    Grade* grade; //reference to grade that this generator represents, if applicable
-    std::vector<unsigned> boundary; //Boundary should be in sorted order
-
-    Generator(Grade* set_grade) : x(set_grade->x), y(set_grade->y), grade(set_grade), boundary(std::vector<unsigned>()) {}
-
-    Generator(int set_x, int set_y) : x(set_x), y(set_y), grade(NULL), boundary(std::vector<unsigned>()) {}
-
-    bool operator<(Generator other) const
-    {
-        if (y != other.y)
-            return y < other.y;
-        else if (x != other.x)
-            return x < other.x;
-        else {
-            int currIndex = boundary.size() - 1;
-            int otherIndex = other.boundary.size() - 1;
-            while (currIndex != -1 && otherIndex != -1) {
-                if (boundary[currIndex] != other.boundary[otherIndex])
-                {
-                    return boundary[currIndex] < other.boundary[otherIndex];
-                }
-                currIndex--;
-                otherIndex--;
-            }
-            if (otherIndex == -1)
-            {
-                return false;
-            }
-            return true;
-        }
-    }
-};
-
 class FIRep {
 public:
     FIRep(BifiltrationData& bd, int v); //constructor; requires verbosity parameter
@@ -111,6 +73,44 @@ public:
     const unsigned verbosity; //controls display of output, for debugging
 
 private:
+    //structure which represents a generalized simplex whose information will be stored in boundary matrices
+    struct Generator
+    {
+        int x;
+        int y;
+        Grade* grade; //reference to grade that this generator represents, if applicable
+        std::vector<unsigned> boundary; //Boundary should be in sorted order
+
+        Generator(Grade* set_grade) : x(set_grade->x), y(set_grade->y), grade(set_grade), boundary(std::vector<unsigned>()) {}
+
+        Generator(int set_x, int set_y) : x(set_x), y(set_y), grade(NULL), boundary(std::vector<unsigned>()) {}
+
+        bool operator<(Generator other) const
+        {
+            if (y != other.y)
+                return y < other.y;
+            else if (x != other.x)
+                return x < other.x;
+            else {
+                unsigned currIndex = 0;
+                unsigned otherIndex = 0;
+                while (currIndex < boundary.size() && otherIndex < other.boundary.size()) {
+                    if (boundary[currIndex] != other.boundary[otherIndex])
+                    {
+                        return boundary[currIndex] < other.boundary[otherIndex];
+                    }
+                    currIndex++;
+                    otherIndex++;
+                }
+                if (otherIndex == other.boundary.size())
+                {
+                    return false;
+                }
+                return true;
+            }
+        }
+    };
+
     unsigned x_grades;  //the number of x-grades that exist in this bifiltration
     unsigned y_grades;  //the number of y-grades that exist in this bifiltration
     MapMatrix* boundary_mx_0; //boundary matrix from dim to dim-1

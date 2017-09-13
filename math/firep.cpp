@@ -40,28 +40,21 @@ FIRep::FIRep(BifiltrationData& bd, int v)
 
     //Create the boundary matrices and index lists
     //First start in dim-1
-    std::vector<AppearanceGrades*> low_simplices;
+    std::vector<Generator> low_generators;
     SimplexInfo* simplices = bd.getSimplices(bd.hom_dim - 1);
     SimplexInfo::iterator it;
     for(it = simplices->begin(); it != simplices->end(); it++)
     {
-        low_simplices.push_back(&(it->second));
+        Generator g = Generator(&(*it->second.begin()));
+        g.x = (it->second.back()).x;
+        g.boundary = std::vector<unsigned>(it->first.begin(), it->first.end());
+        low_generators.push_back(g);
     }
 
-    //Lambda function to sort appearance grades based on gca
-    auto compareLowAppearanceGrades = [](const AppearanceGrades* left, const AppearanceGrades* right)
+    std::sort(low_generators.begin(), low_generators.end());
+    for (unsigned i = 0; i < low_generators.size(); i++)
     {
-        //Each simplex is replaced with the lowest common ancestor, and we sort by that
-        //y index of lowest is y index of first grade of appearance, x index is the x index of last grade of appearanace
-        if ((left->begin())->y != (right->begin())->y)
-            return (left->begin())->y < (right->begin())->y;
-        else
-            return (left->back()).x < (right->back()).x;
-    };
-    std::sort(low_simplices.begin(), low_simplices.end(), compareLowAppearanceGrades);
-    for (unsigned i = 0; i < low_simplices.size(); i++)
-    {
-        (*low_simplices[i])[0].dim_index = i; //Store order in the first simplex
+        low_generators[i].grade->dim_index = i; //Store order in the first simplex
     }
 
     //Now deal with dimension dim
@@ -94,9 +87,9 @@ FIRep::FIRep(BifiltrationData& bd, int v)
 
     //Now to make the boundary matrix
     //create the MapMatrix
-    boundary_mx_0 = new MapMatrix(low_simplices.size(), mid_generators.size());
+    boundary_mx_0 = new MapMatrix(low_generators.size(), mid_generators.size());
     if (verbosity >= 6)
-        debug() << "Creating boundary matrix of dimension" << low_simplices.size() << "x" << mid_generators.size();
+        debug() << "Creating boundary matrix of dimension" << low_generators.size() << "x" << mid_generators.size();
 
     //loop through simplices, writing columns to the matrix
     for (unsigned i = 0; i < mid_generators.size(); i++)
@@ -106,7 +99,7 @@ FIRep::FIRep(BifiltrationData& bd, int v)
         write_boundary_column(boundary_mx_0, mid_generators[i].boundary, i);
     }
 
-    std::vector<AppearanceGrades*>().swap(low_simplices); //"Free" memory of low_simplices
+    std::vector<Generator>().swap(low_generators); //"Free" memory of low_generators
     std::vector<Generator>().swap(mid_generators);
 
     if (verbosity >= 6)
