@@ -235,8 +235,8 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
         if (join(line_info.first).compare("no function") == 0)
         {
             hasFunction =  false;
-            //set label for x-axis to "degree"
-            data->x_label = "degree";
+            //set label for x-axis to "codegree"
+            data->x_label = "codegree";
             expectedNumTokens = dimension;
             if (verbosity >= 6) {
                 debug() << "InputManager: Point cloud file does not have function values. Creating Bifiltration-Rips complex.";
@@ -464,8 +464,8 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
         if (join(line_info.first).compare("no function") == 0)
         {
             hasFunction =  false;
-            //set label for x-axis to "degree"
-            data->x_label = "degree";
+            //set label for x-axis to "codegree"
+            data->x_label = "codegree";
             if (verbosity >= 6) {
                 debug() << "InputManager: Discrete metric space file does not have function values. Creating Bifiltration-Rips complex.";
             }
