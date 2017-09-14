@@ -29,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <limits> //std::numeric_limits
 #include <sstream>
 #include <stdexcept>
+#include <ctime>
 
 //FIRep constructor; requires dimension of homology to be computed and verbosity parameter
 FIRep::FIRep(BifiltrationData& bd, int v)
@@ -43,14 +44,22 @@ FIRep::FIRep(BifiltrationData& bd, int v)
     std::vector<Generator> low_generators;
     SimplexInfo* simplices = bd.getSimplices(bd.hom_dim - 1);
     SimplexInfo::iterator it;
+    
+    clock_t b_1=std::clock();
+    
     for(it = simplices->begin(); it != simplices->end(); it++)
     {
         Generator g = Generator(&(*it->second.begin()));
         g.x = (it->second.back()).x;
+        
+        //This is a hack, in the sense that boundary is not being assigned to the boudnary of a simplex,
+        //but to the simplex itself, which happens to have the same type.
         g.boundary = std::vector<unsigned>(it->first.begin(), it->first.end());
         low_generators.push_back(g);
     }
-
+    
+    clock_t a_1=std::clock();
+    
     std::sort(low_generators.begin(), low_generators.end());
     for (unsigned i = 0; i < low_generators.size(); i++)
     {
@@ -60,6 +69,9 @@ FIRep::FIRep(BifiltrationData& bd, int v)
     //Now deal with dimension dim
     std::vector<Generator> mid_generators;
     simplices = bd.getSimplices(bd.hom_dim);
+    
+    clock_t b_2=std::clock();
+    
     for (it = simplices->begin(); it != simplices->end(); it++)
     {
         for (AppearanceGrades::iterator it2 = (it->second).begin(); it2 != (it->second).end(); it2++)
@@ -69,6 +81,8 @@ FIRep::FIRep(BifiltrationData& bd, int v)
             mid_generators.push_back(g);
         }
     }
+    
+    clock_t a_2=std::clock();
 
     std::sort(mid_generators.begin(), mid_generators.end());
     indexes_0.clear();
@@ -84,13 +98,13 @@ FIRep::FIRep(BifiltrationData& bd, int v)
             qd << "\n";
         }
     }
-
+    
     //Now to make the boundary matrix
     //create the MapMatrix
     boundary_mx_0 = new MapMatrix(low_generators.size(), mid_generators.size());
     if (verbosity >= 6)
         debug() << "Creating boundary matrix of dimension" << low_generators.size() << "x" << mid_generators.size();
-
+    
     //loop through simplices, writing columns to the matrix
     for (unsigned i = 0; i < mid_generators.size(); i++)
     {
@@ -106,8 +120,14 @@ FIRep::FIRep(BifiltrationData& bd, int v)
         debug() << "Created boundary matrix";
 
     //Finally deal with dimension dim+1
+    
+    clock_t bp1=std::clock();
+    
     std::vector<Generator> high_generators;
     //Add the relations
+    
+    clock_t b_3=std::clock();
+    
     for (it = simplices->begin(); it != simplices->end(); it++)
     {
         for (AppearanceGrades::iterator it2 = (it->second).begin(); (it2 + 1) != (it->second).end(); it2++)
@@ -115,14 +135,22 @@ FIRep::FIRep(BifiltrationData& bd, int v)
             Generator g(it2->x, (it2 + 1)->y);
             g.boundary.push_back(it2->dim_index);
             g.boundary.push_back((it2 + 1)->dim_index);
-            if (it2->dim_index > (it2 + 1)->dim_index) {
-                debug() << "ERROR: BAD DIM INDEX";
-            }
+            
+            
+            //if (it2->dim_index > (it2 + 1)->dim_index) {
+            //    debug() << "ERROR: BAD DIM INDEX";
+            //}
             high_generators.push_back(g);
         }
     }
+    
+    clock_t a_3=std::clock();
+    
     //Add generators of dim+1
     SimplexInfo* high_simplices = bd.getSimplices(bd.hom_dim + 1);
+    
+    clock_t b_4=std::clock();
+    
     for (it = high_simplices->begin(); it != high_simplices->end(); it++)
     {
         const std::vector<int>& vertices = it->first;
@@ -153,7 +181,7 @@ FIRep::FIRep(BifiltrationData& bd, int v)
                 unsigned l;
                 for (l = 0; l < facets[k]->size(); l++)
                 {
-                    Grade& grade = facets[k]->at(l);
+                    Grade& grade = (*facets[k])[l];
                     if ((grade.x <= g.x) && (grade.y <= g.y))
                     {
                         g.boundary.push_back(grade.dim_index);
@@ -167,6 +195,12 @@ FIRep::FIRep(BifiltrationData& bd, int v)
             high_generators.push_back(g);
         }
     }
+    
+    clock_t a_4=std::clock();
+    
+    debug() << "time to iterate, including building boundaries but not copying them in" << (a_4+a_3+a_2+a_1-b_4-b_3-b_2-b_1)/( (double) CLOCKS_PER_SEC);
+    
+    
     //Sort and create matrices
     std::sort(high_generators.begin(), high_generators.end());
     indexes_1.clear();
@@ -287,8 +321,8 @@ FIRep::FIRep(BifiltrationData& bd, int t, int s, int r, std::vector<std::vector<
 //destructor
 FIRep::~FIRep()
 {
-    free(boundary_mx_0);
-    free(boundary_mx_1);
+    delete(boundary_mx_0);
+    delete(boundary_mx_1);
 }
 
 //returns a matrix of boundary information for simplices of dimension dim (with multi-grade info)
@@ -391,7 +425,7 @@ void FIRep::set_boundary_vector(Generator& generator, const std::vector<int>& ve
         if (facet_node == low_simplices->end())
             throw std::runtime_error("FIRep::write_boundary_column(): Facet simplex not found.");
         //for this boundary simplex, add the appropriate row index
-        row_indices.push_back(facet_node->second.at(0).dim_index);
+        row_indices.push_back(facet_node->second[0].dim_index);
     }
 
     //We sort because it take O(n) time to insert if the indices are sorted, and O(n^2) for a random ordering
@@ -437,13 +471,13 @@ IndexMatrix* FIRep::get_index_mx(AppearanceGrades& grades)
         unsigned cur_entry = 0; //tracks previously updated multigrade in end-cols
 
         unsigned cur_grade = 0;
-        for (; cur_entry < grades.at(0).x + grades.at(0).y * x_size; cur_entry++)
+        for (; cur_entry < grades[0].x + grades[0].y * x_size; cur_entry++)
             mat->set(cur_entry / x_size, cur_entry % x_size, -1);
 
         //loop through simplices
         for (; cur_grade < grades.size(); cur_grade++) {
-            int cur_x = grades.at(cur_grade).x;
-            int cur_y = grades.at(cur_grade).y;
+            int cur_x = grades[cur_grade].x;
+            int cur_y = grades[cur_grade].y;
 
             //if some multigrades were skipped, store previous column number in skipped cells of end_col matrix
             for (; cur_entry < cur_x + cur_y * x_size; cur_entry++)

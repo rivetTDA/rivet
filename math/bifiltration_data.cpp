@@ -24,9 +24,9 @@ BifiltrationData::BifiltrationData(int dim, int v) :
     ordered_low_simplices = new SimplexInfo;
     ordered_simplices = new SimplexInfo;
     ordered_high_simplices = new SimplexInfo;
-    ordered_low_grades = new GradeInfo;
-    ordered_grades = new GradeInfo;
-    ordered_high_grades = new GradeInfo;
+    //ordered_low_grades = new GradeInfo;
+    //ordered_grades = new GradeInfo;
+    //ordered_high_grades = new GradeInfo;
 }
 
 //destructor
@@ -37,9 +37,10 @@ BifiltrationData::~BifiltrationData()
     delete ordered_simplices;
     delete ordered_high_simplices;
     //delete grade data
-    delete ordered_low_grades;
-    delete ordered_grades;
-    delete ordered_high_grades;
+    
+    //delete ordered_low_grades;
+    //delete ordered_grades;
+    //delete ordered_high_grades;
 }
 
 //adds a simplex (including all of its faces) to the BifiltrationData
@@ -73,6 +74,7 @@ void BifiltrationData::add_faces(const std::vector<int>& vertices, const Appeara
         }
         else //Grade found, pointed at by ret
         {
+            //this could be simplified since for hom_dim - 1, we only need the GLB of all grades.
             ret->second.insert(ret->second.end(), grades.begin(), grades.end());
         }
         return;
@@ -148,19 +150,19 @@ void BifiltrationData::build_VR_subcomplex(const std::vector<unsigned>& times, c
     {
         AppearanceGrades grades = AppearanceGrades(1, Grade(prev_time, prev_dist));
         ordered_low_simplices->emplace(vertices, grades); //makes copy of parent_vertices so we can still edit it
-        addSimplicesToGrade(ordered_low_grades, vertices, grades);
+        //addSimplicesToGrade(ordered_low_grades, vertices, grades);
     }
     else if (vertices.size() == (unsigned)hom_dim + 1) //simplex of dimension hom_dim - 1
     {
         AppearanceGrades grades = AppearanceGrades(1, Grade(prev_time, prev_dist));
         ordered_simplices->emplace(vertices, grades); //makes copy of parent_vertices so we can still edit it
-        addSimplicesToGrade(ordered_grades, vertices, grades);
+        //addSimplicesToGrade(ordered_grades, vertices, grades);
     }
     else if (vertices.size() == (unsigned)hom_dim + 2) //simplex of dimension hom_dim - 1
     {
         AppearanceGrades grades = AppearanceGrades(1, Grade(prev_time, prev_dist));
         ordered_high_simplices->emplace(vertices, grades); //makes copy of parent_vertices so we can still edit it
-        addSimplicesToGrade(ordered_high_grades, vertices, grades);
+        //addSimplicesToGrade(ordered_high_grades, vertices, grades);
         return;
     }
     else if (vertices.size() > (unsigned)hom_dim + 2) //looking at dimension at least hom_dim + 2 and we do not care about those simplices
@@ -240,17 +242,17 @@ void BifiltrationData::build_BR_subcomplex(const std::vector<unsigned>& distance
     if (parent_vertices.size() == (unsigned)hom_dim) //simplex of dimension hom_dim - 1
     {
         ordered_low_simplices->emplace(parent_vertices, parent_grades); //makes copy of parent_vertices so we can still edit it
-        addSimplicesToGrade(ordered_low_grades, parent_vertices, parent_grades);
+        //addSimplicesToGrade(ordered_low_grades, parent_vertices, parent_grades);
     }
     else if (parent_vertices.size() == (unsigned)hom_dim + 1) //simplex of dimension hom_dim - 1
     {
         ordered_simplices->emplace(parent_vertices, parent_grades); //makes copy of parent_vertices so we can still edit it
-        addSimplicesToGrade(ordered_grades, parent_vertices, parent_grades);
+        //addSimplicesToGrade(ordered_grades, parent_vertices, parent_grades);
     }
     else if (parent_vertices.size() == (unsigned)hom_dim + 2) //simplex of dimension hom_dim - 1
     {
         ordered_high_simplices->emplace(parent_vertices, parent_grades); //makes copy of parent_vertices so we can still edit it
-        addSimplicesToGrade(ordered_high_grades, parent_vertices, parent_grades);
+        //addSimplicesToGrade(ordered_high_grades, parent_vertices, parent_grades);
         return;
     }
     else if (parent_vertices.size() > (unsigned)hom_dim + 2) //looking at dimension at least hom_dim + 2 and we do not care about those simplices
@@ -376,6 +378,7 @@ void BifiltrationData::combineMultigrades(AppearanceGrades& merged, const Appear
 }//end combineMultigrades
 
 //Takes a simplex and its grades of appearance and adds it to ordered_high_grades, ordered_grades, or ordered_low_grades
+/*
 void BifiltrationData::addSimplicesToGrade(GradeInfo* orderedGrades, const std::vector<int> simplex, const AppearanceGrades& grades)
 {
     GradeInfo::iterator ret;
@@ -393,11 +396,13 @@ void BifiltrationData::addSimplicesToGrade(GradeInfo* orderedGrades, const std::
         }
     }
 }
+*/
 
 //Assumes that the SimplexInfo hash tables are created
 //Goes through the SimplexInfo hash tables and
 //1. Makes sure that each of the simplex multigrades are incomparable
 //2. Creates the inverse hashtable stored in GradeInfo
+/*
 void BifiltrationData::createGradeInfo()
 {
     GradeInfo::iterator ret;
@@ -458,6 +463,8 @@ void BifiltrationData::createGradeInfo()
         }
     }
 }
+*/
+ 
 
 //Given a list of multigrades, sort them and remove all comparable multigrades
 void BifiltrationData::update_grades(AppearanceGrades& grades)
@@ -523,6 +530,7 @@ SimplexInfo* BifiltrationData::getSimplices(int dim)
 
 //returns the list of grades and their simplices in dimension (hom_dim-1), hom_dim, or (hom_dim+1)
 //Returns NULL if incorrect dimension is given
+/*
 GradeInfo* BifiltrationData::getGrades(int dim)
 {
     if(dim == hom_dim - 1)
@@ -534,6 +542,7 @@ GradeInfo* BifiltrationData::getGrades(int dim)
     else
         return NULL;
 }
+*/ 
 
 //print bifiltration in the RIVET bifiltration input format
 //prints simplices in no particular order, grades are in reverse-lexicographic order

@@ -85,7 +85,7 @@ private:
 
         Generator(int set_x, int set_y) : x(set_x), y(set_y), grade(NULL), boundary(std::vector<unsigned>()) {}
 
-        bool operator<(Generator other) const
+        bool operator<(const Generator& other) const
         {
             if (y != other.y)
                 return y < other.y;

@@ -33,6 +33,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 #include <memory>
 
+#include <ctime>
+
 //epsilon value for use in comparisons
 double ExactValue::epsilon = pow(2, -30);
 
@@ -420,7 +422,7 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
     else {
         data->bifiltration_data->build_BR_complex(num_points, dist_indexes, degree_indexes, data->x_exact.size(), data->y_exact.size());
     }
-
+    
     if (verbosity >= 8) {
         SimplexInfo* simplices = data->bifiltration_data->getSimplices(input_params.dim - 1);
         debug() << "There are" << simplices->size() << "simplices of dimension" << input_params.dim - 1;
@@ -641,7 +643,7 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
     else {
         data->bifiltration_data->build_BR_complex(num_points, dist_indexes, degree_indexes, data->x_exact.size(), data->y_exact.size());
     }
-
+    
     if (verbosity >= 8) {
         SimplexInfo* simplices = data->bifiltration_data->getSimplices(input_params.dim - 1);
         debug() << "There are" << simplices->size() << "simplices of dimension" << input_params.dim - 1;
@@ -650,8 +652,15 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
         simplices = data->bifiltration_data->getSimplices(input_params.dim + 1);
         debug() << "There are" << simplices->size() << "simplices of dimension" << input_params.dim + 1;
     }
+    
+    clock_t start= std::clock();
+    
     data->free_implicit_rep.reset(new FIRep(*(data->bifiltration_data), input_params.verbosity));
 
+    clock_t after_fi_rep=std::clock();
+    
+    debug() << "Time to build whole FI Rep" << (after_fi_rep-start)/((double) CLOCKS_PER_SEC);
+    
     //clean up
     if (!hasFunction) {
         delete degree;
@@ -754,7 +763,7 @@ std::unique_ptr<InputData> InputManager::read_bifiltration(std::ifstream& stream
     {
         data->bifiltration_data->print_bifiltration();
     }
-    data->bifiltration_data->createGradeInfo();
+    //data->bifiltration_data->createGradeInfo();
     data->bifiltration_data->set_xy_grades(data->x_exact.size(), data->y_exact.size());
 
     data->free_implicit_rep.reset(new FIRep(*(data->bifiltration_data), input_params.verbosity));

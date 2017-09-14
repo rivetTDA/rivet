@@ -19,7 +19,7 @@ struct Grade
     int x;
     int y;
     unsigned dim_index; //The index of this point relative to other grades of appearance in the same dimension
-    bool operator<(Grade other) const
+    bool operator<(const Grade& other) const
     {
         if (y != other.y)
             return y < other.y;
@@ -27,7 +27,7 @@ struct Grade
             return x < other.x;
     }
 
-    bool operator==(Grade other) const
+    bool operator==(const Grade& other) const
     {
         return (y == other.y) && (x == other.x);
     }
@@ -60,7 +60,7 @@ struct VectorHash
 //typedef
 typedef std::vector<Grade> AppearanceGrades;
 typedef std::unordered_map<std::vector<int>, AppearanceGrades, VectorHash> SimplexInfo; //vector key is list of vertices in the simplex, value is grades of appearance of simplex
-typedef std::unordered_map<Grade, std::vector<std::vector<int> >, GradeHash> GradeInfo; //Grade key is a grade, value is the list of simplices which are born at that grade.
+//typedef std::unordered_map<Grade, std::vector<std::vector<int> >, GradeHash> GradeInfo; //Grade key is a grade, value is the list of simplices which are born at that grade.
 
 //now the BifiltrationData class
 class BifiltrationData {
@@ -81,7 +81,7 @@ class BifiltrationData {
                     //CONVENTION: the x-coordinate is "scale parameter" for points and the y-coordinate is "degree parameter"
 
         void add_simplex(std::vector<int>& vertices, const AppearanceGrades& grades);	//adds a simplex (and its faces) to BifiltrationData, grades is a vector of appearance grades
-        void createGradeInfo(); //Assuming that SimplexInfo is fully created, creates the inverse mapping GradeInfo
+        //void createGradeInfo(); //Assuming that SimplexInfo is fully created, creates the inverse mapping GradeInfo
 
         void set_xy_grades(unsigned num_x, unsigned num_y); //Sets x_grades and y_grades. Used when reading in a bifiltration.
 
@@ -92,7 +92,7 @@ class BifiltrationData {
 
         SimplexInfo* getSimplices(int dim); //returns the list of simplices and their grades of appearance in dimension (hom_dim-1), hom_dim, or (hom_dim+1)
 
-        GradeInfo* getGrades(int dim); //returns the list of grades and their simplices in dimension (hom_dim-1), hom_dim, or (hom_dim+1)
+        //GradeInfo* getGrades(int dim); //returns the list of grades and their simplices in dimension (hom_dim-1), hom_dim, or (hom_dim+1)
 
         const int hom_dim;      //the dimension of homology to be computed; max dimension of simplices is one more than this
         const int verbosity;	//controls display of output, for debugging
@@ -108,10 +108,12 @@ class BifiltrationData {
         SimplexInfo* ordered_high_simplices;   //pointers to simplices of dimension (hom_dim + 1) in reverse-lexicographical multi-grade order
         SimplexInfo* ordered_simplices;        //pointers to simplices of dimension hom_dim in reverse-lexicographical multi-grade order
         SimplexInfo* ordered_low_simplices;    //pointers to simplices of dimension (hom_dim - 1) in reverse-lexicographical multi-grade order
-
-        GradeInfo* ordered_high_grades;   //pointers to simplices of dimension (hom_dim + 1) in reverse-lexicographical multi-grade order
-        GradeInfo* ordered_grades;        //pointers to simplices of dimension hom_dim in reverse-lexicographical multi-grade order
-        GradeInfo* ordered_low_grades;    //pointers to simplices of dimension (hom_dim - 1) in reverse-lexicographical multi-grade order
+    
+        //It seems these are not actually used in Roy's code anymore.  Commenting.
+    
+        //GradeInfo* ordered_high_grades;   //pointers to simplices of dimension (hom_dim + 1) in reverse-lexicographical multi-grade order
+        //GradeInfo* ordered_grades;        //pointers to simplices of dimension hom_dim in reverse-lexicographical multi-grade order
+        //GradeInfo* ordered_low_grades;    //pointers to simplices of dimension (hom_dim - 1) in reverse-lexicographical multi-grade order
 
         void build_VR_subcomplex(const std::vector<unsigned>& times, const std::vector<unsigned>& distances, std::vector<int> &vertices, const unsigned prev_time, const unsigned prev_dist);	//recursive function used in build_VR_complex()
 
@@ -121,7 +123,7 @@ class BifiltrationData {
 
         void combineMultigrades(AppearanceGrades& merged, const AppearanceGrades& grades1, const AppearanceGrades& grades2, unsigned mindist); //Finds the grades of appearance of when both simplices exist subject to minimal scale parameter, used in build_BR_complex()
 
-        void addSimplicesToGrade(GradeInfo* orderedGrades, const std::vector<int> simplex, const AppearanceGrades& grades); //Takes a simplex and its grades of appearance and adds it to ordered_high_grades, ordered_grades, or ordered_low_grades
+        //void addSimplicesToGrade(GradeInfo* orderedGrades, const std::vector<int> simplex, const AppearanceGrades& grades); //Takes a simplex and its grades of appearance and adds it to ordered_high_grades, ordered_grades, or ordered_low_grades
 
         void add_faces(const std::vector<int>& vertices, const AppearanceGrades& grades);	//recursively adds faces of a simplex to the BifiltrationData; WARNING: doesn't make sure multigrades are incomparable
 
