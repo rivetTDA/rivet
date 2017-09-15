@@ -31,7 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <stdexcept>
 #include <ctime>
 
-//FIRep constructor; requires dimension of homology to be computed and verbosity parameter
+//FIRep constructor; requires BifiltrationData object (which in particular specifies the homology dimension) and verbosity parameter
 FIRep::FIRep(BifiltrationData& bd, int v)
     : verbosity(v), x_grades(bd.num_x_grades()), y_grades(bd.num_y_grades()), bifiltration_data(bd)
 {
@@ -41,24 +41,19 @@ FIRep::FIRep(BifiltrationData& bd, int v)
 
     //Create the boundary matrices and index lists
     //First start in dim-1
-    std::vector<Generator> low_generators;
+    std::vector<GenSimplex> low_generators;
     SimplexInfo* simplices = bd.getSimplices(bd.hom_dim - 1);
     SimplexInfo::iterator it;
     
-    clock_t b_1=std::clock();
-    
     for(it = simplices->begin(); it != simplices->end(); it++)
     {
-        Generator g = Generator(&(*it->second.begin()));
+        //the y-coordinate of g is the minimal one among all appearances of the simplex
+        GenSimplex g = GenSimplex(&(*it->second.begin()));
+        //the x-coordinate of g is the minimal one among all appearances of the simplex
         g.x = (it->second.back()).x;
-        
-        //This is a hack, in the sense that boundary is not being assigned to the boudnary of a simplex,
-        //but to the simplex itself, which happens to have the same type.
-        g.boundary = std::vector<unsigned>(it->first.begin(), it->first.end());
+        g.vertices = std::vector<unsigned>(it->first.begin(), it->first.end());
         low_generators.push_back(g);
     }
-    
-    clock_t a_1=std::clock();
     
     std::sort(low_generators.begin(), low_generators.end());
     for (unsigned i = 0; i < low_generators.size(); i++)
@@ -67,22 +62,19 @@ FIRep::FIRep(BifiltrationData& bd, int v)
     }
 
     //Now deal with dimension dim
-    std::vector<Generator> mid_generators;
+    std::vector<GenSimplex> mid_generators;
     simplices = bd.getSimplices(bd.hom_dim);
-    
-    clock_t b_2=std::clock();
     
     for (it = simplices->begin(); it != simplices->end(); it++)
     {
         for (AppearanceGrades::iterator it2 = (it->second).begin(); it2 != (it->second).end(); it2++)
         {
-            Generator g = Generator(&(*it2));
+            GenSimplex g = GenSimplex(&(*it2));
+            g.vertices = std::vector<unsigned>(it->first.begin(), it->first.end());
             set_boundary_vector(g, it->first, bd.getSimplices(bd.hom_dim - 1));
             mid_generators.push_back(g);
         }
     }
-    
-    clock_t a_2=std::clock();
 
     std::sort(mid_generators.begin(), mid_generators.end());
     indexes_0.clear();
@@ -113,26 +105,24 @@ FIRep::FIRep(BifiltrationData& bd, int v)
         write_boundary_column(boundary_mx_0, mid_generators[i].boundary, i);
     }
 
-    std::vector<Generator>().swap(low_generators); //"Free" memory of low_generators
-    std::vector<Generator>().swap(mid_generators);
+    std::vector<GenSimplex>().swap(low_generators); //"Free" memory of low_generators
+    std::vector<GenSimplex>().swap(mid_generators);
 
     if (verbosity >= 6)
         debug() << "Created boundary matrix";
 
     //Finally deal with dimension dim+1
     
-    clock_t bp1=std::clock();
-    
-    std::vector<Generator> high_generators;
+    std::vector<GenSimplex> high_generators;
     //Add the relations
-    
-    clock_t b_3=std::clock();
     
     for (it = simplices->begin(); it != simplices->end(); it++)
     {
         for (AppearanceGrades::iterator it2 = (it->second).begin(); (it2 + 1) != (it->second).end(); it2++)
         {
-            Generator g(it2->x, (it2 + 1)->y);
+            GenSimplex g(it2->x, (it2 + 1)->y);
+            //g is a relation
+            g.is_rel=true;
             g.boundary.push_back(it2->dim_index);
             g.boundary.push_back((it2 + 1)->dim_index);
             
@@ -144,12 +134,8 @@ FIRep::FIRep(BifiltrationData& bd, int v)
         }
     }
     
-    clock_t a_3=std::clock();
-    
     //Add generators of dim+1
     SimplexInfo* high_simplices = bd.getSimplices(bd.hom_dim + 1);
-    
-    clock_t b_4=std::clock();
     
     for (it = high_simplices->begin(); it != high_simplices->end(); it++)
     {
@@ -174,7 +160,9 @@ FIRep::FIRep(BifiltrationData& bd, int v)
 
         for (AppearanceGrades::iterator it2 = it->second.begin(); it2 != it->second.end(); it2++)
         {
-            Generator g(it2->x, it2->y);
+            GenSimplex g(it2->x, it2->y);
+            g.vertices = std::vector<unsigned>(it->first.begin(), it->first.end());
+
             for (unsigned k = 0; k < facets.size(); k++)
             {
                 //Find facet that was generated before this grade
@@ -195,11 +183,6 @@ FIRep::FIRep(BifiltrationData& bd, int v)
             high_generators.push_back(g);
         }
     }
-    
-    clock_t a_4=std::clock();
-    
-    debug() << "time to iterate, including building boundaries but not copying them in" << (a_4+a_3+a_2+a_1-b_4-b_3-b_2-b_1)/( (double) CLOCKS_PER_SEC);
-    
     
     //Sort and create matrices
     std::sort(high_generators.begin(), high_generators.end());
@@ -403,7 +386,7 @@ MapMatrix_Perm* FIRep::get_boundary_mx(std::vector<int>& face_order, unsigned nu
 } //end get_boundary_mx(int, vector<int>, vector<int>)
 
 //writes boundary vector for simplex represented by sim in column col of matrix mat
-void FIRep::set_boundary_vector(Generator& generator, const std::vector<int>& vertices, SimplexInfo* low_simplices)
+void FIRep::set_boundary_vector(GenSimplex& generator, const std::vector<int>& vertices, SimplexInfo* low_simplices)
 {
     std::vector<unsigned> row_indices;
     //for a 0-simplex, there is nothing to do
