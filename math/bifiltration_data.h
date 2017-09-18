@@ -1,6 +1,6 @@
 /**
  * \class	BifiltrationData
- * \brief	Stores the raw bifiltration data (simplices and their multigrades of apppearance). Used in calculating the free implicit representation.
+ * \brief	Computes and stores the information about a bifiltration needed to compute homology in fixed dimension d.  Together with Input_Manager, handles 1-critical or multicritical Rips bifiltrations, as defined in the RIVET paper.
  * \author	Roy Zhao
  * \date	May 2016
  */
@@ -18,7 +18,8 @@ struct Grade
 {
     int x;
     int y;
-    unsigned dim_index; //The index of this point relative to other grades of appearance in the same dimension
+    
+    //removing dimension index, as this is better kept separately.
     bool operator<(const Grade& other) const
     {
         if (y != other.y)
@@ -34,9 +35,10 @@ struct Grade
 
     Grade() {}
 
-    Grade(int set_x, int set_y) : x(set_x), y(set_y), dim_index(0)
+    Grade(int set_x, int set_y) : x(set_x), y(set_y)
     { }
 };
+
 
 struct GradeHash
 {
@@ -59,10 +61,17 @@ struct VectorHash
 
 //typedef
 typedef std::vector<Grade> AppearanceGrades;
-typedef std::unordered_map<std::vector<int>, AppearanceGrades, VectorHash> SimplexInfo; //vector key is list of vertices in the simplex, value is grades of appearance of simplex
-//typedef std::unordered_map<Grade, std::vector<std::vector<int> >, GradeHash> GradeInfo; //Grade key is a grade, value is the list of simplices which are born at that grade.
+typedef std::unordered_map<std::vector<int>, size_t, GradeHash> SimplexHashLow; //key = vector representing a simplex; value = index in vector<Grade>.
+typedef std::unordered_map<std::vector<int>, size_t, VectorHash> SimplexHashMid; //keylist = vector representing a simplex; value = index in vector<vector<Grades>>.
 
-//now the BifiltrationData class
+// Note: No need for a hash table representation of simplices in the highest index, because we will not consider these simplices as boundaries, and there is no possibility of inserting the same simplex twice.
+
+// We only need a single grade for each simplex in the low dimension because for homology, it suffices to consider a greatest lower bound of all grades.  For mid and high dimensions, we need a vector of grades for each simplex, in the multicritical case.
+typedef std::vector<std::pair<Grade,SimplexHashLow::iterator> SimplexVecLow;
+typedef std::vector<std::pair<AppearanceGrades,SimplexHashLow::iterator> SimplexVecMid;
+typedef std::vector<AppearanceGrades> SimplexVecHigh;
+
+
 class BifiltrationData {
     public:
         BifiltrationData(int dim, int v);	//constructor; requires verbosity parameter
@@ -81,8 +90,11 @@ class BifiltrationData {
                     //CONVENTION: the x-coordinate is "scale parameter" for points and the y-coordinate is "degree parameter"
 
         void add_simplex(std::vector<int>& vertices, const AppearanceGrades& grades);	//adds a simplex (and its faces) to BifiltrationData, grades is a vector of appearance grades
-        //void createGradeInfo(); //Assuming that SimplexInfo is fully created, creates the inverse mapping GradeInfo
-
+    
+        void add_simplex(std::vector<int>& vertices, const AppearanceGrades& grades);	//adds a simplex (and its faces) to BifiltrationData, grades is a vector of appearance grades
+    
+        void add_simplex(std::vector<int>& vertices, const Grade& grade);	//adds a simplex (and its faces) to BifiltrationData, grade is a single appearance grade.
+    
         void set_xy_grades(unsigned num_x, unsigned num_y); //Sets x_grades and y_grades. Used when reading in a bifiltration.
 
         unsigned num_x_grades();                     //returns the number of unique x-coordinates of the multi-grades
@@ -90,9 +102,18 @@ class BifiltrationData {
 
         int get_size(int dim);                  //returns the number of simplices of dimension (hom_dim-1), hom_dim, or (hom_dim+1). Returns -1 if invalid dim.
 
-        SimplexInfo* getSimplices(int dim); //returns the list of simplices and their grades of appearance in dimension (hom_dim-1), hom_dim, or (hom_dim+1)
 
-        //GradeInfo* getGrades(int dim); //returns the list of grades and their simplices in dimension (hom_dim-1), hom_dim, or (hom_dim+1)
+        /*
+        SimplexListLow* getSimplexVecLow(); //returns pointer to the list of simplices in dimension (hom_dim-1)
+    
+        SimplexListMid* getSimplexVecMid(); //returns pointer to the list of simplices in dimension (hom_dim) or (hom_dim+1)
+    
+        SimplexListHigh* getSimplexVecHigh(); //returns pointer to the list of simplices in dimension (hom_dim) or (hom_dim+1)
+    
+        SimplexListLow* getSimplexVecLow; //returns pointer to the list of simplices in dimension (hom_dim-1)
+    
+        SimplexListMidHigh* getSimplexVecMidHigh(int dim); //returns point to the list of simplices in dimension (hom_dim) or (hom_dim+1)
+        */
 
         const int hom_dim;      //the dimension of homology to be computed; max dimension of simplices is one more than this
         const int verbosity;	//controls display of output, for debugging
@@ -101,20 +122,21 @@ class BifiltrationData {
         void print_bifiltration();
 
     private:
-
+    
         unsigned x_grades;  //the number of x-grades that exist in this bifiltration
         unsigned y_grades;  //the number of y-grades that exist in this bifiltration
 
-        SimplexInfo* ordered_high_simplices;   //pointers to simplices of dimension (hom_dim + 1) in reverse-lexicographical multi-grade order
-        SimplexInfo* ordered_simplices;        //pointers to simplices of dimension hom_dim in reverse-lexicographical multi-grade order
-        SimplexInfo* ordered_low_simplices;    //pointers to simplices of dimension (hom_dim - 1) in reverse-lexicographical multi-grade order
+        //firep is a friend class, which allows it to work directly with the following private data.
+        SimplexHashMidHigh high_ht;    //hash table giving the indices of simplices of dimension hom_dim
+        SimplexHashLow low_ht;    //hash table with key the simplices of dimension hom_dim-1 and values the indices of their representation in a vector.
+        SimplexHashMidHigh mid_ht;  //hash table with key the simplices of dimension hom_dim and values the indices of their representation in a vector.
     
-        //It seems these are not actually used in Roy's code anymore.  Commenting.
+        //lists of simplices constructed here will be sorted later by the FI-Rep constructor
+        //TODO: That is the way it is currently done, but is that the best organization?
+        SimpVectLow low_simplices;
+        SimplexVecMid mid_simplices;
+        SimplexVecHigh high_simplices;
     
-        //GradeInfo* ordered_high_grades;   //pointers to simplices of dimension (hom_dim + 1) in reverse-lexicographical multi-grade order
-        //GradeInfo* ordered_grades;        //pointers to simplices of dimension hom_dim in reverse-lexicographical multi-grade order
-        //GradeInfo* ordered_low_grades;    //pointers to simplices of dimension (hom_dim - 1) in reverse-lexicographical multi-grade order
-
         void build_VR_subcomplex(const std::vector<unsigned>& times, const std::vector<unsigned>& distances, std::vector<int> &vertices, const unsigned prev_time, const unsigned prev_dist);	//recursive function used in build_VR_complex()
 
         void build_BR_subcomplex(const std::vector<unsigned>& distances, std::vector<int>& parent_indexes, const std::vector<int>& candidates, const AppearanceGrades& parent_grades, const std::vector<AppearanceGrades>& vertexMultigrades);	//recursive function used in build_BR_complex()

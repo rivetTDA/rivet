@@ -100,6 +100,9 @@ struct GenSimplex
 };
 
 class FIRep {
+
+    friend bifiltration_data;
+    
 public:
     FIRep(BifiltrationData& bd, int v); //constructor; requires verbosity parameter
     

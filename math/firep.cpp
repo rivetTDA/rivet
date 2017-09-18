@@ -140,22 +140,22 @@ FIRep::FIRep(BifiltrationData& bd, int v)
     for (it = high_simplices->begin(); it != high_simplices->end(); it++)
     {
         const std::vector<int>& vertices = it->first;
-        std::vector<AppearanceGrades*> facets;
+        std::vector<AppearanceGrades*> faces;
 
-        //find all facets of this simplex
+        //find all face of this simplex
         for (unsigned k = 0; k < vertices.size(); k++)
         {
-            //facet vertices are all vertices in verts[] except verts[k]
-            std::vector<int> facet;
+            //face vertices are all vertices in verts[] except verts[k]
+            std::vector<int> face;
             for (unsigned l = 0; l < vertices.size(); l++)
                 if (l != k)
-                    facet.push_back(vertices[l]);
+                    face.push_back(vertices[l]);
 
-            //look up dimension index of the facet
-            SimplexInfo::iterator facet_node = simplices->find(facet);
-            if (facet_node == simplices->end())
-                throw std::runtime_error("FIRep::FIRep: Facet simplex not found.");
-            facets.push_back(&(facet_node->second));
+            //look up dimension index of the face
+            SimplexInfo::iterator face_node = simplices->find(face);
+            if (face_node == simplices->end())
+                throw std::runtime_error("FIRep::FIRep: face simplex not found.");
+            faces.push_back(&(face_node->second));
         }
 
         for (AppearanceGrades::iterator it2 = it->second.begin(); it2 != it->second.end(); it2++)
@@ -163,21 +163,21 @@ FIRep::FIRep(BifiltrationData& bd, int v)
             GenSimplex g(it2->x, it2->y);
             g.vertices = std::vector<unsigned>(it->first.begin(), it->first.end());
 
-            for (unsigned k = 0; k < facets.size(); k++)
+            for (unsigned k = 0; k < faces.size(); k++)
             {
-                //Find facet that was generated before this grade
+                //Find a face that was generated before this grade
                 unsigned l;
-                for (l = 0; l < facets[k]->size(); l++)
+                for (l = 0; l < faces[k]->size(); l++)
                 {
-                    Grade& grade = (*facets[k])[l];
+                    Grade& grade = (*faces[k])[l];
                     if ((grade.x <= g.x) && (grade.y <= g.y))
                     {
                         g.boundary.push_back(grade.dim_index);
                         break;
                     }
                 }
-                if (l == facets[k]->size())
-                    throw std::runtime_error("FIRep::FIRep: Facet simplices not born before simplex.");
+                if (l == faces[k]->size())
+                    throw std::runtime_error("FIRep::FIRep: face simplices not born before simplex.");
             }
             std::sort(g.boundary.begin(),g.boundary.end());
             high_generators.push_back(g);
@@ -395,20 +395,20 @@ void FIRep::set_boundary_vector(GenSimplex& generator, const std::vector<int>& v
         return;
     }
 
-    //find all facets of this simplex
+    //find all faces of this simplex
     for (unsigned k = 0; k < vertices.size(); k++) {
-        //facet vertices are all vertices in verts[] except verts[k]
-        std::vector<int> facet;
+        //face vertices are all vertices in verts[] except verts[k]
+        std::vector<int> face;
         for (unsigned l = 0; l < vertices.size(); l++)
             if (l != k)
-                facet.push_back(vertices[l]);
+                face.push_back(vertices[l]);
 
-        //look up dimension index of the facet
-        SimplexInfo::iterator facet_node = low_simplices->find(facet);
-        if (facet_node == low_simplices->end())
-            throw std::runtime_error("FIRep::write_boundary_column(): Facet simplex not found.");
+        //look up dimension index of the face
+        SimplexInfo::iterator face_node = low_simplices->find(face);
+        if (face_node == low_simplices->end())
+            throw std::runtime_error("FIRep::write_boundary_column(): face simplex not found.");
         //for this boundary simplex, add the appropriate row index
-        row_indices.push_back(facet_node->second[0].dim_index);
+        row_indices.push_back(face_node->second[0].dim_index);
     }
 
     //We sort because it take O(n) time to insert if the indices are sorted, and O(n^2) for a random ordering
