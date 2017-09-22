@@ -414,7 +414,7 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
         debug() << "     x-grades: " << data->x_exact.size();
         debug() << "     y-grades: " << data->y_exact.size();
     }
-
+    
     data->bifiltration_data.reset(new BifiltrationData(input_params.dim, input_params.verbosity));
     if (hasFunction) {
          data->bifiltration_data->build_VR_complex(time_indexes, dist_indexes, data->x_exact.size(), data->y_exact.size());
@@ -424,16 +424,17 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
     }
     
     if (verbosity >= 8) {
-        SimplexInfo* simplices = data->bifiltration_data->getSimplices(input_params.dim - 1);
-        debug() << "There are" << simplices->size() << "simplices of dimension" << input_params.dim - 1;
-        simplices = data->bifiltration_data->getSimplices(input_params.dim);
-        debug() << "There are" << simplices->size() << "simplices of dimension" << input_params.dim;
-        simplices = data->bifiltration_data->getSimplices(input_params.dim + 1);
-        debug() << "There are" << simplices->size() << "simplices of dimension" << input_params.dim + 1;
+        int size;
+        size = data->bifiltration_data->get_size(input_params.dim - 1);
+        debug() << "There are" << size << "simplices of dimension" << input_params.dim - 1;
+        size = data->bifiltration_data->get_size(input_params.dim);
+        debug() << "There are" << size << "simplices of dimension" << input_params.dim;
+        size = data->bifiltration_data->get_size(input_params.dim + 1);
+        debug() << "There are" << size << "simplices of dimension" << input_params.dim + 1;
     }
-
+    
     data->free_implicit_rep.reset(new FIRep(*(data->bifiltration_data), input_params.verbosity));
-
+    
     return data;
 } //end read_point_cloud()
 
@@ -634,7 +635,7 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
         debug() << "     x-grades: " << data->x_exact.size();
         debug() << "     y-grades: " << data->y_exact.size();
     }
-
+    
     //build the Vietoris-Rips bifiltration from the discrete index vectors
     data->bifiltration_data.reset(new BifiltrationData(input_params.dim, input_params.verbosity));
     if (hasFunction) {
@@ -645,26 +646,22 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
     }
     
     if (verbosity >= 8) {
-        SimplexInfo* simplices = data->bifiltration_data->getSimplices(input_params.dim - 1);
-        debug() << "There are" << simplices->size() << "simplices of dimension" << input_params.dim - 1;
-        simplices = data->bifiltration_data->getSimplices(input_params.dim);
-        debug() << "There are" << simplices->size() << "simplices of dimension" << input_params.dim;
-        simplices = data->bifiltration_data->getSimplices(input_params.dim + 1);
-        debug() << "There are" << simplices->size() << "simplices of dimension" << input_params.dim + 1;
+        int size;
+        size = data->bifiltration_data->get_size(input_params.dim - 1);
+        debug() << "There are" << size << "simplices of dimension" << input_params.dim - 1;
+        size = data->bifiltration_data->get_size(input_params.dim);
+        debug() << "There are" << size << "simplices of dimension" << input_params.dim;
+        size = data->bifiltration_data->get_size(input_params.dim + 1);
+        debug() << "There are" << size << "simplices of dimension" << input_params.dim + 1;
     }
     
-    clock_t start= std::clock();
-    
     data->free_implicit_rep.reset(new FIRep(*(data->bifiltration_data), input_params.verbosity));
-
-    clock_t after_fi_rep=std::clock();
-    
-    debug() << "Time to build whole FI Rep" << (after_fi_rep-start)/((double) CLOCKS_PER_SEC);
     
     //clean up
     if (!hasFunction) {
         delete degree;
     }
+    
     return data;
 } //end read_discrete_metric_space()
 
@@ -757,6 +754,12 @@ std::unique_ptr<InputData> InputManager::read_bifiltration(std::ifstream& stream
             gradesOfApp.push_back(Grade(x_indexes[current_grade], y_indexes[current_grade]));
             current_grade++;
         }
+        
+        //TODO: Double-check that this sorting hasn't been done earlier.
+        //Mike: I reorganized the code slightly so that the arguments of add_simpex are const references, which
+        //seems better, but that means any sorting should happen before.
+        std::sort(gradesOfApp.begin(),gradesOfApp.end());
+        std::sort(it->first.begin(),it->first.end());
         data->bifiltration_data->add_simplex(it->first, gradesOfApp);
     }
     if (verbosity >= 10)

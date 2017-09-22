@@ -19,12 +19,12 @@ struct Grade
     int x;
     int y;
     
-    bool operator==(constant Grade& other) const
+    bool operator==(const Grade &other) const
     {
-        return x=other.x && y=other.y;
+        return x==other.x && y==other.y;
     }
     
-    bool operator<(const Grade& other) const
+    bool operator<(const Grade &other) const
     {
         if (y != other.y)
             return y < other.y;
@@ -57,41 +57,35 @@ struct LowSimplexData
 };
 
 
-struct HighSimplexData
+struct MidHighSimplexData
 {
     Simplex s;
     AppearanceGrades ag;
-    //column index of the generator corresponding to each bigrade.  Used to construct high boundary matrix.
-    
-    virtual bool is_high() const
-        {return 1;}
-    
-    HighSimplexData(Simplex simp, AppearanceGrades app_gr) : s(simp), ag(app_gr)
-    {}
-};
-
-//TODO: MidSimplexData stores some additional data, beyond what is strictly needed to specify the relevant portion of the bifiltration.
-//This is useful for computing an firep.  Of course, this extra data could be stored elsewhere, but this design seems convenient.  In an application not involving FIReps (e.g. dendrograms/clustering), this extra data can be ignored and contributes relatively little extra storage.
-//Neverthess, it might be reasonable to consider separating out that extra data.
-struct MidSimplexData: public HighSimplexData
-{
     
     //column index of the generator corresponding to each bigrade.  Used to construct high boundary matrix.
     std::vector<unsigned> ind;
     
     //TODO: Maybe slightly cleaner to use an iterator pointing to ind than an iterator pointing to ag?
     //std::vector<unsigned>::iterator ind_it;
-    Appearance_Grades::iterator ag_it;
+    AppearanceGrades::iterator ag_it;
     
-    bool is_high() const
-    {return 0;}
+    bool high;
     
-    MidSimplexData(Simplex simp, AppearanceGrades app_gr) : s(simp), ag(app_gr), ind(vector<unsigned>()), ag_it(ag.begin())
+    virtual bool is_high() const
+        {return high;}
+    
+    //TODO: This is a little inefficient, since high_simplex data doesn't actually need the data of ind or ag_it.  But it's not too bad
+    MidHighSimplexData(Simplex simp, AppearanceGrades app_gr, bool h) : s(simp), ag(app_gr), ind(std::vector<unsigned>()), ag_it(ag.begin()), high(h)
     {}
+
 };
 
 
+
+
 class BifiltrationData {
+    friend class FIRep;
+
     public:
         BifiltrationData(int dim, int v);	//constructor; requires verbosity parameter
 
@@ -110,7 +104,7 @@ class BifiltrationData {
 
     
     
-        void add_simplex(std::vector<int>& vertices, const AppearanceGrades& grades);	//adds a simplex to BifiltrationData, grades is a vector of appearance grades
+        void add_simplex(const std::vector<int> &vertices, const AppearanceGrades &grades);	//adds a simplex to BifiltrationData, grades is a vector of appearance grades
 
         void set_xy_grades(unsigned num_x, unsigned num_y); //Sets x_grades and y_grades. Used when reading in a bifiltration.
 
@@ -132,8 +126,7 @@ class BifiltrationData {
 
         //TODO: It might be more efficient to store all simplices in a single vector, with pointers in.
         std::vector<LowSimplexData> low_simplices;
-        std::vector<MidSimplexData> mid_simplices;
-        std::vector<HighSimplexData> high_simplices;
+        std::vector<MidHighSimplexData> mid_simplices, high_simplices;
     
         void build_VR_subcomplex(const std::vector<unsigned>& times, const std::vector<unsigned>& distances, std::vector<int> &vertices, const unsigned prev_time, const unsigned prev_dist);	//recursive function used in build_VR_complex()
 

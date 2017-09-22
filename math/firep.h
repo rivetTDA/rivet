@@ -38,36 +38,7 @@ class MapMatrix_Perm;
 #include <string>
 #include <vector>
 
-//Pair where first elt. is index of a simplex, and second elt is a grade of appearance of that simplex.  Sorted by the corresponding grade.
-//Each BirthSimplex either corresponds to a simplex in the bifiltration, or to a relation
-struct BirthSimplex
-{
-    size_t index;
-    Grade* grade; //reference to grade that this generator represents, if applicable
-
-    //GenSimplex(Grade* set_grade) : x(set_grade->x), y(set_grade->y), grade(set_grade), boundary(std::vector<unsigned>()) {}
-    
-    BirthSimplex(size_t ind, Grade* g ) : index(ind), grade(g) {}
-    
-    //Compares grades colexicographically.  Within a given grade, we want compare using lexicographical order on vertices, since this seems to work well in practice.
-    //However, for Rips, we will assume that the simplices are already in this order, and will use a stable sort, so we don't need to assume this explicitly.
-    bool operator<(BirthSimplex other) const
-        return grade<other.grade;
-};
-
-//used to build the has table for simplices in hom_dim-1
-struct GradeHash
-{
-    std::size_t operator()(Grade const& grade) const
-    {
-        size_t seed = 0;
-        boost::hash_combine(seed, grade.x);
-        boost::hash_combine(seed, grade.y);
-        return seed;
-    }
-};
-
-//used to build the has table for simplices in hom_dim
+//used to build the hash table for simplices in hom_dim-1, hom_dim
 struct VectorHash
 {
     std::size_t operator()(std::vector<int> const& v) const
@@ -77,11 +48,9 @@ struct VectorHash
 };
 
 //no need for a hash table in highest dimension
-typedef std::unordered_map<const Simplex&, unsigned, GradeHash> SimplexHashLow;
-typedef std::unordered_map<const Simplex&, vector<MidSimplexData>::iterator, VectorHash> SimplexHashMid;
+typedef std::unordered_map<const Simplex, unsigned, VectorHash> SimplexHashLow;
+typedef std::unordered_map<const Simplex, std::vector<MidHighSimplexData>::iterator, VectorHash> SimplexHashMid;
 class FIRep {
-
-    friend bifiltration_data;
     
 public:
     FIRep(BifiltrationData& bd, int v); //constructor; requires verbosity parameter
