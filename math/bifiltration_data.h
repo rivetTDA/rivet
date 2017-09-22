@@ -1,8 +1,8 @@
 /**
  * \class	BifiltrationData
  * \brief	Computes and stores the information about a bifiltration needed to compute homology in fixed dimension d.  Together with Input_Manager, handles 1-critical or multicritical Rips bifiltrations, as defined in the RIVET paper.
- * \author	Roy Zhao
- * \date	May 2016
+ * \author  Roy Zhao; edited by Michael Lesnick.
+ * \date    March 2017; edited September 2017.
  */
 
 #ifndef BIFILTRATION_DATA_H
@@ -19,7 +19,11 @@ struct Grade
     int x;
     int y;
     
-    //removing dimension index, as this is better kept separately.
+    bool operator==(constant Grade& other) const
+    {
+        return x=other.x && y=other.y;
+    }
+    
     bool operator<(const Grade& other) const
     {
         if (y != other.y)
@@ -27,12 +31,7 @@ struct Grade
         else
             return x < other.x;
     }
-
-    bool operator==(const Grade& other) const
-    {
-        return (y == other.y) && (x == other.x);
-    }
-
+     
     Grade() {}
 
     Grade(int set_x, int set_y) : x(set_x), y(set_y)
@@ -40,36 +39,56 @@ struct Grade
 };
 
 
-struct GradeHash
-{
-    std::size_t operator()(Grade const& grade) const
-    {
-        size_t seed = 0;
-        boost::hash_combine(seed, grade.x);
-        boost::hash_combine(seed, grade.y);
-        return seed;
-    }
-};
-
-struct VectorHash
-{
-    std::size_t operator()(std::vector<int> const& v) const
-    {
-        return boost::hash_range(v.begin(), v.end());
-    }
-};
-
 //typedef
+typedef std::vector<int> Simplex;
 typedef std::vector<Grade> AppearanceGrades;
-typedef std::unordered_map<std::vector<int>, size_t, GradeHash> SimplexHashLow; //key = vector representing a simplex; value = index in vector<Grade>.
-typedef std::unordered_map<std::vector<int>, size_t, VectorHash> SimplexHashMid; //keylist = vector representing a simplex; value = index in vector<vector<Grades>>.
 
-// Note: No need for a hash table representation of simplices in the highest index, because we will not consider these simplices as boundaries, and there is no possibility of inserting the same simplex twice.
 
-// We only need a single grade for each simplex in the low dimension because for homology, it suffices to consider a greatest lower bound of all grades.  For mid and high dimensions, we need a vector of grades for each simplex, in the multicritical case.
-typedef std::vector<std::pair<Grade,SimplexHashLow::iterator> SimplexVecLow;
-typedef std::vector<std::pair<AppearanceGrades,SimplexHashLow::iterator> SimplexVecMid;
-typedef std::vector<AppearanceGrades> SimplexVecHigh;
+// We only need a single grade for each simplex in the low dimension because for homology, it suffices to consider a greatest lower bound of all grades.  For mid and high dimensions, we need a vector of grades for each simplex, for the multicritical case.
+
+//In the future, we might specify a vertex using a combinatorial number system, as in DIPHA or Ripser, but this will do for now
+struct LowSimplexData
+{
+    Simplex s;
+    Grade gr;
+    
+    LowSimplexData(Simplex simp, Grade g) : s(simp), gr(g)
+    {}
+};
+
+
+struct HighSimplexData
+{
+    Simplex s;
+    AppearanceGrades ag;
+    //column index of the generator corresponding to each bigrade.  Used to construct high boundary matrix.
+    
+    virtual bool is_high() const
+        {return 1;}
+    
+    HighSimplexData(Simplex simp, AppearanceGrades app_gr) : s(simp), ag(app_gr)
+    {}
+};
+
+//TODO: MidSimplexData stores some additional data, beyond what is strictly needed to specify the relevant portion of the bifiltration.
+//This is useful for computing an firep.  Of course, this extra data could be stored elsewhere, but this design seems convenient.  In an application not involving FIReps (e.g. dendrograms/clustering), this extra data can be ignored and contributes relatively little extra storage.
+//Neverthess, it might be reasonable to consider separating out that extra data.
+struct MidSimplexData: public HighSimplexData
+{
+    
+    //column index of the generator corresponding to each bigrade.  Used to construct high boundary matrix.
+    std::vector<unsigned> ind;
+    
+    //TODO: Maybe slightly cleaner to use an iterator pointing to ind than an iterator pointing to ag?
+    //std::vector<unsigned>::iterator ind_it;
+    Appearance_Grades::iterator ag_it;
+    
+    bool is_high() const
+    {return 0;}
+    
+    MidSimplexData(Simplex simp, AppearanceGrades app_gr) : s(simp), ag(app_gr), ind(vector<unsigned>()), ag_it(ag.begin())
+    {}
+};
 
 
 class BifiltrationData {
@@ -89,31 +108,16 @@ class BifiltrationData {
                     //requires number of vertices, a list of distances between pairs of points, list for degree to y value exchange, and number of grade values in x- and y-directions
                     //CONVENTION: the x-coordinate is "scale parameter" for points and the y-coordinate is "degree parameter"
 
-        void add_simplex(std::vector<int>& vertices, const AppearanceGrades& grades);	//adds a simplex (and its faces) to BifiltrationData, grades is a vector of appearance grades
     
-        void add_simplex(std::vector<int>& vertices, const AppearanceGrades& grades);	//adds a simplex (and its faces) to BifiltrationData, grades is a vector of appearance grades
     
-        void add_simplex(std::vector<int>& vertices, const Grade& grade);	//adds a simplex (and its faces) to BifiltrationData, grade is a single appearance grade.
-    
+        void add_simplex(std::vector<int>& vertices, const AppearanceGrades& grades);	//adds a simplex to BifiltrationData, grades is a vector of appearance grades
+
         void set_xy_grades(unsigned num_x, unsigned num_y); //Sets x_grades and y_grades. Used when reading in a bifiltration.
 
         unsigned num_x_grades();                     //returns the number of unique x-coordinates of the multi-grades
         unsigned num_y_grades();                     //returns the number of unique y-coordinates of the multi-grades
 
         int get_size(int dim);                  //returns the number of simplices of dimension (hom_dim-1), hom_dim, or (hom_dim+1). Returns -1 if invalid dim.
-
-
-        /*
-        SimplexListLow* getSimplexVecLow(); //returns pointer to the list of simplices in dimension (hom_dim-1)
-    
-        SimplexListMid* getSimplexVecMid(); //returns pointer to the list of simplices in dimension (hom_dim) or (hom_dim+1)
-    
-        SimplexListHigh* getSimplexVecHigh(); //returns pointer to the list of simplices in dimension (hom_dim) or (hom_dim+1)
-    
-        SimplexListLow* getSimplexVecLow; //returns pointer to the list of simplices in dimension (hom_dim-1)
-    
-        SimplexListMidHigh* getSimplexVecMidHigh(int dim); //returns point to the list of simplices in dimension (hom_dim) or (hom_dim+1)
-        */
 
         const int hom_dim;      //the dimension of homology to be computed; max dimension of simplices is one more than this
         const int verbosity;	//controls display of output, for debugging
@@ -126,16 +130,10 @@ class BifiltrationData {
         unsigned x_grades;  //the number of x-grades that exist in this bifiltration
         unsigned y_grades;  //the number of y-grades that exist in this bifiltration
 
-        //firep is a friend class, which allows it to work directly with the following private data.
-        SimplexHashMidHigh high_ht;    //hash table giving the indices of simplices of dimension hom_dim
-        SimplexHashLow low_ht;    //hash table with key the simplices of dimension hom_dim-1 and values the indices of their representation in a vector.
-        SimplexHashMidHigh mid_ht;  //hash table with key the simplices of dimension hom_dim and values the indices of their representation in a vector.
-    
-        //lists of simplices constructed here will be sorted later by the FI-Rep constructor
-        //TODO: That is the way it is currently done, but is that the best organization?
-        SimpVectLow low_simplices;
-        SimplexVecMid mid_simplices;
-        SimplexVecHigh high_simplices;
+        //TODO: It might be more efficient to store all simplices in a single vector, with pointers in.
+        std::vector<LowSimplexData> low_simplices;
+        std::vector<MidSimplexData> mid_simplices;
+        std::vector<HighSimplexData> high_simplices;
     
         void build_VR_subcomplex(const std::vector<unsigned>& times, const std::vector<unsigned>& distances, std::vector<int> &vertices, const unsigned prev_time, const unsigned prev_dist);	//recursive function used in build_VR_complex()
 
@@ -144,12 +142,20 @@ class BifiltrationData {
         void generateVertexMultigrades(std::vector<AppearanceGrades>& multigrades, const unsigned vertices, const std::vector<unsigned>& distances, const std::vector<unsigned>& degrees); //Generates required multigrades for build_BR_complex()
 
         void combineMultigrades(AppearanceGrades& merged, const AppearanceGrades& grades1, const AppearanceGrades& grades2, unsigned mindist); //Finds the grades of appearance of when both simplices exist subject to minimal scale parameter, used in build_BR_complex()
-
-        //void addSimplicesToGrade(GradeInfo* orderedGrades, const std::vector<int> simplex, const AppearanceGrades& grades); //Takes a simplex and its grades of appearance and adds it to ordered_high_grades, ordered_grades, or ordered_low_grades
-
+    
+        //Note: Changed behavior of add_simplices so that it no longer adds in faces.  No longer need this helper function
+        //TODO: Remove.
+        /*
         void add_faces(const std::vector<int>& vertices, const AppearanceGrades& grades);	//recursively adds faces of a simplex to the BifiltrationData; WARNING: doesn't make sure multigrades are incomparable
-
+        */
+         
         void update_grades(AppearanceGrades& grades); //Sorts the grades of appearance in reverse lexicographic order and makes sure they are all incomparable
+
+        //total number of simplces of dimension hom_dim, counting mutiplicity in grades of appearance.
+        //used to avoid unnecessary copying of arrays in firep constructor.
+        unsigned mid_count;
+        unsigned high_count;
+
 };
 
 #endif // BIFILTRATION_DATA_H

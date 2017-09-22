@@ -13,7 +13,7 @@
 
 //BifiltrationData constructor; requires dimension of homology to be computed and verbosity parameter
 BifiltrationData::BifiltrationData(int dim, int v) :
-     hom_dim(dim), verbosity(v), x_grades(0), y_grades(0)
+     hom_dim(dim), verbosity(v), x_grades(0), y_grades(0), mid_count(0), high_count(0)
 {
     if (hom_dim > 5) {
         throw std::runtime_error("BifiltrationData: Dimensions greater than 5 probably don't make sense");
@@ -30,85 +30,43 @@ BifiltrationData::~BifiltrationData()
 {
 }
 
-//adds a simplex to the BifiltrationData.
-//if simplex or any of its faces already exist, their new grades are added
-//WARNING: doesn't verify multigrades are non-comparable.
-//We don't need to add simplexes of dimension greater than hom_dim+1
-void BifiltrationData::add_simplex(std::vector<int>& vertices, const AppearanceGrades& grades)
+//adds a simplex to the BifiltrationData
+//if the simplex does not have dimension hom_dim-1, hom_dim, or hom_dim+1, does nothing.
+//WARNING: Assumes but does not vertify does not verify that multigrades are non-comparable
+//WARNING: Assumes that simplex has not already been added.  Does not check this.
+//WARNING: Assumes that
+void BifiltrationData::add_simplex(Simplex& vertices, const AppearanceGrades& grades)
 {
     //make sure vertices are sorted
     std::sort(vertices.begin(), vertices.end());
-
-    //add the simplex and all of its faces
-    add_faces(vertices, grades);
-}//end add_simplex()
-
-//Adds faces of a simplex to the BifiltrationData.  Assumes this face hasn't been seen yet.
-
-//Only need a recursive procedure for input files of Bifiltration type
-void BifiltrationData::add_faces(const std::vector<int>& vertices, const AppearanceGrades& grades)
-{
-    //Store the simplex info if it is of dimension (hom_dim - 1), hom_dim, or hom_dim+1. Dimension is parent_vertices.size() - 1
+    
+    //also make sure appearance grades are sorted in colex order. (Since the grades are incomparable, this means sort by y-coordinate.)
+    sort(grades.begin(),grades.end());
+    
     if (vertices.size() == 0)
     {
         return;
     }
+    
     else if (vertices.size() == (unsigned)hom_dim) //simplex of dimension hom_dim - 1
     {
-        SimplexHashLow::iterator ret = low_ht->find(vertices);
-        if (ret == low_ht->end()) //Grade not found
-        {
-            low_ht->emplace(vertices, grades);
-        }
-        else //Grade found, pointed at by ret
-        {
-            //this could be simplified since for hom_dim - 1, we only need the GLB of all grades.
-            ret->second.insert(ret->second.end(), grades.begin(), grades.end());
-        }
+        //For the homology computation, we only need the greatest lower bound of grades
+        low_simplices.push_back(LowSimplexData(vertices,Grade((grades.end()-1)->x,grades.begin()->y));
         return;
     }
     else if (vertices.size() == (unsigned)hom_dim + 1) //simplex of dimension hom_dim
     {
-        ret = ordered_simplices->find(vertices);
-        if (ret == ordered_simplices->end()) //Grade not found
-        {
-            ordered_simplices->emplace(vertices, grades);
-        }
-        else //Grade found, pointed at by ret
-        {
-            ret->second.insert(ret->second.end(), grades.begin(), grades.end());
-        }
+        mid_simplices.push_back(MidSimplexData(vertices,grades));
+        return;
+
     }
     else if (vertices.size() == (unsigned)hom_dim + 2) //simplex of dimension hom_dim + 1
     {
-        ret = ordered_high_simplices->find(vertices);
-        if (ret == ordered_high_simplices->end()) //Grade not found
-        {
-            ordered_high_simplices->emplace(vertices, grades);
-        }
-        else //Grade found, pointed at by ret
-        {
-            ret->second.insert(ret->second.end(), grades.begin(), grades.end());
-        }
-    }
-    else if (vertices.size() < (unsigned)hom_dim) //looking at dimension less than hom_dim -1= 1 and we do not care about those simplices
-    {
+        high_simplices.push_back(HighSimplexData(vertices,grades));
         return;
     }
-
-    //Iterate for each face
-    for(unsigned i = 0; i < vertices.size(); i++)
-    {
-        //form vector consisting of all the vertices except for vertices[i]
-        std::vector<int> face;
-        for(unsigned k = 0; k < vertices.size(); k++)
-            if(k != i)
-                face.push_back(vertices[k]);
-
-        //add the face simplex to the BifiltrationData
-        add_faces(face, grades);
-    }
 }//end add_faces()
+
 
 //builds BifiltrationData representing a bifiltered Vietoris-Rips complex from discrete data
 //requires a list of birth times (one for each point) and a list of distances between pairs of points
@@ -118,7 +76,7 @@ void BifiltrationData::build_VR_complex(const std::vector<unsigned>& times, cons
 {
     x_grades = num_x;
     y_grades = num_y;
-
+    
     //Add generation points recursively
     for(unsigned i=0; i<times.size(); i++)
     {
@@ -136,26 +94,19 @@ void BifiltrationData::build_VR_subcomplex(const std::vector<unsigned>& times, c
     //Store the simplex info if it is of dimension (hom_dim - 1), hom_dim, or hom_dim+1. Dimension is vertices.size() - 1
     if (vertices.size() == (unsigned)hom_dim) //simplex of dimension hom_dim - 1
     {
-        //place a pair into the hash table, and return an iterator to the hash table which is stored in the vector.  Also store grade in the vector.
-        low_simplices.push_back(std::pair<Grade,SimplexHashLow::iterator>(Grade(prev_time, prev_dist),low_ht.emplace(vertices,low_simplices.size()).first()));
+        low_simplices.push_back(LowSimplexData(vertices,Grade(prev_time, prev_dist));
     }
     else if (vertices.size() == (unsigned)hom_dim + 1) //simplex of dimension hom_dim - 1
     {
-        mid_simplices.push_back(std::pair<AppearanceGrades,SimplexHashLow::iterator>(AppearanceGrades(1, Grade(prev_time, prev_dist)),mid_ht.emplace(vertices,mid_simplices.size()).first()));
+        mid_simplices.push_back(MidSimplexData(vertices,AppearanceGrades(1, Grade(prev_time, prev_dist))));
+        mid_count++;
     }
     else if (vertices.size() == (unsigned)hom_dim + 2) //simplex of dimension hom_dim - 1
     {
-        high_simplices.push_back(AppearanceGrades(1, Grade(prev_time, prev_dist)));
+        high_simplices.push_back(HighSimplexData(vertices,AppearanceGrades(1, Grade(prev_time, prev_dist))));
+        high_count++;
         return;
     }
-
-    //We don't need this here, because there is already a return statement above.
-    /*
-    else if (vertices.size() > (unsigned)hom_dim + 2) //looking at dimension at least hom_dim + 2 and we do not care about those simplices
-    {
-        return;
-    }
-    */
 
     //loop through all points that could be children of this node
     for(unsigned j = vertices.back() + 1; j < times.size(); j++)
@@ -230,25 +181,19 @@ void BifiltrationData::build_BR_subcomplex(const std::vector<unsigned>& distance
     {
         //take the greatest lower bound of parent_grades, using the fact that the grades are ordered properly.
         
-        low_simplices.push_back(std::pair<Grade,SimplexHashLow::iterator>(Grade(parent_grades.back().x,parent_grades.begin().y),low_ht.emplace(parent_vertices,low_simplices.size()).first()));
+        low_simplices.push_back(LowSimplexData(parent_vertices,Grade(parent_grades.back().x,parent_grades.begin().y)));
     }
-    else if (parent_vertices.size() == (unsigned)hom_dim + 1) //simplex of dimension hom_dim - 1
+    else if (parent_vertices.size() == (unsigned)hom_dim + 1) //simplex of dimension hom_dim
     {
-        mid_simplices.push_back(std::pair<AppearanceGrades,SimplexHashLow::iterator>(parent_grades,mid_ht.emplace(parent_vertices,mid_simplices.size()).first()));
+        mid_simplices.push_back(MidSimplexData(parent_vertices,parent_grades));
+        mid_count+=parent_grades.size();
     }
-    else if (parent_vertices.size() == (unsigned)hom_dim + 2) //simplex of dimension hom_dim - 1
+    else if (parent_vertices.size() == (unsigned)hom_dim + 2) //simplex of dimension hom_dim + 1
     {
-        ordered_high_simplices->emplace(parent_vertices, parent_grades);
+        high_simplices.push_back(HighSimplexData(parent_vertices,parent_grades));
+        high_count+=parent_grades.size();
         return;
     }
-    
-    //We don't need this here, because there is already a return statement above.
-    /*
-    else if (parent_vertices.size() > (unsigned)hom_dim + 2) //looking at dimension at least hom_dim + 2 and we do not care about those simplices
-    {
-        return;
-    }
-    */
 
     //loop through all points that could be added to form a larger simplex (candidates)
     for(std::vector<int>::const_iterator it = candidates.begin(); it != candidates.end(); it++)
@@ -416,8 +361,11 @@ int BifiltrationData::get_size(int dim)
         return -1;
 }
 
+
 //returns the list of simplices and their grades of appearance in dimension (hom_dim-1), hom_dim, or (hom_dim+1)
 //Returns NULL if incorrect dimension is given
+                                
+/*
 SimplexInfo* BifiltrationData::getSimplices(int dim)
 {
     if(dim == hom_dim - 1)
@@ -441,48 +389,46 @@ SimplexInfo* BifiltrationData::getSimplices(int dim)
     else
         return NULL;
 }
-
+*/
 
 //print bifiltration in the RIVET bifiltration input format
 //prints simplices in no particular order, grades are in reverse-lexicographic order
 void BifiltrationData::print_bifiltration()
 {
-    for (SimplexInfo::const_iterator it = ordered_low_simplices->begin(); it != ordered_low_simplices->end(); it++)
+    
+    //these three similar nested loops could be combined, but it's not such a big deal.
+    for (vector<LowSimplexData>::const_iterator it = low_simplices.begin(); it != low_simplices.end(); it++)
     {
-        for (std::vector<int>::const_iterator it2 = it->first.begin(); it2 != it->first.end(); it2++)
+        for (Simplex::const_iterator it2 = it->s.begin(); it2 != it->s.end(); it2++)
         {
             std::cout << *it2 << " ";
         }
         std::cout << "; "; //Separator of vertex and grade info
-        for (AppearanceGrades::const_iterator it2 = it->second.begin(); it2 != it->second.end(); it2++)
+        std::cout << it->gr.x << " " it->gr.y << std::endl;
+    }
+    
+    for (vector<MidSimplexData>::const_iterator it = mid_simplices->begin(); it != mid_simplices->end(); it++)
+    {
+        for (Simplex::const_iterator it2 = it->s.begin(); it2 != it->s.end(); it2++)
+        {
+            std::cout << *it2 << " ";
+        }
+        std::cout << "; "; //Separator of vertex and grade info
+        for (AppearanceGrades::const_iterator it2 = it->ag.begin(); it2 != it->ag.end(); it2++)
         {
             std::cout << it2->x << " " << it2->y << " ";
         }
         std:: cout << std::endl;
     }
 
-    for (SimplexInfo::const_iterator it = ordered_simplices->begin(); it != ordered_simplices->end(); it++)
+    for (vector<HighSimplexData>::const_iterator it = high_simplices->begin(); it != high_simplices->end(); it++)
     {
-        for (std::vector<int>::const_iterator it2 = it->first.begin(); it2 != it->first.end(); it2++)
+        for (Simplex::const_iterator it2 = it->s.begin(); it2 != it->s.end(); it2++)
         {
             std::cout << *it2 << " ";
         }
         std::cout << "; "; //Separator of vertex and grade info
-        for (AppearanceGrades::const_iterator it2 = it->second.begin(); it2 != it->second.end(); it2++)
-        {
-            std::cout << it2->x << " " << it2->y << " ";
-        }
-        std:: cout << std::endl;
-    }
-
-    for (SimplexInfo::const_iterator it = ordered_high_simplices->begin(); it != ordered_high_simplices->end(); it++)
-    {
-        for (std::vector<int>::const_iterator it2 = it->first.begin(); it2 != it->first.end(); it2++)
-        {
-            std::cout << *it2 << " ";
-        }
-        std::cout << "; "; //Separator of vertex and grade info
-        for (AppearanceGrades::const_iterator it2 = it->second.begin(); it2 != it->second.end(); it2++)
+        for (AppearanceGrades::const_iterator it2 = it->ag.begin(); it2 != it->ag.end(); it2++)
         {
             std::cout << it2->x << " " << it2->y << " ";
         }

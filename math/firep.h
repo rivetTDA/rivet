@@ -38,67 +38,47 @@ class MapMatrix_Perm;
 #include <string>
 #include <vector>
 
-//struct respresenting generalized simplex whose information will be stored in boundary matrices
-//Each Gen_Simplex either corresponds to a simplex in the bifiltration, or to a relation
-struct GenSimplex
+//Pair where first elt. is index of a simplex, and second elt is a grade of appearance of that simplex.  Sorted by the corresponding grade.
+//Each BirthSimplex either corresponds to a simplex in the bifiltration, or to a relation
+struct BirthSimplex
 {
-    int x;
-    int y;
-    bool is_rel=false;
+    size_t index;
     Grade* grade; //reference to grade that this generator represents, if applicable
 
+    //GenSimplex(Grade* set_grade) : x(set_grade->x), y(set_grade->y), grade(set_grade), boundary(std::vector<unsigned>()) {}
     
-    //TODO: In the 1-cirtical case, many Gen_Simplexes may share the same "vertices" data
-    //      Would it be better to keep this info elsewhere and store a pointer to this?
-    //      Alternatively, we could store this as an integer using a combinatorial number system,
-    //      as in DIPHA/Riper.
+    BirthSimplex(size_t ind, Grade* g ) : index(ind), grade(g) {}
     
-    std::vector<unsigned> vertices; //vertices are assumed to be in sorted order
-    std::vector<unsigned> boundary; //Boundary should be in sorted order
-    
-    GenSimplex(Grade* set_grade) : x(set_grade->x), y(set_grade->y), grade(set_grade), boundary(std::vector<unsigned>()) {}
-    
-    GenSimplex(int set_x, int set_y) : x(set_x), y(set_y), grade(NULL), boundary(std::vector<unsigned>()) {}
-    
-    //Compares grades colexicographically.  Then, if grades are equal:
-    //-simplices are lexicographically ordered by vertex index.  (In examples of Rips bifiltrations, this seems to work well.)
-    //-a relation is less than a simplex.  (Because heuristically, we expect to see less fill-in if sparser columns come first, and relations have at most two entries.)
-    //-relations are ordered so that the one whose pivot is smaller (i.e., higher up in the matrix) come first.  In a tie, order using the other element  (Heuristically, this makes it harder for pivots to "collide.")
-    
-    bool operator<(GenSimplex other) const
+    //Compares grades colexicographically.  Within a given grade, we want compare using lexicographical order on vertices, since this seems to work well in practice.
+    //However, for Rips, we will assume that the simplices are already in this order, and will use a stable sort, so we don't need to assume this explicitly.
+    bool operator<(BirthSimplex other) const
+        return grade<other.grade;
+};
+
+//used to build the has table for simplices in hom_dim-1
+struct GradeHash
+{
+    std::size_t operator()(Grade const& grade) const
     {
-        if (y != other.y)
-            return y < other.y;
-        else if (x != other.x)
-            return x < other.x;
-        else if (!is_rel && !other.is_rel) {
-            //neither GenSimplex is a relation
-            unsigned currIndex = 0;
-            while (currIndex != vertices.size()) {
-                if (vertices[currIndex] != other.vertices[currIndex])
-                {
-                    return vertices[currIndex] < other.vertices[currIndex];
-                }
-                currIndex++;
-            }
-            //In this case the the simplices are equal.
-            return false;
-        }
-        else if (is_rel != other.is_rel)
-            //exactly one GenSimplex is relation.
-            return is_rel;
-        else {
-            //each GenSimplex is relation.
-            
-            //NOTE: We assume that the boundaries of the relations contains exactly two elements.
-            if (boundary[1]!=other.boundary[1])
-                return boundary[1]<other.boundary[1];
-            else
-                return boundary[0]<other.boundary[0];
-        }
+        size_t seed = 0;
+        boost::hash_combine(seed, grade.x);
+        boost::hash_combine(seed, grade.y);
+        return seed;
     }
 };
 
+//used to build the has table for simplices in hom_dim
+struct VectorHash
+{
+    std::size_t operator()(std::vector<int> const& v) const
+    {
+        return boost::hash_range(v.begin(), v.end());
+    }
+};
+
+//no need for a hash table in highest dimension
+typedef std::unordered_map<const Simplex&, unsigned, GradeHash> SimplexHashLow;
+typedef std::unordered_map<const Simplex&, vector<MidSimplexData>::iterator, VectorHash> SimplexHashMid;
 class FIRep {
 
     friend bifiltration_data;
@@ -123,9 +103,12 @@ public:
     //returns a boundary matrix for (hom_dim+1)-simplices with columns and rows a specified orders -- for vineyard-update algorithm
     MapMatrix_Perm* get_boundary_mx(std::vector<int>& face_order, unsigned num_faces, std::vector<int>& coface_order, unsigned num_cofaces);
     
-    //returns a matrix of column indexes to accompany MapMatrices
-    IndexMatrix* get_low_index_mx();
     
+    //TODO: shouldn't the following two return pointers to consts?
+    
+    //returns a matrix of column indexes to accompany MapMatrices
+    IndexMatrix * get_low_index_mx();
+
     //returns a matrix of column indexes to accompany MapMatrices
     IndexMatrix* get_high_index_mx();
     
@@ -143,13 +126,17 @@ private:
     MapMatrix* boundary_mx_1; //boundary matrix from dim+1 to dim
     
     //Indexes of simplices. Grades are stored in discrete indexes, real ExactValues are stored in InputData.x_exact and y_exact
+    
+    //TODO: It seems not good design to store the grades this way, if they will only be accessed via the function get_index_mx,
+    //is currently the case.  (get_index_mx outputs this data in a compressed form which avoids repeat indices).
+    //It would be better to instead store the output of the computation performed by get_index_mx.
     AppearanceGrades indexes_0; //indexes of simplices in dimension dim
     AppearanceGrades indexes_1; //indexes of simplices in dimension dim+1
-    //TODO: Delete reference once Alex's code is merged
+    
     BifiltrationData& bifiltration_data; //Associated bifiltration data is kept only for Alex's dendrogram code
     
     //writes boundary vector for simplex represented by sim in column col of matrix mat
-    void set_boundary_vector(GenSimplex& generator, const std::vector<int>& vertices, SimplexInfo* low_simplices);
+    //void set_boundary_vector(GenSimplex& generator, const std::vector<int>& vertices, SimplexInfo* low_simplices);
     
     void write_boundary_column(MapMatrix* mat, std::vector<unsigned>& entries, unsigned col); //writes boundary information given boundary entries in column col of matrix mat
     
