@@ -19,7 +19,7 @@
  **********************************************************************/
 /**
  * \class   firep
- * \brief   Computes and stores an FI-Rep of the dth homology module of a (possibly multicritical) bifiltered simplicial complex
+ * \brief   Computes and stores an FI-Rep of the hom_dim^{th} homology module of a (possibly multicritical) bifiltered simplicial complex.  Takes either a bifiltration_data object, or a representation of the FI_Rep obtained directly from text input.
  * \author  Roy Zhao; edited by Michael Lesnick.
  * \date    March 2017; edited September 2017.
  */
@@ -38,7 +38,7 @@ class MapMatrix_Perm;
 #include <string>
 #include <vector>
 
-//used to build the hash table for simplices in hom_dim-1, hom_dim
+//used to build the hash tables for simplices in hom_dim-1 and hom_dim
 struct VectorHash
 {
     std::size_t operator()(std::vector<int> const& v) const
@@ -47,7 +47,7 @@ struct VectorHash
     }
 };
 
-//no need for a hash table in highest dimension
+//no need for a hash table in the high dimension
 typedef std::unordered_map<const Simplex, unsigned, VectorHash> SimplexHashLow;
 typedef std::unordered_map<const Simplex, std::vector<MidHighSimplexData>::iterator, VectorHash> SimplexHashMid;
 class FIRep {
@@ -97,16 +97,19 @@ private:
     //Indexes of simplices. Grades are stored in discrete indexes, real ExactValues are stored in InputData.x_exact and y_exact
     
     //TODO: It seems not good design to store the grades this way, if they will only be accessed via the function get_index_mx,
-    //is currently the case.  (get_index_mx outputs this data in a compressed form which avoids repeat indices).
-    //It would be better to instead store the output of the computation performed by get_index_mx.
+    //as is currently the case.  (get_index_mx outputs this data in a compressed form which avoids repeat indices).
+    //It would be better to instead store the output of the computation performed by get_index_mx, and perhaps even to avoid computation of these
+    //intermediate vectors altogether.
     AppearanceGrades indexes_0; //indexes of simplices in dimension dim
     AppearanceGrades indexes_1; //indexes of simplices in dimension dim+1
     
-    BifiltrationData& bifiltration_data; //Associated bifiltration data is kept only for Alex's dendrogram code
     
-    //writes boundary vector for simplex represented by sim in column col of matrix mat
-    //void set_boundary_vector(GenSimplex& generator, const std::vector<int>& vertices, SimplexInfo* low_simplices);
+    //Note: Associated bifiltration data is kept only for Alex's dendrogram code.
+    //Once that code is improved, it should not require an FI-Rep at all, and this can eventually be removed.
+    BifiltrationData& bifiltration_data;
     
+    //writes boundary column.
+    //TODO: Creating a vector representation of the boundary column and then copying to the matrix (as a linked list) is inefficient.  With the current choice of data structure, the advantage is that this allows us to first sort the column.  In the future, we will probably follow PHAT/Dipha/Ripser and represent the columns directly as heaps (i.e., arrays with a special order), rather than linked lists, and this intermediate step will not be necessary.
     void write_boundary_column(MapMatrix* mat, std::vector<unsigned>& entries, unsigned col); //writes boundary information given boundary entries in column col of matrix mat
     
     IndexMatrix* get_index_mx(AppearanceGrades& source_grades); //Gets the index matrix associated with a list of grades

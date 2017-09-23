@@ -21,8 +21,6 @@ BifiltrationData::BifiltrationData(int dim, int v) :
     if (verbosity >= 8) {
         debug() << "Created BifiltrationData(" << hom_dim << ", " << verbosity << ")";
     }
-    
-    //use default constructors for the hash table and vectors.
 }
 
 //destructor
@@ -32,20 +30,11 @@ BifiltrationData::~BifiltrationData()
 
 //adds a simplex to the BifiltrationData
 //if the simplex does not have dimension hom_dim-1, hom_dim, or hom_dim+1, does nothing.
-//WARNING: Assumes but does not vertify does not verify that multigrades are non-comparable
+//WARNING: Assumes but does not verify that multigrades are non-comparable
 //WARNING: Assumes that simplex has not already been added.  Does not check this.
-//WARNING: Assumes that vertices is sorted (increasing order) and grades is sorted (colex order).
+//WARNING: Assumes that vertices is sorted (increasing order) and grades is also sorted (colex order).
 void BifiltrationData::add_simplex(Simplex const &vertices, const AppearanceGrades &grades)
 {
-    
-    /*
-    //make sure vertices are sorted
-    std::sort(vertices.begin(), vertices.end());
-    
-    //also make sure appearance grades are sorted in colex order. (Since the grades are incomparable, this means sort by y-coordinate.)
-    sort(grades.begin(),grades.end());
-    */
-    
     if (vertices.size() == 0)
     {
         return;
@@ -75,7 +64,6 @@ void BifiltrationData::add_simplex(Simplex const &vertices, const AppearanceGrad
 
 //builds BifiltrationData representing a bifiltered Vietoris-Rips complex from discrete data
 //requires a list of birth times (one for each point) and a list of distances between pairs of points
-//NOTE: automatically computes global indexes and dimension indexes
 //CONVENTION: the x-coordinate is "birth time" for points and the y-coordinate is "distance" between points
 void BifiltrationData::build_VR_complex(const std::vector<unsigned>& times, const std::vector<unsigned>& distances, const unsigned num_x, const unsigned num_y)
 {

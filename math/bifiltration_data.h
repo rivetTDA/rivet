@@ -1,6 +1,6 @@
 /**
  * \class	BifiltrationData
- * \brief	Computes and stores the information about a bifiltration needed to compute homology in fixed dimension d.  Together with Input_Manager, handles 1-critical or multicritical Rips bifiltrations, as defined in the RIVET paper.
+ * \brief	Computes and stores the information about a bifiltration needed to compute homology in fixed dimension hom_dim.  Together with Input_Manager, handles 1-critical or multicritical Rips bifiltrations, as defined in the RIVET paper.  Only tracks the hom_dim-1, hom_dim, and hom_dim+1 -dimensional simplices
  * \author  Roy Zhao; edited by Michael Lesnick.
  * \date    March 2017; edited September 2017.
  */
@@ -13,7 +13,7 @@
 #include <unordered_map>
 #include <boost/functional/hash.hpp>
 
-//Pair of coordinates specifying grade of appearance with additional sorting operator. Sorted first by y then x grade in REVERSE-LEXICOGRAPHIC ORDER.
+//Pair of coordinates specifying grade of appearance with additional sorting operator. Sorted COLEXICOGRAPHICALLY, i.e., first by y-coordinate,  then by x-coordinate.
 struct Grade
 {
     int x;
@@ -39,14 +39,12 @@ struct Grade
 };
 
 
-//typedef
+//typedefs
+//TODO: It may be more efficient to specify a simplex using a combinatorial number system, as in DIPHA or Ripser, but this will do for now.
 typedef std::vector<int> Simplex;
 typedef std::vector<Grade> AppearanceGrades;
 
-
-// We only need a single grade for each simplex in the low dimension because for homology, it suffices to consider a greatest lower bound of all grades.  For mid and high dimensions, we need a vector of grades for each simplex, for the multicritical case.
-
-//In the future, we might specify a vertex using a combinatorial number system, as in DIPHA or Ripser, but this will do for now
+// Even in the multicritical case, we only need a single grade for each (hom_dim-1)-dimensional simplex because for the homology computation, it suffices to consider a greatest lower bound of all grades of appearance of the simplexx.  For mid and high dimensions (i.e., dimensions hom_dim and hom_dim+1), we need a vector of grades for each simplex, for the multicritical case.
 struct LowSimplexData
 {
     Simplex s;
@@ -74,7 +72,7 @@ struct MidHighSimplexData
     virtual bool is_high() const
         {return high;}
     
-    //TODO: This is a little inefficient, since high_simplex data doesn't actually need the data of ind or ag_it.  But it's not too bad
+    //TODO: This is a little inefficient, since high_simplex data doesn't actually need the data of ind or ag_it.  But this is convenient and not terrible.
     MidHighSimplexData(Simplex simp, AppearanceGrades app_gr, bool h) : s(simp), ag(app_gr), ind(std::vector<unsigned>()), ag_it(ag.begin()), high(h)
     {}
 
@@ -92,13 +90,12 @@ class BifiltrationData {
         ~BifiltrationData(); //destructor
 
         void build_VR_complex(const std::vector<unsigned>& times, const std::vector<unsigned>& distances, const unsigned num_x, const unsigned num_y);
-                    //builds BifiltrationData representing a bifiltered Vietoris-Rips complex from discrete data
+                    //builds BifiltrationData representing a bifiltered Vietoris-Rips complex from discrete data, via a straighforward recursive algorithm either similar to or identical to the Bron–Kerbosch_algorithm.
                     //requires a list of birth times (one for each point), a list of distances between pairs of points, max dimension of simplices to construct, and number of grade values in x- and y-directions
-                    //NOTE: automatically computes global indexes and dimension indexes
                     //CONVENTION: the x-coordinate is "birth time" for points and the y-coordinate is "distance" between points
 
         void build_BR_complex(const unsigned num_vertices, const std::vector<unsigned>& distances, const std::vector<unsigned>& degrees, const unsigned num_x, const unsigned num_y);
-                    //builds BifiltrationData representing a bifiltered Rips complex from discrete data
+                    //builds BifiltrationData representing a bifiltered Rips complex from discrete data.
                     //requires number of vertices, a list of distances between pairs of points, list for degree to y value exchange, and number of grade values in x- and y-directions
                     //CONVENTION: the x-coordinate is "scale parameter" for points and the y-coordinate is "degree parameter"
 
@@ -136,16 +133,15 @@ class BifiltrationData {
 
         void combineMultigrades(AppearanceGrades& merged, const AppearanceGrades& grades1, const AppearanceGrades& grades2, unsigned mindist); //Finds the grades of appearance of when both simplices exist subject to minimal scale parameter, used in build_BR_complex()
     
-        //Note: Changed behavior of add_simplices so that it no longer adds in faces.  No longer need this helper function
-        //TODO: Remove.
+        //Note: Changed behavior of add_simplices so that it no longer recursively adds in faces.  The following helper function previously used for this is now removed.
         /*
         void add_faces(const std::vector<int>& vertices, const AppearanceGrades& grades);	//recursively adds faces of a simplex to the BifiltrationData; WARNING: doesn't make sure multigrades are incomparable
         */
          
         void update_grades(AppearanceGrades& grades); //Sorts the grades of appearance in reverse lexicographic order and makes sure they are all incomparable
 
-        //total number of simplces of dimension hom_dim, counting mutiplicity in grades of appearance.
-        //used to avoid unnecessary copying of arrays in firep constructor.
+        //total number of simplces of dimensions hom_dim and hom_dim+1, counting mutiplicity in grades of appearance.
+        //used to avoid unnecessary resizing of arrays in firep constructor.
         unsigned mid_count;
         unsigned high_count;
 

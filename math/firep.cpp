@@ -39,34 +39,29 @@ FIRep::FIRep(BifiltrationData& bd, int v)
         bd.print_bifiltration();
     }
     
-    //First we build the low boundary matrix, then the high boundary matrix.
+    //We build the low boundary matrix, then the high boundary matrix.
+    //First, process simplices of dimension hom_dim-1.
     
-    //First process simplices of hom_dim-1
-    
-    //sort the low_simplices in colexicographical order, using the comparator defined for Grade.  We constructed the simplices in
+    //Sort the low_simplices in colexicographical order, using the comparator defined for Grade.  We constructed the simplices in
     //lexicographical order on vertex indices, so use of stable sort preserves this within a grade.
     
-    //TODO: Would probably be slightly cheaper to create a separate array for sorting.  However, these objects are not so large, so probably fine to sort in place.
     std::stable_sort(bd.low_simplices.begin(), bd.low_simplices.end(),[](const LowSimplexData& left,const LowSimplexData& right)
     {
         return left.gr < right.gr;
     });
     
-    //Enter the low simplex indices into a hash table.
+    //Enter the low simplex indices into a hash table.  //Used to construct the low boundary matrix
     SimplexHashLow low_ht; //key = simplex; value = index of that simplex in Low_Simplices
     
-    //keys are pointers to simplices, values is an unsigned integer giving the index of this simplic in the sorted list.
-    //Used to construct the hom_dim^{th} boundary matrix
     for (unsigned i = 0; i != bd.low_simplices.size(); i++)
     {
         low_ht.emplace(bd.low_simplices[i].s,i);
     }
 
-    //Now deal with dimension dim
+    //Now process simplices of dimension hom_dim
     
-    //construct a vector with one entry per simplex per grade of appearance.  This is the object we sort.
-    //We didn't have to do this for dimension hom_dim-1 because there we kept only one simplex per dimension.
-    
+    //construct a vector with one entry per simplex per grade of appearance.
+    //After sorting, this will index the columns of the low boundary matrix
     auto mid_generators = std::vector<std::pair<std::vector<MidHighSimplexData>::iterator , AppearanceGrades::iterator>>();
     mid_generators.reserve(bd.mid_count);
     indexes_0.reserve(bd.mid_count);
@@ -77,15 +72,16 @@ FIRep::FIRep(BifiltrationData& bd, int v)
         it->ind.reserve(it->ag.size());
         //iterate through the grades
         for (auto it2 =it->ag.begin(); it2 != it->ag.end(); it2++)
-            //populate mid_generators with pairs which specify a simplex and its grade of appearance
+            
+            //populate mid_generators with pairs of iterators which specify a simplex and its grade of appearance
             mid_generators.push_back(std::pair<std::vector<MidHighSimplexData>::iterator,AppearanceGrades::iterator>(it,it2));
     }
 
     
-    //sort mid_generators according to colex order on grades
+    //stably sort mid_generators according to colex order on grades
     std::stable_sort(mid_generators.begin(),mid_generators.end(),[](const auto& left,const auto& right) {return *(left.second)<*(right.second);});
     
-    //find the grades of each column in the low matrix
+    //record the grade of each column in the low matrix in a vector.
     for (unsigned i = 0; i < bd.mid_count; i++)
     {
         indexes_0.push_back(*(mid_generators[i].second));
@@ -98,6 +94,7 @@ FIRep::FIRep(BifiltrationData& bd, int v)
         debug() << "Creating boundary matrix of dimension" << bd.low_simplices.size() << "x" << mid_generators.size();
     
     //loop through simplices, writing columns to the matrix
+    
     //if hom_dim==0, we don't need to add any columns
     if (bd.hom_dim>0)
     {
@@ -131,11 +128,12 @@ FIRep::FIRep(BifiltrationData& bd, int v)
                 
                 face.clear();
             }
+            
             //We sort because it take O(n) time to insert if the indices are sorted, and O(n^2) for a random ordering
+            //In the future, we may heapify instead of sorting.
             std::sort(row_indices.begin(), row_indices.end());
             
             //add in the boundary column
-            //TODO: In an array implementation of columns, this step would be cheaper.  We may want this eventually.
             write_boundary_column(boundary_mx_0, row_indices, i);
             row_indices.clear();
         }
@@ -151,7 +149,7 @@ FIRep::FIRep(BifiltrationData& bd, int v)
     //Next, we build the high boundary matrix.
     //First, we need to do more processing of the simplices in dimension hom_dim
     
-    //Place the sorted indices in the MidHighSimplexData structs.
+    //Record the sorted indices in the MidHighSimplexData structs.
     for(unsigned i=0; i!= mid_generators.size(); i++)
     {
         //this funky line uses the iterator in ag to access the corresponding element in ind, and also increments the iterator in ag
@@ -165,16 +163,14 @@ FIRep::FIRep(BifiltrationData& bd, int v)
     }
     
     //Enter the mid_simplex indices into a hash table.
-    SimplexHashMid mid_ht; //keylist = vector representing a simplex; value = iterator pointing to that simplex in mid_simplices
+    SimplexHashMid mid_ht; //key = simplex; value = iterator pointing to that simplex in mid_simplices
 
-    //key is a simplex, value is an unsigned integer giving the index of this simplex in the sorted list.
     for (auto it = bd.mid_simplices.begin(); it != bd.mid_simplices.end(); it++)
     {
         mid_ht.emplace(it->s,it);
     }
     
-    //Build the list of relations in dimension hom_dim+1:
-    
+    //The following vector will index the columns of the high boundary matrix
     auto high_generators = std::vector<std::pair<std::vector<MidHighSimplexData>::iterator,AppearanceGrades::iterator>>();
     
     //We know in advance how many columns the high boundary matrix will have.
@@ -182,10 +178,10 @@ FIRep::FIRep(BifiltrationData& bd, int v)
     indexes_1.reserve(bd.high_count+bd.mid_count-bd.mid_simplices.size());
     
     //Add the relations to high_generators
-    //Relations will be represented implicity as AppearanceGrades::iterator objects, where the AppearanceGrade in question is
-    //a member of a MidHighSimplexData Object m.
-    //This iterator is enough to carry out the sorting we need to do.
-    //We also store a pointer to m, since the simplex itself wil be needed to construct the boundary
+    //Relations will be represented implicity as using two pieces of data:
+    //1) An AppearanceGrades::iterator it2, where the AppearanceGrades object in question is a member of a MidHighSimplexData Object m.
+    //2) An iterator it pointing to m in mid_simplices.
+    //The relation represented is the one between *it2 and *(it2+1).
     
     for (auto it = bd.mid_simplices.begin(); it != bd.mid_simplices.end(); it++)
     {
@@ -195,13 +191,13 @@ FIRep::FIRep(BifiltrationData& bd, int v)
         }
     }
     
-    //Add the simplices in hom_dim+1 to high_generators
+    //Add each (simplex,grade) pair of dimension (hom_dim+1) to high_generators
     for (auto it = bd.high_simplices.begin(); it != bd.high_simplices.end(); it++)
     {
         //iterate through the grades
         for (auto it2 =it->ag.begin(); it2 != it->ag.end(); it2++)
         {
-            //populate high_generators with pairs which specify a simplex and its grade of appearance
+            //populate high_generators with pairs
             high_generators.push_back(std::pair<std::vector<MidHighSimplexData>::iterator,AppearanceGrades::iterator>(it,it2));
         }
     }
@@ -209,7 +205,7 @@ FIRep::FIRep(BifiltrationData& bd, int v)
     //Now we've build the list of high_generators, and we need to sort it.  We have stored the relations implicitly, so the comparator
     //has to compute the grade of a relation as part of the sorting.
     
-    //TODO: In the following sorting, one could instead precompute the grades of the relations, and avoid copying/recomputing grades.  This  would be more efficient.
+    //TODO: In the following sorting, one could instead precompute the grades of the relations, and avoid copying/recomputing grades.  This probably would be more efficient, but not clear whether it is worth the trouble.
     std::stable_sort(high_generators.begin(),high_generators.end(),
                      [](const auto& left,const auto& right)
                      {
@@ -258,7 +254,7 @@ FIRep::FIRep(BifiltrationData& bd, int v)
                     );
     //high_generators is now properly sorted.
     
-    //Compute the boundary matrix.  This is more complex than in the lower dimension, because we need to handle the relations, and need to find which of several copies of a mid_simplex is suitable to use.
+    //Compute the boundary matrix.  This is more complex than in the lower dimension, because (in the multicritical setting) we need to handle the relations and make a valid choice from among several possible birth grades of a boundary simplex.
 
     //create the MapMatrix
     boundary_mx_1 = new MapMatrix(mid_generators.size(), high_generators.size());
@@ -291,17 +287,18 @@ FIRep::FIRep(BifiltrationData& bd, int v)
                     if (l != k)
                         face.push_back(vertices[l]);
             
-                //use hash table to look up the index of this face in low_simplices;
+                //use hash table to look up the index of this face in mid_simplices;
                 auto face_node=mid_ht.find(face);
                 
                 if (face_node == mid_ht.end())
                     throw std::runtime_error("FIRep::write_boundary_column(): face simplex not found.");
             
-                //face_node->second gives the boundary simplex, but there may be several different grades of appearance.  Choose one.
+                //face_node->second gives an iterator pointing to the face.
+                //Now choose a suitable bigrade for the face.
                 
-                //Simplices are colex ordered.  So are the multiple grades of appearance of a given simplex.  Thus, it can be shown that if we reject a grade of appearance once, we do not need to consider it again.  This saves us time.
+                //A COOL TRICK: Simplices are colex ordered, and so is each AppearanceGrades vector ag.  Thus, it can be shown that if we reject a grade of appearance once, we do not need to consider it again.  This saves us time in building the FI-Rep.
                 
-                //Note however, that the construction of the boundary matrix depends on the choice of the grade of the boundary element, and it is not clear how this choice impacts the performance of the algorithm.
+                //Note however, that the construction of the boundary matrix depends on the choice of the grade of the boundary element, and it is not clear how this choice impacts the speed of subsequent computations taking the FIRep as input.  In the absense of any insight into this, w simply make the chocie that allows us to build the FI-Rep most quickly.
                     
                 bool found_match=false;
                 while (!found_match)
@@ -309,7 +306,7 @@ FIRep::FIRep(BifiltrationData& bd, int v)
                     //Did we find a grade for this boundary simplex that is less than the grade of the simplex itself, in the partial order on R^2?
                     if ((face_node->second->ag_it->x <= high_generators[i].second->x) && (face_node->second->ag_it->y <= high_generators[i].second->y))
                     {
-                        //insert the index in mid_generators corresponding to this grade
+                        //insert the index in mid_generators corresponding to this (simplex,grade) pair.
                         row_indices.push_back(*(face_node->second->ind.begin()+std::distance(face_node->second->ag.begin(),face_node->second->ag_it)));
                         found_match=true;
                     }
@@ -322,6 +319,7 @@ FIRep::FIRep(BifiltrationData& bd, int v)
             }
                 
             //We sort because it take O(n) time to insert if the indices are sorted, and O(n^2) for a random ordering
+            //Note: Again, in the future, we may heapify.
             std::sort(row_indices.begin(), row_indices.end());
             
             //add in the boundary column
@@ -448,7 +446,7 @@ FIRep::~FIRep()
 }
 
 //returns a matrix of boundary information for simplices of dimension dim (with multi-grade info)
-//columns ordered according to dimension index (reverse-lexicographic order with respect to multi-grades)
+//columns ordered according to dimension index (co-lexicographic order with respect to grades)
 MapMatrix* FIRep::get_low_boundary_mx()
 {
     MapMatrix* src = boundary_mx_0;
@@ -461,8 +459,8 @@ MapMatrix* FIRep::get_low_boundary_mx()
     return mat;
 } //end get_low_boundary_mx()
 
-//returns a matrix of boundary information for simplices of dimension dim+1 (with multi-grade info)
-//columns ordered according to dimension index (reverse-lexicographic order with respect to multi-grades)
+//returns a matrix of boundary information for simplices of dimension dim+1 (with grade info)
+//columns ordered according to dimension index (co-lexicographic order with respect to grades)
 MapMatrix* FIRep::get_high_boundary_mx()
 {
     MapMatrix* src = boundary_mx_1;
