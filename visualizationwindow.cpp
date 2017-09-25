@@ -116,6 +116,13 @@ void VisualizationWindow::start_computation()
     //start the computation in a new thread
     cthread.compute();
 
+    //update text items
+    auto shortName = QString::fromStdString(input_params.shortName);
+    this->setWindowTitle("RIVET - " + shortName);
+    ui->filenameLabel->setText( QStringLiteral("Input file: ").append(shortName) );
+    ui->homdimLabel->setText( QStringLiteral("Homology dimension: %1").arg(input_params.dim) );
+
+
 } //end start_computation()
 
 //this slot is signaled when the xi support points are ready to be drawn
@@ -134,10 +141,12 @@ void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMe
         slice_diagram.add_point(grades.x[point.x], grades.y[point.y], point.zero, point.one, point.two);
 
     //create the SliceDiagram
+    config_params.xLabel = QString::fromStdString(template_points->x_label);
+    config_params.yLabel = QString::fromStdString(template_points->y_label);
     if (!slice_diagram.is_created() && !grades.x.empty() && !grades.y.empty()) {
         slice_diagram.create_diagram(
-            QString::fromStdString(template_points->x_label),
-            QString::fromStdString(template_points->y_label),
+            config_params.xLabel,
+            config_params.yLabel,
             grades.x.front(), grades.x.back(),
             grades.y.front(), grades.y.back(),
             ui->normCoordCheckBox->isChecked(), template_points->homology_dimensions);
@@ -166,15 +175,16 @@ void VisualizationWindow::augmented_arrangement_ready(std::shared_ptr<Arrangemen
     //receive the arrangement
     this->arrangement = arrangement;
 
+    if(arrangement->is_empty()) { //e.g. the arrangement contains only Betti numbers and no barcode templates
+        return;
+    }
+
     //TESTING: print arrangement info and verify consistency
     //    arrangement->print_stats();
     //    arrangement->test_consistency();
-    auto shortName = QString::fromStdString(input_params.shortName);
 
-    this->setWindowTitle("RIVET - " + shortName);
-
-    //inialize persistence diagram
-    p_diagram.create_diagram(shortName, input_params.dim);
+    //create persistence diagram
+    p_diagram.create_diagram();
 
     //get the barcode
     BarcodeTemplate dbc = arrangement->get_barcode_template(angle_precise, offset_precise);
@@ -286,12 +296,8 @@ void VisualizationWindow::update_persistence_diagram()
         BarcodeTemplate dbc = arrangement->get_barcode_template(angle_precise, offset_precise);
         barcode = dbc.rescale(angle_precise, offset_precise, template_points->template_points, grades);
 
-        qDebug() << "Unshifted barcode:";
-        barcode->print();
-
         //shift the barcode so that "zero" is where the selected line crosses the bottom or left side of the viewing window
     	double ll_corner = rivet::numeric::project_to_line(angle_precise, offset_precise, grades.x[0], grades.y[0]); //lower-left corner of line selection window
-    	qDebug() << "ll_corner: " << ll_corner;
     	barcode = barcode->shift(-1*ll_corner);
 
         //TESTING
@@ -384,8 +390,7 @@ void VisualizationWindow::on_actionConfigure_triggered()
     configBox->exec();
 
     if (line_selection_ready) {
-        slice_diagram.receive_parameter_change(QString::fromStdString(template_points->x_label),
-            QString::fromStdString(template_points->y_label));
+        slice_diagram.receive_parameter_change();
 
         if (persistence_diagram_drawn)
             p_diagram.receive_parameter_change();

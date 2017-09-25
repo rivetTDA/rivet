@@ -39,6 +39,7 @@ public:
     void paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWidget*);
 
     void set_line(double start_x, double start_y, double end_x, double end_y);
+    void set_width(int bar_width);
 
     void select();
     void select_secondary();
@@ -67,6 +68,7 @@ private:
     bool hover;
     double dx; //horizontal length of line (pixels)
     double dy; //vertical length of line (pixels)
+    int width; //width of the bar (pixels)
 };
 
 #endif // PERSISTENCE_BAR_H

@@ -27,6 +27,7 @@ struct ConfigParameters;
 
 #include <QColor>
 #include <QDialog>
+#include <QFont>
 #include <QString>
 
 namespace Ui {
@@ -65,11 +66,9 @@ private slots:
     void on_bettiDotSpinBox_valueChanged(int arg1);
     void on_persistenceDotSpinBox_valueChanged(int arg1);
 
-    void on_xaxisText_editingFinished();
-
-    void on_yaxisText_editingFinished();
-
     void on_AutoDotSizeCheckBox_clicked(bool checked);
+
+    void on_fontSizeSpinBox_valueChanged(int arg1);
 
 private:
     Ui::ConfigureDialog* ui;
@@ -87,8 +86,7 @@ private:
     int bettiRadius;
     int perRadius;
     bool autoDots;
-    QString xlabel;
-    QString ylabel;
+    QFont dgmFont;
 };
 
 #endif // CONFIGUREDIALOG_H

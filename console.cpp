@@ -50,6 +50,7 @@ static const char USAGE[] =
       rivet_console --version
       rivet_console <input_file> --identify
       rivet_console <input_file> --betti [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>]
+      rivet_console <input_file> <output_file> --betti [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>]
       rivet_console <precomputed_file> --bounds
       rivet_console <precomputed_file> --barcodes <line_file>
       rivet_console <input_file> <output_file> [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [-f <format>] [--binary]
@@ -362,7 +363,7 @@ int main(int argc, char* argv[])
             std::clog << "Wrote arrangement to " << params.outputFile << std::endl;
         }
     });
-    computation.template_points_ready.connect([&points_message, &binary, &betti_only, &verbosity](TemplatePointsMessage message) {
+    computation.template_points_ready.connect([&points_message, &binary, &betti_only, &verbosity, &params](TemplatePointsMessage message) {
         points_message.reset(new TemplatePointsMessage(message));
 
         if (binary) {
@@ -397,8 +398,27 @@ int main(int argc, char* argv[])
             print_dims(message, std::cout);
             std::cout << std::endl;
             print_betti(message, std::cout);
-            std::cout.flush();
+            
+            //if an output file has been specified, then save the Betti numbers in an arrangement file (with no barcode templates)
+            if (!params.outputFile.empty()) {
+                std::ofstream file(params.outputFile);
+                if (file.is_open()) {
+                    std::vector<exact> emptyvec;
+                    std::shared_ptr<Arrangement> temp_arrangement = std::make_shared<Arrangement>(emptyvec, emptyvec, verbosity);
+                    std::shared_ptr<ArrangementMessage> temp_am = std::make_shared<ArrangementMessage>(*temp_arrangement);
+                    if (verbosity > 0) {
+                        debug() << "Writing file:" << params.outputFile;
+                    }
+                    write_boost_file(params, *points_message, *temp_am);
+                } else {
+                    std::stringstream ss;
+                    ss << "Error: Unable to write file:" << params.outputFile;
+                    throw std::runtime_error(ss.str());
+                }
+            }
+
             //TODO: this seems a little abrupt...
+            std::cout.flush();
             exit(0);
         }
     });
@@ -413,19 +433,21 @@ int main(int argc, char* argv[])
     }
     std::unique_ptr<ComputationResult> result;
 
+    std::unique_ptr<InputData> input;
+
+    std::shared_ptr<Arrangement> arrangement;
+
     if (barcodes || bounds) {
         result = load_from_precomputed(params.fileName);
         if (barcodes) {
             if (!slices.empty()) {
                 process_barcode_queries(slices, *result);
-                return 0;
             }
         } else {
             process_bounds(*result);
         }
     } else {
 
-        std::unique_ptr<InputData> input;
         try {
             input = inputManager.start(progress);
         } catch (const std::exception& e) {
@@ -441,31 +463,34 @@ int main(int argc, char* argv[])
         if (params.verbosity >= 2) {
             debug() << "Computation complete; augmented arrangement ready.";
         }
-        auto arrangement = result->arrangement;
+        arrangement = result->arrangement;
         if (params.verbosity >= 4) {
             arrangement->print_stats();
         }
 
-        //if an output file has been specified, then save the arrangement
-        if (!params.outputFile.empty()) {
-            std::ofstream file(params.outputFile);
-            if (file.is_open()) {
-                if (verbosity > 0) {
-                    debug() << "Writing file:" << params.outputFile;
-                }
-                if (params.outputFormat == "R0") {
-                    FileWriter fw(params, *input, *(arrangement), result->template_points);
-                    fw.write_augmented_arrangement(file);
-                } else if (params.outputFormat == "R1") {
-                    write_boost_file(params, *points_message, *arrangement_message);
-                } else {
-                    throw std::runtime_error("Unsupported output format: " + params.outputFormat);
-                }
-            } else {
-                std::stringstream ss;
-                ss << "Error: Unable to write file:" << params.outputFile;
-                throw std::runtime_error(ss.str());
+    }
+    //if an output file has been specified, then save the arrangement
+    if (!params.outputFile.empty()) {
+        std::ofstream file(params.outputFile);
+        if (file.is_open()) {
+            if (arrangement == nullptr) {
+                arrangement.reset(new Arrangement());
             }
+            if (verbosity > 0) {
+                debug() << "Writing file:" << params.outputFile;
+            }
+            if (params.outputFormat == "R0") {
+                FileWriter fw(params, *input, *(arrangement), result->template_points);
+                fw.write_augmented_arrangement(file);
+            } else if (params.outputFormat == "R1") {
+                write_boost_file(params, *points_message, *arrangement_message);
+            } else {
+                throw std::runtime_error("Unsupported output format: " + params.outputFormat);
+            }
+        } else {
+            std::stringstream ss;
+            ss << "Error: Unable to write file:" << params.outputFile;
+            throw std::runtime_error(ss.str());
         }
     }
     if (params.verbosity > 2) {

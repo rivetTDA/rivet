@@ -77,7 +77,7 @@ void SliceDiagram::clear_points()
 }
 
 //NOTE: create_diagram() simply creates all objects; resize_diagram() handles positioning of objects
-void SliceDiagram::create_diagram(const QString x_text, const QString y_text, double xmin, double xmax, double ymin, double ymax, bool norm_coords, unsigned_matrix& hom_dims)
+void SliceDiagram::create_diagram(const QString& x_text, const QString& y_text, double xmin, double xmax, double ymin, double ymax, bool norm_coords, unsigned_matrix& hom_dims)
 {
     //set data-dependent parameters
     data_xmin = xmin;
@@ -93,7 +93,7 @@ void SliceDiagram::create_diagram(const QString x_text, const QString y_text, do
     QBrush xi1brush(config_params->xi1color);
     QBrush xi2brush(config_params->xi2color);
     QPen grayPen(Qt::gray);
-    QPen highlighter(QBrush(config_params->persistenceHighlightColor), 6);
+    QPen highlighter(QBrush(config_params->persistenceHighlightColor), config_params->sliceLineWidth/2);
 
     //draw labels
     std::ostringstream s_xmin;
@@ -101,30 +101,36 @@ void SliceDiagram::create_diagram(const QString x_text, const QString y_text, do
     s_xmin << data_xmin;
     data_xmin_text = addSimpleText(QString(s_xmin.str().data()));
     data_xmin_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+    data_xmin_text->setFont(config_params->diagramFont);
 
     std::ostringstream s_xmax;
     s_xmax.precision(4);
     s_xmax << data_xmax;
     data_xmax_text = addSimpleText(QString(s_xmax.str().data()));
     data_xmax_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+    data_xmax_text->setFont(config_params->diagramFont);
 
     std::ostringstream s_ymin;
     s_ymin.precision(4);
     s_ymin << data_ymin;
     data_ymin_text = addSimpleText(QString(s_ymin.str().data()));
     data_ymin_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+    data_ymin_text->setFont(config_params->diagramFont);
 
     std::ostringstream s_ymax;
     s_ymax.precision(4);
     s_ymax << data_ymax;
     data_ymax_text = addSimpleText(QString(s_ymax.str().data()));
     data_ymax_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+    data_ymax_text->setFont(config_params->diagramFont);
 
     x_label = addSimpleText(x_text);
     x_label->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+    x_label->setFont(config_params->diagramFont);
 
     y_label = addSimpleText(y_text);
     y_label->setTransform(QTransform(0, 1, 1, 0, 0, 0));
+    y_label->setFont(config_params->diagramFont);
 
     //create rectangles for visualizing homology dimensions
     //first, find max dimension
@@ -278,8 +284,11 @@ void SliceDiagram::resize_diagram()
         int min_grid = (x_grid < y_grid) ? x_grid : y_grid;
 
         int auto_radius = (int)min_grid / sqrt(max_xi_value);
+        int max_radius = (int)( std::min(diagram_max_height, diagram_max_width)/20 );
         if (auto_radius < 3)
             auto_radius = 3;
+        if (auto_radius > max_radius)
+            auto_radius = max_radius;
 
         config_params->bettiDotRadius = auto_radius;
         config_params->persistenceDotRadius = auto_radius;
@@ -393,7 +402,7 @@ void SliceDiagram::redraw_dots()
 } //end redraw_dots()
 
 //updates the diagram after a change in configuration parameters
-void SliceDiagram::receive_parameter_change(const QString& xtext, const QString& ytext)
+void SliceDiagram::receive_parameter_change()
 {
     //update colors of the xi dots (necessary because I didn't override their paint() function)
     QBrush xi0brush(config_params->xi0color);
@@ -406,17 +415,32 @@ void SliceDiagram::receive_parameter_change(const QString& xtext, const QString&
     for (std::vector<QGraphicsEllipseItem*>::iterator it = xi2_dots.begin(); it != xi2_dots.end(); ++it)
         (*it)->setBrush(xi2brush);
 
+    //update width of persistence bars
+    //  this seems excessive, but it's necessary to call prepareGeometryChange() on each bar, and set_width() does this
+    for (unsigned i = 0; i < bars.size(); i++) {
+        for (std::list<PersistenceBar*>::iterator it = bars[i].begin(); it != bars[i].end(); ++it) {
+            (*it)->set_width(config_params->persistenceBarWidth);
+        }
+    }
+
     //update the slice line highlight
-    QPen highlighter(QBrush(config_params->persistenceHighlightColor), 6);
+    QPen highlighter(QBrush(config_params->persistenceHighlightColor), config_params->sliceLineWidth/2);
     highlight_line->setPen(highlighter);
 
     //update axis labels
-    x_label->setText(xtext);
-    y_label->setText(ytext);
+    x_label->setText(config_params->xLabel);
+    y_label->setText(config_params->yLabel);
+
+    //update fonts
+    data_xmin_text->setFont(config_params->diagramFont);
+    data_xmax_text->setFont(config_params->diagramFont);
+    data_ymin_text->setFont(config_params->diagramFont);
+    data_ymax_text->setFont(config_params->diagramFont);
+    x_label->setFont(config_params->diagramFont);
+    y_label->setFont(config_params->diagramFont);
 
     //update diagram
     resize_diagram();
-
 } //end update_diagram()
 
 //updates the line, in response to a change in the controls in the VisualizationWindow
@@ -560,7 +584,7 @@ void SliceDiagram::update_barcode(Barcode const& bc, bool show)
 std::pair<double, double> SliceDiagram::compute_endpoint(double coordinate, unsigned offset)
 {
     //difference in offset between consecutive bars (pixel units)
-    int step_size = 10;
+    int step_size = config_params->persistenceBarWidth + config_params->persistenceBarSpace;
 
     //compute x and y relative to slice line (pixel units)
     double x = 0;

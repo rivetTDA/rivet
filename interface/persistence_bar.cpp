@@ -32,6 +32,7 @@ PersistenceBar::PersistenceBar(SliceDiagram* s_diagram, ConfigParameters* params
     , pressed(false)
     , secondary(false)
     , hover(false)
+    , width(params->persistenceBarWidth)
 {
     setAcceptHoverEvents(true);
 }
@@ -47,14 +48,14 @@ QPainterPath PersistenceBar::shape() const
     QPainterPathStroker stroker;
     path.moveTo(0, 0);
     path.lineTo(dx, dy);
-    stroker.setWidth(10);
+    stroker.setWidth(width);
     return stroker.createStroke(path);
 }
 
 void PersistenceBar::paint(QPainter* painter, const QStyleOptionGraphicsItem* /*unused*/, QWidget* /*unused*/)
 {
     QPen pen(config_params->persistenceColor);
-    pen.setWidth(4);
+    pen.setWidth(config_params->persistenceBarWidth);
 
     if (pressed) {
         pen.setColor(config_params->persistenceHighlightColor);
@@ -70,9 +71,16 @@ void PersistenceBar::paint(QPainter* painter, const QStyleOptionGraphicsItem* /*
 
 void PersistenceBar::set_line(double start_x, double start_y, double end_x, double end_y)
 {
+    prepareGeometryChange();
     setPos(start_x, start_y);
     dx = end_x - start_x;
     dy = end_y - start_y;
+}
+
+void PersistenceBar::set_width(int bar_width)
+{
+    prepareGeometryChange();
+    width = bar_width;
 }
 
 void PersistenceBar::select()

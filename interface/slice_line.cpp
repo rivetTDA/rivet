@@ -58,14 +58,14 @@ QPainterPath SliceLine::shape() const
     QPainterPathStroker stroker;
     path.moveTo(0, 0);
     path.lineTo(right_point);
-    stroker.setWidth(20);
+    stroker.setWidth(config_params->sliceLineWidth + 2);
     return stroker.createStroke(path);
 }
 
 void SliceLine::paint(QPainter* painter, const QStyleOptionGraphicsItem* /*unused*/, QWidget* /*unused*/)
 {
     QPen pen(config_params->sliceLineColor);
-    pen.setWidth(4);
+    pen.setWidth(config_params->sliceLineWidth);
 
     if (pressed) {
         pen.setColor(config_params->sliceLineHighlightColor);
