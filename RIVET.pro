@@ -36,8 +36,6 @@ SOURCES	+= main.cpp                         \
 		math/index_matrix.cpp               \
 		math/map_matrix.cpp                 \
 		#math/multi_betti.cpp                \
-		#math/simplex_tree.cpp               \
-		#math/st_node.cpp                    \
 		dcel/barcode.cpp               \
 		dcel/barcode_template.cpp           \
 		dcel/anchor.cpp                     \
@@ -75,8 +73,6 @@ HEADERS  += visualizationwindow.h			\
 		math/index_matrix.h					\
 		math/map_matrix.h					\
 		math/multi_betti.h					\
-		#math/simplex_tree.h					\
-		#math/st_node.h						\
 		dcel/barcode.h	    				\
 		dcel/barcode_template.h				\
 		dcel/anchor.h						\
