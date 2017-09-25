@@ -55,7 +55,7 @@ FIRep::FIRep(BifiltrationData& bd, int v)
     
     for (unsigned i = 0; i != bd.low_simplices.size(); i++)
     {
-        low_ht.emplace(bd.low_simplices[i].s,i);
+        low_ht.emplace(&(bd.low_simplices[i].s),i);
     }
 
     //Now process simplices of dimension hom_dim
@@ -119,7 +119,7 @@ FIRep::FIRep(BifiltrationData& bd, int v)
                         face.push_back(vertices[l]);
             
                 //use hash table to look up the index of this face in low_simplices;
-                auto face_node=low_ht.find(face);
+                auto face_node=low_ht.find(&face);
                 if (face_node == low_ht.end())
                     throw std::runtime_error("FIRep::write_boundary_column(): face simplex not found.");
             
@@ -142,6 +142,8 @@ FIRep::FIRep(BifiltrationData& bd, int v)
     
     //We no longer need low_simplices
     std::vector<LowSimplexData>().swap(bd.low_simplices); //"Free" memory of low_generators
+    std::unordered_map<Simplex * const, unsigned, VectorHash,deref_equal_fn>().swap(low_ht); //"Free" memory of hash_table.
+    
     
     if (verbosity >= 6)
         debug() << "Created low boundary matrix";
@@ -167,7 +169,7 @@ FIRep::FIRep(BifiltrationData& bd, int v)
 
     for (auto it = bd.mid_simplices.begin(); it != bd.mid_simplices.end(); it++)
     {
-        mid_ht.emplace(it->s,it);
+        mid_ht.emplace(&(it->s),it);
     }
     
     //The following vector will index the columns of the high boundary matrix
@@ -288,7 +290,7 @@ FIRep::FIRep(BifiltrationData& bd, int v)
                         face.push_back(vertices[l]);
             
                 //use hash table to look up the index of this face in mid_simplices;
-                auto face_node=mid_ht.find(face);
+                auto face_node=mid_ht.find(&face);
                 
                 if (face_node == mid_ht.end())
                     throw std::runtime_error("FIRep::write_boundary_column(): face simplex not found.");

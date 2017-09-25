@@ -41,15 +41,25 @@ class MapMatrix_Perm;
 //used to build the hash tables for simplices in hom_dim-1 and hom_dim
 struct VectorHash
 {
-    std::size_t operator()(std::vector<int> const& v) const
+    std::size_t operator()(Simplex const * const& v) const
     {
-        return boost::hash_range(v.begin(), v.end());
+        return boost::hash_range(v->begin(), v->end());
     }
 };
 
+struct deref_equal_fn
+{
+    bool operator()(Simplex * const &lhs, Simplex * const &rhs) const
+    {
+        return *lhs == *rhs;
+    }
+};
+
+typedef std::unordered_map<Simplex * const, unsigned, VectorHash,deref_equal_fn> SimplexHashLow;
+typedef std::unordered_map<Simplex * const, std::vector<MidHighSimplexData>::iterator, VectorHash,deref_equal_fn> SimplexHashMid;
 //no need for a hash table in the high dimension
-typedef std::unordered_map<const Simplex, unsigned, VectorHash> SimplexHashLow;
-typedef std::unordered_map<const Simplex, std::vector<MidHighSimplexData>::iterator, VectorHash> SimplexHashMid;
+
+
 class FIRep {
     
 public:
