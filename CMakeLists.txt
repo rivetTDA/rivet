@@ -1,7 +1,9 @@
 cmake_minimum_required (VERSION 3.1)
 project (rivet_console)
 set (CMAKE_CXX_STANDARD 14)
-set(CMAKE_BUILD_TYPE Debug)
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release)
+endif()
 set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-ftemplate-depth=1024 -Wall -Wextra -pedantic")
 
 include(ExternalProject)
