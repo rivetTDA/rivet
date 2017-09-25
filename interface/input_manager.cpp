@@ -28,10 +28,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
+#include <memory>
 #include <set>
 #include <sstream>
 #include <vector>
-#include <memory>
 
 #include <ctime>
 
@@ -234,18 +234,15 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
 
         //read label for x-axis
         line_info = reader.next_line();
-        if (join(line_info.first).compare("no function") == 0)
-        {
-            hasFunction =  false;
+        if (join(line_info.first).compare("no function") == 0) {
+            hasFunction = false;
             //set label for x-axis to "codegree"
             data->x_label = "codegree";
             expectedNumTokens = dimension;
             if (verbosity >= 6) {
                 debug() << "InputManager: Point cloud file does not have function values. Creating Bifiltration-Rips complex.";
             }
-        }
-        else
-        {
+        } else {
             hasFunction = true;
             data->x_label = line_info.first[0];
             expectedNumTokens = dimension + 1;
@@ -312,8 +309,7 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
     (ret.first)->indexes.push_back(0); //store distance 0 at 0th index
 
     //consider all points
-    for (unsigned i = 0; i < num_points; i++) 
-    {
+    for (unsigned i = 0; i < num_points; i++) {
         if (hasFunction) {
             //store time value, if it doesn't exist already
             ret = time_set.insert(ExactValue(points[i].birth));
@@ -373,8 +369,7 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
 
         //build vector of discrete degree indices from 0 to maxDegree and bins those degree values
         //WARNING: assumes that the number of distinct degree grades will be equal to maxDegree which may not hold
-        for (unsigned i = 0; i <= maxDegree; i++)
-        {
+        for (unsigned i = 0; i <= maxDegree; i++) {
             ret = degree_set.insert(ExactValue(maxDegree - i)); //store degree -i because degree is wrt opposite ordering on R
             (ret.first)->indexes.push_back(i); //degree i is stored at index i
         }
@@ -407,22 +402,20 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
     if (verbosity >= 4) {
         if (hasFunction) {
             debug() << "  Building Vietoris-Rips bifiltration.";
-        }
-        else {
+        } else {
             debug() << "  Building Bifiltration-Rips bifiltration.";
         }
         debug() << "     x-grades: " << data->x_exact.size();
         debug() << "     y-grades: " << data->y_exact.size();
     }
-    
+
     data->bifiltration_data.reset(new BifiltrationData(input_params.dim, input_params.verbosity));
     if (hasFunction) {
-         data->bifiltration_data->build_VR_complex(time_indexes, dist_indexes, data->x_exact.size(), data->y_exact.size());
-    }
-    else {
+        data->bifiltration_data->build_VR_complex(time_indexes, dist_indexes, data->x_exact.size(), data->y_exact.size());
+    } else {
         data->bifiltration_data->build_BR_complex(num_points, dist_indexes, degree_indexes, data->x_exact.size(), data->y_exact.size());
     }
-    
+
     if (verbosity >= 8) {
         int size;
         size = data->bifiltration_data->get_size(input_params.dim - 1);
@@ -432,9 +425,9 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
         size = data->bifiltration_data->get_size(input_params.dim + 1);
         debug() << "There are" << size << "simplices of dimension" << input_params.dim + 1;
     }
-    
+
     data->free_implicit_rep.reset(new FIRep(*(data->bifiltration_data), input_params.verbosity));
-    
+
     return data;
 } //end read_point_cloud()
 
@@ -464,9 +457,8 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
     try {
         std::vector<exact> values;
 
-        if (join(line_info.first).compare("no function") == 0)
-        {
-            hasFunction =  false;
+        if (join(line_info.first).compare("no function") == 0) {
+            hasFunction = false;
             //set label for x-axis to "codegree"
             data->x_label = "codegree";
             if (verbosity >= 6) {
@@ -484,9 +476,7 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
                 throw std::runtime_error("Number of points must be at least 1");
             }
             num_points = static_cast<unsigned>(dim);
-        }
-        else
-        {
+        } else {
             hasFunction = true;
             data->x_label = line_info.first[0];
             if (verbosity >= 6) {
@@ -600,8 +590,7 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
 
         //build vector of discrete degree indices from 0 to maxDegree and bins those degree values
         //WARNING: assumes that the number of distinct degree grades will be equal to maxDegree which may not hold
-        for (unsigned i = 0; i <= maxDegree; i++)
-        {
+        for (unsigned i = 0; i <= maxDegree; i++) {
             ret = degree_set.insert(ExactValue(maxDegree - i)); //store degree -i because degree is wrt opposite ordering on R
             (ret.first)->indexes.push_back(i); //degree -i is stored at index i
         }
@@ -628,23 +617,21 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
     if (verbosity >= 4) {
         if (hasFunction) {
             debug() << "  Building Vietoris-Rips bifiltration.";
-        }
-        else {
+        } else {
             debug() << "  Building Bifiltration-Rips bifiltration.";
         }
         debug() << "     x-grades: " << data->x_exact.size();
         debug() << "     y-grades: " << data->y_exact.size();
     }
-    
+
     //build the Vietoris-Rips bifiltration from the discrete index vectors
     data->bifiltration_data.reset(new BifiltrationData(input_params.dim, input_params.verbosity));
     if (hasFunction) {
-         data->bifiltration_data->build_VR_complex(value_indexes, dist_indexes, data->x_exact.size(), data->y_exact.size());
-    }
-    else {
+        data->bifiltration_data->build_VR_complex(value_indexes, dist_indexes, data->x_exact.size(), data->y_exact.size());
+    } else {
         data->bifiltration_data->build_BR_complex(num_points, dist_indexes, degree_indexes, data->x_exact.size(), data->y_exact.size());
     }
-    
+
     if (verbosity >= 8) {
         int size;
         size = data->bifiltration_data->get_size(input_params.dim - 1);
@@ -654,14 +641,14 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
         size = data->bifiltration_data->get_size(input_params.dim + 1);
         debug() << "There are" << size << "simplices of dimension" << input_params.dim + 1;
     }
-    
+
     data->free_implicit_rep.reset(new FIRep(*(data->bifiltration_data), input_params.verbosity));
-    
+
     //clean up
     if (!hasFunction) {
         delete degree;
     }
-    
+
     return data;
 } //end read_discrete_metric_space()
 
@@ -691,7 +678,7 @@ std::unique_ptr<InputData> InputManager::read_bifiltration(std::ifstream& stream
     std::pair<ExactSet::iterator, bool> ret; //for return value upon insert()
 
     //read simplices
-    std::vector<std::pair<std::vector<int>, unsigned> > simplexList;
+    std::vector<std::pair<std::vector<int>, unsigned>> simplexList;
     unsigned num_grades = 0;
     while (reader.has_next_line()) {
         auto line_info = reader.next_line();
@@ -706,7 +693,7 @@ std::unique_ptr<InputData> InputManager::read_bifiltration(std::ifstream& stream
             //read vertices
             unsigned pos = 0;
             std::vector<int> verts;
-            while(tokens[pos].at(0) != ';') {
+            while (tokens[pos].at(0) != ';') {
                 int v = std::stoi(tokens[pos]);
                 verts.push_back(v);
                 pos++;
@@ -723,7 +710,7 @@ std::unique_ptr<InputData> InputManager::read_bifiltration(std::ifstream& stream
                 pos += 2;
             }
 
-            simplexList.push_back({verts, grades});
+            simplexList.push_back({ verts, grades });
         } catch (std::exception& e) {
             throw InputError(line_info.second, "Could not read vertex: " + std::string(e.what()));
         }
@@ -743,27 +730,23 @@ std::unique_ptr<InputData> InputManager::read_bifiltration(std::ifstream& stream
     build_grade_vectors(*data, x_set, x_indexes, data->x_exact, input_params.x_bins);
     build_grade_vectors(*data, y_set, y_indexes, data->y_exact, input_params.y_bins);
 
-
     int current_grade = 0;
-    for (std::vector<std::pair<std::vector<int>, unsigned> >::iterator it = simplexList.begin(); it != simplexList.end(); it++)
-    {
+    for (std::vector<std::pair<std::vector<int>, unsigned>>::iterator it = simplexList.begin(); it != simplexList.end(); it++) {
         unsigned appearances = it->second;
         AppearanceGrades gradesOfApp;
-        for (unsigned i = 0; i < appearances; i++)
-        {
+        for (unsigned i = 0; i < appearances; i++) {
             gradesOfApp.push_back(Grade(x_indexes[current_grade], y_indexes[current_grade]));
             current_grade++;
         }
-        
+
         //TODO: Double-check that this sorting hasn't been done earlier.
         //Mike: I reorganized the code slightly so that the arguments of add_simpex are const references, which
         //seems better, but that means any sorting should happen before.
-        std::sort(gradesOfApp.begin(),gradesOfApp.end());
-        std::sort(it->first.begin(),it->first.end());
+        std::sort(gradesOfApp.begin(), gradesOfApp.end());
+        std::sort(it->first.begin(), it->first.end());
         data->bifiltration_data->add_simplex(it->first, gradesOfApp);
     }
-    if (verbosity >= 10)
-    {
+    if (verbosity >= 10) {
         data->bifiltration_data->print_bifiltration();
     }
     //data->bifiltration_data->createGradeInfo();
@@ -796,7 +779,7 @@ std::unique_ptr<InputData> InputManager::read_firep(std::ifstream& stream, Progr
     //Temporary data structures to store matrices
     int t, s, r;
     std::vector<exact> x_values, y_values;
-    std::vector<std::vector<unsigned> > d2, d1; //matrices d2: hom_dim+1->hom_dim, d1: hom_dim->hom_dim-1
+    std::vector<std::vector<unsigned>> d2, d1; //matrices d2: hom_dim+1->hom_dim, d1: hom_dim->hom_dim-1
 
     //read simplices
     while (reader.has_next_line()) {
@@ -1059,6 +1042,7 @@ exact InputManager::approx(double x)
     return exact((long)floor(x * denom), denom);
 }
 
-FileType InputManager::identify() {
+FileType InputManager::identify()
+{
     return this->get_file_type(this->input_params.fileName);
 }

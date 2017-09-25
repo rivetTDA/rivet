@@ -25,10 +25,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../dcel/dcel.h"
 #include "dcel/arrangement.h"
 #include "debug.h"
+#include "firep.h"
 #include "index_matrix.h"
 #include "map_matrix.h"
 #include "multi_betti.h"
-#include "firep.h"
 
 #include <chrono>
 #include <stdexcept> //for error-checking and debugging
@@ -160,14 +160,13 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<std::shared_ptr<H
 
     // choose the initial value of the threshold intelligently
     unsigned long threshold;
-    choose_initial_threshold(total_time_for_resets, total_transpositions, total_time_for_transpositions, threshold); 
-        //if the number of swaps might exceed this threshold, then we will do a persistence calculation from scratch instead of vineyard updates
+    choose_initial_threshold(total_time_for_resets, total_transpositions, total_time_for_transpositions, threshold);
+    //if the number of swaps might exceed this threshold, then we will do a persistence calculation from scratch instead of vineyard updates
     if (verbosity >= 4) {
         debug() << "initial reset threshold set to" << threshold;
     }
 
     timer.restart();
-
 
     //traverse the path
     Timer steptimer;
@@ -311,7 +310,7 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<std::shared_ptr<H
             max_time = step_time;
 
         //update the treshold
-        if(swap_counter > 0 || num_trans >= threshold) {
+        if (swap_counter > 0 || num_trans >= threshold) {
             threshold = (unsigned long)(((double)total_transpositions / total_time_for_transpositions) * ((double)total_time_for_resets / number_of_resets));
             if (verbosity >= 6) {
                 // debug() << "===>>> UPDATING THRESHOLD:";
@@ -1435,7 +1434,7 @@ void PersistenceUpdater::store_barcode_template(std::shared_ptr<Face> cell)
 } //end store_barcode_template()
 
 //chooses an initial threshold by timing vineyard updates corresponding to random transpositions
-void PersistenceUpdater::choose_initial_threshold(unsigned decomp_time, unsigned long & num_trans, unsigned & trans_time, unsigned long & threshold)
+void PersistenceUpdater::choose_initial_threshold(unsigned decomp_time, unsigned long& num_trans, unsigned& trans_time, unsigned long& threshold)
 {
     if (verbosity >= 4) {
         debug() << "RANDOM VINEYARD UPDATES TO CHOOSE THE INITIAL THRESHOLD";
@@ -1463,8 +1462,7 @@ void PersistenceUpdater::choose_initial_threshold(unsigned decomp_time, unsigned
     if (verbosity >= 8) {
         debug() << "  -->Doing some random vineyard updates...";
     }
-    while ( (timer.elapsed() < runtime || trans_list.size() == 0) &&
-        (timer.elapsed() < 5 || trans_list.size() < 5000) ) //do a transposition
+    while ((timer.elapsed() < runtime || trans_list.size() == 0) && (timer.elapsed() < 5 || trans_list.size() < 5000)) //do a transposition
     {
         unsigned rand_col = rand() % (num_cols - 1); //random integer in {0, 1, ..., num_cols - 2}
 

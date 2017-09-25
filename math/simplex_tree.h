@@ -43,7 +43,6 @@ class MapMatrix_Perm;
 #include <string>
 #include <vector>
 
-
 //comparison functor for sorting std::set<STNode*> by REVERSE-LEXICOGRAPHIC multi-grade order
 struct NodeComparator {
     bool operator()(const STNode* left, const STNode* right) const
@@ -80,30 +79,30 @@ public:
     //updates multigrades; for use when building simplexTree from a bifiltration file
     //also requires the number of x- and y-grades that exist in the bifiltration
     void update_xy_indexes(std::vector<unsigned>& x_ind, std::vector<unsigned>& y_ind, unsigned num_x, unsigned num_y);
-    
+
     //updates the global indexes of all simplices in this simplex tree
-    void update_global_indexes(); 
+    void update_global_indexes();
 
     //updates the dimension indexes (reverse-lexicographical multi-grade order) for simplices of dimension (hom_dim-1), hom_dim, and (hom_dim+1)
-    void update_dim_indexes(); 
+    void update_dim_indexes();
 
     //returns a matrix of boundary information for simplices
-    MapMatrix* get_boundary_mx(unsigned dim); 
+    MapMatrix* get_boundary_mx(unsigned dim);
 
     //returns a boundary matrix for hom_dim-simplices with columns in a specified order -- for vineyard-update algorithm
-    MapMatrix_Perm* get_boundary_mx(std::vector<int>& coface_order, unsigned num_simplices); 
+    MapMatrix_Perm* get_boundary_mx(std::vector<int>& coface_order, unsigned num_simplices);
 
     //returns a boundary matrix for (hom_dim+1)-simplices with columns and rows a specified orders -- for vineyard-update algorithm
-    MapMatrix_Perm* get_boundary_mx(std::vector<int>& face_order, unsigned num_faces, std::vector<int>& coface_order, unsigned num_cofaces); 
+    MapMatrix_Perm* get_boundary_mx(std::vector<int>& face_order, unsigned num_faces, std::vector<int>& coface_order, unsigned num_cofaces);
 
     //returns a matrix of column indexes to accompany MapMatrices
-    IndexMatrix* get_index_mx(unsigned dim); 
+    IndexMatrix* get_index_mx(unsigned dim);
 
     //given a global index, return (a vector containing) the vertices of the simplex
-    std::vector<int> find_vertices(int gi); 
+    std::vector<int> find_vertices(int gi);
 
     //given a sorted vector of vertex indexes, return a pointer to the node representing the corresponding simplex
-    STNode* find_simplex(std::vector<int>& vertices); 
+    STNode* find_simplex(std::vector<int>& vertices);
 
     unsigned num_x_grades(); //returns the number of unique x-coordinates of the multi-grades
     unsigned num_y_grades(); //returns the number of unique y-coordinates of the multi-grades

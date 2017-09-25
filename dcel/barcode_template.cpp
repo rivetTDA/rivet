@@ -215,7 +215,7 @@ double BarcodeTemplate::project(const TemplatePoint& pt, double angle, double of
         } //else: no projection
         return rivet::numeric::INFTY;
     }
-    
+
     //if we get here, then line is neither horizontal nor vertical
     double radians = angle * rivet::numeric::PI / 180;
     double x = grades.x[pt.x];
@@ -231,7 +231,7 @@ double BarcodeTemplate::project(const TemplatePoint& pt, double angle, double of
     } //else: point is below the line, so project up
     if (offset >= 0) {
         return x / cos(radians);
-    } //else 
+    } //else
     return yL / sin(radians);
 
 } //end project()

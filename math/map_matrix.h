@@ -84,7 +84,8 @@ protected:
 
 //MapMatrix is a column-priority matrix designed for standard persistence calculations
 class MapMatrix : public MapMatrix_Base {
-friend class FIRep;
+    friend class FIRep;
+
 public:
     MapMatrix(unsigned rows, unsigned cols); //constructor to create matrix of specified size (all entries zero)
     MapMatrix(unsigned size); //constructor to create a (square) identity matrix
@@ -116,7 +117,7 @@ public:
 
     //copies columns with indexes in [first, last] from other, inserting them in this matrix with the same column indexes
     void copy_cols_same_indexes(MapMatrix* other, int first, int last);
-          
+
     //removes zero columns from this matrix
     //  ind_old gives grades of columns before zero columns are removed; new grade info stored in ind_new
     void remove_zero_cols(IndexMatrix* ind_old, IndexMatrix* ind_new);
@@ -142,7 +143,7 @@ public:
 
     //reduces this matrix, fills the low array, and returns the corresponding upper-triangular matrix for the RU-decomposition
     //  NOTE: only to be called before any rows are swapped!
-    MapMatrix_RowPriority_Perm* decompose_RU(); 
+    MapMatrix_RowPriority_Perm* decompose_RU();
 
     int low(unsigned j); //returns the "low" index in the specified column, or -1 if the column is empty
     int find_low(unsigned l); //returns the index of the column with low l, or -1 if there is no such column
@@ -151,10 +152,10 @@ public:
     void swap_columns(unsigned j, bool update_lows); //transposes columns j and j+1, optionally updates low array
 
     //clears the matrix, then rebuilds it from reference with columns permuted according to col_order
-    void rebuild(MapMatrix_Perm* reference, std::vector<unsigned>& col_order); 
-    
+    void rebuild(MapMatrix_Perm* reference, std::vector<unsigned>& col_order);
+
     //clears the matrix, then rebuilds it from reference with columns permuted according to col_order and rows permuted according to row_order
-    void rebuild(MapMatrix_Perm* reference, std::vector<unsigned>& col_order, std::vector<unsigned>& row_order); 
+    void rebuild(MapMatrix_Perm* reference, std::vector<unsigned>& col_order, std::vector<unsigned>& row_order);
 
     ///FOR TESTING ONLY
     virtual void print(); //prints the matrix to standard output (for testing)
