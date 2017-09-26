@@ -36,7 +36,7 @@ BifiltrationData::~BifiltrationData()
 //if the simplex does not have dimension hom_dim-1, hom_dim, or hom_dim+1, does nothing.
 //WARNING: Assumes but does not verify that multigrades are non-comparable
 //WARNING: Assumes that simplex has not already been added.  Does not check this.
-//WARNING: Assumes that vertices is sorted (increasing order) and grades is also sorted (colex order).
+//WARNING: Assumes that simplex vertices are sorted (increasing order) and vector of grades of appearance is also sorted (colex order).
 void BifiltrationData::add_simplex(Simplex const& vertices, const AppearanceGrades& grades)
 {
     if (vertices.size() == 0) {
