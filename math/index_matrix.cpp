@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **********************************************************************/
 
 #include "index_matrix.h"
+#include "debug.h"
 
 #include <stdexcept> //for error-checking and debugging
 
@@ -62,3 +63,25 @@ unsigned IndexMatrix::height() const
 {
     return num_rows;
 }
+
+//function to print the matrix to standard output, for testing purposes
+void IndexMatrix::print() const
+{
+    //handle empty matrix
+    if (num_rows == 0 || num_cols == 0) {
+        debug() << "        (empty matrix:" << num_rows << "rows by" << num_cols << "columns)";
+        return;
+    }
+
+    debug() << "        (matrix:" << num_rows << "rows by" << num_cols << "columns)";
+
+    //print the matrix
+    for (unsigned i = 0; i < num_rows; i++) {
+        Debug qd = debug(true);
+        qd << "        |";
+        for (unsigned j = 0; j < num_cols; j++) {
+            qd << " " << data[num_cols * i + j];
+        }
+        qd << " |\n";
+    }
+} //end print()

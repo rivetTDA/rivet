@@ -27,9 +27,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "dcel/arrangement_message.h"
 #include <boost/optional.hpp>
 
-template<typename T>
+template <typename T>
 struct Ptr_Compare {
-    bool operator()(const std::shared_ptr<T> left, const std::shared_ptr<T> right) const {
+    bool operator()(const std::shared_ptr<T> left, const std::shared_ptr<T> right) const
+    {
         return &(*left) < &(*right);
     }
 };
@@ -37,8 +38,8 @@ struct Ptr_Compare {
 ArrangementMessage::ArrangementMessage(Arrangement const& arrangement)
     : x_grades(arrangement.x_grades)
     , y_grades(arrangement.y_grades)
-      , x_exact(arrangement.x_exact)
-      ,y_exact(arrangement.y_exact)
+    , x_exact(arrangement.x_exact)
+    , y_exact(arrangement.y_exact)
     , vertical_line_query_list()
     , half_edges()
     , vertices()
@@ -51,41 +52,40 @@ ArrangementMessage::ArrangementMessage(Arrangement const& arrangement)
     std::map<std::shared_ptr<Vertex>, long, Ptr_Compare<Vertex>> vertex_map;
     //Build maps
     long id_counter = 0;
-    for(auto face : arrangement.faces) {
+    for (auto face : arrangement.faces) {
         face_map.emplace(face, id_counter++);
     }
     id_counter = 0;
-    for(auto half : arrangement.halfedges) {
-       halfedge_map.emplace(half, id_counter++);
+    for (auto half : arrangement.halfedges) {
+        halfedge_map.emplace(half, id_counter++);
     }
     id_counter = 0;
-    for(auto anchor : arrangement.all_anchors) {
+    for (auto anchor : arrangement.all_anchors) {
         anchor_map.emplace(anchor, id_counter++);
     }
     id_counter = 0;
-    for(auto vertex: arrangement.vertices) {
+    for (auto vertex : arrangement.vertices) {
         vertex_map.emplace(vertex, id_counter++);
     }
 
-    auto HID = [&halfedge_map](const std::shared_ptr<Halfedge> &ptr) {
+    auto HID = [&halfedge_map](const std::shared_ptr<Halfedge>& ptr) {
         auto it = halfedge_map.find(ptr);
         return it == halfedge_map.end() ? -1 : it->second;
     };
 
-    auto AID = [&anchor_map](const std::shared_ptr<Anchor> &ptr) {
+    auto AID = [&anchor_map](const std::shared_ptr<Anchor>& ptr) {
         auto it = anchor_map.find(ptr);
         return it == anchor_map.end() ? -1 : it->second;
     };
 
-    auto VID = [&vertex_map](const std::shared_ptr<Vertex> &ptr) {
+    auto VID = [&vertex_map](const std::shared_ptr<Vertex>& ptr) {
         auto it = vertex_map.find(ptr);
         return it == vertex_map.end() ? -1 : it->second;
     };
 
-    auto FID = [&face_map](const std::shared_ptr<Face> &ptr) {
+    auto FID = [&face_map](const std::shared_ptr<Face>& ptr) {
         return ptr == nullptr ? -1 : ptr->id();
     };
-
 
     //build data structures
 
@@ -102,7 +102,7 @@ ArrangementMessage::ArrangementMessage(Arrangement const& arrangement)
             AnchorId(AID(half->get_anchor())) });
     }
     for (auto anchor : arrangement.all_anchors) {
-//        std::cerr << "Adding anchor: " << anchor->get_x() << ", " << anchor->get_y() << std::endl;
+        //        std::cerr << "Adding anchor: " << anchor->get_x() << ", " << anchor->get_y() << std::endl;
         anchors.push_back(AnchorM{
             anchor->get_x(),
             anchor->get_y(),
@@ -416,7 +416,7 @@ Arrangement ArrangementMessage::to_arrangement() const
     std::vector<std::shared_ptr<::Anchor>> temp_anchors; //For indexing, since arrangement.all_anchors is a set
     for (auto anchor : anchors) {
         std::shared_ptr<::Anchor> ptr = std::make_shared<::Anchor>(anchor.x_coord, anchor.y_coord);
-//        std::clog << "Adding anchor to arrangement: " << ptr->get_x() << ", " << ptr->get_y() << std::endl;
+        //        std::clog << "Adding anchor to arrangement: " << ptr->get_x() << ", " << ptr->get_y() << std::endl;
         assert(anchor.x_coord == ptr->get_x());
         assert(anchor.y_coord == ptr->get_y());
         temp_anchors.push_back(ptr);
@@ -429,11 +429,11 @@ Arrangement ArrangementMessage::to_arrangement() const
 
     auto it = arrangement.all_anchors.begin();
     for (size_t i = 0; i < anchors.size(); i++) {
-//        std::clog << "Checking: ";
-//        std::clog << anchors[i].x_coord << "-->" << temp_anchors[i]->get_x() << "-->" << (*it)->get_x() << " / ";
+        //        std::clog << "Checking: ";
+        //        std::clog << anchors[i].x_coord << "-->" << temp_anchors[i]->get_x() << "-->" << (*it)->get_x() << " / ";
         assert(anchors[i].x_coord == temp_anchors[i]->get_x());
         assert(anchors[i].x_coord == (*it)->get_x());
-//        std::clog << anchors[i].y_coord << "-->" << temp_anchors[i]->get_y() << "-->" << (*it)->get_y() << std::endl;
+        //        std::clog << anchors[i].y_coord << "-->" << temp_anchors[i]->get_y() << "-->" << (*it)->get_y() << std::endl;
         assert(anchors[i].y_coord == temp_anchors[i]->get_y());
         assert(anchors[i].y_coord == (*it)->get_y());
         ++it;
@@ -516,18 +516,18 @@ Arrangement ArrangementMessage::to_arrangement() const
 
     it = arrangement.all_anchors.begin();
     for (size_t i = 0; i < anchors.size(); i++) {
-//        std::clog << "Checking: ";
+        //        std::clog << "Checking: ";
         assert(anchors[i].x_coord == temp_anchors[i]->get_x());
         assert(anchors[i].x_coord == (*it)->get_x());
-//        std::clog << anchors[i].x_coord << " ";
+        //        std::clog << anchors[i].x_coord << " ";
         assert(anchors[i].y_coord == temp_anchors[i]->get_y());
         assert(anchors[i].y_coord == (*it)->get_y());
-//        std::clog << anchors[i].y_coord << std::endl;
+        //        std::clog << anchors[i].y_coord << std::endl;
         assert(anchors[i].above_line == (*it)->is_above());
         assert(anchors[i].position == (*it)->get_position());
         ++it;
     }
-//    std::clog << "All anchors identical in to_arrangement" << std::endl;
+    //    std::clog << "All anchors identical in to_arrangement" << std::endl;
     return arrangement;
 }
 

@@ -30,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QGraphicsView>
 
 #include <algorithm> // std::min
-#include <cmath> 	 // c++ version of math.h; includes overloaded absolute value functions
+#include <cmath> // c++ version of math.h; includes overloaded absolute value functions
 #include <limits>
 #include <set>
 #include <sstream>
@@ -602,16 +602,16 @@ std::pair<double, double> SliceDiagram::compute_endpoint(double coordinate, unsi
         x = -1 * (int)(step_size * offset);
     } else {
         double angle = atan(line_slope); //angle (data)      NOTE: it would be slightly more efficient to only compute this once per barcode update
-        
+
         if (coordinate == std::numeric_limits<double>::infinity()) {
             //set coordinate so that it will be outside the viewable window
             coordinate = view_length / std::min(scale_x, scale_y);
         }
-        
+
         //find (x,y) along the line
         x = coordinate * cos(angle) * scale_x;
         y = coordinate * sin(angle) * scale_y;
-        
+
         //offset from slice line
         double pixel_angle = atan(line_slope * scale_y / scale_x); //angle (pixels)    NOTE: it would be slightly more efficient to only compute this once per barcode update
         x -= step_size * offset * sin(pixel_angle);

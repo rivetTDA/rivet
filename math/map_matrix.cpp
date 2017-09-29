@@ -22,9 +22,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "map_matrix.h"
-#include "index_matrix.h"
 #include "bool_array.h"
 #include "debug.h"
+#include "index_matrix.h"
 #include <numeric> //for std::accumulate
 #include <stdexcept> //for error-checking and debugging
 
@@ -242,7 +242,7 @@ void MapMatrix_Base::add_column(unsigned j, unsigned k)
 
     //loop through all entries in column j
     while (jnode != NULL) {
-        //now it is save to dereference jnode (*jnode)...
+        //now it is safe to dereference jnode (*jnode)...
         unsigned row = jnode->get_row();
 
         //loop through entries in column k, starting at the current position
@@ -259,13 +259,13 @@ void MapMatrix_Base::add_column(unsigned j, unsigned k)
 
         if (!added && khandle == NULL) //then we haven't yet added anything to column k (but if we get here, column k is nonempty)
         {
-            if ((*columns[k]).get_row() == row) //then remove this node (since 1+1=0)
+            if (columns[k]->get_row() == row) //then remove this node (since 1+1=0)
             {
-                MapMatrixNode* next = (*columns[k]).get_next();
+                MapMatrixNode* next = columns[k]->get_next();
                 delete columns[k];
                 columns[k] = next;
                 added = true; //proceed with next element from column j
-            } else if ((*columns[k]).get_row() < row) //then insert new initial node into column k
+            } else if (columns[k]->get_row() < row) //then insert new initial node into column k
             {
                 MapMatrixNode* newnode = new MapMatrixNode(row);
                 newnode->set_next(columns[k]);
@@ -455,13 +455,13 @@ void MapMatrix::add_column(MapMatrix* other, unsigned j, unsigned k)
 
         if (!added && khandle == NULL) //then we haven't yet added anything to column k (but if we get here, column k is nonempty)
         {
-            if ((*columns[k]).get_row() == row) //then remove this node (since 1+1=0)
+            if (columns[k]->get_row() == row) //then remove this node (since 1+1=0)
             {
                 MapMatrixNode* next = (*columns[k]).get_next();
                 delete columns[k];
                 columns[k] = next;
                 added = true; //proceed with next element from column j
-            } else if ((*columns[k]).get_row() < row) //then insert new initial node into column k
+            } else if (columns[k]->get_row() < row) //then insert new initial node into column k
             {
                 MapMatrixNode* newnode = new MapMatrixNode(row);
                 newnode->set_next(columns[k]);
@@ -523,8 +523,7 @@ void MapMatrix::copy_cols_from(MapMatrix* other, int first, int last, unsigned o
 
             //create all other nodes in this column
             other_node = other_node->get_next();
-            while (other_node != NULL)
-            {
+            while (other_node != NULL) {
                 MapMatrixNode* new_node = new MapMatrixNode(other_node->get_row() + offset);
                 cur_node->set_next(new_node);
                 cur_node = new_node;
@@ -532,32 +531,67 @@ void MapMatrix::copy_cols_from(MapMatrix* other, int first, int last, unsigned o
             }
         }
     }
-}//end copy_cols_from()
+} //end copy_cols_from()
+
+//copies column with index src_col from other to column dest_col in this matrix
+void MapMatrix::copy_cols_from(MapMatrix* other, int src_col, int dest_col)
+{
+    //First free memory in destination column
+    MapMatrixNode* cur_node = columns[dest_col];
+    while (cur_node != NULL) {
+        MapMatrixNode* next = cur_node->get_next();
+        delete cur_node;
+        cur_node = next;
+    }
+
+    MapMatrixNode* other_node = other->columns[src_col];
+    if (other_node != NULL) {
+        //create the first node in this column
+        cur_node = new MapMatrixNode(other_node->get_row());
+        columns[dest_col] = cur_node;
+
+        //create all other nodes in this column
+        other_node = other_node->get_next();
+        while (other_node != NULL) {
+            MapMatrixNode* new_node = new MapMatrixNode(other_node->get_row());
+            cur_node->set_next(new_node);
+            cur_node = new_node;
+            other_node = other_node->get_next();
+        }
+    } else
+        columns[dest_col] = NULL; //this shouldn't be necessary
+} //end copy_cols_from()
 
 //copies columns with indexes in [first, last] from other, inserting them in this matrix with the same column indexes
 void MapMatrix::copy_cols_same_indexes(MapMatrix* other, int first, int last)
 {
     for (int j = first; j <= last; j++) {
+        //First free current column memory
+        MapMatrixNode* cur_node = columns[j];
+        while (cur_node != NULL) {
+            MapMatrixNode* next = cur_node->get_next();
+            delete cur_node;
+            cur_node = next;
+        }
+
         MapMatrixNode* other_node = other->columns[j];
         if (other_node != NULL) {
             //create the first node in this column
-            MapMatrixNode* cur_node = new MapMatrixNode(other_node->get_row());
-            columns[j] = (cur_node);
+            cur_node = new MapMatrixNode(other_node->get_row());
+            columns[j] = cur_node;
 
             //create all other nodes in this column
             other_node = other_node->get_next();
-            while (other_node != NULL)
-            {
+            while (other_node != NULL) {
                 MapMatrixNode* new_node = new MapMatrixNode(other_node->get_row());
                 cur_node->set_next(new_node);
                 cur_node = new_node;
                 other_node = other_node->get_next();
             }
-        }
-        else
+        } else
             columns[j] = NULL; //this shouldn't be necessary
     }
-}//end copy_cols_same_indexes()
+} //end copy_cols_same_indexes()
 
 //removes zero columns from this matrix
 //ind_old gives grades of columns before zero columns are removed; new grade info stored in ind_new
@@ -567,9 +601,9 @@ void MapMatrix::remove_zero_cols(IndexMatrix* ind_old, IndexMatrix* ind_new)
     int new_col = -1; //new index of rightmost column that has been moved
     int cur_col = 0; //old index of rightmost column considered for move
 
-//    qDebug() << "REMOVING ZERO COLS: (" << columns.size() << "cols)";
-//    print();
-//    ind_old->print();
+    //    qDebug() << "REMOVING ZERO COLS: (" << columns.size() << "cols)";
+    //    print();
+    //    ind_old->print();
 
     //loop over all grades
     for (unsigned y = 0; y < ind_old->height(); y++) {
@@ -588,10 +622,10 @@ void MapMatrix::remove_zero_cols(IndexMatrix* ind_old, IndexMatrix* ind_new)
     //resize the columns vector
     columns.resize(new_col + 1);
 
-//    qDebug() << "RESULTING MATRIX: (" << columns.size() << "cols)";
-//    print();
-//    ind_new->print();
-}//end remove_zero_cols
+    //    qDebug() << "RESULTING MATRIX: (" << columns.size() << "cols)";
+    //    print();
+    //    ind_new->print();
+} //end remove_zero_cols
 
 std::ostream& operator<<(std::ostream& out, const MapMatrix& matrix)
 {
@@ -629,6 +663,67 @@ std::ostream& operator<<(std::ostream& out, const MapMatrix& matrix)
         out << " |\n";
     }
     return out;
+}
+
+//function to print the matrix to standard output, for testing purposes
+void MapMatrix::print()
+{
+    //handle empty matrix
+    if (num_rows == 0 || columns.size() == 0) {
+        debug() << "        (empty matrix:" << num_rows << "rows by" << columns.size() << "columns)";
+        return;
+    }
+
+    debug() << "        (matrix:" << num_rows << "rows by" << columns.size() << "columns)";
+
+    //create a 2D array of booleans to temporarily store the matrix
+    bool_array mx(num_rows, columns.size());
+    for (unsigned i = 0; i < num_rows; i++)
+        for (unsigned j = 0; j < columns.size(); j++)
+            mx.at(i, j) = false;
+
+    //traverse the linked lists in order to fill the 2D array
+    MapMatrixNode* current;
+    for (unsigned j = 0; j < columns.size(); j++) {
+        current = columns[j];
+        while (current != NULL) {
+            int row = current->get_row();
+            mx.at(row, j) = true;
+            current = current->get_next();
+        }
+    }
+
+    //print the matrix
+    for (unsigned i = 0; i < num_rows; i++) {
+        Debug qd = debug(true);
+        qd << "        |";
+        for (unsigned j = 0; j < columns.size(); j++) {
+            if (mx.at(i, j))
+                qd << " 1";
+            else
+                qd << " 0";
+        }
+        qd << " |\n";
+    }
+} //end print()
+
+//check for inconsistencies in matrix column, for testing purposes
+void MapMatrix::assert_cols_correct()
+{
+    for (unsigned j = 0; j < columns.size(); j++) {
+        //consider the first node
+        MapMatrixNode* current = columns[j];
+        MapMatrixNode* next_node;
+
+        //consider all following nodes
+        while (current != NULL) {
+            next_node = current->get_next();
+            if (next_node != NULL && current->get_row() <= next_node->get_row()) {
+                debug() << "===>>> ERROR IN COLUMN " << j;
+            }
+            current = next_node;
+        }
+    }
 }
 
 /********** implementation of class MapMatrix_Perm, supports row swaps (and stores a low array) **********/
@@ -712,7 +807,6 @@ MapMatrix_RowPriority_Perm* MapMatrix_Perm::decompose_RU()
 {
     //create the matrix U
     MapMatrix_RowPriority_Perm* U = new MapMatrix_RowPriority_Perm(columns.size()); //NOTE: must be deleted later!
-
     //loop through columns
     for (unsigned j = 0; j < columns.size(); j++) {
         //while column j is nonempty and its low number is found in the low array, do column operations
@@ -728,7 +822,6 @@ MapMatrix_RowPriority_Perm* MapMatrix_Perm::decompose_RU()
             low_by_row[columns[j]->get_row()] = j;
         }
     }
-
     //return the matrix U
     return U;
 } //end decompose_RU()

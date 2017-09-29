@@ -28,7 +28,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "dcel/barcode_template.h"
 #include "interface/file_input_reader.h"
 #include "interface/input_parameters.h"
-#include "math/simplex_tree.h"
+#include "math/bifiltration_data.h"
+#include "math/firep.h"
 #include "math/template_point.h"
 #include "math/template_points_matrix.h"
 #include "progress.h"
@@ -111,7 +112,8 @@ struct InputData {
     bool is_data;
     std::vector<exact> x_exact; //exact (e.g. rational) values of all x-grades, sorted
     std::vector<exact> y_exact; //exact (e.g. rational) values of all y-grades, sorted
-    std::shared_ptr<SimplexTree> simplex_tree; // will be non-null if we read raw data
+    std::shared_ptr<BifiltrationData> bifiltration_data; // will be non-null if we read raw data
+    std::shared_ptr<FIRep> free_implicit_rep; // will be non-null if we read raw data
     std::vector<TemplatePoint> template_points; // will be non-empty if we read RIVET data
     std::vector<BarcodeTemplate> barcode_templates; //only used if we read a RIVET data file and need to store the barcode templates before the arrangement is ready
     FileType file_type;
@@ -149,12 +151,13 @@ private:
 
     void register_file_type(FileType file_type);
 
-    std::unique_ptr<InputData> read_point_cloud(std::ifstream& stream, Progress& progress); //reads a point cloud and constructs a simplex tree representing the bifiltered Vietoris-Rips complex
+    std::unique_ptr<InputData> read_point_cloud(std::ifstream& stream, Progress& progress); //reads a point cloud and constructs a simplex tree representing the bifiltered Bifiltration/Vietoris-Rips complex
     std::unique_ptr<InputData> read_discrete_metric_space(std::ifstream& stream, Progress& progress); //reads data representing a discrete metric space with a real-valued function and constructs a simplex tree
-    std::unique_ptr<InputData> read_bifiltration(std::ifstream& stream, Progress& progress); //reads a bifiltration and constructs a simplex tree
+    std::unique_ptr<InputData> read_bifiltration(std::ifstream& stream, Progress& progress); //reads a bifiltration and constructs a BifiltrationData
+    std::unique_ptr<InputData> read_firep(std::ifstream& stream, Progress& progress); //reads a free implicit representation and constructs a FIRep
     std::unique_ptr<InputData> read_RIVET_data(std::ifstream& stream, Progress& progress); //reads a file of previously-computed data from RIVET
 
-    void build_grade_vectors(InputData& data, ExactSet& value_set, std::vector<unsigned>& indexes, std::vector<exact>& grades_exact, unsigned num_bins); //converts an ExactSets of values to the vectors of discrete values that SimplexTree uses to build the bifiltration, and also builds the grade vectors (floating-point and exact)
+    void build_grade_vectors(InputData& data, ExactSet& value_set, std::vector<unsigned>& indexes, std::vector<exact>& grades_exact, unsigned num_bins); //converts an ExactSets of values to the vectors of discrete values that BifiltrationData uses to build the bifiltration, and also builds the grade vectors (floating-point and exact)
 
     exact approx(double x); //finds a rational approximation of a floating-point value; precondition: x > 0
     FileType& get_file_type(std::string fileName);
