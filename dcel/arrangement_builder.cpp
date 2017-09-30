@@ -28,7 +28,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <boost/graph/kruskal_min_spanning_tree.hpp>
 #include <boost/graph/properties.hpp>
 #include <math/persistence_updater.h>
-#include <math/simplex_tree.h>
+#include <math/firep.h>
+#include <math/bifiltration_data.h>
 
 #include <algorithm> //for find function in version 3 of find_subpath
 #include <cutgraph.h>
@@ -110,7 +111,8 @@ std::shared_ptr<Arrangement> ArrangementBuilder::build_arrangement(std::vector<e
     //first, compute anchors and store them in the vector Arrangement::all_anchors
     progress.progress(10);
     //TODO: this is odd, fix.
-    SimplexTree dummy_tree(0, 0);
+    BifiltrationData dummy_data(0, 0);
+    FIRep dummy_tree(dummy_data, 0);
     std::shared_ptr<Arrangement> arrangement(new Arrangement(x_exact, y_exact, verbosity));
     PersistenceUpdater updater(*arrangement, dummy_tree, xi_pts, verbosity); //we only use the PersistenceUpdater to find and store the anchors
     if (verbosity >= 2) {

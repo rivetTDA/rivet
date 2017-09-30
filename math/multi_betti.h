@@ -34,7 +34,7 @@ struct ColumnList; //necessary for column reduction in MultiBetti::reduce(...)
 class ComputationThread;
 class IndexMatrix;
 class MapMatrix;
-class SimplexTree;
+class FIRep;
 class TemplatePoint;
 
 #include <boost/multi_array.hpp>
@@ -48,7 +48,7 @@ typedef std::vector<int> Vector;
 class MultiBetti {
 public:
     //constructor: sets up the data structure but does not compute xi_0 or xi_1
-    MultiBetti(SimplexTree& st, int dim); 
+    MultiBetti(FIRep& rep, int dim); 
 
     //computes xi_0 and xi_1, and also stores dimension of homology at each grade in the supplied matrix
     void compute(unsigned_matrix& hom_dims, Progress& progress);
@@ -65,7 +65,7 @@ public:
     //stores the xi support points in lexicographical order
     void store_support_points(std::vector<TemplatePoint>& tpts);
 
-    SimplexTree& bifiltration; //reference to the bifiltration
+    FIRep& bifiltration; //reference to the bifiltration
 
 private:
     const int dimension; //dimension of homology to compute

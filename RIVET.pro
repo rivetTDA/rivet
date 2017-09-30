@@ -75,8 +75,8 @@ HEADERS  += visualizationwindow.h			\
 		math/index_matrix.h					\
 		math/map_matrix.h					\
 		math/multi_betti.h					\
-		math/simplex_tree.h					\
-		math/st_node.h						\
+		#math/simplex_tree.h					\
+		#math/st_node.h						\
 		dcel/barcode.h	    				\
 		dcel/barcode_template.h				\
 		dcel/anchor.h						\

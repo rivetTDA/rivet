@@ -35,7 +35,7 @@ class MapMatrix_Perm;
 class MapMatrix_RowPriority_Perm;
 class Arrangement;
 class MultiBetti;
-class SimplexTree;
+class FIRep;
 class TemplatePoint;
 struct TemplatePointsMatrixEntry;
 
@@ -47,7 +47,7 @@ struct TemplatePointsMatrixEntry;
 
 class PersistenceUpdater {
 public:
-    PersistenceUpdater(Arrangement& m, SimplexTree& b, std::vector<TemplatePoint>& xi_pts, unsigned verbosity); //constructor for when we must compute all of the barcode templates
+    PersistenceUpdater(Arrangement& m, FIRep& b, std::vector<TemplatePoint>& xi_pts, unsigned verbosity); //constructor for when we must compute all of the barcode templates
 
     //PersistenceUpdater(Arrangement& m, std::vector<TemplatePoint>& xi_pts); //constructor for when we load the pre-computed barcode templates from a RIVET data file
 
@@ -65,8 +65,7 @@ private:
     //data structures
 
     Arrangement& arrangement; //pointer to the DCEL arrangement in which the barcodes will be stored
-    SimplexTree& bifiltration; //pointer to the bifiltration
-    int dim; //dimension of homology to be computed
+    FIRep& bifiltration; //pointer to the bifiltration
 
     unsigned verbosity;
 
