@@ -2,7 +2,7 @@
 # parameters: mean radius 2, std. dev. radius 0.3, radius for codensity function 1
 points
 2
-4
+1000
 codensity
 -2.01	-1.50	33
 0.39	-2.13	11
