@@ -328,6 +328,8 @@ MapMatrix::MapMatrix(unsigned size)
 {
 }
 
+
+//Mike: This constructor was copying data unnecessarily, so I fixed it.  But it as far as I know, it is not used at all in the rest of the code, except for the unit tests.
 MapMatrix::MapMatrix(std::initializer_list<std::initializer_list<int>> values)
     : MapMatrix_Base(values.size(),
           std::accumulate(values.begin(), values.end(), 0U,
@@ -335,20 +337,21 @@ MapMatrix::MapMatrix(std::initializer_list<std::initializer_list<int>> values)
                   return std::max(max_so_far, static_cast<unsigned>(row.size()));
               }))
 {
+    
     //TODO: Make this fast once we pick a representation.
     auto row_it = values.begin();
     for (unsigned row = 0; row < values.size(); row++) {
-        auto row_values = *row_it;
-        ++row_it;
-        auto col_it = row_values.begin();
-        for (unsigned col = 0; col < row_values.size(); col++) {
+        auto col_it = row_it->begin();
+        for (unsigned col = 0; col < row_it->size(); col++) {
             if (*col_it)
                 set(row, col);
             ++col_it;
         }
+        ++row_it;
     }
 }
-
+ 
+ 
 bool MapMatrix::operator==(MapMatrix& other)
 {
     //TODO: make fast once we choose a representation
@@ -871,7 +874,6 @@ void MapMatrix_Perm::swap_rows(unsigned i, bool update_lows)
 } //end swap_rows()
 
 //transposes columns j and j+1
-//NOTE: this does not update low arrays! user must do this via swap_lows()
 void MapMatrix_Perm::swap_columns(unsigned j, bool update_lows)
 {
     //swap columns

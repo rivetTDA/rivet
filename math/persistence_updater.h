@@ -65,7 +65,7 @@ private:
     //data structures
 
     Arrangement& arrangement; //pointer to the DCEL arrangement in which the barcodes will be stored
-    FIRep& bifiltration; //pointer to the bifiltration
+    FIRep& bifiltration; //pointer to the FIRep
 
     unsigned verbosity;
 
@@ -139,7 +139,7 @@ private:
     //swaps two blocks of columns by updating the total order on columns, then rebuilding the matrices and computing a new RU-decomposition
     void update_order_and_reset_matrices(std::shared_ptr<TemplatePointsMatrixEntry> first, std::shared_ptr<TemplatePointsMatrixEntry> second, bool from_below, MapMatrix_Perm* RL_initial, MapMatrix_Perm* RH_initial);
 
-    //updates the total order on columns, rebuilds the matrices, and computing a new RU-decomposition for a NON-STRICT anchor
+    //updates the total order on columns, rebuilds the matrices, and computes a new RU-decomposition for a NON-STRICT anchor
     void update_order_and_reset_matrices(MapMatrix_Perm* RL_initial, MapMatrix_Perm* RH_initial);
 
     //swaps two blocks of simplices in the total order, and counts switches and separations
@@ -148,10 +148,10 @@ private:
     //used by the previous function to split grade lists at each anchor crossing
     void do_separations(std::shared_ptr<TemplatePointsMatrixEntry> greater, std::shared_ptr<TemplatePointsMatrixEntry> lesser, bool horiz);
 
-    //removes entries corresponding to an TemplatePointsMatrixEntry from lift_low and lift_high
+    //removes entries corresponding to a TemplatePointsMatrixEntry from lift_low and lift_high
     void remove_lift_entries(std::shared_ptr<TemplatePointsMatrixEntry> entry);
 
-    //creates the appropriate entries in lift_low and lift_high for an TemplatePointsMatrixEntry with nonempty sets of "low" or "high" simplices
+    //creates the appropriate entries in lift_low and lift_high for a TemplatePointsMatrixEntry with nonempty sets of "low" or "high" simplices
     void add_lift_entries(std::shared_ptr<TemplatePointsMatrixEntry> entry);
 
     //stores a barcode template in a 2-cell of the arrangement
