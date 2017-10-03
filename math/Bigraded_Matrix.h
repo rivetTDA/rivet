@@ -8,14 +8,17 @@
 #ifndef __Bigraded_Matrix_H__
 #define __Bigraded_Matrix_H__
 
-#include <sparse_matrix.h>
-#include <index_matrix.h>
-#include <PHAT/vector_heap.h>
+//forward declarations
+
+template< class Representation>
+class SparseMatrix<Representation>;
+class vector_heap;
+class IndexMatrix;
 
 struct BigradedMatrix {
 public:
     //column-sparse matrix
-    SparseMatrix<phat::vector_heap> mat;
+    SparseMatrix<vector_heap> mat;
     //bigrade info for each column of mat
     IndexMatrix ind;
     
