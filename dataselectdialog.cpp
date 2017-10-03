@@ -155,6 +155,9 @@ void DataSelectDialog::detect_file_type()
                     qDebug() << "Partial:" << line;
                     partial = line;
                 }
+            } else if (line.startsWith("FILE TYPE:") && line.contains("firep")) {
+                ui->homDimLabel->setEnabled(false);
+                ui->homDimSpinBox->setEnabled(false);
             } else if (line.startsWith("FILE TYPE DESCRIPTION: ")) {
 
                 ui->fileTypeLabel->setText("This file appears to contain " + line.mid(QString("FILE TYPE DESCRIPTION: ").length()).trimmed() + ".");
