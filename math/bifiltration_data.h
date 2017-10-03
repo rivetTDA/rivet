@@ -118,7 +118,13 @@ public:
 
     //print bifiltration in the RIVET bifiltration input format
     void print_bifiltration();
-
+    
+    std::vector<LowSimplexData>* get_low_simplices() {return &low_simplices;}
+    
+    std::vector<MidHighSimplexData>* get_mid_simplices() {return &mid_simplices;}
+    
+    std::vector<MidHighSimplexData>* get_high_simplices() {return &high_simplices;}
+    
 private:
     unsigned x_grades; //the number of x-grades that exist in this bifiltration
     unsigned y_grades; //the number of y-grades that exist in this bifiltration
