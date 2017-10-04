@@ -47,7 +47,7 @@ ControlDot::ControlDot(SliceLine* line, bool left_bottom, ConfigParameters* para
 QRectF ControlDot::boundingRect() const
 {
     int radius = config_params->sliceLineWidth + 4;
-    return QRectF(-1*radius, -1*radius, 2*radius, 2*radius);
+    return QRectF(-1 * radius, -1 * radius, 2 * radius, 2 * radius);
 }
 
 void ControlDot::paint(QPainter* painter, const QStyleOptionGraphicsItem* /*unused*/, QWidget* /*unused*/)
@@ -135,7 +135,7 @@ QVariant ControlDot::itemChange(GraphicsItemChange change, const QVariant& value
         //return
         return newpos;
     }
-    
+
     return QGraphicsItem::itemChange(change, value);
 }
 

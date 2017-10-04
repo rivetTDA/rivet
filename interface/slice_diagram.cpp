@@ -93,7 +93,7 @@ void SliceDiagram::create_diagram(const QString& x_text, const QString& y_text, 
     QBrush xi1brush(config_params->xi1color);
     QBrush xi2brush(config_params->xi2color);
     QPen grayPen(Qt::gray);
-    QPen highlighter(QBrush(config_params->persistenceHighlightColor), config_params->sliceLineWidth/2);
+    QPen highlighter(QBrush(config_params->persistenceHighlightColor), config_params->sliceLineWidth / 2);
 
     //draw labels
     std::ostringstream s_xmin;
@@ -284,7 +284,7 @@ void SliceDiagram::resize_diagram()
         int min_grid = (x_grid < y_grid) ? x_grid : y_grid;
 
         int auto_radius = (int)min_grid / sqrt(max_xi_value);
-        int max_radius = (int)( std::min(diagram_max_height, diagram_max_width)/20 );
+        int max_radius = (int)(std::min(diagram_max_height, diagram_max_width) / 20);
         if (auto_radius < 3)
             auto_radius = 3;
         if (auto_radius > max_radius)
@@ -424,7 +424,7 @@ void SliceDiagram::receive_parameter_change()
     }
 
     //update the slice line highlight
-    QPen highlighter(QBrush(config_params->persistenceHighlightColor), config_params->sliceLineWidth/2);
+    QPen highlighter(QBrush(config_params->persistenceHighlightColor), config_params->sliceLineWidth / 2);
     highlight_line->setPen(highlighter);
 
     //update axis labels

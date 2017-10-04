@@ -533,5 +533,5 @@ Arrangement ArrangementMessage::to_arrangement() const
 
 bool ArrangementMessage::is_empty() const
 {
-    return ( x_exact.empty() && y_exact.empty() );
+    return (x_exact.empty() && y_exact.empty());
 }
