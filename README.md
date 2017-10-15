@@ -5,13 +5,13 @@ Designed by Michael Lesnick and Matthew Wright.
 Created December 2013.  
 
 ## Contributors
-Madkour Abdel-Rahman (St. Olaf)
-Bryn Keller (Intel Labs)
-Michael Lesnick (Princeton)
-Phil Nadolny (St. Olaf)
-William Wang (UPenn)
-Matthew Wright (St. Olaf)
-Alex Yu (Princeton)
+Madkour Abdel-Rahman (St. Olaf)   
+Bryn Keller (Intel Labs)  
+Michael Lesnick (Princeton)  
+Phil Nadolny (St. Olaf)  
+William Wang (UPenn)  
+Matthew Wright (St. Olaf)  
+Alex Yu (Princeton)  
 Roy Zhao (UC Berkeley)
 
 ## Requirements
