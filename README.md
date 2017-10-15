@@ -5,11 +5,14 @@ Designed by Michael Lesnick and Matthew Wright.
 Created December 2013.  
 
 ## Contributors
-Michael Lesnick (Princeton)
-Matthew Wright (St. Olaf College)
+Madkour Abdel-Rahman (St. Olaf)
 Bryn Keller (Intel Labs)
-
-TODO: Other contributors please add yourselves!
+Michael Lesnick (Princeton)
+Phil Nadolny (St. Olaf)
+William Wang (UPenn)
+Matthew Wright (St. Olaf)
+Alex Yu (Princeton)
+Roy Zhao (UC Berkeley)
 
 ## Requirements
 Before starting to build RIVET, you will need to have the following installed:
