@@ -78,7 +78,7 @@ void Halfedge::serialize(Archive& ar, const unsigned int /*version*/)
 template <class Archive>
 void Face::serialize(Archive& ar, const unsigned int /*version*/)
 {
-    ar& boundary& dbc& visited & identifier;
+    ar& boundary& dbc& visited& identifier;
 }
 
 template <class Archive>
@@ -130,6 +130,6 @@ void load(Archive& ar, unsigned_matrix& mat, const unsigned int& /*version*/)
     mat.resize(size);
     std::memcpy(mat.origin(), data.data(), data.size() * sizeof(unsigned));
 }
-}
+} // namespace boost
 
 #endif //RIVET_CONSOLE_SERIALIZATION_H

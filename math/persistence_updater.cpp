@@ -25,10 +25,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../dcel/dcel.h"
 #include "dcel/arrangement.h"
 #include "debug.h"
+#include "firep.h"
 #include "index_matrix.h"
 #include "map_matrix.h"
 #include "multi_betti.h"
-#include "simplex_tree.h"
 
 #include <chrono>
 #include <stdexcept> //for error-checking and debugging
@@ -36,10 +36,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <timer.h>
 
 //constructor for when we must compute all of the barcode templates
-PersistenceUpdater::PersistenceUpdater(Arrangement& m, SimplexTree& b, std::vector<TemplatePoint>& xi_pts, unsigned verbosity)
+PersistenceUpdater::PersistenceUpdater(Arrangement& m, FIRep& b, std::vector<TemplatePoint>& xi_pts, unsigned verbosity)
     : arrangement(m)
     , bifiltration(b)
-    , dim(b.hom_dim)
     , verbosity(verbosity)
     , template_points_matrix(m.x_exact.size(), m.y_exact.size())
 //    , testing(false)
@@ -75,13 +74,13 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<std::shared_ptr<H
     if (verbosity >= 10) {
         debug() << "  Mapping low simplices:";
     }
-    IndexMatrix* ind_low = bifiltration.get_index_mx(dim); //can we improve this with something more efficient than IndexMatrix?
+    IndexMatrix* ind_low = bifiltration.get_low_index_mx(); //can we improve this with something more efficient than IndexMatrix?
     store_multigrades(ind_low, true);
 
     if (verbosity >= 10) {
         debug() << "  Mapping high simplices:";
     }
-    IndexMatrix* ind_high = bifiltration.get_index_mx(dim + 1); //again, could be improved?
+    IndexMatrix* ind_high = bifiltration.get_high_index_mx(); //again, could be improved?
     store_multigrades(ind_high, false);
 
     //get the proper simplex ordering
@@ -161,14 +160,13 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<std::shared_ptr<H
 
     // choose the initial value of the threshold intelligently
     unsigned long threshold;
-    choose_initial_threshold(total_time_for_resets, total_transpositions, total_time_for_transpositions, threshold); 
-        //if the number of swaps might exceed this threshold, then we will do a persistence calculation from scratch instead of vineyard updates
+    choose_initial_threshold(total_time_for_resets, total_transpositions, total_time_for_transpositions, threshold);
+    //if the number of swaps might exceed this threshold, then we will do a persistence calculation from scratch instead of vineyard updates
     if (verbosity >= 4) {
         debug() << "initial reset threshold set to" << threshold;
     }
 
     timer.restart();
-
 
     //traverse the path
     Timer steptimer;
@@ -312,7 +310,7 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<std::shared_ptr<H
             max_time = step_time;
 
         //update the treshold
-        if(swap_counter > 0 || num_trans >= threshold) {
+        if (swap_counter > 0 || num_trans >= threshold) {
             threshold = (unsigned long)(((double)total_transpositions / total_time_for_transpositions) * ((double)total_time_for_resets / number_of_resets));
             if (verbosity >= 6) {
                 // debug() << "===>>> UPDATING THRESHOLD:";
@@ -358,14 +356,14 @@ void PersistenceUpdater::set_anchor_weights(std::vector<std::shared_ptr<Halfedge
     if (verbosity >= 10) {
         debug() << "  Mapping low simplices:";
     }
-    IndexMatrix* ind_low = bifiltration.get_index_mx(dim); //can we improve this with something more efficient than IndexMatrix?
+    IndexMatrix* ind_low = bifiltration.get_low_index_mx(); //can we improve this with something more efficient than IndexMatrix?
     store_multigrades(ind_low, true);
     delete ind_low;
 
     if (verbosity >= 10) {
         debug() << "  Mapping high simplices:";
     }
-    IndexMatrix* ind_high = bifiltration.get_index_mx(dim + 1); //again, could be improved?
+    IndexMatrix* ind_high = bifiltration.get_high_index_mx(); //again, could be improved?
     store_multigrades(ind_high, false);
     delete ind_high;
 
@@ -1242,7 +1240,6 @@ void PersistenceUpdater::update_order_and_reset_matrices(std::shared_ptr<Templat
         inv_perm_high[perm_high[i]] = i;
 
     //STEP 3: re-build the matrix R based on the new order
-
     R_low->rebuild(RL_initial, perm_low);
     R_high->rebuild(RH_initial, perm_high, perm_low);
 
@@ -1437,7 +1434,7 @@ void PersistenceUpdater::store_barcode_template(std::shared_ptr<Face> cell)
 } //end store_barcode_template()
 
 //chooses an initial threshold by timing vineyard updates corresponding to random transpositions
-void PersistenceUpdater::choose_initial_threshold(unsigned decomp_time, unsigned long & num_trans, unsigned & trans_time, unsigned long & threshold)
+void PersistenceUpdater::choose_initial_threshold(unsigned decomp_time, unsigned long& num_trans, unsigned& trans_time, unsigned long& threshold)
 {
     if (verbosity >= 4) {
         debug() << "RANDOM VINEYARD UPDATES TO CHOOSE THE INITIAL THRESHOLD";
@@ -1465,8 +1462,7 @@ void PersistenceUpdater::choose_initial_threshold(unsigned decomp_time, unsigned
     if (verbosity >= 8) {
         debug() << "  -->Doing some random vineyard updates...";
     }
-    while ( (timer.elapsed() < runtime || trans_list.size() == 0) &&
-        (timer.elapsed() < 5 || trans_list.size() < 5000) ) //do a transposition
+    while ((timer.elapsed() < runtime || trans_list.size() == 0) && (timer.elapsed() < 5 || trans_list.size() < 5000)) //do a transposition
     {
         unsigned rand_col = rand() % (num_cols - 1); //random integer in {0, 1, ..., num_cols - 2}
 

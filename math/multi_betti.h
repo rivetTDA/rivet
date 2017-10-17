@@ -34,7 +34,7 @@ struct ColumnList; //necessary for column reduction in MultiBetti::reduce(...)
 class ComputationThread;
 class IndexMatrix;
 class MapMatrix;
-class SimplexTree;
+class FIRep;
 class TemplatePoint;
 
 #include <boost/multi_array.hpp>
@@ -48,7 +48,7 @@ typedef std::vector<int> Vector;
 class MultiBetti {
 public:
     //constructor: sets up the data structure but does not compute xi_0 or xi_1
-    MultiBetti(SimplexTree& st, int dim); 
+    MultiBetti(FIRep& rep, int dim);
 
     //computes xi_0 and xi_1, and also stores dimension of homology at each grade in the supplied matrix
     void compute(unsigned_matrix& hom_dims, Progress& progress);
@@ -65,7 +65,7 @@ public:
     //stores the xi support points in lexicographical order
     void store_support_points(std::vector<TemplatePoint>& tpts);
 
-    SimplexTree& bifiltration; //reference to the bifiltration
+    FIRep& bifiltration; //reference to the bifiltration
 
 private:
     const int dimension; //dimension of homology to compute
@@ -85,7 +85,7 @@ private:
     //      were zeroed out in this reduction or zero before this function was called
     //  indexes of columns that are zeroed out are inserted into zero_list
     void reduce_slave(MapMatrix* mm, MapMatrix* slave1, MapMatrix* slave2, int first_col, int last_col, Vector& lows,
-                          unsigned y_grade, ColumnList& zero_list, long& zero_cols);
+        unsigned y_grade, ColumnList& zero_list, long& zero_cols);
 
     //column reduction of two matrices spliced together by y-grade
     //  pivot columns are:
@@ -96,13 +96,13 @@ private:
     //      nonzero_cols_steps12: of the columns reduced in steps 1 and 2, the number that remained nonzero
     //      nonzero_cols_step3: of the columns reduced in step 3, the number that remained nonzero.
     void reduce_spliced(MapMatrix* m_left, MapMatrix* m_right, IndexMatrix* ind_left, IndexMatrix* ind_right,
-                        ColumnList& right_cols, unsigned grade_x, unsigned grade_y, Vector& lows,
-                        long& nonzero_cols_steps12, long& nonzero_cols_step3);
+        ColumnList& right_cols, unsigned grade_x, unsigned grade_y, Vector& lows,
+        long& nonzero_cols_steps12, long& nonzero_cols_step3);
 
     //another version of reduce_spliced for computing dim(U) for xi_1
     //  increments nonzero_cols by the number of columns that were reduced and remained nonzero
     void reduce_spliced(MapMatrix* m_left, MapMatrix* m_right, IndexMatrix* ind_left, IndexMatrix* ind_right,
-                        ColumnList& right_cols, unsigned grade_x, unsigned grade_y, Vector& lows, long& nonzero_cols);
+        ColumnList& right_cols, unsigned grade_x, unsigned grade_y, Vector& lows, long& nonzero_cols);
 
     //builds the bdry2 matrix of the direct sum B + C
     //  input: matrix bdry2, corresponding index matrix ind2

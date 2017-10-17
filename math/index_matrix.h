@@ -48,6 +48,8 @@ public:
     unsigned width() const; //returns number of columns
     unsigned height() const; //returns number of rows
 
+    void print() const; //prints the matrix
+
 private:
     unsigned num_rows;
     unsigned num_cols;
