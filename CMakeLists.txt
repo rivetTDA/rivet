@@ -50,7 +50,16 @@ add_executable (rivet_console
         numerics.cpp
         timer.cpp
         debug.cpp
-        dcel/grades.cpp dcel/grades.h math/bool_array.cpp math/bool_array.h)
+        dcel/grades.cpp 
+	dcel/grades.h 
+	math/bool_array.cpp 
+	math/bool_array.h
+	math/phat_mod/include/phat/boundary_matrix_mod.h
+	math/phat_mod/include/phat/representations/vector_heap_mod.h
+	math/phat_mod/include/phat/helpers/misc.h
+	math/phat_mod/include/phat/helpers/thread_local_storage.h
+)
+	
 
 add_dependencies(rivet_console docopt_project)
 

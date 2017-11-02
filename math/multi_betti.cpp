@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **********************************************************************/
 /* multi-graded Betti number class
- * takes a bifiltration and computes the multi-graded Betti numbers
+ * takes a firep and computes the multi-graded Betti numbers
  */
 
 #include "multi_betti.h"
@@ -67,11 +67,11 @@ struct ColumnList {
 
 //constructor: sets up the data structure but does not compute xi_0 or xi_1
 MultiBetti::MultiBetti(FIRep& rep, int dim)
-    : bifiltration(rep)
+    : fir(rep)
     , dimension(dim)
-    , num_x_grades(bifiltration.num_x_grades())
-    , num_y_grades(bifiltration.num_y_grades())
-    , verbosity(bifiltration.verbosity)
+    , num_x_grades(fir.num_x_grades())
+    , num_y_grades(fir.num_y_grades())
+    , verbosity(fir.verbosity)
 {
     xi.resize(boost::extents[num_x_grades][num_y_grades][3]);
 } //end constructor
@@ -85,13 +85,14 @@ void MultiBetti::compute(unsigned_matrix& hom_dims, Progress& progress)
     if (num_x_grades <= 0 || num_y_grades <= 0) {
         return;
     }
-
+    
     //input to the algorithm: two boundary matrices, with index data
-    MapMatrix* bdry1 = bifiltration.get_low_boundary_mx();
-    IndexMatrix* ind1 = bifiltration.get_low_index_mx();
+    //TODO: a future version of this code will not copy these matrices, but operate on them directly.
+    MapMatrix* bdry1 = new MapMatrix(fir.boundary_mx_0);
+    IndexMatrix* ind1 = fir.get_low_index_mx();
 
-    MapMatrix* bdry2 = bifiltration.get_high_boundary_mx();
-    IndexMatrix* ind2 = bifiltration.get_high_index_mx();
+    MapMatrix* bdry2 = new MapMatrix(fir.boundary_mx_1);
+    IndexMatrix* ind2 = fir.get_high_index_mx();
 
     // STEP 1: reduce bdry2, record its pointwise rank, and build a partially-reduced copy for later use
     //   this approach aims to maximize memory usage by deleting bdry2 matrix before building bdry2s matrix
@@ -378,6 +379,7 @@ void MultiBetti::reduce(MapMatrix* mm, int first_col, int last_col, Vector& lows
             lows[mm->low(j)] = j;
             nonzero_cols++;
         }
+        mm->finalize(j);
     }
 } //end reduce()
 
@@ -404,6 +406,9 @@ void MultiBetti::reduce_slave(MapMatrix* mm, MapMatrix* slave1, MapMatrix* slave
             zero_cols++;
             zero_list.insert(j, y_grade);
         }
+        mm->finalize(j);
+        slave1->finalize(j);
+        slave2->finalize(j);
     }
 } //end reduce_slave()
 
@@ -719,8 +724,9 @@ MapMatrix* MultiBetti::build_split_mx(unsigned size)
 {
     MapMatrix* mat = new MapMatrix(2 * size, size);
     for (unsigned i = 0; i < size; i++) {
-        mat->set(i, i);
         mat->set(i + size, i);
+        mat->set(i, i);
+        //Note: Order matters here; column is already heapified by construction (see documentation for std::pop_heap), so no need to call mat->prepare();
     }
     return mat;
 } //end build_split_mx()

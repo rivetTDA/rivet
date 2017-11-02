@@ -65,7 +65,7 @@ public:
     //stores the xi support points in lexicographical order
     void store_support_points(std::vector<TemplatePoint>& tpts);
 
-    FIRep& bifiltration; //reference to the bifiltration
+    FIRep& fir; //reference to the bifiltration
 
 private:
     const int dimension; //dimension of homology to compute

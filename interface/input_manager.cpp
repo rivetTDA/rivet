@@ -428,6 +428,11 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
 
     data->free_implicit_rep.reset(new FIRep(*(data->bifiltration_data), input_params.verbosity));
 
+    //sets the pointer to the BifiltrationData object to null.
+    //TODO: This is kind of hacky.  It might be nicer structure to just have the bifiltration be a temporary variable for this function, and not a member of an InputData object.  But seems fine for now.
+    data->bifiltration_data.reset();
+    
+    
     return data;
 } //end read_point_cloud()
 
@@ -643,7 +648,12 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
     }
 
     data->free_implicit_rep.reset(new FIRep(*(data->bifiltration_data), input_params.verbosity));
-
+    
+    //sets the pointer to the BifiltrationData object to null.
+    //TODO: As above, this is kind of hacky.
+    data->bifiltration_data.reset();
+    
+    
     //clean up
     if (!hasFunction) {
         delete degree;
@@ -740,8 +750,7 @@ std::unique_ptr<InputData> InputManager::read_bifiltration(std::ifstream& stream
         }
 
         //TODO: Double-check that this sorting hasn't been done earlier.
-        //Mike: I reorganized the code slightly so that the arguments of add_simpex are const references, which
-        //seems better, but that means any sorting should happen before.
+        //Mike: I reorganized the code slightly so that the arguments of add_simplex are const references, which seems better, but that means any sorting should happen before.
         std::sort(gradesOfApp.begin(), gradesOfApp.end());
         std::sort(it->first.begin(), it->first.end());
         data->bifiltration_data->add_simplex(it->first, gradesOfApp);
@@ -754,6 +763,10 @@ std::unique_ptr<InputData> InputManager::read_bifiltration(std::ifstream& stream
 
     data->free_implicit_rep.reset(new FIRep(*(data->bifiltration_data), input_params.verbosity));
 
+    //sets the pointer to the BifiltrationData object to null.
+    //TODO: As above, this is kind of hacky.
+    data->bifiltration_data.reset();
+    
     return data;
 } //end read_bifiltration()
 
