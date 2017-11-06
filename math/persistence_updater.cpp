@@ -38,7 +38,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //constructor for when we must compute all of the barcode templates
 PersistenceUpdater::PersistenceUpdater(Arrangement& m, FIRep& b, std::vector<TemplatePoint>& xi_pts, unsigned verbosity)
     : arrangement(m)
-    , bifiltration(b)
+    , fir(b)
     , verbosity(verbosity)
     , template_points_matrix(m.x_exact.size(), m.y_exact.size())
 //    , testing(false)
@@ -74,13 +74,13 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<std::shared_ptr<H
     if (verbosity >= 10) {
         debug() << "  Mapping low simplices:";
     }
-    IndexMatrix* ind_low = bifiltration.get_low_index_mx(); //can we improve this with something more efficient than IndexMatrix?
+    IndexMatrix* ind_low = fir.get_low_index_mx(); //can we improve this with something more efficient than IndexMatrix?
     store_multigrades(ind_low, true);
 
     if (verbosity >= 10) {
         debug() << "  Mapping high simplices:";
     }
-    IndexMatrix* ind_high = bifiltration.get_high_index_mx(); //again, could be improved?
+    IndexMatrix* ind_high = fir.get_high_index_mx(); //again, could be improved?
     store_multigrades(ind_high, false);
 
     //get the proper simplex ordering
@@ -93,8 +93,8 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<std::shared_ptr<H
     delete ind_high;
 
     //get boundary matrices (R) and identity matrices (U) for RU-decomposition
-    R_low = bifiltration.get_boundary_mx(low_simplex_order, num_low_simplices);
-    R_high = bifiltration.get_boundary_mx(low_simplex_order, num_low_simplices, high_simplex_order, num_high_simplices);
+    R_low = fir.boundary_mx_0.get_permuted_and_trimmed_mx(low_simplex_order, num_low_simplices);
+    R_high = fir.boundary_mx_0.get_permuted_and_trimmed_mx(low_simplex_order, num_low_simplices, high_simplex_order, num_high_simplices);
 
     //print runtime data
     if (verbosity >= 4) {
@@ -116,6 +116,7 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<std::shared_ptr<H
     inv_perm_low.resize(R_low->width());
     perm_high.resize(R_high->width());
     inv_perm_high.resize(R_high->width());
+    
     for (unsigned j = 0; j < perm_low.size(); j++) {
         perm_low[j] = j;
         inv_perm_low[j] = j;
@@ -128,7 +129,7 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<std::shared_ptr<H
     // PART 2: INITIAL PERSISTENCE COMPUTATION (RU-decomposition)
 
     timer.restart();
-
+    
     //initial RU-decomposition
     U_low = R_low->decompose_RU();
     U_high = R_high->decompose_RU();
@@ -356,14 +357,14 @@ void PersistenceUpdater::set_anchor_weights(std::vector<std::shared_ptr<Halfedge
     if (verbosity >= 10) {
         debug() << "  Mapping low simplices:";
     }
-    IndexMatrix* ind_low = bifiltration.get_low_index_mx(); //can we improve this with something more efficient than IndexMatrix?
+    IndexMatrix* ind_low = fir.get_low_index_mx(); //can we improve this with something more efficient than IndexMatrix?
     store_multigrades(ind_low, true);
     delete ind_low;
 
     if (verbosity >= 10) {
         debug() << "  Mapping high simplices:";
     }
-    IndexMatrix* ind_high = bifiltration.get_high_index_mx(); //again, could be improved?
+    IndexMatrix* ind_high = fir.get_high_index_mx(); //again, could be improved?
     store_multigrades(ind_high, false);
     delete ind_high;
 
@@ -943,6 +944,7 @@ unsigned long PersistenceUpdater::move_high_columns(int s, unsigned n, int t)
 
 //performs a vineyard update corresponding to the transposition of columns a and (a + 1)
 //  for LOW simplices
+//Assumes U does not specify the addition of a zero column in R to another column.
 void PersistenceUpdater::vineyard_update_low(unsigned a)
 {
     unsigned b = a + 1;
@@ -960,7 +962,8 @@ void PersistenceUpdater::vineyard_update_low(unsigned a)
             bool RHal = (l > -1 && R_high->entry(a, l)); //entry (a,l) in matrix RH
 
             //ensure that UL[a,b]=0
-            U_low->clear(a, b);
+            //Note: Can comment this, under the assumption that U does not specify the addition of a zero column in R to another column. This allows us to get rid of clear(a,b) in the MapMatrix altogether -Mike
+            //U_low->clear(a, b);
 
             //transpose rows and columns (don't need to swap columns of RL, because these columns are zero)
             U_low->swap_columns(a);
@@ -983,7 +986,8 @@ void PersistenceUpdater::vineyard_update_low(unsigned a)
         } else //simplex b is negative (Case 4)
         {
             //ensure that UL[a,b]=0
-            U_low->clear(a, b);
+            //Note: As above, can comment this, under the assumption that U does not specify the addition of a zero column in R to another column. -Mike
+            //U_low->clear(a, b);
 
             //transpose rows and columns and update low arrays
             R_low->swap_columns(a, true);
@@ -1047,6 +1051,7 @@ void PersistenceUpdater::vineyard_update_low(unsigned a)
 
 //performs a vineyard update corresponding to the transposition of columns a and (a + 1)
 //  for HIGH simplices
+//Assumes U does not specify the addition of a zero column in R to another column.
 void PersistenceUpdater::vineyard_update_high(unsigned a)
 {
     unsigned b = a + 1;
@@ -1059,8 +1064,9 @@ void PersistenceUpdater::vineyard_update_high(unsigned a)
         if (!b_pos) //only have to swap columns of R if column b is nonzero
             R_high->swap_columns(a, true);
 
-        //ensure that UL[a,b]=0
-        U_high->clear(a, b);
+        //ensure that UH[a,b]=0
+        //Note: As above, can comment this, under the assumption that U does not specify the addition of a zero column in R to another column. -Mike
+        //U_high->clear(a, b);
 
         //transpose rows and columns of U
         U_high->swap_columns(a);

@@ -407,6 +407,11 @@ FIRep::FIRep(BifiltrationData& bd, int t, int s, int r, std::vector<std::vector<
     }
 }
 
+//Default destructor is just fine.
+FIRep::~FIRep() {};
+
+
+
 //writes boundary information given boundary entries in column col of matrix mat
 void FIRep::write_boundary_column(MapMatrix& mat, const std::vector<unsigned>& entries, const unsigned col)
 {

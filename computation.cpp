@@ -43,6 +43,10 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(ComputationInput& in
         debug() << "\nBIFILTRATION:";
         debug() << "   Number of simplices of dimension " << params.dim << " : " << input.bifiltration().get_size(params.dim);
         debug() << "   Number of simplices of dimension " << (params.dim + 1) << " : " << input.bifiltration().get_size(params.dim + 1);
+        
+        //TODO: At this point, I shouldn't ever need the bifiltation.  How do I get rid of it without breaking things?
+        debug() << "Important TODO: At this point, I shouldn't ever need the bifiltation.  How do I get rid of it without breaking things??? -Mike";
+        
         if (verbosity >= 4) {
             debug() << "   Number of x-exact:" << input.x_exact.size();
             if (input.x_exact.size()) {

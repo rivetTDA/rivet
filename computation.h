@@ -50,7 +50,7 @@ public:
     {
         return *(data.bifiltration_data);
     }
-
+    
     FIRep& rep()
     {
         return *(data.free_implicit_rep);

@@ -113,7 +113,7 @@ struct InputData {
     std::vector<exact> x_exact; //exact (e.g. rational) values of all x-grades, sorted
     std::vector<exact> y_exact; //exact (e.g. rational) values of all y-grades, sorted
     
-    std::shared_ptr<BifiltrationData> bifiltration_data; //TOOD [Mike]: This is only needed to build the FIRep.  To save memory, I have fixed the code to set bifiltration_data to the null pointer once the FIRep is built.  But arguably, it would be better design to remove this member from the struct altogether.
+    std::shared_ptr<BifiltrationData> bifiltration_data; //TODO: This is only needed to build the FIRep.  To save memory, I have fixed the code to set bifiltration_data to the null pointer once the FIRep is built.  But perhaps it would be better design to remove this member from the struct altogether. -Mike
     
     std::shared_ptr<FIRep> free_implicit_rep;
     std::vector<TemplatePoint> template_points; // will be non-empty if we read RIVET data

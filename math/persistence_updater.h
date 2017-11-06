@@ -65,7 +65,7 @@ private:
     //data structures
 
     Arrangement& arrangement; //pointer to the DCEL arrangement in which the barcodes will be stored
-    FIRep& bifiltration; //pointer to the FIRep
+    FIRep& fir; //pointer to the FIRep
 
     unsigned verbosity;
 

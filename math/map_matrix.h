@@ -76,6 +76,10 @@ protected:
 
     virtual void add_to(unsigned j, unsigned k); //adds column j to column k; RESULT: column j is not changed, column k contains sum of columns j and k (with mod-2 arithmetic)
     
+    
+    //Set the matrix to the trivial one.
+    //TODO: Should num_rows also change?
+    //TODO: I think this (and it's related functions) should be removed; it will probably no longer be necessary.
     virtual void clear();
 };
 
@@ -112,24 +116,24 @@ public:
     
     virtual int low(unsigned j) const; //returns the "low" index in the specified column, or -1 if the column is empty
     
-    bool col_is_empty(unsigned j) const; //returns true iff column j is empty (for columns that are not empty, this method is faster than low(j))
+    bool col_is_empty(unsigned j) const; //returns true iff column j is empty
 
     void add_column(unsigned j, unsigned k); //adds column j to column k; RESULT: column j is not changed, column k contains sum of columns j and k (with mod-2 arithmetic)
     
-    void add_column(const MapMatrix& other, unsigned j, unsigned k); //adds column j from MapMatrix* other to column k of this matrix
+    void add_column(const MapMatrix* other, unsigned j, unsigned k); //adds column j from MapMatrix* other to column k of this matrix
     
     void prepare_col(unsigned i);
     
     //copies column with index src_col from other to column dest_col in this matrix
-    void copy_cols_from(const MapMatrix& other, int src_col, int dest_col);
+    void copy_cols_from(const MapMatrix* other, int src_col, int dest_col);
     
     //copies NONZERO columns with indexes in [first, last] from other, appending them to this matrix to the right of all existing columns
     //  all row indexes in copied columns are increased by offset
     //Note: Only needed for the Koszul homology algorithm???
-    void copy_cols_from(const MapMatrix& other, int first, int last, unsigned offset);
+    void copy_cols_from(const MapMatrix* other, int first, int last, unsigned offset);
 
     //copies columns with indexes in [first, last] from other, inserting them in this matrix with the same column indexes
-    void copy_cols_same_indexes(const MapMatrix& other, int first, int last);
+    void copy_cols_same_indexes(const MapMatrix* other, int first, int last);
 
     //removes zero columns from this matrix
     //  ind_old gives grades of columns before zero columns are removed; new grade info stored in ind_new
@@ -143,13 +147,16 @@ public:
     
     
     //returns a boundary matrix for hom_dim-simplices with columns in a specified order -- for vineyard-update algorithm
-    MapMatrix_Perm get_permuted_and_trimmed_mx(const std::vector<int>& coface_order, unsigned num_simplices);
+    MapMatrix_Perm* get_permuted_and_trimmed_mx(const std::vector<int>& coface_order, unsigned num_simplices);
     
     //returns a boundary matrix for (hom_dim+1)-simplices with columns and rows a specified orders -- for vineyard-update algorithm
-    MapMatrix_Perm get_permuted_and_trimmed_mx(const std::vector<int>& face_order, unsigned num_faces, const std::vector<int>& coface_order, const unsigned num_cofaces);
+    MapMatrix_Perm* get_permuted_and_trimmed_mx(const std::vector<int>& face_order, unsigned num_faces, const std::vector<int>& coface_order, const unsigned num_cofaces);
     
     void finalize(unsigned i);
     
+    void print();
+    
+    //TODO: Remove me, no longer necessary
     virtual void clear();
 };
 
@@ -164,15 +171,15 @@ public:
     //MapMatrix_Perm(const MapMatrix_Perm& other); //copy constructor
     //~MapMatrix_Perm();
     
-    //TODO: Replace this
+    //TODO: Replace this?  I can't remember if it is still necessary. -Mike.
     //void set(unsigned i, unsigned j); //sets (to 1) the entry in row i, column j
     
     bool entry(unsigned i, unsigned j) const; //returns true if entry (i,j) is 1, false otherwise
 
     //reduces this matrix, fills the low array, and returns the corresponding upper-triangular matrix for the RU-decomposition
     //  NOTE: only to be called before any rows are swapped!
-    void decompose_RU(MapMatrix_RowPriority_Perm& U);
-
+    MapMatrix_RowPriority_Perm* decompose_RU();
+    
     int low(unsigned j) const; //returns the "low" index in the specified column, or -1 if the column is empty
     int find_low(unsigned l) const; //returns the index of the column with low l, or -1 if there is no such column
 
@@ -181,10 +188,11 @@ public:
     
     //TODO: Add lazy versions of these functions which don't redo the whole computation
     //clears the matrix, then rebuilds it from reference with columns permuted according to col_order
-    void rebuild(const MapMatrix_Perm& reference, const std::vector<int>& col_order);
+    //NOTE: This funciton and the next do not remove columns or rows.
+    void rebuild(MapMatrix_Perm* reference, const std::vector<unsigned>& col_order);
 
     //clears the matrix, then rebuilds it from reference with columns permuted according to col_order and rows permuted according to row_order
-    void rebuild(const MapMatrix_Perm& reference, const std::vector<int>& col_order, const std::vector<int>& row_order);
+    void rebuild(MapMatrix_Perm* reference, const std::vector<unsigned>& col_order, const std::vector<unsigned>& row_order);
     
     ///FOR TESTING ONLY
     //virtual void print(); //prints the matrix to standard output (for testing)
