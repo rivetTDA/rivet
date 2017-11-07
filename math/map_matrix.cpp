@@ -265,19 +265,12 @@ void MapMatrix::prepare_col(unsigned i)
     matrix.prepare_col(i);
 }
 
-
-//copies columns with indexes in [first, last] from other, inserting them in this matrix with the same column indexes
-void MapMatrix::copy_cols_from(const MapMatrix* other, int first, int last)
+//copies column with index src_col from other to column dest_col in this matrix
+void MapMatrix::copy_col_from(const MapMatrix* other, unsigned src_col, unsigned dest_col)
 {
-    std::vector<phat::index> temp_col;
-    //TODO: Inconsistent use of phat::index vs. int vs. unsigned.
-    for(phat::index j = first; j <= last; j++) {
-        (other->matrix).get_col(j, temp_col);
-        matrix.set_col(j, temp_col);
-    }
+    matrix.set_col(dest_col,*(other->matrix.get_col_iter(src_col)));
 }
-//end copy_cols_from()
-
+//end copy_col_from()
 
 //copies NONZERO columns with indexes in [first, last] from other, appending them to this matrix to the right of all existing columns
 //  all row indexes in copied columns are increased by offset
@@ -303,7 +296,7 @@ void MapMatrix::copy_cols_same_indexes(const MapMatrix* other, int first, int la
 {
     //std::vector<phat::index> temp_col;
     for(phat::index j = first; j <= last; j++) {
-        matrix.set_col(j,*(other->matrix.get_col_iter(j)) );
+        matrix.set_col(j,*(other->matrix.get_col_iter(j)));
     }
 }
 
@@ -363,18 +356,20 @@ MapMatrix_Perm* MapMatrix::get_permuted_and_trimmed_mx(const std::vector<int>& c
     //create the matrix
     
     MapMatrix_Perm* mat = new MapMatrix_Perm(this->height(), num_simplices); //NOTE: must be deleted
-    
+    int order_index;
     //loop through all simplices, writing columns to the matrix
     for (unsigned i = 0; i < this->width(); i++) {
-        int order_index = coface_order[i]; //index of the matrix column which will store the boundary of this simplex
+        order_index  = coface_order[i]; //index of the matrix column which will store the boundary of this simplex
         if (order_index != -1) {
-            mat->copy_cols_from(this,i, order_index);
+            mat->copy_col_from(this,i,order_index);
         }
     }
     
+    //TODO: Arguably, it would be better design to initialize the low_by_column here, rather than in the method decompose_RU().  Currently, this function gives a partially initialized MapMatrix_Perm.
+    
     //return the matrix
     return mat;
-} //end get_boundary_mx(int, vector<int>)
+} //end get_permuted_and_trimmed_mx
 
 //returns a copy of the matrix with columns and rows in specified orders, and some rows/columns possibly removed -- for vineyard-update algorithm
 //  PARAMETERS:
@@ -385,17 +380,16 @@ MapMatrix_Perm* MapMatrix::get_permuted_and_trimmed_mx(const std::vector<int>& f
 {
     //create the matrix
     MapMatrix_Perm* mat = new MapMatrix_Perm(num_faces, num_cofaces); //NOTE: must be deleted
-    
+    int order_index;
     for (unsigned i = 0; i < this->width(); i++) {
-        int order_index = coface_order[i]; //index of the matrix column which will store the boundary of this simplex
+        order_index = coface_order[i]; //index of the matrix column which will store the boundary of this simplex
         if (order_index != -1) {
-            mat->matrix.set_col(order_index,*matrix.get_col_iter(i),face_order);
+            mat->matrix.set_col(order_index,*(this->matrix.get_col_iter(i)),face_order);
         }
     }
-    
     //return the matrix
     return mat;
-} //end get_boundary_mx(int, vector<int>, vector<int>)
+} //end get_permuted_and_trimmed_mx
 
 
 //TODO: Mike I don't want to bother implementing this
@@ -563,18 +557,18 @@ MapMatrix_RowPriority_Perm* MapMatrix_Perm::decompose_RU()
     //Create U
     MapMatrix_RowPriority_Perm* U = new MapMatrix_RowPriority_Perm(width()); //NOTE: must be deleted
     
-    //loop through columns of this matrix
     int c;
     int l;
     
+    //loop through columns of this matrix
     for (unsigned j = 0; j < width(); j++) {
         //while column j is nonempty and its low number is found in the low array, do column operations
-        l=low(j);
+        l=matrix.get_max_index(j);
         while (l>=0 && low_by_row[l] >= 0) {
             c = low_by_row[l];
             add_column(c, j);
             U->add_row(j, c); //perform the opposite row operation on U
-            l=low(j);
+            l=matrix.get_max_index(j);
         }
         
         if (l>=0) //then column is still nonempty, so update lows
@@ -587,6 +581,7 @@ MapMatrix_RowPriority_Perm* MapMatrix_Perm::decompose_RU()
     return U;
 } //end decompose_RU()
 
+//WARNING: MapMatirx_Perm's version of this function only behaves the same as MapMatrix's version once low_by_col has been properly initialized.
 //returns the row index of the lowest entry in the specified column, or -1 if the column is empty
 int MapMatrix_Perm::low(unsigned j) const
 {

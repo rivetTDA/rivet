@@ -94,8 +94,25 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<std::shared_ptr<H
 
     //get boundary matrices (R) and identity matrices (U) for RU-decomposition
     R_low = fir.boundary_mx_0.get_permuted_and_trimmed_mx(low_simplex_order, num_low_simplices);
-    R_high = fir.boundary_mx_0.get_permuted_and_trimmed_mx(low_simplex_order, num_low_simplices, high_simplex_order, num_high_simplices);
+    R_high = fir.boundary_mx_1.get_permuted_and_trimmed_mx(low_simplex_order, num_low_simplices, high_simplex_order, num_high_simplices);
+    
+    //for debugging.
+    /*
+    debug() << "Initial low matrix";
+    fir.boundary_mx_0.print();
+    
+    debug() << "Initial high matrix";
+    fir.boundary_mx_1.print();
 
+    
+    
+    debug() << "Initial trimmed, permuted R_low";
+    R_low->print();
+    
+    debug() << "Initial trimmed, permuted R_high";
+    R_high->print();
+    */
+     
     //print runtime data
     if (verbosity >= 4) {
         debug() << "  --> computing initial order on simplices and building the boundary matrices took"
@@ -106,6 +123,7 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<std::shared_ptr<H
     timer.restart();
     MapMatrix_Perm* R_low_initial = new MapMatrix_Perm(*R_low);
     MapMatrix_Perm* R_high_initial = new MapMatrix_Perm(*R_high);
+    
     if (verbosity >= 4) {
         debug() << "  --> copying the boundary matrices took"
                 << timer.elapsed() << "milliseconds";
@@ -125,6 +143,7 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<std::shared_ptr<H
         perm_high[j] = j;
         inv_perm_high[j] = j;
     }
+    
 
     // PART 2: INITIAL PERSISTENCE COMPUTATION (RU-decomposition)
 
@@ -134,6 +153,16 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<std::shared_ptr<H
     U_low = R_low->decompose_RU();
     U_high = R_high->decompose_RU();
 
+    /*
+    //for debugging
+    debug() << "R_low, after reduction";
+    R_low->print();
+    
+    debug() << "R_high, after reduction";
+    R_high->print();
+    */
+    
+    
     unsigned total_time_for_resets = timer.elapsed();
     if (verbosity >= 4) {
         debug() << "  --> computing the RU decomposition took" << total_time_for_resets << "milliseconds";

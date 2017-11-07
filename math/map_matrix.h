@@ -125,7 +125,9 @@ public:
     void prepare_col(unsigned i);
     
     //copies column with index src_col from other to column dest_col in this matrix
-    void copy_cols_from(const MapMatrix* other, int src_col, int dest_col);
+    void copy_col_from(const MapMatrix* other, unsigned src_col, unsigned dest_col);
+    
+    //TODO: Make the int arguments in the next two functions unsigned?
     
     //copies NONZERO columns with indexes in [first, last] from other, appending them to this matrix to the right of all existing columns
     //  all row indexes in copied columns are increased by offset
