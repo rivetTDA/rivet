@@ -37,9 +37,6 @@ public:
     // low
     int low( unsigned i ) const { return (int) rep._get_max_index( (index) i ); }
     
-    // add_column() for RIVET compatibility
-    void add_column(unsigned source, unsigned target ) { rep._add_to( (index) source, (index) target ); }
-
     // operators / constructors
 public:
     SparseMatrix() : boundary_matrix() {}

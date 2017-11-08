@@ -134,10 +134,6 @@ void MapMatrix_Base::add_to(unsigned j, unsigned k)
     matrix.add_to(j,k);
 } //end add_to()
 
-void MapMatrix_Base::clear()
-{
-    matrix.clear();
-} //clear()
 /********** implementation of class MapMatrix, for column-sparse matrices **********/
 
 //constructor that sets initial size of matrix
@@ -342,11 +338,6 @@ void MapMatrix::finalize(unsigned i)
     matrix.finalize(i);
 }
 
-void MapMatrix::clear()
-{
-    MapMatrix_Base::clear();
-} //clear()
-
 //returns a copy of the matrix with columns in a specified order, and some columns possibly removed -- for vineyard-update algorithm
 //    simplex_order is a map which sends each column index to its new index in the permutation.
 //        if simplex_order[i] == -1, then column i is NOT represented in the matrix being built
@@ -549,9 +540,7 @@ bool MapMatrix_Perm::entry(unsigned i, unsigned j) const
 
 //reduces this matrix and returns the corresponding upper-triangular matrix for the RU-decomposition
 //NOTE -- only to be called before any rows are swapped!
-//NOTE: Initially modifies U to be a matrix of the appropriate size.  TODO: Is this design too awkward?  Perhaps Matthew's earlier pointer based design made sense.
-
-//TODO: should be able to make this more efficient, in the special case of heaps.  Too much pushing and popping; can skip some of this when we add a column.
+//NOTE -- this is just the standard persistence algorithm, but with some tweaks
 MapMatrix_RowPriority_Perm* MapMatrix_Perm::decompose_RU()
 {
     //Create U
@@ -559,29 +548,45 @@ MapMatrix_RowPriority_Perm* MapMatrix_Perm::decompose_RU()
     
     int c;
     int l;
+    bool changing_column = false;
     
     //loop through columns of this matrix
     for (unsigned j = 0; j < width(); j++) {
         //while column j is nonempty and its low number is found in the low array, do column operations
-        l=matrix.get_max_index(j);
+        
+        //NOTE: We don't call MapMatrix_Perm::low() because in our application of this method, low_by_col has not yet been properly initialized.  As a side effect, this method is initializing low_by_col.  This seems to be poor design, but it makes little difference in terms of computational efficiency.  I won't fix it right now. -Mike
+        l=matrix.pop_max_index(j);
+        if (l>=0 && low_by_row[l] >= 0)
+            //if we get here then we are going to change the j^{th} column.
+            changing_column = true;
+
         while (l>=0 && low_by_row[l] >= 0) {
             c = low_by_row[l];
-            add_column(c, j);
+            //special version of add_column which knows that column c has been finalized and the pivot of column j has been popped.
+            matrix.add_to_popped(c, j);
             U->add_row(j, c); //perform the opposite row operation on U
-            l=matrix.get_max_index(j);
+            l=matrix.pop_max_index(j);
         }
         
-        if (l>=0) //then column is still nonempty, so update lows
+        if (l>=0) //then column is still nonempty, so put back the pivot we popped off last, update lows
         {
+            matrix.push_max_index(j,l);
             low_by_col[j] = l;
             low_by_row[l] = j;
+        }
+        
+        //if we changed the column, it might not be finalized anymore, so finalize it.
+        if (changing_column)
+        {
+            finalize(j);
+            changing_column = false;
         }
     }
     //return the matrix U
     return U;
 } //end decompose_RU()
 
-//WARNING: MapMatirx_Perm's version of this function only behaves the same as MapMatrix's version once low_by_col has been properly initialized.
+//WARNING: This only behaves in the expected way once low_by_col has been properly initialized.
 //returns the row index of the lowest entry in the specified column, or -1 if the column is empty
 int MapMatrix_Perm::low(unsigned j) const
 {

@@ -76,11 +76,6 @@ protected:
 
     virtual void add_to(unsigned j, unsigned k); //adds column j to column k; RESULT: column j is not changed, column k contains sum of columns j and k (with mod-2 arithmetic)
     
-    
-    //Set the matrix to the trivial one.
-    //TODO: Should num_rows also change?
-    //TODO: I think this (and it's related functions) should be removed; it will probably no longer be necessary.
-    virtual void clear();
 };
 
 //MapMatrix is a column-priority matrix designed for standard persistence calculations
@@ -158,8 +153,6 @@ public:
     
     void print();
     
-    //TODO: Remove me, no longer necessary
-    virtual void clear();
 };
 
 //MapMatrix with row/column permutations and low array, designed for "vineyard updates"
