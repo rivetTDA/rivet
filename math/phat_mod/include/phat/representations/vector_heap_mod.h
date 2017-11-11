@@ -182,6 +182,7 @@ namespace phat {
             std::make_heap( matrix[ idx ].begin( ), matrix[ idx ].end( ));
         }
         
+        //TODO: I don't think we need this.  Delete.
         /*
         //sets column, where indices are the image of those appearing in col under the permutation map row_order.  Required by RIVET for resets during vineyard updates.  Similar to the above, but assumes that all indices in row_order are non-negative (whereas we cannot assume that in the version of _set_col above, because we may see an index -1.
         void _set_col( index idx, const column& col)
@@ -226,7 +227,7 @@ namespace phat {
             return max_element;
         }
         
-        // RIVET modification; part of an optimization of the standard reduction for heaps.
+        // RIVET modification; part of an optimization of the standard reduction when columns are lazy heaps.
         void _push_max_index(index col_idx,index entry)
         {
             column& col = matrix[ col_idx ];
@@ -294,7 +295,7 @@ namespace phat {
         
         
         // prepare_col is needed by RIVET
-        void _prepare_col(index idx)
+        void _heapify_col(index idx)
         {
             std::make_heap(matrix[idx].begin( ),matrix[idx].end( ), permutation_comparison );
         }

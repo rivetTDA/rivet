@@ -42,7 +42,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef __MapMatrix_H__
 #define __MapMatrix_H__
 
-#include "phat_mod/include/phat/boundary_matrix_mod.h"
+//#include "phat_mod/include/phat/boundary_matrix_mod.h"
+#include "phat_mod/include/phat/representations/vector_heap_mod.h"
 #include <ostream> //for testing
 #include <vector>
 
@@ -60,7 +61,7 @@ protected:
     virtual ~MapMatrix_Base(); //destructor
     
     //Uses the vector_heap_mod representation by default
-    phat::boundary_matrix_mod<> matrix; //modified PHAT boundary matrix
+    phat::vector_heap_mod matrix; //modified PHAT boundary matrix
     unsigned num_rows; //number of rows in the matrix
 
     virtual unsigned width() const; //returns the number of columns in the matrix

@@ -74,54 +74,6 @@ void MapMatrix_Base::set(unsigned i, unsigned j)
 } //end set()
 
 
-/*
-//clears (sets to 0) the entry in row i, column j
-void MapMatrix_Base::clear(unsigned i, unsigned j)
-{
-    //make sure this entry is valid
-    if (columns.size() <= j)
-        throw std::runtime_error("MapMatrix_Base::clear(): attempting to clear entry in a column past end of matrix");
-    if (num_rows <= i)
-        throw std::runtime_error("MapMatrix_Base::clear(): attempting to clear entry in a row past end of matrix");
-
-    //if column is empty, then do nothing
-    if (columns[j] == NULL)
-        return;
-
-    //column is not empty, so get initial node pointer in the column
-    MapMatrixNode* current = columns[j];
-
-    //see if the first node is the one we want
-    if (current->get_row() < i)
-        return; //because the entry in row i must be zero (row entries are sorted in decreasing order)
-
-    if (current->get_row() == i) {
-        columns[j] = current->get_next();
-        delete current;
-        return;
-    }
-
-    //traverse the nodes in this column after the first node
-    while (current->get_next() != NULL) {
-        MapMatrixNode* next = current->get_next();
-
-        if (next->get_row() < i) //then the entry in row i must be zero (row entries are sorted in decreasing order)
-            return;
-
-        if (next->get_row() == i) //then we found the row we wanted
-        {
-            current->set_next(next->get_next());
-            delete next;
-            return;
-        }
-
-        //if we are still looking, then get the next node
-        current = next;
-    }
-} //end clear()
-*/
- 
- 
 //returns true if entry (i,j) is 1, false otherwise
 bool MapMatrix_Base::entry(unsigned i, unsigned j) const
 {
@@ -175,23 +127,7 @@ MapMatrix::MapMatrix(std::initializer_list<std::initializer_list<int>> values)
 }
 */
  
-//TODO:I think we don't need this.  Remove.
-/*
-bool MapMatrix::operator==(MapMatrix& other)
-{
-    //TODO: make fast once we choose a representation
 
-    if (height() != other.height() || width() != other.width())
-        return false;
-    for (unsigned row = 0; row < height(); row++)
-        for (unsigned col = 0; col < width(); col++)
-            if (entry(row, col) != other.entry(row, col))
-                return false;
-
-    return true;
-}
-*/
- 
 //returns the number of columns in the matrix
 unsigned MapMatrix::width() const
 {
@@ -257,9 +193,10 @@ void MapMatrix::add_column(const MapMatrix* other, unsigned j, unsigned k)
     matrix._add_to(other->matrix,j,k);
 }
 
+//
 void MapMatrix::prepare_col(unsigned i)
 {
-    matrix._prepare_col(i);
+    matrix._heapify_col(i);
 }
 
 //copies column with index src_col from other to column dest_col in this matrix
@@ -278,12 +215,11 @@ void MapMatrix::copy_cols_from(const MapMatrix* other, int first, int last, unsi
     
     std::vector<phat::index> temp_col;
     for(phat::index j = first; j <= last; j++) {
-        other->matrix._get_col(j, temp_col);
-        if(offset > 0) {
-            for(unsigned i = 0; i < temp_col.size(); i++)
-                temp_col[i] += offset;
-        }
-        matrix._set_col(idx, temp_col);
+        
+        //it is an iterator pointing to the jth column of matrix.
+        auto it=other->matrix._get_col_iter(j);
+        for(unsigned i = 0; i < it->size(); i++)
+                matrix._set_entry(*(it->begin()+i)+offset,idx);
         idx++;
     }
 }
@@ -304,8 +240,7 @@ void MapMatrix::remove_zero_cols(IndexMatrix* ind_old, IndexMatrix* ind_new)
 {
     phat::index new_idx = -1; //new index of rightmost column that has been moved
     phat::index cur_idx = 0; //old index of rightmost column considered for move
-    std::vector<phat::index> temp_col;
-    
+    phat::index end_col;
     //debug() << "REMOVING ZERO COLS: (" << matrix._get_num_cols() << "cols)";
     //        print();
     //        ind_old->print();
@@ -313,12 +248,11 @@ void MapMatrix::remove_zero_cols(IndexMatrix* ind_old, IndexMatrix* ind_new)
     //loop over all grades
     for(unsigned y = 0; y < ind_old->height(); y++) {
         for(unsigned x = 0; x < ind_old->width(); x++) {
-            int end_col = ind_old->get(y, x); //index of rightmost column at this grade
+            end_col = ind_old->get(y, x); //index of rightmost column at this grade
             for(; cur_idx <= end_col; cur_idx++) { //loop over all columns at this grade
                 if( !matrix._is_empty(cur_idx) ) { //then move column
                     new_idx++; //new index of this column
-                    matrix._get_col(cur_idx, temp_col);
-                    matrix._set_col(new_idx, temp_col);
+                    matrix._set_col(new_idx,*matrix._get_col_iter(cur_idx));
                 }
             }
             ind_new->set(y, x, new_idx); //rightmost column index for this grade
@@ -383,78 +317,13 @@ MapMatrix_Perm* MapMatrix::get_permuted_and_trimmed_mx(const std::vector<int>& f
     return mat;
 } //end get_permuted_and_trimmed_mx
 
-
-//TODO: Mike I don't want to bother implementing this
-/*
-std::ostream& operator<<(std::ostream& out, const MapMatrix& matrix)
-{
-    //handle empty matrix
-    if (matrix.num_rows == 0 || matrix.columns.size() == 0) {
-        out << "        (empty matrix:" << matrix.num_rows << "rows by" << matrix.columns.size() << "columns)";
-        return out;
-    }
-
-    //create a 2D array of booleans to temporarily store the matrix
-    bool_array mx(matrix.num_rows, matrix.columns.size());
-    for (unsigned i = 0; i < matrix.num_rows; i++)
-        for (unsigned j = 0; j < matrix.columns.size(); j++)
-            mx.at(i, j) = false;
-
-    //traverse the linked lists in order to fill the 2D array
-    MapMatrix::MapMatrixNode* current;
-    for (unsigned j = 0; j < matrix.columns.size(); j++) {
-        current = matrix.columns[j];
-        while (current != NULL) {
-            int row = current->get_row();
-            mx.at(row, j) = true;
-            current = current->get_next();
-        }
-    }
-
-    for (unsigned i = 0; i < matrix.num_rows; i++) {
-        out << "        |";
-        for (unsigned j = 0; j < matrix.columns.size(); j++) {
-            if (mx.at(i, j))
-                out << " 1";
-            else
-                out << " 0";
-        }
-        out << " |\n";
-    }
-    return out;
-}
-*/
- 
-
 //function to print the matrix to standard output, for testing purposes
 void MapMatrix::print()
 {
     matrix._print(num_rows);
 } //end print()
 
- 
-/*
-//check for inconsistencies in matrix column, for testing purposes
-void MapMatrix::assert_cols_correct()
-{
-    for (unsigned j = 0; j < columns.size(); j++) {
-        //consider the first node
-        MapMatrixNode* current = columns[j];
-        MapMatrixNode* next_node;
 
-        //consider all following nodes
-        while (current != NULL) {
-            next_node = current->get_next();
-            if (next_node != NULL && current->get_row() <= next_node->get_row()) {
-                debug() << "===>>> ERROR IN COLUMN " << j;
-            }
-            current = next_node;
-        }
-    }
-}
-
-*/
- 
 /********** implementation of class MapMatrix_Perm, supports row swaps (and stores a low array) **********/
 
 MapMatrix_Perm::MapMatrix_Perm(unsigned rows, unsigned cols)
