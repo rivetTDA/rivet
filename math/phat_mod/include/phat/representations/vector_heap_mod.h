@@ -1,4 +1,4 @@
-//Modified for RIVET by Matthew Wright and Michael Lesnick
+//Modified for RIVET by Matthew Wright and Michael Lesnick.
 
 /*  Copyright 2013 IST Austria
 Contributed by: Jan Reininghaus
@@ -36,7 +36,15 @@ namespace phat {
     
         mutable thread_local_storage< column > temp_column_buffer;
 
-    protected:
+        //Added for use in RIVET.
+        //Stores the permuation of a subset of row indices.
+        //Convention is that row_order[i]=-1 indicates that i does not appear in the row order.
+        //by default this is empty.
+        std::vector< unsigned >& row_order;
+        
+        //Added for use in RIVET.
+        std::function<bool(index,index)> permutation_comparison
+        
         void _prune( index idx )
         {
             column& col = matrix[ idx ];
@@ -49,7 +57,7 @@ namespace phat {
             }
             col = temp_col;
             std::reverse( col.begin( ), col.end( ) );
-            std::make_heap( col.begin( ), col.end( ) );
+            std::make_heap( col.begin( ), col.end( ), permutation_comparison );
             inserts_since_last_prune[ idx ] = 0;
         }
 
@@ -59,16 +67,16 @@ namespace phat {
                 return -1;
             else {
                 index max_element = col.front( );
-                std::pop_heap( col.begin( ), col.end( ) );
+                std::pop_heap( col.begin( ), col.end( ), permutation_comparison );
                 col.pop_back( );
                 while( !col.empty( ) && col.front( ) == max_element ) {
-                    std::pop_heap( col.begin( ), col.end( ) );
+                    std::pop_heap( col.begin( ), col.end( ), permutation_comparison );
                     col.pop_back( );
                     if( col.empty( ) )
                         return -1;
                     else {
                         max_element = col.front( );
-                        std::pop_heap( col.begin( ), col.end( ) );
+                        std::pop_heap( col.begin( ), col.end( ), permutation_comparison );
                         col.pop_back( );
                     }
                 }
@@ -80,7 +88,23 @@ namespace phat {
 
     public:
         
-        //NOTE: Moved to a public function in this modification for RIVET.
+        //default constructor
+        vector_heap_mod()
+        :
+            //default initialization of permutation_comparison, for unpermuted case
+            //lamba function
+            permutation_comparison([](const index& left, const index& right) { return left < right; })
+        {}
+        
+        //Added for use in RIVET
+        //sets_the row order permutation and also sets the permutation_comparison function to use this permutation, rather than the default.
+        void _set_row_order(std::vector< unsigned >& reorder_vector)
+        {
+            row_order=reorder_vector;
+            permutation_comparison=[](const index& left, const index& right) { return row_order[first]<row_order[second]; })
+        }
+        
+        //NOTE: Changed to public in this modification for RIVET.
         index _pop_max_index( index idx )
         {
             return _pop_max_index( matrix[ idx ] );
@@ -98,6 +122,7 @@ namespace phat {
             inserts_since_last_prune.assign( nr_of_columns, 0 );
         }
         
+        //Added for use in RIVET
         void _reserve_cols( index nr_of_columns )
         {
             matrix.reserve( nr_of_columns );
@@ -121,7 +146,7 @@ namespace phat {
         {
             temp_column_buffer( ) = matrix[ idx ];
             
-            index max_index = _pop_max_index( temp_column_buffer() );
+            index max_index = _pop_max_index( temp_column_buffer(),  );
             while( max_index != -1 ) {
                 col.push_back( max_index );
                 max_index = _pop_max_index( temp_column_buffer( ) );
@@ -136,29 +161,30 @@ namespace phat {
         void _set_col( index idx, const column& col )
         {
             matrix[ idx ] = col;
-            std::make_heap( matrix[ idx ].begin( ), matrix[ idx ].end( ) );
+            std::make_heap( matrix[ idx ].begin( ), matrix[ idx ].end( ), permutation_comparison );
         }
         
         //TODO: Combine the two functions here?  That's probably a little cleaner, but I am encountering
         //some type conversion troubles; some arrays elsewhere that are more naturally valued in unsigned ints would have to be ints. -Mike
         
-        //sets column, where indices are the image of those appearing in col under the permutation map row_order.  Required by RIVET for the initialization of the vineyard update process
-        //TODO:This is probably temporary.  Replace by code which makes the indices the exactly those appearing in col, but takes the heap order to be determined by row order.  This will allow for lazy resets.
-        void _set_col( index idx, const column& col, const std::vector<int>& row_order)
+        //sets column, where indices are the image of those appearing in col under the permutation map row_order.  Required by RIVET for the initialization of the vineyard update process.
+        //Note: Unlike the version of _set_col below, this actually stores the permuted indices, rather than working with the permutation order on the original indices.
+        void _set_col( index idx, const column& col, const std::vector<int>& row_perm_order)
         {
             matrix[idx].clear();
             matrix[idx].shrink_to_fit();
             matrix[idx].reserve(col.size());
             for (auto it=col.begin(); it != col.end(); it++)
             {
-                if(row_order[*it]>=0)
-                    matrix[idx].push_back(row_order[*it]);
+                if(row_perm_order[*it]>=0)
+                    matrix[idx].push_back(row_perm_order[*it]);
             }
-            std::make_heap( matrix[ idx ].begin( ), matrix[ idx ].end( ) );
+            std::make_heap( matrix[ idx ].begin( ), matrix[ idx ].end( ));
         }
         
+        /*
         //sets column, where indices are the image of those appearing in col under the permutation map row_order.  Required by RIVET for resets during vineyard updates.  Similar to the above, but assumes that all indices in row_order are non-negative (whereas we cannot assume that in the version of _set_col above, because we may see an index -1.
-        void _set_col( index idx, const column& col, const std::vector<unsigned>& row_order)
+        void _set_col( index idx, const column& col)
         {
             matrix[idx].clear();
             matrix[idx].shrink_to_fit();
@@ -167,9 +193,10 @@ namespace phat {
             {
                 matrix[idx].push_back(row_order[*it]);
             }
-            std::make_heap( matrix[ idx ].begin( ), matrix[ idx ].end( ) );
+            std::make_heap( matrix[ idx ].begin( ), matrix[ idx ].end( ), permutation_comparison );
         }
-        
+        */
+         
         // _set_entry is needed by RIVET.
         // Adds an entry to a column.  Does not do any sorting or heapification.
         void _set_entry(index row,index col)
@@ -195,7 +222,7 @@ namespace phat {
             column& col = const_cast< column& >( matrix[ idx ] );
             index max_element = _pop_max_index( col );
             col.push_back( max_element );
-            std::push_heap( col.begin( ), col.end( ) );
+            std::push_heap( col.begin( ), col.end( ), permutation_comparison);
             return max_element;
         }
         
@@ -204,7 +231,7 @@ namespace phat {
         {
             column& col = matrix[ col_idx ];
             col.push_back( entry );
-            std::push_heap( col.begin( ), col.end( ) );
+            std::push_heap( col.begin( ), col.end( ), permutation_comparison );
         }
     
 
@@ -228,7 +255,7 @@ namespace phat {
         {              
             for( index idx = 0; idx < (index)matrix[ source ].size( ); idx++ ) {
                 matrix[ target ].push_back( matrix[ source ][ idx ] );
-                std::push_heap( matrix[ target ].begin(), matrix[ target ].end() );
+                std::push_heap( matrix[ target ].begin(), matrix[ target ].end(), permutation_comparison );
             }
             inserts_since_last_prune[ target ] += matrix[ source ].size();
 
@@ -241,7 +268,7 @@ namespace phat {
         void _add_to(const  vector_heap_mod& other, index source, index target ) {
             for( index idx = 0; idx < (index) other.matrix[ source ].size( ); idx++ ) {
                 matrix[ target ].push_back( other.matrix[ source ][ idx ] );
-                std::push_heap( matrix[ target ].begin(), matrix[ target ].end() );
+                std::push_heap( matrix[ target ].begin(), matrix[ target ].end(), permutation_comparison );
             }
             inserts_since_last_prune[ target ] += other.matrix[ source ].size();
             
@@ -257,7 +284,7 @@ namespace phat {
             //in the implementation of the heap used here, the pivot is stored at the 0th index, so we start the addition from index 1.
             for( index idx = 1; idx < (index) matrix[ source ].size( ); idx++ ) {
                 matrix[ target ].push_back( matrix[ source ][ idx ] );
-                std::push_heap( matrix[ target ].begin(), matrix[ target ].end() );
+                std::push_heap( matrix[ target ].begin(), matrix[ target ].end(), permutation_comparison );
             }
             inserts_since_last_prune[ target ] += matrix[ source ].size()-1;
             
@@ -269,7 +296,7 @@ namespace phat {
         // prepare_col is needed by RIVET
         void _prepare_col(index idx)
         {
-            std::make_heap(matrix[idx].begin( ),matrix[idx].end( ) );
+            std::make_heap(matrix[idx].begin( ),matrix[idx].end( ), permutation_comparison );
         }
         
         
