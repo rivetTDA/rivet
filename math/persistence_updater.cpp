@@ -92,27 +92,13 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<std::shared_ptr<H
     unsigned num_high_simplices = build_simplex_order(ind_high, false, high_simplex_order);
     delete ind_high;
 
-    //get boundary matrices (R) and identity matrices (U) for RU-decomposition
-    R_low = fir.boundary_mx_0.get_permuted_and_trimmed_mx(low_simplex_order, num_low_simplices);
-    R_high = fir.boundary_mx_1.get_permuted_and_trimmed_mx(low_simplex_order, num_low_simplices, high_simplex_order, num_high_simplices);
-    
-    //for debugging.
-    /*
-    debug() << "Initial low matrix";
-    fir.boundary_mx_0.print();
-    
-    debug() << "Initial high matrix";
-    fir.boundary_mx_1.print();
 
+    //get intial boundary matrices R_low and R_high for RU-decomposition.  These are permuted and trimmed,
+    //as described in Section 6 of the RIVET paper.
+    R_low = new MapMatrix_Perm(fir.boundary_mx_0, low_simplex_order, num_low_simplices); //NOTE: must be deleted
     
+    R_high = new MapMatrix_Perm(fir.boundary_mx_1,low_simplex_order, num_low_simplices, high_simplex_order, num_high_simplices); //NOTE: must be deleted
     
-    debug() << "Initial trimmed, permuted R_low";
-    R_low->print();
-    
-    debug() << "Initial trimmed, permuted R_high";
-    R_high->print();
-    */
-     
     //print runtime data
     if (verbosity >= 4) {
         debug() << "  --> computing initial order on simplices and building the boundary matrices took"
@@ -143,6 +129,7 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<std::shared_ptr<H
         perm_high[j] = j;
         inv_perm_high[j] = j;
     }
+    
     
 
     // PART 2: INITIAL PERSISTENCE COMPUTATION (RU-decomposition)

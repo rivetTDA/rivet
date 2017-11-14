@@ -19,20 +19,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **********************************************************************/
 /**
  * \class	MapMatrix and related classes
- * \brief	Stores a matrix representing a simplicial map and provides operations for persistence calculations.
- * \author	Matthew L. Wright
- * \date	February 2014
+ * \brief	Stores a column sparse matrix with Z/2Z coefficients provides operations for persistence calculations.
+ * \author	Matthew L. Wright.  Modified by Michael Lesnick.
+ * \date	February 2014.  Modified 2017.
  * 
- * The MapMatrix class stores a matrix representing a simplicial map, such as a boundary map.
- * Such a matrix is a sparse matrix with entries in the two-element field.
- * This implementation is based on that described in the persistent homology survey paper by Edelsbrunner and Harer.
- * Operations are those necessary for persistence computations.
- *
-   //TODO: Change the below
- * Implementation details: A vector contains pointers to the first element (possibly null) in each column; each column is represented by a linked list.
- * Linked lists connecting entries in each row are not implemented.
- * Each entry in the matrix is an instance of the MapMatrixNode class.
- *
+ * The MapMatrix class stores a column sparse matrix with Z/2Z coefficients.  The current implementation is based on a substantially modified version of the class vector_heap from the PHAT library by Bauer, Kerber, an Reininghaus.
+ 
+ 
+ //TODO: After the incorporation of PHAT's lazy heaps, the MapMatrix_Base class seems to no longer be a heplful abstraction.  Get rid of this or reconsider the structure more carefully.
+ 
+ //TODO: Update the below, as the structure has been changed a lot.
  * The MapMatrix_Base class provides the basic structures and functionality; it is the parent class and is not meant to be instantiated directly.
  * The class MapMatrix inherits MapMatrix_Base and stores matrices in a column-sparse format, designed for basic persistence calcuations.
  * The class MapMatrix_Perm inherits MapMatrix, adding functionality for row and column permutations; it is designed for the reduced matrices of vineyard updates.
@@ -73,7 +69,8 @@ protected:
     //TODO: Remove this
     //virtual void clear(unsigned i, unsigned j); //clears (sets to 0) the entry in row i, column j
 
-    virtual bool entry(unsigned i, unsigned j) const; //returns true if entry (i,j) is 1, false otherwise
+    //TODO: Don't think we need this anymore.
+    //virtual bool entry(unsigned i, unsigned j) const; //returns true if entry (i,j) is 1, false otherwise
 
     virtual void add_to(unsigned j, unsigned k); //adds column j to column k; RESULT: column j is not changed, column k contains sum of columns j and k (with mod-2 arithmetic)
     
@@ -83,6 +80,8 @@ protected:
 class MapMatrix_Perm;
 class MapMatrix : public MapMatrix_Base {
     friend class FIRep;
+    friend class MapMatrix_Perm;
+
 
 public:
 
@@ -108,7 +107,7 @@ public:
     //WARNING: Current Implementation assumes the entry has not already been added.
     virtual void set(unsigned i, unsigned j); //sets (to 1) the entry in row i, column j
     
-    virtual bool entry(unsigned i, unsigned j) const; //returns true if entry (i,j) is 1, false otherwise
+    //virtual bool entry(unsigned i, unsigned j) const; //returns true if entry (i,j) is 1, false otherwise
     
     virtual int low(unsigned j) const; //returns the "low" index in the specified column, or -1 if the column is empty
     
@@ -137,39 +136,28 @@ public:
     //  ind_old gives grades of columns before zero columns are removed; new grade info stored in ind_new
     void remove_zero_cols(IndexMatrix* ind_old, IndexMatrix* ind_new);
     
-    //FOR TESTING ONLY
-    //virtual void print(); //prints the matrix to standard output (for testing)
-
-    //check for inconsistencies in matrix column, for testing purposes
-    //void assert_cols_correct();
-    
-    
-    //returns a boundary matrix for hom_dim-simplices with columns in a specified order -- for vineyard-update algorithm
-    MapMatrix_Perm* get_permuted_and_trimmed_mx(const std::vector<int>& coface_order, unsigned num_simplices);
-    
-    //returns a boundary matrix for (hom_dim+1)-simplices with columns and rows a specified orders -- for vineyard-update algorithm
-    MapMatrix_Perm* get_permuted_and_trimmed_mx(const std::vector<int>& face_order, unsigned num_faces, const std::vector<int>& coface_order, const unsigned num_cofaces);
-    
     void finalize(unsigned i);
     
     void print();
     
 };
 
-//MapMatrix with row/column permutations and low array, designed for "vineyard updates"
+//MapMatrix with row/column permutations and low array, designed for "vineyard updates."
 class MapMatrix_RowPriority_Perm; //forward declaration
-class MapMatrix_Perm : public MapMatrix {
+class MapMatrix_Perm {
 public:
-    MapMatrix_Perm(unsigned rows, unsigned cols);
-    MapMatrix_Perm(unsigned size);
+  
+    //Constructors
     
-    //Defaults shoudl work correctly
-    //MapMatrix_Perm(const MapMatrix_Perm& other); //copy constructor
-    //~MapMatrix_Perm();
+    //Special constructor to create the initial low matrix used in the computation of barcode templates.  Permutes and trims columns as described in section 6 of the RIVET paper.
+    MapMatrix_Perm(const MapMatrix& mat, const std::vector<int>& coface_order, unsigned num_cofaces);
     
-    //TODO: Replace this?  I can't remember if it is still necessary. -Mike.
-    //void set(unsigned i, unsigned j); //sets (to 1) the entry in row i, column j
+    //Special constructor to create the initial high matrix used in the computation of barcode templates.  Permutes and trims rows and columns as described in section 6 of the RIVET paper.
+    MapMatrix_Perm(const MapMatrix& mat, const std::vector<int>& face_order, unsigned num_faces, const std::vector<int>& coface_order, const unsigned num_cofaces);
     
+    unsigned width() const; //returns the number of columns in the matrix
+    unsigned height() const; //returns the number of rows in the matrix
+
     bool entry(unsigned i, unsigned j) const; //returns true if entry (i,j) is 1, false otherwise
 
     //reduces this matrix, fills the low array, and returns the corresponding upper-triangular matrix for the RU-decomposition
@@ -179,6 +167,10 @@ public:
     int low(unsigned j) const; //returns the "low" index in the specified column, or -1 if the column is empty
     int find_low(unsigned l) const; //returns the index of the column with low l, or -1 if there is no such column
 
+    bool col_is_empty(unsigned j) const; //returns true iff column j is empty
+    
+    void add_column(unsigned j, unsigned k); //adds column j to column k; RESULT: column j is not changed, column k contains sum of columns j and k (with mod-2 arithmetic)
+    
     void swap_rows(unsigned i, bool update_lows); //transposes rows i and i+1, optionally updates low array
     void swap_columns(unsigned j, bool update_lows); //transposes columns j and j+1, optionally updates low array
     
@@ -190,19 +182,20 @@ public:
     //clears the matrix, then rebuilds it from reference with columns permuted according to col_order and rows permuted according to row_order
     void rebuild(MapMatrix_Perm* reference, const std::vector<unsigned>& col_order, const std::vector<unsigned>& row_order);
     
-    ///FOR TESTING ONLY
-    //virtual void print(); //prints the matrix to standard output (for testing)
-    //void check_lows(); //checks for inconsistencies in low arrays
+    //TODO: Add a finalize method here?
+    
+    void print(); //prints the matrix to standard output (for testing)
 
-protected:
-    std::vector<unsigned> perm; //permutation vector
-    std::vector<unsigned> mrep; //inverse permutation vector
+private:
+    phat::vector_heap_perm matrix; // modified version of phat's vector_heap class which supports implicit ordering of rows.
+    
     std::vector<int> low_by_row; //stores index of column with each low number, or -1 if no such column exists -- NOTE: only accurate after decompose_RU() is called
     std::vector<int> low_by_col; //stores the low number for each column, or -1 if the column is empty -- NOTE: only accurate after decompose_RU() is called
 };
 
-//MapMatrix stored in row-priority format, with row/column permutations, designed for upper-triangular matrices in vineyard updates
-class MapMatrix_RowPriority_Perm : public MapMatrix_Base {
+//MapMatrix stored in row-priority format, with row/column permutations, designed for upper-triangular matrices in vineyard updates.
+//This class is just a simple interface for the vector_heap_perm class.
+class MapMatrix_RowPriority_Perm {
 public:
     MapMatrix_RowPriority_Perm(unsigned size); //constructs the identity matrix of specified size
     //MapMatrix_RowPriority_Perm(const MapMatrix_RowPriority_Perm& other); //copy constructor
@@ -211,7 +204,7 @@ public:
     unsigned width() const; //returns the number of columns in the matrix
     unsigned height() const; //returns the number of rows in the matrix
 
-    //void set(unsigned i, unsigned j); //sets (to 1) the entry in row i, column j
+    //We don't need this clear function.  It has been commented out of the PersistenceUpdater class.
     //void clear(unsigned i, unsigned j); //clears (sets to 0) the entry in row i, column j
     bool entry(unsigned i, unsigned j) const; //returns true if entry (i,j) is 1, false otherwise
 
@@ -224,9 +217,8 @@ public:
     //void print(); //prints the matrix to qDebug() for testing
     //void print_perm(); //prints the permutation vectors to qDebug() for testing
 
-protected:
-    std::vector<unsigned> perm; //permutation vector
-    std::vector<unsigned> mrep; //inverse permutation vector
+private:
+    phat::vector_heap_perm matrix; // modified version of phat's vector_heap class which supports implicit ordering of rows.
 };
 
 #endif // __MapMatrix_H__

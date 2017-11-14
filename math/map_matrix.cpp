@@ -73,13 +73,15 @@ void MapMatrix_Base::set(unsigned i, unsigned j)
     matrix._set_entry(i,j);
 } //end set()
 
-
+//TODO: Don't think we need this anymore.
+/*
 //returns true if entry (i,j) is 1, false otherwise
 bool MapMatrix_Base::entry(unsigned i, unsigned j) const
 {
     return matrix._is_in_matrix(i,j);
 } //end entry()
-
+*/
+ 
 //adds column j to column k
 //  RESULT: column j is not changed, column k contains sum of columns j and k (with mod-2 arithmetic)
 void MapMatrix_Base::add_to(unsigned j, unsigned k)
@@ -153,13 +155,13 @@ void MapMatrix::set(unsigned i, unsigned j)
     MapMatrix_Base::set(i, j);
 }
 
-
+/*
 //returns true if entry (i,j) is 1, false otherwise
 bool MapMatrix::entry(unsigned i, unsigned j) const
 {
     return MapMatrix_Base::entry(i, j);
 }
-
+*/
  
 //returns the "low" index in the specified column, or 0 if the column is empty or does not exist
 int MapMatrix::low(unsigned j) const
@@ -199,12 +201,22 @@ void MapMatrix::prepare_col(unsigned i)
     matrix._heapify_col(i);
 }
 
+/* TODO: Ready to be deleted; This was only being used in one place, so was easily eliminated.
 //copies column with index src_col from other to column dest_col in this matrix
 void MapMatrix::copy_col_from(const MapMatrix* other, unsigned src_col, unsigned dest_col)
 {
     matrix._set_col(dest_col,*(other->matrix._get_col_iter(src_col)));
 }
 //end copy_col_from()
+*/
+
+void MapMatrix::finalize(unsigned i)
+{
+    matrix._finalize(i);
+}
+
+
+/********* Next three methods are used only by the MultiBetti class *********/
 
 //copies NONZERO columns with indexes in [first, last] from other, appending them to this matrix to the right of all existing columns
 //  all row indexes in copied columns are increased by offset
@@ -268,55 +280,6 @@ void MapMatrix::remove_zero_cols(IndexMatrix* ind_old, IndexMatrix* ind_new)
     //        ind_new->print();
 } //end remove_zero_cols
 
-void MapMatrix::finalize(unsigned i)
-{
-    matrix._finalize(i);
-}
-
-//returns a copy of the matrix with columns in a specified order, and some columns possibly removed -- for vineyard-update algorithm
-//    simplex_order is a map which sends each column index to its new index in the permutation.
-//        if simplex_order[i] == -1, then column i is NOT represented in the matrix being built
-//    num_simplices is the number of columns we keep (i.e., the number of entries in the vector that are NOT -1)
-MapMatrix_Perm* MapMatrix::get_permuted_and_trimmed_mx(const std::vector<int>& coface_order, unsigned num_simplices)
-{
-    //create the matrix
-    
-    MapMatrix_Perm* mat = new MapMatrix_Perm(this->height(), num_simplices); //NOTE: must be deleted
-    int order_index;
-    //loop through all simplices, writing columns to the matrix
-    for (unsigned i = 0; i < this->width(); i++) {
-        order_index  = coface_order[i]; //index of the matrix column which will store the boundary of this simplex
-        if (order_index != -1) {
-            mat->copy_col_from(this,i,order_index);
-        }
-    }
-    
-    //TODO: Arguably, it would be better design to initialize the low_by_column here, rather than in the method decompose_RU().  Currently, this function gives a partially initialized MapMatrix_Perm.
-    
-    //return the matrix
-    return mat;
-} //end get_permuted_and_trimmed_mx
-
-//returns a copy of the matrix with columns and rows in specified orders, and some rows/columns possibly removed -- for vineyard-update algorithm
-//  PARAMETERS:
-//    each vector represents a map sends a row/column index to its new index in the permutation.
-//        if the value of the map is -1 at index i, then the row/column at index i is NOT represented in the boundary matrix
-//    each unsigned is the number of simplices in the corresponding order (i.e., the number of entries in the vector that are NOT -1)
-MapMatrix_Perm* MapMatrix::get_permuted_and_trimmed_mx(const std::vector<int>& face_order, unsigned num_faces, const std::vector<int>& coface_order, const unsigned num_cofaces)
-{
-    //create the matrix
-    MapMatrix_Perm* mat = new MapMatrix_Perm(num_faces, num_cofaces); //NOTE: must be deleted
-    int order_index;
-    for (unsigned i = 0; i < this->width(); i++) {
-        order_index = coface_order[i]; //index of the matrix column which will store the boundary of this simplex
-        if (order_index != -1) {
-            mat->matrix._set_col(order_index,*(this->matrix._get_col_iter(i)),face_order);
-        }
-    }
-    //return the matrix
-    return mat;
-} //end get_permuted_and_trimmed_mx
-
 //function to print the matrix to standard output, for testing purposes
 void MapMatrix::print()
 {
@@ -326,89 +289,71 @@ void MapMatrix::print()
 
 /********** implementation of class MapMatrix_Perm, supports row swaps (and stores a low array) **********/
 
-MapMatrix_Perm::MapMatrix_Perm(unsigned rows, unsigned cols)
-    : MapMatrix(rows, cols)
-    , perm(rows)
-    , mrep(rows)
-    , low_by_row(rows, -1)
-    , low_by_col(cols, -1) // col_perm(cols)
-{
-    //initialize permutation vectors to the identity permutation
-    for (unsigned i = 0; i < rows; i++) {
-        perm[i] = i;
-        mrep[i] = i;
-    }
-    
-    //vector_heap_mod stores a reference to perm.
-    matrix._set_row_order(perm);
-}
+//Constructor
+//Constructs a copy of the matrix with columns in a specified order, and some columns possibly removed -- for vineyard-update algorithm
+//    simplex_order is a map which sends each column index to its new index in the permutation.
+//        if simplex_order[i] == -1, then column i is NOT represented in the matrix being built
+//    num_simplices is the number of columns we keep (i.e., the number of entries in the vector that are NOT -1)
+MapMatrix_Perm::MapMatrix_Perm(const MapMatrix& mat, const std::vector<int>& coface_order, unsigned num_cofaces)
+    : matrix(mat.height(),num_cofaces)
+    , low_by_row(mat.height(), -1)
+    , low_by_col(num_cofaces, -1) // col_perm(cols)
 
-MapMatrix_Perm::MapMatrix_Perm(unsigned size)
-    : MapMatrix(size)
-    , perm(size)
-    , mrep(size)
-    , low_by_row(size, -1)
-    , low_by_col(size, -1)
 {
-    //initialize permutation vectors to the identity permutation
-    for (unsigned i = 0; i < size; i++) {
-        perm[i] = i;
-        mrep[i] = i;
-    }
-}
-
-//Default copy constructor is the right one.
-/*
-//copy constructor
-MapMatrix_Perm::MapMatrix_Perm(const MapMatrix_Perm& other)
-    : MapMatrix(other.height(), other.width())
-    , perm(other.perm)
-    , mrep(other.mrep)
-    , low_by_row(other.low_by_row)
-    , low_by_col(other.low_by_col)
-{
-    //copy all matrix entries
-    for (unsigned j = 0; j < other.width(); j++) {
-        MapMatrixNode* other_node = other.columns[j];
-        if (other_node != NULL) {
-            //create the first node in this column
-            MapMatrixNode* cur_node = new MapMatrixNode(other_node->get_row());
-            columns[j] = cur_node;
-
-            //create all other nodes in this column
-            other_node = other_node->get_next();
-            while (other_node != NULL) {
-                MapMatrixNode* new_node = new MapMatrixNode(other_node->get_row());
-                cur_node->set_next(new_node);
-                cur_node = new_node;
-                other_node = other_node->get_next();
-            }
+    int order_index;
+    //loop through all simplices, writing columns to the matrix
+    for (unsigned i = 0; i < mat.width(); i++) {
+        order_index  = coface_order[i]; //index of the matrix column which will store the boundary of this simplex
+        if (order_index != -1) {
+            //NOTE: Permissions here are okay because MapMatrix is a friend class.
+            matrix._set_col(order_index,*(mat.matrix._get_col_iter(i)));
+            
+            //TODO: Delete this old version; what is there now should be equivalent.
+            //mat->copy_col_from(this,i,order_index);
         }
     }
-}
-*/
 
-//TODO:No longer need this
-/*
-MapMatrix_Perm::~MapMatrix_Perm()
+} //end constructor
+
+//Constructor
+//Constructs a copy of the matrix with columns and rows in specified orders, and some rows/columns possibly removed -- for the vineyard-update algorithm
+//  PARAMETERS:
+//    each vector represents a map sends a row/column index to its new index in the permutation.
+//        if the value of the map is -1 at index i, then the row/column at index i is NOT represented in the boundary matrix
+//    each unsigned is the number of simplices in the corresponding order (i.e., the number of entries in the vector that are NOT -1)
+MapMatrix_Perm::MapMatrix_Perm(const MapMatrix& mat, const std::vector<int>& face_order, unsigned num_faces, const std::vector<int>& coface_order, const unsigned num_cofaces)
+    : matrix(num_faces,num_cofaces)
+    , low_by_row(num_faces, -1)
+    , low_by_col(num_cofaces, -1) // col_perm(cols)
+    
+    {
+    //create the matrix
+    int order_index;
+    for (unsigned i = 0; i < mat.width(); i++) {
+        order_index = coface_order[i]; //index of the matrix column which will store the boundary of this simplex
+        if (order_index != -1) {
+            matrix._set_col(order_index,*(mat.matrix._get_col_iter(i)),face_order);
+        }
+    }
+} //end constructor
+
+
+//returns the number of columns in the matrix
+unsigned MapMatrix_Perm::width() const
 {
+    return matrix._get_num_cols();
 }
-*/
- 
-//TODO:Don't need this
-/*
-//sets (to 1) the entry in row i, column j
-//NOTE: to be used for matrix construction only; does not update low array
-void MapMatrix_Perm::set(unsigned i, unsigned j)
+
+//returns the number of rows in the matrix
+unsigned MapMatrix_Perm::height() const
 {
-    MapMatrix::set(mrep[i], j);
+    return matrix._get_num_rows();
 }
-*/
 
 //returns true if entry (i,j) is 1, false otherwise
 bool MapMatrix_Perm::entry(unsigned i, unsigned j) const
 {
-    return MapMatrix::entry(mrep[i], j);
+    return matrix._is_in_matrix(i, j);
 }
 
 //reduces this matrix and returns the corresponding upper-triangular matrix for the RU-decomposition
@@ -427,18 +372,27 @@ MapMatrix_RowPriority_Perm* MapMatrix_Perm::decompose_RU()
     for (unsigned j = 0; j < width(); j++) {
         //while column j is nonempty and its low number is found in the low array, do column operations
         
-        //NOTE: We don't call MapMatrix_Perm::low() because in our application of this method, low_by_col has not yet been properly initialized.  As a side effect, this method is initializing low_by_col.  This seems to be poor design, but it makes little difference in terms of computational efficiency.  I won't fix it right now. -Mike
-        l=matrix._pop_max_index(j);
+        //NOTE: We don't call MapMatrix_Perm::low() because in our application of this method, low_by_col has not yet been properly initialized.
+        
+        l=matrix._remove_max(j);
+        
         if (l>=0 && low_by_row[l] >= 0)
+        {
             //if we get here then we are going to change the j^{th} column.
             changing_column = true;
-
+            
+        }
+        
         while (l>=0 && low_by_row[l] >= 0) {
             c = low_by_row[l];
-            //special version of add_column which knows that column c has been finalized and the pivot of column j has been popped.
+            
+            //For efficiency, we use a special version of add_column which knows that column c has been finalized and the pivot of column j has been popped.
+        
             matrix._add_to_popped(c, j);
+            
             U->add_row(j, c); //perform the opposite row operation on U
-            l=matrix._pop_max_index(j);
+            l=matrix._remove_max(j);
+        
         }
         
         if (l>=0) //then column is still nonempty, so put back the pivot we popped off last, update lows
@@ -451,7 +405,7 @@ MapMatrix_RowPriority_Perm* MapMatrix_Perm::decompose_RU()
         //if we changed the column, it might not be finalized anymore, so finalize it.
         if (changing_column)
         {
-            finalize(j);
+            matrix._finalize(j);
             changing_column = false;
         }
     }
@@ -459,7 +413,6 @@ MapMatrix_RowPriority_Perm* MapMatrix_Perm::decompose_RU()
     return U;
 } //end decompose_RU()
 
-//WARNING: This only behaves in the expected way once low_by_col has been properly initialized.
 //returns the row index of the lowest entry in the specified column, or -1 if the column is empty
 int MapMatrix_Perm::low(unsigned j) const
 {
@@ -472,22 +425,25 @@ int MapMatrix_Perm::find_low(unsigned l) const
     return low_by_row[l];
 }
 
+//returns true iff column j is empty
+bool MapMatrix_Perm::col_is_empty(unsigned j) const
+{
+    return matrix._is_empty(j);
+}
+
+//adds column j to column k; RESULT: column j is not changed, column k contains sum of columns j and k (with mod-2 arithmetic)
+void MapMatrix_Perm::add_column(unsigned j, unsigned k)
+{
+    matrix._add_to(j, k);
+}
+
 //transposes rows i and i+1
 //NOTE: this causes low array to be incorrect iff there are columns k and l with low(k)=i, low(l)=i+1, and M[i,l]=1  (as in Vineyards, Case 1.1)
 //      the user must detect this and do a column operation to restore the matrix to a reduced state!
 void MapMatrix_Perm::swap_rows(unsigned i, bool update_lows)
 {
-    //get original row indexes of these rows
-    unsigned a = mrep[i];
-    unsigned b = mrep[i + 1];
-
-    //swap entries in permutation and inverse permutation arrays
-    unsigned temp = perm[a]; ///TODO: why do I do this? isn't temp == i?  Mike: Good question, looks so.
-    perm[a] = perm[b];
-    perm[b] = temp;
-
-    mrep[i] = b;
-    mrep[i + 1] = a;
+    //swap rows
+    matrix._swap_rows(i);
 
     //update low arrays
     if (update_lows) {
@@ -534,13 +490,13 @@ void MapMatrix_Perm::rebuild(MapMatrix_Perm* reference, const std::vector<unsign
     for (unsigned i = 0; i < matrix._get_num_cols(); i++) {matrix._clear(i);}
 
     //reset low arrays
-    for (unsigned i = 0; i < num_rows; i++)
+    for (unsigned i = 0; i < matrix._get_num_rows(); i++)
         low_by_row[i] = -1;
     for (unsigned j = 0; j < matrix._get_num_cols(); j++)
         low_by_col[j] = -1;
     
     //TODO: Why was this block of code here, anyway? This is for rebuilding the lower matrix in an FIRep, and for that, the permutation of the rows is trivial.
-    //TODO: It might be better design to actually take the lower matrix to be a MapMatrix, not MapMatrix perm, thought that would be a  disruptive change.  It won't matter in the end, since the code will eventually work on a presentation matrix.
+    //TODO: Relatedly, it might be better design to actually take the lower matrix to be a MapMatrix, not MapMatrix perm, though that would be a  disruptive change.  It won't matter in the end, since the code will eventually work on a presentation matrix.
     /*
     //reset permutation vectors
     for (unsigned i = 0; i < num_rows; i++) {
@@ -556,6 +512,7 @@ void MapMatrix_Perm::rebuild(MapMatrix_Perm* reference, const std::vector<unsign
     }
 } //end rebuild()
 
+//TODO: Implement a more efficient rebuild procudure.  This one does unnecessary work in the front and back of the matrix.
 //clears the matrix, then rebuilds it from reference with columns permuted according to col_order and rows permuted according to row_order
 //  NOTE: reference should have the same size as this matrix!
 //  col_order is a map: (column index in reference matrix) -> (column index in rebuilt matrix) and similarly for row_order
@@ -574,180 +531,50 @@ void MapMatrix_Perm::rebuild(MapMatrix_Perm* reference, const std::vector<unsign
     for (unsigned i = 0; i < matrix._get_num_cols(); i++) {matrix._clear(i);}
 
     //reset low arrays
-    for (unsigned i = 0; i < num_rows; i++)
+    for (unsigned i = 0; i < matrix._get_num_rows(); i++)
         low_by_row[i] = -1;
     for (unsigned j = 0; j < matrix._get_num_cols(); j++)
         low_by_col[j] = -1;
     
-    //TODO: Delete.  In this modified version, we do not reset the order.
-    /*
-    //reset permutation vectors
-    for (unsigned i = 0; i < num_rows; i++) {
-        perm[i] = i;
-        mrep[i] = i;
-    }
-    */
-
+    //update implicit row order.
+    matrix._set_perm(row_order);
+    
     //build the new matrix
     for (unsigned j = 0; j < matrix._get_num_cols(); j++) {
-        //copy column j from reference into column col_order[j] of this matrix, with the appropriate reindexing to account for the row permutation:
-        std::vector<phat::index> temp_col;
-        //TODO:Keep the permuatation as is, but change the order for heapification.  This would allow us to avoid touching some of the columns, for a more efficient reset.
-        temp_col.reserve((reference->matrix._get_col_iter(j))->size());
-        
-        //copy column j from reference into column col_order[j] of this matrix, replacing each index with its image under the permutation row_order
-        
-        //TODO: Reserve space for this column?
+        //NOTE: We reorder rows implicitly now, so this is quite simple.
         matrix._set_col(col_order[j],*(reference->matrix._get_col_iter(j)));
     }
-
 } //end rebuild()
 
-/*
+
 //function to print the matrix to standard output, for testing purposes
 void MapMatrix_Perm::print()
 {
-    //handle empty matrix
-    if (num_rows == 0 || columns.size() == 0) {
-        debug() << "        (empty matrix:" << num_rows << "rows by" << columns.size() << "columns)";
-        return;
-    }
-
-    //create a 2D array of booleans to temporarily store the matrix
-    bool_array mx(num_rows, columns.size());
-    for (unsigned i = 0; i < num_rows; i++)
-        for (unsigned j = 0; j < columns.size(); j++)
-            mx.at(i, j) = false;
-
-    //traverse the linked lists in order to fill the 2D array
-    MapMatrixNode* current;
-    for (unsigned j = 0; j < columns.size(); j++) {
-        current = columns[j];
-        while (current != NULL) {
-            int row = current->get_row();
-            mx.at(perm[row], j) = true;
-            current = current->get_next();
-        }
-    }
-
-    //print the matrix
-    for (unsigned i = 0; i < num_rows; i++) {
-        Debug qd = debug(true);
-        qd << "        |";
-        for (unsigned j = 0; j < columns.size(); j++) {
-            if (mx.at(i, j))
-                qd << " 1";
-            else
-                qd << " 0";
-        }
-        qd << " |";
-    }
-} //end print()
-*/
- 
-/*
-//check for inconsistencies in low arrays, for testing purposes
-void MapMatrix_Perm::check_lows()
-{
-    for (unsigned i = 0; i < num_rows; i++) {
-        if (low_by_row[i] != -1) {
-            if (low_by_col[low_by_row[i]] != static_cast<int>(i))
-                debug() << "===>>> ERROR: INCONSISTNECY IN LOW ARRAYS";
-        }
-    }
-    for (unsigned j = 0; j < columns.size(); j++) {
-        //find the lowest entry in column j
-        int lowest = -1;
-        if (columns[j] != NULL) {
-            //consider the first node
-            MapMatrixNode* current = columns[j];
-            lowest = perm[current->get_row()];
-
-            //consider all following nodes
-            current = current->get_next();
-            while (current != NULL) {
-                if (static_cast<int>(perm[current->get_row()]) > lowest)
-                    lowest = perm[current->get_row()];
-
-                current = current->get_next();
-            }
-        }
-
-        //does this match low_by_col[j]?
-        if (lowest != low_by_col[j])
-            debug() << "===>>> ERROR IN low_by_col[" << j << "]";
-        else if (lowest != -1) {
-            if (low_by_row[lowest] != static_cast<int>(j))
-                debug() << "===>>> ERROR: INCONSISTNECY IN LOW ARRAYS";
-        }
-    }
+    matrix._print();
 }
-*/
+
 
 /********** implementation of class MapMatrix_RowPriority_Perm **********/
 
+//Initializes this matrix to the identity matrix.
 MapMatrix_RowPriority_Perm::MapMatrix_RowPriority_Perm(unsigned size)
-    : MapMatrix_Base(size)
-    , perm(size)
-    , mrep(size)
-{
-    //initialize permutation vectors to the identity permutation
-    for (unsigned i = 0; i < size; i++) {
-        perm[i] = i;
-        mrep[i] = i;
-    }
-}
+    : matrix(size)
+    {}
 
 //TODO: Is this necessary?
 MapMatrix_RowPriority_Perm::~MapMatrix_RowPriority_Perm() = default;
 
-//Default copy constructor is the right one.
-/*
-//copy constructor
-MapMatrix_RowPriority_Perm::MapMatrix_RowPriority_Perm(const MapMatrix_RowPriority_Perm& other)
-    : MapMatrix_Base(other.height())
-    , perm(other.perm)
-    , mrep(other.mrep)
-{
-    //copy all matrix entries
-    for (unsigned j = 0; j < other.height(); j++) {
-        MapMatrixNode* other_node = other.columns[j];
-        if (other_node != NULL) {
-            //create the first node in this column
-            MapMatrixNode* cur_node = new MapMatrixNode(other_node->get_row());
-            columns[j] = cur_node;
-
-            //create all other nodes in this column
-            other_node = other_node->get_next();
-            while (other_node != NULL) {
-                MapMatrixNode* new_node = new MapMatrixNode(other_node->get_row());
-                cur_node->set_next(new_node);
-                cur_node = new_node;
-                other_node = other_node->get_next();
-            }
-        }
-    }
-}
-*/
-
 unsigned MapMatrix_RowPriority_Perm::width() const
 {
-    return MapMatrix_Base::height();
+    return matrix._get_num_rows();
 }
 
 unsigned MapMatrix_RowPriority_Perm::height() const
 {
-    return MapMatrix_Base::width();
+    return matrix._get_num_cols();
 }
 
-/*
-void MapMatrix_RowPriority_Perm::set(unsigned i, unsigned j)
-{
-    MapMatrix_Base::set(mrep[j], i);
-}
-*/
- 
-//We should be able to get away with out this clear function
+
 /*
 void MapMatrix_RowPriority_Perm::clear(unsigned i, unsigned j)
 {
@@ -757,13 +584,13 @@ void MapMatrix_RowPriority_Perm::clear(unsigned i, unsigned j)
  
 bool MapMatrix_RowPriority_Perm::entry(unsigned i, unsigned j) const
 {
-    return MapMatrix_Base::entry(mrep[j], i);
+    return matrix._is_in_matrix(j, i);
 }
 
 //adds row j to row k; RESULT: row j is not changed, row k contains sum of rows j and k (with mod-2 arithmetic)
 void MapMatrix_RowPriority_Perm::add_row(unsigned j, unsigned k)
 {
-    return MapMatrix_Base::add_to(j, k);
+    return matrix._add_to(j, k);
 }
 
 //transposes rows i and i+1
@@ -775,73 +602,7 @@ void MapMatrix_RowPriority_Perm::swap_rows(unsigned i)
 //transposes columns j and j+1
 void MapMatrix_RowPriority_Perm::swap_columns(unsigned j)
 {
-    //get original indexes of these columns
-    unsigned a = mrep[j];
-    unsigned b = mrep[j + 1];
-
-    //swap perm[a] and perm[b]
-    unsigned temp = perm[a];
-    perm[a] = perm[b];
-    perm[b] = temp;
-
-    //swap mrep[i] and mrep[i+1]
-    mrep[j] = b;
-    mrep[j + 1] = a;
+    matrix._swap_rows(j);
 }
 
-/*
-//prints the matrix to debug(), for testing
-//this function is identical to MapMatrix::print(), with rows and columns transposed
-void MapMatrix_RowPriority_Perm::print()
-{
-    //handle empty matrix
-    if (num_rows == 0 || columns.size() == 0) {
-        debug() << "        (empty matrix:" << columns.size() << "rows by" << num_rows << "columns)";
-        return;
-    }
 
-    //create a 2D array of booleans to temporarily store the matrix
-    bool_array mx(columns.size(), num_rows);
-    for (unsigned i = 0; i < columns.size(); i++)
-        for (unsigned j = 0; j < num_rows; j++)
-            mx.at(i, j) = false;
-
-    //traverse the linked lists in order to fill the 2D array
-    MapMatrixNode* current;
-    for (unsigned j = 0; j < columns.size(); j++) {
-        current = columns[j];
-        while (current != NULL) {
-            unsigned row = current->get_row();
-            mx.at(j, perm[row]) = true;
-            current = current->get_next();
-        }
-    }
-
-    //print the matrix
-    for (unsigned i = 0; i < num_rows; i++) {
-        Debug qd = debug(true);
-        qd << "        |";
-        for (unsigned j = 0; j < columns.size(); j++) {
-            if (mx.at(i, j))
-                qd << " 1";
-            else
-                qd << " 0";
-        }
-        qd << " |";
-    }
-} //end print()
-*/
-
-/*
-//prints the permutation vectors to debug() for testing
-void MapMatrix_RowPriority_Perm::print_perm()
-{
-    Debug qd = debug();
-    qd << " ==== Perm:";
-    for (unsigned i = 0; i < perm.size(); i++)
-        qd << perm[i];
-    qd << "\n ==== Mrep:";
-    for (unsigned i = 0; i < mrep.size(); i++)
-        qd << mrep[i];
-}
-*/
