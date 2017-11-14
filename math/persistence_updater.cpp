@@ -1267,7 +1267,8 @@ void PersistenceUpdater::update_order_and_reset_matrices(std::shared_ptr<Templat
 
     //STEP 4: compute the new RU-decomposition
 
-    ///TODO: should I avoid deleting and reallocating matrix U?
+    // TODO: In the future, we will only reset part of U, and we won't delete this matrix here.
+    
     delete U_low;
     U_low = R_low->decompose_RU();
     delete U_high;

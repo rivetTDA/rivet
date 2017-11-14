@@ -380,7 +380,6 @@ MapMatrix_RowPriority_Perm* MapMatrix_Perm::decompose_RU()
         {
             //if we get here then we are going to change the j^{th} column.
             changing_column = true;
-            
         }
         
         while (l>=0 && low_by_row[l] >= 0) {
@@ -392,7 +391,6 @@ MapMatrix_RowPriority_Perm* MapMatrix_Perm::decompose_RU()
             
             U->add_row(j, c); //perform the opposite row operation on U
             l=matrix._remove_max(j);
-        
         }
         
         if (l>=0) //then column is still nonempty, so put back the pivot we popped off last, update lows
@@ -537,6 +535,7 @@ void MapMatrix_Perm::rebuild(MapMatrix_Perm* reference, const std::vector<unsign
         low_by_col[j] = -1;
     
     //update implicit row order.
+    //TODO: Could be more efficient; shouldn't have to completely copy the permutation over.
     matrix._set_perm(row_order);
     
     //build the new matrix
