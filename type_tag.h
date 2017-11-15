@@ -25,6 +25,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef RIVET_CONSOLE_TYPE_TAG_H
 #define RIVET_CONSOLE_TYPE_TAG_H
 
+#include <msgpack.hpp>
+
 //http://www.ilikebigbits.com/blog/2014/5/6/type-safe-identifiers-in-c
 template <class Tag, class impl, impl default_value>
 class ID {
@@ -54,6 +56,8 @@ public:
     {
         ar& m_val;
     }
+
+    MSGPACK_DEFINE(m_val);
 
 private:
     impl m_val;

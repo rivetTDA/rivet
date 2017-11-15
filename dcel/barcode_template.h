@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <set>
 #include <vector>
-
+#include <msgpack.hpp>
 struct BarTemplate {
     unsigned begin; //index of TemplatePointsMatrixEntry of the equivalence class corresponding to the beginning of this bar
     unsigned end; //index of TemplatePointsMatrixEntry of the equivalence class corresponding to the end of this bar
@@ -45,6 +45,9 @@ struct BarTemplate {
     {
         ar& begin& end& multiplicity;
     }
+
+    MSGPACK_DEFINE(begin, end, multiplicity);
+
     friend bool operator==(BarTemplate const& left, BarTemplate const& right);
 };
 
@@ -79,6 +82,7 @@ public:
     {
         ar& bars;
     }
+    MSGPACK_DEFINE(bars);
     friend bool operator==(BarcodeTemplate const& left, BarcodeTemplate const& right);
 
 private:

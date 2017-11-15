@@ -106,7 +106,6 @@ unsigned int get_uint_or_die(std::map<std::string, docopt::value>& args, const s
     }
 }
 
-//TODO: this doesn't really belong here, look for a better place.
 void write_boost_file(InputParameters const& params, TemplatePointsMessage const& message, ArrangementMessage const& arrangement)
 {
     std::ofstream file(params.outputFile, std::ios::binary);
@@ -116,6 +115,19 @@ void write_boost_file(InputParameters const& params, TemplatePointsMessage const
     file << "RIVET_1\n";
     boost::archive::binary_oarchive oarchive(file);
     oarchive& params& message& arrangement;
+    file.flush();
+}
+
+void write_msgpack_file(InputParameters const& params, TemplatePointsMessage const& message, ArrangementMessage const& arrangement)
+{
+    std::ofstream file(params.outputFile, std::ios::binary);
+    if (!file.is_open()) {
+        throw std::runtime_error("Could not open " + params.outputFile + " for writing.");
+    }
+    file << "RIVET_msgpack\n";
+    msgpack::pack(file, params);
+    msgpack::pack(file, message);
+    msgpack::pack(file, arrangement);
     file.flush();
 }
 
@@ -484,6 +496,8 @@ int main(int argc, char* argv[])
                 fw.write_augmented_arrangement(file);
             } else if (params.outputFormat == "R1") {
                 write_boost_file(params, *points_message, *arrangement_message);
+            } else if (params.outputFormat == "msgpack") {
+                write_msgpack_file(params, *points_message, *arrangement_message);
             } else {
                 throw std::runtime_error("Unsupported output format: " + params.outputFormat);
             }

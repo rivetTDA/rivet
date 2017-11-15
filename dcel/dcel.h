@@ -151,6 +151,7 @@ struct TemplatePointsMessage {
     {
         ar& x_label& y_label& template_points& homology_dimensions& x_exact& y_exact;
     }
+    MSGPACK_DEFINE(x_label, y_label, template_points, homology_dimensions, x_exact, y_exact);
 };
 
 #endif // __DCEL_H__

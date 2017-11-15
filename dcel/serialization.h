@@ -42,6 +42,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "math/template_points_matrix.h"
 #include "numerics.h"
 #include "type_tag.h"
+#include <msgpack.hpp>
+#include "msgpack_external.h"
+
+
 //namespace boost {
 //    namespace multiprecision {
 //        template<class Archive>
@@ -114,6 +118,41 @@ void save(Archive& ar, unsigned_matrix const& mat, const unsigned int& /*version
     ar& dims& data;
 }
 
+//        inline unsigned_matrix& operator>> (::msgpack::object o, unsigned_matrix& v)
+//        {
+//            std::vector<unsigned> dims;
+//            std::vector<unsigned> data;
+//            throw std::runtime_error("not implemented");
+//            ar& dims& data;
+//            unsigned_matrix::extent_gen extents;
+//            auto size = extents[dims[0]][dims[1]];
+//            //    std::cerr << "Data: ";
+//            //    for (auto d : data) {
+//            //        std::cerr << d << " ";
+//            //    }
+//            std::cerr << std::endl;
+//            mat.resize(size);
+//            std::memcpy(mat.origin(), data.data(), data.size() * sizeof(unsigned));
+//            if(o.type != type::ARRAY) { throw type_error(); }
+//            if(o.via.array.size != 3) { throw type_error(); }
+//            o.via.array.ptr[0].convert(&v.X);
+//            o.via.array.ptr[1].convert(&v.Y);
+//            o.via.array.ptr[2].convert(&v.Z);
+//            return v;
+//        }
+
+//        template <typename Stream>
+//        inline ::msgpack::packer<Stream>& operator<< (::msgpack::packer<Stream>& o, const unsigned_matrix& mat)
+//        {
+//            std::vector<unsigned> dims(mat.shape(), mat.shape() + mat.num_dimensions());
+//            std::vector<unsigned> data(mat.origin(), mat.origin() + mat.num_elements());
+//            o.pack(dims);
+//            o.pack(data);
+//            return o;
+//        }
+
+
+
 template <class Archive>
 void load(Archive& ar, unsigned_matrix& mat, const unsigned int& /*version*/)
 {
@@ -131,5 +170,7 @@ void load(Archive& ar, unsigned_matrix& mat, const unsigned int& /*version*/)
     std::memcpy(mat.origin(), data.data(), data.size() * sizeof(unsigned));
 }
 }
+
+
 
 #endif //RIVET_CONSOLE_SERIALIZATION_H

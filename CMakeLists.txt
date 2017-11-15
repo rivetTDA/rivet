@@ -17,13 +17,24 @@ externalproject_add(
   INSTALL_COMMAND ""
   )
 
+externalproject_add(
+        msgpack_project
+        PREFIX msgpack
+        GIT_REPOSITORY https://github.com/msgpack/msgpack-c
+        GIT_TAG master
+        CMAKE_ARGS -D CMAKE_CXX_STANDARD=11 -D CMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+        INSTALL_COMMAND ""
+)
 
 find_package(Boost "1.60" COMPONENTS serialization system)
 
 #note this must come before add_executable or it will be ignored
 link_directories(${CMAKE_CURRENT_BINARY_DIR}/docopt/src/docopt_project-build)
 
-include_directories("${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/include" ${Boost_INCLUDE_DIR} "${CMAKE_CURRENT_BINARY_DIR}/docopt/src/docopt_project")
+include_directories("${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/include" ${Boost_INCLUDE_DIR} "${CMAKE_CURRENT_BINARY_DIR}/docopt/src/docopt_project"
+       "${CMAKE_CURRENT_BINARY_DIR}/msgpack/src/msgpack_project/include" )
+
+add_definitions(-DMSGPACK_USE_BOOST)
 
 add_executable (rivet_console
         console.cpp
@@ -71,6 +82,7 @@ add_executable(unit_tests
         dcel/barcode.cpp
         dcel/barcode_template.cpp
         dcel/dcel.cpp
+        dcel/serialization.h
         math/map_matrix.cpp
         math/multi_betti.cpp
         math/simplex_tree.cpp
