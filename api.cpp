@@ -45,10 +45,10 @@ std::unique_ptr<ComputationResult> from_istream(std::istream &file) {
 std::unique_ptr<ComputationResult> from_messages(
         const TemplatePointsMessage &templatePointsMessage,
         const ArrangementMessage &arrangementMessage) {
-    std::__1::unique_ptr<ComputationResult> result(new ComputationResult);
+    std::unique_ptr<ComputationResult> result(new ComputationResult);
     result->arrangement.reset(new Arrangement);
     *(result->arrangement) = arrangementMessage.to_arrangement();
-    std::__1::vector<size_t> ex;
+    std::vector<size_t> ex;
     const size_t* shape = templatePointsMessage.homology_dimensions.shape();
     ex.assign(shape, shape + templatePointsMessage.homology_dimensions.num_dimensions());
     result->homology_dimensions.resize(ex);
