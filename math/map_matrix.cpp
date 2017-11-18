@@ -302,13 +302,9 @@ MapMatrix_Perm::MapMatrix_Perm(const MapMatrix& mat, const std::vector<int>& cof
     , low_by_col(num_cofaces, -1) // col_perm(cols)
 
 {
-    
-    debug() << "about to enter loop in the MapMatrix_Perm constructor.\n";
     //loop through all simplices, writing columns to the matrix
     for (unsigned i = 0; i < mat.width(); i++) {
-        debug() << "i is " << i << "\n";
         int order_index  = coface_order[i]; //index of the matrix column which will store the boundary of this simplex
-        debug() << "order_index is " << order_index << "\n";
         if (order_index != -1) {
             //NOTE: Permissions here are okay because MapMatrix is a friend class.
             matrix._set_col(order_index,*(mat.matrix._get_col_iter(i)));

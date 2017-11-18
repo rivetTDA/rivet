@@ -35,8 +35,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 FIRep::FIRep(BifiltrationData& bd, int v)
     : boundary_mx_low(MapMatrix(0,0))
     , boundary_mx_high(MapMatrix(0,0))
-    , index_mx_low(bd.num_x_grades(), bd.num_y_grades())
-    , index_mx_high(bd.num_x_grades(), bd.num_y_grades())
+    , index_mx_low(bd.num_y_grades(), bd.num_x_grades())
+    , index_mx_high(bd.num_y_grades(), bd.num_x_grades())
     , verbosity(v)
     , x_grades(bd.num_x_grades())
     , y_grades(bd.num_y_grades())
@@ -91,53 +91,51 @@ FIRep::FIRep(BifiltrationData& bd, int v)
     //loop through simplices, writing columns to the matrix
     Grade prev_grade;
     
-    //if hom_dim==0, we don't need to add any columns, and index_mx_low is already set correctly.
-    if (bd.hom_dim > 0) {
-        //reserve space to work
-        Simplex face;
-        face.reserve(bd.hom_dim);
-        
-        if (bd.mid_count > 0)
-            prev_grade = *(mid_generators[0].second);
+    if (bd.mid_count > 0)
+        prev_grade = *(mid_generators[0].second);
         
         for (unsigned i = 0; i < bd.mid_count; i++) {
             
             //fill in the appropriate part of the index matrix, if any
             fill_index_mx(index_mx_low, prev_grade, *(mid_generators[i].second), i-1);
             
-            //call the simplex "vertices";
-            Simplex& vertices = mid_generators[i].first->s;
+            //If hom_dim==0, there are no columns to fill in.
+            if (bd.hom_dim > 0)
+            {
+                //reserve space to work
+                Simplex face;
+                face.reserve(bd.hom_dim);
+                //call the simplex "vertices";
+                Simplex& vertices = mid_generators[i].first->s;
             
-            //TODO: reserve space in the column of boundary_mx_low for the entries we will add in?  Because of all the nested interfaces, a few classes would have to be changed.  Probably not worth it.
+                //TODO: reserve space in the column of boundary_mx_low for the entries we will add in?  Because of all the nested interfaces, a few classes would have to be changed.  Probably not worth it.
             
-            //find all faces of this simplex
-            for (unsigned k = 0; k < vertices.size(); k++) {
-                //face vertices are all vertices in verts[] except verts[k]
-                for (unsigned l = 0; l < vertices.size(); l++)
-                    if (l != k)
-                        face.push_back(vertices[l]);
+                //find all faces of this simplex
+                for (unsigned k = 0; k < vertices.size(); k++) {
+                    //face vertices are all vertices in verts[] except verts[k]
+                    for (unsigned l = 0; l < vertices.size(); l++)
+                        if (l != k)
+                            face.push_back(vertices[l]);
 
-                //use hash table to look up the index of this face in low_simplices;
-                auto face_node = low_ht.find(&face);
-                if (face_node == low_ht.end())
-                    throw std::runtime_error("FIRep constructor: face simplex not found.");
+                    //use hash table to look up the index of this face in low_simplices;
+                    auto face_node = low_ht.find(&face);
+                    if (face_node == low_ht.end())
+                        throw std::runtime_error("FIRep constructor: face simplex not found.");
 
-                //now write the row index to row_indices
-                boundary_mx_low.set(face_node->second,i);
-                face.clear();
+                    //now write the row index to row_indices
+                    boundary_mx_low.set(face_node->second,i);
+                    face.clear();
+                }
+            
+                //heapify this column
+                boundary_mx_low.prepare_col(i);
             }
-            
-            //heapify this column
-            boundary_mx_low.prepare_col(i);
         }
-        
-        //Now complete construction of the index_mx_low.
-        if (bd.mid_count > 0)
-            fill_index_mx(index_mx_low, prev_grade, Grade(0,index_mx_low.height()), mid_generators.size()-1);
-    }
-    //We're done building boundary_mx_low.
     
-    index_mx_low.print();
+    //Now complete construction of the index_mx_low.
+    if (bd.mid_count > 0)
+        fill_index_mx(index_mx_low, prev_grade, Grade(0,index_mx_low.height()), mid_generators.size()-1);
+    //We're done building boundary_mx_low.
     
     //We no longer need low_simplices
     std::vector<LowSimplexData>().swap(bd.low_simplices); //"Free" memory of low_generators
@@ -321,9 +319,6 @@ FIRep::FIRep(BifiltrationData& bd, int v)
     if (high_generators.size() > 0)
         fill_index_mx(index_mx_high, prev_grade, Grade(0,index_mx_high.height()), high_generators.size()-1);
     //We're done building boundary_mx_high.
-
-    //Only for debugging. remove later.
-    index_mx_high.print();
     
     if (verbosity >= 6)
         debug() << "Created high boundary matrix";
@@ -344,8 +339,8 @@ FIRep::FIRep(BifiltrationData& bd, int v)
 FIRep::FIRep(BifiltrationData& bd, unsigned num_high_simplices, unsigned num_mid_simplices, unsigned num_low_simplices, std::vector<std::vector<unsigned>>& d2, std::vector<std::vector<unsigned>>& d1, const std::vector<unsigned> x_values, const std::vector<unsigned> y_values, int v)
     : boundary_mx_low(MapMatrix(num_low_simplices, num_mid_simplices))
     , boundary_mx_high(MapMatrix(num_mid_simplices, num_high_simplices))
-    , index_mx_low(bd.num_x_grades(), bd.num_y_grades())
-    , index_mx_high(bd.num_x_grades(), bd.num_y_grades())
+    , index_mx_low(bd.num_y_grades(), bd.num_x_grades())
+    , index_mx_high(bd.num_y_grades(), bd.num_x_grades())
     , verbosity(v)
     , x_grades(bd.num_x_grades())
     , y_grades(bd.num_y_grades())
