@@ -134,7 +134,7 @@ public:
 
     //removes zero columns from this matrix
     //  ind_old gives grades of columns before zero columns are removed; new grade info stored in ind_new
-    void remove_zero_cols(IndexMatrix* ind_old, IndexMatrix* ind_new);
+    void remove_zero_cols(const IndexMatrix& ind_old, IndexMatrix& ind_new);
     
     void finalize(unsigned i);
     
@@ -177,10 +177,28 @@ public:
     //TODO: Add lazy versions of these functions which don't redo the whole computation
     //clears the matrix, then rebuilds it from reference with columns permuted according to col_order
     //NOTE: This funciton and the next do not remove columns or rows.
+    
     void rebuild(MapMatrix_Perm* reference, const std::vector<unsigned>& col_order);
 
     //clears the matrix, then rebuilds it from reference with columns permuted according to col_order and rows permuted according to row_order
     void rebuild(MapMatrix_Perm* reference, const std::vector<unsigned>& col_order, const std::vector<unsigned>& row_order);
+    
+    
+    /***************************/
+    
+    // BIG TODO: Add functionality which does the
+    
+    //- Transpose both rows and columns of U.
+    //- Do the corresponding column perms to R.
+    //- If working on the high matrix, also permute rows of R.
+    //- Heapify all rows of U in permutation range.  (if still using vineyards, may have to heapify more rows of U.)
+    //- Heapify all cols of R in permutation range.
+    // -Use G.E. on these rows to make U upper triangular, doing the corresponding column additions to R
+    // -Fix R to be reduced again (column operations taking only the permuted cols and the columns which had permuted lows as pivots.
+
+    /***************************/
+    
+    
     
     //TODO: Add a finalize method here?
     

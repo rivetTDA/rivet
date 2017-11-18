@@ -15,8 +15,8 @@
 
 //Pair of coordinates specifying grade of appearance with additional sorting operator. Sorted COLEXICOGRAPHICALLY, i.e., first by y-coordinate,  then by x-coordinate.
 struct Grade {
-    int x;
-    int y;
+    unsigned x;
+    unsigned y;
 
     bool operator==(const Grade& other) const
     {
@@ -33,7 +33,7 @@ struct Grade {
 
     Grade() {}
 
-    Grade(int set_x, int set_y)
+    Grade(unsigned set_x, unsigned set_y)
         : x(set_x)
         , y(set_y)
     {
@@ -90,7 +90,7 @@ class BifiltrationData {
     friend class FIRep;
 
 public:
-    BifiltrationData(int dim, int v); //constructor; requires verbosity parameter
+    BifiltrationData(unsigned dim, int v); //constructor; requires verbosity parameter
 
     ~BifiltrationData(); //destructor
 
@@ -111,9 +111,10 @@ public:
     unsigned num_x_grades(); //returns the number of unique x-coordinates of the multi-grades
     unsigned num_y_grades(); //returns the number of unique y-coordinates of the multi-grades
 
-    int get_size(int dim); //returns the number of simplices of dimension (hom_dim-1), hom_dim, or (hom_dim+1). Returns -1 if invalid dim.
-
-    const int hom_dim; //the dimension of homology to be computed; max dimension of simplices is one more than this
+    int get_size(unsigned dim); //returns the number of simplices of dimension (hom_dim-1), hom_dim, or (hom_dim+1). Returns -1 if invalid dim.
+    
+    //TODO:Make unsigned?
+    const unsigned hom_dim; //the dimension of homology to be computed; max dimension of simplices is one more than this
     const int verbosity; //controls display of output, for debugging
 
     //print bifiltration in the RIVET bifiltration input format

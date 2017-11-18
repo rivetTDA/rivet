@@ -245,10 +245,12 @@ void MapMatrix::copy_cols_same_indexes(const MapMatrix* other, int first, int la
     }
 }
 
+
+//TODO: It would be more natural to make this function a member of a bigraded matrix class, or as a member of the MultiBetti class
 //removes zero columns from this matrix
 //ind_old gives grades of columns before zero columns are removed; new grade info stored in ind_new
 //NOTE: ind_old and ind_new must have the same size!
-void MapMatrix::remove_zero_cols(IndexMatrix* ind_old, IndexMatrix* ind_new)
+void MapMatrix::remove_zero_cols(const IndexMatrix& ind_old, IndexMatrix& ind_new)
 {
     phat::index new_idx = -1; //new index of rightmost column that has been moved
     phat::index cur_idx = 0; //old index of rightmost column considered for move
@@ -258,16 +260,16 @@ void MapMatrix::remove_zero_cols(IndexMatrix* ind_old, IndexMatrix* ind_new)
     //        ind_old->print();
     
     //loop over all grades
-    for(unsigned y = 0; y < ind_old->height(); y++) {
-        for(unsigned x = 0; x < ind_old->width(); x++) {
-            end_col = ind_old->get(y, x); //index of rightmost column at this grade
+    for(unsigned y = 0; y < ind_old.height(); y++) {
+        for(unsigned x = 0; x < ind_old.width(); x++) {
+            end_col = ind_old.get(y, x); //index of rightmost column at this grade
             for(; cur_idx <= end_col; cur_idx++) { //loop over all columns at this grade
                 if( !matrix._is_empty(cur_idx) ) { //then move column
                     new_idx++; //new index of this column
                     matrix._set_col(new_idx,*matrix._get_col_iter(cur_idx));
                 }
             }
-            ind_new->set(y, x, new_idx); //rightmost column index for this grade
+            ind_new.set(y, x, new_idx); //rightmost column index for this grade
         }
     }
     
@@ -462,7 +464,7 @@ void MapMatrix_Perm::swap_rows(unsigned i, bool update_lows)
 void MapMatrix_Perm::swap_columns(unsigned j, bool update_lows)
 {
     //swap columns
-    matrix._swap_columns(j);
+    matrix._swap_columns(j,j+1);
 
     //update low arrays
     if (update_lows) {
@@ -524,10 +526,10 @@ void MapMatrix_Perm::rebuild(MapMatrix_Perm* reference, const std::vector<unsign
     //    if (check[j] == false) {
     //        debug() << "ERROR: column permutation skipped" << j;
     //    }
-
+    
     //clear the matrix
     for (unsigned i = 0; i < matrix._get_num_cols(); i++) {matrix._clear(i);}
-
+    
     //reset low arrays
     for (unsigned i = 0; i < matrix._get_num_rows(); i++)
         low_by_row[i] = -1;
@@ -551,7 +553,6 @@ void MapMatrix_Perm::print()
 {
     matrix._print();
 }
-
 
 /********** implementation of class MapMatrix_RowPriority_Perm **********/
 
@@ -595,7 +596,7 @@ void MapMatrix_RowPriority_Perm::add_row(unsigned j, unsigned k)
 //transposes rows i and i+1
 void MapMatrix_RowPriority_Perm::swap_rows(unsigned i)
 {
-    matrix._swap_columns(i);
+    matrix._swap_columns(i,i+1);
 }
 
 //transposes columns j and j+1

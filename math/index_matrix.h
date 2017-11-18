@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **********************************************************************/
 /**
  * \class	IndexMatrix
- * \brief	Stores a matrix of column indexes, one for each multi-grade (to accompany a MapMatrix).
+ * \brief	Stores a matrix of column indexes, one for each bigrade.  This, together with a MapMatrix, represents a morphism of free bigraded modules.
  * \author	Matthew L. Wright
  * \date	July 2014
  */
@@ -27,18 +27,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef __IndexMatrix_H__
 #define __IndexMatrix_H__
 
-// Holds information about the simplices of one particular dimension that exist at each
-// multigrade. Note that an IndexMatrix instance is specific to one simplex dimension,
-// e.g. it might track 0-simplices or 3-simplices. The indices themselves
-// are meaningful only in relation to a particular SimplexTree instance.
-//
-// The entry at (row, col) is to be the greatest dim_index of all simplices that
-// appear at or before this multigrade in reverse lexicographical order, or -1
-// if there are no such simplices
+#include <vector>
+
+// The entry at (row, col) is to be the greatest column index of all columns that
+// appear at or before (row, col) in colexicographical order, or -1
+// if there are no such columns
 class IndexMatrix {
 public:
+    //Initialize each entry in the matrix to be -1.
     IndexMatrix(unsigned rows, unsigned cols);
-    ~IndexMatrix();
 
     void set(unsigned row, unsigned col, int value);
     int get(unsigned row, unsigned col) const;
@@ -53,7 +50,7 @@ public:
 private:
     unsigned num_rows;
     unsigned num_cols;
-    int* data;
+    std::vector<int> data;
 };
 
 #endif // __IndexMatrix_H__

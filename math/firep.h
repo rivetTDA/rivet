@@ -33,6 +33,7 @@ class IndexMatrix;
 
 #include "bifiltration_data.h"
 #include "map_matrix.h"
+#include "index_matrix.h"
 
 #include <set>
 #include <string>
@@ -61,25 +62,25 @@ typedef std::unordered_map<Simplex* const, std::vector<MidHighSimplexData>::iter
 class FIRep {
 
 public:
-    MapMatrix boundary_mx_0; //boundary matrix from dim to dim-1
-    MapMatrix boundary_mx_1; //boundary matrix from dim+1 to dim
+    MapMatrix boundary_mx_low; //boundary matrix from dim to dim-1
+    MapMatrix boundary_mx_high; //boundary matrix from dim+1 to dim
+    
+    IndexMatrix index_mx_low; //matrix of column indexes to accompany boundary_mx_low
+    IndexMatrix index_mx_high; //matrix of column indexes to accompany boundary_mx_high
     
     FIRep(BifiltrationData& bd, int v); //constructor; requires verbosity parameter
 
     //This constructor is used when the FIRep is given directly as text input.
     //TODO: Minor point, but it seems a little hacky to be passing a BifiltrationData object to this constructor
-    FIRep(BifiltrationData& bd, int t, int s, int r, std::vector<std::vector<unsigned>>& d2, std::vector<std::vector<unsigned>>& d1,
+    FIRep(BifiltrationData& bd, unsigned um_high_simplices, unsigned num_mid_simplices, unsigned num_low_simplices, std::vector<std::vector<unsigned>>& d2, std::vector<std::vector<unsigned>>& d1,
         const std::vector<unsigned> x_values, const std::vector<unsigned> y_values, int v); //constructor
 
-    ~FIRep(); //destructor
+    //TODO:Delete?
+    //~FIRep(); //destructor
 
     //TODO: should the following two return pointers to consts?  There are places where we modify an index matrix as we zero out columns...
     
-    //returns a matrix of column indexes to accompany MapMatrices
-    IndexMatrix* get_low_index_mx();
 
-    //returns a matrix of column indexes to accompany MapMatrices
-    IndexMatrix* get_high_index_mx();
 
     unsigned num_x_grades(); //returns the number of unique x-coordinates of the multi-grades
     unsigned num_y_grades(); //returns the number of unique y-coordinates of the multi-grades
@@ -94,21 +95,20 @@ private:
 
     //Indexes of simplices. Grades are stored in discrete indexes, real ExactValues are stored in InputData.x_exact and y_exact
 
-    //TODO: It seems not good design to store the grades this way, if they will only be accessed via the function get_index_mx,
-    //as is currently the case.  (get_index_mx outputs this data in a compressed form which avoids repeat indices).
-    //It would be better to instead store the output of the computation performed by get_index_mx, and perhaps even to avoid computation of these
-    //intermediate vectors altogether.
-    AppearanceGrades indexes_0; //indexes of simplices in dimension dim
-    AppearanceGrades indexes_1; //indexes of simplices in dimension dim+1
-
-    //Note: Associated bifiltration data is kept only for Alex's dendrogram code.
-    //TODO: Delete this!
-    //BifiltrationData& bifiltration_data;
-
+    //TODO: Get rid of these; store the index matrices themselves.
+    /*
+    AppearanceGrades indexes_low; //indexes of simplices in dimension dim
+    AppearanceGrades indexes_high; //indexes of simplices in dimension dim+1
+    */
+     
     //writes boundary column.
     void write_boundary_column(MapMatrix& mat, const std::vector<unsigned>& entries, const unsigned col); //writes boundary information given boundary entries in column col of matrix mat
 
+    /*
     IndexMatrix* get_index_mx(AppearanceGrades& source_grades); //Gets the index matrix associated with a list of grades
+     */
 };
+     
+     
 
 #endif // __SimplexTree_H__

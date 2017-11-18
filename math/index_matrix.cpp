@@ -26,13 +26,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 IndexMatrix::IndexMatrix(unsigned rows, unsigned cols)
     : num_rows(rows)
     , num_cols(cols)
+    //initialize each entry to be -1.
+    , data(rows * cols,-1)
 {
-    data = new int[rows * cols];
-}
-
-IndexMatrix::~IndexMatrix()
-{
-    delete[] data;
 }
 
 void IndexMatrix::set(unsigned row, unsigned col, int value)

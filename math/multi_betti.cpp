@@ -88,11 +88,11 @@ void MultiBetti::compute(unsigned_matrix& hom_dims, Progress& progress)
     
     //input to the algorithm: two boundary matrices, with index data
     //TODO: a future version of this code will not copy these matrices, but operate on them directly.
-    MapMatrix* bdry1 = new MapMatrix(fir.boundary_mx_0);
-    IndexMatrix* ind1 = fir.get_low_index_mx();
+    MapMatrix* bdry1 = new MapMatrix(fir.boundary_mx_low);
+    IndexMatrix* ind1 = &fir.index_mx_low;
 
-    MapMatrix* bdry2 = new MapMatrix(fir.boundary_mx_1);
-    IndexMatrix* ind2 = fir.get_high_index_mx();
+    MapMatrix* bdry2 = new MapMatrix(fir.boundary_mx_high);
+    IndexMatrix* ind2 = &fir.index_mx_high;
 
     // STEP 1: reduce bdry2, record its pointwise rank, and build a partially-reduced copy for later use
     //   this approach aims to maximize memory usage by deleting bdry2 matrix before building bdry2s matrix
@@ -145,11 +145,11 @@ void MultiBetti::compute(unsigned_matrix& hom_dims, Progress& progress)
 
     //remove zero columns from bdry2m
     IndexMatrix* ind2m = new IndexMatrix(num_y_grades, num_x_grades); //stores grade info for bdry2m
-    bdry2m->remove_zero_cols(ind2, ind2m);
+    bdry2m->remove_zero_cols(*ind2, *ind2m);
 
     //clean up
     delete bdry2;
-    delete ind2;
+    //delete ind2;
 
     //emit progress message
     progress.progress(40);
@@ -298,7 +298,7 @@ void MultiBetti::compute(unsigned_matrix& hom_dims, Progress& progress)
 
     //clean up
     delete bdry1;
-    delete ind1;
+    //delete ind1;
     delete bdry2m;
     delete ind2m;
     delete split;

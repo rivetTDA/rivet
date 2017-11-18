@@ -11,7 +11,7 @@
 #include <stdexcept>
 
 //BifiltrationData constructor; requires dimension of homology to be computed and verbosity parameter
-BifiltrationData::BifiltrationData(int dim, int v)
+BifiltrationData::BifiltrationData(unsigned dim, int v)
     : hom_dim(dim)
     , verbosity(v)
     , x_grades(0)
@@ -43,18 +43,18 @@ void BifiltrationData::add_simplex(Simplex const& vertices, const AppearanceGrad
         return;
     }
 
-    else if (vertices.size() == (unsigned)hom_dim) //simplex of dimension hom_dim - 1
+    else if (vertices.size() == hom_dim) //simplex of dimension hom_dim - 1
     {
         //For the homology computation, we only need the greatest lower bound of grades
         low_simplices.push_back(LowSimplexData(vertices, Grade((grades.end() - 1)->x, grades.begin()->y)));
         return;
-    } else if (vertices.size() == (unsigned)hom_dim + 1) //simplex of dimension hom_dim
+    } else if (vertices.size() == hom_dim + 1) //simplex of dimension hom_dim
     {
         mid_simplices.push_back(MidHighSimplexData(vertices, grades, false));
         mid_count++;
         return;
 
-    } else if (vertices.size() == (unsigned)hom_dim + 2) //simplex of dimension hom_dim + 1
+    } else if (vertices.size() == hom_dim + 2) //simplex of dimension hom_dim + 1
     {
         high_simplices.push_back(MidHighSimplexData(vertices, grades, true));
         high_count++;
@@ -84,14 +84,14 @@ void BifiltrationData::build_VR_complex(const std::vector<unsigned>& times, cons
 void BifiltrationData::build_VR_subcomplex(const std::vector<unsigned>& times, const std::vector<unsigned>& distances, std::vector<int>& vertices, const unsigned prev_time, const unsigned prev_dist)
 {
     //Store the simplex info if it is of dimension (hom_dim - 1), hom_dim, or hom_dim+1. Dimension is vertices.size() - 1
-    if (vertices.size() == (unsigned)hom_dim) //simplex of dimension hom_dim - 1
+    if (vertices.size() == hom_dim) //simplex of dimension hom_dim - 1
     {
         low_simplices.push_back(LowSimplexData(vertices, Grade(prev_time, prev_dist)));
-    } else if (vertices.size() == (unsigned)hom_dim + 1) //simplex of dimension hom_dim - 1
+    } else if (vertices.size() == hom_dim + 1) //simplex of dimension hom_dim - 1
     {
         mid_simplices.push_back(MidHighSimplexData(vertices, AppearanceGrades(1, Grade(prev_time, prev_dist)), false));
         mid_count++;
-    } else if (vertices.size() == (unsigned)hom_dim + 2) //simplex of dimension hom_dim - 1
+    } else if (vertices.size() == hom_dim + 2) //simplex of dimension hom_dim - 1
     {
         high_simplices.push_back(MidHighSimplexData(vertices, AppearanceGrades(1, Grade(prev_time, prev_dist)), true));
         high_count++;
@@ -166,16 +166,16 @@ void BifiltrationData::build_BR_complex(const unsigned num_vertices, const std::
 void BifiltrationData::build_BR_subcomplex(const std::vector<unsigned>& distances, std::vector<int>& parent_vertices, const std::vector<int>& candidates, const AppearanceGrades& parent_grades, const std::vector<AppearanceGrades>& vertexMultigrades)
 {
     //Store the simplex info if it is of dimension (hom_dim - 1), hom_dim, or hom_dim+1. Dimension is parent_vertices.size() - 1
-    if (parent_vertices.size() == (unsigned)hom_dim) //simplex of dimension hom_dim - 1
+    if (parent_vertices.size() == hom_dim) //simplex of dimension hom_dim - 1
     {
         //take the greatest lower bound of parent_grades, using the fact that the grades are ordered properly.
 
         low_simplices.push_back(LowSimplexData(parent_vertices, Grade((parent_grades.end() - 1)->x, parent_grades.begin()->y)));
-    } else if (parent_vertices.size() == (unsigned)hom_dim + 1) //simplex of dimension hom_dim
+    } else if (parent_vertices.size() == hom_dim + 1) //simplex of dimension hom_dim
     {
         mid_simplices.push_back(MidHighSimplexData(parent_vertices, parent_grades, false));
         mid_count += parent_grades.size();
-    } else if (parent_vertices.size() == (unsigned)hom_dim + 2) //simplex of dimension hom_dim + 1
+    } else if (parent_vertices.size() == hom_dim + 2) //simplex of dimension hom_dim + 1
     {
         high_simplices.push_back(MidHighSimplexData(parent_vertices, parent_grades, true));
         high_count += parent_grades.size();
@@ -248,8 +248,8 @@ void BifiltrationData::combineMultigrades(AppearanceGrades& merged, const Appear
 {
     AppearanceGrades::const_iterator it1 = grades1.begin();
     AppearanceGrades::const_iterator it2 = grades2.begin();
-    int y1 = it1->y, y2 = it2->y, maxX;
-    int currYMax = std::max(std::max(y1, y2), (int)minDist);
+    unsigned y1 = it1->y, y2 = it2->y, maxX;
+    unsigned currYMax = std::max(std::max(y1, y2), minDist);
     Grade lastGrade;
     while (it1 != grades1.end() || it2 != grades2.end()) {
         maxX = std::numeric_limits<int>::min();
@@ -274,7 +274,7 @@ void BifiltrationData::combineMultigrades(AppearanceGrades& merged, const Appear
                 y1 = std::numeric_limits<int>::max();
             }
         }
-        int newYMax = std::max(std::max(y1, y2), (int)minDist);
+        unsigned newYMax = std::max(std::max(y1, y2), minDist);
         if (newYMax > currYMax) {
             lastGrade.x = maxX;
             lastGrade.y = currYMax;
@@ -319,7 +319,7 @@ unsigned BifiltrationData::num_y_grades()
 }
 
 //returns the number of simplices of dimension (hom_dim-1), hom_dim, or (hom_dim+1)
-int BifiltrationData::get_size(int dim)
+int BifiltrationData::get_size(unsigned dim)
 {
     if (dim == hom_dim - 1)
         return low_simplices.size();

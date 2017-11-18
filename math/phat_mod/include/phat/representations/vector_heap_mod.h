@@ -547,9 +547,9 @@ namespace phat {
         }
         */
         
-        //swap column idx with column idx+1
-        void _swap_columns(index idx) {
-            matrix[idx].swap(matrix[idx+1]);
+        //swap column a with column b
+        void _swap_columns(index a, index b) {
+            matrix[a].swap(matrix[b]);
         }
         
         //(implicitly) swap row idx with row idx+1

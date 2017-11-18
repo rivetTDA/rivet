@@ -74,30 +74,32 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<std::shared_ptr<H
     if (verbosity >= 10) {
         debug() << "  Mapping low simplices:";
     }
-    IndexMatrix* ind_low = fir.get_low_index_mx(); //can we improve this with something more efficient than IndexMatrix?
+    
+    //TODO:Probably could be cleaned up.  We don't need pointers here, do we?
+    IndexMatrix* ind_low = &(fir.index_mx_low); //can we improve this with something more efficient than IndexMatrix?
     store_multigrades(ind_low, true);
 
     if (verbosity >= 10) {
         debug() << "  Mapping high simplices:";
     }
-    IndexMatrix* ind_high = fir.get_high_index_mx(); //again, could be improved?
+    IndexMatrix* ind_high = &(fir.index_mx_high); //again, could be improved?
     store_multigrades(ind_high, false);
 
     //get the proper simplex ordering
     std::vector<int> low_simplex_order; //this will be a map : dim_index --> order_index for dim-simplices; -1 indicates simplices not in the order
     unsigned num_low_simplices = build_simplex_order(ind_low, true, low_simplex_order);
-    delete ind_low;
+    //delete ind_low;
 
     std::vector<int> high_simplex_order; //this will be a map : dim_index --> order_index for (dim+1)-simplices; -1 indicates simplices not in the order
     unsigned num_high_simplices = build_simplex_order(ind_high, false, high_simplex_order);
-    delete ind_high;
+    //delete ind_high;
 
 
     //get intial boundary matrices R_low and R_high for RU-decomposition.  These are permuted and trimmed,
     //as described in Section 6 of the RIVET paper.
-    R_low = new MapMatrix_Perm(fir.boundary_mx_0, low_simplex_order, num_low_simplices); //NOTE: must be deleted
+    R_low = new MapMatrix_Perm(fir.boundary_mx_low, low_simplex_order, num_low_simplices); //NOTE: must be deleted
     
-    R_high = new MapMatrix_Perm(fir.boundary_mx_1,low_simplex_order, num_low_simplices, high_simplex_order, num_high_simplices); //NOTE: must be deleted
+    R_high = new MapMatrix_Perm(fir.boundary_mx_high,low_simplex_order, num_low_simplices, high_simplex_order, num_high_simplices); //NOTE: must be deleted
     
     //print runtime data
     if (verbosity >= 4) {
@@ -373,16 +375,16 @@ void PersistenceUpdater::set_anchor_weights(std::vector<std::shared_ptr<Halfedge
     if (verbosity >= 10) {
         debug() << "  Mapping low simplices:";
     }
-    IndexMatrix* ind_low = fir.get_low_index_mx(); //can we improve this with something more efficient than IndexMatrix?
+    IndexMatrix* ind_low = &fir.index_mx_low; //can we improve this with something more efficient than IndexMatrix?
     store_multigrades(ind_low, true);
-    delete ind_low;
+    //delete ind_low;
 
     if (verbosity >= 10) {
         debug() << "  Mapping high simplices:";
     }
-    IndexMatrix* ind_high = fir.get_high_index_mx(); //again, could be improved?
+    IndexMatrix* ind_high = &fir.index_mx_high; //again, could be improved?
     store_multigrades(ind_high, false);
-    delete ind_high;
+    //delete ind_high;
 
     // PART 2: TRAVERSE THE PATH AND COUNT SWITCHES & SEPARATIONS AT EACH STEP
 
