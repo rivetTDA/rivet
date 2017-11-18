@@ -35,7 +35,6 @@ include_directories("${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/include" ${Bo
        "${CMAKE_CURRENT_BINARY_DIR}/msgpack/src/msgpack_project/include" )
 
 add_definitions(-DMSGPACK_USE_BOOST)
-include_directories("${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/include" ${Boost_INCLUDE_DIR} "${CMAKE_CURRENT_BINARY_DIR}/docopt/src/docopt_project")
 
 add_library(rivet
         computation.cpp
@@ -68,6 +67,8 @@ add_library(rivet
         interface/c_api.cpp
         interface/c_api.h api.h api.cpp)
 
+add_dependencies(rivet msgpack_project)
+
 add_executable (rivet_console
         console.cpp
         computation.cpp
@@ -99,7 +100,7 @@ add_executable (rivet_console
         math/bool_array.h
         api.cpp)
 
-add_dependencies(rivet_console docopt_project)
+add_dependencies(rivet_console docopt_project msgpack_project)
 
 target_link_libraries(rivet_console ${CMAKE_CURRENT_BINARY_DIR}/docopt/src/docopt_project-build/libdocopt_s.a ${Boost_LIBRARIES})
 # TODO: Make this file run the qmake build as well, and copy the rivet_console into the same dir where the viewer is built
@@ -132,7 +133,8 @@ add_executable(unit_tests
         debug.cpp
         test/unit_tests.cpp dcel/grades.cpp dcel/grades.h math/bool_array.cpp math/bool_array.h)
 
+add_dependencies(unit_tests msgpack_project)
 
 include_directories("${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/include" ${Boost_INCLUDE_DIR} ${PROJECT_SOURCE_DIR}/test)
 
-target_link_libraries(unit_tests ${Boost_LIBRARIES})
+target_link_libraries(unit_tests ${Boost_LIBRARIES} )
