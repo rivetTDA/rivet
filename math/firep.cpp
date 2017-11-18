@@ -89,7 +89,6 @@ FIRep::FIRep(BifiltrationData& bd, int v)
         debug() << "Creating boundary matrix of dimension" << bd.low_simplices.size() << "x" << mid_generators.size();
 
     //loop through simplices, writing columns to the matrix
-
     Grade prev_grade;
     
     //if hom_dim==0, we don't need to add any columns, and index_mx_low is already set correctly.
@@ -103,24 +102,8 @@ FIRep::FIRep(BifiltrationData& bd, int v)
         
         for (unsigned i = 0; i < bd.mid_count; i++) {
             
-            //If the bigrade changes from column i-1 to column i, add i-1 into index_mx_low in the appropriate places.
-            //Note that i-1 may need to be added in several times if there is a jump (w.r.t. colex order on the relevant grid)
-            //in the bigrade of column i-1 to the bigrade of column i.
-            
-            //TODO: This while loop is now appearing in three places, with only tiny changes.  Should be a private function.
-            while (! (*(mid_generators[i].second) == prev_grade) )
-            {
-                index_mx_low.set(prev_grade.y,prev_grade.x,i-1);
-                
-                //increment previous_grade w.r.t. colex order on the grid of bigrades.
-                if (prev_grade.x < x_grades-1)
-                    prev_grade.x++;
-                else
-                {
-                    prev_grade.x = 0;
-                    prev_grade.y++;
-                }
-            }
+            //fill in the appropriate part of the index matrix, if any
+            fill_index_mx(index_mx_low, prev_grade, *(mid_generators[i].second), i-1);
             
             //call the simplex "vertices";
             Simplex& vertices = mid_generators[i].first->s;
@@ -148,28 +131,14 @@ FIRep::FIRep(BifiltrationData& bd, int v)
             boundary_mx_low.prepare_col(i);
         }
         
-        //Now we complete construction of the index_mx_low.
-        //TODO: This block of code is now appearing in three places, with only tiny changes.  Should be a private function.
+        //Now complete construction of the index_mx_low.
         if (bd.mid_count > 0)
-        {
-            //When we get here, previous_grade == mid_generators.back().second
-            //now set the values of index_mx_low at the indices which haven't been visited yet
-            while (! (prev_grade.y < y_grades-1 || prev_grade.x < x_grades-1) )
-            {
-                index_mx_low.set(prev_grade.y,prev_grade.x,mid_generators.size()-1);
-                //increment previous_grade w.r.t. colex order on the grid of bigrades.
-                if (prev_grade.x < x_grades-1)
-                    prev_grade.x++;
-                else
-                {
-                    prev_grade.x = 0;
-                    prev_grade.y++;
-                }
-            }
-        }
+            fill_index_mx(index_mx_low, prev_grade, Grade(0,index_mx_low.height()), mid_generators.size()-1);
     }
     //We're done building boundary_mx_low.
-
+    
+    index_mx_low.print();
+    
     //We no longer need low_simplices
     std::vector<LowSimplexData>().swap(bd.low_simplices); //"Free" memory of low_generators
     std::unordered_map<Simplex* const, unsigned, VectorHash, deref_equal_fn>().swap(low_ht); //"Free" memory of hash_table.
@@ -286,19 +255,7 @@ FIRep::FIRep(BifiltrationData& bd, int v)
         if (high_generators[i].first->is_high()) {
             
             //set entries of the index matrix
-            while (! (*(high_generators[i].second) == prev_grade) )
-            {
-                index_mx_high.set(prev_grade.y,prev_grade.x,i-1);
-                
-                //increment previous_grade w.r.t. colex order on the grid of bigrades.
-                if (prev_grade.x < x_grades-1)
-                    prev_grade.x++;
-                else
-                {
-                    prev_grade.x = 0;
-                    prev_grade.y++;
-                }
-            }
+            fill_index_mx(index_mx_high, prev_grade, *(high_generators[i].second), i-1);
             
             //TODO: reserve space in the column of boundary_mx_high for the entries we will add in?  Because of all the nested interfaces, a few classes would have to be changed.  Probably not worth it.
 
@@ -348,19 +305,7 @@ FIRep::FIRep(BifiltrationData& bd, int v)
             
             //Update index_mx_high in the appropriate way.
             Grade curr_grade = Grade(high_generators[i].second->x, (high_generators[i].second + 1)->y);
-            while (! (curr_grade == prev_grade) )
-            {
-                index_mx_high.set(prev_grade.y,prev_grade.x,i-1);
-                
-                //increment previous_grade w.r.t. colex order on the grid of bigrades.
-                if (prev_grade.x < x_grades-1)
-                    prev_grade.x++;
-                else
-                {
-                    prev_grade.x = 0;
-                    prev_grade.y++;
-                }
-            }
+            fill_index_mx(index_mx_high, prev_grade, curr_grade, i-1);
 
             //add the second index of the relation to the ith column of boundary_mx_high
             boundary_mx_high.set(*(high_generators[i].first->ind.begin() + std::distance(high_generators[i].first->ag.begin(), high_generators[i].second) + 1),i);
@@ -374,24 +319,12 @@ FIRep::FIRep(BifiltrationData& bd, int v)
     
     //Now we complete construction of the index_mx_high.
     if (high_generators.size() > 0)
-    {
-        //When we get here, previous_grade is the grade of the last column of boundary_mx_high.
-        //now set the values of index_mx_high at the indices which haven't been visited yet
-        while (! (prev_grade.y < y_grades-1 || prev_grade.x < x_grades-1) )
-        {
-            index_mx_high.set(prev_grade.y,prev_grade.x,high_generators.size()-1);
-            //increment previous_grade w.r.t. colex order on the grid of bigrades.
-            if (prev_grade.x < x_grades-1)
-                prev_grade.x++;
-            else
-            {
-                prev_grade.x = 0;
-                prev_grade.y++;
-            }
-        }
-    }
+        fill_index_mx(index_mx_high, prev_grade, Grade(0,index_mx_high.height()), high_generators.size()-1);
     //We're done building boundary_mx_high.
 
+    //Only for debugging. remove later.
+    index_mx_high.print();
+    
     if (verbosity >= 6)
         debug() << "Created high boundary matrix";
 
@@ -441,40 +374,12 @@ FIRep::FIRep(BifiltrationData& bd, unsigned num_high_simplices, unsigned num_mid
     for (unsigned i = 0; i < num_mid_simplices; i++) {
         write_boundary_column(boundary_mx_low, d1[mid_indexes[i].second], i);
         
-        //set entries of index_mx_low
-        while (! (mid_indexes[i].first == prev_grade) )
-        {
-            index_mx_low.set(prev_grade.y,prev_grade.x,i-1);
-            
-            //increment previous_grade w.r.t. colex order on the grid of bigrades.
-            if (prev_grade.x < x_grades-1)
-                prev_grade.x++;
-            else
-            {
-                prev_grade.x = 0;
-                prev_grade.y++;
-            }
-        }
+        fill_index_mx(index_mx_low, prev_grade, mid_indexes[i].first, i-1);
     }
     
     //Now we complete construction of the index_mx_low.
     if (num_mid_simplices > 0)
-    {
-        //When we get here, previous_grade == mid_indexes.back().second
-        //now set the values of index_mx_low at the indices which haven't been visited yet
-        while (! (prev_grade.y < y_grades-1 || prev_grade.x < x_grades-1) )
-        {
-            index_mx_low.set(prev_grade.y,prev_grade.x,mid_indexes.size()-1);
-            //increment previous_grade w.r.t. colex order on the grid of bigrades.
-            if (prev_grade.x < x_grades-1)
-                prev_grade.x++;
-            else
-            {
-                prev_grade.x = 0;
-                prev_grade.y++;
-            }
-        }
-    }
+        fill_index_mx(index_mx_low, prev_grade, Grade(0,index_mx_low.height()), mid_indexes.size()-1);
     
     std::vector<std::pair<Grade, unsigned>> high_indexes;
     for (unsigned i = 0; i < num_high_simplices; i++) {
@@ -494,47 +399,18 @@ FIRep::FIRep(BifiltrationData& bd, unsigned num_high_simplices, unsigned num_mid
         }
         write_boundary_column(boundary_mx_high, entries, i);
         
-        //set entries of index_mx_high
-        while (! (high_indexes[i].first == prev_grade) )
-        {
-            index_mx_high.set(prev_grade.y,prev_grade.x,i-1);
-            
-            //increment previous_grade w.r.t. colex order on the grid of bigrades.
-            if (prev_grade.x < x_grades-1)
-                prev_grade.x++;
-            else
-            {
-                prev_grade.x = 0;
-                prev_grade.y++;
-            }
-        }
+        fill_index_mx(index_mx_high, prev_grade, high_indexes[i].first, i-1);
     }
 
     //Now we complete construction of the index_mx_high
     if (num_high_simplices > 0)
-    {
-        //When we get here, previous_grade == high_indices.back().second
-        //now set the values of index_mx_high at the indices which haven't been visited yet
-        while (! (prev_grade.y < y_grades-1 || prev_grade.x < x_grades-1) )
-        {
-            index_mx_high.set(prev_grade.y,prev_grade.x,high_indexes.size()-1);
-            //increment previous_grade w.r.t. colex order on the grid of bigrades.
-            if (prev_grade.x < x_grades-1)
-                prev_grade.x++;
-            else
-            {
-                prev_grade.x = 0;
-                prev_grade.y++;
-            }
-        }
-    }
+        fill_index_mx(index_mx_high, prev_grade, Grade(0,index_mx_high.height()), high_indexes.size()-1);
     
     if (verbosity >= 8)
         debug() << "Created FIRep";
 
-    if (verbosity >= 10) {
+    if (verbosity >= 10)
         print();
-    }
 }
 
 //writes boundary information given boundary entries in column col of matrix mat
@@ -567,3 +443,18 @@ void FIRep::print()
     //boundary_mx_high.print();
     //get_high_index_mx()->print();
 }
+
+void FIRep::fill_index_mx(IndexMatrix& ind_mat, Grade& start_grade, const Grade& end_grade, const unsigned& value)
+{
+    Grade& current_grade = start_grade;
+    while (! (current_grade == end_grade) )
+    {
+        //set value of index matrix
+        ind_mat.set(current_grade.y,current_grade.x,value);
+        
+        //increment w.r.t. colex order on the grid of bigrades.
+        ind_mat.next_colex(current_grade.y,current_grade.x);
+    }
+}
+
+

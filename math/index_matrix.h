@@ -45,12 +45,21 @@ public:
     unsigned width() const; //returns number of columns
     unsigned height() const; //returns number of rows
 
+    //utility function which gives the next index in the matrix, w.r.t. colex order.
+    //NOTE: directly increments row and col.  For the last index (num_rows-1,num_columns-1), this will increment
+    //to (num_rows,0) which is outside of the grid.  This edge case behavior is convenient in the firep class.
+    // For input indices not in the grid, an error is thrown.
+    void next_colex(unsigned& row, unsigned& col);
+    
     void print() const; //prints the matrix
-
+    
 private:
     unsigned num_rows;
     unsigned num_cols;
     std::vector<int> data;
+    
+
+    
 };
 
 #endif // __IndexMatrix_H__

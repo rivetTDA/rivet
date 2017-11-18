@@ -60,6 +60,19 @@ unsigned IndexMatrix::height() const
     return num_rows;
 }
 
+void IndexMatrix::next_colex(unsigned& row, unsigned& col)
+{
+    if (row >= num_rows || col >= num_cols)
+        throw std::runtime_error("IndexMatrix.next_colex(): matrix subscript out of bounds");
+    if (col < num_cols-1)
+        col++;
+    else
+    {
+        col = 0;
+        row++;
+    }
+}
+
 //function to print the matrix to standard output, for testing purposes
 void IndexMatrix::print() const
 {
@@ -81,3 +94,6 @@ void IndexMatrix::print() const
         qd << " |\n";
     }
 } //end print()
+
+
+

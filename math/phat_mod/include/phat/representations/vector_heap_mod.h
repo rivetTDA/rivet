@@ -151,9 +151,6 @@ namespace phat {
         // _set_entry is needed by RIVET.
         // Adds an entry to a column.  Does not do any sorting or heapification.
         // NOTE: Assumes the entry has not yet been added.
-        
-        //QUESTION: Is the row index permuted or not?
-        //NOTE: I want separate versions for the permuted and unpermuted setttings.
         void _set_entry(index row,index col)
         {
             matrix[col].push_back(row);

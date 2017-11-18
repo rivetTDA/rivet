@@ -104,6 +104,11 @@ private:
     //writes boundary column.
     void write_boundary_column(MapMatrix& mat, const std::vector<unsigned>& entries, const unsigned col); //writes boundary information given boundary entries in column col of matrix mat
 
+    //technical utility function for setting the index matrices.
+    //sets each entry of ind_mat in the colex interval [start_grade,end_grade) to value
+    void fill_index_mx(IndexMatrix& ind_mat, Grade& start_grade, const Grade& end_grade, const unsigned& value);
+    
+    
     /*
     IndexMatrix* get_index_mx(AppearanceGrades& source_grades); //Gets the index matrix associated with a list of grades
      */
