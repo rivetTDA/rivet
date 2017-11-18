@@ -43,7 +43,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "numerics.h"
 #include "type_tag.h"
 #include <msgpack.hpp>
-#include "msgpack_external.h"
 
 
 //namespace boost {
@@ -64,8 +63,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //    }
 //}
 
-BOOST_CLASS_EXPORT(BarcodeTemplate)
-BOOST_CLASS_EXPORT(BarTemplate)
 
 template <class Archive>
 void Vertex::serialize(Archive& ar, const unsigned int /*version*/)

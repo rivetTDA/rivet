@@ -12,12 +12,9 @@ namespace msgpack {
             template<>
             struct as<exact> {
                 exact operator()(msgpack::object const& o) const {
-                    throw std::runtime_error("not implemented");
-//                    if (o.type != msgpack::type::ARRAY) throw msgpack::type_error();
-//                    if (o.via.array.size != 2) throw msgpack::type_error();
-//                    boost::multiprecision::cpp_int num = o.via.array.ptr[0].as<boost::multiprecision::cpp_int>();
-//                    boost::multiprecision::cpp_int denom = o.via.array.ptr[1].as<boost::multiprecision::cpp_int>();
-//                    return exact(num, denom);
+                    std::string buf;
+                    o.convert(buf);
+                    return exact(buf);
                 }
             };
             template<>

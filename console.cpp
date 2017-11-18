@@ -35,6 +35,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "dcel/arrangement_message.h"
 #include "dcel/serialization.h"
+#include "api.h"
 
 static const char USAGE[] =
     R"(RIVET: Rank Invariant Visualization and Exploration Tool
@@ -94,6 +95,9 @@ static const char USAGE[] =
                                                     10 0.92: 11.9947 inf x1, 11.9947 19.9461 x2, 11.9947 16.4909 x1, 11.9947 13.0357 x4
 
 )";
+
+std::unique_ptr<ComputationResult>
+from_messages(const TemplatePointsMessage &templatePointsMessage, const ArrangementMessage &arrangementMessage);
 
 unsigned int get_uint_or_die(std::map<std::string, docopt::value>& args, const std::string& key)
 {
@@ -212,14 +216,14 @@ void process_barcode_queries(std::string query_file_name, const ComputationResul
             return;
         }
     }
-    Grades grades(computation_result.arrangement->x_exact, computation_result.arrangement->y_exact);
 
-    for (auto query : queries) {
+    auto vec = query_barcodes(computation_result, queries);
+    for(auto i = 0; i < queries.size(); i++) {
+        auto query = queries[i];
         auto angle = query.first;
         auto offset = query.second;
         std::cout << angle << " " << offset << ": ";
-        auto templ = computation_result.arrangement->get_barcode_template(angle, offset);
-        auto barcode = templ.rescale(angle, offset, computation_result.template_points, grades);
+        auto barcode = vec[i].get();
         for (auto it = barcode->begin(); it != barcode->end(); it++) {
             auto bar = *it;
             std::cout << bar.birth << " ";
@@ -249,35 +253,14 @@ bool is_precomputed(std::string file_name)
     return line == "RIVET_1";
 }
 
-std::unique_ptr<ComputationResult> load_from_precomputed(std::string file_name)
-{
+std::unique_ptr<ComputationResult> load_from_precomputed(std::string file_name) {
     std::ifstream file(file_name);
     if (!file.is_open()) {
         throw std::runtime_error("Couldn't open " + file_name + " for reading");
     }
-    std::string type;
-    std::getline(file, type);
-    if (type != "RIVET_1") {
-        throw std::runtime_error("Expected a precomputed RIVET file");
-    }
-    boost::archive::binary_iarchive archive(file);
-    InputParameters params;
-    TemplatePointsMessage templatePointsMessage;
-    ArrangementMessage arrangementMessage;
-    archive >> params;
-    archive >> templatePointsMessage;
-    archive >> arrangementMessage;
-    std::unique_ptr<ComputationResult> result(new ComputationResult);
-    result->arrangement.reset(new Arrangement);
-    *(result->arrangement) = arrangementMessage.to_arrangement();
-    std::vector<size_t> ex;
-    const size_t* shape = templatePointsMessage.homology_dimensions.shape();
-    ex.assign(shape, shape + templatePointsMessage.homology_dimensions.num_dimensions());
-    result->homology_dimensions.resize(ex);
-    result->homology_dimensions = templatePointsMessage.homology_dimensions;
-    result->template_points = templatePointsMessage.template_points;
-    return result;
+    return from_istream(file);
 }
+
 
 int main(int argc, char* argv[])
 {

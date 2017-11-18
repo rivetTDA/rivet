@@ -35,6 +35,38 @@ include_directories("${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/include" ${Bo
        "${CMAKE_CURRENT_BINARY_DIR}/msgpack/src/msgpack_project/include" )
 
 add_definitions(-DMSGPACK_USE_BOOST)
+include_directories("${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/include" ${Boost_INCLUDE_DIR} "${CMAKE_CURRENT_BINARY_DIR}/docopt/src/docopt_project")
+
+add_library(rivet
+        computation.cpp
+        interface/progress.cpp
+        interface/file_writer.cpp
+        interface/file_input_reader.cpp
+        interface/input_manager.cpp
+        dcel/barcode.cpp
+        dcel/arrangement.cpp
+        dcel/arrangement_builder.cpp
+        dcel/anchor.cpp
+        dcel/barcode_template.cpp
+        dcel/dcel.cpp
+        dcel/arrangement_message.cpp
+        math/map_matrix.cpp
+        math/multi_betti.cpp
+        math/simplex_tree.cpp
+        math/st_node.cpp
+        math/template_point.cpp
+        math/template_points_matrix.cpp
+        math/index_matrix.cpp
+        math/persistence_updater.cpp
+        numerics.cpp
+        timer.cpp
+        debug.cpp
+        dcel/grades.cpp
+        dcel/grades.h
+        math/bool_array.cpp
+        math/bool_array.h
+        interface/c_api.cpp
+        interface/c_api.h api.h api.cpp)
 
 add_executable (rivet_console
         console.cpp
@@ -61,7 +93,11 @@ add_executable (rivet_console
         numerics.cpp
         timer.cpp
         debug.cpp
-        dcel/grades.cpp dcel/grades.h math/bool_array.cpp math/bool_array.h)
+        dcel/grades.cpp
+        dcel/grades.h
+        math/bool_array.cpp
+        math/bool_array.h
+        api.cpp)
 
 add_dependencies(rivet_console docopt_project)
 
