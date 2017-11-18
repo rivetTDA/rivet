@@ -68,6 +68,7 @@ add_library(rivet
         interface/c_api.h api.h api.cpp)
 
 add_dependencies(rivet msgpack_project)
+target_link_libraries(rivet ${Boost_LIBRARIES})
 
 add_executable (rivet_console
         console.cpp
