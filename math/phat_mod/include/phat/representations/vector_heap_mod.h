@@ -183,7 +183,7 @@ namespace phat {
         }
         
         // RIVET modification; part of an optimization of the standard reduction when columns are lazy heaps.
-        void _push_max_index(index col_idx,index entry)
+        void _push_index(index col_idx,index entry)
         {
             column& col = matrix[ col_idx ];
             col.push_back( entry );
@@ -482,12 +482,11 @@ namespace phat {
             return perm[raw_index];
         }
         
-        void _push_max_index(index col_idx,index entry)
+        void _push_index(index col_idx,index entry)
         {
             matrix[ col_idx ].push_back(mrep[entry]);
             std::push_heap( matrix[ col_idx ].begin( ), matrix[ col_idx ].end( ), [this](const index left, const index right) { return perm[left]<perm[right]; } );
         }
-        
         
         // adds column 'source' to column 'target'
         // TODO: As above, add and then heapify if the column is large, instead of maintaining the heap entry by entry?
