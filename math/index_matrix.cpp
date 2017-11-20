@@ -73,6 +73,18 @@ void IndexMatrix::next_colex(unsigned& row, unsigned& col)
     }
 }
 
+unsigned IndexMatrix::start_index(unsigned& row, unsigned& col)
+{
+    if (row == 0 && col == 0)
+        return 0;
+
+    if (col > 0)
+        return 1 + get(row,col-1);
+        
+    //if we get here, then row>0 and col == 0.
+    return 1 + get(row-1,num_cols-1);
+}
+
 //function to print the matrix to standard output, for testing purposes
 void IndexMatrix::print() const
 {

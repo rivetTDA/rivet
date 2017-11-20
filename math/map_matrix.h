@@ -102,14 +102,23 @@ public:
     //virtual bool operator==(MapMatrix& other);
 
     //requests that the columns vector have enough capacity for num_cols columns
-    void reserve_cols(unsigned num_cols); //requests that the columns vector have enough capacity for num_cols columns
+    void reserve_cols(unsigned num_cols);
     
     //WARNING: Current Implementation assumes the entry has not already been added.
     virtual void set(unsigned i, unsigned j); //sets (to 1) the entry in row i, column j
     
     //virtual bool entry(unsigned i, unsigned j) const; //returns true if entry (i,j) is 1, false otherwise
     
-    virtual int low(unsigned j) const; //returns the "low" index in the specified column, or -1 if the column is empty
+    //returns the "low" index in the specified column, or -1 if the column is empty
+    virtual int low(unsigned j) const;
+    
+    //same as the above, but removes the low.
+    //Used for efficient implementation of standard reduction w/ lazy heaps.
+    int remove_low(unsigned j);
+    
+    //Assuming column l is already heapified, adds l to the column and fixes heap.
+    //Used for efficient implementation of standard reduction w/ lazy heaps.
+    void push_index(unsigned j, unsigned l);
     
     bool col_is_empty(unsigned j) const; //returns true iff column j is empty
 
@@ -117,7 +126,10 @@ public:
     
     void add_column(const MapMatrix* other, unsigned j, unsigned k); //adds column j from MapMatrix* other to column k of this matrix
     
+    void add_column_popped(unsigned j, unsigned k); //wraps the add_to_popped() function in vector_heap_mod. See that code for an explanation.
+    
     void prepare_col(unsigned i);
+    
     
     //copies column with index src_col from other to column dest_col in this matrix
     void copy_col_from(const MapMatrix* other, unsigned src_col, unsigned dest_col);

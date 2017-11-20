@@ -307,6 +307,7 @@ void MultiBetti::compute(unsigned_matrix& hom_dims, Progress& progress)
     delete merge;
 } //end compute()
 
+//TODO: By an observation of William Wang, this can be simplified a bit.
 //computes xi_2 from the values of xi_0, xi_1 and the dimensions
 void MultiBetti::compute_xi2(unsigned_matrix& hom_dims)
 {
@@ -369,17 +370,37 @@ void MultiBetti::store_support_points(std::vector<TemplatePoint>& tpts)
 //  increments nonzero_cols by the number of columns in [first_col, last_col] that remained nonzero
 void MultiBetti::reduce(MapMatrix* mm, int first_col, int last_col, Vector& lows, long& nonzero_cols)
 {
+    int c;
+    int l;
+    bool changing_column = false;
+    
     for (int j = first_col; j <= last_col; j++) {
+        
+        l = mm->remove_low(j);
+        
+        if (l != -1 && lows[l] != -1 && lows[l] < j)
+        {
+            //if we get here then we are going to change the j^{th} column.
+            changing_column = true;
+        }
+        
         //while column j is nonempty and its low number is found in the low array, do column operations
-        while (mm->low(j) >= 0 && lows[mm->low(j)] >= 0 && lows[mm->low(j)] < j) {
-            mm->add_column(lows[mm->low(j)], j);
+        while (l != -1  && lows[l] != -1 && lows[l] < j) {
+            c = lows[l];
+            mm->add_column_popped(c, j);
+            l = mm->remove_low(j);
         }
 
-        if (mm->low(j) >= 0) { //column is still nonempty
-            lows[mm->low(j)] = j;
+        if (l != -1) { //column is still nonempty, so put back the pivot we popped off last and update lows
+            mm->push_index(j,l);
+            lows[l] = j;
             nonzero_cols++;
         }
-        mm->finalize(j);
+        if (changing_column)
+        {
+            mm->finalize(j);
+            changing_column = false;
+        }
     }
 } //end reduce()
 
@@ -391,24 +412,48 @@ void MultiBetti::reduce(MapMatrix* mm, int first_col, int last_col, Vector& lows
 void MultiBetti::reduce_slave(MapMatrix* mm, MapMatrix* slave1, MapMatrix* slave2, int first_col, int last_col, Vector& lows,
     unsigned y_grade, ColumnList& zero_list, long& zero_cols)
 {
+    int c;
+    int l;
+    bool changing_column = false;
+    
     for (int j = first_col; j <= last_col; j++) {
-        //while column j is nonempty and its low number is found in the low array, do column operations
-        while (mm->low(j) >= 0 && lows[mm->low(j)] >= 0 && lows[mm->low(j)] < j) {
-            int col_to_add = lows[mm->low(j)];
-            mm->add_column(col_to_add, j);
-            slave1->add_column(col_to_add, j);
-            slave2->add_column(col_to_add, j);
+        
+        l = mm->remove_low(j);
+        
+        if (l != -1 && lows[l] != 1 && lows[l] < j)
+        {
+            //if we get here then we are going to change the j^{th} column.
+            changing_column = true;
         }
-
-        if (mm->low(j) >= 0) //column is still nonempty, so update lows
-            lows[mm->low(j)] = j;
-        else { //column is zero
+        
+        //while column j is nonempty and its low number is found in the low array, do column operations
+        while (l != -1 && lows[l] != -1 && lows[l] < j) {
+            c = lows[l];
+            mm->add_column_popped(c, j);
+            slave1->add_column(c, j);
+            slave2->add_column(c, j);
+            l = mm->remove_low(j);
+        }
+        
+        if (l != -1) //column is still nonempty, so update lows
+        {
+            mm->push_index(j,l);
+            lows[l] = j;
+        }
+        else
+        {
+            //column is zero
             zero_cols++;
             zero_list.insert(j, y_grade);
         }
-        mm->finalize(j);
-        slave1->finalize(j);
-        slave2->finalize(j);
+        
+        if (changing_column)
+        {
+            mm->finalize(j);
+            slave1->finalize(j);
+            slave2->finalize(j);
+            changing_column = false;
+        }
     }
 } //end reduce_slave()
 

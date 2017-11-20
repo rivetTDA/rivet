@@ -1,7 +1,7 @@
 /**
  * \class	BigradedMatrix
  * \brief	Stores a SparseMatrix object (i.e., PHAT-type column-sparse matrix) and an IndexMatrix specifying the grade of appearance of each column.
- * \author	Michael Lesnick
+ * \author	Michael Lesnick and Matthew Wright
  * \date	9/28/17
  */
 
@@ -9,21 +9,31 @@
 #define __Bigraded_Matrix_H__
 
 //forward declarations
-
-template< class Representation>
-class SparseMatrix<Representation>;
+class MapMatrix;
 class vector_heap;
 class IndexMatrix;
 
-struct BigradedMatrix {
+class BigradedMatrix {
 public:
     //column-sparse matrix
-    SparseMatrix<vector_heap> mat;
+    MapMatrix mat;
     //bigrade info for each column of mat
     IndexMatrix ind;
     
-    BigradedMatrix(unsigned rows, unsigned cols, unsigned num_xgr, unsigned num_ygr) : mat(SparseMatrix(rows,cols)), ind(IndexMatrix(num_ygr,num_xgr))
+    //constructor
+    BigradedMatrix(MapMatrix map_mat, IndexMatrix ind_mat) : mat(map_mat), ind(ind_mat)
     {}
+    
+    //Compute the kernel of this bigraded matrix via a standard reduction
+    BigradedMatrix kernel();
 };
+
+
+private:
+
+    //adapted from MultiBetti::reduce_slave()
+    void reduce_slave(MapMatrix& slave, const int& first_col, const int& last_col, Vector& lows,
+                                  unsigned y_grade, ColumnList& zero_list, long& zero_cols)
+
 
 #endif // __Bigraded_Matrix_H__

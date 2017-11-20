@@ -174,6 +174,19 @@ int MapMatrix::low(unsigned j) const
     return matrix._get_max_index(j);
 }
 
+//same as the above, but removes the low.
+int MapMatrix::remove_low(unsigned j)
+{
+    return matrix._remove_max(j);
+}
+
+//Assuming column l is already heapified, adds l to the column and fixes heap.
+void MapMatrix::push_index(unsigned j, unsigned l)
+{
+    
+    return matrix._push_index(j,l);
+}
+
 //returns true iff column j is empty
 bool MapMatrix::col_is_empty(unsigned j) const
 {
@@ -193,6 +206,12 @@ void MapMatrix::add_column(const MapMatrix* other, unsigned j, unsigned k)
     //if (other->columns.size() <= j || columns.size() <= k)
     //    throw std::runtime_error("MapMatrix::add_column(): attempting to access column(s) past end of matrix");
     matrix._add_to(other->matrix,j,k);
+}
+
+//wraps the add_to_popped() function in vector_heap_mod. See that code for an explanation.
+void MapMatrix::add_column_popped(unsigned j, unsigned k)
+{
+    matrix._add_to_popped(j,k);
 }
 
 //
@@ -302,9 +321,11 @@ MapMatrix_Perm::MapMatrix_Perm(const MapMatrix& mat, const std::vector<int>& cof
     , low_by_col(num_cofaces, -1) // col_perm(cols)
 
 {
+    
+    int order_index;
     //loop through all simplices, writing columns to the matrix
     for (unsigned i = 0; i < mat.width(); i++) {
-        int order_index  = coface_order[i]; //index of the matrix column which will store the boundary of this simplex
+        order_index  = coface_order[i]; //index of the matrix column which will store the boundary of this simplex
         if (order_index != -1) {
             //NOTE: Permissions here are okay because MapMatrix is a friend class.
             matrix._set_col(order_index,*(mat.matrix._get_col_iter(i)));
@@ -384,7 +405,7 @@ MapMatrix_RowPriority_Perm* MapMatrix_Perm::decompose_RU()
             c = low_by_row[l];
             
             //For efficiency, we use a special version of add_column which knows that column c has been finalized and the pivot of column j has been popped.
-        
+            
             matrix._add_to_popped(c, j);
             
             U->add_row(j, c); //perform the opposite row operation on U
@@ -393,7 +414,7 @@ MapMatrix_RowPriority_Perm* MapMatrix_Perm::decompose_RU()
         
         if (l>=0) //then column is still nonempty, so put back the pivot we popped off last, update lows
         {
-            matrix._push_max_index(j,l);
+            matrix._push_index(j,l);
             low_by_col[j] = l;
             low_by_row[l] = j;
         }
