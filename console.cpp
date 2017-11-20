@@ -174,13 +174,9 @@ void print_betti(TemplatePointsMessage const& message, std::ostream& ostream)
 }
 
 void process_bounds(const ComputationResult &computation_result) {
-    const auto grades = Grades(computation_result.arrangement->x_exact, computation_result.arrangement->y_exact);
-    const auto x_low = grades.x.front();
-    const auto y_low = grades.y.front();
-    const auto x_high = grades.x.back();
-    const auto y_high = grades.y.back();
-    std::cout << "low: " << x_low << ", " << y_low << std::endl;
-    std::cout << "high: " << x_high << ", " << y_high << std::endl;
+    auto bounds = compute_bounds(computation_result);
+    std::cout << "low: " << bounds.x_low << ", " << bounds.y_low << std::endl;
+    std::cout << "high: " << bounds.x_high << ", " << bounds.y_high << std::endl;
 }
 
 void process_barcode_queries(std::string query_file_name, const ComputationResult& computation_result)

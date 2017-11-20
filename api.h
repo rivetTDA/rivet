@@ -27,4 +27,15 @@ std::vector<std::unique_ptr<Barcode>> query_barcodes(const ComputationResult &co
                                                      const std::vector<std::pair<double, double>> &offset_slopes);
 
 std::unique_ptr<ComputationResult> from_istream(std::istream &file);
+
+
+struct Bounds {
+    double x_low;
+    double y_low;
+    double x_high;
+    double y_high;
+};
+
+Bounds compute_bounds(const ComputationResult &computation_result);
+
 #endif //RIVET_CONSOLE_API_H

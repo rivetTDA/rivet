@@ -71,3 +71,17 @@ std::vector<std::unique_ptr<Barcode>> query_barcodes(const ComputationResult &co
     }
     return result;
 }
+
+Bounds compute_bounds(const ComputationResult &computation_result) {
+    const auto grades = Grades(computation_result.arrangement->x_exact, computation_result.arrangement->y_exact);
+    const auto x_low = grades.x.front();
+    const auto y_low = grades.y.front();
+    const auto x_high = grades.x.back();
+    const auto y_high = grades.y.back();
+    return Bounds {
+            x_low,
+            y_low,
+            x_high,
+            y_high
+    };
+}

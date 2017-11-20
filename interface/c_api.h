@@ -42,13 +42,28 @@ typedef struct {
     size_t length;
 } BarCodesResult;
 
+typedef struct {
+    double x_low;
+    double y_low;
+    double x_high;
+    double y_high;
+} ArrangementBounds;
+
+struct rivet_comp;
+typedef rivet_comp RivetComputation;
+
+RivetComputation * read_rivet_computation(const char* bytes, size_t length);
+
 //Computed* compute_arrangement_from_point_cloud(PointCloud);
-BarCodesResult* barcodes_from_bytes(const char* bytes,
-                                    size_t length,
+BarCodesResult* barcodes_from_computation(RivetComputation* rivet_computation,
                                     double* offsets,
                                     double* angles,
                                     size_t query_length
                                     );
+
+ArrangementBounds bounds_from_computation(RivetComputation* rivet_computation);
+
+void free_rivet_computation(RivetComputation * rivet_computation);
 
 void free_barcodes_result(BarCodesResult *result);
 

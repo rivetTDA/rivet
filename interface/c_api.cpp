@@ -14,17 +14,32 @@
 #include "input_parameters.h"
 
 
+extern "C"
+RivetComputation* read_rivet_computation(const char* bytes, size_t length) {
+    try {
+        std::istringstream buf(std::string(bytes, length));
+        auto computation = from_istream(buf);
+        return reinterpret_cast<RivetComputation*>(computation.release());
+    } catch (std::exception &e) {
+        std::cerr << "RIVET error: " << e.what() << std::endl;
+        return nullptr;
+    }
+}
 
 extern "C"
-BarCodesResult* barcodes_from_bytes(const char* bytes,
-                                    size_t length,
+void free_rivet_computation(RivetComputation* computation) {
+
+    delete reinterpret_cast<ComputationResult*>(computation);
+}
+
+extern "C"
+BarCodesResult* barcodes_from_computation(RivetComputation* rivet_computation,
                                     double* angles,
                                     double* offsets,
                                     size_t query_length
 ) {
     try {
-        std::istringstream buf(std::string(bytes, length));
-        auto computation = from_istream(buf);
+        ComputationResult* computation = reinterpret_cast<ComputationResult*>(rivet_computation);
 
         std::vector<std::pair<double, double>> pos;
         for (size_t i = 0; i < query_length; i++) {
@@ -44,12 +59,27 @@ BarCodesResult* barcodes_from_bytes(const char* bytes,
             barcodes[i].angle = angles[i];
             barcodes[i].offset = offsets[i];
         }
-        auto result = new BarCodesResult{barcodes, query_results.size()};
+        Bounds bounds = compute_bounds(*computation);
+        auto result = new BarCodesResult{ barcodes,
+                                          query_results.size(),
+                                            };
         return result;
     } catch (std::exception &e) {
         std::cerr << "RIVET error: " << e.what() << std::endl;
         return nullptr;
     }
+}
+
+extern "C"
+ArrangementBounds bounds_from_computation(RivetComputation * rivet_computation) {
+    ComputationResult* computation = reinterpret_cast<ComputationResult*>(rivet_computation);
+    auto bounds = compute_bounds(*computation);
+    return ArrangementBounds {
+            bounds.x_low,
+            bounds.y_low,
+            bounds.x_high,
+            bounds.y_high
+    };
 }
 
 extern "C"
