@@ -172,6 +172,13 @@ namespace phat {
         }
         */
 
+        // append copy of column to back of matrix, while clearing the original column
+        void _append_col_and clear(column& col)
+        {
+            matrix.push_back(column());
+            matrix[size()-1].swap(col);
+        }
+        
         // largest row index of given column idx (new name for lowestOne())
         index _get_max_index( index idx ) const
         {
