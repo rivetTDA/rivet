@@ -128,8 +128,12 @@ public:
     
     void add_column_popped(unsigned j, unsigned k); //wraps the add_to_popped() function in vector_heap_mod. See that code for an explanation.
     
-    void prepare_col(unsigned i);
+    void prepare_col(unsigned j);
     
+    //For use in the new algorithm to compute presentations.  Move the jth column of other to the back of this matrix, zeroing out this column of other in the process.
+    void move_col(MapMatrix& other, unsigned j);
+    
+    void finalize(unsigned i);
     
     //copies column with index src_col from other to column dest_col in this matrix
     void copy_col_from(const MapMatrix* other, unsigned src_col, unsigned dest_col);
@@ -147,8 +151,7 @@ public:
     //removes zero columns from this matrix
     //  ind_old gives grades of columns before zero columns are removed; new grade info stored in ind_new
     void remove_zero_cols(const IndexMatrix& ind_old, IndexMatrix& ind_new);
-    
-    void finalize(unsigned i);
+
     
     void print();
     

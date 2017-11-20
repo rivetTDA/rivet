@@ -8,37 +8,12 @@
 #ifndef BIFILTRATION_DATA_H
 #define BIFILTRATION_DATA_H
 
+#include "grade.h"
 #include <boost/functional/hash.hpp>
 #include <set>
 #include <unordered_map>
 #include <vector>
 
-//Pair of coordinates specifying grade of appearance with additional sorting operator. Sorted COLEXICOGRAPHICALLY, i.e., first by y-coordinate,  then by x-coordinate.
-struct Grade {
-    unsigned x;
-    unsigned y;
-
-    bool operator==(const Grade& other) const
-    {
-        return x == other.x && y == other.y;
-    }
-
-    bool operator<(const Grade& other) const
-    {
-        if (y != other.y)
-            return y < other.y;
-        else
-            return x < other.x;
-    }
-
-    Grade() {}
-
-    Grade(unsigned set_x, unsigned set_y)
-        : x(set_x)
-        , y(set_y)
-    {
-    }
-};
 
 //typedefs
 //TODO: It may be more efficient to specify a simplex using a combinatorial number system, as in DIPHA or Ripser, but this will do for now.

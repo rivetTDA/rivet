@@ -215,10 +215,20 @@ void MapMatrix::add_column_popped(unsigned j, unsigned k)
 }
 
 //
-void MapMatrix::prepare_col(unsigned i)
+void MapMatrix::prepare_col(unsigned j)
 {
-    matrix._heapify_col(i);
+    matrix._heapify_col(j);
 }
+
+//For use in the new algorithm to compute presentations.  Move the jth column of other to the back of this matrix, zeroing out this column of other in the process.
+void MapMatrix::move_col(MapMatrix& other, unsigned j)
+{
+    matrix._append_col_and_clear(*other.matrix._get_col_iter(j));
+}
+
+
+
+
 
 /* TODO: Ready to be deleted; This was only being used in one place, so was easily eliminated.
 //copies column with index src_col from other to column dest_col in this matrix

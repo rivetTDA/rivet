@@ -1,16 +1,16 @@
 /**
  * \class	Presentation
- * \brief	Stores a presentation of a 2-D persistence module. 
+ * \brief	Stores a presentation of a 2-D persistence module.  Constructor takes an FIRep as input.
  * \author	Michael Lesnick
  * \date	9/28/17
  */
 
-#ifndef __Bigraded_Matrix_H__
-#define __Bigraded_Matrix_H__
+#ifndef __Presentation_H__
+#define __Presentation_H__
 
 
 #include "index_matrix.h"
-#include "PHAT/vector_heap.h"
+#include "map_matrix.h"
 #include <string>
 
 //forward declarations
@@ -18,12 +18,13 @@ template< class Representation>
 class SparseMatrix<Representation>;
 class vector_heap;
 class IndexMatrix;
+class FIRep;
+class BigradedMatrix
 
 class Presentation {
 public:
     
-    //Note: It is up to the user to make sure that the data indeed defines a valid presentation.
-    SparseMatrix<vector_heap> mat;
+    MapMatrix mat;
     IndexMatrix col_ind;
     IndexMatrix row_ind;
     
@@ -33,17 +34,25 @@ public:
     
     std::string minimality();
     
-    void set_minimality(string s);
-    
     //Throws an exception if !is_kernel_minimal
     void minimize();
     
     //Constructor
-    Presentation(unsigned rows,unsigned columns, unsigned num_xgr, unsigned num_ygr) : mat(SparseMatrix(rows,cols)), col_ind(IndexMatrix(num_ygr,num_xgr)), row_ind(IndexMatrix(num_ygr,num_xgr)), minimality("undefined")
+    //Builds a presentation from an FI-Rep.
+    Presentation(FIRep fir);
+    
+    //Gets all bigraded Betti numbers.  Returns this data as a 3-dimensional array.
+    Betti_Array get_betti();
+    
     
 private:
-    //valid values= "undefined", "kernel_minimal", "fully_minimal", "nonminimal"
-    std::string minimality;
+  
+    bool is_minimal;
+    bool is_kernel_minimal; //If is_minimal then kernel_minimal should always hold.  Note: Our algorithm for constructing a presentation from an FIRep yields a kernel minimal presentation.
+    
+    //description here.
+    BigradedMatrix kernel_coordinates(BigradedMatrix fir_high, BigradedMatrix kernel)
+    
 };
 
-#endif // __Bigraded_Matrix_H__
+#endif // __Presentation_H__

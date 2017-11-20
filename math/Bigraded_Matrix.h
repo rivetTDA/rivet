@@ -21,19 +21,24 @@ public:
     IndexMatrix ind;
     
     //constructor
-    BigradedMatrix(MapMatrix map_mat, IndexMatrix ind_mat) : mat(map_mat), ind(ind_mat)
+    BigradedMatrix(unsigned rows, unsigned cols, unsigned ind_rows, unsigned ind_cols) : mat(rows,cols), ind(ind_rows,ind_cols)
     {}
     
-    //Compute the kernel of this bigraded matrix via a standard reduction
+    //Compute the kernel of this bigraded matrix via a standard reduction:
+    //Note: This destroys the matrix.
     BigradedMatrix kernel();
-};
 
+};
 
 private:
 
-    //adapted from MultiBetti::reduce_slave()
-    void reduce_slave(MapMatrix& slave, const int& first_col, const int& last_col, Vector& lows,
-                                  unsigned y_grade, ColumnList& zero_list, long& zero_cols)
+     /*
+     Performs a step of the kernel computation at a single bigrade.
+     This is a variant on the standard bigraded reduction.
+     When a column in mat is zeroed out, the corresponding column of slave is appended to the back working_ker.mat, and then zeroed out in the slave.
+     The function also records the bigrades of the generators for the kernel by updating working_ker.ind.
+     */
+    void compute_kernel_one_bigrade(MapMatrix& slave, BigradedMatrix working_ker, const Grade current_grade, Vector& lows)
 
 
 #endif // __Bigraded_Matrix_H__

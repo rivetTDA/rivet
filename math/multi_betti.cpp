@@ -420,7 +420,7 @@ void MultiBetti::reduce_slave(MapMatrix* mm, MapMatrix* slave1, MapMatrix* slave
         
         l = mm->remove_low(j);
         
-        if (l != -1 && lows[l] != 1 && lows[l] < j)
+        if (l != -1 && lows[l] != -1 && lows[l] < j)
         {
             //if we get here then we are going to change the j^{th} column.
             changing_column = true;
