@@ -41,6 +41,7 @@ class Vertex;
 #include "math/template_point.h"
 #include "numerics.h"
 #include "pointer_comparator.h"
+#include <boost/numeric/interval.hpp>
 #include <set>
 #include <vector>
 
@@ -149,11 +150,14 @@ private:
 
     void announce_next_point(std::shared_ptr<Halfedge> finder, std::shared_ptr<Vertex> next_pt);
 
+    //to ensure that the arrangement is built correctly, use interval arithmetic with the following interval type
+    typedef boost::numeric::interval<double> I_aux;
+
     //struct to hold a future intersection event -- used when building the arrangement
     struct Crossing {
         std::shared_ptr<Anchor> a; //pointer to one line
         std::shared_ptr<Anchor> b; //pointer to the other line -- must ensure that line for anchor a is below line for anchor b just before the crossing point!!!!!
-        double x; //x-coordinate of intersection point (floating-point)
+        I_aux x; //interval containing the x-coordinate of intersection point
         std::shared_ptr<Arrangement> m; //pointer to the arrangement, so the Crossing has access to the vectors x_grades, x_exact, y_grades, and y_exact
 
         Crossing(std::shared_ptr<Anchor> a, std::shared_ptr<Anchor> b, std::shared_ptr<Arrangement> m); //precondition: Anchors a and b must be comparable

@@ -690,6 +690,7 @@ Arrangement::Crossing::Crossing(std::shared_ptr<Anchor> a, std::shared_ptr<Ancho
 bool Arrangement::Crossing::x_equal(const Crossing* other) const
 {
     if (Arrangement::almost_equal(x, other->x)) //then compare exact values
+    	///TODO: COMPARE INTERVALS HERE
     {
         //find exact x-values
         exact x1 = (m->y_exact[a->get_y()] - m->y_exact[b->get_y()]) / (m->x_exact[a->get_x()] - m->x_exact[b->get_x()]);
@@ -723,9 +724,9 @@ bool Arrangement::CrossingComparator::operator()(const Crossing& c1, const Cross
 
         //if the x-values are exactly equal, then consider the y-values
         if (x1 == x2) {
-            //find the y-values
-            double c1y = m->x_grades[c1.a->get_x()] * (c1.x) - m->y_grades[c1.a->get_y()];
-            double c2y = m->x_grades[c2.a->get_x()] * (c2.x) - m->y_grades[c2.a->get_y()];
+            //find the y-values -- each is stored as an interval
+            I_aux c1y = m->x_grades[c1.a->get_x()] * (c1.x) - m->y_grades[c1.a->get_y()];
+            I_aux c2y = m->x_grades[c2.a->get_x()] * (c2.x) - m->y_grades[c2.a->get_y()];
 
             //if the y-values are nearly equal as double values, then compare exact values
             if (Arrangement::almost_equal(c1y, c2y)) {
@@ -741,7 +742,7 @@ bool Arrangement::CrossingComparator::operator()(const Crossing& c1, const Cross
                 return y1 > y2;
             }
             //otherwise, the y-values are not almost equal
-            return c1y > c2y;
+            return c1y > c2y; // TODO: UPDATE THIS!!!!
         }
         //otherwise, the x-values are not equal
         return x1 > x2;
