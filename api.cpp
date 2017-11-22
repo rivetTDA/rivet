@@ -5,6 +5,13 @@
 #include "dcel/serialization.h"
 #include "api.h"
 
+//class break_stream: public std::streambuf {
+//protected:
+//    int overflow(int __c) override {
+//        throw std::runtime_error("no!");
+//        //return basic_streambuf::overflow(__c);
+//    }
+//};
 std::unique_ptr<ComputationResult> from_istream(std::istream &file) {
     std::string type;
     std::getline(file, type);
@@ -28,12 +35,18 @@ std::unique_ptr<ComputationResult> from_istream(std::istream &file) {
         msgpack::object_handle oh;
         pac.next(oh);
         auto m1 = oh.get();
+//        std::cout << "params" << std::endl;
         m1.convert(params);
         pac.next(oh);
         auto m2 = oh.get();
+//        std::cout << "points" << std::endl;
+//        break_stream stream;
+//        std::cout.rdbuf(&stream);
+//        std::cerr.rdbuf(&stream);
         m2.convert(templatePointsMessage);
         pac.next(oh);
         auto m3 = oh.get();
+//        std::cout << "arrangement message" << std::endl;
         m3.convert(arrangementMessage);
 
     } else {
@@ -45,6 +58,7 @@ std::unique_ptr<ComputationResult> from_istream(std::istream &file) {
 std::unique_ptr<ComputationResult> from_messages(
         const TemplatePointsMessage &templatePointsMessage,
         const ArrangementMessage &arrangementMessage) {
+//    std::cout << "from_messages" << std::endl;
     std::unique_ptr<ComputationResult> result(new ComputationResult);
     result->arrangement.reset(new Arrangement);
     *(result->arrangement) = arrangementMessage.to_arrangement();

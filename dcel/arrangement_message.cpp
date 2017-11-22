@@ -102,7 +102,6 @@ ArrangementMessage::ArrangementMessage(Arrangement const& arrangement)
             AnchorId(AID(half->get_anchor())) });
     }
     for (auto anchor : arrangement.all_anchors) {
-//        std::cerr << "Adding anchor: " << anchor->get_x() << ", " << anchor->get_y() << std::endl;
         anchors.push_back(AnchorM{
             anchor->get_x(),
             anchor->get_y(),
@@ -402,6 +401,7 @@ bool operator==(ArrangementMessage const& left, ArrangementMessage const& right)
 
 Arrangement ArrangementMessage::to_arrangement() const
 {
+//    std::cout << "constructing arrangement" << std::endl;
     Arrangement arrangement;
     //First create all the objects
     for (auto vertex : vertices) {
@@ -416,12 +416,12 @@ Arrangement ArrangementMessage::to_arrangement() const
     std::vector<std::shared_ptr<::Anchor>> temp_anchors; //For indexing, since arrangement.all_anchors is a set
     for (auto anchor : anchors) {
         std::shared_ptr<::Anchor> ptr = std::make_shared<::Anchor>(anchor.x_coord, anchor.y_coord);
-//        std::clog << "Adding anchor to arrangement: " << ptr->get_x() << ", " << ptr->get_y() << std::endl;
         assert(anchor.x_coord == ptr->get_x());
         assert(anchor.y_coord == ptr->get_y());
         temp_anchors.push_back(ptr);
     }
 
+//    std::cout << "building anchors" << std::endl;
     arrangement.all_anchors.clear();
     arrangement.all_anchors = std::set<std::shared_ptr<::Anchor>, PointerComparator<::Anchor, Anchor_LeftComparator>>(temp_anchors.begin(), temp_anchors.end());
 
@@ -429,17 +429,15 @@ Arrangement ArrangementMessage::to_arrangement() const
 
     auto it = arrangement.all_anchors.begin();
     for (size_t i = 0; i < anchors.size(); i++) {
-//        std::clog << "Checking: ";
-//        std::clog << anchors[i].x_coord << "-->" << temp_anchors[i]->get_x() << "-->" << (*it)->get_x() << " / ";
         assert(anchors[i].x_coord == temp_anchors[i]->get_x());
         assert(anchors[i].x_coord == (*it)->get_x());
-//        std::clog << anchors[i].y_coord << "-->" << temp_anchors[i]->get_y() << "-->" << (*it)->get_y() << std::endl;
         assert(anchors[i].y_coord == temp_anchors[i]->get_y());
         assert(anchors[i].y_coord == (*it)->get_y());
         ++it;
     }
 
     //Now populate all the pointers
+//    std::cout << "populating pointers" << std::endl;
 
     for (size_t i = 0; i < vertices.size(); i++) {
         if (vertices[i].incident_edge != HalfedgeId::invalid()) {
@@ -516,18 +514,15 @@ Arrangement ArrangementMessage::to_arrangement() const
 
     it = arrangement.all_anchors.begin();
     for (size_t i = 0; i < anchors.size(); i++) {
-//        std::clog << "Checking: ";
         assert(anchors[i].x_coord == temp_anchors[i]->get_x());
         assert(anchors[i].x_coord == (*it)->get_x());
-//        std::clog << anchors[i].x_coord << " ";
         assert(anchors[i].y_coord == temp_anchors[i]->get_y());
         assert(anchors[i].y_coord == (*it)->get_y());
-//        std::clog << anchors[i].y_coord << std::endl;
         assert(anchors[i].above_line == (*it)->is_above());
         assert(anchors[i].position == (*it)->get_position());
         ++it;
     }
-//    std::clog << "All anchors identical in to_arrangement" << std::endl;
+//    std::cout << "returning arrangement" << std::endl;
     return arrangement;
 }
 

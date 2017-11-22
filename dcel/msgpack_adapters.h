@@ -83,7 +83,6 @@ namespace msgpack {
                     std::vector<unsigned> dims = o.via.array.ptr[0].convert();
                     std::vector<unsigned> data = o.via.array.ptr[1].convert();
                     auto size = extents[dims[0]][dims[1]];
-                    std::cerr << std::endl;
                     mat.resize(size);
                     std::memcpy(mat.origin(), data.data(), data.size() * sizeof(unsigned));
                     return o;
