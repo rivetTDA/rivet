@@ -94,43 +94,43 @@ FIRep::FIRep(BifiltrationData& bd, int v)
     if (bd.mid_count > 0)
         prev_grade = *(mid_generators[0].second);
         
-        for (unsigned i = 0; i < bd.mid_count; i++) {
-            
-            //fill in the appropriate part of the index matrix, if any
-            fill_index_mx(index_mx_low, prev_grade, *(mid_generators[i].second), i-1);
-            
-            //If hom_dim==0, there are no columns to fill in.
-            if (bd.hom_dim > 0)
-            {
-                //reserve space to work
-                Simplex face;
-                face.reserve(bd.hom_dim);
-                //call the simplex "vertices";
-                Simplex& vertices = mid_generators[i].first->s;
-            
-                //TODO: reserve space in the column of boundary_mx_low for the entries we will add in?  Because of all the nested interfaces, a few classes would have to be changed.  Probably not worth it.
-            
-                //find all faces of this simplex
-                for (unsigned k = 0; k < vertices.size(); k++) {
-                    //face vertices are all vertices in verts[] except verts[k]
-                    for (unsigned l = 0; l < vertices.size(); l++)
-                        if (l != k)
-                            face.push_back(vertices[l]);
-
-                    //use hash table to look up the index of this face in low_simplices;
-                    auto face_node = low_ht.find(&face);
-                    if (face_node == low_ht.end())
-                        throw std::runtime_error("FIRep constructor: face simplex not found.");
-
-                    //now write the row index to row_indices
-                    boundary_mx_low.set(face_node->second,i);
-                    face.clear();
-                }
-            
-                //heapify this column
-                boundary_mx_low.prepare_col(i);
+    for (unsigned i = 0; i < bd.mid_count; i++) {
+        
+        //fill in the appropriate part of the index matrix, if any
+        fill_index_mx(index_mx_low, prev_grade, *(mid_generators[i].second), i-1);
+    
+        //If hom_dim==0, there are no columns to fill in.
+        if (bd.hom_dim > 0)
+        {
+            //reserve space to work
+            Simplex face;
+            face.reserve(bd.hom_dim);
+            //call the simplex "vertices";
+            Simplex& vertices = mid_generators[i].first->s;
+        
+            //TODO: reserve space in the column of boundary_mx_low for the entries we will add in?  Because of the nested interfaces, a few classes would have to be changed.  Probably not worth it.
+        
+            //find all faces of this simplex
+            for (unsigned k = 0; k < vertices.size(); k++) {
+                //face vertices are all vertices in verts[] except verts[k]
+                for (unsigned l = 0; l < vertices.size(); l++)
+                    if (l != k)
+                        face.push_back(vertices[l]);
+                
+                //use hash table to look up the index of this face in low_simplices;
+                auto face_node = low_ht.find(&face);
+                if (face_node == low_ht.end())
+                    throw std::runtime_error("FIRep constructor: face simplex not found.");
+                
+                //now write the row index to row_indices
+                boundary_mx_low.set(face_node->second,i);
+                face.clear();
             }
+        
+            //heapify this column
+            boundary_mx_low.prepare_col(i);
         }
+    }
     
     //Now complete construction of the index_mx_low.
     if (bd.mid_count > 0)

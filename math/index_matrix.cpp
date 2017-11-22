@@ -108,4 +108,18 @@ void IndexMatrix::print() const
 } //end print()
 
 
+/********** Defs for IndexMatrixLex **********/
 
+unsigned IndexMatrixLex::start_index(unsigned& row, unsigned& col)
+{
+    if (row == 0 && col == 0)
+        return 0;
+    else
+    {
+        if (row > 0)
+            return 1 + get(row-1,col);
+        //if we get here, then col > 0 and row == 0.
+        else
+            return 1 + get(num_rows-1,col-1);
+    }
+}

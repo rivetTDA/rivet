@@ -38,7 +38,7 @@ private:
      When a column in mat is zeroed out, the corresponding column of slave is appended to the back working_ker.mat, and then zeroed out in the slave.
      The function also records the bigrades of the generators for the kernel by updating working_ker.ind.
      */
-    void compute_kernel_one_bigrade(MapMatrix& slave, BigradedMatrix working_ker, const Grade current_grade, Vector& lows)
+    void compute_kernel_one_bigrade(MapMatrix& slave, MapMatrix ker_mat, IndexMatrixLex ker_ind, const Grade current_grade, Vector& lows)
 
 
 #endif // __Bigraded_Matrix_H__
