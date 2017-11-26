@@ -13,8 +13,11 @@
 #include <vector>
 #include <set>
 
-BigradedMatrix::kernel()
+BigradedMatrix BigradedMatrix::kernel()
 {
+    
+    //TODO: Do I need this corner case
+    std::cout << "Need this?? \n";
     if (num_x_grades <= 0 || num_y_grades <= 0) {
         //TODO: Handle this corner case by returning a 0x0 matrix.
     }
@@ -30,10 +33,15 @@ BigradedMatrix::kernel()
     //initialize low array for the standard reduction
     std::vector<int> lows(mat.height(), -1);
 
+    //TODO: Maybe more slightly more efficient to avoid the grade struct here?  Or do the loop over curr_grade?
+    Grade curr_grade;
+    
     //Compute the kernel in lex order via the standard bigraded reduction
     for (unsigned x = 0; x < ind.width(); x++) {
         for (unsigned y = 0; y < ind.height(); y++) { //reduce bdry2 at (x,y) and record rank
-            compute_kernel_one_bigrade(reduction_matrix,ker_lex_mat,ker_lex_ind,Grade(x,y),lows);
+            curr_grade.x=x;
+            curr_grade.y=y;
+            kernel_one_bigrade(reduction_matrix,ker_lex_mat,ker_lex_ind,curr_grade,lows);
         }
     }
     
@@ -42,6 +50,11 @@ BigradedMatrix::kernel()
     int first_col;
     int last_col;
     
+    //replace mat with something trivial to save memory
+    mat=MapMatrix(0,0);
+    
+    
+    //TODO: Make this into a member function for the BigradedMatrixLex class, which returns a BigradedMatrix(Colex).
     //Move lex_ker.mat into ker.mat, sorting the columns in colex order, and construct the corresponding IndexMatrix
     for (unsigned y = 0; y < ind.height(); y++) {
         for (unsigned x = 0; x < ind.width(); x++) { //reduce bdry2 at (x,y) and record rank
@@ -58,10 +71,16 @@ BigradedMatrix::kernel()
             colex_ker.ind.set(y,x,colex_ker.mat.width()-1);
         }
     }
+    
+    
     return colex_ker;
 }
 
-void BigradedMatrix::compute_kernel_one_bigrade(MapMatrix& slave, MapMatrix ker_mat, IndexMatrixLex ker_ind, const Grade current_grade, Vector& lows)
+BigradedMatrixLex BigradedMatrix::min_gens()
+{
+
+
+void BigradedMatrix::kernel_one_bigrade(MapMatrix& slave, MapMatrix ker_mat, IndexMatrixLex ker_ind, const Grade current_grade, Vector& lows)
 {
     int c;
     int l;
@@ -122,7 +141,10 @@ void BigradedMatrix::compute_kernel_one_bigrade(MapMatrix& slave, MapMatrix ker_
     
     
     
-    
+void BigradedMatrix::min_gens_one_bigrade(MapMatrix& red_mat, IndexMatrixLex& red_ind, const Grade& current_grade, std::vector<int>& lows)
+{
+        
+}
     
 } //end reduce_slave()
     

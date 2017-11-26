@@ -17,19 +17,18 @@ class BigradedMatrix {
 public:
     //column-sparse matrix
     MapMatrix mat;
-    //bigrade info for each column of mat
+    //bigrade info for each column of mat.  Columns are assumed to be in colex order.
     IndexMatrix ind;
     
     //constructor
-    BigradedMatrix(unsigned rows, unsigned cols, unsigned ind_rows, unsigned ind_cols) : mat(rows,cols), ind(ind_rows,ind_cols)
+    BigradedMatrix(unsigned rows, unsigned cols, unsigned ind_rows, unsigned ind_cols)
+        : mat(rows,cols), ind(ind_rows,ind_cols)
     {}
     
     //Compute the kernel of this bigraded matrix via a standard reduction:
     //Note: This destroys the matrix.
     BigradedMatrix kernel();
-
-};
-
+    
 private:
 
      /*
@@ -38,7 +37,26 @@ private:
      When a column in mat is zeroed out, the corresponding column of slave is appended to the back working_ker.mat, and then zeroed out in the slave.
      The function also records the bigrades of the generators for the kernel by updating working_ker.ind.
      */
-    void compute_kernel_one_bigrade(MapMatrix& slave, MapMatrix ker_mat, IndexMatrixLex ker_ind, const Grade current_grade, Vector& lows)
+    void kernel_one_bigrade(MapMatrix& slave, MapMatrix ker_mat, IndexMatrixLex ker_ind, const Grade& current_grade, std::vector<int>&& lows)
+
+};
+
+//Similar to BigradedMatrix, but columns are assumed to be in lex order, and we have only one method, which is different from those for BigradedMatrix
+class BigradedMatrixLex
+{
+    MapMatrix mat;
+    IndexMatrixLex ind;
+    
+    BigradedMatrixLex(unsigned rows, unsigned cols, unsigned ind_rows, unsigned ind_cols)
+        : mat(rows,cols), ind(ind_rows,ind_cols)
+    {}
+    
+public:
+    //creates a BigradedMatrix version of this object (with columns in colex order), trivializing this object in the process.
+    BigradedMatrix convert_colex();
+};
+
 
 
 #endif // __Bigraded_Matrix_H__
+
