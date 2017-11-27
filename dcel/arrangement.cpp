@@ -287,6 +287,7 @@ Anchor* Arrangement::find_least_upper_anchor(double y_coord)
     unsigned int zero = 0; //disambiguate the following function call
     auto test = new Anchor(zero, best);
     auto it = all_anchors.lower_bound(test);
+    delete test;
 
     if (it == all_anchors.end()) //not found
     {
