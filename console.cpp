@@ -52,8 +52,8 @@ static const char USAGE[] =
       rivet_console <input_file> --identify
       rivet_console <input_file> --betti [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>]
       rivet_console <input_file> <output_file> --betti [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>]
-      rivet_console <precomputed_file> --bounds
-      rivet_console <precomputed_file> --barcodes <line_file>
+      rivet_console <precomputed_file> --bounds [-V <verbosity>]
+      rivet_console <precomputed_file> --barcodes <line_file> [-V <verbosity>]
       rivet_console <input_file> <output_file> [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [-f <format>] [--binary]
 
     Options:
@@ -343,8 +343,9 @@ int main(int argc, char* argv[])
         if (!(*arrangement_message == test)) {
             throw std::runtime_error("Original and deserialized don't match!");
         }
-        Arrangement reconstituted = arrangement_message->to_arrangement();
-        ArrangementMessage round_trip(reconstituted);
+        Arrangement *reconstituted = arrangement_message->to_arrangement();
+        reconstituted->test_consistency();
+        ArrangementMessage round_trip(*reconstituted);
         if (!(round_trip == *arrangement_message)) {
             throw std::runtime_error("Original and reconstituted don't match!");
         }

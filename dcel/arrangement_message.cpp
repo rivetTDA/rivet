@@ -402,19 +402,19 @@ bool operator==(ArrangementMessage const& left, ArrangementMessage const& right)
     return true;
 }
 
-Arrangement ArrangementMessage::to_arrangement() const
+Arrangement* ArrangementMessage::to_arrangement() const
 {
 //    std::cout << "constructing arrangement" << std::endl;
-    Arrangement arrangement;
+    Arrangement* arrangement = new Arrangement();
     //First create all the objects
     for (auto vertex : vertices) {
-        arrangement.vertices.push_back(new ::Vertex(vertex.x, vertex.y));
+        arrangement->vertices.push_back(new ::Vertex(vertex.x, vertex.y));
     }
     for (size_t i = 0; i < faces.size(); i++) {
-        arrangement.faces.push_back(new ::Face(nullptr, i));
+        arrangement->faces.push_back(new ::Face(nullptr, i));
     }
     for (size_t i = 0; i < half_edges.size(); i++) {
-        arrangement.halfedges.push_back(new ::Halfedge());
+        arrangement->halfedges.push_back(new ::Halfedge());
     }
     std::vector<::Anchor*> temp_anchors; //For indexing, since arrangement.all_anchors is a set
     for (auto anchor : anchors) {
@@ -425,12 +425,12 @@ Arrangement ArrangementMessage::to_arrangement() const
     }
 
 //    std::cout << "building anchors" << std::endl;
-    arrangement.all_anchors.clear();
-    arrangement.all_anchors = std::set<Anchor*, PointerComparator<::Anchor, Anchor_LeftComparator>>(temp_anchors.begin(), temp_anchors.end());
+    arrangement->all_anchors.clear();
+    arrangement->all_anchors = std::set<Anchor*, PointerComparator<::Anchor, Anchor_LeftComparator>>(temp_anchors.begin(), temp_anchors.end());
 
-    assert(arrangement.all_anchors.size() == anchors.size());
+    assert(arrangement->all_anchors.size() == anchors.size());
 
-    auto it = arrangement.all_anchors.begin();
+    auto it = arrangement->all_anchors.begin();
     for (size_t i = 0; i < anchors.size(); i++) {
         assert(anchors[i].x_coord == temp_anchors[i]->get_x());
         assert(anchors[i].x_coord == (*it)->get_x());
@@ -444,53 +444,53 @@ Arrangement ArrangementMessage::to_arrangement() const
 
     for (size_t i = 0; i < vertices.size(); i++) {
         if (vertices[i].incident_edge != HalfedgeId::invalid()) {
-            arrangement.vertices[i]->set_incident_edge(arrangement.halfedges[static_cast<long>(vertices[i].incident_edge)]);
+            arrangement->vertices[i]->set_incident_edge(arrangement->halfedges[static_cast<long>(vertices[i].incident_edge)]);
         }
     }
     for (size_t i = 0; i < faces.size(); i++) {
-        auto mface = arrangement.faces[i];
+        auto mface = arrangement->faces[i];
         auto face = faces[i];
         //TODO: this doesn't seem right, why would a face not have a boundary?
         if (faces[i].boundary != HalfedgeId::invalid()) {
-            mface->set_boundary(arrangement.halfedges[static_cast<long>(face.boundary)]);
+            mface->set_boundary(arrangement->halfedges[static_cast<long>(face.boundary)]);
         }
         mface->set_barcode(face.dbc);
     }
     for (size_t i = 0; i < half_edges.size(); i++) {
-        ::Halfedge& edge = *(arrangement.halfedges[i]);
+        ::Halfedge& edge = *(arrangement->halfedges[i]);
         ArrangementMessage::HalfedgeM ref = half_edges[i];
         if (ref.face != FaceId::invalid())
-            edge.set_face(arrangement.faces[static_cast<long>(ref.face)]);
+            edge.set_face(arrangement->faces[static_cast<long>(ref.face)]);
         if (ref.anchor != AnchorId::invalid()) {
             edge.set_anchor(temp_anchors[static_cast<long>(ref.anchor)]);
         }
         //TODO: shouldn't a halfedge always have a next?
         if (ref.next != HalfedgeId::invalid()) {
-            edge.set_next(arrangement.halfedges[static_cast<long>(ref.next)]);
+            edge.set_next(arrangement->halfedges[static_cast<long>(ref.next)]);
         }
         if (ref.origin != VertexId::invalid()) {
-            edge.set_origin(arrangement.vertices[static_cast<long>(ref.origin)]);
+            edge.set_origin(arrangement->vertices[static_cast<long>(ref.origin)]);
         }
         if (ref.prev != HalfedgeId::invalid()) {
-            edge.set_prev(arrangement.halfedges[static_cast<long>(ref.prev)]);
+            edge.set_prev(arrangement->halfedges[static_cast<long>(ref.prev)]);
         }
         if (ref.twin != HalfedgeId::invalid()) {
-            edge.set_twin(arrangement.halfedges[static_cast<long>(ref.twin)]);
+            edge.set_twin(arrangement->halfedges[static_cast<long>(ref.twin)]);
         }
     }
 
     for (size_t i = 0; i < vertical_line_query_list.size(); i++) {
-        arrangement.vertical_line_query_list.push_back(arrangement.halfedges[static_cast<long>(vertical_line_query_list[i])]);
+        arrangement->vertical_line_query_list.push_back(arrangement->halfedges[static_cast<long>(vertical_line_query_list[i])]);
     }
 
-    assert(arrangement.all_anchors.size() == anchors.size());
+    assert(arrangement->all_anchors.size() == anchors.size());
 
-    it = arrangement.all_anchors.begin();
+    it = arrangement->all_anchors.begin();
     for (size_t i = 0; i < anchors.size(); i++) {
         ::Anchor& anchor = **it;
         ArrangementMessage::AnchorM ref = anchors[i];
         if (ref.dual_line != HalfedgeId::invalid()) {
-            auto edge = arrangement.halfedges[static_cast<long>(ref.dual_line)];
+            auto edge = arrangement->halfedges[static_cast<long>(ref.dual_line)];
             //TODO: why, oh why, should this reset be necessary?
 //            anchor.get_line().reset();
             anchor.set_line(edge);
@@ -500,22 +500,22 @@ Arrangement ArrangementMessage::to_arrangement() const
         }
         anchor.set_weight(ref.weight);
         anchor.set_position(ref.position);
-        if (it != arrangement.all_anchors.end()) {
+        if (it != arrangement->all_anchors.end()) {
             ++it;
         }
     }
-    arrangement.bottomleft = arrangement.halfedges[static_cast<long>(bottomleft)];
-    arrangement.bottomright = arrangement.halfedges[static_cast<long>(bottomright)];
-    arrangement.topright = arrangement.halfedges[static_cast<long>(topright)];
-    arrangement.topleft = arrangement.halfedges[static_cast<long>(topleft)];
+    arrangement->bottomleft = arrangement->halfedges[static_cast<long>(bottomleft)];
+    arrangement->bottomright = arrangement->halfedges[static_cast<long>(bottomright)];
+    arrangement->topright = arrangement->halfedges[static_cast<long>(topright)];
+    arrangement->topleft = arrangement->halfedges[static_cast<long>(topleft)];
 
-    arrangement.x_exact = x_exact;
-    arrangement.y_exact = y_exact;
+    arrangement->x_exact = x_exact;
+    arrangement->y_exact = y_exact;
 
-    arrangement.x_grades = x_grades;
-    arrangement.y_grades = y_grades;
+    arrangement->x_grades = x_grades;
+    arrangement->y_grades = y_grades;
 
-    it = arrangement.all_anchors.begin();
+    it = arrangement->all_anchors.begin();
     for (size_t i = 0; i < anchors.size(); i++) {
         assert(anchors[i].x_coord == temp_anchors[i]->get_x());
         assert(anchors[i].x_coord == (*it)->get_x());

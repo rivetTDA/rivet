@@ -518,7 +518,7 @@ long Arrangement::AID(Anchor* a) const
             return i;
         ++it;
     }
-
+    Debug() << "WARNING: no anchor found for " << *a;
     //we should only get here if f is nullptr (meaning the unbounded, outside face)
     return -1;
 }

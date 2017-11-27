@@ -60,8 +60,8 @@ std::unique_ptr<ComputationResult> from_messages(
         const ArrangementMessage &arrangementMessage) {
 //    std::cout << "from_messages" << std::endl;
     std::unique_ptr<ComputationResult> result(new ComputationResult);
-    result->arrangement.reset(new Arrangement);
-    *(result->arrangement) = arrangementMessage.to_arrangement();
+    result->arrangement.reset(arrangementMessage.to_arrangement());
+    result->arrangement->test_consistency();
     std::vector<size_t> ex;
     const size_t* shape = templatePointsMessage.homology_dimensions.shape();
     ex.assign(shape, shape + templatePointsMessage.homology_dimensions.num_dimensions());

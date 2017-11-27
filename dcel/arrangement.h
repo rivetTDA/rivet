@@ -63,6 +63,8 @@ public:
 
     ~Arrangement();
 
+    Arrangement(const Arrangement& that) = delete;
+
     //returns barcode template associated with the specified line (point)
     BarcodeTemplate& get_barcode_template(double degrees, double offset);
 

@@ -53,7 +53,7 @@ public:
 
     friend bool operator==(ArrangementMessage const& left, ArrangementMessage const& right);
 
-    Arrangement to_arrangement() const;
+    Arrangement* to_arrangement() const;
 
     bool is_empty() const;
 

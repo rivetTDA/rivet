@@ -21,7 +21,7 @@ externalproject_add(
         msgpack_project
         PREFIX msgpack
         GIT_REPOSITORY https://github.com/msgpack/msgpack-c
-        GIT_TAG master
+        GIT_TAG 83a4b89818d4ed3b84d69cbf36e782c641ffab53
         CMAKE_ARGS -D CMAKE_CXX_STANDARD=11 -D CMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
         INSTALL_COMMAND ""
 )
