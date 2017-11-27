@@ -343,7 +343,6 @@ void Arrangement::announce_next_point(Halfedge* finger, Vertex* next_pt)
 //find a 2-cell containing the specified point
 Face* Arrangement::find_point(double x_coord, double y_coord)
 {
-    std::cerr << "find_point " << x_coord << ", " << y_coord << std::endl;
     //start on the left edge of the arrangement, at the correct y-coordinate
     auto start = find_least_upper_anchor(-1 * y_coord);
 
