@@ -29,6 +29,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 template<typename T>
 struct Ptr_Compare {
+    bool operator()(const T* left, const T* right) const {
+        return &(*left) < &(*right);
+    }
     bool operator()(const std::shared_ptr<T> left, const std::shared_ptr<T> right) const {
         return &(*left) < &(*right);
     }
@@ -45,10 +48,10 @@ ArrangementMessage::ArrangementMessage(Arrangement const& arrangement)
     , anchors()
     , faces()
 {
-    std::map<std::shared_ptr<Face>, long, Ptr_Compare<Face>> face_map;
-    std::map<std::shared_ptr<Halfedge>, long, Ptr_Compare<Halfedge>> halfedge_map;
-    std::map<std::shared_ptr<Anchor>, long, Ptr_Compare<Anchor>> anchor_map;
-    std::map<std::shared_ptr<Vertex>, long, Ptr_Compare<Vertex>> vertex_map;
+    std::map<const Face*, long, Ptr_Compare<Face>> face_map;
+    std::map<const Halfedge*, long, Ptr_Compare<Halfedge>> halfedge_map;
+    std::map<const Anchor*, long, Ptr_Compare<Anchor>> anchor_map;
+    std::map<const Vertex*, long, Ptr_Compare<Vertex>> vertex_map;
     //Build maps
     long id_counter = 0;
     for(auto face : arrangement.faces) {
@@ -67,22 +70,22 @@ ArrangementMessage::ArrangementMessage(Arrangement const& arrangement)
         vertex_map.emplace(vertex, id_counter++);
     }
 
-    auto HID = [&halfedge_map](const std::shared_ptr<Halfedge> &ptr) {
+    auto HID = [&halfedge_map](const Halfedge* ptr) {
         auto it = halfedge_map.find(ptr);
         return it == halfedge_map.end() ? -1 : it->second;
     };
 
-    auto AID = [&anchor_map](const std::shared_ptr<Anchor> &ptr) {
+    auto AID = [&anchor_map](const Anchor* ptr) {
         auto it = anchor_map.find(ptr);
         return it == anchor_map.end() ? -1 : it->second;
     };
 
-    auto VID = [&vertex_map](const std::shared_ptr<Vertex> &ptr) {
+    auto VID = [&vertex_map](const Vertex* ptr) {
         auto it = vertex_map.find(ptr);
         return it == vertex_map.end() ? -1 : it->second;
     };
 
-    auto FID = [&face_map](const std::shared_ptr<Face> &ptr) {
+    auto FID = [&face_map](const Face* ptr) {
         return ptr == nullptr ? -1 : ptr->id();
     };
 
@@ -405,17 +408,17 @@ Arrangement ArrangementMessage::to_arrangement() const
     Arrangement arrangement;
     //First create all the objects
     for (auto vertex : vertices) {
-        arrangement.vertices.push_back(std::make_shared<::Vertex>(vertex.x, vertex.y));
+        arrangement.vertices.push_back(new ::Vertex(vertex.x, vertex.y));
     }
     for (size_t i = 0; i < faces.size(); i++) {
-        arrangement.faces.push_back(std::make_shared<::Face>(nullptr, i));
+        arrangement.faces.push_back(new ::Face(nullptr, i));
     }
     for (size_t i = 0; i < half_edges.size(); i++) {
-        arrangement.halfedges.push_back(std::make_shared<::Halfedge>());
+        arrangement.halfedges.push_back(new ::Halfedge());
     }
-    std::vector<std::shared_ptr<::Anchor>> temp_anchors; //For indexing, since arrangement.all_anchors is a set
+    std::vector<::Anchor*> temp_anchors; //For indexing, since arrangement.all_anchors is a set
     for (auto anchor : anchors) {
-        std::shared_ptr<::Anchor> ptr = std::make_shared<::Anchor>(anchor.x_coord, anchor.y_coord);
+        auto ptr = new ::Anchor(anchor.x_coord, anchor.y_coord);
         assert(anchor.x_coord == ptr->get_x());
         assert(anchor.y_coord == ptr->get_y());
         temp_anchors.push_back(ptr);
@@ -423,7 +426,7 @@ Arrangement ArrangementMessage::to_arrangement() const
 
 //    std::cout << "building anchors" << std::endl;
     arrangement.all_anchors.clear();
-    arrangement.all_anchors = std::set<std::shared_ptr<::Anchor>, PointerComparator<::Anchor, Anchor_LeftComparator>>(temp_anchors.begin(), temp_anchors.end());
+    arrangement.all_anchors = std::set<Anchor*, PointerComparator<::Anchor, Anchor_LeftComparator>>(temp_anchors.begin(), temp_anchors.end());
 
     assert(arrangement.all_anchors.size() == anchors.size());
 
@@ -487,9 +490,9 @@ Arrangement ArrangementMessage::to_arrangement() const
         ::Anchor& anchor = **it;
         ArrangementMessage::AnchorM ref = anchors[i];
         if (ref.dual_line != HalfedgeId::invalid()) {
-            std::shared_ptr<::Halfedge> edge = arrangement.halfedges[static_cast<long>(ref.dual_line)];
+            auto edge = arrangement.halfedges[static_cast<long>(ref.dual_line)];
             //TODO: why, oh why, should this reset be necessary?
-            anchor.get_line().reset();
+//            anchor.get_line().reset();
             anchor.set_line(edge);
         }
         if (ref.above_line != anchor.is_above()) {

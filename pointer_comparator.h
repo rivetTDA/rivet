@@ -31,7 +31,15 @@ class PointerComparator {
 public:
     Comparator comparator;
 
+    bool operator()(const std::unique_ptr<T> &lhs, const std::unique_ptr<T> &rhs) const //returns true if lhs comes before rhs
+    {
+        return comparator(*lhs, *rhs);
+    }
     bool operator()(const std::shared_ptr<T> lhs, const std::shared_ptr<T> rhs) const //returns true if lhs comes before rhs
+    {
+        return comparator(*lhs, *rhs);
+    }
+    bool operator()(const T* lhs, const T* rhs) const //returns true if lhs comes before rhs
     {
         return comparator(*lhs, *rhs);
     }
