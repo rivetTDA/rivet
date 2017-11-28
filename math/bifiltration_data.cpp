@@ -142,7 +142,7 @@ void BifiltrationData::build_BR_complex(const unsigned num_vertices, const std::
 
     std::vector<AppearanceGrades> vertexMultigrades;
     generateVertexMultigrades(vertexMultigrades, num_vertices, distances, degrees);
-
+    
     std::vector<int> simplex_indices;
     for (unsigned i = 0; i < num_vertices; i++) {
         //Look at simplex with smallest vertex vertex i
@@ -155,7 +155,6 @@ void BifiltrationData::build_BR_complex(const unsigned num_vertices, const std::
             if (distances[j * (j - 1) / 2 + i + 1] < std::numeric_limits<unsigned>::max()) //if an edge is between i and j
                 candidates.push_back(j);
         }
-
         //recursion
         build_BR_subcomplex(distances, simplex_indices, candidates, vertexMultigrades[i], vertexMultigrades);
         simplex_indices.pop_back();
@@ -192,7 +191,7 @@ void BifiltrationData::build_BR_subcomplex(const std::vector<unsigned>& distance
                 minDist = distances[(*it) * (*it - 1) / 2 + *it2 + 1];
         AppearanceGrades newGrades;
         combineMultigrades(newGrades, parent_grades, vertexMultigrades[*it], minDist);
-
+        
         //Determine subset of candidates which are still candidates after adding *it
         std::vector<int> newCandidates;
         for (std::vector<int>::const_iterator it2 = it + 1; it2 != candidates.end(); it2++) {
@@ -243,13 +242,13 @@ void BifiltrationData::generateVertexMultigrades(std::vector<AppearanceGrades>& 
 
 //Determines the grades of appearance of when both simplices exist subject to some minimal distance parameter mindist
 //Grade arrays are assumed to be sorted in reverse lexicographic order, output will be sorted in reverse lexicographic order
-//Takes the intersection of the grades of appearances and the half plan y >= minDist
+//Takes the intersection of the grades of appearances and the half plane y >= minDist
 void BifiltrationData::combineMultigrades(AppearanceGrades& merged, const AppearanceGrades& grades1, const AppearanceGrades& grades2, const unsigned minDist)
 {
     AppearanceGrades::const_iterator it1 = grades1.begin();
     AppearanceGrades::const_iterator it2 = grades2.begin();
-    unsigned y1 = it1->y, y2 = it2->y, maxX;
-    unsigned currYMax = std::max(std::max(y1, y2), minDist);
+    int y1 = it1->y, y2 = it2->y, maxX;
+    int currYMax = std::max(std::max(y1, y2), (int) minDist);
     Grade lastGrade;
     while (it1 != grades1.end() || it2 != grades2.end()) {
         maxX = std::numeric_limits<int>::min();
@@ -274,7 +273,7 @@ void BifiltrationData::combineMultigrades(AppearanceGrades& merged, const Appear
                 y1 = std::numeric_limits<int>::max();
             }
         }
-        unsigned newYMax = std::max(std::max(y1, y2), minDist);
+        int newYMax = std::max(std::max(y1, y2), (int) minDist);
         if (newYMax > currYMax) {
             lastGrade.x = maxX;
             lastGrade.y = currYMax;
@@ -318,14 +317,15 @@ unsigned BifiltrationData::num_y_grades()
     return y_grades;
 }
 
-//returns the number of simplices of dimension (hom_dim-1), hom_dim, or (hom_dim+1)
-int BifiltrationData::get_size(unsigned dim)
+//returns the number of simplices of dimension (hom_dim-1), hom_dim, or (hom_dim+1).
+//Assumes dim is non-negative
+int BifiltrationData::get_size(int dim)
 {
-    if (dim == hom_dim - 1)
+    if (dim == (int) hom_dim - 1)
         return low_simplices.size();
-    else if (dim == hom_dim)
+    else if (dim == (int) hom_dim)
         return mid_simplices.size();
-    else if (dim == hom_dim + 1)
+    else if (dim == (int) hom_dim + 1)
         return high_simplices.size();
     else
         return -1;

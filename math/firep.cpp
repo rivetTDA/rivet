@@ -95,9 +95,9 @@ FIRep::FIRep(BifiltrationData& bd, int v)
         prev_grade = *(mid_generators[0].second);
         
         for (unsigned i = 0; i < bd.mid_count; i++) {
-            
             //fill in the appropriate part of the index matrix, if any
             fill_index_mx(index_mx_low, prev_grade, *(mid_generators[i].second), i-1);
+            
             
             //If hom_dim==0, there are no columns to fill in.
             if (bd.hom_dim > 0)

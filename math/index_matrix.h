@@ -49,7 +49,7 @@ public:
     //NOTE: directly increments row and col.  For the last index (num_rows-1,num_columns-1), this will increment
     //to (num_rows,0) which is outside of the grid.  This edge case behavior is convenient in the firep class.
     // For input indices not in the grid, an error is thrown.
-    void next_colex(unsigned& row, unsigned& col);
+    void next_colex(int & row, int & col);
     
     void print() const; //prints the matrix
     

@@ -15,8 +15,8 @@
 
 //Pair of coordinates specifying grade of appearance with additional sorting operator. Sorted COLEXICOGRAPHICALLY, i.e., first by y-coordinate,  then by x-coordinate.
 struct Grade {
-    unsigned x;
-    unsigned y;
+    int x;
+    int y;
 
     bool operator==(const Grade& other) const
     {
@@ -33,7 +33,7 @@ struct Grade {
 
     Grade() {}
 
-    Grade(unsigned set_x, unsigned set_y)
+    Grade(int set_x, int set_y)
         : x(set_x)
         , y(set_y)
     {
@@ -75,7 +75,7 @@ struct MidHighSimplexData {
         return high;
     }
 
-    //TODO: This is a little inefficient, since high_simplex data doesn't actually need the data of ind or ag_it.  But this is convenient and not terrible.
+    //TODO: This is a little inefficient, since high_simplices doesn't actually need the data of ind or ag_it.  But this is convenient and not terrible.
     MidHighSimplexData(Simplex simp, AppearanceGrades app_gr, bool h)
         : s(simp)
         , ag(app_gr)
@@ -111,7 +111,7 @@ public:
     unsigned num_x_grades(); //returns the number of unique x-coordinates of the multi-grades
     unsigned num_y_grades(); //returns the number of unique y-coordinates of the multi-grades
 
-    int get_size(unsigned dim); //returns the number of simplices of dimension (hom_dim-1), hom_dim, or (hom_dim+1). Returns -1 if invalid dim.
+    int get_size(int dim); //returns the number of simplices of dimension (hom_dim-1), hom_dim, or (hom_dim+1). Returns -1 if invalid dim.
     
     //TODO:Make unsigned?
     const unsigned hom_dim; //the dimension of homology to be computed; max dimension of simplices is one more than this

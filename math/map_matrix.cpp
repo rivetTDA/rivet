@@ -393,7 +393,7 @@ MapMatrix_RowPriority_Perm* MapMatrix_Perm::decompose_RU()
         
         if (l>=0) //then column is still nonempty, so put back the pivot we popped off last, update lows
         {
-            matrix._push_max_index(j,l);
+            matrix._push_index(j,l);
             low_by_col[j] = l;
             low_by_row[l] = j;
         }
