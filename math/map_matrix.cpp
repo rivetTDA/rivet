@@ -372,12 +372,13 @@ MapMatrix_RowPriority_Perm* MapMatrix_Perm::decompose_RU()
         
         //NOTE: We don't call MapMatrix_Perm::low() because in our application of this method, low_by_col has not yet been properly initialized.
         
-        l=matrix._remove_max(j);
+        l=matrix._get_max_index_finalized(j);
         
         if (l>=0 && low_by_row[l] >= 0)
         {
             //if we get here then we are going to change the j^{th} column.
             changing_column = true;
+            matrix._remove_max(j);
         }
         
         while (l>=0 && low_by_row[l] >= 0) {
@@ -391,19 +392,19 @@ MapMatrix_RowPriority_Perm* MapMatrix_Perm::decompose_RU()
             l=matrix._remove_max(j);
         }
         
-        if (l>=0) //then column is still nonempty, so put back the pivot we popped off last, update lows
+        if (l>=0) //then column is still nonempty.
         {
-            matrix._push_index(j,l);
+            //Update lows
             low_by_col[j] = l;
             low_by_row[l] = j;
+            if (changing_column)
+            {
+                //if we changed the column, put back the pivot we popped off last and finalize.
+                matrix._push_index(j,l);
+                matrix._finalize(j);
+            }
         }
-        
-        //if we changed the column, it might not be finalized anymore, so finalize it.
-        if (changing_column)
-        {
-            matrix._finalize(j);
-            changing_column = false;
-        }
+        changing_column = false;
     }
     //return the matrix U
     return U;
