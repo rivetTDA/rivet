@@ -60,11 +60,11 @@ unsigned IndexMatrix::height() const
     return num_rows;
 }
 
-void IndexMatrix::next_colex(unsigned& row, unsigned& col)
+void IndexMatrix::next_colex(int & row, int & col)
 {
-    if (row >= num_rows || col >= num_cols)
+    if (row >= (int) num_rows || col >= (int) num_cols)
         throw std::runtime_error("IndexMatrix.next_colex(): matrix subscript out of bounds");
-    if (col < num_cols-1)
+    if (col < (int) num_cols-1)
         col++;
     else
     {

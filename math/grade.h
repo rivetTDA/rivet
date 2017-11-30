@@ -16,8 +16,8 @@ Note: This file contains a Struct that appeared earlier in bifiltration_data.h. 
 
 //Pair of coordinates specifying grade of appearance with additional sorting operator. Sorted COLEXICOGRAPHICALLY, i.e., first by y-coordinate,  then by x-coordinate.
 struct Grade {
-    unsigned x;
-    unsigned y;
+    int x;
+    int y;
     
     bool operator==(const Grade& other) const
     {
@@ -34,7 +34,7 @@ struct Grade {
     
     Grade() {}
     
-    Grade(unsigned set_x, unsigned set_y)
+    Grade(int set_x, int set_y)
     : x(set_x)
     , y(set_y)
     {
