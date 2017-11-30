@@ -482,6 +482,14 @@ namespace phat {
             return perm[max_element];
         }
         
+        // largest row index of given column idx.
+        // NOTE: Only works correctly when this column has no repeat entries, i.e. if nothing has been added to the column since it was itialized or finalized.
+        // But in this case this is a bit faster than get_max_index.
+        index _get_max_index_finalized( index idx ) const
+        {
+            return perm[matrix[ idx ].front()];
+        }
+        
         // pops the maximum index of a column
         index _remove_max( index idx )
         {

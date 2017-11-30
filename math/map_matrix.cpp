@@ -359,12 +359,13 @@ bool MapMatrix_Perm::entry(unsigned i, unsigned j) const
 //NOTE -- this is just the standard persistence algorithm, but with some tweaks
 MapMatrix_RowPriority_Perm* MapMatrix_Perm::decompose_RU()
 {
+    
     //Create U
     MapMatrix_RowPriority_Perm* U = new MapMatrix_RowPriority_Perm(width()); //NOTE: must be deleted
     
     int c;
     int l;
-    bool changing_column = false;
+    bool changing_column;
     
     //loop through columns of this matrix
     for (unsigned j = 0; j < width(); j++) {
@@ -372,18 +373,20 @@ MapMatrix_RowPriority_Perm* MapMatrix_Perm::decompose_RU()
         
         //NOTE: We don't call MapMatrix_Perm::low() because in our application of this method, low_by_col has not yet been properly initialized.
         
+        changing_column = false;
         l=matrix._get_max_index_finalized(j);
         
-        if (l>=0 && low_by_row[l] >= 0)
+        if (l != -1 && low_by_row[l] != -1 )
         {
             //if we get here then we are going to change the j^{th} column.
             changing_column = true;
             matrix._remove_max(j);
         }
         
-        while (l>=0 && low_by_row[l] >= 0) {
+        while (l != -1  && low_by_row[l] != -1 )
+        {
             c = low_by_row[l];
-            
+        
             //For efficiency, we use a special version of add_column which knows that column c has been finalized and the pivot of column j has been popped.
         
             matrix._add_to_popped(c, j);
@@ -392,7 +395,7 @@ MapMatrix_RowPriority_Perm* MapMatrix_Perm::decompose_RU()
             l=matrix._remove_max(j);
         }
         
-        if (l>=0) //then column is still nonempty.
+        if (l != -1 ) //then column is still nonempty.
         {
             //Update lows
             low_by_col[j] = l;
@@ -404,7 +407,6 @@ MapMatrix_RowPriority_Perm* MapMatrix_Perm::decompose_RU()
                 matrix._finalize(j);
             }
         }
-        changing_column = false;
     }
     //return the matrix U
     return U;
