@@ -49,6 +49,7 @@ namespace phat {
             col = temp_col;
             
             //Remark: Interesting that this reverse step is here in the original PHAT code.  Is this more efficient than just calling make_heap?  -Mike
+            //TODO: Maybe experiment with deleting std::reverse?
             std::reverse( col.begin( ), col.end( ) );
             std::make_heap( col.begin( ), col.end( )  );
             inserts_since_last_prune[ idx ] = 0;
@@ -180,6 +181,14 @@ namespace phat {
             col.push_back( max_element );
             std::push_heap( col.begin( ), col.end( ) );
             return max_element;
+        }
+        
+        // largest row index of given column idx.
+        // NOTE: Only works correctly when this column has no repeat entries, i.e. if nothing has been added to the column since it was itialized or finalized.
+        // But in this case this is a bit faster than get_max_index.
+        index _get_max_index_finalized( index idx ) const
+        {
+            return matrix[ idx ].front();
         }
         
         // RIVET modification; part of an optimization of the standard reduction when columns are lazy heaps.
@@ -610,7 +619,6 @@ namespace phat {
             //_finalize(idx);
             for (unsigned j=0; j< matrix[idx].size(); j++)
             {
-                //The only difference between the print function for the base class and this one is the following line.
                 col.push_back(matrix[idx][j]);
             }
             std::sort(col.begin(),col.end(),[this](const index left, const index right) { return perm[left]<perm[right]; });
