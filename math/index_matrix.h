@@ -49,17 +49,33 @@ public:
     //NOTE: directly increments row and col.  For the last index (num_rows-1,num_columns-1), this will increment
     //to (num_rows,0) which is outside of the grid.  This edge case behavior is convenient in the firep class.
     // For input indices not in the grid, an error is thrown.
+    
+    //TODO:Make static?
     void next_colex(int & row, int & col);
     
+    unsigned start_index(unsigned& row, unsigned& col);
+    
     void print() const; //prints the matrix
+    
+    //technical utility function for setting the index matrices.
+    //sets each entry of the index matrix in the colex interval [start_grade,end_grade) to value
+    //As a side effect, sets start_grade equal to end_grade
+    void fill_index_mx(Grade& start_grade, const Grade& end_grade, const unsigned& value);
     
 private:
     unsigned num_rows;
     unsigned num_cols;
     std::vector<int> data;
-    
-
-    
 };
+
+class IndexMatrixLex : public IndexMatrix {
+    
+    //Initialize each entry in the matrix to be -1.
+    IndexMatrixLex(unsigned rows, unsigned cols);
+    
+    //definition of start_index is different than for the parent class
+    unsigned start_index(unsigned& row, unsigned& col);
+};
+
 
 #endif // __IndexMatrix_H__

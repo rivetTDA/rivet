@@ -12,7 +12,9 @@
 class MapMatrix;
 class vector_heap;
 class IndexMatrix;
+class IndexMatrixLex;
 
+class BigradedMatrixLex;
 class BigradedMatrix {
 public:
     //column-sparse matrix
@@ -21,9 +23,13 @@ public:
     IndexMatrix ind;
     
     //constructor
-    BigradedMatrix(unsigned rows, unsigned cols, unsigned ind_rows, unsigned ind_cols)
+    BigradedMatrix(unsigned rows, unsigned cols, unsigned ind_rows, unsigned ind_cols);
         : mat(rows,cols), ind(ind_rows,ind_cols)
     {}
+    
+    //Constructor taking a BigradedMatrixLex object.  Moves the cols of lex_mat into this matrix, and builds the corresponding index matrix.
+    //Also trivialized lex_mat in the process
+    BigradedMatrix::BigradedMatrix(BigradedMatrixLex lex_mat);
     
     //Compute the kernel of this bigraded matrix via a standard reduction:
     //Note: This destroys the matrix.
@@ -37,11 +43,11 @@ private:
      When a column in mat is zeroed out, the corresponding column of slave is appended to the back working_ker.mat, and then zeroed out in the slave.
      The function also records the bigrades of the generators for the kernel by updating working_ker.ind.
      */
-    void kernel_one_bigrade(MapMatrix& slave, MapMatrix ker_mat, IndexMatrixLex ker_ind, const Grade& current_grade, std::vector<int>&& lows)
+    void kernel_one_bigrade(MapMatrix& slave, BigradedMatrixLex& ker_lex, unsigned curr_x, unsigned curr_y, std::vector<int>& lows)
 
 };
 
-//Similar to BigradedMatrix, but columns are assumed to be in lex order, and we have only one method, which is different from those for BigradedMatrix
+//Similar to BigradedMatrix, but columns are assumed to be in lex order.
 class BigradedMatrixLex
 {
     MapMatrix mat;
@@ -50,10 +56,6 @@ class BigradedMatrixLex
     BigradedMatrixLex(unsigned rows, unsigned cols, unsigned ind_rows, unsigned ind_cols)
         : mat(rows,cols), ind(ind_rows,ind_cols)
     {}
-    
-public:
-    //creates a BigradedMatrix version of this object (with columns in colex order), trivializing this object in the process.
-    BigradedMatrix convert_colex();
 };
 
 

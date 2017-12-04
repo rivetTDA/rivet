@@ -173,12 +173,26 @@ namespace phat {
         }
         */
 
+        // append copy of column to back of matrix
+        void _append_col(const column& col)
+        {
+            matrix.push_back(col);
+        }
+        
         // append copy of column to back of matrix, while clearing the original column
-        void _append_col_and clear(column& col)
+        void _append_col_and_clear(column& col)
         {
             matrix.push_back(column());
             matrix[size()-1].swap(col);
         }
+        
+        // append copy of column to back of matrix, while clearing the original column
+        void _move_column(index source, index target)
+        {
+            matrix[target].swap(column());
+            matrix[target].swap(matrix[source]);
+        }
+        
         
         // largest row index of given column idx (new name for lowestOne())
         index _get_max_index( index idx ) const
@@ -271,6 +285,17 @@ namespace phat {
                 _prune( target );
         }
         
+        void _add_to_popped(const  vector_heap_mod& other, index source, index target ) {
+            //in the implementation of the heap used here, the pivot is stored at the 0th index, so we start the addition from index 1.
+            for( index idx = 1; idx < (index) other.matrix[ source ].size( ); idx++ ) {
+                matrix[ target ].push_back( other.matrix[ source ][ idx ] );
+                std::push_heap( matrix[ target ].begin(), matrix[ target ].end() );
+            }
+            inserts_since_last_prune[ target ] += other.matrix[ source ].size()-1;
+            
+            if( 2 * inserts_since_last_prune[ target ] > ( index )matrix[ target ].size() )
+                _prune( target );
+        }
         
         // _heapify_col is needed by RIVET
         void _heapify_col(index idx)
@@ -322,6 +347,43 @@ namespace phat {
             
         }
     };
+    
+    
+/*** Special Functions which work properly only when the columns in question are sorted ***/
+//TODO: Would it be cleaner to introduce a child class which implements these?
+    
+    // adds column 'source' to column 'target'
+    // NOTE: taken from PHAT's vector_vector file, without modification, except for a change in name.
+    // For use in Presentation.minimize().
+    void _add_to_sorted( index source, index target ) {
+        column& source_col = matrix[ source ];
+        column& target_col = matrix[ target ];
+        column& temp_col = temp_column_buffer();
+        
+        size_t new_size = source_col.size() + target_col.size();
+        
+        if (new_size > temp_col.size()) temp_col.resize(new_size);
+        
+        std::vector<index>::iterator col_end = std::set_symmetric_difference( target_col.begin(), target_col.end(),
+                                                                             source_col.begin(), source_col.end(),
+                                                                             temp_col.begin() );
+        temp_col.erase(col_end, temp_col.end());
+        
+        
+        target_col.swap(temp_col);
+    }
+    
+    void _add_to_sorted( index source, index target ) {
+
+    }
+    
+    bool _is_in_matrix_sorted( index row, index col ) const {
+        return std::binary_search(matrix[col].begin(), matrix[col].end(), row);
+    }
+    
+    
+    
+    
     
 /*********************** vector_heap_perm ***********************/
     

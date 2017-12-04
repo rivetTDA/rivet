@@ -62,26 +62,20 @@ typedef std::unordered_map<Simplex* const, std::vector<MidHighSimplexData>::iter
 class FIRep {
 
 public:
-    MapMatrix boundary_mx_low; //boundary matrix from dim to dim-1
-    MapMatrix boundary_mx_high; //boundary matrix from dim+1 to dim
     
-    IndexMatrix index_mx_low; //matrix of column indexes to accompany boundary_mx_low
-    IndexMatrix index_mx_high; //matrix of column indexes to accompany boundary_mx_high
+    //Notes that grades are stored in discrete indexes, real ExactValues are stored in InputData.x_exact and y_exact
+    BigradedMatrix low_mx; //low matrix in the FIRep
+    BigradedMatrix high_mx; //high matrix in the FIRep
     
-    FIRep(BifiltrationData& bd, int v); //constructor; requires verbosity parameter
+    FIRep(BifiltrationData& bif_data, int v); //constructor; requires verbosity parameter
 
     //This constructor is used when the FIRep is given directly as text input.
     //TODO: Minor point, but it seems a little hacky to be passing a BifiltrationData object to this constructor
-    FIRep(BifiltrationData& bd, unsigned um_high_simplices, unsigned num_mid_simplices, unsigned num_low_simplices, std::vector<std::vector<unsigned>>& d2, std::vector<std::vector<unsigned>>& d1,
-        const std::vector<unsigned> x_values, const std::vector<unsigned> y_values, int v); //constructor
+    FIRep(BifiltrationData& bif_data, unsigned num_high_simplices, unsigned num_mid_simplices, unsigned num_low_simplices, std::vector<std::vector<unsigned>>& d2, std::vector<std::vector<unsigned>>& d1,
+        const std::vector<unsigned> x_values, const std::vector<unsigned> y_values, int v);
 
-    //TODO:Delete?
-    //~FIRep(); //destructor
-
-    //TODO: should the following two return pointers to consts?  There are places where we modify an index matrix as we zero out columns...
+    //TODO: should the following two return consts?  Are there places where we modify an index matrix as we zero out columns?
     
-
-
     unsigned num_x_grades(); //returns the number of unique x-coordinates of the multi-grades
     unsigned num_y_grades(); //returns the number of unique y-coordinates of the multi-grades
 
@@ -92,26 +86,9 @@ public:
 private:
     unsigned x_grades; //the number of x-grades that exist in this firep
     unsigned y_grades; //the number of y-grades that exist in this firep
-
-    //Indexes of simplices. Grades are stored in discrete indexes, real ExactValues are stored in InputData.x_exact and y_exact
-
-    //TODO: Get rid of these; store the index matrices themselves.
-    /*
-    AppearanceGrades indexes_low; //indexes of simplices in dimension dim
-    AppearanceGrades indexes_high; //indexes of simplices in dimension dim+1
-    */
-     
+    
     //writes boundary column.
     void write_boundary_column(MapMatrix& mat, const std::vector<unsigned>& entries, const unsigned col); //writes boundary information given boundary entries in column col of matrix mat
-
-    //technical utility function for setting the index matrices.
-    //sets each entry of ind_mat in the colex interval [start_grade,end_grade) to value
-    void fill_index_mx(IndexMatrix& ind_mat, Grade& start_grade, const Grade& end_grade, const unsigned& value);
-    
-    
-    /*
-    IndexMatrix* get_index_mx(AppearanceGrades& source_grades); //Gets the index matrix associated with a list of grades
-     */
 };
      
      

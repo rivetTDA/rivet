@@ -104,13 +104,20 @@ public:
     //requests that the columns vector have enough capacity for num_cols columns
     void reserve_cols(unsigned num_cols);
     
-    //WARNING: Current Implementation assumes the entry has not already been added.
-    virtual void set(unsigned i, unsigned j); //sets (to 1) the entry in row i, column j
+    //resize the matrix to the specified number of columns
+    void MapMatrix::resize(unsigned num_cols);
     
-    //virtual bool entry(unsigned i, unsigned j) const; //returns true if entry (i,j) is 1, false otherwise
+    //resize the matrix to the specified number of columns
+    void MapMatrix::resize(unsigned n_rows, unsigned n_cols);
+    
+    //WARNING: Current implementation assumes the entry has not already been added.
+    virtual void set(unsigned i, unsigned j); //sets (to 1) the entry in row i, column j
     
     //returns the "low" index in the specified column, or -1 if the column is empty
     virtual int low(unsigned j) const;
+    
+    //same functionality as above, but only works correctly if column is finalized.
+    int MapMatrix::low_finalized(unsigned j) const;
     
     //same as the above, but removes the low.
     //Used for efficient implementation of standard reduction w/ lazy heaps.
@@ -124,20 +131,37 @@ public:
 
     void add_column(unsigned j, unsigned k); //adds column j to column k; RESULT: column j is not changed, column k contains sum of columns j and k (with mod-2 arithmetic)
     
+    //TODO: Probably only used to compute Betti numbers, so perhaps should move with the other specialized functions for that
+    //adds column j from MapMatrix other to column k of this matrix
     void add_column(const MapMatrix* other, unsigned j, unsigned k); //adds column j from MapMatrix* other to column k of this matrix
     
-    void add_column_popped(unsigned j, unsigned k); //wraps the add_to_popped() function in vector_heap_mod. See that code for an explanation.
+    
+    //wraps the add_to_popped() function in vector_heap_mod. See that code for an explanation.
+    void add_column_popped(unsigned j, unsigned k);
+    
+    //same as above, but column j now comes from another matrix.
+    void MapMatrix::add_column_popped(const MapMatrix& other, unsigned j, unsigned k);
     
     void prepare_col(unsigned j);
     
-    //For use in the new algorithm to compute presentations.  Move the jth column of other to the back of this matrix, zeroing out this column of other in the process.
-    void move_col(MapMatrix& other, unsigned j);
-    
     void finalize(unsigned i);
     
-    //copies column with index src_col from other to column dest_col in this matrix
-    void copy_col_from(const MapMatrix* other, unsigned src_col, unsigned dest_col);
+    void print();
     
+
+/*** For use in the new code to compute presentations ***/
+    
+     //copies with index j from other to the back of this matrix
+    void MapMatrix::append_col(const MapMatrix& other, unsigned j);
+    
+    //Move column with index source to index target, zeroing out this column source in the process.
+    void move_col(unsigned source, unsigned target);
+    
+    //Move the jth column of other to the back of this matrix, zeroing out this column of other in the process.
+    void move_col(MapMatrix& other, unsigned j);
+    
+/*** Next three functions are tehcnical functions used in Matthew's old Betti code. ***/
+    //TODO: These probably can be deleted in a few weeks.
     //TODO: Make the int arguments in the next two functions unsigned?
     
     //copies NONZERO columns with indexes in [first, last] from other, appending them to this matrix to the right of all existing columns
@@ -153,9 +177,19 @@ public:
     void remove_zero_cols(const IndexMatrix& ind_old, IndexMatrix& ind_new);
 
     
-    void print();
     
+/*** Next two functions assume that column(s) in question are sorted ***/
+    
+    //same as add_column above, but requires columns to be sorted vectors.
+    void add_column_sorted(unsigned j, unsigned k);
+    
+    //returns true if entry (i,j) is 1, false otherwise
+    bool entry_sorted(unsigned i, unsigned j) const;
 };
+
+
+
+
 
 //MapMatrix with row/column permutations and low array, designed for "vineyard updates."
 class MapMatrix_RowPriority_Perm; //forward declaration
@@ -201,7 +235,7 @@ public:
     
     /***************************/
     
-    // BIG TODO: Add functionality which does the
+    // BIG TODO: Add functionality which does the following:
     
     //- Transpose both rows and columns of U.
     //- Do the corresponding column perms to R.

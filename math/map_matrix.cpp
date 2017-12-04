@@ -149,6 +149,20 @@ void MapMatrix::reserve_cols(unsigned num_cols)
     matrix._reserve_cols(num_cols);
 }
 
+//resize the matrix to the specified number of columns
+void MapMatrix::resize(unsigned num_cols)
+{
+    matrix._set_num_cols(num_cols);
+}
+
+//resize the matrix to the specified number of columns
+void MapMatrix::resize(unsigned n_rows, unsigned n_cols)
+{
+    resize(n_cols);
+    num_rows = n_rows;
+}
+
+
 //sets (to 1) the entry in row i, column j
 void MapMatrix::set(unsigned i, unsigned j)
 {
@@ -166,12 +180,14 @@ bool MapMatrix::entry(unsigned i, unsigned j) const
 //returns the "low" index in the specified column, or 0 if the column is empty or does not exist
 int MapMatrix::low(unsigned j) const
 {
-    //make sure this query is valid
-    /*
-    if (columns.size() <= j)
-        throw std::runtime_error("MapMatrix::low(): attempting to check low number of a column past end of matrix");
-     */
     return matrix._get_max_index(j);
+}
+
+//returns the "low" index in the specified column, or 0 if the column is empty or does not exist.
+//same as the above, but only valid if the column is finalized
+int MapMatrix::low_finalized(unsigned j) const
+{
+    return matrix._get_max_index_finalized(j);
 }
 
 //same as the above, but removes the low.
@@ -199,6 +215,7 @@ void MapMatrix::add_column(unsigned j, unsigned k)
     MapMatrix_Base::add_to(j, k);
 }
 
+//TODO: Probably only used to compute Betti numbers, so perhaps should move with the other specialized functions for that
 //adds column j from MapMatrix other to column k of this matrix
 void MapMatrix::add_column(const MapMatrix* other, unsigned j, unsigned k)
 {
@@ -214,30 +231,17 @@ void MapMatrix::add_column_popped(unsigned j, unsigned k)
     matrix._add_to_popped(j,k);
 }
 
-//
+//same as above, but column j now comes from another matrix.
+void MapMatrix::add_column_popped(const MapMatrix& other, unsigned j, unsigned k)
+{
+    matrix._add_to_popped(other.matrix,j,k);
+}
+
+//heapify the column
 void MapMatrix::prepare_col(unsigned j)
 {
     matrix._heapify_col(j);
 }
-
-//For use in the new algorithm to compute presentations.  Move the jth column of other to the back of this matrix, zeroing out this column of other in the process.
-void MapMatrix::move_col(MapMatrix& other, unsigned j)
-{
-    matrix._append_col_and_clear(*other.matrix._get_col_iter(j));
-}
-
-
-
-
-
-/* TODO: Ready to be deleted; This was only being used in one place, so was easily eliminated.
-//copies column with index src_col from other to column dest_col in this matrix
-void MapMatrix::copy_col_from(const MapMatrix* other, unsigned src_col, unsigned dest_col)
-{
-    matrix._set_col(dest_col,*(other->matrix._get_col_iter(src_col)));
-}
-//end copy_col_from()
-*/
 
 void MapMatrix::finalize(unsigned i)
 {
@@ -245,7 +249,28 @@ void MapMatrix::finalize(unsigned i)
 }
 
 
+/********* Methods used to compute a presentation *********/
+
+ //copies with index j from other to the back of this matrix
+ void MapMatrix::append_col(const MapMatrix& other, unsigned j)
+ {
+     matrix._append_col(*other.matrix._get_col_iter(j));
+ }
+
+//Move column with index source to index target, zeroing out this column source in the process.
+void move_col(unsigned source, unsigned target)
+{
+    matrix._move_column(source, target);
+}
+
+//Move the jth column of other to the back of this matrix, zeroing out this column of other in the process.
+void MapMatrix::move_col(MapMatrix& other, unsigned j)
+{
+    matrix._append_col_and_clear(*other.matrix._get_col_iter(j));
+}
+
 /********* Next three methods are used only by the MultiBetti class *********/
+
 
 //copies NONZERO columns with indexes in [first, last] from other, appending them to this matrix to the right of all existing columns
 //  all row indexes in copied columns are increased by offset
@@ -316,6 +341,23 @@ void MapMatrix::print()
 {
     matrix._print(num_rows);
 } //end print()
+
+
+/********** methods of the class MapMatrix which assume that the column(s) in question are sorted  **********/
+
+//same as add_column above, but requires columns to be sorted vectors.
+void add_column_sorted(unsigned j, unsigned k)
+{
+    mapmatrix._add_to_sorted(j , k);
+}
+
+
+//returns true if entry (i,j) is 1, false otherwise
+bool entry_sorted(unsigned i, unsigned j) const {
+    return matrix._is_in_matrix_sorted(i,j)
+}
+
+
 
 
 /********** implementation of class MapMatrix_Perm, supports row swaps (and stores a low array) **********/

@@ -32,44 +32,42 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <stdexcept>
 
 //FIRep constructor; requires BifiltrationData object (which in particular specifies the homology dimension) and verbosity parameter
-FIRep::FIRep(BifiltrationData& bd, int v)
-    : boundary_mx_low(MapMatrix(0,0))
-    , boundary_mx_high(MapMatrix(0,0))
-    , index_mx_low(bd.num_y_grades(), bd.num_x_grades())
-    , index_mx_high(bd.num_y_grades(), bd.num_x_grades())
+FIRep::FIRep(BifiltrationData& bif_data, int v)
+    : low_mx(0,0,bif_data.num_y_grades(),bif_data.num_x_grades())
+    , high_mx(0,0,bif_data.num_y_grades(),bif_data.num_x_grades())
     , verbosity(v)
-    , x_grades(bd.num_x_grades())
-    , y_grades(bd.num_y_grades())
+    , x_grades(bif_data.num_x_grades())
+    , y_grades(bif_data.num_y_grades())
 {
     if (verbosity >= 10) {
-        bd.print_bifiltration();
+        bif_data.print_bifiltration();
     }
 
-    //We build the low boundary matrix, then the high boundary matrix.
+    //We build the low matrix, then the high matrix.
     //First, process simplices of dimension hom_dim-1.
 
     //Sort the low_simplices in colexicographical order, using the comparator defined for Grade.  We constructed the simplices in
     //lexicographical order on vertex indices, so use of stable sort preserves this within a grade.
 
-    std::stable_sort(bd.low_simplices.begin(), bd.low_simplices.end(), [](const LowSimplexData& left, const LowSimplexData& right) {
+    std::stable_sort(bif_data.low_simplices.begin(), bif_data.low_simplices.end(), [](const LowSimplexData& left, const LowSimplexData& right) {
         return left.gr < right.gr;
     });
 
-    //Enter the low simplex indices into a hash table.  //Used to construct the low boundary matrix
+    //Enter the low simplex indices into a hash table.  //Used to construct the low matrix
     SimplexHashLow low_ht; //key = simplex; value = index of that simplex in Low_Simplices
 
-    for (unsigned i = 0; i != bd.low_simplices.size(); i++) {
-        low_ht.emplace(&(bd.low_simplices[i].s), i);
+    for (unsigned i = 0; i != bif_data.low_simplices.size(); i++) {
+        low_ht.emplace(&(bif_data.low_simplices[i].s), i);
     }
 
     //Now process simplices of dimension hom_dim
 
     //construct a vector with one entry per simplex per grade of appearance.
-    //After sorting, this will index the columns of the low boundary matrix
+    //After sorting, this will index the columns of the low matrix
     auto mid_generators = std::vector<std::pair<std::vector<MidHighSimplexData>::iterator, AppearanceGrades::iterator>>();
-    mid_generators.reserve(bd.mid_count);
+    mid_generators.reserve(bif_data.mid_count);
 
-    for (auto it = bd.mid_simplices.begin(); it != bd.mid_simplices.end(); it++) {
+    for (auto it = bif_data.mid_simplices.begin(); it != bif_data.mid_simplices.end(); it++) {
         //set aside space for indices in each MidHighSimplexData struct.
         it->ind.reserve(it->ag.size());
         //iterate through the grades
@@ -82,33 +80,33 @@ FIRep::FIRep(BifiltrationData& bd, int v)
     //stably sort mid_generators according to colex order on grades
     std::stable_sort(mid_generators.begin(), mid_generators.end(), [](const auto& left, const auto& right) { return *(left.second) < *(right.second); });
     
-    //create the MapMatrix
-    boundary_mx_low = MapMatrix(bd.low_simplices.size(), mid_generators.size());
+    //create the MapMatrix of the appropriate size
+    low_mx.mat = MapMatrix(bif_data.low_simplices.size(), mid_generators.size());
 
     if (verbosity >= 6)
-        debug() << "Creating boundary matrix of dimension" << bd.low_simplices.size() << "x" << mid_generators.size();
+        debug() << "Creating low matrix of dimension" << bif_data.low_simplices.size() << "x" << mid_generators.size();
 
     //loop through simplices, writing columns to the matrix
     Grade prev_grade;
     
-    if (bd.mid_count > 0)
+    if (bif_data.mid_count > 0)
         prev_grade = *(mid_generators[0].second);
         
-    for (unsigned i = 0; i < bd.mid_count; i++) {
+    for (unsigned i = 0; i < bif_data.mid_count; i++) {
         
         //fill in the appropriate part of the index matrix, if any
-        fill_index_mx(index_mx_low, prev_grade, *(mid_generators[i].second), i-1);
+        low_mx.ind.fill_index_mx(prev_grade, *(mid_generators[i].second), i-1);
     
         //If hom_dim==0, there are no columns to fill in.
-        if (bd.hom_dim > 0)
+        if (bif_data.hom_dim > 0)
         {
             //reserve space to work
             Simplex face;
-            face.reserve(bd.hom_dim);
+            face.reserve(bif_data.hom_dim);
             //call the simplex "vertices";
             Simplex& vertices = mid_generators[i].first->s;
         
-            //TODO: reserve space in the column of boundary_mx_low for the entries we will add in?  Because of the nested interfaces, a few classes would have to be changed.  Probably not worth it.
+            //TODO: reserve space in the column of low_mx for the entries we will add in?  Because of the nested interfaces, a few classes would have to be changed.  Probably not worth it.
         
             //find all faces of this simplex
             for (unsigned k = 0; k < vertices.size(); k++) {
@@ -123,28 +121,28 @@ FIRep::FIRep(BifiltrationData& bd, int v)
                     throw std::runtime_error("FIRep constructor: face simplex not found.");
                 
                 //now write the row index to row_indices
-                boundary_mx_low.set(face_node->second,i);
+                low_mx.mat.set(face_node->second,i);
                 face.clear();
             }
         
             //heapify this column
-            boundary_mx_low.prepare_col(i);
+            low_mx.mat.prepare_col(i);
         }
     }
     
-    //Now complete construction of the index_mx_low.
-    if (bd.mid_count > 0)
-        fill_index_mx(index_mx_low, prev_grade, Grade(0,index_mx_low.height()), mid_generators.size()-1);
-    //We're done building boundary_mx_low.
+    //Now complete construction of the low_mx.ind.
+    if (bif_data.mid_count > 0)
+        low_mx.ind.fill_index_mx(prev_grade, Grade(0,low_mx.ind.height()), mid_generators.size()-1);
+    //We're done building low_mx.
     
     //We no longer need low_simplices
-    std::vector<LowSimplexData>().swap(bd.low_simplices); //"Free" memory of low_generators
+    std::vector<LowSimplexData>().swap(bif_data.low_simplices); //"Free" memory of low_generators
     std::unordered_map<Simplex* const, unsigned, VectorHash, deref_equal_fn>().swap(low_ht); //"Free" memory of hash_table.
 
     if (verbosity >= 6)
-        debug() << "Created low boundary matrix";
+        debug() << "Created low matrix";
 
-    //Next, we build the high boundary matrix.
+    //Next, we build the high matrix.
     //First, we need to do more processing of the simplices in dimension hom_dim
 
     //Record the sorted indices in the MidHighSimplexData structs.
@@ -153,23 +151,23 @@ FIRep::FIRep(BifiltrationData& bd, int v)
         *(mid_generators[i].first->ind.begin() + std::distance(mid_generators[i].first->ag.begin(), mid_generators[i].first->ag_it++)) = i;
     }
 
-    //Reset all of the ag_it iterators to their start position.  This is needed for when we build the high boundary matrix.
-    for (auto it = bd.mid_simplices.begin(); it != bd.mid_simplices.end(); it++) {
+    //Reset all of the ag_it iterators to their start position.  This is needed for when we build the high matrix.
+    for (auto it = bif_data.mid_simplices.begin(); it != bif_data.mid_simplices.end(); it++) {
         it->ag_it = it->ag.begin();
     }
 
     //Enter the mid_simplex indices into a hash table.
     SimplexHashMid mid_ht; //key = simplex; value = iterator pointing to that simplex in mid_simplices
 
-    for (auto it = bd.mid_simplices.begin(); it != bd.mid_simplices.end(); it++) {
+    for (auto it = bif_data.mid_simplices.begin(); it != bif_data.mid_simplices.end(); it++) {
         mid_ht.emplace(&(it->s), it);
     }
 
-    //The following vector will index the columns of the high boundary matrix
+    //The following vector will index the columns of the high matrix
     auto high_generators = std::vector<std::pair<std::vector<MidHighSimplexData>::iterator, AppearanceGrades::iterator>>();
 
-    //We know in advance how many columns the high boundary matrix will have.
-    high_generators.reserve(bd.high_count + bd.mid_count - bd.mid_simplices.size());
+    //We know in advance how many columns the high matrix will have.
+    high_generators.reserve(bif_data.high_count + bif_data.mid_count - bif_data.mid_simplices.size());
 
     //Add the relations to high_generators
     //Relations will be represented implicity as using two pieces of data:
@@ -177,14 +175,14 @@ FIRep::FIRep(BifiltrationData& bd, int v)
     //2) An iterator it pointing to m in mid_simplices.
     //The relation represented is the one between *it2 and *(it2+1).
 
-    for (auto it = bd.mid_simplices.begin(); it != bd.mid_simplices.end(); it++) {
+    for (auto it = bif_data.mid_simplices.begin(); it != bif_data.mid_simplices.end(); it++) {
         for (AppearanceGrades::iterator it2 = it->ag.begin(); (it2 + 1) != it->ag.end(); it2++) {
             high_generators.push_back(std::pair<std::vector<MidHighSimplexData>::iterator, AppearanceGrades::iterator>(it, it2));
         }
     }
 
     //Add each (simplex,grade) pair of dimension (hom_dim+1) to high_generators
-    for (auto it = bd.high_simplices.begin(); it != bd.high_simplices.end(); it++) {
+    for (auto it = bif_data.high_simplices.begin(); it != bif_data.high_simplices.end(); it++) {
         //iterate through the grades
         for (auto it2 = it->ag.begin(); it2 != it->ag.end(); it2++) {
             //populate high_generators with pairs
@@ -233,29 +231,29 @@ FIRep::FIRep(BifiltrationData& bd, int v)
         });
     //high_generators is now properly sorted.
 
-    //Compute the boundary matrix.  This is more complex than in the lower dimension, because (in the multicritical setting) we need to handle the relations and make a valid choice from among several possible birth grades of a boundary simplex.
+    //Compute the matrix.  This is more complex than in the lower dimension, because (in the multicritical setting) we need to handle the relations and make a valid choice from among several possible birth grades of a boundary simplex.
 
     //create the MapMatrix
-    boundary_mx_high = MapMatrix(mid_generators.size(), high_generators.size());
+    high_mx.mat = MapMatrix(mid_generators.size(), high_generators.size());
     if (verbosity >= 6)
-        debug() << "Creating boundary matrix of dimension" << mid_generators.size() << "x" << high_generators.size();
+        debug() << "Creating high matrix of dimension" << mid_generators.size() << "x" << high_generators.size();
 
     //reserve space to work
     Simplex face;
-    face.reserve(bd.hom_dim + 1);
+    face.reserve(bif_data.hom_dim + 1);
 
     if (high_generators.size() > 0)
         prev_grade = *(high_generators[0].second);
     
-    //add in columns of boundary matrix and set the entries of the corresponding IndexMatrix
+    //add in columns of matrix and set the entries of the corresponding IndexMatrix
     for (unsigned i = 0; i < high_generators.size(); i++) {
         
         if (high_generators[i].first->is_high()) {
             
             //set entries of the index matrix
-            fill_index_mx(index_mx_high, prev_grade, *(high_generators[i].second), i-1);
+            high_mx.ind.fill_index_mx(prev_grade, *(high_generators[i].second), i-1);
             
-            //TODO: reserve space in the column of boundary_mx_high for the entries we will add in?  Because of all the nested interfaces, a few classes would have to be changed.  Probably not worth it.
+            //TODO: reserve space in the column of high_mx for the entries we will add in?  Because of all the nested interfaces, a few classes would have to be changed.  Probably not worth it.
 
             //call the simplex "vertices";
             Simplex& vertices = high_generators[i].first->s;
@@ -278,7 +276,7 @@ FIRep::FIRep(BifiltrationData& bd, int v)
 
                 //A COOL TRICK: Simplices are colex ordered, and so is each AppearanceGrades vector ag.  Thus, it can be shown that if we reject a grade of appearance once, we do not need to consider it again.  This saves us time in building the FI-Rep.
 
-                //Note however, that the construction of the boundary matrix depends on the choice of the grade of the boundary element, and it is not clear how this choice impacts the speed of subsequent computations taking the FIRep as input.  In the absense of any insight into this, we simply make the choice that allows us to build the FI-Rep most quickly.
+                //Note however, that the construction of the matrix depends on the choice of the grade of the boundary element, and it is not clear how this choice impacts the speed of subsequent computations taking the FIRep as input.  In the absense of any insight into this, we simply make the choice that allows us to build the FI-Rep most quickly.
 
                 bool found_match = false;
                 while (!found_match) {
@@ -287,7 +285,7 @@ FIRep::FIRep(BifiltrationData& bd, int v)
                         //insert the index in mid_generators corresponding to this (simplex,grade) pair.
                         
                         
-                        boundary_mx_high.set(*(face_node->second->ind.begin() + std::distance(face_node->second->ag.begin(), face_node->second->ag_it)),i);
+                        high_mx.mat.set(*(face_node->second->ind.begin() + std::distance(face_node->second->ag.begin(), face_node->second->ag_it)),i);
                         found_match = true;
                     } else {
                         face_node->second->ag_it++;
@@ -295,33 +293,33 @@ FIRep::FIRep(BifiltrationData& bd, int v)
                 }
                 face.clear();
             }
-            boundary_mx_high.prepare_col(i);
+            high_mx.mat.prepare_col(i);
             }
 
         else {
             //if we are here, i indexes a relation.
             
-            //Update index_mx_high in the appropriate way.
+            //Update high_mx.ind in the appropriate way.
             Grade curr_grade = Grade(high_generators[i].second->x, (high_generators[i].second + 1)->y);
-            fill_index_mx(index_mx_high, prev_grade, curr_grade, i-1);
+            high_mx.ind.fill_index_mx(prev_grade, curr_grade, i-1);
 
-            //add the second index of the relation to the ith column of boundary_mx_high
-            boundary_mx_high.set(*(high_generators[i].first->ind.begin() + std::distance(high_generators[i].first->ag.begin(), high_generators[i].second) + 1),i);
+            //add the second index of the relation to the ith column of high_mx
+            high_mx.mat.set(*(high_generators[i].first->ind.begin() + std::distance(high_generators[i].first->ag.begin(), high_generators[i].second) + 1),i);
             
-            //add the first index of the relation to the ith column of boundary_mx_high
-            boundary_mx_high.set(*(high_generators[i].first->ind.begin() + std::distance(high_generators[i].first->ag.begin(), high_generators[i].second)),i);
+            //add the first index of the relation to the ith column of high_mx
+            high_mx.mat.set(*(high_generators[i].first->ind.begin() + std::distance(high_generators[i].first->ag.begin(), high_generators[i].second)),i);
             
-            //Note: The order in which we add the two elements matters; by construction, column is in heap order (see documentation for std::pop_heap), so no need to call boundary_mx_high.prepare_col().
+            //Note: The order in which we add the two elements matters; by construction, column is in heap order (see documentation for std::pop_heap), so no need to call high_mx.mat.prepare_col().
         }
     }
     
-    //Now we complete construction of the index_mx_high.
+    //Now we complete construction of the high_mx.ind.
     if (high_generators.size() > 0)
-        fill_index_mx(index_mx_high, prev_grade, Grade(0,index_mx_high.height()), high_generators.size()-1);
-    //We're done building boundary_mx_high.
+        high_mx.ind.fill_index_mx(prev_grade, Grade(0,high_mx.ind.height()), high_generators.size()-1);
+    //We're done building high_mx.
     
     if (verbosity >= 6)
-        debug() << "Created high boundary matrix";
+        debug() << "Created high matrix";
 
     if (verbosity >= 6) {
         debug() << "Created FIRep";
@@ -332,18 +330,13 @@ FIRep::FIRep(BifiltrationData& bd, int v)
 
 }
 
-
-// New names: t=num_high_simplices, s=num_mid_simplices, r=num_low_simplices
-
 //This constructor is used when the FIRep is given directly as text input.  To understand this part of code, it may be helpful to review the conventions for the FIRep input format, as explained in the RIVET documentation.
-FIRep::FIRep(BifiltrationData& bd, unsigned num_high_simplices, unsigned num_mid_simplices, unsigned num_low_simplices, std::vector<std::vector<unsigned>>& d2, std::vector<std::vector<unsigned>>& d1, const std::vector<unsigned> x_values, const std::vector<unsigned> y_values, int v)
-    : boundary_mx_low(MapMatrix(num_low_simplices, num_mid_simplices))
-    , boundary_mx_high(MapMatrix(num_mid_simplices, num_high_simplices))
-    , index_mx_low(bd.num_y_grades(), bd.num_x_grades())
-    , index_mx_high(bd.num_y_grades(), bd.num_x_grades())
+FIRep::FIRep(BifiltrationData& bif_data, unsigned num_high_simplices, unsigned num_mid_simplices, unsigned num_low_simplices, std::vector<std::vector<unsigned>>& d2, std::vector<std::vector<unsigned>>& d1, const std::vector<unsigned> x_values, const std::vector<unsigned> y_values, int v)
+    : low_mx(num_low_simplices, num_mid_simplices, bif_data.num_y_grades(), bif_data.num_x_grades())
+    , high_mx(num_mid_simplices, num_high_simplices, bif_data.num_y_grades(), bif_data.num_x_grades())
     , verbosity(v)
-    , x_grades(bd.num_x_grades())
-    , y_grades(bd.num_y_grades())
+    , x_grades(bif_data.num_x_grades())
+    , y_grades(bif_data.num_y_grades())
 
 {
     //TODO: Instead of using separate x_value and y_value vectors, it would be more efficient to use a vector of pairs.
@@ -367,14 +360,14 @@ FIRep::FIRep(BifiltrationData& bd, unsigned num_high_simplices, unsigned num_mid
         prev_grade = mid_indexes[0].first;
     
     for (unsigned i = 0; i < num_mid_simplices; i++) {
-        write_boundary_column(boundary_mx_low, d1[mid_indexes[i].second], i);
+        write_boundary_column(low_mx.mat, d1[mid_indexes[i].second], i);
         
-        fill_index_mx(index_mx_low, prev_grade, mid_indexes[i].first, i-1);
+        low_mx.ind.fill_index_mx(prev_grade, mid_indexes[i].first, i-1);
     }
     
-    //Now we complete construction of the index_mx_low.
+    //Now we complete construction of the low_mx.ind.
     if (num_mid_simplices > 0)
-        fill_index_mx(index_mx_low, prev_grade, Grade(0,index_mx_low.height()), mid_indexes.size()-1);
+        low_mx.ind.fill_index_mx(prev_grade, Grade(0,low_mx.ind.height()), mid_indexes.size()-1);
     
     std::vector<std::pair<Grade, unsigned>> high_indexes;
     for (unsigned i = 0; i < num_high_simplices; i++) {
@@ -392,14 +385,14 @@ FIRep::FIRep(BifiltrationData& bd, unsigned num_high_simplices, unsigned num_mid
         for (unsigned j = 0; j < entries.size(); j++) {
             entries[j] = inverse_map[entries[j]];
         }
-        write_boundary_column(boundary_mx_high, entries, i);
+        write_boundary_column(high_mx.mat, entries, i);
         
-        fill_index_mx(index_mx_high, prev_grade, high_indexes[i].first, i-1);
+        high_mx.ind.fill_index_mx(prev_grade, high_indexes[i].first, i-1);
     }
 
-    //Now we complete construction of the index_mx_high
+    //Now we complete construction of high_mx.ind
     if (num_high_simplices > 0)
-        fill_index_mx(index_mx_high, prev_grade, Grade(0,index_mx_high.height()), high_indexes.size()-1);
+        high_mx.ind.fill_index_mx(prev_grade, Grade(0,high_mx.ind.height()), high_indexes.size()-1);
     
     if (verbosity >= 8)
         debug() << "Created FIRep";
@@ -432,24 +425,10 @@ unsigned FIRep::num_y_grades()
 //Print the matrices and appearance grades
 void FIRep::print()
 {
-    debug() << "printing of FIRep disabled for now";
-    //boundary_mx_low.print();
-    //get_low_index_mx()->print();
-    //boundary_mx_high.print();
-    //get_high_index_mx()->print();
-}
-
-void FIRep::fill_index_mx(IndexMatrix& ind_mat, Grade& start_grade, const Grade& end_grade, const unsigned& value)
-{
-    Grade& current_grade = start_grade;
-    while (! (current_grade == end_grade) )
-    {
-        //set value of index matrix
-        ind_mat.set(current_grade.y,current_grade.x,value);
-        
-        //increment w.r.t. colex order on the grid of bigrades.
-        ind_mat.next_colex(current_grade.y,current_grade.x);
-    }
+    low_mx.mat.print();
+    low_mx.ind.print();
+    high_mx.mat.print();
+    high_mx.ind.print();
 }
 
 

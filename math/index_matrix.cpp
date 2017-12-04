@@ -85,6 +85,19 @@ unsigned IndexMatrix::start_index(unsigned& row, unsigned& col)
     return 1 + get(row-1,num_cols-1);
 }
 
+void IndexMatrix::fill_index_mx(Grade& start_grade, const Grade& end_grade, const unsigned& value)
+{
+    Grade& current_grade = start_grade;
+    while (! (current_grade == end_grade) )
+    {
+        //set value of index matrix
+        set(current_grade.y, current_grade.x,value);
+        
+        //increment w.r.t. colex order on the grid of bigrades.
+        next_colex(current_grade.y, current_grade.x);
+    }
+}
+
 //function to print the matrix to standard output, for testing purposes
 void IndexMatrix::print() const
 {
@@ -109,6 +122,12 @@ void IndexMatrix::print() const
 
 
 /********** Defs for IndexMatrixLex **********/
+
+//constructor simply calls the constructor for the parent class
+IndexMatrixLex::IndexMatrixLex(unsigned rows, unsigned cols)
+    : IndexMatrix(rows, columns)
+{}
+
 
 unsigned IndexMatrixLex::start_index(unsigned& row, unsigned& col)
 {
