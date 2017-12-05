@@ -751,17 +751,14 @@ bool Arrangement::CrossingComparator::operator()(const Crossing& c1, const Cross
     return c1.x > c2.x;
 }
 
-//epsilon value for use in comparisons
-double Arrangement::epsilon = pow(2, -30);
-
-//test whether two double values are almost equal (indicating that we should do exact comparison)
-bool Arrangement::almost_equal(const double a, const double b)
+//test whether two interval values are almost equal (indicating that we should do exact comparison)
+bool Arrangement::almost_equal(const I_aux a, const I_aux b)
 {
-    double diff = std::abs(a - b);
-    if (diff <= epsilon)
-        return true;
+    using namespace boost::numeric::interval_lib::compare::certain;
 
-    if (diff <= (std::abs(a) + std::abs(b)) * epsilon)
-        return true;
-    return false;
+    if(a != b) { // then the intervals are disjoint, so the values are not almost equal
+    	return false;
+    }
+    // else -- the intervals are not disjoint, so the values might be equal
+    return true;
 }
