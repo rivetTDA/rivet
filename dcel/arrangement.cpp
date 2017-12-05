@@ -29,6 +29,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <boost/graph/graph_traits.hpp>
 #include <boost/graph/kruskal_min_spanning_tree.hpp>
 
+#include <cfloat> // DBL_MAX and DBL_MIN
+#include <cmath> // std::nextafter
+
 using rivet::numeric::INFTY;
 
 Arrangement::Arrangement()
@@ -675,6 +678,15 @@ void Arrangement::test_consistency()
 
 /********** the following objects and functions are for exact comparisons **********/
 
+//to ensure that the arrangement is built correctly, use interval arithmetic with the following interval type
+typedef boost::numeric::interval<double> I_aux;
+
+//return an interval that contains a value
+I_aux Arrangement::to_interval(double v)
+{
+	return I_aux(nextafter(v, DBL_MIN), nextafter(v, DBL_MAX));
+}
+
 //Crossing constructor
 //precondition: Anchors a and b must be comparable
 Arrangement::Crossing::Crossing(std::shared_ptr<Anchor> a, std::shared_ptr<Anchor> b, std::shared_ptr<Arrangement> m)
@@ -682,16 +694,15 @@ Arrangement::Crossing::Crossing(std::shared_ptr<Anchor> a, std::shared_ptr<Ancho
     , b(b)
     , m(m)
 {
-    //store the x-coordinate of the crossing for fast (inexact) comparisons
-    x = (m->y_grades[a->get_y()] - m->y_grades[b->get_y()]) / (m->x_grades[a->get_x()] - m->x_grades[b->get_x()]);
+    //compute the x-coordinate of the crossing as an interval for fast (inexact) comparisons
+    x = ( to_interval(m->y_grades[a->get_y()]) - to_interval(m->y_grades[b->get_y()]) ) / 
+        ( to_interval(m->x_grades[a->get_x()]) - to_interval(m->x_grades[b->get_x()]) );
 }
 
 //returns true iff this Crossing has (exactly) the same x-coordinate as other Crossing
 bool Arrangement::Crossing::x_equal(const Crossing* other) const
 {
-    if (Arrangement::almost_equal(x, other->x)) //then compare exact values
-    	///TODO: COMPARE INTERVALS HERE
-    {
+    if (Arrangement::almost_equal(x, other->x)) { //then compare exact values
         //find exact x-values
         exact x1 = (m->y_exact[a->get_y()] - m->y_exact[b->get_y()]) / (m->x_exact[a->get_x()] - m->x_exact[b->get_x()]);
         exact x2 = (m->y_exact[other->a->get_y()] - m->y_exact[other->b->get_y()]) / (m->x_exact[other->a->get_x()] - m->x_exact[other->b->get_x()]);
@@ -716,7 +727,7 @@ bool Arrangement::CrossingComparator::operator()(const Crossing& c1, const Cross
     std::shared_ptr<Arrangement> m = c1.m; //makes it easier to reference arrays in the arrangement
 
     //now do the comparison
-    //if the x-coordinates are nearly equal as double values, then compare exact values
+    //if the x-coordinates are nearly equal, then compare exact values
     if (Arrangement::almost_equal(c1.x, c2.x)) {
         //find exact x-values
         exact x1 = (m->y_exact[c1.a->get_y()] - m->y_exact[c1.b->get_y()]) / (m->x_exact[c1.a->get_x()] - m->x_exact[c1.b->get_x()]);
@@ -724,9 +735,9 @@ bool Arrangement::CrossingComparator::operator()(const Crossing& c1, const Cross
 
         //if the x-values are exactly equal, then consider the y-values
         if (x1 == x2) {
-            //find the y-values -- each is stored as an interval
-            I_aux c1y = m->x_grades[c1.a->get_x()] * (c1.x) - m->y_grades[c1.a->get_y()];
-            I_aux c2y = m->x_grades[c2.a->get_x()] * (c2.x) - m->y_grades[c2.a->get_y()];
+            //find the y-values as intervals
+            I_aux c1y = to_interval(m->x_grades[c1.a->get_x()]) * (c1.x) - to_interval(m->y_grades[c1.a->get_y()]);
+            I_aux c2y = to_interval(m->x_grades[c2.a->get_x()]) * (c2.x) - to_interval(m->y_grades[c2.a->get_y()]);
 
             //if the y-values are nearly equal as double values, then compare exact values
             if (Arrangement::almost_equal(c1y, c2y)) {
@@ -742,13 +753,13 @@ bool Arrangement::CrossingComparator::operator()(const Crossing& c1, const Cross
                 return y1 > y2;
             }
             //otherwise, the y-values are not almost equal
-            return c1y > c2y; // TODO: UPDATE THIS!!!!
+            return c1y > c2y; // TODO: check this
         }
         //otherwise, the x-values are not equal
         return x1 > x2;
     }
     //otherwise, the x-values are not almost equal
-    return c1.x > c2.x;
+    return c1.x > c2.x; // TODO: check this
 }
 
 //test whether two interval values are almost equal (indicating that we should do exact comparison)

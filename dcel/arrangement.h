@@ -82,10 +82,6 @@ public:
     std::vector<exact> x_exact; //exact values for all x-grades
     std::vector<exact> y_exact; //exact values for all y-grades
 
-    //these are necessary for comparisons; TODO: should they be static members of Arrangement?
-    static double epsilon;
-    static bool almost_equal(const double a, const double b);
-
     friend std::ostream& operator<<(std::ostream&, const Arrangement&);
     friend std::istream& operator>>(std::istream&, Arrangement&);
     std::shared_ptr<Halfedge> insert_vertex(std::shared_ptr<Halfedge> edge, double x, double y); //inserts a new vertex on the specified edge, with the specified coordinates, and updates all relevant pointers
@@ -152,6 +148,12 @@ private:
 
     //to ensure that the arrangement is built correctly, use interval arithmetic with the following interval type
     typedef boost::numeric::interval<double> I_aux;
+
+    //return an interval that contains a value
+    static I_aux to_interval(double v);
+
+    //compare two intervals; return true if they are not disjoint
+    static bool almost_equal(const I_aux a, const I_aux b);
 
     //struct to hold a future intersection event -- used when building the arrangement
     struct Crossing {
