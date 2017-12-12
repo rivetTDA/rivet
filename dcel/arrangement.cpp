@@ -682,9 +682,10 @@ void Arrangement::test_consistency()
 typedef boost::numeric::interval<double> I_aux;
 
 //return an interval that contains a value
+//precondition: v is the double value nearest to the desired real value
 I_aux Arrangement::to_interval(double v)
 {
-	return I_aux(nextafter(v, DBL_MIN), nextafter(v, DBL_MAX));
+	return I_aux(nextafter(v, -DBL_MAX), nextafter(v, DBL_MAX));
 }
 
 //Crossing constructor
