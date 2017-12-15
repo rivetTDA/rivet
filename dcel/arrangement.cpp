@@ -748,19 +748,19 @@ bool Arrangement::CrossingComparator::operator()(const Crossing& c1, const Cross
 
                 //if the y-values are exactly equal, then sort by relative position of the lines
                 if (y1 == y2)
-                    return c1.a->get_position() > c2.a->get_position(); //Is there a better way???
+                    return c1.a->get_position() > c2.a->get_position();
 
                 //otherwise, the y-values are not equal
                 return y1 > y2;
             }
             //otherwise, the y-values are not almost equal
-            return c1y > c2y; // TODO: check this
+            return c1y > c2y;
         }
         //otherwise, the x-values are not equal
         return x1 > x2;
     }
     //otherwise, the x-values are not almost equal
-    return c1.x > c2.x; // TODO: check this
+    return c1.x > c2.x;
 }
 
 //test whether two interval values are almost equal (indicating that we should do exact comparison)
