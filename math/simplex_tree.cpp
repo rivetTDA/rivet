@@ -516,17 +516,46 @@ STNode* SimplexTree::find_simplex(std::vector<int>& vertices)
     if (size == 0)
         return root; //root is associated with the null simpex
 
-    //search the vector of children nodes for each vertex
-    STNode* node = root;
-    for (unsigned i = 0; i < size && nullptr != node; i++) {
+    //first node can be indexed directly from the root (requires that all vertices are numbered consecutively from zero)
+    STNode* node = root->get_children()[vertices[0]];
+
+    //search the vector of children nodes for each vertex, starting from index 1
+    for (size_t i = 1; i < size && nullptr != node; i++) {
         std::vector<STNode*>& kids = node->get_children();
         int key = vertices[i];
-        node = *(std::find_if(kids.begin(),
-            kids.end(),
-            [key](STNode* kid) { return kid->get_vertex() == key; }));
+
+        //use a sequential search for small vectors
+        if (kids.size() <= 20) {
+             node = *(std::find_if(kids.begin(),
+                kids.end(),
+                [key](STNode* kid) { return kid->get_vertex() == key; }));
+        } 
+        //otherwise, use a binary search
+        else {
+            size_t min = 0;
+            size_t max = kids.size() - 1;
+            size_t mid;
+            STNode* test = nullptr;
+            while (max >= min) {
+                mid = (min + max)/2;
+                test = kids[mid];
+                int vertex = test->get_vertex();
+     
+                if ( vertex == key ) {
+                    node = test;
+                    break;  //found it at kids[mid]
+                }
+                else if ( vertex < key )
+                    min = mid + 1;
+                else
+                    max = mid - 1;
+            }
+            if (max < min) //didn't find it
+                return nullptr;
+        }
     }
 
-    //return global index
+    //found the node
     return node;
 }
 
