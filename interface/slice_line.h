@@ -61,6 +61,9 @@ public:
     double get_box_xmax();
     double get_box_ymax();
 
+    void set_visibility(bool visible);
+
+
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent* event);
     void mouseReleaseEvent(QGraphicsSceneMouseEvent* event);
@@ -69,6 +72,7 @@ protected:
 private:
     double data_xmax, data_ymax; //pixel dimensions slightly greater than the largest possible data values (i.e. largest multi-grade)
     double box_xmax, box_ymax; //pixel dimensions of the on-screen box in which this line is allowed to move
+
 
     bool vertical; //true if the line is currently vertical
     double slope; //current slope of the line in PIXEL units

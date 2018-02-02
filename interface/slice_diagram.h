@@ -42,6 +42,7 @@ typedef boost::multi_array<QGraphicsRectItem*, 2> QGRI_matrix;
 class SliceDiagram : public QGraphicsScene {
     Q_OBJECT
 
+    //todo: make the gray outline of the gradings visible
 public:
     SliceDiagram(ConfigParameters* params, std::vector<double>& x_grades, std::vector<double>& y_grades, QObject* parent = 0);
     ~SliceDiagram();
@@ -56,8 +57,18 @@ public:
     void redraw_dim_rects(); //redraws the rectangles for the homology dimension visualization
     void redraw_dots(); //redraws the support points of the multigraded Betti numbers
 
-    void update_line(double angle, double offset); //updates the line, in response to a change in the controls in the VisualizationWindow
+    void zoom_diagram(double angle, double offset, double distance_to_origin); //redraws diagram in response to a change in bounds
+
+
+    void update_line(double angle, double offset, double distance_to_origin); //updates the line, in response to a change in the controls in the VisualizationWindow
     void update_window_controls(bool from_dot); //computes new angle and offset in response to a change in the line, emits signal for the VisualizationWindow
+
+    void update_BottomX(double bottom_x, double distance_to_origin, bool visible);//called when the window bounds are changed; distance to origin and visible refer to the corresponding values in the new window
+    void update_BottomY(double bottom_y, double distance_to_origin, bool visible);
+    void update_TopX(double top_x, double distance_to_origin, bool visible);
+    void update_TopY(double top_y, double distance_to_origin, bool visible);
+
+
 
     void draw_barcode(const Barcode& bc, bool show); //draws the barcode parallel to the slice line; "show" determines whether or not bars are visible
     void update_barcode(const Barcode& bc, bool show); //updates the barcode (e.g. after a change in the slice line)
@@ -76,12 +87,25 @@ public:
     double get_slice_length(); //gets the length of the slice, for scaling the persistence diagram
     double get_pd_scale(); //gets the number of pixels per unit, for the persistence diagram
 
+    double get_original_xmin();
+    double get_original_xmax();
+    double get_original_ymin();
+    double get_original_ymax();
+
+    double get_min_supp_xi_x();
+    double get_max_supp_xi_x();
+    double get_min_supp_xi_y();
+    double get_max_supp_xi_y();
+
+    bool get_line_visible(); //true if the line is visible
+
     void receive_parameter_change(); //updates the diagram after a change in configuration parameters
 
 public slots:
     void receive_bar_selection(std::vector<unsigned> indexes); //highlight the specified class of bars, which has been selected externally
     void receive_bar_secondary_selection(std::vector<unsigned> indexes); //secondary highlight, used for persistence dots that represent multiple classes of bars
     void receive_bar_deselection(); //remove bar highlighting in response to external command
+    //void update_dist_to_origin(double dist);
 
 signals:
     void set_line_control_elements(double angle, double offset); //sends updates to, e.g., the VisualizationWindow
@@ -101,8 +125,11 @@ private:
     QGraphicsSimpleTextItem* y_label;
 
     QGraphicsRectItem* control_rect; //control dots live on this rectangle
-    QGraphicsLineItem* gray_line_vertical; //vertical gray line at the right of the diagram
-    QGraphicsLineItem* gray_line_horizontal; //horizontal gray line at the top of the diagram
+    QGraphicsLineItem* gray_line_vertical; //vertical gray line at the right of the grading rectangle
+    QGraphicsLineItem* gray_line_horizontal; //horizontal gray line at the top of the grading rectangle
+    QGraphicsLineItem* gray_line_vertical_left; //vertical gray line at the left of the grading rectangle
+    QGraphicsLineItem* gray_line_horizontal_bottom; //horizontal gray line at the bottom of the grading rectangle
+
     ControlDot* dot_left;
     ControlDot* dot_right;
 
@@ -142,9 +169,17 @@ private:
     const std::vector<double>& y_grades; // "
 
     ///TODO: the next four values can be obtained from x_grades and y_grades
-    double data_xmin, data_xmax, data_ymin, data_ymax; //min and max coordinates of the data
+    double original_xmin, original_xmax, original_ymin, original_ymax; //default bounds-these are unchanged after initialization
+    double data_xmin, data_xmax, data_ymin, data_ymax; //min and max coordinates of the CURRENT WINDOW
     int view_length;    //width + height of the QGraphicsView that displays the diagram; used for drawing infinite bars
     int max_xi_value; //max value of the bigraded betti numbers
+
+    double min_supp_xi_x; //the minimal x value in the support of the betti numbers
+    double max_supp_xi_x;
+    double min_supp_xi_y;
+    double max_supp_xi_y;
+
+
 
     int diagram_width, diagram_height; //pixel size of the diagram
     bool normalized_coords; //whether the user has selected "normalize coordinates"
@@ -154,6 +189,9 @@ private:
     bool line_vert; //true if the line is vertical, false otherwise
     double line_pos; //relative position of left endpoint of line: 0 is lower left corner, positive values (up to 1) are along left side, negative values (to -1) are along bottom edge of box
 
+    bool line_visible; //true if the line is visible in the current window
+
+    double dist_to_origin;//signed distance in data units from the bottom left corner to the origin
     const int padding; //distance between xi support point area and control rectangle (on the top and right sides)
 
     bool created; //true once the diagram has been created

@@ -235,6 +235,7 @@ void SliceLine::update_bounds(double data_width, double data_height, int padding
     box_xmax = data_width + padding;
     box_ymax = data_height + padding;
 
+
     update_lock = false;
 }
 
@@ -362,4 +363,13 @@ double SliceLine::get_box_xmax()
 double SliceLine::get_box_ymax()
 {
     return box_ymax;
+}
+
+void SliceLine::set_visibility(bool visible)
+{
+    left_dot->setVisible(visible);
+    right_dot->setVisible(visible);
+    setVisible(visible);
+
+
 }
