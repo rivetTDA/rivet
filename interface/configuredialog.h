@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 struct ConfigParameters;
 
+#include "api.h"
 #include "input_parameters.h"
 
 #include <QColor>
