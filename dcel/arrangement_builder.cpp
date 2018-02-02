@@ -34,7 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cutgraph.h>
 #include <stack> //for find_subpath
 
-    using rivet::numeric::INFTY;
+using rivet::numeric::INFTY;
 
 ArrangementBuilder::ArrangementBuilder(unsigned verbosity)
     : verbosity(verbosity)
@@ -166,8 +166,9 @@ void ArrangementBuilder::build_interior(std::shared_ptr<Arrangement> arrangement
 
     //data structure for queue of future intersections
     std::priority_queue<std::shared_ptr<Arrangement::Crossing>,
-            std::vector<std::shared_ptr<Arrangement::Crossing>>,
-            PointerComparator<Arrangement::Crossing, Arrangement::CrossingComparator>> crossings;
+        std::vector<std::shared_ptr<Arrangement::Crossing>>,
+        PointerComparator<Arrangement::Crossing, Arrangement::CrossingComparator>>
+        crossings;
 
     //data structure for all pairs of Anchors whose potential crossings have been considered
     typedef std::pair<std::shared_ptr<Anchor>, std::shared_ptr<Anchor>> Anchor_pair;

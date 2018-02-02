@@ -46,14 +46,7 @@ public:
     void redraw_dots(); //redraws persistence dots; e.g. used after a change in parameters
 
     void update_diagram(double slice_length, double diagram_scale, const Barcode& bc); //updates the diagram after a change in the slice line
-    void update_diagram(double slice_length_pix, double diagram_scale, double slice_dist_dat, double max_len_dat, bool is_visible, const Barcode&bc);//updates the diagram after a change in the window bounds
-
-
-
-
-
-
-
+    void update_diagram(double slice_length_pix, double diagram_scale, double slice_dist_dat, double max_len_dat, bool is_visible, const Barcode& bc); //updates the diagram after a change in the window bounds
 
     void select_dot(PersistenceDot* clicked); //highlight the specified dot, selected in the persistence diagram, and propagate to the slice diagram
     void deselect_dot(); //remove selection and propagate to the slice diagram
@@ -64,11 +57,11 @@ public slots:
     void receive_dot_selection(unsigned index); //highlight the specified dot, which has been selected externally
     void receive_dot_deselection(); //remove dot highlighting in response to external command
 
-
 signals:
     void persistence_dot_selected(std::vector<unsigned> indexes);
     void persistence_dot_secondary_selection(std::vector<unsigned> indexes);
     void persistence_dot_deselected();
+
 private:
     //graphics items
     ConfigParameters* config_params;
@@ -82,9 +75,6 @@ private:
     QGraphicsLineItem* top_left_hline;
     QGraphicsLineItem* top_left_vline;
 
-
-
-
     QGraphicsSimpleTextItem* inf_text;
     QGraphicsSimpleTextItem* lt_inf_text;
     QGraphicsSimpleTextItem* inf_count_text;
@@ -94,9 +84,6 @@ private:
 
     QGraphicsSimpleTextItem* big_nonessential_count_text; //barcodes that are born before the visible window, die after, but not essential
     QGraphicsSimpleTextItem* big_essential_count_text; //essential cycles that are born before the visible window
-
-
-
 
     QGraphicsSimpleTextItem* file_text;
     QGraphicsSimpleTextItem* dim_text;
@@ -112,8 +99,8 @@ private:
     int inf_dot_vpos; //vertical position (y-coordinate) of dots representing essential cycles
     int lt_inf_dot_vpos; //vertical position (y-coordinate) of dots representing non-infinite pairs above the diagram
     int gt_neg_inf_dot_hpos;
-    double max_line_length;//the length in data unit of the line segment inside the original data box
-    double dist_to_origin;//the distance from the left bottom dot in the diagram to the origin in the coordinate system defined in the paper, expressed in data units
+    double max_line_length; //the length in data unit of the line segment inside the original data box
+    double dist_to_origin; //the distance from the left bottom dot in the diagram to the origin in the coordinate system defined in the paper, expressed in data units
 
     const Barcode* barcode; //reference to the barcode displayed in the persistence diagram
 

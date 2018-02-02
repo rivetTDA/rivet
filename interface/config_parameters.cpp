@@ -37,5 +37,5 @@ ConfigParameters::ConfigParameters()
     , persistenceBarSpace(5) //space between persistence bars(pixels)
     , diagramFont() //system default font
 {
-    diagramFont.setPointSize(12);   // SET DEFAULT FONT SIZE HERE
+    diagramFont.setPointSize(12); // SET DEFAULT FONT SIZE HERE
 }

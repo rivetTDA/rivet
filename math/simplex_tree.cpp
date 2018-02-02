@@ -382,8 +382,8 @@ void SimplexTree::write_boundary_column(MapMatrix* mat, STNode* sim, int col, in
         STNode* facet_node = find_simplex(facet);
         if (facet_node == NULL) {
             std::stringstream ss;
-            for(unsigned i = 0; i < facet.size(); i++) {
-                if(i != 0)
+            for (unsigned i = 0; i < facet.size(); i++) {
+                if (i != 0)
                     ss << ",";
                 ss << facet[i];
             }

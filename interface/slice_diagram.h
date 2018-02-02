@@ -59,16 +59,13 @@ public:
 
     void zoom_diagram(double angle, double offset, double distance_to_origin); //redraws diagram in response to a change in bounds
 
-
     void update_line(double angle, double offset, double distance_to_origin); //updates the line, in response to a change in the controls in the VisualizationWindow
     void update_window_controls(bool from_dot); //computes new angle and offset in response to a change in the line, emits signal for the VisualizationWindow
 
-    void update_BottomX(double bottom_x, double distance_to_origin, bool visible);//called when the window bounds are changed; distance to origin and visible refer to the corresponding values in the new window
+    void update_BottomX(double bottom_x, double distance_to_origin, bool visible); //called when the window bounds are changed; distance to origin and visible refer to the corresponding values in the new window
     void update_BottomY(double bottom_y, double distance_to_origin, bool visible);
     void update_TopX(double top_x, double distance_to_origin, bool visible);
     void update_TopY(double top_y, double distance_to_origin, bool visible);
-
-
 
     void draw_barcode(const Barcode& bc, bool show); //draws the barcode parallel to the slice line; "show" determines whether or not bars are visible
     void update_barcode(const Barcode& bc, bool show); //updates the barcode (e.g. after a change in the slice line)
@@ -171,15 +168,13 @@ private:
     ///TODO: the next four values can be obtained from x_grades and y_grades
     double original_xmin, original_xmax, original_ymin, original_ymax; //default bounds-these are unchanged after initialization
     double data_xmin, data_xmax, data_ymin, data_ymax; //min and max coordinates of the CURRENT WINDOW
-    int view_length;    //width + height of the QGraphicsView that displays the diagram; used for drawing infinite bars
+    int view_length; //width + height of the QGraphicsView that displays the diagram; used for drawing infinite bars
     int max_xi_value; //max value of the bigraded betti numbers
 
     double min_supp_xi_x; //the minimal x value in the support of the betti numbers
     double max_supp_xi_x;
     double min_supp_xi_y;
     double max_supp_xi_y;
-
-
 
     int diagram_width, diagram_height; //pixel size of the diagram
     bool normalized_coords; //whether the user has selected "normalize coordinates"
@@ -191,7 +186,7 @@ private:
 
     bool line_visible; //true if the line is visible in the current window
 
-    double dist_to_origin;//signed distance in data units from the bottom left corner to the origin
+    double dist_to_origin; //signed distance in data units from the bottom left corner to the origin
     const int padding; //distance between xi support point area and control rectangle (on the top and right sides)
 
     bool created; //true once the diagram has been created

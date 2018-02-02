@@ -28,10 +28,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
+#include <memory>
 #include <set>
 #include <sstream>
 #include <vector>
-#include <memory>
 
 //epsilon value for use in comparisons
 double ExactValue::epsilon = pow(2, -30);
@@ -713,6 +713,7 @@ exact InputManager::approx(double x)
     return exact((long)floor(x * denom), denom);
 }
 
-FileType InputManager::identify() {
+FileType InputManager::identify()
+{
     return this->get_file_type(this->input_params.fileName);
 }

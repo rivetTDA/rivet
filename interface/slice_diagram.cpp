@@ -30,11 +30,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QGraphicsView>
 
 #include <algorithm> // std::min
-#include <cmath> 	 // c++ version of math.h; includes overloaded absolute value functions
+#include <cmath> // c++ version of math.h; includes overloaded absolute value functions
+#include <iostream>
 #include <limits>
 #include <set>
 #include <sstream>
-#include <iostream>
 SliceDiagram::SliceDiagram(ConfigParameters* params, std::vector<double>& x_grades, std::vector<double>& y_grades, QObject* parent)
     : QGraphicsScene(parent)
     , config_params(params)
@@ -88,10 +88,10 @@ void SliceDiagram::create_diagram(const QString& x_text, const QString& y_text, 
     data_ymax = ymax;
     normalized_coords = norm_coords;
 
-    original_xmin=xmin;
-    original_xmax=xmax;
-    original_ymin=ymin;
-    original_ymax=ymax;
+    original_xmin = xmin;
+    original_xmax = xmax;
+    original_ymin = ymin;
+    original_ymax = ymax;
 
     //pens and brushes
     QPen blackPen(Qt::black);
@@ -100,11 +100,7 @@ void SliceDiagram::create_diagram(const QString& x_text, const QString& y_text, 
     QBrush xi1brush(config_params->xi1color);
     QBrush xi2brush(config_params->xi2color);
     QPen grayPen(Qt::gray);
-    QPen highlighter(QBrush(config_params->persistenceHighlightColor), config_params->sliceLineWidth/2);
-
-
-
-
+    QPen highlighter(QBrush(config_params->persistenceHighlightColor), config_params->sliceLineWidth / 2);
 
     //draw labels
     std::ostringstream s_xmin;
@@ -139,7 +135,6 @@ void SliceDiagram::create_diagram(const QString& x_text, const QString& y_text, 
     x_label->setFlag(QGraphicsItem::ItemIgnoresTransformations);
     x_label->setFont(config_params->diagramFont);
 
-
     y_label = addSimpleText(y_text);
     y_label->setTransform(QTransform(0, 1, 1, 0, 0, 0));
     y_label->setFont(config_params->diagramFont);
@@ -164,7 +159,7 @@ void SliceDiagram::create_diagram(const QString& x_text, const QString& y_text, 
             else if (hom_dims[i][j] >= 80)
                 gray_value = 0; //black
 
-            QGraphicsRectItem* item = addRect(QRectF(), Qt::NoPen, QBrush(QColor(gray_value, gray_value, gray_value, 240)));//last value refers to the trasparency, max value=255
+            QGraphicsRectItem* item = addRect(QRectF(), Qt::NoPen, QBrush(QColor(gray_value, gray_value, gray_value, 240))); //last value refers to the trasparency, max value=255
             item->setToolTip(QString("dimension = ") + QString::number(hom_dims[i][j]));
             hom_dim_rects[i][j] = item;
         }
@@ -207,41 +202,32 @@ void SliceDiagram::create_diagram(const QString& x_text, const QString& y_text, 
 
     //find the max and min values of the support of xi
 
-    double min_x_so_far=std::numeric_limits<double>::infinity();
-    double min_y_so_far=std::numeric_limits<double>::infinity();
-    double max_x_so_far=0;
-    double max_y_so_far=0;
+    double min_x_so_far = std::numeric_limits<double>::infinity();
+    double min_y_so_far = std::numeric_limits<double>::infinity();
+    double max_x_so_far = 0;
+    double max_y_so_far = 0;
 
-    for(unsigned i=0; i<points.size(); i++)
-    {
-        double this_x=points[i].x;
-        double this_y=points[i].y;
-        if(this_x>max_x_so_far)
-        {
-            max_x_so_far=this_x;
+    for (unsigned i = 0; i < points.size(); i++) {
+        double this_x = points[i].x;
+        double this_y = points[i].y;
+        if (this_x > max_x_so_far) {
+            max_x_so_far = this_x;
         }
-        if(this_x<min_x_so_far)
-        {
-            min_x_so_far=this_x;
+        if (this_x < min_x_so_far) {
+            min_x_so_far = this_x;
         }
-        if(this_y>max_y_so_far)
-        {
-            max_y_so_far=this_y;
+        if (this_y > max_y_so_far) {
+            max_y_so_far = this_y;
         }
-        if(this_y<min_y_so_far)
-        {
-            min_y_so_far=this_y;
+        if (this_y < min_y_so_far) {
+            min_y_so_far = this_y;
         }
     }
 
-    min_supp_xi_x=min_x_so_far;
-    max_supp_xi_x=max_x_so_far;
-    min_supp_xi_y=min_y_so_far;
-    max_supp_xi_y=max_y_so_far;
-
-
-
-
+    min_supp_xi_x = min_x_so_far;
+    max_supp_xi_x = max_x_so_far;
+    min_supp_xi_y = min_y_so_far;
+    max_supp_xi_y = max_y_so_far;
 
     //add control objects
     line_vert = false; //IS IT POSSIBLE THAT THE INITIAL LINE COULD BE VERTICAL???????????????????????????????????
@@ -338,7 +324,7 @@ void SliceDiagram::resize_diagram()
         int min_grid = (x_grid < y_grid) ? x_grid : y_grid;
 
         int auto_radius = (int)min_grid / sqrt(max_xi_value);
-        int max_radius = (int)( std::min(diagram_max_height, diagram_max_width)/20 );
+        int max_radius = (int)(std::min(diagram_max_height, diagram_max_width) / 20);
         if (auto_radius < 3)
             auto_radius = 3;
         if (auto_radius > max_radius)
@@ -351,36 +337,23 @@ void SliceDiagram::resize_diagram()
     //reposition reference objects
     control_rect->setRect(0, 0, diagram_width + padding, diagram_height + padding);
 
-    double gray_box_xmin=fmax(original_xmin-data_xmin,0.0)/(data_xmax-data_xmin);//top left corner of gray box, relative units
-    double gray_box_xmax=fmax(original_xmax-data_xmin,0.0)/(data_xmax-data_xmin);
-    double gray_box_ymin=fmax(original_ymin-data_ymin,0.0)/(data_ymax-data_ymin);
-    double gray_box_ymax=fmax(original_ymax-data_ymin,0.0)/(data_ymax-data_ymin);
+    double gray_box_xmin = fmax(original_xmin - data_xmin, 0.0) / (data_xmax - data_xmin); //top left corner of gray box, relative units
+    double gray_box_xmax = fmax(original_xmax - data_xmin, 0.0) / (data_xmax - data_xmin);
+    double gray_box_ymin = fmax(original_ymin - data_ymin, 0.0) / (data_ymax - data_ymin);
+    double gray_box_ymax = fmax(original_ymax - data_ymin, 0.0) / (data_ymax - data_ymin);
 
-
-
-
-
-
-
-    gray_line_vertical->setLine(diagram_width*gray_box_xmax, diagram_height*gray_box_ymin,diagram_width*gray_box_xmax, diagram_height*gray_box_ymax);
-    gray_line_horizontal->setLine(diagram_width*gray_box_xmin, diagram_height*gray_box_ymax,diagram_width*gray_box_xmax, diagram_height*gray_box_ymax);
-    gray_line_vertical_left->setLine(diagram_width*gray_box_xmin, diagram_height*gray_box_ymin,diagram_width*gray_box_xmin, diagram_height*gray_box_ymax);
-    gray_line_horizontal_bottom->setLine(diagram_width*gray_box_xmin, diagram_height*gray_box_ymin,diagram_width*gray_box_xmax, diagram_height*gray_box_ymin);
-
-
+    gray_line_vertical->setLine(diagram_width * gray_box_xmax, diagram_height * gray_box_ymin, diagram_width * gray_box_xmax, diagram_height * gray_box_ymax);
+    gray_line_horizontal->setLine(diagram_width * gray_box_xmin, diagram_height * gray_box_ymax, diagram_width * gray_box_xmax, diagram_height * gray_box_ymax);
+    gray_line_vertical_left->setLine(diagram_width * gray_box_xmin, diagram_height * gray_box_ymin, diagram_width * gray_box_xmin, diagram_height * gray_box_ymax);
+    gray_line_horizontal_bottom->setLine(diagram_width * gray_box_xmin, diagram_height * gray_box_ymin, diagram_width * gray_box_xmax, diagram_height * gray_box_ymin);
 
     data_xmin_text->setPos(data_xmin_text->boundingRect().width() / (-2), -1 * text_padding);
     data_xmax_text->setPos(diagram_width - data_xmax_text->boundingRect().width() / 2, -1 * text_padding);
     data_ymin_text->setPos(-1 * text_padding - data_ymin_text->boundingRect().width(), data_ymin_text->boundingRect().height() / 2);
     data_ymax_text->setPos(-1 * text_padding - data_ymax_text->boundingRect().width(), diagram_height + data_ymax_text->boundingRect().height() / 2);
 
-
-
-
-
     x_label->setPos((diagram_width - x_label->boundingRect().width()) / 2, -1 * text_padding);
     y_label->setPos(-1 * text_padding - y_label->boundingRect().height(), (diagram_height - y_label->boundingRect().width()) / 2);
-
 
     //reposition dimension rectangles
     redraw_dim_rects();
@@ -400,14 +373,14 @@ void SliceDiagram::resize_diagram()
 
     //reposition bars
 
-    double offset_scale=1;//(pow(data_xmax-data_xmin,2.0)+pow(data_ymax-data_ymin,2.0))/(pow(original_xmax-original_xmin,2.0)+pow(original_ymax-original_ymin,2.0));
+    double offset_scale = 1; //(pow(data_xmax-data_xmin,2.0)+pow(data_ymax-data_ymin,2.0))/(pow(original_xmax-original_xmin,2.0)+pow(original_ymax-original_ymin,2.0));
     unsigned count = 1;
     for (unsigned i = 0; i < bars.size(); i++) {
         for (std::list<PersistenceBar*>::iterator it = bars[i].begin(); it != bars[i].end(); ++it) {
             double start = (*it)->get_start();
             double end = (*it)->get_end();
-            std::pair<double, double> p1 = compute_endpoint(start, (count*1.0)*offset_scale);
-            std::pair<double, double> p2 = compute_endpoint(end, (count*1.0)*offset_scale);
+            std::pair<double, double> p1 = compute_endpoint(start, (count * 1.0) * offset_scale);
+            std::pair<double, double> p2 = compute_endpoint(end, (count * 1.0) * offset_scale);
             (*it)->set_line(p1.first, p1.second, p2.first, p2.second);
             count++;
         }
@@ -481,15 +454,12 @@ void SliceDiagram::redraw_dots()
     }
 } //end redraw_dots()
 
-
-
 //zoom in or out in response to a user-defined change in window bounds
-void SliceDiagram::zoom_diagram(double angle,double offset, double distance_to_origin)
+void SliceDiagram::zoom_diagram(double angle, double offset, double distance_to_origin)
 {
     int text_padding = 5; //pixels
 
-
-    dist_to_origin=distance_to_origin;
+    dist_to_origin = distance_to_origin;
 
     //reposition dimension rectangles
     redraw_dim_rects();
@@ -497,87 +467,75 @@ void SliceDiagram::zoom_diagram(double angle,double offset, double distance_to_o
     //reposition xi points
     redraw_dots();
 
-    double gray_box_xmin=fmax(original_xmin-data_xmin,0.0)/(data_xmax-data_xmin);//top left corner of gray box, relative units
-    double gray_box_xmax=fmax(original_xmax-data_xmin,0.0)/(data_xmax-data_xmin);
-    double gray_box_ymin=fmax(original_ymin-data_ymin,0.0)/(data_ymax-data_ymin);
-    double gray_box_ymax=fmax(original_ymax-data_ymin,0.0)/(data_ymax-data_ymin);
-
-
+    double gray_box_xmin = fmax(original_xmin - data_xmin, 0.0) / (data_xmax - data_xmin); //top left corner of gray box, relative units
+    double gray_box_xmax = fmax(original_xmax - data_xmin, 0.0) / (data_xmax - data_xmin);
+    double gray_box_ymin = fmax(original_ymin - data_ymin, 0.0) / (data_ymax - data_ymin);
+    double gray_box_ymax = fmax(original_ymax - data_ymin, 0.0) / (data_ymax - data_ymin);
 
     data_xmin_text->setPos(data_xmin_text->boundingRect().width() / (-2), -1 * text_padding);
     data_xmax_text->setPos(diagram_width - data_xmax_text->boundingRect().width() / 2, -1 * text_padding);
     data_ymin_text->setPos(-1 * text_padding - data_ymin_text->boundingRect().width(), data_ymin_text->boundingRect().height() / 2);
     data_ymax_text->setPos(-1 * text_padding - data_ymax_text->boundingRect().width(), diagram_height + data_ymax_text->boundingRect().height() / 2);
 
-
-
-    gray_line_vertical->setLine(diagram_width*gray_box_xmax, diagram_height*gray_box_ymin,diagram_width*gray_box_xmax, diagram_height*gray_box_ymax);
-    gray_line_horizontal->setLine(diagram_width*gray_box_xmin, diagram_height*gray_box_ymax,diagram_width*gray_box_xmax, diagram_height*gray_box_ymax);
-    gray_line_vertical_left->setLine(diagram_width*gray_box_xmin, diagram_height*gray_box_ymin,diagram_width*gray_box_xmin, diagram_height*gray_box_ymax);
-    gray_line_horizontal_bottom->setLine(diagram_width*gray_box_xmin, diagram_height*gray_box_ymin,diagram_width*gray_box_xmax, diagram_height*gray_box_ymin);
-
+    gray_line_vertical->setLine(diagram_width * gray_box_xmax, diagram_height * gray_box_ymin, diagram_width * gray_box_xmax, diagram_height * gray_box_ymax);
+    gray_line_horizontal->setLine(diagram_width * gray_box_xmin, diagram_height * gray_box_ymax, diagram_width * gray_box_xmax, diagram_height * gray_box_ymax);
+    gray_line_vertical_left->setLine(diagram_width * gray_box_xmin, diagram_height * gray_box_ymin, diagram_width * gray_box_xmin, diagram_height * gray_box_ymax);
+    gray_line_horizontal_bottom->setLine(diagram_width * gray_box_xmin, diagram_height * gray_box_ymin, diagram_width * gray_box_xmax, diagram_height * gray_box_ymin);
 
     x_label->setPos((diagram_width - x_label->boundingRect().width()) / 2, -1 * text_padding);
     y_label->setPos(-1 * text_padding - y_label->boundingRect().height(), (diagram_height - y_label->boundingRect().width()) / 2);
 
-    
-    double intrinsic_y_int=offset/cos(angle*PI/180);
-    double intrinsic_slope=tan(angle*PI/180);
+    double intrinsic_y_int = offset / cos(angle * PI / 180);
+    double intrinsic_slope = tan(angle * PI / 180);
 
-    line_slope=intrinsic_slope;
+    line_slope = intrinsic_slope;
 
     double x = 0, y = 0;
-        if(line_vert)
+    if (line_vert) {
+        double relative_intercept_horz = (-offset - data_xmin) / (data_xmax - data_xmin); //vertical line has negative offset
+        x = relative_intercept_horz * diagram_width;
+        line_visible = (0 <= relative_intercept_horz && relative_intercept_horz <= 1);
+        slice_line->update_position(x, y, line_vert, 0);
+        slice_line->set_visibility(line_visible); //don't plot the line if it lies outisde of the viewing window
+        line_pos = -1 * relative_intercept_horz;
+    }
+
+    else {
+        double relative_intercept_vert = (data_xmin * intrinsic_slope + intrinsic_y_int - data_ymin) / (data_ymax - data_ymin);
+        if (relative_intercept_vert < 0) //then left-bottom endpoint is along bottom edge of box
         {
-            double relative_intercept_horz=(-offset-data_xmin)/(data_xmax-data_xmin);//vertical line has negative offset
-            x=relative_intercept_horz*diagram_width;
-            line_visible=(0<=relative_intercept_horz&& relative_intercept_horz<=1);
-            slice_line->update_position(x, y, line_vert, 0);
-            slice_line->set_visibility(line_visible); //don't plot the line if it lies outisde of the viewing window
-            line_pos=-1*relative_intercept_horz;
+            //the corresponding x point satisfies y_int+slope*(x+xmin)=ymin;
+            double relative_intercept_horz = -data_xmin + (data_ymin - intrinsic_y_int) / (intrinsic_slope);
+            relative_intercept_horz /= data_xmax - data_xmin;
+            x = relative_intercept_horz * diagram_width;
+            line_visible = (0 <= relative_intercept_horz && relative_intercept_horz < 1);
+            line_pos = -1 * relative_intercept_horz;
+        } else //then left-bottom endpoint is along left edge of box
+        {
+            y = relative_intercept_vert * diagram_height;
+            line_visible = (0 <= relative_intercept_vert && relative_intercept_vert < 1);
+            line_pos = relative_intercept_vert;
         }
 
-        else
-        {
-            double relative_intercept_vert=(data_xmin*intrinsic_slope+intrinsic_y_int-data_ymin)/(data_ymax-data_ymin);
-            if (relative_intercept_vert<0) //then left-bottom endpoint is along bottom edge of box
-            {
-                //the corresponding x point satisfies y_int+slope*(x+xmin)=ymin;
-                double relative_intercept_horz=-data_xmin+(data_ymin-intrinsic_y_int)/(intrinsic_slope);
-                relative_intercept_horz/=data_xmax-data_xmin;
-                x = relative_intercept_horz *diagram_width;
-                line_visible=(0<=relative_intercept_horz&& relative_intercept_horz<1);
-                line_pos=-1*relative_intercept_horz;
-            }
-            else //then left-bottom endpoint is along left edge of box
-            {
-                y = relative_intercept_vert * diagram_height;
-                line_visible=(0<=relative_intercept_vert&& relative_intercept_vert<1);
-                line_pos=relative_intercept_vert;
-            }
+        slice_line->update_position(x, y, line_vert, intrinsic_slope * scale_y / scale_x);
+        slice_line->set_visibility(line_visible);
+    }
 
-            slice_line->update_position(x, y, line_vert, intrinsic_slope*scale_y/scale_x);
-            slice_line->set_visibility(line_visible);
-        }
-
-    if(line_visible)
-    {
+    if (line_visible) {
         //reposition bars
-        double offset_scale=1;//(pow(data_xmax-data_xmin,2.0)+pow(data_ymax-data_ymin,2.0))/(pow(original_xmax-original_xmin,2.0)+pow(original_ymax-original_ymin,2.0));
+        double offset_scale = 1; //(pow(data_xmax-data_xmin,2.0)+pow(data_ymax-data_ymin,2.0))/(pow(original_xmax-original_xmin,2.0)+pow(original_ymax-original_ymin,2.0));
         unsigned count = 1;
         for (unsigned i = 0; i < bars.size(); i++) {
             for (std::list<PersistenceBar*>::iterator it = bars[i].begin(); it != bars[i].end(); ++it) {
                 double start = (*it)->get_start();
                 double end = (*it)->get_end();
-                std::pair<double, double> p1 = compute_endpoint(start, offset_scale*(count*1.0));
-                std::pair<double, double> p2 = compute_endpoint(end, offset_scale*(count*1.0));
+                std::pair<double, double> p1 = compute_endpoint(start, offset_scale * (count * 1.0));
+                std::pair<double, double> p2 = compute_endpoint(end, offset_scale * (count * 1.0));
                 (*it)->set_line(p1.first, p1.second, p2.first, p2.second);
                 count++;
             }
         }
-
     }
-
 
     //clear selection (because resizing window might combine or split dots in the upper strip of the persistence diagram)
     clear_selection();
@@ -586,9 +544,6 @@ void SliceDiagram::zoom_diagram(double angle,double offset, double distance_to_o
     //reposition highlighting
     if (primary_selected.size() > 0)
         update_highlight();
-
-
-
 
 } //end zoom_diagram()
 
@@ -659,7 +614,7 @@ void SliceDiagram::receive_parameter_change()
     }
 
     //update the slice line highlight
-    QPen highlighter(QBrush(config_params->persistenceHighlightColor), config_params->sliceLineWidth/2);
+    QPen highlighter(QBrush(config_params->persistenceHighlightColor), config_params->sliceLineWidth / 2);
     highlight_line->setPen(highlighter);
 
     //update axis labels
@@ -682,7 +637,7 @@ void SliceDiagram::receive_parameter_change()
 //NOTE: angle is in DEGREES
 void SliceDiagram::update_line(double angle, double offset, double distance_to_origin)
 {
-    dist_to_origin=distance_to_origin;
+    dist_to_origin = distance_to_origin;
 
     if (angle == 90) //handle vertical line
     {
@@ -690,15 +645,10 @@ void SliceDiagram::update_line(double angle, double offset, double distance_to_o
         line_vert = true;
         line_pos = offset / (data_xmax - data_xmin); //relative units
 
-        line_visible=(-1<=line_pos&& line_pos<=0); //vertical line has negative offset
-
+        line_visible = (-1 <= line_pos && line_pos <= 0); //vertical line has negative offset
 
         //update the SliceLine
         int xpos = (-1 * offset - data_xmin) * scale_x; //pixel units
-
-
-
-
 
         slice_line->update_position(xpos, 0, true, 0);
     } else if (angle == 0) //handle horizontal line
@@ -707,8 +657,7 @@ void SliceDiagram::update_line(double angle, double offset, double distance_to_o
         line_vert = false;
         line_slope = 0;
         line_pos = offset / (data_ymax - data_ymin); //relative units
-        line_visible=(0<=line_pos&& line_pos<=1);
-
+        line_visible = (0 <= line_pos && line_pos <= 1);
 
         //update the SliceLine
         int ypos = (offset - data_ymin) * scale_y; //pixel units
@@ -725,16 +674,14 @@ void SliceDiagram::update_line(double angle, double offset, double distance_to_o
         if (y_coord >= data_ymin) //then slice line intersects left edge of box
         {
             line_pos = (y_coord - data_ymin) / (data_ymax - data_ymin); //relative units
-            line_visible=(0<=line_pos&& line_pos<1);
+            line_visible = (0 <= line_pos && line_pos < 1);
             slice_line->update_position(0, (y_coord - data_ymin) * scale_y, false, line_slope * scale_y / scale_x);
-
-
 
         } else //then slice line intersects bottom of box
         {
             double x_coord = (data_ymin - offset / cos(radians)) / line_slope; //x-coordinate of slice line at y=data_ymin; data units
             line_pos = -1 * (x_coord - data_xmin) / (data_xmax - data_xmin); //relative units
-            line_visible=(-1<line_pos&& line_pos<=0);
+            line_visible = (-1 < line_pos && line_pos <= 0);
             slice_line->update_position((x_coord - data_xmin) * scale_x, 0, false, line_slope * scale_y / scale_x);
         }
     }
@@ -785,49 +732,38 @@ void SliceDiagram::update_window_controls(bool from_dot)
     highlight_line->hide();
 } //end update_window_controls()
 
-
 void SliceDiagram::update_BottomX(double bottom_x, double distance_to_origin, bool visible)
 {
 
-    scale_x*=(data_xmax-data_xmin)/(data_xmax-bottom_x);
-    data_xmin=bottom_x;
-    line_visible=visible;
-    dist_to_origin=distance_to_origin;
-
-
-
+    scale_x *= (data_xmax - data_xmin) / (data_xmax - bottom_x);
+    data_xmin = bottom_x;
+    line_visible = visible;
+    dist_to_origin = distance_to_origin;
 }
 
 void SliceDiagram::update_BottomY(double bottom_y, double distance_to_origin, bool visible)
 {
-    scale_y*=(data_ymax-data_ymin)/(data_ymax-bottom_y);
-    data_ymin=bottom_y;
-    line_visible=visible;
-    dist_to_origin=distance_to_origin;
+    scale_y *= (data_ymax - data_ymin) / (data_ymax - bottom_y);
+    data_ymin = bottom_y;
+    line_visible = visible;
+    dist_to_origin = distance_to_origin;
 }
 
 void SliceDiagram::update_TopX(double top_x, double distance_to_origin, bool visible)
 {
-    scale_x*=(data_xmax-data_xmin)/(top_x-data_xmin);
-    data_xmax=top_x;
-    line_visible=visible;
-    dist_to_origin=distance_to_origin;
-
+    scale_x *= (data_xmax - data_xmin) / (top_x - data_xmin);
+    data_xmax = top_x;
+    line_visible = visible;
+    dist_to_origin = distance_to_origin;
 }
 
 void SliceDiagram::update_TopY(double top_y, double distance_to_origin, bool visible)
 {
-    scale_y*=(data_ymax-data_ymin)/(top_y-data_ymin);
-    data_ymax=top_y;
-    line_visible=visible;
-    dist_to_origin=distance_to_origin;
-
+    scale_y *= (data_ymax - data_ymin) / (top_y - data_ymin);
+    data_ymax = top_y;
+    line_visible = visible;
+    dist_to_origin = distance_to_origin;
 }
-
-
-
-
-
 
 //draws the barcode parallel to the slice line
 void SliceDiagram::draw_barcode(Barcode const& bc, bool show)
@@ -835,14 +771,14 @@ void SliceDiagram::draw_barcode(Barcode const& bc, bool show)
     bars.resize(bc.size());
     int num_bars = 1;
     unsigned index = 0;
-    double offset_scale=1;//(pow(data_xmax-data_xmin,2.0)+pow(data_ymax-data_ymin,2.0))/(pow(original_xmax-original_xmin,2.0)+pow(original_ymax-original_ymin,2.0));
+    double offset_scale = 1; //(pow(data_xmax-data_xmin,2.0)+pow(data_ymax-data_ymin,2.0))/(pow(original_xmax-original_xmin,2.0)+pow(original_ymax-original_ymin,2.0));
     for (std::multiset<MultiBar>::iterator it = bc.begin(); it != bc.end(); ++it) {
         double start = it->birth;
         double end = it->death;
 
         for (unsigned i = 0; i < it->multiplicity; i++) {
-            std::pair<double, double> p1 = compute_endpoint(start, (num_bars*1.0)*offset_scale);
-            std::pair<double, double> p2 = compute_endpoint(end, (num_bars*1.0)*offset_scale);
+            std::pair<double, double> p1 = compute_endpoint(start, (num_bars * 1.0) * offset_scale);
+            std::pair<double, double> p2 = compute_endpoint(end, (num_bars * 1.0) * offset_scale);
 
             PersistenceBar* bar = new PersistenceBar(this, config_params, start, end, index);
             bar->set_line(p1.first, p1.second, p2.first, p2.second);
@@ -883,30 +819,28 @@ std::pair<double, double> SliceDiagram::compute_endpoint(double coordinate, unsi
     int old_step_size = config_params->persistenceBarWidth + config_params->persistenceBarSpace;
 
     //this is expressed in terms of the original window
-    double dx=data_xmax-data_xmin;
-    double dy=data_ymax-data_ymin;
-    double dx0=original_xmax-original_xmin;
-    double dy0=original_ymax-original_ymin;
-    double offset_angle=PI/2;
-    if(!line_vert)
-    {
-        offset_angle=PI/2+atan(line_slope);
+    double dx = data_xmax - data_xmin;
+    double dy = data_ymax - data_ymin;
+    double dx0 = original_xmax - original_xmin;
+    double dy0 = original_ymax - original_ymin;
+    double offset_angle = PI / 2;
+    if (!line_vert) {
+        offset_angle = PI / 2 + atan(line_slope);
     }
-    double conversion=sqrt((pow(cos(offset_angle)/dx,2.0)+pow(sin(offset_angle)/dy,2.0))/(pow(cos(offset_angle)/dx0,2.0)+pow(sin(offset_angle)/dy0,2.0)));
+    double conversion = sqrt((pow(cos(offset_angle) / dx, 2.0) + pow(sin(offset_angle) / dy, 2.0)) / (pow(cos(offset_angle) / dx0, 2.0) + pow(sin(offset_angle) / dy0, 2.0)));
 
-    int step_size=old_step_size*conversion;
-
+    int step_size = old_step_size * conversion;
 
     //compute x and y relative to slice line (pixel units)
     double x = 0;
     double y = 0;
     if (line_vert) {
-        if (coordinate == std::numeric_limits<double>::infinity()) {//should change to upper bound of view
+        if (coordinate == std::numeric_limits<double>::infinity()) { //should change to upper bound of view
             //choose y outside of the viewable window
             y = view_length;
         } else {
             //find y along the line
-            y = (coordinate-dist_to_origin) * scale_y;
+            y = (coordinate - dist_to_origin) * scale_y;
         }
 
         //offset from slice line
@@ -920,15 +854,13 @@ std::pair<double, double> SliceDiagram::compute_endpoint(double coordinate, unsi
         }
 
         //find (x,y) along the line
-        x =(coordinate-dist_to_origin) * cos(angle) * scale_x;
-        y =(coordinate-dist_to_origin) * sin(angle) * scale_y;
-
+        x = (coordinate - dist_to_origin) * cos(angle) * scale_x;
+        y = (coordinate - dist_to_origin) * sin(angle) * scale_y;
 
         //offset from slice line
         double pixel_angle = atan(line_slope * scale_y / scale_x); //angle (pixels)    NOTE: it would be slightly more efficient to only compute this once per barcode update
         x -= step_size * offset * sin(pixel_angle);
         y += step_size * offset * cos(pixel_angle);
-
     }
 
     //adjust for position of slice line
@@ -1024,8 +956,6 @@ void SliceDiagram::receive_bar_deselection()
     highlight_line->hide();
 } //end receive_bar_deselection()
 
-
-
 //unselect all bars
 void SliceDiagram::clear_selection()
 {
@@ -1120,14 +1050,11 @@ double SliceDiagram::get_slice_length()
     double dx = slice_line->get_right_pt_x() - slice_line->pos().x();
     double dy = slice_line->get_right_pt_y() - slice_line->pos().y();
 
-    if(dx<0|| dy<0)
-    {//this happens if the line is not visible in the window
+    if (dx < 0 || dy < 0) { //this happens if the line is not visible in the window
         return 0;
     }
     return sqrt(dx * dx + dy * dy);
 }
-
-
 
 //gets the number of pixels per unit, for the persistence diagram
 double SliceDiagram::get_pd_scale()
