@@ -47,7 +47,6 @@ public:
 
     void update_diagram(double slice_length, double diagram_scale, const Barcode& bc); //updates the diagram after a change in the slice line
     void update_diagram(double slice_length_pix, double diagram_scale, double slice_dist_dat, double max_len_dat, bool is_visible, const Barcode&bc);//updates the diagram after a change in the window bounds
-    //void update_diagram(double slice_length_dat, double slice_dist_dat, double max_len_dat, bool is_visible); //can be called after a change in window bounds;
 
 
 
@@ -61,7 +60,6 @@ public:
 
     void receive_parameter_change(); //updates the diagram after a change in the configuration parameters
 
-    //void set_max_line_length(double length);
 public slots:
     void receive_dot_selection(unsigned index); //highlight the specified dot, which has been selected externally
     void receive_dot_deselection(); //remove dot highlighting in response to external command

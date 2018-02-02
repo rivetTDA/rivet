@@ -362,8 +362,6 @@ void SliceDiagram::resize_diagram()
 
 
 
-   // gray_line_vertical->setLine(diagram_width, 0, diagram_width, diagram_height);
-    //gray_line_horizontal->setLine(0, diagram_height, diagram_width, diagram_height);
     gray_line_vertical->setLine(diagram_width*gray_box_xmax, diagram_height*gray_box_ymin,diagram_width*gray_box_xmax, diagram_height*gray_box_ymax);
     gray_line_horizontal->setLine(diagram_width*gray_box_xmin, diagram_height*gray_box_ymax,diagram_width*gray_box_xmax, diagram_height*gray_box_ymax);
     gray_line_vertical_left->setLine(diagram_width*gray_box_xmin, diagram_height*gray_box_ymin,diagram_width*gray_box_xmin, diagram_height*gray_box_ymax);
@@ -490,8 +488,6 @@ void SliceDiagram::zoom_diagram(double angle,double offset, double distance_to_o
 {
     int text_padding = 5; //pixels
 
-    std::cout<<"zoom_diagram called"<<std::endl;
-    std::cout<<"xmin="<<data_xmin<<", xmax="<<data_xmax<<",ymin="<<data_ymin<<",ymax="<<data_ymax;
 
     dist_to_origin=distance_to_origin;
 
@@ -507,7 +503,6 @@ void SliceDiagram::zoom_diagram(double angle,double offset, double distance_to_o
     double gray_box_ymax=fmax(original_ymax-data_ymin,0.0)/(data_ymax-data_ymin);
 
 
-    std::cout<<"box corners:"<<gray_box_xmin<<","<<gray_box_xmax<<","<<gray_box_ymin<<","<<gray_box_ymax<<std::endl;
 
     data_xmin_text->setPos(data_xmin_text->boundingRect().width() / (-2), -1 * text_padding);
     data_xmax_text->setPos(diagram_width - data_xmax_text->boundingRect().width() / 2, -1 * text_padding);
@@ -928,7 +923,6 @@ std::pair<double, double> SliceDiagram::compute_endpoint(double coordinate, unsi
         x =(coordinate-dist_to_origin) * cos(angle) * scale_x;
         y =(coordinate-dist_to_origin) * sin(angle) * scale_y;
 
-        //std::cout<<"in compute_endpoing,coordinate="<<coordinate<<", x,y="<<x<<","<<y<<std::endl;
 
         //offset from slice line
         double pixel_angle = atan(line_slope * scale_y / scale_x); //angle (pixels)    NOTE: it would be slightly more efficient to only compute this once per barcode update

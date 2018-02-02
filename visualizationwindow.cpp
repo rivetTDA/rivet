@@ -95,7 +95,6 @@ VisualizationWindow::VisualizationWindow(InputParameters& params)
     QObject::connect(&p_diagram, &PersistenceDiagram::persistence_dot_secondary_selection, &slice_diagram, &SliceDiagram::receive_bar_secondary_selection);
     QObject::connect(&p_diagram, &PersistenceDiagram::persistence_dot_deselected, &slice_diagram, &SliceDiagram::receive_bar_deselection);
 
-    //QObject::connect(this, &VisualizationWindow::send_dist_to_origin_to_sd, &slice_diagram, &SliceDiagram::update_dist_to_origin);
 
     //connect other signals and slots
     QObject::connect(&prog_dialog, &ProgressDialog::stopComputation, &cthread, &ComputationThread::terminate); ///TODO: don't use QThread::terminate()! modify ComputationThread so that it can stop gracefully and clean up after itself
@@ -479,7 +478,6 @@ void VisualizationWindow::update_persistence_diagram()
 
         //shift the barcode so that "zero" is where the selected line crosses the bottom or left side of the viewing window
         double ll_corner = rivet::numeric::project_to_line(angle_precise, offset_precise, origin_x, origin_y); //lower-left corner of line selection window
-        std::cout<<"double ll_corner="<<ll_corner<<std::endl;
         barcode = barcode->shift(-1*ll_corner);
 
         //TESTING
@@ -803,8 +801,7 @@ void VisualizationWindow::update_origin()
             dot_pos_y=y_int+slope*xmin_precise;
             dist_to_origin=sqrt(pow(dot_pos_x-origin_x,2.0)+pow(dot_pos_y-origin_y,2.0));
             is_visible=(ymin_precise<=dot_pos_y)&&(dot_pos_y<=ymax_precise);
-            std::cout<<"dot on left edge, dot_pos_y="<<dot_pos_y<<std::endl;
-            std::cout<<"xmin="<<xmin_precise<<",ymin="<<ymin_precise<<",slope="<<slope<<",y_int="<<y_int<<std::endl;
+            
         }
         else
         {//bottom dot is on the bottom edge of the visible window
@@ -812,8 +809,7 @@ void VisualizationWindow::update_origin()
             dot_pos_y=ymin_precise;
             dist_to_origin=sqrt(pow(dot_pos_x-origin_x,2.0)+pow(dot_pos_y-origin_y,2.0));
             is_visible=(xmin_precise<=dot_pos_x)&&(dot_pos_x<=xmax_precise);
-            std::cout<<"dot on bottom edge, dot_pos_x="<<dot_pos_x<<std::endl;
-            std::cout<<"xmin="<<xmin_precise<<",ymin="<<ymin_precise<<",slope="<<slope<<",y_int="<<y_int<<std::endl;
+            
 
         }
         if(dot_pos_x<origin_x || dot_pos_y<origin_y)
@@ -839,10 +835,4 @@ void VisualizationWindow::update_origin()
 
         slice_length=sqrt((top_corner_x-dot_pos_x)*(top_corner_x-dot_pos_x)+(top_corner_y-dot_pos_y)*(top_corner_y-dot_pos_y));
     }
-    //double new_max_len=sqrt(pow(top_corner_x-origin_x,2.0)+pow(top_corner_y-origin_y,2.0));
-    //std::cout<<"new max len="<<new_max_len<<std::endl;
-    //std::cout<<"new dist to origin="<<dist_to_origin<<std::endl;
-    //double new_max_len=sqrt((xmax_precise-xmin_precise)*(xmax_precise-xmin_precise)+(ymax_precise-ymin_precise)*(ymax_precise-ymin_precise));
-    //the persistence diagram corresponds to the diagonal of the current view
-    //p_diagram.set_max_line_length(new_max_len);
 }

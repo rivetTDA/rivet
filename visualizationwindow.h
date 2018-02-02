@@ -46,7 +46,6 @@ typedef boost::multiprecision::cpp_rational exact;
 typedef boost::multi_array<unsigned, 2> unsigned_matrix;
 
 #include <vector>
-//todo: update the window bound increment based on the scale of the current window
 namespace Ui {
 class VisualizationWindow;
 }
@@ -64,8 +63,6 @@ protected:
     void closeEvent(QCloseEvent* event);
     QString suggestedName(QString extension);
 
-//signals:
-//    void send_dist_to_origin_to_sd(double dist);
 public slots:
     void start_computation(); //begins the computation pipeline
     void paint_template_points(std::shared_ptr<TemplatePointsMessage> points);

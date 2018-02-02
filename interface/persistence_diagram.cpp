@@ -43,10 +43,7 @@ PersistenceDiagram::PersistenceDiagram(ConfigParameters* params, QObject* parent
     setItemIndexMethod(NoIndex); //not sure why, but this seems to fix the dot update issue (#7 in the issue tracker)
 }
 
-//TODO: the left corner of the blue line stays fixed at the lower left visible corner of the line; the total length of the diagram
-//corresponds to the diagonal of the visible box
 
-//add a <inf column on the left side
 //simply creates all objects; resize_diagram() handles positioning of objects
 void PersistenceDiagram::create_diagram()
 {
@@ -148,19 +145,8 @@ void PersistenceDiagram::resize_diagram()
     diag_line->setLine(0, 0, diagram_size, diagram_size);
 
 
-    //if(dist_to_origin<0)
-    //{
-      // double lower=dist_to_origin*diagram_size/max_line_length;
-       //double upper=lower+line_size*diagram_size/(scale*max_line_length);
-       //blue_line->setLine(lower, lower, upper, upper );
-    //}
-    //else
-    //{
-    //bottom corner of persistence diagram always corresponds to bottom corner of line visible in slice diagram
-    //(might be negative in the line's parametrization)
 
-        blue_line->setLine(0, 0, line_size*diagram_size/(scale*max_line_length), line_size*diagram_size/(scale*max_line_length));
-    //}
+    blue_line->setLine(0, 0, line_size*diagram_size/(scale*max_line_length), line_size*diagram_size/(scale*max_line_length));
 
 
 
@@ -242,10 +228,6 @@ void PersistenceDiagram::set_barcode(const Barcode& bc)
 void PersistenceDiagram::draw_dots()
 {
 
-    //TODO: if dist_to_origin<0, need to change position of points
-    //namely, instead of plotting birth-dist_to_origin, plot birth, and instead of the reltive length slice_len/max_len,
-    //plot (slice_len+dist_to_origin)/max_len (since this is what shows up in the persistence diagram proper, the
-    //dist_to_origin segment showing up below and to the left of the actual diagram)
 
 
 
@@ -282,16 +264,11 @@ void PersistenceDiagram::draw_dots()
     double radius_scale=diagram_size/600.0; //used to change the radius in accordance with a change in size of application window
     //EVIL "magic number"
     double slice_line_len=line_size/scale;
-    std::cout<<"draw_dots called"<<std::endl;
-    std::cout<<"max line length="<<max_line_length<<std::endl;
-    std::cout<<"length of slice="<<slice_line_len<<std::endl;
-    std::cout<<"dist to origin="<<dist_to_origin<<std::endl;
 
 
     //loop over all bars
     for (std::multiset<MultiBar>::iterator it = barcode->begin(); it != barcode->end(); ++it) {
 
-        std::cout<<"Birth: "<<it->birth<<", death: "<<it->death<<",multiplicity:"<<it->multiplicity<<std::endl;
 
         if (it->death == std::numeric_limits<double>::infinity()) //essential cycle (visualized in the upper horizontal strip of the persistence diagram)
         {
@@ -361,8 +338,6 @@ void PersistenceDiagram::draw_dots()
             if(birth<dist_to_origin&& death-dist_to_origin<max_line_length)//dot is in the gt_neg_inf strip
             {//born too early, but does not die too late (might die too early)
 
-                //std::cout<<"in gt_neg_inf strip"<<std::endl;
-                //std::cout<<"Birth: "<<it->birth<<", death: "<<it->death<<",multiplicity:"<<it->multiplicity<<std::endl;
 
                 int y_pixel=std::round(death*scale);
                 std::map<int, PersistenceDot*>::iterator dot_it = gt_neg_inf_dot_map.find(y_pixel);
@@ -378,7 +353,6 @@ void PersistenceDiagram::draw_dots()
 
                     if (death  < dist_to_origin) //dies too early
                     {
-                        std::cout<<"num_short_points incremented"<<std::endl;
                         num_short_cycles += it->multiplicity;
                         dot->setVisible(false);
                     } else //then dot will be visible in the left strip
@@ -407,8 +381,6 @@ void PersistenceDiagram::draw_dots()
             else if (birth>dist_to_origin && death-dist_to_origin>max_line_length) //dies too late and not born too early (might be born too late)
             {
 
-                //std::cout<<"in lt_inf strip"<<std::endl;
-                //std::cout<<"Birth: "<<it->birth<<", death: "<<it->death<<",multiplicity:"<<it->multiplicity<<std::endl;
 
                 //check to see if a dot already exists in its position
                 int x_pixel = std::round(birth * scale);
@@ -451,8 +423,6 @@ void PersistenceDiagram::draw_dots()
             else if (birth<dist_to_origin && death-dist_to_origin>max_line_length) //born too early, dies too late
             {//dot is a long nonessential cycle, and contributes to the counter at the intersection of lt_inf and gt_neg_inf
 
-                //std::cout<<"in top left box "<<std::endl;
-                //std::cout<<"Birth: "<<it->birth<<", death: "<<it->death<<",multiplicity:"<<it->multiplicity<<std::endl;
 
                 int x_pixel=std::round(birth*scale);
                 int y_pixel=std::round(death*scale);
@@ -549,17 +519,7 @@ void PersistenceDiagram::update_diagram(double slice_length, double diagram_scal
     scale = diagram_scale / sqrt(2); //similarly, divide by sqrt(2)
     barcode = &bc;
 
-    //modify frame
-    //if(dist_to_origin<0)
-    //{
-      // double lower=dist_to_origin*diagram_size/max_line_length;
-       //double upper=lower+line_size*diagram_size/(scale*max_line_length);
-       //blue_line->setLine(lower, lower, upper, upper );
-    //}
-    //else
-    //{
-        blue_line->setLine(0, 0, line_size*diagram_size/(scale*max_line_length), line_size*diagram_size/(scale*max_line_length));
-    //}
+    blue_line->setLine(0, 0, line_size*diagram_size/(scale*max_line_length), line_size*diagram_size/(scale*max_line_length));
 
 
     //remove old dots
@@ -588,17 +548,7 @@ void PersistenceDiagram::update_diagram(double slice_length_pix, double diagram_
         //update parameters
         line_size = slice_length_pix / sqrt(2); //divide by sqrt(2) because the line is drawn at a 45-degree angle
         scale = diagram_scale / sqrt(2); //similarly, divide by sqrt(2)
-        //modify frame
-        //if(dist_to_origin<0)
-        //{
-          // double lower=dist_to_origin*diagram_size/max_line_length;
-           //double upper=lower+line_size*diagram_size/(scale*max_line_length);
-           //blue_line->setLine(lower, lower, upper, upper );
-        //}
-        //else
-        //{
-            blue_line->setLine(0, 0, line_size*diagram_size/(scale*max_line_length), line_size*diagram_size/(scale*max_line_length));
-        //}
+        blue_line->setLine(0, 0, line_size*diagram_size/(scale*max_line_length), line_size*diagram_size/(scale*max_line_length));
 
     }
     else
@@ -722,7 +672,3 @@ void PersistenceDiagram::receive_parameter_change()
 }
 
 
-//void PersistenceDiagram::set_max_line_length(double length)
-//{
-//    max_line_length=length;
-//}
