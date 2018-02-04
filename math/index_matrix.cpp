@@ -73,7 +73,7 @@ void IndexMatrix::next_colex(int & row, int & col)
     }
 }
 
-unsigned IndexMatrix::start_index(unsigned& row, unsigned& col)
+int IndexMatrix::start_index(unsigned row, unsigned col)
 {
     if (row == 0 && col == 0)
         return 0;
@@ -97,6 +97,17 @@ void IndexMatrix::fill_index_mx(Grade& start_grade, const Grade& end_grade, cons
         next_colex(current_grade.y, current_grade.x);
     }
 }
+
+//returns the number of columns in the bigraded matrix of index
+//less than or equal to the given bigraded in the partial order on R^2
+unsigned IndexMatrix::num_columns_leq(unsigned row, unsigned col)
+{
+    if (row==0 || col == num_cols-1)
+        return get(row, col)+1;
+    else
+        return get(row, col)-get(row-1, num_cols-1)+get(row-1,col)+1;
+}
+
 
 //function to print the matrix to standard output, for testing purposes
 void IndexMatrix::print() const
@@ -125,11 +136,11 @@ void IndexMatrix::print() const
 
 //constructor simply calls the constructor for the parent class
 IndexMatrixLex::IndexMatrixLex(unsigned rows, unsigned cols)
-    : IndexMatrix(rows, columns)
+    : IndexMatrix(rows, cols)
 {}
 
 
-unsigned IndexMatrixLex::start_index(unsigned& row, unsigned& col)
+int IndexMatrixLex::start_index(unsigned row, unsigned col)
 {
     if (row == 0 && col == 0)
         return 0;

@@ -319,13 +319,13 @@ unsigned BifiltrationData::num_y_grades()
 
 //returns the number of simplices of dimension (hom_dim-1), hom_dim, or (hom_dim+1).
 //Assumes dim is non-negative
-int BifiltrationData::get_size(int dim)
+int BifiltrationData::get_size(unsigned dim)
 {
-    if (dim == (int) hom_dim - 1)
+    if (hom_dim > 0 && dim == hom_dim - 1)
         return low_simplices.size();
-    else if (dim == (int) hom_dim)
+    else if (dim == hom_dim)
         return mid_simplices.size();
-    else if (dim == (int) hom_dim + 1)
+    else if (dim == hom_dim + 1)
         return high_simplices.size();
     else
         return -1;

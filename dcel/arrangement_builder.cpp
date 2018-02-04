@@ -45,7 +45,7 @@ ArrangementBuilder::ArrangementBuilder(unsigned verbosity)
 //builds the DCEL arrangement, computes and stores persistence data
 //also stores ordered list of xi support points in the supplied vector
 //precondition: the constructor has already created the boundary of the arrangement
-std::shared_ptr<Arrangement> ArrangementBuilder::build_arrangement(MultiBetti& mb,
+std::shared_ptr<Arrangement> ArrangementBuilder::build_arrangement(FIRep& fir,
     std::vector<exact> x_exact,
     std::vector<exact> y_exact,
     std::vector<TemplatePoint>& template_points,
@@ -57,7 +57,7 @@ std::shared_ptr<Arrangement> ArrangementBuilder::build_arrangement(MultiBetti& m
     //this also finds anchors and stores them in the vector Arrangement::all_anchors -- JULY 2015 BUG FIX
     progress.progress(10);
     auto arrangement = std::make_shared<Arrangement>(x_exact, y_exact, verbosity);
-    PersistenceUpdater updater(*arrangement,mb.fir, template_points, verbosity); //PersistenceUpdater object is able to do the calculations necessary for finding anchors and computing barcode templates
+    PersistenceUpdater updater(*arrangement,fir, template_points, verbosity); //PersistenceUpdater object is able to do the calculations necessary for finding anchors and computing barcode templates
     if (verbosity >= 2) {
         debug() << "Anchors found; this took " << timer.elapsed() << " milliseconds.";
     }
@@ -112,9 +112,9 @@ std::shared_ptr<Arrangement> ArrangementBuilder::build_arrangement(std::vector<e
     progress.progress(10);
     //TODO: this is odd, fix.
     BifiltrationData dummy_data(0, 0);
-    FIRep dummy_tree(dummy_data, 0);
+    FIRep dummy_fir(dummy_data, 0);
     std::shared_ptr<Arrangement> arrangement(new Arrangement(x_exact, y_exact, verbosity));
-    PersistenceUpdater updater(*arrangement, dummy_tree, xi_pts, verbosity); //we only use the PersistenceUpdater to find and store the anchors
+    PersistenceUpdater updater(*arrangement, dummy_fir, xi_pts, verbosity); //we only use the PersistenceUpdater to find and store the anchors
     if (verbosity >= 2) {
         debug() << "Anchors found; this took " << timer.elapsed() << " milliseconds.";
     }

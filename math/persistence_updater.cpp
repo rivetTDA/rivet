@@ -76,13 +76,13 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<std::shared_ptr<H
     }
     
     //TODO:Probably could be cleaned up.  We don't need pointers here, do we?
-    IndexMatrix* ind_low = &(fir.index_mx_low); //can we improve this with something more efficient than IndexMatrix?
+    IndexMatrix* ind_low = &(fir.low_mx.ind); //can we improve this with something more efficient than IndexMatrix?
     store_multigrades(ind_low, true);
 
     if (verbosity >= 10) {
         debug() << "  Mapping high simplices:";
     }
-    IndexMatrix* ind_high = &(fir.index_mx_high); //again, could be improved?
+    IndexMatrix* ind_high = &(fir.low_mx.ind); //again, could be improved?
     store_multigrades(ind_high, false);
 
     //get the proper simplex ordering
@@ -96,9 +96,9 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<std::shared_ptr<H
 
     //get intial boundary matrices R_low and R_high for RU-decomposition.  These are permuted and trimmed,
     //as described in Section 6 of the RIVET paper.
-    R_low = new MapMatrix_Perm(fir.boundary_mx_low, low_simplex_order, num_low_simplices); //NOTE: must be deleted
+    R_low = new MapMatrix_Perm(fir.low_mx.mat, low_simplex_order, num_low_simplices); //NOTE: must be deleted
     
-    R_high = new MapMatrix_Perm(fir.boundary_mx_high,low_simplex_order, num_low_simplices, high_simplex_order, num_high_simplices); //NOTE: must be deleted
+    R_high = new MapMatrix_Perm(fir.high_mx.mat,low_simplex_order, num_low_simplices, high_simplex_order, num_high_simplices); //NOTE: must be deleted
     
     //print runtime data
     if (verbosity >= 4) {
@@ -374,14 +374,14 @@ void PersistenceUpdater::set_anchor_weights(std::vector<std::shared_ptr<Halfedge
     if (verbosity >= 10) {
         debug() << "  Mapping low simplices:";
     }
-    IndexMatrix* ind_low = &fir.index_mx_low; //can we improve this with something more efficient than IndexMatrix?
+    IndexMatrix* ind_low = &fir.low_mx.ind; //can we improve this with something more efficient than IndexMatrix?
     store_multigrades(ind_low, true);
     //delete ind_low;
 
     if (verbosity >= 10) {
         debug() << "  Mapping high simplices:";
     }
-    IndexMatrix* ind_high = &fir.index_mx_high; //again, could be improved?
+    IndexMatrix* ind_high = &fir.high_mx.ind; //again, could be improved?
     store_multigrades(ind_high, false);
     //delete ind_high;
 

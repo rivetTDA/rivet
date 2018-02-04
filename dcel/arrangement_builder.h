@@ -21,12 +21,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // Created by Bryn Keller on 6/28/16.
 //
 
-#ifndef RIVET_CONSOLE_MESH_BUILDER_H
-#define RIVET_CONSOLE_MESH_BUILDER_H
+#ifndef RIVET_CONSOLE_ARRANGEMENT_BUILDER_H
+#define RIVET_CONSOLE_ARRANGEMENT_BUILDER_H
 
 #include "dcel/arrangement.h"
 #include "interface/progress.h"
-#include "math/multi_betti.h"
+#include "math/firep.h"
 
 class ArrangementBuilder {
 public:
@@ -35,7 +35,7 @@ public:
     //builds the DCEL arrangement, computes and stores persistence data
     //also stores ordered list of xi support points in the supplied vector
     //precondition: the constructor has already created the boundary of the arrangement
-    std::shared_ptr<Arrangement> build_arrangement(MultiBetti& mb,
+    std::shared_ptr<Arrangement> build_arrangement(FIRep& fir,
         std::vector<exact> x_exact,
         std::vector<exact> y_exact,
         std::vector<TemplatePoint>& template_points,
@@ -57,4 +57,4 @@ private:
     void find_subpath(Arrangement& arrangement, unsigned cur_node, std::vector<std::vector<unsigned>>& adj, std::vector<std::shared_ptr<Halfedge>>& pathvec);
 };
 
-#endif //RIVET_CONSOLE_MESH_BUILDER_H
+#endif //RIVET_CONSOLE_ARRANGEMENT_BUILDER_H

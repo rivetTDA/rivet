@@ -31,11 +31,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <sstream>
 #include <stdexcept>
 
+//constructor; requires verbosity parameter
+FIRep::FIRep(Presentation pres, int vbsty)
+    : low_mx(BigradedMatrix(MapMatrix(0,pres.mat.height()),pres.row_ind))
+    , high_mx(BigradedMatrix(pres.mat,pres.col_ind))
+    , verbosity(vbsty)
+    , x_grades(pres.row_ind.width())
+    , y_grades(pres.row_ind.height())
+{}
+
 //FIRep constructor; requires BifiltrationData object (which in particular specifies the homology dimension) and verbosity parameter
-FIRep::FIRep(BifiltrationData& bif_data, int v)
+FIRep::FIRep(BifiltrationData& bif_data, int vbsty)
     : low_mx(0,0,bif_data.num_y_grades(),bif_data.num_x_grades())
     , high_mx(0,0,bif_data.num_y_grades(),bif_data.num_x_grades())
-    , verbosity(v)
+    , verbosity(vbsty)
     , x_grades(bif_data.num_x_grades())
     , y_grades(bif_data.num_y_grades())
 {
@@ -174,7 +183,7 @@ FIRep::FIRep(BifiltrationData& bif_data, int v)
     //1) An AppearanceGrades::iterator it2, where the AppearanceGrades object in question is a member of a MidHighSimplexData Object m.
     //2) An iterator it pointing to m in mid_simplices.
     //The relation represented is the one between *it2 and *(it2+1).
-
+    
     for (auto it = bif_data.mid_simplices.begin(); it != bif_data.mid_simplices.end(); it++) {
         for (AppearanceGrades::iterator it2 = it->ag.begin(); (it2 + 1) != it->ag.end(); it2++) {
             high_generators.push_back(std::pair<std::vector<MidHighSimplexData>::iterator, AppearanceGrades::iterator>(it, it2));
@@ -190,7 +199,7 @@ FIRep::FIRep(BifiltrationData& bif_data, int v)
         }
     }
 
-    //Now we've build the list of high_generators, and we need to sort it.  We have stored the relations implicitly, so the comparator
+    //Now we've built the list of high_generators, and we need to sort it.  We have stored the relations implicitly, so the comparator
     //has to compute the grade of a relation as part of the sorting.
 
     //TODO: In the following sorting, one could instead precompute the grades of the relations, and avoid copying/recomputing grades.  This probably would be more efficient, but not clear whether it is worth the trouble.
@@ -330,11 +339,15 @@ FIRep::FIRep(BifiltrationData& bif_data, int v)
 
 }
 
+
+
+
+
 //This constructor is used when the FIRep is given directly as text input.  To understand this part of code, it may be helpful to review the conventions for the FIRep input format, as explained in the RIVET documentation.
-FIRep::FIRep(BifiltrationData& bif_data, unsigned num_high_simplices, unsigned num_mid_simplices, unsigned num_low_simplices, std::vector<std::vector<unsigned>>& d2, std::vector<std::vector<unsigned>>& d1, const std::vector<unsigned> x_values, const std::vector<unsigned> y_values, int v)
+FIRep::FIRep(BifiltrationData& bif_data, unsigned num_high_simplices, unsigned num_mid_simplices, unsigned num_low_simplices, std::vector<std::vector<unsigned>>& d2, std::vector<std::vector<unsigned>>& d1, const std::vector<unsigned> x_values, const std::vector<unsigned> y_values, int vbsty)
     : low_mx(num_low_simplices, num_mid_simplices, bif_data.num_y_grades(), bif_data.num_x_grades())
     , high_mx(num_mid_simplices, num_high_simplices, bif_data.num_y_grades(), bif_data.num_x_grades())
-    , verbosity(v)
+    , verbosity(vbsty)
     , x_grades(bif_data.num_x_grades())
     , y_grades(bif_data.num_y_grades())
 
@@ -411,13 +424,13 @@ void FIRep::write_boundary_column(MapMatrix& mat, const std::vector<unsigned>& e
 } //end write_boundary_column();
 
 //returns the number of unique x-coordinates of the multi-grades
-unsigned FIRep::num_x_grades()
+unsigned FIRep::num_x_grades() const
 {
     return x_grades;
 }
 
 //returns the number of unique y-coordinates of the multi-grades
-unsigned FIRep::num_y_grades()
+unsigned FIRep::num_y_grades() const
 {
     return y_grades;
 }

@@ -122,7 +122,12 @@ namespace phat {
         */
         
         //Added for use in RIVET
-        std::vector< column >::const_iterator _get_col_iter( index idx) const {
+        std::vector< column >::iterator _get_col_iter( index idx) {
+            return matrix.begin()+idx;
+        }
+        
+        //Added for use in RIVET
+        std::vector< column >::const_iterator _get_const_col_iter( index idx) const {
             return matrix.begin()+idx;
         }
     
@@ -182,17 +187,31 @@ namespace phat {
         // append copy of column to back of matrix, while clearing the original column
         void _append_col_and_clear(column& col)
         {
-            matrix.push_back(column());
-            matrix[size()-1].swap(col);
+            column temp_col = column();
+            matrix.push_back(temp_col);
+            matrix[matrix.size()-1].swap(col);
         }
         
-        // append copy of column to back of matrix, while clearing the original column
+        // moves a column into another location, overwriting the column originally in that location.
         void _move_column(index source, index target)
         {
-            matrix[target].swap(column());
+            column temp_col = column();
+            matrix[target].swap(temp_col);
             matrix[target].swap(matrix[source]);
         }
         
+        // reindex column idx using the indices given in new_row_indices.
+        void _reindex_column(index idx, const std::vector<int>& new_row_indices)
+        {
+            column temp_col = column();
+            temp_col.reserve(matrix[idx].size());
+            
+            for( index j = 0; j < (index) temp_col.size( ); j++ )
+            {
+                temp_col.push_back(new_row_indices[ matrix[ idx ][ j ] ]);
+            }
+            matrix[idx].swap(temp_col);
+        }
         
         // largest row index of given column idx (new name for lowestOne())
         index _get_max_index( index idx ) const
@@ -209,6 +228,8 @@ namespace phat {
         // But in this case this is a bit faster than get_max_index.
         index _get_max_index_finalized( index idx ) const
         {
+            if( matrix[ idx ].empty( ) )
+                return -1;
             return matrix[ idx ].front();
         }
         
@@ -220,6 +241,8 @@ namespace phat {
             std::push_heap( col.begin( ), col.end( ) );
         }
     
+        
+        //TODO: I don't really need this, since we could just call _pop_max_index directly.
         // removes the maximal index of a column
         index _remove_max( index idx )
         {
@@ -316,6 +339,12 @@ namespace phat {
             _prune( idx );
         }
 
+        //Sort column i
+        //This is needed by RIVET to compute a minimal presentation
+        void _sort_col(index idx) {
+            std::sort(matrix[idx].begin(),matrix[idx].end());
+        }
+        
         // print the matrix.  since a PHAT matrix doesn't know the number of rows, this has to be passed as an argument.
         void _print( index num_rows ) {
             //Print matrix dimensions
@@ -346,8 +375,6 @@ namespace phat {
             }
             
         }
-    };
-    
     
 /*** Special Functions which work properly only when the columns in question are sorted ***/
 //TODO: Would it be cleaner to introduce a child class which implements these?
@@ -355,32 +382,29 @@ namespace phat {
     // adds column 'source' to column 'target'
     // NOTE: taken from PHAT's vector_vector file, without modification, except for a change in name.
     // For use in Presentation.minimize().
-    void _add_to_sorted( index source, index target ) {
-        column& source_col = matrix[ source ];
-        column& target_col = matrix[ target ];
-        column& temp_col = temp_column_buffer();
+        void _add_to_sorted( index source, index target ) {
+            column& source_col = matrix[ source ];
+            column& target_col = matrix[ target ];
+            column& temp_col = temp_column_buffer();
         
-        size_t new_size = source_col.size() + target_col.size();
+            size_t new_size = source_col.size() + target_col.size();
+            
+            if (new_size > temp_col.size()) temp_col.resize(new_size);
+            
+            std::vector<index>::iterator col_end = std::set_symmetric_difference( target_col.begin(), target_col.end(),
+                                                                                 source_col.begin(), source_col.end(),
+                                                                                 temp_col.begin() );
+            temp_col.erase(col_end, temp_col.end());
         
-        if (new_size > temp_col.size()) temp_col.resize(new_size);
         
-        std::vector<index>::iterator col_end = std::set_symmetric_difference( target_col.begin(), target_col.end(),
-                                                                             source_col.begin(), source_col.end(),
-                                                                             temp_col.begin() );
-        temp_col.erase(col_end, temp_col.end());
-        
-        
-        target_col.swap(temp_col);
-    }
+            target_col.swap(temp_col);
+        }
     
-    void _add_to_sorted( index source, index target ) {
-
-    }
-    
-    bool _is_in_matrix_sorted( index row, index col ) const {
-        return std::binary_search(matrix[col].begin(), matrix[col].end(), row);
-    }
-    
+        bool _is_in_matrix_sorted( index row, index col ) const {
+            return std::binary_search(matrix[col].begin(), matrix[col].end(), row);
+        }
+        
+    };
     
     
     
@@ -556,6 +580,8 @@ namespace phat {
         // But in this case this is a bit faster than get_max_index.
         index _get_max_index_finalized( index idx ) const
         {
+            if( matrix[ idx ].empty( ) )
+                return -1;
             return perm[matrix[ idx ].front()];
         }
         

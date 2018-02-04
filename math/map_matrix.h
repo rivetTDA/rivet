@@ -105,10 +105,10 @@ public:
     void reserve_cols(unsigned num_cols);
     
     //resize the matrix to the specified number of columns
-    void MapMatrix::resize(unsigned num_cols);
+    void resize(unsigned num_cols);
     
     //resize the matrix to the specified number of columns
-    void MapMatrix::resize(unsigned n_rows, unsigned n_cols);
+    void resize(unsigned n_rows, unsigned n_cols);
     
     //WARNING: Current implementation assumes the entry has not already been added.
     virtual void set(unsigned i, unsigned j); //sets (to 1) the entry in row i, column j
@@ -117,7 +117,7 @@ public:
     virtual int low(unsigned j) const;
     
     //same functionality as above, but only works correctly if column is finalized.
-    int MapMatrix::low_finalized(unsigned j) const;
+    int low_finalized(unsigned j) const;
     
     //same as the above, but removes the low.
     //Used for efficient implementation of standard reduction w/ lazy heaps.
@@ -140,7 +140,7 @@ public:
     void add_column_popped(unsigned j, unsigned k);
     
     //same as above, but column j now comes from another matrix.
-    void MapMatrix::add_column_popped(const MapMatrix& other, unsigned j, unsigned k);
+    void add_column_popped(const MapMatrix& other, unsigned j, unsigned k);
     
     void prepare_col(unsigned j);
     
@@ -152,13 +152,22 @@ public:
 /*** For use in the new code to compute presentations ***/
     
      //copies with index j from other to the back of this matrix
-    void MapMatrix::append_col(const MapMatrix& other, unsigned j);
+    void append_col(const MapMatrix& other, unsigned j);
     
     //Move column with index source to index target, zeroing out this column source in the process.
     void move_col(unsigned source, unsigned target);
     
     //Move the jth column of other to the back of this matrix, zeroing out this column of other in the process.
     void move_col(MapMatrix& other, unsigned j);
+
+    
+/********* Methods used to minimize a presentation *********/
+    
+    void sort_col(int i);
+   
+    // reindex column col using the indices given in new_row_indices.
+    void reindex_column(unsigned col, const std::vector<int>& new_row_indices);
+    
     
 /*** Next three functions are tehcnical functions used in Matthew's old Betti code. ***/
     //TODO: These probably can be deleted in a few weeks.
@@ -175,6 +184,7 @@ public:
     //removes zero columns from this matrix
     //  ind_old gives grades of columns before zero columns are removed; new grade info stored in ind_new
     void remove_zero_cols(const IndexMatrix& ind_old, IndexMatrix& ind_new);
+
 
     
     

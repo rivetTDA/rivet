@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define __IndexMatrix_H__
 
 #include <vector>
+#include "grade.h"
 
 // The entry at (row, col) is to be the greatest column index of all columns that
 // appear at or before (row, col) in colexicographical order, or -1
@@ -38,6 +39,8 @@ public:
     IndexMatrix(unsigned rows, unsigned cols);
 
     void set(unsigned row, unsigned col, int value);
+    
+    //Returns the entry at (row,col) (see above).
     int get(unsigned row, unsigned col) const;
 
     int last() const;
@@ -53,28 +56,35 @@ public:
     //TODO:Make static?
     void next_colex(int & row, int & col);
     
-    unsigned start_index(unsigned& row, unsigned& col);
+    //returns the index of the first column whose bigrade is at least (row,col) in colex order, or one larger than the largest column index if there is no such column.
+    //returns an int for consisteny with get.
+    int start_index(unsigned row, unsigned col);
     
-    void print() const; //prints the matrix
+    
+    //returns the number of columns in the bigraded matrix of index
+    //less than or equal to the given bigraded in the partial order on R^2
+    unsigned num_columns_leq(unsigned row, unsigned col);
     
     //technical utility function for setting the index matrices.
     //sets each entry of the index matrix in the colex interval [start_grade,end_grade) to value
     //As a side effect, sets start_grade equal to end_grade
     void fill_index_mx(Grade& start_grade, const Grade& end_grade, const unsigned& value);
     
-private:
+    void print() const; //prints the matrix
+    
+protected:
     unsigned num_rows;
     unsigned num_cols;
     std::vector<int> data;
 };
 
 class IndexMatrixLex : public IndexMatrix {
-    
+public:
     //Initialize each entry in the matrix to be -1.
     IndexMatrixLex(unsigned rows, unsigned cols);
     
     //definition of start_index is different than for the parent class
-    unsigned start_index(unsigned& row, unsigned& col);
+    int start_index(unsigned row, unsigned col);
 };
 
 

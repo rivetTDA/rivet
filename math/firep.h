@@ -29,11 +29,12 @@
 
 //forward declarations
 class IndexMatrix;
-
+#include "presentation.h"
 
 #include "bifiltration_data.h"
 #include "map_matrix.h"
 #include "index_matrix.h"
+#include "bigraded_matrix.h"
 
 #include <set>
 #include <string>
@@ -67,17 +68,32 @@ public:
     BigradedMatrix low_mx; //low matrix in the FIRep
     BigradedMatrix high_mx; //high matrix in the FIRep
     
-    FIRep(BifiltrationData& bif_data, int v); //constructor; requires verbosity parameter
+    //constructor; requires verbosity parameter
+    FIRep(BifiltrationData& bif_data, int vbsty);
+    
+    /*
+    constructor taking a presentation.  High matrix is set to a copy of the presentation matrix;
+    low matrix is set to zero.
+    TODO: We need this only because persistence updater currently takes an FIRep as input.
+    Note also that this is inefficient, since we are making a copy fo the presentation matrix,
+    though that is not necessary. In the future, we can give persistence updater a presentation directly,
+    and this will be much simpler. Once that is implemented, we can remove this constructor,
+    and perhaps also remove an associated constructor in the BigradedMatrix class.
+     */
+    FIRep(Presentation pres, int vbsty);
+    
 
+    
+    
     //This constructor is used when the FIRep is given directly as text input.
-    //TODO: Minor point, but it seems a little hacky to be passing a BifiltrationData object to this constructor
+    //TODO: It seems a little hacky to be passing a BifiltrationData object to this constructor
     FIRep(BifiltrationData& bif_data, unsigned num_high_simplices, unsigned num_mid_simplices, unsigned num_low_simplices, std::vector<std::vector<unsigned>>& d2, std::vector<std::vector<unsigned>>& d1,
-        const std::vector<unsigned> x_values, const std::vector<unsigned> y_values, int v);
+        const std::vector<unsigned> x_values, const std::vector<unsigned> y_values, int vbsty);
 
     //TODO: should the following two return consts?  Are there places where we modify an index matrix as we zero out columns?
     
-    unsigned num_x_grades(); //returns the number of unique x-coordinates of the multi-grades
-    unsigned num_y_grades(); //returns the number of unique y-coordinates of the multi-grades
+    unsigned num_x_grades() const; //returns the number of unique x-coordinates of the multi-grades
+    unsigned num_y_grades() const; //returns the number of unique y-coordinates of the multi-grades
 
     void print(); //Print the matrices and appearance grades
 

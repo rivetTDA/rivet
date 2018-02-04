@@ -254,11 +254,11 @@ void MapMatrix::finalize(unsigned i)
  //copies with index j from other to the back of this matrix
  void MapMatrix::append_col(const MapMatrix& other, unsigned j)
  {
-     matrix._append_col(*other.matrix._get_col_iter(j));
+     matrix._append_col(*other.matrix._get_const_col_iter(j));
  }
 
 //Move column with index source to index target, zeroing out this column source in the process.
-void move_col(unsigned source, unsigned target)
+void MapMatrix::move_col(unsigned source, unsigned target)
 {
     matrix._move_column(source, target);
 }
@@ -266,8 +266,24 @@ void move_col(unsigned source, unsigned target)
 //Move the jth column of other to the back of this matrix, zeroing out this column of other in the process.
 void MapMatrix::move_col(MapMatrix& other, unsigned j)
 {
-    matrix._append_col_and_clear(*other.matrix._get_col_iter(j));
+    matrix._append_col_and_clear(*(other.matrix._get_col_iter(j)));
+    
 }
+
+
+/********* Methods used to minimize a presentation *********/
+
+void MapMatrix::sort_col(int i)
+{
+    matrix._sort_col(i);
+}
+
+// reindex column col using the indices given in new_row_indices.
+void MapMatrix::reindex_column(unsigned col, const std::vector<int>& new_row_indices)
+{
+    matrix._reindex_column(col,new_row_indices);
+}
+
 
 /********* Next three methods are used only by the MultiBetti class *********/
 
@@ -283,7 +299,7 @@ void MapMatrix::copy_cols_from(const MapMatrix* other, int first, int last, unsi
     for(phat::index j = first; j <= last; j++) {
         
         //it is an iterator pointing to the jth column of matrix.
-        auto it=other->matrix._get_col_iter(j);
+        auto it=other->matrix._get_const_col_iter(j);
         for(unsigned i = 0; i < it->size(); i++)
                 matrix._set_entry(*(it->begin()+i)+offset,idx);
         idx++;
@@ -295,7 +311,7 @@ void MapMatrix::copy_cols_same_indexes(const MapMatrix* other, int first, int la
 {
     //std::vector<phat::index> temp_col;
     for(phat::index j = first; j <= last; j++) {
-        matrix._set_col(j,*(other->matrix._get_col_iter(j)));
+        matrix._set_col(j,*(other->matrix._get_const_col_iter(j)));
     }
 }
 
@@ -346,15 +362,15 @@ void MapMatrix::print()
 /********** methods of the class MapMatrix which assume that the column(s) in question are sorted  **********/
 
 //same as add_column above, but requires columns to be sorted vectors.
-void add_column_sorted(unsigned j, unsigned k)
+void MapMatrix::add_column_sorted(unsigned j, unsigned k)
 {
-    mapmatrix._add_to_sorted(j , k);
+    matrix._add_to_sorted(j , k);
 }
 
 
 //returns true if entry (i,j) is 1, false otherwise
-bool entry_sorted(unsigned i, unsigned j) const {
-    return matrix._is_in_matrix_sorted(i,j)
+bool MapMatrix::entry_sorted(unsigned i, unsigned j) const {
+    return matrix._is_in_matrix_sorted(i,j);
 }
 
 
@@ -380,7 +396,7 @@ MapMatrix_Perm::MapMatrix_Perm(const MapMatrix& mat, const std::vector<int>& cof
         order_index  = coface_order[i]; //index of the matrix column which will store the boundary of this simplex
         if (order_index != -1) {
             //NOTE: Permissions here are okay because MapMatrix is a friend class.
-            matrix._set_col(order_index,*(mat.matrix._get_col_iter(i)));
+            matrix._set_col(order_index,*(mat.matrix._get_const_col_iter(i)));
         }
     }
 
@@ -403,7 +419,7 @@ MapMatrix_Perm::MapMatrix_Perm(const MapMatrix& mat, const std::vector<int>& fac
     for (unsigned i = 0; i < mat.width(); i++) {
         order_index = coface_order[i]; //index of the matrix column which will store the boundary of this simplex
         if (order_index != -1) {
-            matrix._set_col(order_index,*(mat.matrix._get_col_iter(i)),face_order);
+            matrix._set_col(order_index,*(mat.matrix._get_const_col_iter(i)),face_order);
         }
     }
 } //end constructor

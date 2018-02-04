@@ -20,7 +20,7 @@
 typedef std::vector<int> Simplex;
 typedef std::vector<Grade> AppearanceGrades;
 
-// Even in the multicritical case, we only need a single grade for each (hom_dim-1)-dimensional simplex because for the homology computation, it suffices to consider a greatest lower bound of all grades of appearance of the simplexx.  For mid and high dimensions (i.e., dimensions hom_dim and hom_dim+1), we need a vector of grades for each simplex, for the multicritical case.
+// Even in the multicritical case, we only need a single grade for each (hom_dim-1)-dimensional simplex because for the homology computation, it suffices to consider a greatest lower bound of all grades of appearance of the simplex.  For mid and high dimensions (i.e., dimensions hom_dim and hom_dim+1), we need a vector of grades for each simplex, for the multicritical case.
 struct LowSimplexData {
     Simplex s;
     Grade gr;
@@ -70,7 +70,7 @@ public:
     ~BifiltrationData(); //destructor
 
     void build_VR_complex(const std::vector<unsigned>& times, const std::vector<unsigned>& distances, const unsigned num_x, const unsigned num_y);
-    //builds BifiltrationData representing a bifiltered Vietoris-Rips complex from discrete data, via a straighforward recursive algorithm either similar to or identical to the Bron–Kerbosch_algorithm.
+    //builds BifiltrationData representing a bifiltered Vietoris-Rips complex from discrete data, via a straighforward recursive algorithm similar to (identical to?) the Bron–Kerbosch_algorithm.
     //requires a list of birth times (one for each point), a list of distances between pairs of points, max dimension of simplices to construct, and number of grade values in x- and y-directions
     //CONVENTION: the x-coordinate is "birth time" for points and the y-coordinate is "distance" between points
 
@@ -86,9 +86,8 @@ public:
     unsigned num_x_grades(); //returns the number of unique x-coordinates of the multi-grades
     unsigned num_y_grades(); //returns the number of unique y-coordinates of the multi-grades
 
-    int get_size(unsigned dim); //returns the number of simplices of dimension (hom_dim-1), hom_dim, or (hom_dim+1). Returns -1 if invalid dim.
+    int get_size(unsigned dim); //returns the number of simplices of dimension (hom_dim-1), hom_dim, or (hom_dim+1).  Assumes dim is non-negative.  Returns -1 if invalid dim.
     
-    //TODO:Make unsigned?
     const unsigned hom_dim; //the dimension of homology to be computed; max dimension of simplices is one more than this
     const int verbosity; //controls display of output, for debugging
 
@@ -119,6 +118,7 @@ private:
     void update_grades(AppearanceGrades& grades); //Sorts the grades of appearance in reverse lexicographic order and makes sure they are all incomparable
 
     //total number of simplces of dimensions hom_dim and hom_dim+1, counting mutiplicity in grades of appearance.
+    
     //used to avoid unnecessary resizing of arrays in firep constructor.
     unsigned mid_count;
     unsigned high_count;

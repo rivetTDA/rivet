@@ -33,6 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <set>
 
 //struct to record which columns of a slave matrix correspond to zero columns of the reduced matrix
+//used only by compute_koszul, the older Betti number algorithm.
 struct ColumnList {
     std::vector<std::set<int>> columns; //stores indexes of columns, by y-grade
 
@@ -66,18 +67,34 @@ struct ColumnList {
 };
 
 //constructor: sets up the data structure but does not compute xi_0 or xi_1
-MultiBetti::MultiBetti(FIRep& rep, int dim)
-    : fir(rep)
-    , dimension(dim)
-    , num_x_grades(fir.num_x_grades())
+MultiBetti::MultiBetti(const FIRep& fir)
+    : num_x_grades(fir.num_x_grades())
     , num_y_grades(fir.num_y_grades())
     , verbosity(fir.verbosity)
 {
     xi.resize(boost::extents[num_x_grades][num_y_grades][3]);
 } //end constructor
 
+//Reads the 0th and 1st Betti numbers off of a minimal presentation.
+void MultiBetti::read_betti(const Presentation & pres)
+{
+    int prev_row_count = 0;
+    int prev_col_count = 0;
+    for (unsigned x = 0; x < num_x_grades; x++)
+    {
+        for (unsigned y = 0; y < num_y_grades; y++)
+        {
+            xi[x][y][0] = pres.row_ind.get(y,x)+1-prev_row_count;
+            prev_row_count = pres.row_ind.get(y,x)+1;
+        
+            xi[x][y][1]= xi[x][y][0]=pres.col_ind.get(y,x)+1-prev_col_count;
+            prev_col_count = pres.col_ind.get(y,x)+1;
+        }
+    }
+}
+
 //computes xi_0 and xi_1, and also stores dimension of homology at each grade in the supplied matrix
-void MultiBetti::compute(unsigned_matrix& hom_dims, Progress& progress)
+void MultiBetti::compute_koszul(FIRep& fir, unsigned_matrix& hom_dims, Progress& progress)
 {
     //ensure hom_dims is the correct size
     hom_dims.resize(boost::extents[num_x_grades][num_y_grades]);
@@ -88,11 +105,11 @@ void MultiBetti::compute(unsigned_matrix& hom_dims, Progress& progress)
     
     //input to the algorithm: two boundary matrices, with index data
     //TODO: a future version of this code will not copy these matrices, but operate on them directly.
-    MapMatrix* bdry1 = new MapMatrix(fir.boundary_mx_low);
-    IndexMatrix* ind1 = &fir.index_mx_low;
+    MapMatrix* bdry1 = new MapMatrix(fir.low_mx.mat);
+    IndexMatrix* ind1 = &fir.low_mx.ind;
 
-    MapMatrix* bdry2 = new MapMatrix(fir.boundary_mx_high);
-    IndexMatrix* ind2 = &fir.index_mx_high;
+    MapMatrix* bdry2 = new MapMatrix(fir.high_mx.mat);
+    IndexMatrix* ind2 = &fir.high_mx.ind;
 
     // STEP 1: reduce bdry2, record its pointwise rank, and build a partially-reduced copy for later use
     //   this approach aims to maximize memory usage by deleting bdry2 matrix before building bdry2s matrix

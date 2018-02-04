@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "arrangement.h"
 
 #include "../dcel/barcode_template.h"
-#include "../math/multi_betti.h" //this include might not be necessary
+//#include "../math/multi_betti.h" //this include might not be necessary
 #include "../math/persistence_updater.h"
 #include "dcel.h"
 
