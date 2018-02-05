@@ -46,7 +46,6 @@ typedef boost::multiprecision::cpp_rational exact;
 typedef boost::multi_array<unsigned, 2> unsigned_matrix;
 
 #include <vector>
-
 namespace Ui {
 class VisualizationWindow;
 }
@@ -79,6 +78,12 @@ private slots:
     void on_normCoordCheckBox_clicked(bool checked);
     void on_barcodeCheckBox_clicked(bool checked);
 
+
+    void on_BottomCornerXSpinBox_valueChanged(double x_bottom);
+    void on_BottomCornerYSpinBox_valueChanged(double y_bottom);
+    void on_TopCornerXSpinBox_valueChanged(double x_top);
+    void on_TopCornerYSpinBox_valueChanged(double y_top);
+
     void on_actionExit_triggered();
     void on_actionAbout_triggered();
     void on_actionConfigure_triggered();
@@ -86,6 +91,11 @@ private slots:
     void on_actionSave_line_selection_window_as_image_triggered();
     void on_actionSave_triggered();
     void on_actionOpen_triggered();
+    void on_actionRestore_default_window_triggered();
+    void on_actionBetti_number_window_triggered();
+    void on_actionAutomatically_reset_line_toggled();
+
+
 
 private:
     static const QString DEFAULT_SAVE_DIR_KEY;
@@ -101,11 +111,23 @@ private:
     ConfigParameters config_params; //parameters that control the visualization
     DataSelectDialog ds_dialog; //dialog box that gets the input parameters
 
+
+
+
     Grades grades;
 
     double angle_precise; //sufficiently-precise internal value of the slice-line angle in DEGREES, necessary because QDoubleSpinBox truncates this value
     double offset_precise; //sufficiently-precise internal value of the slice-line offset, necessary because QDoubleSpinBox truncates this value
 
+    double xmin_precise; //internal value of the coordinates of the current window
+    double xmax_precise;
+    double ymin_precise;
+    double ymax_precise;
+
+    double origin_x, origin_y;//the coordinates in data units of the origin on the line; i.e. the point where it intersects the box circumscribing the gradings
+    double dist_to_origin; //signed distance in data units from bottom left control dot in visible window to the origin; positive if the dot is up and to the right of the origin; negative otherwise
+    double slice_length;//length of the visible slice in DATA units
+    bool is_visible; //whether the line is visible in the current window
     std::shared_ptr<TemplatePointsMessage> template_points; //The template points, homology dimensions, and other useful context
     std::shared_ptr<ArrangementMessage> arrangement; //pointer to the DCEL arrangement
     std::unique_ptr<Barcode> barcode; //pointer to the currently-displayed barcode
@@ -124,7 +146,9 @@ private:
     bool persistence_diagram_drawn;
 
     void update_persistence_diagram(); //updates the persistence diagram and barcode after a change in the slice line
+    void reset_line(); //change the line so it connects the extreme points of the current window
 
+    void update_origin();//computes the origin of the line after a change in parameters; updates the value of dist_to_origin
     //other items
     void save_arrangement(const QString& filename);
 

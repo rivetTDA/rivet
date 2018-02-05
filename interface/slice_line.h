@@ -61,6 +61,8 @@ public:
     double get_box_xmax();
     double get_box_ymax();
 
+    void set_visibility(bool visible);
+
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent* event);
     void mouseReleaseEvent(QGraphicsSceneMouseEvent* event);

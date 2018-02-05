@@ -51,4 +51,3 @@ double Grades::max_offset() const
     }
     return std::max(y.back(), -1 * x.front());
 }
-

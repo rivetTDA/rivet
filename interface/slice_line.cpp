@@ -363,3 +363,10 @@ double SliceLine::get_box_ymax()
 {
     return box_ymax;
 }
+
+void SliceLine::set_visibility(bool visible)
+{
+    left_dot->setVisible(visible);
+    right_dot->setVisible(visible);
+    setVisible(visible);
+}
