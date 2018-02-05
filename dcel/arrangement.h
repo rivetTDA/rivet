@@ -41,6 +41,7 @@ class Vertex;
 #include "math/template_point.h"
 #include "numerics.h"
 #include "pointer_comparator.h"
+#include <boost/numeric/interval.hpp>
 #include <set>
 #include <vector>
 
@@ -85,10 +86,6 @@ public:
     //references to vectors of multi-grade values
     std::vector<exact> x_exact; //exact values for all x-grades
     std::vector<exact> y_exact; //exact values for all y-grades
-
-    //these are necessary for comparisons; TODO: should they be static members of Arrangement?
-    static double epsilon;
-    static bool almost_equal(const double a, const double b);
 
     friend std::ostream& operator<<(std::ostream&, const Arrangement&);
     friend std::istream& operator>>(std::istream&, Arrangement&);
@@ -153,11 +150,20 @@ private:
 
     void announce_next_point(Halfedge* finder, Vertex* next_pt);
 
+    //to ensure that the arrangement is built correctly, use interval arithmetic with the following interval type
+    typedef boost::numeric::interval<double> DoubleInterval;
+
+    //return an interval that contains a value
+    static DoubleInterval to_interval(double v);
+
+    //compare two intervals; return true if they are not disjoint
+    static bool almost_equal(const DoubleInterval a, const DoubleInterval b);
+
     //struct to hold a future intersection event -- used when building the arrangement
     struct Crossing {
         Anchor* a; //pointer to one line
         Anchor* b; //pointer to the other line -- must ensure that line for anchor a is below line for anchor b just before the crossing point!!!!!
-        double x; //x-coordinate of intersection point (floating-point)
+        DoubleInterval x; //interval containing the x-coordinate of intersection point
         Arrangement* m; //pointer to the arrangement, so the Crossing has access to the vectors x_grades, x_exact, y_grades, and y_exact
 
         Crossing(Anchor* a, Anchor* b, Arrangement* m); //precondition: Anchors a and b must be comparable

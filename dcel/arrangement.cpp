@@ -29,6 +29,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <boost/graph/graph_traits.hpp>
 #include <boost/graph/kruskal_min_spanning_tree.hpp>
 
+#include <cfloat> // DBL_MAX and DBL_MIN
+#include <cmath> // std::nextafter
+
 using rivet::numeric::INFTY;
 
 Arrangement::Arrangement()
@@ -691,6 +694,16 @@ void Arrangement::test_consistency()
 
 /********** the following objects and functions are for exact comparisons **********/
 
+//to ensure that the arrangement is built correctly, use interval arithmetic with the following interval type
+typedef boost::numeric::interval<double> DoubleInterval;
+
+//return an interval that contains a value
+//precondition: v is the double value nearest to the desired real value
+DoubleInterval Arrangement::to_interval(double v)
+{
+	return DoubleInterval(nextafter(v, -DBL_MAX), nextafter(v, DBL_MAX));
+}
+
 //Crossing constructor
 //precondition: Anchors a and b must be comparable
 Arrangement::Crossing::Crossing(Anchor* a, Anchor* b, Arrangement* m)
@@ -698,15 +711,15 @@ Arrangement::Crossing::Crossing(Anchor* a, Anchor* b, Arrangement* m)
     , b(b)
     , m(m)
 {
-    //store the x-coordinate of the crossing for fast (inexact) comparisons
-    x = (m->y_grades[a->get_y()] - m->y_grades[b->get_y()]) / (m->x_grades[a->get_x()] - m->x_grades[b->get_x()]);
+    //compute the x-coordinate of the crossing as an interval for fast (inexact) comparisons
+    x = ( to_interval(m->y_grades[a->get_y()]) - to_interval(m->y_grades[b->get_y()]) ) / 
+        ( to_interval(m->x_grades[a->get_x()]) - to_interval(m->x_grades[b->get_x()]) );
 }
 
 //returns true iff this Crossing has (exactly) the same x-coordinate as other Crossing
 bool Arrangement::Crossing::x_equal(const Crossing* other) const
 {
-    if (Arrangement::almost_equal(x, other->x)) //then compare exact values
-    {
+    if (Arrangement::almost_equal(x, other->x)) { //then compare exact values
         //find exact x-values
         exact x1 = (m->y_exact[a->get_y()] - m->y_exact[b->get_y()]) / (m->x_exact[a->get_x()] - m->x_exact[b->get_x()]);
         exact x2 = (m->y_exact[other->a->get_y()] - m->y_exact[other->b->get_y()]) / (m->x_exact[other->a->get_x()] - m->x_exact[other->b->get_x()]);
@@ -731,7 +744,7 @@ bool Arrangement::CrossingComparator::operator()(const Crossing& c1, const Cross
     Arrangement* m = c1.m; //makes it easier to reference arrays in the arrangement
 
     //now do the comparison
-    //if the x-coordinates are nearly equal as double values, then compare exact values
+    //if the x-coordinates are nearly equal, then compare exact values
     if (Arrangement::almost_equal(c1.x, c2.x)) {
         //find exact x-values
         exact x1 = (m->y_exact[c1.a->get_y()] - m->y_exact[c1.b->get_y()]) / (m->x_exact[c1.a->get_x()] - m->x_exact[c1.b->get_x()]);
@@ -739,9 +752,9 @@ bool Arrangement::CrossingComparator::operator()(const Crossing& c1, const Cross
 
         //if the x-values are exactly equal, then consider the y-values
         if (x1 == x2) {
-            //find the y-values
-            double c1y = m->x_grades[c1.a->get_x()] * (c1.x) - m->y_grades[c1.a->get_y()];
-            double c2y = m->x_grades[c2.a->get_x()] * (c2.x) - m->y_grades[c2.a->get_y()];
+            //find the y-values as intervals
+            DoubleInterval c1y = to_interval(m->x_grades[c1.a->get_x()]) * (c1.x) - to_interval(m->y_grades[c1.a->get_y()]);
+            DoubleInterval c2y = to_interval(m->x_grades[c2.a->get_x()]) * (c2.x) - to_interval(m->y_grades[c2.a->get_y()]);
 
             //if the y-values are nearly equal as double values, then compare exact values
             if (Arrangement::almost_equal(c1y, c2y)) {
@@ -751,7 +764,7 @@ bool Arrangement::CrossingComparator::operator()(const Crossing& c1, const Cross
 
                 //if the y-values are exactly equal, then sort by relative position of the lines
                 if (y1 == y2)
-                    return c1.a->get_position() > c2.a->get_position(); //Is there a better way???
+                    return c1.a->get_position() > c2.a->get_position();
 
                 //otherwise, the y-values are not equal
                 return y1 > y2;
@@ -766,17 +779,14 @@ bool Arrangement::CrossingComparator::operator()(const Crossing& c1, const Cross
     return c1.x > c2.x;
 }
 
-//epsilon value for use in comparisons
-double Arrangement::epsilon = pow(2, -30);
-
-//test whether two double values are almost equal (indicating that we should do exact comparison)
-bool Arrangement::almost_equal(const double a, const double b)
+//test whether two interval values are almost equal (indicating that we should do exact comparison)
+bool Arrangement::almost_equal(const DoubleInterval a, const DoubleInterval b)
 {
-    double diff = std::abs(a - b);
-    if (diff <= epsilon)
-        return true;
+    using namespace boost::numeric::interval_lib::compare::certain;
 
-    if (diff <= (std::abs(a) + std::abs(b)) * epsilon)
-        return true;
-    return false;
+    if(a != b) { // then the intervals are disjoint, so the values are not almost equal
+    	return false;
+    }
+    // else -- the intervals are not disjoint, so the values might be equal
+    return true;
 }

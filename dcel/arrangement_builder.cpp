@@ -244,9 +244,10 @@ void ArrangementBuilder::build_interior(Arrangement &arrangement)
         unsigned last_pos = cur->b->get_position(); //most recent edge in the curve corresponding to Anchor b
 
         if (last_pos != first_pos + 1) {
-            throw std::runtime_error("intersection between non-consecutive curves [1]: x = "
-                + std::to_string(sweep->x) + ", last_pos = " + std::to_string(last_pos)
-                + std::to_string(last_pos) + ", first_pos + 1 = " + std::to_string(first_pos + 1));
+            throw std::runtime_error("intersection between non-consecutive curves [1]: x = ["
+                + std::to_string(lower(sweep->x)) + ", " + std::to_string(upper(sweep->x)) 
+                + ", last_pos = " + std::to_string(last_pos)
+                + ", first_pos + 1 = " + std::to_string(first_pos + 1));
         }
 
         //find out if more than two curves intersect at this point
@@ -261,16 +262,18 @@ void ArrangementBuilder::build_interior(Arrangement &arrangement)
             last_pos++; //last_pos = cur->b->get_position();
         }
 
-        //compute y-coordinate of intersection
-        double intersect_y = arrangement.x_grades[sweep->a->get_x()] * (sweep->x) - arrangement.y_grades[sweep->a->get_y()];
+        //compute (approximate) coordinates of intersection
+        double intersect_x = ( arrangement.y_grades[sweep->a->get_y()] - arrangement.y_grades[sweep->b->get_y()] ) /
+                             ( arrangement.x_grades[sweep->a->get_x()] - arrangement.x_grades[sweep->b->get_x()] );
+        double intersect_y = arrangement.x_grades[sweep->a->get_x()] * intersect_x - arrangement.y_grades[sweep->a->get_y()];
 
         if (verbosity >= 10) {
             debug() << "  found intersection between"
-                    << (last_pos - first_pos + 1) << "edges at x =" << sweep->x << ", y =" << intersect_y;
+                    << (last_pos - first_pos + 1) << "edges at x =" << intersect_x << ", y =" << intersect_y;
         }
 
         //create new vertex
-        auto new_vertex = new Vertex(sweep->x, intersect_y);
+        auto new_vertex = new Vertex(intersect_x, intersect_y);
         arrangement.vertices.push_back(new_vertex);
 
         //anchor edges to vertex and create new face(s) and edges	//TODO: check this!!!
@@ -370,7 +373,7 @@ void ArrangementBuilder::build_interior(Arrangement &arrangement)
         }
 
         //output status
-        if (verbosity >= 8) {
+        if (verbosity >= 4) {
             status_counter++;
             if (status_counter % status_interval == 0)
                 debug() << "      processed" << status_counter << "intersections"; //TODO: adding this makes debug go into an infinite loop: <<  "sweep position =" << *sweep;
