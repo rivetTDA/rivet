@@ -679,13 +679,13 @@ void Arrangement::test_consistency()
 /********** the following objects and functions are for exact comparisons **********/
 
 //to ensure that the arrangement is built correctly, use interval arithmetic with the following interval type
-typedef boost::numeric::interval<double> I_aux;
+typedef boost::numeric::interval<double> DoubleInterval;
 
 //return an interval that contains a value
 //precondition: v is the double value nearest to the desired real value
-I_aux Arrangement::to_interval(double v)
+DoubleInterval Arrangement::to_interval(double v)
 {
-	return I_aux(nextafter(v, -DBL_MAX), nextafter(v, DBL_MAX));
+	return DoubleInterval(nextafter(v, -DBL_MAX), nextafter(v, DBL_MAX));
 }
 
 //Crossing constructor
@@ -737,8 +737,8 @@ bool Arrangement::CrossingComparator::operator()(const Crossing& c1, const Cross
         //if the x-values are exactly equal, then consider the y-values
         if (x1 == x2) {
             //find the y-values as intervals
-            I_aux c1y = to_interval(m->x_grades[c1.a->get_x()]) * (c1.x) - to_interval(m->y_grades[c1.a->get_y()]);
-            I_aux c2y = to_interval(m->x_grades[c2.a->get_x()]) * (c2.x) - to_interval(m->y_grades[c2.a->get_y()]);
+            DoubleInterval c1y = to_interval(m->x_grades[c1.a->get_x()]) * (c1.x) - to_interval(m->y_grades[c1.a->get_y()]);
+            DoubleInterval c2y = to_interval(m->x_grades[c2.a->get_x()]) * (c2.x) - to_interval(m->y_grades[c2.a->get_y()]);
 
             //if the y-values are nearly equal as double values, then compare exact values
             if (Arrangement::almost_equal(c1y, c2y)) {
@@ -764,7 +764,7 @@ bool Arrangement::CrossingComparator::operator()(const Crossing& c1, const Cross
 }
 
 //test whether two interval values are almost equal (indicating that we should do exact comparison)
-bool Arrangement::almost_equal(const I_aux a, const I_aux b)
+bool Arrangement::almost_equal(const DoubleInterval a, const DoubleInterval b)
 {
     using namespace boost::numeric::interval_lib::compare::certain;
 

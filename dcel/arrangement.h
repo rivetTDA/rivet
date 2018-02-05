@@ -147,19 +147,19 @@ private:
     void announce_next_point(std::shared_ptr<Halfedge> finder, std::shared_ptr<Vertex> next_pt);
 
     //to ensure that the arrangement is built correctly, use interval arithmetic with the following interval type
-    typedef boost::numeric::interval<double> I_aux;
+    typedef boost::numeric::interval<double> DoubleInterval;
 
     //return an interval that contains a value
-    static I_aux to_interval(double v);
+    static DoubleInterval to_interval(double v);
 
     //compare two intervals; return true if they are not disjoint
-    static bool almost_equal(const I_aux a, const I_aux b);
+    static bool almost_equal(const DoubleInterval a, const DoubleInterval b);
 
     //struct to hold a future intersection event -- used when building the arrangement
     struct Crossing {
         std::shared_ptr<Anchor> a; //pointer to one line
         std::shared_ptr<Anchor> b; //pointer to the other line -- must ensure that line for anchor a is below line for anchor b just before the crossing point!!!!!
-        I_aux x; //interval containing the x-coordinate of intersection point
+        DoubleInterval x; //interval containing the x-coordinate of intersection point
         std::shared_ptr<Arrangement> m; //pointer to the arrangement, so the Crossing has access to the vectors x_grades, x_exact, y_grades, and y_exact
 
         Crossing(std::shared_ptr<Anchor> a, std::shared_ptr<Anchor> b, std::shared_ptr<Arrangement> m); //precondition: Anchors a and b must be comparable
