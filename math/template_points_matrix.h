@@ -38,11 +38,11 @@ struct TemplatePointsMatrixEntry {
     unsigned y; //discrete y-grade of this support point
     unsigned index; //index of this support point in the vector of support points stored in VisualizationWindow
 
-    std::shared_ptr<TemplatePointsMatrixEntry> down; //pointer to the next support point below this one
-    std::shared_ptr<TemplatePointsMatrixEntry> left; //pointer to the next support point left of this one
+    TemplatePointsMatrixEntry* down; //pointer to the next support point below this one
+    TemplatePointsMatrixEntry* left; //pointer to the next support point left of this one
 
-    std::list<std::shared_ptr<Multigrade>> low_simplices; //associated multigrades for simplices of lower dimension
-    std::list<std::shared_ptr<Multigrade>> high_simplices; //associated multigrades for simplices of higher dimension
+    std::list<Multigrade*> low_simplices; //associated multigrades for simplices of lower dimension
+    std::list<Multigrade*> high_simplices; //associated multigrades for simplices of higher dimension
 
     unsigned low_count; //number of columns in matrix of simplices of lower dimension that are mapped to this TemplatePointsMatrixEntry
     unsigned high_count; //number of columns in matrix of simplices of higher dimension that are mapped to this TemplatePointsMatrixEntry
@@ -52,13 +52,13 @@ struct TemplatePointsMatrixEntry {
 
     //functions
     TemplatePointsMatrixEntry(); //empty constructor
-    TemplatePointsMatrixEntry(unsigned x, unsigned y, unsigned i, std::shared_ptr<TemplatePointsMatrixEntry> d, std::shared_ptr<TemplatePointsMatrixEntry> l); //regular constructor
+    TemplatePointsMatrixEntry(unsigned x, unsigned y, unsigned i, TemplatePointsMatrixEntry* d, TemplatePointsMatrixEntry* l); //regular constructor
     TemplatePointsMatrixEntry(unsigned x, unsigned y); //constructor for temporary entries used in counting switches
 
     void add_multigrade(unsigned x, unsigned y, unsigned num_cols, int index, bool low); //associates a (new) multigrades to this xi entry
     //the "low" argument is true if this multigrade is for low_simplices, and false if it is for high_simplices
 
-    void insert_multigrade(std::shared_ptr<Multigrade> mg, bool low); //inserts a Multigrade at the end of the list for the given dimension; does not update column counts!
+    void insert_multigrade(Multigrade* mg, bool low); //inserts a Multigrade at the end of the list for the given dimension; does not update column counts!
 };
 
 //// each TemplatePointsMatrixEntry maintains two lists of multigrades
@@ -82,20 +82,20 @@ class TemplatePointsMatrix {
 public:
     TemplatePointsMatrix(unsigned width, unsigned height); //constructor
 
-    std::vector<std::shared_ptr<TemplatePointsMatrixEntry>> fill_and_find_anchors(std::vector<TemplatePoint>& xi_pts); //stores xi support points in the xiSupportMatrix
+    std::vector<TemplatePointsMatrixEntry*> fill_and_find_anchors(std::vector<TemplatePoint>& xi_pts); //stores xi support points in the xiSupportMatrix
     //also finds anchors, which are stored both in the matrix and in the vector xi_pts
     //precondition: xi_pts contains the support points in lexicographical order
 
-    std::shared_ptr<TemplatePointsMatrixEntry> get_row(unsigned r); //gets a pointer to the rightmost entry in row r; returns NULL if row r is empty
-    std::shared_ptr<TemplatePointsMatrixEntry> get_col(unsigned c); //gets a pointer to the top entry in column c; returns NULL if column c is empty
+    TemplatePointsMatrixEntry* get_row(unsigned r); //gets a pointer to the rightmost entry in row r; returns NULL if row r is empty
+    TemplatePointsMatrixEntry* get_col(unsigned c); //gets a pointer to the top entry in column c; returns NULL if column c is empty
 
     unsigned height(); //retuns the number of rows;
 
     void clear_grade_lists(); //clears the level set lists for all entries in the matrix
 
 private:
-    std::vector<std::shared_ptr<TemplatePointsMatrixEntry>> columns;
-    std::vector<std::shared_ptr<TemplatePointsMatrixEntry>> rows;
+    std::vector<TemplatePointsMatrixEntry*> columns;
+    std::vector<TemplatePointsMatrixEntry*> rows;
 };
 
 #endif // TEMPLATE_POINT_MATRIX_H

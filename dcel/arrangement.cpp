@@ -65,15 +65,15 @@ Arrangement::Arrangement(std::vector<exact> xe,
     , verbosity(verbosity)
 {
     //create vertices
-    vertices.push_back(std::make_shared<Vertex>(0, INFTY)); //index 0
-    vertices.push_back(std::make_shared<Vertex>(INFTY, INFTY)); //index 1
-    vertices.push_back(std::make_shared<Vertex>(INFTY, -INFTY)); //index 2
-    vertices.push_back(std::make_shared<Vertex>(0, -INFTY)); //index 3
+    vertices.push_back(new Vertex(0, INFTY)); //index 0
+    vertices.push_back(new Vertex(INFTY, INFTY)); //index 1
+    vertices.push_back(new Vertex(INFTY, -INFTY)); //index 2
+    vertices.push_back(new Vertex(0, -INFTY)); //index 3
 
     //create halfedges
     for (int i = 0; i < 4; i++) {
-        halfedges.push_back(std::make_shared<Halfedge>(vertices[i], std::shared_ptr<Anchor>(nullptr))); //index 0, 2, 4, 6 (inside halfedges)
-        halfedges.push_back(std::make_shared<Halfedge>(vertices[(i + 1) % 4], std::shared_ptr<Anchor>(nullptr))); //index 1, 3, 5, 7 (outside halfedges)
+        halfedges.push_back(new Halfedge(vertices[i], nullptr)); //index 0, 2, 4, 6 (inside halfedges)
+        halfedges.push_back(new Halfedge(vertices[(i + 1) % 4], nullptr)); //index 1, 3, 5, 7 (outside halfedges)
         halfedges[2 * i]->set_twin(halfedges[2 * i + 1]);
         halfedges[2 * i + 1]->set_twin(halfedges[2 * i]);
     }
@@ -89,39 +89,53 @@ Arrangement::Arrangement(std::vector<exact> xe,
     }
 
     //create face
-    faces.push_back(std::make_shared<Face>(halfedges[0], faces.size()));
+    faces.push_back(new Face(halfedges[0], faces.size()));
 
     //set the remaining pointers on the halfedges
     for (int i = 0; i < 4; i++) {
-        std::shared_ptr<Halfedge> inside = halfedges[2 * i];
+        Halfedge* inside = halfedges[2 * i];
         inside->set_next(halfedges[(2 * i + 2) % 8]);
         inside->set_prev(halfedges[(2 * i + 6) % 8]);
         inside->set_face(faces[0]);
 
-        std::shared_ptr<Halfedge> outside = halfedges[2 * i + 1];
+        Halfedge* outside = halfedges[2 * i + 1];
         outside->set_next(halfedges[(2 * i + 7) % 8]);
         outside->set_prev(halfedges[(2 * i + 3) % 8]);
     }
 } //end constructor
 
+Arrangement::~Arrangement() {
+    for(auto face : faces) {
+        delete face;
+    }
+    for(auto halfedge: halfedges) {
+        delete halfedge;
+    }
+    for(auto anchor: all_anchors) {
+        delete anchor;
+    }
+    for(auto vertex: vertices) {
+        delete vertex;
+    }
+}
 //inserts a new vertex on the specified edge, with the specified coordinates, and updates all relevant pointers
 //  i.e. new vertex is between initial and termainal points of the specified edge
 //returns pointer to a new halfedge, whose initial point is the new vertex, and that follows the specified edge around its face
-std::shared_ptr<Halfedge> Arrangement::insert_vertex(std::shared_ptr<Halfedge> edge, double x, double y)
+Halfedge* Arrangement::insert_vertex(Halfedge* edge, double x, double y)
 {
     //create new vertex
-    std::shared_ptr<Vertex> new_vertex = std::make_shared<Vertex>(x, y);
-    vertices.push_back(new_vertex);
+    vertices.push_back(new Vertex(x, y));
+    auto new_vertex = vertices.back();
 
     //get twin and Anchor of this edge
-    std::shared_ptr<Halfedge> twin = edge->get_twin();
-    std::shared_ptr<Anchor> anchor = edge->get_anchor();
+    auto twin = edge->get_twin();
+    auto anchor = edge->get_anchor();
 
     //create new halfedges
-    std::shared_ptr<Halfedge> up = std::make_shared<Halfedge>(new_vertex, anchor);
-    halfedges.push_back(up);
-    std::shared_ptr<Halfedge> dn = std::make_shared<Halfedge>(new_vertex, anchor);
-    halfedges.push_back(dn);
+    halfedges.push_back(new Halfedge(new_vertex, anchor));
+    auto up = halfedges.back();
+    halfedges.push_back(new Halfedge(new_vertex, anchor));
+    auto dn = halfedges.back();
 
     //update pointers
     up->set_next(edge->get_next());
@@ -153,17 +167,18 @@ std::shared_ptr<Halfedge> Arrangement::insert_vertex(std::shared_ptr<Halfedge> e
 //creates the first pair of Halfedges in an Anchor line, anchored on the left edge of the strip at origin of specified edge
 //  also creates a new face (the face below the new edge)
 //  CAUTION: leaves nullptr: new_edge.next and new_twin.prev
-std::shared_ptr<Halfedge> Arrangement::create_edge_left(std::shared_ptr<Halfedge> edge, std::shared_ptr<Anchor> anchor)
+Halfedge* Arrangement::create_edge_left(Halfedge* edge, Anchor* anchor)
 {
     //create new halfedges
-    std::shared_ptr<Halfedge> new_edge(new Halfedge(edge->get_origin(), anchor)); //points AWAY FROM left edge
-    halfedges.push_back(new_edge);
-    std::shared_ptr<Halfedge> new_twin(new Halfedge(nullptr, anchor)); //points TOWARDS left edge
-    halfedges.push_back(new_twin);
+    ; //points AWAY FROM left edge
+    halfedges.push_back(new Halfedge(edge->get_origin(), anchor));
+    auto new_edge = halfedges.back();
+    halfedges.push_back(new Halfedge(nullptr, anchor)); //points TOWARDS left edge
+    auto new_twin = halfedges.back();
 
     //create new face
-    std::shared_ptr<Face> new_face(new Face(new_edge, faces.size()));
-    faces.push_back(new_face);
+    faces.push_back(new Face(new_edge, faces.size()));
+    auto new_face = faces.back();
 
     //update Halfedge pointers
     new_edge->set_prev(edge->get_prev());
@@ -190,7 +205,7 @@ std::shared_ptr<Halfedge> Arrangement::create_edge_left(std::shared_ptr<Halfedge
 BarcodeTemplate& Arrangement::get_barcode_template(double degrees, double offset)
 {
     ///TODO: store some point/cell to seed the next query
-    std::shared_ptr<Face> cell;
+    Face* cell;
     if (degrees == 90) //then line is vertical
     {
         cell = find_vertical_line(-1 * offset); //multiply by -1 to correct for orientation of offset
@@ -199,7 +214,7 @@ BarcodeTemplate& Arrangement::get_barcode_template(double degrees, double offset
         }
 
     } else if (degrees == 0) { //then line is horizontal
-        std::shared_ptr<Anchor> anchor = find_least_upper_anchor(offset);
+        auto anchor = find_least_upper_anchor(offset);
 
         if (anchor != nullptr)
             cell = anchor->get_line()->get_face();
@@ -243,16 +258,16 @@ unsigned Arrangement::num_faces()
 //creates a new anchor in the vector all_anchors
 void Arrangement::add_anchor(Anchor anchor)
 {
-    all_anchors.insert(std::make_shared<Anchor>(anchor.get_entry()));
+    all_anchors.insert(new Anchor(anchor.get_entry()));
 }
 
 //finds the first anchor that intersects the left edge of the arrangement at a point not less than the specified y-coordinate
 //  if no such anchor, returns nullptr
-std::shared_ptr<Anchor> Arrangement::find_least_upper_anchor(double y_coord)
+Anchor* Arrangement::find_least_upper_anchor(double y_coord)
 {
     //binary search to find greatest y-grade not greater than than y_coord
     unsigned best = 0;
-    if (y_grades.size() >= 1 && y_grades[0] <= y_coord) {
+    if ((!y_grades.empty()) && y_grades[0] <= y_coord) {
         //binary search the vector y_grades
         unsigned min = 0;
         unsigned max = y_grades.size() - 1;
@@ -273,20 +288,21 @@ std::shared_ptr<Anchor> Arrangement::find_least_upper_anchor(double y_coord)
     //if we get here, then y_grades[best] is the greatest y-grade not greater than y_coord
     //now find Anchor whose line intersects the left edge of the arrangement lowest, but not below y_grade[best]
     unsigned int zero = 0; //disambiguate the following function call
-    std::shared_ptr<Anchor> test(new Anchor(zero, best));
-    std::set<std::shared_ptr<Anchor>, PointerComparator<Anchor, Anchor_LeftComparator>>::iterator it = all_anchors.lower_bound(test);
+    auto test = new Anchor(zero, best);
+    auto it = all_anchors.lower_bound(test);
+    delete test;
 
     if (it == all_anchors.end()) //not found
     {
         return nullptr;
     }
     //else
-    return *it;
+    return (*it);
 } //end find_least_upper_anchor()
 
 //finds the (unbounded) cell associated to dual point of the vertical line with the given x-coordinate
 //  i.e. finds the Halfedge whose Anchor x-coordinate is the largest such coordinate not larger than than x_coord; returns the Face corresponding to that Halfedge
-std::shared_ptr<Face> Arrangement::find_vertical_line(double x_coord)
+Face* Arrangement::find_vertical_line(double x_coord)
 {
     //is there an Anchor with x-coordinate not greater than x_coord?
     if (vertical_line_query_list.size() >= 1
@@ -298,7 +314,7 @@ std::shared_ptr<Face> Arrangement::find_vertical_line(double x_coord)
 
         while (max >= min) {
             unsigned mid = (max + min) / 2;
-            std::shared_ptr<Anchor> test = vertical_line_query_list[mid]->get_anchor();
+            auto test = vertical_line_query_list[mid]->get_anchor();
 
             if (x_grades[test->get_x()] <= x_coord) //found a lower bound, but search upper subarray for a better lower bound
             {
@@ -316,7 +332,7 @@ std::shared_ptr<Face> Arrangement::find_vertical_line(double x_coord)
 
 } //end find_vertical_line()
 
-void Arrangement::announce_next_point(std::shared_ptr<Halfedge> finger, std::shared_ptr<Vertex> next_pt)
+void Arrangement::announce_next_point(Halfedge* finger, Vertex* next_pt)
 {
 
     if (verbosity >= 10) {
@@ -328,12 +344,12 @@ void Arrangement::announce_next_point(std::shared_ptr<Halfedge> finger, std::sha
 }
 
 //find a 2-cell containing the specified point
-std::shared_ptr<Face> Arrangement::find_point(double x_coord, double y_coord)
+Face* Arrangement::find_point(double x_coord, double y_coord)
 {
     //start on the left edge of the arrangement, at the correct y-coordinate
-    std::shared_ptr<Anchor> start = find_least_upper_anchor(-1 * y_coord);
+    auto start = find_least_upper_anchor(-1 * y_coord);
 
-    std::shared_ptr<Halfedge> finger = nullptr; //for use in finding the cell
+    Halfedge* finger = nullptr; //for use in finding the cell
 
     if (start == nullptr) //then starting point is in the top (unbounded) cell
     {
@@ -348,7 +364,7 @@ std::shared_ptr<Face> Arrangement::find_point(double x_coord, double y_coord)
         }
     }
 
-    std::shared_ptr<Face> cell = nullptr; //will later point to the cell containing the specified point
+    Face* cell = nullptr; //will later point to the cell containing the specified point
 
     while (cell == nullptr) //while not found
     {
@@ -357,7 +373,7 @@ std::shared_ptr<Face> Arrangement::find_point(double x_coord, double y_coord)
         }
 
         //find the edge of the current cell that crosses the horizontal line at y_coord
-        std::shared_ptr<Vertex> next_pt = finger->get_next()->get_origin();
+        Vertex* next_pt = finger->get_next()->get_origin();
 
         announce_next_point(finger, next_pt);
 
@@ -379,7 +395,7 @@ std::shared_ptr<Face> Arrangement::find_point(double x_coord, double y_coord)
             } else //move to adjacent cell
             {
                 //find degree of vertex
-                std::shared_ptr<Halfedge> thumb = finger->get_next();
+                auto thumb = finger->get_next();
                 int deg = 1;
                 while (thumb != finger->get_twin()) {
                     thumb = thumb->get_twin()->get_next();
@@ -399,7 +415,7 @@ std::shared_ptr<Face> Arrangement::find_point(double x_coord, double y_coord)
                 cell = finger->get_face();
             } else //then edge is not vertical
             {
-                std::shared_ptr<Anchor> temp = finger->get_anchor();
+                Anchor* temp = finger->get_anchor();
                 double x_pos = (y_coord + y_grades[temp->get_y()]) / x_grades[temp->get_x()]; //NOTE: division by zero never occurs because we are searching along a horizontal line, and thus we never cross horizontal lines in the arrangement
 
                 if (x_pos >= x_coord) //found the cell
@@ -442,8 +458,8 @@ void Arrangement::print()
 
     debug() << "  Halfedges";
     for (unsigned i = 0; i < halfedges.size(); i++) {
-        std::shared_ptr<Halfedge> e = halfedges[i];
-        std::shared_ptr<Halfedge> t = e->get_twin();
+        auto e = halfedges[i];
+        auto t = e->get_twin();
         debug() << "    halfedge " << i << ": " << *(e->get_origin()) << "--" << *(t->get_origin()) << "; ";
         if (e->get_anchor() == nullptr)
             debug() << "Anchor null; ";
@@ -458,7 +474,7 @@ void Arrangement::print()
     }
 
     debug() << "  Anchor set: ";
-    std::set<std::shared_ptr<Anchor>>::iterator it;
+    std::set<Anchor*>::iterator it;
     for (it = all_anchors.begin(); it != all_anchors.end(); ++it) {
         Anchor cur = **it;
         debug() << "(" << cur.get_x() << ", " << cur.get_y() << ") halfedge " << HID(cur.get_line()) << "; ";
@@ -466,7 +482,7 @@ void Arrangement::print()
 } //end print()
 
 template <typename T>
-long index_of(std::vector<T> const& vec, T const& t)
+long index_of(std::vector<T*> const& vec, T const* t)
 {
     for (size_t i = 0; i < vec.size(); i++) {
         if (vec[i] == t)
@@ -477,26 +493,26 @@ long index_of(std::vector<T> const& vec, T const& t)
 
 //look up halfedge ID, used in print() for debugging
 // HID = halfedge ID
-long Arrangement::HID(std::shared_ptr<Halfedge> h) const
+long Arrangement::HID(Halfedge* h) const
 {
     return index_of(halfedges, h);
 }
 
 //look up face ID, used in print() for debugging
 // FID = face ID
-long Arrangement::FID(std::shared_ptr<Face> f) const
+long Arrangement::FID(Face* f) const
 {
     return index_of(faces, f);
 }
 
 //look up vertex ID, used in print() for debugging
 // VID = vertex ID
-long Arrangement::VID(std::shared_ptr<Vertex> v) const
+long Arrangement::VID(Vertex* v) const
 {
     return index_of(vertices, v);
 }
 
-long Arrangement::AID(std::shared_ptr<Anchor> a) const
+long Arrangement::AID(Anchor* a) const
 {
     auto it = all_anchors.begin();
 
@@ -505,7 +521,7 @@ long Arrangement::AID(std::shared_ptr<Anchor> a) const
             return i;
         ++it;
     }
-
+    debug() << "WARNING: no anchor found.";//" for " << *a;
     //we should only get here if f is nullptr (meaning the unbounded, outside face)
     return -1;
 }
@@ -518,8 +534,8 @@ void Arrangement::test_consistency()
     bool face_problem = false;
     std::set<int> edges_found_in_faces;
 
-    for (std::vector<std::shared_ptr<Face>>::iterator it = faces.begin(); it != faces.end(); ++it) {
-        std::shared_ptr<Face> face = *it;
+    for (auto it = faces.begin(); it != faces.end(); ++it) {
+        auto face = (*it);
         if (verbosity >= 10) {
             //FID calls are expensive
             //TODO put an ID field in Face and others?
@@ -529,7 +545,7 @@ void Arrangement::test_consistency()
             debug() << "    PROBLEM: face" << FID(face) << "has null edge pointer.";
             face_problem = true;
         } else {
-            std::shared_ptr<Halfedge> start = face->get_boundary();
+            auto start = face->get_boundary();
             edges_found_in_faces.insert(HID(start));
 
             if (start->get_face() != face) {
@@ -540,7 +556,7 @@ void Arrangement::test_consistency()
             if (start->get_next() == nullptr)
                 debug() << "    PROBLEM: starting halfedge" << HID(start) << "of face" << FID(face) << "has nullptr next pointer.";
             else {
-                std::shared_ptr<Halfedge> cur = start->get_next();
+                auto cur = start->get_next();
                 int i = 0;
                 while (cur != start) {
                     edges_found_in_faces.insert(HID(cur));
@@ -577,8 +593,8 @@ void Arrangement::test_consistency()
     if (halfedges.size() < 2) {
         debug() << "Only " << halfedges.size() << "halfedges present!";
     }
-    std::shared_ptr<Halfedge> start = halfedges[1];
-    std::shared_ptr<Halfedge> cur = start;
+    auto start = halfedges[1];
+    auto cur = start;
     do {
         edges_found_in_faces.insert(HID(cur));
 
@@ -605,11 +621,11 @@ void Arrangement::test_consistency()
     bool curve_problem = false;
     std::set<int> edges_found_in_curves;
 
-    for (std::set<std::shared_ptr<Anchor>>::iterator it = all_anchors.begin(); it != all_anchors.end(); ++it) {
-        std::shared_ptr<Anchor> anchor = *it;
+    for (auto it = all_anchors.begin(); it != all_anchors.end(); ++it) {
+        auto anchor = *it;
         debug() << "  Checking line for anchor (" << anchor->get_x() << "," << anchor->get_y() << ")";
 
-        std::shared_ptr<Halfedge> edge = anchor->get_line();
+        Halfedge* edge = anchor->get_line();
         do {
             edges_found_in_curves.insert(HID(edge));
             edges_found_in_curves.insert(HID(edge->get_twin()));
@@ -669,7 +685,7 @@ void Arrangement::test_consistency()
 
     //check anchor lines
     debug() << "Checking order of vertices along right edge of the strip:";
-    std::shared_ptr<Halfedge> redge = halfedges[3];
+    auto redge = halfedges[3];
     while (redge != halfedges[1]) {
         debug() << " y = " << redge->get_origin()->get_y() << "at vertex" << VID(redge->get_origin());
         redge = redge->get_next();
@@ -690,7 +706,7 @@ DoubleInterval Arrangement::to_interval(double v)
 
 //Crossing constructor
 //precondition: Anchors a and b must be comparable
-Arrangement::Crossing::Crossing(std::shared_ptr<Anchor> a, std::shared_ptr<Anchor> b, std::shared_ptr<Arrangement> m)
+Arrangement::Crossing::Crossing(Anchor* a, Anchor* b, Arrangement* m)
     : a(a)
     , b(b)
     , m(m)
@@ -725,7 +741,7 @@ bool Arrangement::CrossingComparator::operator()(const Crossing& c1, const Cross
         throw std::runtime_error("Inverted crossing error");
     }
 
-    std::shared_ptr<Arrangement> m = c1.m; //makes it easier to reference arrays in the arrangement
+    Arrangement* m = c1.m; //makes it easier to reference arrays in the arrangement
 
     //now do the comparison
     //if the x-coordinates are nearly equal, then compare exact values

@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "dataselectdialog.h"
 #include "ui_dataselectdialog.h"
 
+#include "api.h"
 #include "interface/console_interaction.h"
 #include "interface/file_input_reader.h"
 #include "interface/input_parameters.h"

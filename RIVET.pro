@@ -18,6 +18,7 @@ TARGET = RIVET
 TEMPLATE = app
 
 QMAKE_LIBDIR += /usr/local/lib #TODO: figure out how to generalize
+INCLUDEPATH += $$PWD/build/msgpack/src/msgpack_project/include
 LIBS        += -lboost_serialization
 
 SOURCES	+= main.cpp                         \

@@ -41,12 +41,12 @@ Vertex::Vertex()
 {
 }
 
-void Vertex::set_incident_edge(std::shared_ptr<Halfedge> edge)
+void Vertex::set_incident_edge(Halfedge* edge)
 {
     incident_edge = edge;
 }
 
-std::shared_ptr<Halfedge> Vertex::get_incident_edge()
+Halfedge* Vertex::get_incident_edge()
 {
     return incident_edge;
 }
@@ -75,7 +75,7 @@ bool Vertex::operator==(Vertex const& other)
 
 /*** implementation of class Halfedge ***/
 
-Halfedge::Halfedge(std::shared_ptr<Vertex> v, std::shared_ptr<Anchor> p)
+Halfedge::Halfedge(Vertex* v, Anchor* p)
     : origin(v)
     , twin(nullptr)
     , next(nullptr)
@@ -95,69 +95,69 @@ Halfedge::Halfedge()
 {
 }
 
-void Halfedge::set_twin(std::shared_ptr<Halfedge> e)
+void Halfedge::set_twin(Halfedge* e)
 {
     twin = e;
 }
 
-std::shared_ptr<Halfedge> Halfedge::get_twin() const
+Halfedge* Halfedge::get_twin() const
 {
     return twin;
 }
 
-void Halfedge::set_next(std::shared_ptr<Halfedge> e)
+void Halfedge::set_next(Halfedge* e)
 {
     next = e;
 }
 
-std::shared_ptr<Halfedge> Halfedge::get_next() const
+Halfedge* Halfedge::get_next() const
 {
     return next;
 }
 
-void Halfedge::set_prev(std::shared_ptr<Halfedge> e)
+void Halfedge::set_prev(Halfedge* e)
 {
     prev = e;
 }
 
-std::shared_ptr<Halfedge> Halfedge::get_prev() const
+Halfedge* Halfedge::get_prev() const
 {
     return prev;
 }
 
-void Halfedge::set_origin(std::shared_ptr<Vertex> v)
+void Halfedge::set_origin(Vertex* v)
 {
     origin = v;
 }
 
-std::shared_ptr<Vertex> Halfedge::get_origin() const
+Vertex* Halfedge::get_origin() const
 {
     return origin;
 }
 
-void Halfedge::set_face(std::shared_ptr<Face> f)
+void Halfedge::set_face(Face* f)
 {
     face = f;
 }
 
-std::shared_ptr<Face> Halfedge::get_face() const
+Face* Halfedge::get_face() const
 {
     return face;
 }
 
-void Halfedge::set_anchor(std::shared_ptr<Anchor> anchor)
+void Halfedge::set_anchor(Anchor* anchor)
 {
     this->anchor = anchor;
 }
 
-std::shared_ptr<Anchor> Halfedge::get_anchor() const
+Anchor* Halfedge::get_anchor() const
 {
     return anchor;
 }
 
 Debug& operator<<(Debug& qd, const Halfedge& e)
 {
-    std::shared_ptr<Halfedge> t = e.twin;
+    Halfedge* t = e.twin;
     qd << *(e.origin) << "--" << *(t->origin) << "; ";
     if (e.anchor == nullptr)
         qd << "Anchor null; ";
@@ -168,7 +168,7 @@ Debug& operator<<(Debug& qd, const Halfedge& e)
 
 /*** implementation of class Face ***/
 
-Face::Face(std::shared_ptr<Halfedge> e, unsigned long id)
+Face::Face(Halfedge* e, unsigned long id)
     : boundary(e)
     , visited(false)
 , identifier(id)
@@ -186,12 +186,12 @@ Face::~Face()
 {
 }
 
-void Face::set_boundary(std::shared_ptr<Halfedge> e)
+void Face::set_boundary(Halfedge* e)
 {
     boundary = e;
 }
 
-std::shared_ptr<Halfedge> Face::get_boundary()
+Halfedge* Face::get_boundary()
 {
     return boundary;
 }
@@ -218,8 +218,8 @@ void Face::mark_as_visited()
 
 Debug& operator<<(Debug& qd, const Face& f)
 {
-    std::shared_ptr<Halfedge> start = f.boundary;
-    std::shared_ptr<Halfedge> curr = start;
+    Halfedge* start = f.boundary;
+    Halfedge* curr = start;
     do {
         qd << *(curr->get_origin()) << "--";
         curr = curr->get_next();
