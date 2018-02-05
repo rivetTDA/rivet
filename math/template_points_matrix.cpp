@@ -46,7 +46,7 @@ TemplatePointsMatrixEntry::TemplatePointsMatrixEntry()
 }
 
 //regular constructor
-TemplatePointsMatrixEntry::TemplatePointsMatrixEntry(unsigned x, unsigned y, unsigned i, std::shared_ptr<TemplatePointsMatrixEntry> d, std::shared_ptr<TemplatePointsMatrixEntry> l)
+TemplatePointsMatrixEntry::TemplatePointsMatrixEntry(unsigned x, unsigned y, unsigned i, TemplatePointsMatrixEntry* d, TemplatePointsMatrixEntry* l)
     : x(x)
     , y(y)
     , index(i)
@@ -77,16 +77,16 @@ TemplatePointsMatrixEntry::TemplatePointsMatrixEntry(unsigned x, unsigned y)
 void TemplatePointsMatrixEntry::add_multigrade(unsigned x, unsigned y, unsigned num_cols, int index, bool low)
 {
     if (low) {
-        low_simplices.push_back(std::make_shared<Multigrade>(x, y, num_cols, index));
+        low_simplices.push_back(new Multigrade(x, y, num_cols, index));
         low_count += num_cols;
     } else {
-        high_simplices.push_back(std::make_shared<Multigrade>(x, y, num_cols, index));
+        high_simplices.push_back(new Multigrade(x, y, num_cols, index));
         high_count += num_cols;
     }
 }
 
 //inserts a Multigrade at the beginning of the list for the given dimension
-void TemplatePointsMatrixEntry::insert_multigrade(std::shared_ptr<Multigrade> mg, bool low)
+void TemplatePointsMatrixEntry::insert_multigrade(Multigrade* mg, bool low)
 {
     if (low)
         low_simplices.push_back(mg);
@@ -132,11 +132,11 @@ TemplatePointsMatrix::TemplatePointsMatrix(unsigned width, unsigned height)
 //  also finds anchors, which are stored in the matrix and in the vector xi_pts
 //  precondition: xi_pts contains the support points in lexicographical order
 //  Runtime complexity of this function is O(n_x * n_y). We can probably do better, but it probably doesn't matter.
-std::vector<std::shared_ptr<TemplatePointsMatrixEntry>> TemplatePointsMatrix::fill_and_find_anchors(std::vector<TemplatePoint>& xi_pts)
+std::vector<TemplatePointsMatrixEntry*> TemplatePointsMatrix::fill_and_find_anchors(std::vector<TemplatePoint>& xi_pts)
 {
     unsigned next_xi_pt = 0; //tracks the index of the next xi support point to insert
 
-    std::vector<std::shared_ptr<TemplatePointsMatrixEntry>> matrix_entries;
+    std::vector<TemplatePointsMatrixEntry*> matrix_entries;
 
     //loop over all grades in lexicographical order
     for (unsigned i = 0; i < columns.size(); i++) {
@@ -168,7 +168,7 @@ std::vector<std::shared_ptr<TemplatePointsMatrixEntry>> TemplatePointsMatrix::fi
             }
 
             //create a new TemplatePointsMatrixEntry
-            std::shared_ptr<TemplatePointsMatrixEntry> new_entry(new TemplatePointsMatrixEntry(i, j, insertion_point, columns[i], rows[j]));
+            TemplatePointsMatrixEntry* new_entry(new TemplatePointsMatrixEntry(i, j, insertion_point, columns[i], rows[j]));
             columns[i] = new_entry;
             rows[j] = new_entry;
 
@@ -181,13 +181,13 @@ std::vector<std::shared_ptr<TemplatePointsMatrixEntry>> TemplatePointsMatrix::fi
 } //end fill_and_find_anchors()
 
 //gets a pointer to the rightmost entry in row r; returns NULL if row r is empty
-std::shared_ptr<TemplatePointsMatrixEntry> TemplatePointsMatrix::get_row(unsigned r)
+TemplatePointsMatrixEntry* TemplatePointsMatrix::get_row(unsigned r)
 {
     return rows[r];
 }
 
 //gets a pointer to the top entry in column c; returns NULL if column c is empty
-std::shared_ptr<TemplatePointsMatrixEntry> TemplatePointsMatrix::get_col(unsigned c)
+TemplatePointsMatrixEntry* TemplatePointsMatrix::get_col(unsigned c)
 {
     return columns[c];
 }
@@ -202,7 +202,7 @@ unsigned TemplatePointsMatrix::height()
 void TemplatePointsMatrix::clear_grade_lists()
 {
     for (unsigned i = 0; i < columns.size(); i++) {
-        std::shared_ptr<TemplatePointsMatrixEntry> cur_entry = columns[i];
+        TemplatePointsMatrixEntry* cur_entry = columns[i];
         while (cur_entry != NULL) {
             cur_entry->low_simplices.clear();
             cur_entry->high_simplices.clear();

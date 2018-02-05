@@ -25,3 +25,4 @@ ui_progressdialog.h
 ui_visualizationwindow.h
 build
 cmake-build-*
+msgpack
