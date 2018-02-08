@@ -90,30 +90,20 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<std::shared_ptr<H
     unsigned num_low_simplices = build_simplex_order(ind_low, true, low_simplex_order);
     //delete ind_low;
     
-    debug() << "built low simplex order!!!";
-    
     std::vector<int> high_simplex_order; //this will be a map : dim_index --> order_index for (dim+1)-simplices; -1 indicates simplices not in the order
     unsigned num_high_simplices = build_simplex_order(ind_high, false, high_simplex_order);
     //delete ind_high;
 
-    debug() << "built high simplex order!!!";
-    
-    
     //get intial boundary matrices R_low and R_high for RU-decomposition.  These are permuted and trimmed,
     //as described in Section 6 of the RIVET paper.
     R_low = new MapMatrix_Perm(fir.low_mx.mat, low_simplex_order, num_low_simplices); //NOTE: must be deleted
     
-    debug() << "built R_low!!!";
-    
-    
     R_high = new MapMatrix_Perm(fir.high_mx.mat,low_simplex_order, num_low_simplices, high_simplex_order, num_high_simplices); //NOTE: must be deleted
-    
-    debug() << "built R_high!!!";
     
     //print runtime data
     if (verbosity >= 4) {
         debug() << "  --> computing initial order on simplices and building the boundary matrices took"
-                << timer.elapsed() << "milliseconds";
+                << timer.elapsed() << " milliseconds";
     }
 
     //copy the boundary matrices (R) for fast reset later
@@ -123,7 +113,7 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<std::shared_ptr<H
     
     if (verbosity >= 4) {
         debug() << "  --> copying the boundary matrices took"
-                << timer.elapsed() << "milliseconds";
+                << timer.elapsed() << " milliseconds";
     }
 
     //initialize the permutation vectors

@@ -43,7 +43,7 @@ public:
     
     //Constructor
     //Builds a presentation from an FI-Rep.  Also computes Hilbert function along the way.
-    Presentation(FIRep fir, Progress& progress);
+    Presentation(FIRep fir, Progress& progress, int verbosity);
     
     /* 
     Throws an exception if !is_kernel_minimal.  Minimizes presentation using only column operations.

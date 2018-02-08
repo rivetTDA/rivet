@@ -68,9 +68,26 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(ComputationInput& in
     }
     
     MultiBetti mb(input.rep());
-    Presentation pres(input.rep(),progress);
+    
+    Timer timer;
+    timer.restart();
+    
+    Presentation pres(input.rep(),progress,verbosity);
     if (verbosity >= 2) {
         debug() << "COMPUTED PRESENTATION!";
+    }
+    
+
+    
+    if (verbosity > 7)
+    {
+        std::cout << "UNMINIMIZED PRESENTATION: " << std::endl;
+        pres.print();
+    }
+    
+    if (verbosity >= 4) {
+        std::cout << "  --> minimizing the presentation took "
+        << timer.elapsed() << " milliseconds" << std::endl;
     }
     
     pres.minimize();
@@ -78,10 +95,14 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(ComputationInput& in
         debug() << "MINIMIZED PRESENTATION!";
     }
     
+    if (verbosity > 7)
+    {
+        std::cout << "MINIMAL PRESENTATION: " << std::endl;
+        pres.print();
+    }
+    
+    
     progress.progress(95);
-    
-    
-    Timer timer;
 
     //TODO: Introduce an option to use either the old or new Betti number computation.
     //For now, just using the new option
@@ -91,12 +112,9 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(ComputationInput& in
     mb.compute_xi2(pres.hom_dims);
     
     //TODO: In the new code, the Presentation class keeps its own public hom_dims matrix,
-    //so the one stored by the objct named result is no longer necessary.
+    //so the one stored by the object named "result" is no longer necessary.
     //However, for compatibility with the old Betti number algorithm, for now I am keeping the latter.
-    //Think later about a nicer way to do this.  Of course, the Presentation constructor could take hom_dims
-    //as an argument.  This would be more uniform, but it seems odd structurally.
-    //Is it possible make result a local variable to this function, initialized only if we are using the old
-    //Betti number algorithm?
+    //A more uniform way to do this would be to also make the hom_dims a public member of MultiBetti.
     result->homology_dimensions = pres.hom_dims;
     
     //Now that I've copied the hom_dims matrix, I might as well make the original one trivial.
@@ -123,9 +141,8 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(ComputationInput& in
     
     //Copy pres into an FIRep object and use this going forward
     //TODO: This copy operation is unnecessary; eventually it shouldn't happen.
-    //I think the best solution is to make persistence updater take a presentation.
+    //The best solution is to make persistence updater take a presentation.
     FIRep fir(pres, verbosity);
-    fir.print();
     
     ArrangementBuilder builder(verbosity);
 
