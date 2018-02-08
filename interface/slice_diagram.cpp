@@ -279,6 +279,7 @@ bool SliceDiagram::is_created()
 //resizes diagram to fill the QGraphicsView
 void SliceDiagram::resize_diagram()
 {
+
     //parameters
     int scene_padding = 30; //pixels
     int text_padding = 5; //pixels

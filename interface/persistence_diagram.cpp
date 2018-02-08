@@ -109,6 +109,7 @@ void PersistenceDiagram::create_diagram()
 //resizes diagram to fill the QGraphicsView; called after every window resize
 void PersistenceDiagram::resize_diagram(double slice_length, double diagram_scale)
 {
+
     line_size = slice_length / sqrt(2); //divide by sqrt(2) because the line is drawn at a 45-degree angle
     scale = diagram_scale / sqrt(2); //similarly, divide by sqrt(2)
 

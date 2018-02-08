@@ -76,6 +76,9 @@ VisualizationWindow::VisualizationWindow(InputParameters& params)
     ui->pdView->scale(1, -1);
     ui->pdView->setRenderHint(QPainter::Antialiasing);
 
+
+
+
     //connect signal from DataSelectDialog to start the computation
     QObject::connect(&ds_dialog, &DataSelectDialog::dataSelected, this, &VisualizationWindow::start_computation);
 
@@ -134,16 +137,12 @@ void VisualizationWindow::start_computation()
 void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMessage> points)
 {
 
-    qDebug()<<"in paint_template_points, angle="<<angle_precise;
     qDebug() << "VisualizationWindow: Received template points";
 
     template_points = points;
 
     //first load our local copies of the data
     grades = Grades(template_points->x_exact, template_points->y_exact);
-
-    qDebug()<<"in paint_template_points, grades.x.front="<<grades.x.front()<<"grades.x.back="<<grades.x.back();
-    qDebug()<<"grades.y.front="<<grades.y.front()<<"grades.y.back="<<grades.y.back();
 
 
 
