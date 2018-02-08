@@ -233,13 +233,17 @@ void PersistenceDiagram::draw_dots()
     //EVIL "magic number"
     double slice_line_len = line_size / scale;
 
+    double eps=pow(10.0,-3.0); //"wiggle room" to account for rounding errors
+    //dots will be shown on the persistence diagram if they lie in the epsilon-neighborhood of the diagram
+    //otherwise they will appear on one of the counters
+
+
     //loop over all bars
     for (std::multiset<MultiBar>::iterator it = barcode->begin(); it != barcode->end(); ++it) {
 
         if (it->death == std::numeric_limits<double>::infinity()) //essential cycle (visualized in the upper horizontal strip of the persistence diagram)
         {
             double birth = it->birth;
-
             //check to see if a dot already exists in its position
             int x_pixel = std::round(birth * scale);
 
@@ -256,12 +260,12 @@ void PersistenceDiagram::draw_dots()
                 inf_dot_map.insert(std::pair<int, PersistenceDot*>(x_pixel, dot));
 
                 //position dot properly
-                if (birth - dist_to_origin > max_line_length) //it is an essential cycle born too late
+                if (birth - dist_to_origin > max_line_length+eps) //it is an essential cycle born too late
                 {
                     num_big_cycles += it->multiplicity;
                     inf_dot_map.insert(std::pair<int, PersistenceDot*>(x_pixel, dot));
                     dot->setVisible(false);
-                } else if (birth < dist_to_origin) //it is an essential cycle born too early
+                } else if (birth < dist_to_origin-eps) //it is an essential cycle born too early
                 {
                     num_long_essential_points += it->multiplicity;
                     gt_neg_inf_dot_map.insert(std::pair<int, PersistenceDot*>(x_pixel, dot));
@@ -281,10 +285,10 @@ void PersistenceDiagram::draw_dots()
                 dots_by_bc_index.push_back(dot); //necessary for dot lookup when persistence bars are highlighted
                 dot->add_index(bc_index);
 
-                if (birth - dist_to_origin > max_line_length) //it is an essential cycle born too late
+                if (birth - dist_to_origin > max_line_length+eps) //it is an essential cycle born too late
                 {
                     num_big_cycles += it->multiplicity;
-                } else if (birth < dist_to_origin) //it is an essential cycle born too early
+                } else if (birth < dist_to_origin-eps) //it is an essential cycle born too early
                 {
                     num_long_essential_points += it->multiplicity;
                 }
@@ -294,7 +298,7 @@ void PersistenceDiagram::draw_dots()
             double birth = it->birth;
             double death = it->death;
 
-            if (birth < dist_to_origin && death - dist_to_origin < max_line_length) //dot is in the gt_neg_inf strip
+            if (birth < dist_to_origin-eps && death - dist_to_origin < max_line_length+eps) //dot is in the gt_neg_inf strip
             { //born too early, but does not die too late (might die too early)
 
                 int y_pixel = std::round(death * scale);
@@ -309,7 +313,7 @@ void PersistenceDiagram::draw_dots()
                     dots_by_bc_index.push_back(dot);
                     gt_neg_inf_dot_map.insert(std::pair<int, PersistenceDot*>(y_pixel, dot));
 
-                    if (death < dist_to_origin) //dies too early
+                    if (death < dist_to_origin-eps) //dies too early
                     {
                         num_short_cycles += it->multiplicity;
                         dot->setVisible(false);
@@ -327,7 +331,7 @@ void PersistenceDiagram::draw_dots()
                     dots_by_bc_index.push_back(dot); //necessary for dot lookup when persistence bars are highlighted
                     dot->add_index(bc_index);
 
-                    if (death < dist_to_origin) //dies too early
+                    if (death < dist_to_origin-eps) //dies too early
                     {
                         num_short_points += it->multiplicity;
                     }
@@ -335,7 +339,7 @@ void PersistenceDiagram::draw_dots()
 
             }
 
-            else if (birth > dist_to_origin && death - dist_to_origin > max_line_length) //dies too late and not born too early (might be born too late)
+            else if (birth > dist_to_origin-eps && death - dist_to_origin > max_line_length+eps) //dies too late and not born too early (might be born too late)
             {
 
                 //check to see if a dot already exists in its position
@@ -352,7 +356,7 @@ void PersistenceDiagram::draw_dots()
                     dots_by_bc_index.push_back(dot);
                     lt_inf_dot_map.insert(std::pair<int, PersistenceDot*>(x_pixel, dot));
 
-                    if (birth - dist_to_origin > max_line_length) //born too late
+                    if (birth - dist_to_origin > max_line_length+eps) //born too late
                     {
                         num_big_points += it->multiplicity;
                         dot->setVisible(false);
@@ -370,12 +374,12 @@ void PersistenceDiagram::draw_dots()
                     dots_by_bc_index.push_back(dot); //necessary for dot lookup when persistence bars are highlighted
                     dot->add_index(bc_index);
 
-                    if (birth - dist_to_origin > max_line_length) //born too late
+                    if (birth - dist_to_origin > max_line_length+eps) //born too late
                     {
                         num_big_points += it->multiplicity;
                     }
                 }
-            } else if (birth < dist_to_origin && death - dist_to_origin > max_line_length) //born too early, dies too late
+            } else if (birth < dist_to_origin-eps && death - dist_to_origin > max_line_length+eps) //born too early, dies too late
             { //dot is a long nonessential cycle, and contributes to the counter at the intersection of lt_inf and gt_neg_inf
 
                 int x_pixel = std::round(birth * scale);

@@ -374,14 +374,13 @@ void SliceDiagram::resize_diagram()
 
     //reposition bars
 
-    double offset_scale = 1; //(pow(data_xmax-data_xmin,2.0)+pow(data_ymax-data_ymin,2.0))/(pow(original_xmax-original_xmin,2.0)+pow(original_ymax-original_ymin,2.0));
     unsigned count = 1;
     for (unsigned i = 0; i < bars.size(); i++) {
         for (std::list<PersistenceBar*>::iterator it = bars[i].begin(); it != bars[i].end(); ++it) {
             double start = (*it)->get_start();
             double end = (*it)->get_end();
-            std::pair<double, double> p1 = compute_endpoint(start, (count * 1.0) * offset_scale);
-            std::pair<double, double> p2 = compute_endpoint(end, (count * 1.0) * offset_scale);
+            std::pair<double, double> p1 = compute_endpoint(start, count );
+            std::pair<double, double> p2 = compute_endpoint(end, count);
             (*it)->set_line(p1.first, p1.second, p2.first, p2.second);
             count++;
         }
@@ -524,14 +523,13 @@ void SliceDiagram::zoom_diagram(double angle, double offset, double distance_to_
 
     if (line_visible) {
         //reposition bars
-        double offset_scale = 1; //(pow(data_xmax-data_xmin,2.0)+pow(data_ymax-data_ymin,2.0))/(pow(original_xmax-original_xmin,2.0)+pow(original_ymax-original_ymin,2.0));
         unsigned count = 1;
         for (unsigned i = 0; i < bars.size(); i++) {
             for (std::list<PersistenceBar*>::iterator it = bars[i].begin(); it != bars[i].end(); ++it) {
                 double start = (*it)->get_start();
                 double end = (*it)->get_end();
-                std::pair<double, double> p1 = compute_endpoint(start, offset_scale * (count * 1.0));
-                std::pair<double, double> p2 = compute_endpoint(end, offset_scale * (count * 1.0));
+                std::pair<double, double> p1 = compute_endpoint(start, count);
+                std::pair<double, double> p2 = compute_endpoint(end, count);
                 (*it)->set_line(p1.first, p1.second, p2.first, p2.second);
                 count++;
             }
@@ -726,7 +724,6 @@ void SliceDiagram::update_window_controls(bool from_dot)
     //remember whether the source of this change is the move of a ControlDot
     control_dot_moved = from_dot;
 
-
     //send updates
     emit set_line_control_elements(angle, offset);
 
@@ -773,14 +770,13 @@ void SliceDiagram::draw_barcode(Barcode const& bc, bool show)
     bars.resize(bc.size());
     int num_bars = 1;
     unsigned index = 0;
-    double offset_scale = 1; //(pow(data_xmax-data_xmin,2.0)+pow(data_ymax-data_ymin,2.0))/(pow(original_xmax-original_xmin,2.0)+pow(original_ymax-original_ymin,2.0));
     for (std::multiset<MultiBar>::iterator it = bc.begin(); it != bc.end(); ++it) {
         double start = it->birth;
         double end = it->death;
 
         for (unsigned i = 0; i < it->multiplicity; i++) {
-            std::pair<double, double> p1 = compute_endpoint(start, (num_bars * 1.0) * offset_scale);
-            std::pair<double, double> p2 = compute_endpoint(end, (num_bars * 1.0) * offset_scale);
+            std::pair<double, double> p1 = compute_endpoint(start, num_bars );
+            std::pair<double, double> p2 = compute_endpoint(end, num_bars );
 
             PersistenceBar* bar = new PersistenceBar(this, config_params, start, end, index);
             bar->set_line(p1.first, p1.second, p2.first, p2.second);
@@ -817,22 +813,28 @@ void SliceDiagram::update_barcode(Barcode const& bc, bool show)
 //computes an endpoint of a bar in the barcode
 std::pair<double, double> SliceDiagram::compute_endpoint(double coordinate, unsigned offset)
 {
+    //the commented code is for keeping the spacing constant in data units
+    //as is, the spacing is constant in pixel units
+
+
+
     //difference in offset between consecutive bars (pixel units)
-    int old_step_size = config_params->persistenceBarWidth + config_params->persistenceBarSpace;
+    //int old_step_size = config_params->persistenceBarWidth + config_params->persistenceBarSpace;
 
     //this is expressed in terms of the original window
-    double dx = data_xmax - data_xmin;
-    double dy = data_ymax - data_ymin;
-    double dx0 = original_xmax - original_xmin;
-    double dy0 = original_ymax - original_ymin;
-    double offset_angle = PI / 2;
-    if (!line_vert) {
-        offset_angle = PI / 2 + atan(line_slope);
-    }
-    double conversion = sqrt((pow(cos(offset_angle) / dx, 2.0) + pow(sin(offset_angle) / dy, 2.0)) / (pow(cos(offset_angle) / dx0, 2.0) + pow(sin(offset_angle) / dy0, 2.0)));
+    //double dx = data_xmax - data_xmin;
+    //double dy = data_ymax - data_ymin;
+    //double dx0 = original_xmax - original_xmin;
+    //double dy0 = original_ymax - original_ymin;
+    //double offset_angle = PI / 2;
+    //if (!line_vert) {
+    //    offset_angle = PI / 2 + atan(line_slope);
+    //}
+    //double conversion = sqrt((pow(cos(offset_angle) / dx, 2.0) + pow(sin(offset_angle) / dy, 2.0)) / (pow(cos(offset_angle) / dx0, 2.0) + pow(sin(offset_angle) / dy0, 2.0)));
 
-    int step_size = old_step_size * conversion;
+    //int step_size = old_step_size * conversion;
 
+    int step_size=config_params->persistenceBarWidth + config_params->persistenceBarSpace;
     //compute x and y relative to slice line (pixel units)
     double x = 0;
     double y = 0;
