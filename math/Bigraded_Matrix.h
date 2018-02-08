@@ -40,6 +40,10 @@ public:
     //Compute the kernel of this bigraded matrix via a standard reduction:
     //Note: This destroys the matrix.
     BigradedMatrix kernel();
+
+    void print();
+    
+    
     
 private:
 
@@ -65,6 +69,8 @@ public:
         : mat(rows,cols),
         ind(ind_rows,ind_cols)
     {}
+    
+    void print();
 };
 
 

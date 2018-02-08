@@ -72,12 +72,16 @@ public:
     
     void print() const; //prints the matrix
     
+    //print the colex-ordered vector of bigrades that this object represents
+    void print_bigrades_vector() const;
+    
 protected:
     unsigned num_rows;
     unsigned num_cols;
     std::vector<int> data;
 };
 
+//Same as parent class but uses the lex order.
 class IndexMatrixLex : public IndexMatrix {
 public:
     //Initialize each entry in the matrix to be -1.
@@ -85,6 +89,9 @@ public:
     
     //definition of start_index is different than for the parent class
     int start_index(unsigned row, unsigned col);
+    
+    //print the lex-ordered vector of bigrades that this object represents
+    void print_bigrades_vector() const;
 };
 
 

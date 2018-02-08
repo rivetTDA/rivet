@@ -21,9 +21,15 @@ Presentation::Presentation(FIRep fir, Progress& progress)
     
     //ensure hom_dims is the correct size
     //note that unlike the IndexMatrices, is indexed by x-coordinate first, then y-coordinate.  This discrepancy seems a bit strange, but follows the exisiting convention.
-    //TODO: Why does this use a boost multi-array, when the IndexMatrix class uses a custom multi-array?
     hom_dims.resize(boost::extents[fir.high_mx.ind.width()][fir.high_mx.ind.height()]);
-
+    
+    bool is_debugging = false;
+    
+    
+    std::cout<< "High Matrix" << std::endl;
+    if (is_debugging)
+        fir.high_mx.print();
+    
     //Compute a minimal set of generators for the image of the high matrix.  Also compute pointwise ranks for the high matrix.
     //This is done by simple version of the standard reduction.
     //TODO: later, this will be modified to also yield clearing data.
@@ -35,11 +41,30 @@ Presentation::Presentation(FIRep fir, Progress& progress)
     //High matrix in the FIRep is no longer needed.  Replace it with something trivial.
     fir.high_mx.mat=MapMatrix(0,0);
     
+    if (is_debugging)
+    {
+        std::cout<< "Reduced High Matrix" << std::endl;
+        high_min_gens.print();
+    }
+        
     //Compute the kernel of the low matrix.
     //TODO: later, this will be modified to take advantage of clearing data.
     //TODO: I guess then that the kernel method might belong in the presentation class.
+    
+    if (is_debugging)
+    {
+        std::cout<< "Low Matrix" << std::endl;
+        fir.low_mx.print();
+    }
+    
     BigradedMatrix low_kernel = fir.low_mx.kernel();
     
+    if (is_debugging)
+    {
+        std::cout << "low_kernel: " << std::endl;
+        low_kernel.print();
+    }
+        
     progress.progress(55);
     
     //TODO: This step requires to copy the IndexMatrix.  Restructure to avoid this unnecessary copying?
@@ -51,14 +76,9 @@ Presentation::Presentation(FIRep fir, Progress& progress)
     
     //set hom_dims to its final value.
     //proceed in lexicographical order
-    for (unsigned x = 0; x < col_ind.width(); x++)
-    {
-        for (unsigned y = 0; y < col_ind.height(); y++)
-        {
-            //before this line is executed hom_dims[x][y] is equal to the pointwise rank of the high matrix in the firep at (x,y)
-            hom_dims[x][y]= low_kernel.ind.num_columns_leq(y,x) - hom_dims[x][y];
-        }
-    }
+    
+    //Given that hom_dims contains the pointwise ranks of the high map, set each entry to its final value.
+    compute_hom_dims(low_kernel.ind);
     
     //set the matrix to be the right size.
     mat = MapMatrix(low_kernel.mat.width(),high_min_gens.mat.width());
@@ -67,6 +87,12 @@ Presentation::Presentation(FIRep fir, Progress& progress)
     //Result is stored in mat and col_ind.
     kernel_coordinates(high_min_gens, low_kernel);
     
+    if (is_debugging)
+    {
+        std::cout << "unminimized presentation matrix: " << std::endl;
+        print();
+    }
+        
     //emit progress message
     progress.progress(70);
 }
@@ -104,13 +130,14 @@ void Presentation::min_gens_and_clearing_data_one_bigrade(BigradedMatrix& old_hi
     MapMatrix& mx= old_high.mat;
     
     int first_col=old_high.ind.start_index(curr_y,0);
+    int first_col_curr_bigrade=old_high.ind.start_index(curr_y,curr_x);
     int last_col=old_high.ind.get(curr_y,curr_x);
+    
+    if (curr_y>0)
+        hom_dims[curr_x][curr_y]=hom_dims[curr_x][curr_y-1];
     
     //take each column with index in [first_col,last_col] to be a pivot column.
     for (int j = first_col; j <= last_col; j++) {
-        
-        if (curr_y>0)
-            hom_dims[curr_x][curr_y]=hom_dims[curr_x][curr_y-1];
         
         changing_column = false;
         l=mx.low_finalized(j);
@@ -128,7 +155,8 @@ void Presentation::min_gens_and_clearing_data_one_bigrade(BigradedMatrix& old_hi
             mx.add_column_popped(c, j);
             l = mx.remove_low(j);
         }
-        
+    
+    
         if (l != -1) //column is still nonempty
         {
             //if we changed the column, we have to put back the last entry we popped.
@@ -139,11 +167,13 @@ void Presentation::min_gens_and_clearing_data_one_bigrade(BigradedMatrix& old_hi
             
             lows[l] = j;
             
-            //copy this column into the new matrix.
-            new_high.mat.append_col(mx,j);
+            //NOTE: Could be *lightly more efficient if the for loop was split into two parts, so that we didn't have to check this condition, but this may not be worth it.
+            if (j >= first_col_curr_bigrade) {
+                //copy this column into the new matrix.
+                new_high.mat.append_col(mx,j);
+            }
             
             hom_dims[curr_x][curr_y]++;
-            
         }
     } // reductions complete
     
@@ -157,7 +187,8 @@ void Presentation::kernel_coordinates(BigradedMatrixLex& high_mat, const Bigrade
 {
     //create and initialize the low array
     std::vector<int> ker_lows(kernel.mat.height(),-1);
-    for (unsigned i = 0; i < kernel.mat.height(); i++)
+    
+    for (unsigned i = 0; i < kernel.mat.width(); i++)
     {
         ker_lows[kernel.mat.low_finalized(i)] = i;
     }
@@ -181,28 +212,46 @@ void Presentation::kernel_coordinates_one_bigrade(BigradedMatrixLex& high_mat, c
     int l;
     MapMatrix& hi_mx = high_mat.mat;
     
-    int first_col = high_mat.ind.start_index(curr_y,0);
+    int first_col = high_mat.ind.start_index(curr_y,curr_x);
     int last_col = high_mat.ind.get(curr_y,curr_x);
+    
+    //std::cout << "first_col: "<< first_col << "\n";
+    //std::cout << "last_col: "<< last_col << "\n";
+    //std::cout << "number_of_cols: "<< hi_mx.width() << "\n";
     
     //take each column with index in [first_col,last_col] to be a pivot column.
     for (int j = first_col; j <= last_col; j++) {
 
         l=hi_mx.remove_low(j);
         
+        //std::cout << "removed low: " << l << " entering while loop. "<<"\n";
+        
         //reduce the jth column to zero, storing the reduction indices in ker_mx.
         while (l != -1 ) {
             c = ker_lows[l];
+            
+            //std::cout << "got column with colliding pivot!"<<"\n";
             
             //add column c of kernel matrix to column j of the high_matrix.
             //TODO: WRONG FUNCTION.
             hi_mx.add_column_popped(kernel.mat,c, j);
             
+            //std::cout << "added columns!"<<"\n";
+            
             //add c to num_cols_added^{th} column of mat.
+            
+            
             mat.set(c,num_cols_added);
+            
+            //std::cout << "updated vector of new coords!!"<<"\n";
             
             //remove next element of jth column of high_mat
             l = hi_mx.remove_low(j);
+            
+            //std::cout << "removed next pivot!"<<"\n";
         }
+        
+        //std::cout << "finished with while loop!  Column is zeroed out!!"<<"\n";
         
         //column of high_mat is now empty and the corresponding column has been added to mat.
         
@@ -230,6 +279,9 @@ void Presentation::minimize()
     if (! is_kernel_minimal)
         throw std::runtime_error("Presentation::minimize() : Presentation is not kernel minimal.\n");
     
+    //new index matrix
+    IndexMatrix row_ind_new(row_ind.height(),row_ind.width());
+    
     //new_row_indices[i] stores the new index in the minimal presentation corresponding to the row index i in the unminimized presentation.
     std::vector<int> new_row_indices(mat.height(),0);
     
@@ -238,12 +290,11 @@ void Presentation::minimize()
         mat.sort_col(i);
     
     //stores the next place we should move a column that we are not minimizing.
-    unsigned num_cols_kept = 0;
+    int num_cols_kept = 0;
     
     //variables to work with index matrices
     Grade curr_grade(0,0);
     Grade prev_grade(0,0);
-    unsigned last_index = -1;
     
     int pivot_i;
     
@@ -252,50 +303,76 @@ void Presentation::minimize()
     
     for (unsigned i = 0; i < mat.width(); i++)
     {
+        
+        //std::cout << "i: " << i << std::endl;
+        //row_ind.print();
+        //print();
+        
         //get the grade of the ith column
         while (col_ind.get(curr_grade.y,curr_grade.x) < (int) i)
             col_ind.next_colex(curr_grade.y,curr_grade.x);
         //after exiting the while loop, curr_grade is equal to the bigrade of column i.
         
         //decide whether the grade of ith column and that of pivot_i are equal
-        pivot_i = mat.low(i);
+        pivot_i = mat.low_sorted(i);
         
-        if ( pivot_i >= row_ind.start_index(curr_grade.y,curr_grade.x)) {
+        //std::cout << "Pivot is: " << pivot_i << std::endl;
+        //std::cout << "Current Bigrade is: " << curr_grade.x << " , " << curr_grade.y << std::endl;
+        //std::cout << "row_ind.start_index(curr_grade.y,curr_grade.x): " << row_ind.start_index(curr_grade.y,curr_grade.x) << std::endl;
+        if (row_index_has_matching_bigrade(pivot_i,curr_grade.y,curr_grade.x))
+        {
             //if we're here then the grades of the column and pivot match
+            //std::cout << "grades of pivot and column match.  Will remove!" << i << std::endl;
+            
+            
+            //std::cout << "grades match at column " << i << std::endl;
             
             //mark pivot_i for removal from row indices
             new_row_indices[pivot_i] = -1;
             
-            //zero out the part of the row pivot_i to the right of i
+            //zero out the part of the row pivot_i to the right of i.
+            //the part of the row to the left is already zero, since if it was ever non-zero
             for(unsigned j = i+1; j < mat.width(); j++ ) {
                 
                 if (mat.entry_sorted(pivot_i,j)) {
                     //if we're here then pivot_i is contained in column j
                     //add column i to column j to clear pivot_i.
+                    
                     mat.add_column_sorted(i,j);
+                
                 }
             }
+        
+            //Note that this function also updates prev_grade to be equal to curr_grade
+            update_col_and_row_inds(row_ind_new, prev_grade, curr_grade, num_cols_kept-1);
         }
+        
         else
         {
             
             //if we get here then the grades of the column and pivot don't match
-            //We move this column to the appropriate place and update in IndexMatrix accordingly
+            //std::cout << "grades of pivot and column do not match.  Will move to correct place!" << i << std::endl;
             
+            //We move this column to the appropriate place and update in IndexMatrix accordingly
             
             //move column i to index num_cols_kept
             mat.move_col(i,num_cols_kept);
             
-            //Now update the IndexMatrix row_ind.
-            update_col_and_row_inds(prev_grade, curr_grade, num_cols_kept);
+            //Note that this function also updates prev_grade to be equal to curr_grade
+            update_col_and_row_inds(row_ind_new, prev_grade, curr_grade, num_cols_kept-1);
             
+            //Now update the IndexMatrix row_ind.
             num_cols_kept++;
-            last_index = i;
         }
     }
     
+    //finish updating the row and column indices
+    update_col_and_row_inds(row_ind_new, curr_grade, Grade(0,col_ind.height()), num_cols_kept-1);
+    row_ind=row_ind_new;
+    
     unsigned new_height=mat.height()-(mat.width()-num_cols_kept);
     
+    //Compute the reindexing vector.
     unsigned next_index=0;
     for (unsigned i=0; i<new_row_indices.size(); i++) {
         if (new_row_indices[i] != -1)
@@ -305,38 +382,133 @@ void Presentation::minimize()
         }
     }
     
-    //resize the matrix
-    mat.resize(new_height,num_cols_kept);
+    bool is_debugging = false;
     
-    //replace row indices with new ones
+    if (is_debugging)
+    {
+        std::cout << "num_cols_kept: " << num_cols_kept << std::endl;
+        std::cout << "mat before resizing" << std::endl;
+        print();
+    }
+    
+    //trim the unneeded columns
+    mat.resize(mat.height(),num_cols_kept);
+    
+    if (is_debugging)
+    {
+        std::cout << "mat before reindexing" << std::endl;
+        print();
+    }
+    
+    //replace old row indices with new ones
     reindex_min_pres(new_row_indices);
     
+    //trim the unneeded rows.  (This amounts to just changing a stored number.)
+    mat.resize(new_height,num_cols_kept);
+    
+    if (is_debugging)
+    {
+        std::cout << "mat after reindexing" << std::endl;
+        print();
+    }
+
     //we've finished minimizing the presentation
     is_minimized = true;
 }
 
-void Presentation::update_col_and_row_inds(Grade& start_grade, const Grade& end_grade, const unsigned& value)
+//Technical function for constructing hom_dims at all indices from an FIRep.  Used by the Presentation constructor.
+void Presentation::compute_hom_dims(const IndexMatrix& ind)
 {
-    Grade& current_grade = start_grade;
-    while (! (current_grade == end_grade) )
+    //to compute the pointwise dimension of the kernel at index (i,j), I need this quantity at (i,j-1).
+    //We store the values at the previous row in the following vector.
+    std::vector<unsigned> ker_dims_prev_row(col_ind.width(),0);
+    
+    //compute hom dims_along bottom row, and initialize ker_dims_prev_row
+    for (unsigned x = 0; x < col_ind.width(); x++)
     {
-        //decrement value of row_ind at (x,y) by the appropriate amount
-        row_ind.set(current_grade.y, current_grade.x, row_ind.get(current_grade.y,current_grade.x)-((col_ind.get(current_grade.y,current_grade.x)-value)));
-        
-        //set value of col_ind at (x,y)
-        col_ind.set(current_grade.y, current_grade.x,value);
-        
-        //increment w.r.t. colex order on the grid of bigrades.
-        col_ind.next_colex(current_grade.y, current_grade.x);
+        ker_dims_prev_row[x] = ind.get(0, x)+1;
+        hom_dims[x][0]= ker_dims_prev_row[x] - hom_dims[x][0];
+    }
+
+    for (unsigned y = 1; y < col_ind.height(); y++)
+    {
+        for (unsigned x = 0; x < col_ind.width(); x++)
+        {
+            //before this line is executed, hom_dims[x][y] is equal to the pointwise rank of the high matrix in the firep at (x,y)
+            ker_dims_prev_row[x] = ind.get(y,x) - ker_dims_prev_row[col_ind.width()-1] + ker_dims_prev_row[x] + 1;
+            hom_dims[x][y]=ker_dims_prev_row[x] - hom_dims[x][y];
+        }
     }
 }
 
+void Presentation::update_col_and_row_inds(IndexMatrix& row_ind_new, Grade& start_grade, const Grade& end_grade, const int& value)
+{
+    Grade& gr = start_grade;
+    while (! (gr == end_grade) )
+    {
+        //decrement value of row_ind at (x,y) by the appropriate amount
+        row_ind_new.set(gr.y, gr.x, row_ind.get(gr.y, gr.x)-((col_ind.get(gr.y, gr.x)-value)));
+        
+        //set value of col_ind at (x,y)
+        col_ind.set(gr.y, gr.x, value);
+        
+        //increment w.r.t. colex order on the grid of bigrades.
+        col_ind.next_colex(gr.y, gr.x);
+    }
+}
+
+//Technical function used by Presentation::minimize()
 void Presentation::reindex_min_pres(const std::vector<int>& new_row_indices)
 {
     for (unsigned i=0; i < mat.width(); i++)
     {
         mat.reindex_column(i,new_row_indices);
     }
+}
+
+//Technical function by Presentation::minimize()
+//NOTE: Works correctly only in the setting in which the function is used.
+//In that setting j will have bigrade AT MOST (row, col) w.r.t the order on R^2.
+bool Presentation::row_index_has_matching_bigrade(int j, unsigned row, unsigned col)
+{
+    if (j!= row_ind.last())
+    {
+        return j >= row_ind.start_index(row,col);
+    }
+    else
+    {
+        //it could be that j is the only row_index appearing at bigrade (row,col).
+        if (col > 0)
+        {
+            //std::cout << "Hey hey" << std::endl;
+            //std::cout << "j: " << j << std::endl;
+            //std::cout << "row: " << row << std::endl;
+            //std::cout << "col: " << col << std::endl;
+            //std::cout << "row_ind.get(row,col-1): " << row_ind.get(6,5) << std::endl;
+            return j > row_ind.get(row,col-1);
+        }
+        else
+        {
+            if (row > 0)
+            {
+                return j>row_ind.get(row-1,row_ind.width()-1);
+            }
+            else
+            {
+                //If bigrade of j is at most (0,0), then it is exactly (0,0)
+                return true;
+            }
+        }
+    }
+}
+
+void Presentation::print()
+{
+    std::cout << "Row bigrades: " << std::endl;
+    row_ind.print_bigrades_vector();
+    std::cout << "Column bigrades " << std::endl;
+    col_ind.print_bigrades_vector();
+    mat.print();
 }
 
 

@@ -86,6 +86,8 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(ComputationInput& in
     //TODO: Introduce an option to use either the old or new Betti number computation.
     //For now, just using the new option
     //mb.compute_koszul(result->homology_dimensions, progress);
+    
+    mb.read_betti(pres,result->homology_dimensions);
     mb.compute_xi2(pres.hom_dims);
     
     //TODO: In the new code, the Presentation class keeps its own public hom_dims matrix,
@@ -99,7 +101,7 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(ComputationInput& in
     
     //Now that I've copied the hom_dims matrix, I might as well make the original one trivial.
     pres.hom_dims.resize(boost::extents[0][0]);
-
+    
     if (verbosity >= 2) {
         debug() << "  -- xi_i computation took " << timer.elapsed() << " milliseconds";
     }
@@ -123,8 +125,11 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(ComputationInput& in
     //TODO: This copy operation is unnecessary; eventually it shouldn't happen.
     //I think the best solution is to make persistence updater take a presentation.
     FIRep fir(pres, verbosity);
+    fir.print();
     
     ArrangementBuilder builder(verbosity);
+
+    
     auto arrangement = builder.build_arrangement(fir, input.x_exact, input.y_exact, result->template_points, progress); ///TODO: update this -- does not need to store list of xi support points in xi_support
     //NOTE: this also computes and stores barcode templates in the arrangement
 

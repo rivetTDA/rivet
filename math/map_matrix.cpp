@@ -155,7 +155,7 @@ void MapMatrix::resize(unsigned num_cols)
     matrix._set_num_cols(num_cols);
 }
 
-//resize the matrix to the specified number of columns
+//resize the matrix to the specified number of rows and columns
 void MapMatrix::resize(unsigned n_rows, unsigned n_cols)
 {
     resize(n_cols);
@@ -260,16 +260,25 @@ void MapMatrix::finalize(unsigned i)
 //Move column with index source to index target, zeroing out this column source in the process.
 void MapMatrix::move_col(unsigned source, unsigned target)
 {
-    matrix._move_column(source, target);
+    matrix._move_col(source, target);
 }
 
+//Move the ith column of other to jth this matrix, zeroing out ith column of other in the process.
+void MapMatrix::move_col(MapMatrix& other, unsigned i, unsigned j)
+{
+    matrix._move_col(*(other.matrix._get_col_iter(i)),j);
+    
+}
+
+//TODO:I think and the related functions can be removed.
+/*
 //Move the jth column of other to the back of this matrix, zeroing out this column of other in the process.
-void MapMatrix::move_col(MapMatrix& other, unsigned j)
+void MapMatrix::append_col_and_clear(MapMatrix& other, unsigned j)
 {
     matrix._append_col_and_clear(*(other.matrix._get_col_iter(j)));
     
 }
-
+*/
 
 /********* Methods used to minimize a presentation *********/
 
@@ -356,6 +365,7 @@ void MapMatrix::remove_zero_cols(const IndexMatrix& ind_old, IndexMatrix& ind_ne
 void MapMatrix::print()
 {
     matrix._print(num_rows);
+    //std::cout << "MapMatrix::print() finished call to _print!" << std::endl;
 } //end print()
 
 
@@ -373,6 +383,10 @@ bool MapMatrix::entry_sorted(unsigned i, unsigned j) const {
     return matrix._is_in_matrix_sorted(i,j);
 }
 
+//returns entry of column i with largest index, if the column is non empty.  Returns -1 otherwise.
+int MapMatrix::low_sorted(unsigned i) const {
+    return matrix._get_max_index_sorted(i);
+}
 
 
 

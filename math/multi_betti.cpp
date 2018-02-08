@@ -76,18 +76,20 @@ MultiBetti::MultiBetti(const FIRep& fir)
 } //end constructor
 
 //Reads the 0th and 1st Betti numbers off of a minimal presentation.
-void MultiBetti::read_betti(const Presentation & pres)
+void MultiBetti::read_betti(const Presentation & pres, unsigned_matrix& hom_dims)
 {
-    int prev_row_count = 0;
-    int prev_col_count = 0;
-    for (unsigned x = 0; x < num_x_grades; x++)
+    hom_dims.resize(boost::extents[num_x_grades][num_y_grades]);
+    
+    unsigned prev_row_count = 0;
+    unsigned prev_col_count = 0;
+    for (unsigned y = 0; y < num_y_grades; y++)
     {
-        for (unsigned y = 0; y < num_y_grades; y++)
+        for (unsigned x = 0; x < num_x_grades; x++)
         {
             xi[x][y][0] = pres.row_ind.get(y,x)+1-prev_row_count;
             prev_row_count = pres.row_ind.get(y,x)+1;
         
-            xi[x][y][1]= xi[x][y][0]=pres.col_ind.get(y,x)+1-prev_col_count;
+            xi[x][y][1] = pres.col_ind.get(y,x)+1-prev_col_count;
             prev_col_count = pres.col_ind.get(y,x)+1;
         }
     }

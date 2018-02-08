@@ -438,10 +438,10 @@ unsigned FIRep::num_y_grades() const
 //Print the matrices and appearance grades
 void FIRep::print()
 {
-    low_mx.mat.print();
-    low_mx.ind.print();
-    high_mx.mat.print();
-    high_mx.ind.print();
+    std::cout << "low matrix: " << std::endl;
+    low_mx.print();
+    std::cout << "high matrix: " << std::endl;
+    high_mx.print();
 }
 
 

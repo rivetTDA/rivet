@@ -58,6 +58,8 @@ public:
     
     void minimize();
     
+    void print();
+    
 private:
   
     bool is_minimized; //True iff this presentation has been minimized.  Note that presentation might be minimal even if it hasn't been explicitly minimized
@@ -90,17 +92,23 @@ private:
     //Reduce this column, putting the corresponding reduction coordinates
     void kernel_coordinates_one_bigrade(BigradedMatrixLex& high_mat, const BigradedMatrix& kernel, const unsigned& curr_x, const unsigned& curr_y, const std::vector<int>& ker_lows, unsigned& num_cols_added);
     
+    //Technical function for constructing hom_dims at all indices from an FIRep.  Used by the Presentation constructor.
+    void compute_hom_dims(const IndexMatrix& ind);
+    
     //technical utility function used by Presentation.minimize()
     //Same action as IndexMatrix::fill_index_mx() on col_ind, but also decrements each entry of a second IndexMatrix
     //in the colex interval [start_grade,end_grade) by the difference between value and the index of this index matrix.
     //To be called on the member col_ind, with row_ind_mx as the argument.
-    void update_col_and_row_inds(Grade& start_grade, const Grade& end_grade, const unsigned& value);
+    void update_col_and_row_inds(IndexMatrix& row_ind_new, Grade& start_grade, const Grade& end_grade, const int& value);
 
     
     //Technical function used to compute a minimal presetation.
     //Takes as input a minimal presentation with the non-minimal column indices (which skip some entries), and a vector giving the miminal (consecutive) column indices.
     //Replaces all indices in the matrix with the minimal column indices.
     void reindex_min_pres(const std::vector<int>& new_row_indices);
+    
+    //Technical function by Presentation::minimize()
+    bool row_index_has_matching_bigrade(int j, unsigned row, unsigned col);
     
 };
 

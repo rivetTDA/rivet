@@ -182,22 +182,28 @@ namespace phat {
         void _append_col(const column& col)
         {
             matrix.push_back(col);
-        }
-        
-        // append copy of column to back of matrix, while clearing the original column
-        void _append_col_and_clear(column& col)
-        {
-            column temp_col = column();
-            matrix.push_back(temp_col);
-            matrix[matrix.size()-1].swap(col);
+            inserts_since_last_prune.push_back(0);
         }
         
         // moves a column into another location, overwriting the column originally in that location.
-        void _move_column(index source, index target)
+        void _move_col(index source, index target)
         {
+            if (source != target)
+            {
+                column temp_col = column();
+                matrix[target].swap(temp_col);
+                matrix[target].swap(matrix[source]);
+            }
+        }
+        
+        // move column col to index idx, while clearing the original column
+        void _move_col(column& col,index idx)
+        {
+            //TODO: This is different than what PHAT does in the _prune function.  Which is better?
             column temp_col = column();
-            matrix[target].swap(temp_col);
-            matrix[target].swap(matrix[source]);
+            matrix[idx].swap(temp_col);
+            matrix[idx].swap(col);
+            inserts_since_last_prune[idx]=0;
         }
         
         // reindex column idx using the indices given in new_row_indices.
@@ -206,9 +212,9 @@ namespace phat {
             column temp_col = column();
             temp_col.reserve(matrix[idx].size());
             
-            for( index j = 0; j < (index) temp_col.size( ); j++ )
+            for( index j = 0; j < (index) matrix[idx].size(); j++ )
             {
-                temp_col.push_back(new_row_indices[ matrix[ idx ][ j ] ]);
+                temp_col.push_back(new_row_indices[matrix[idx][j]]);
             }
             matrix[idx].swap(temp_col);
         }
@@ -346,6 +352,10 @@ namespace phat {
         }
         
         // print the matrix.  since a PHAT matrix doesn't know the number of rows, this has to be passed as an argument.
+        // WARNING: For now, assumes that the column is finalized.  Otherwise, the finalization process may destroy a sorted
+        // column when minimizing a presentation.
+        // TODO: The above limitation is probably indicative of bad structure.  Revisit.
+        
         void _print( index num_rows ) {
             //Print matrix dimensions
             std::cout << num_rows << " x " << matrix.size() << " matrix:" << std::endl;
@@ -354,13 +364,13 @@ namespace phat {
             std::vector<std::vector<index>> dense_mat= std::vector<std::vector<index>>(matrix.size());
             for (unsigned i=0; i < dense_mat.size(); i++)
             {
-                //set column of to vector of num_rows zeros
+                //set column i to vector of num_rows zeros
                 dense_mat[i].resize(num_rows);
             }
             //Step 2: Set the entries of the matrix
             for (unsigned i=0; i < dense_mat.size(); i++)
             {
-                _finalize(i);
+                //_finalize(i);
                 for (unsigned j=0; j< matrix[i].size(); j++)
                 {
                     dense_mat[i][matrix[i][j]]=1;
@@ -373,7 +383,24 @@ namespace phat {
                     std::cout << dense_mat[j][i] << " ";
                 std::cout << std::endl;
             }
-            
+        }
+        
+        // print the non-zero entries of a column of the matrix.
+        // for debugging
+        void _print_sparse() {
+            for (unsigned i=0; i < matrix.size(); i ++)
+            {
+                auto col=std::vector<index>();
+                //_finalize(idx);
+                for (unsigned j=0; j< matrix[i].size(); j++)
+                {
+                    col.push_back(matrix[i][j]);
+                }
+                std::sort(col.begin(),col.end());
+                for (unsigned j=0; j < col.size(); j++)
+                    std::cout << col[j] << " ";
+                std::cout << std::endl;
+            }
         }
     
 /*** Special Functions which work properly only when the columns in question are sorted ***/
@@ -402,6 +429,12 @@ namespace phat {
     
         bool _is_in_matrix_sorted( index row, index col ) const {
             return std::binary_search(matrix[col].begin(), matrix[col].end(), row);
+        }
+        
+        index _get_max_index_sorted( index idx ) const {
+            if( matrix[ idx ].empty( ) )
+                return -1;
+            return matrix[ idx ].back();
         }
         
     };
@@ -539,6 +572,7 @@ namespace phat {
             matrix[idx].clear();
             matrix[idx].shrink_to_fit();
             matrix[idx].reserve(col.size());
+            
             for (auto it=col.begin(); it != col.end(); it++)
             {
                 if(row_perm_order[*it]>=0)

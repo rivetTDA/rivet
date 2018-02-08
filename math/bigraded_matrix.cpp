@@ -27,8 +27,11 @@ BigradedMatrix::BigradedMatrix(const MapMatrix& m, const IndexMatrix& i)
 BigradedMatrix::BigradedMatrix(BigradedMatrixLex lex_mat)
     : BigradedMatrix(lex_mat.mat.height(), lex_mat.mat.width(), lex_mat.ind.height(), lex_mat.ind.width())
 {
+    
     int first_col;
     int last_col;
+    
+    int current_index = 0;
     
     for (unsigned y = 0; y < ind.height(); y++) {
         for (unsigned x = 0; x < ind.width(); x++) {
@@ -39,10 +42,13 @@ BigradedMatrix::BigradedMatrix(BigradedMatrixLex lex_mat)
             
             //move all the columns of bigrade (x,y) from lex_mat to mat
             for (int j = first_col; j<= last_col ; j++)
-                mat.move_col(lex_mat.mat,j);
+            {
+                mat.move_col(lex_mat.mat,j,current_index);
+                current_index++;
+            }
             
             //Set the value of colex_ker.ind at x,y
-            ind.set(y,x,mat.width()-1);
+            ind.set(y,x,current_index-1);
         }
     }
     
@@ -62,7 +68,7 @@ BigradedMatrix BigradedMatrix::kernel()
      
     //The following object will store a basis for the kernel in lex order.
     
-    BigradedMatrixLex ker_lex = BigradedMatrixLex(mat.height(),0,ind.height(),ind.width());
+    BigradedMatrixLex ker_lex = BigradedMatrixLex(mat.width(),0,ind.height(),ind.width());
     
     //A column-sparse identity matrix.  Will serve as slave in the reduction.
     MapMatrix reduction_matrix = MapMatrix(mat.width());
@@ -88,11 +94,14 @@ void BigradedMatrix::kernel_one_bigrade(MapMatrix& slave, BigradedMatrixLex& ker
     bool changing_column;
     
     int first_col = ind.start_index(curr_y,0);
+    int first_col_curr_bigrade = ind.start_index(curr_y,curr_x);
     int last_col = ind.get(curr_y,curr_x);
         
     //take each column with index in [first_col,last_col] to be a pivot column.
     for (int j = first_col; j <= last_col; j++) {
         
+        //std::cout << "j: " << j<< std::endl;
+
         changing_column = false;
         l=mat.low_finalized(j);
         
@@ -104,7 +113,8 @@ void BigradedMatrix::kernel_one_bigrade(MapMatrix& slave, BigradedMatrixLex& ker
         }
     
         //while column j is nonempty and its low number is found in the low array, do column operations
-        while (l != -1 && lows[l] != -1 && lows[l] < j) {
+        while (l != -1 && lows[l] != -1 && lows[l] < j)
+        {
             c = lows[l];
             mat.add_column_popped(c, j);
             slave.add_column(c, j);
@@ -124,6 +134,7 @@ void BigradedMatrix::kernel_one_bigrade(MapMatrix& slave, BigradedMatrixLex& ker
                 mat.finalize(j);
             }
         }
+        
         else // column is empty
         {
             if (changing_column)
@@ -132,10 +143,15 @@ void BigradedMatrix::kernel_one_bigrade(MapMatrix& slave, BigradedMatrixLex& ker
                 slave.finalize(j);
                 
                 //Add the j^{th} column of slave to the back of ker_lex and zero out the corresponding column in slave
-                ker_lex.mat.move_col(slave,j);
+                ker_lex.mat.append_col(slave,j);
+            }
+            else if ( j>= first_col_curr_bigrade)
+            {
+                
+                ker_lex.mat.append_col(slave,j);
             }
         }
-    } // reductions complete
+    }  // reductions complete
     
     // to record the bigrades of the newly added generators of the kernel, we update the IndexMatrix.
     ker_lex.ind.set(curr_y, curr_x,ker_lex.mat.width()-1);
@@ -143,5 +159,15 @@ void BigradedMatrix::kernel_one_bigrade(MapMatrix& slave, BigradedMatrixLex& ker
 } //end kernel_one_bigrade()
     
 
-    
-    
+void BigradedMatrix::print()
+{
+    ind.print_bigrades_vector();
+    mat.print();
+}
+
+void BigradedMatrixLex::print()
+{
+    ind.print_bigrades_vector();
+    mat.print();
+}
+

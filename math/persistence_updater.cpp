@@ -82,23 +82,33 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<std::shared_ptr<H
     if (verbosity >= 10) {
         debug() << "  Mapping high simplices:";
     }
-    IndexMatrix* ind_high = &(fir.low_mx.ind); //again, could be improved?
+    IndexMatrix* ind_high = &(fir.high_mx.ind); //again, could be improved?
     store_multigrades(ind_high, false);
-
+    
     //get the proper simplex ordering
     std::vector<int> low_simplex_order; //this will be a map : dim_index --> order_index for dim-simplices; -1 indicates simplices not in the order
     unsigned num_low_simplices = build_simplex_order(ind_low, true, low_simplex_order);
     //delete ind_low;
     
+    debug() << "built low simplex order!!!";
+    
     std::vector<int> high_simplex_order; //this will be a map : dim_index --> order_index for (dim+1)-simplices; -1 indicates simplices not in the order
     unsigned num_high_simplices = build_simplex_order(ind_high, false, high_simplex_order);
     //delete ind_high;
 
+    debug() << "built high simplex order!!!";
+    
+    
     //get intial boundary matrices R_low and R_high for RU-decomposition.  These are permuted and trimmed,
     //as described in Section 6 of the RIVET paper.
     R_low = new MapMatrix_Perm(fir.low_mx.mat, low_simplex_order, num_low_simplices); //NOTE: must be deleted
     
+    debug() << "built R_low!!!";
+    
+    
     R_high = new MapMatrix_Perm(fir.high_mx.mat,low_simplex_order, num_low_simplices, high_simplex_order, num_high_simplices); //NOTE: must be deleted
+    
+    debug() << "built R_high!!!";
     
     //print runtime data
     if (verbosity >= 4) {

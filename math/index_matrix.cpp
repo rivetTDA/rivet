@@ -105,11 +105,10 @@ unsigned IndexMatrix::num_columns_leq(unsigned row, unsigned col)
     if (row==0 || col == num_cols-1)
         return get(row, col)+1;
     else
-        return get(row, col)-get(row-1, num_cols-1)+get(row-1,col)+1;
+        return get(row, col) - get(row-1, num_cols-1) + get(row-1,col)+1;
 }
 
-
-//function to print the matrix to standard output, for testing purposes
+//prints the matrix to standard output, for testing purposes
 void IndexMatrix::print() const
 {
     //handle empty matrix
@@ -130,6 +129,33 @@ void IndexMatrix::print() const
         qd << " |\n";
     }
 } //end print()
+
+
+void IndexMatrix::print_bigrades_vector() const
+{
+    debug() << "IndexMatrix number of columns is:" << last()+1;
+    
+    int prev_entry=-1;
+    //print the matrix
+    Debug qd = debug(true);
+    qd << "| ";
+    for (unsigned i = 0; i < num_rows; i++)
+    {
+        for (unsigned j = 0; j < num_cols; j++) {
+            //note that we use the (x,y) convention to print, not the (rows,cols) convention.
+            int curr_entry = get(i,j);
+            while (curr_entry>prev_entry)
+            {
+                qd << "(" << j << "," << i << ") ";
+                curr_entry--;
+            }
+            prev_entry = get(i,j);
+        }
+    }
+    qd << "|\n";
+} //end print()
+
+
 
 
 /********** Defs for IndexMatrixLex **********/
@@ -153,3 +179,31 @@ int IndexMatrixLex::start_index(unsigned row, unsigned col)
             return 1 + get(num_rows-1,col-1);
     }
 }
+
+void IndexMatrixLex::print_bigrades_vector() const
+{
+    debug() << "IndexMatrix number of columns is:" << last()+1;
+    
+    int prev_entry=-1;
+    //print the matrix
+    Debug qd = debug(true);
+    qd << "| ";
+    for (unsigned j= 0; j < num_cols; j++)
+    {
+        for (unsigned i = 0; i < num_rows; i++)
+        {
+            //note that we use the (x,y) convention to print, not the (rows,cols) convention.
+            int curr_entry = get(i,j);
+            while (curr_entry>prev_entry)
+            {
+                qd << "(" << j << "," << i << ") ";
+                curr_entry--;
+            }
+            prev_entry = get(i,j);
+        }
+    }
+    qd << "|\n";
+} //end print()
+
+
+

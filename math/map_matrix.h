@@ -157,8 +157,8 @@ public:
     //Move column with index source to index target, zeroing out this column source in the process.
     void move_col(unsigned source, unsigned target);
     
-    //Move the jth column of other to the back of this matrix, zeroing out this column of other in the process.
-    void move_col(MapMatrix& other, unsigned j);
+    //Move the ith column of other to jth this matrix, zeroing out ith column of other in the process.
+    void move_col(MapMatrix& other, unsigned i, unsigned j);
 
     
 /********* Methods used to minimize a presentation *********/
@@ -195,6 +195,10 @@ public:
     
     //returns true if entry (i,j) is 1, false otherwise
     bool entry_sorted(unsigned i, unsigned j) const;
+    
+    //returns entry with largest index, if the column is non empty.  Returns -1 otherwise.
+    int low_sorted(unsigned i) const;
+
 };
 
 

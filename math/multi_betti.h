@@ -53,7 +53,7 @@ public:
     void compute_koszul(FIRep& fir, unsigned_matrix& hom_dims, Progress& progress);
 
     //Reads the 0th and 1st Betti numbers off of a minimal presentation into the multi_betti object.
-    void read_betti(const Presentation & pres);
+    void read_betti(const Presentation & pres, unsigned_matrix& hom_dims);
     
     //TODO: Implement this.
     //Compute the 0th and 1st Betti numbers from a not-necessarily-minimal presentation
