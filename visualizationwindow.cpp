@@ -61,6 +61,7 @@ VisualizationWindow::VisualizationWindow(InputParameters& params)
     , slice_update_lock(false)
     , p_diagram(&config_params, this)
     , persistence_diagram_drawn(false)
+    , slice_diagram_initialized(false)
 {
     ui->setupUi(this);
 
@@ -132,6 +133,8 @@ void VisualizationWindow::start_computation()
 //this slot is signaled when the xi support points are ready to be drawn
 void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMessage> points)
 {
+
+    qDebug()<<"in paint_template_points, angle="<<angle_precise;
     qDebug() << "VisualizationWindow: Received template points";
 
     template_points = points;
@@ -139,10 +142,58 @@ void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMe
     //first load our local copies of the data
     grades = Grades(template_points->x_exact, template_points->y_exact);
 
+    qDebug()<<"in paint_template_points, grades.x.front="<<grades.x.front()<<"grades.x.back="<<grades.x.back();
+    qDebug()<<"grades.y.front="<<grades.y.front()<<"grades.y.back="<<grades.y.back();
+
+
+
     //send xi support points to the SliceDiagram
     slice_diagram.clear_points();
     for (auto point : template_points->template_points)
         slice_diagram.add_point(grades.x[point.x], grades.y[point.y], point.zero, point.one, point.two);
+
+
+    if(!slice_diagram_initialized)
+    {
+        double x_step=fmax(.0001, (grades.x.back()-grades.x.front())/20); //spin box has 4 digit precision, so shouldn't have step size be less than this
+        double y_step=fmax(.0001, (grades.y.back()-grades.y.front())/20);
+
+        ui->BottomCornerXSpinBox->setSingleStep(x_step);
+        ui->TopCornerXSpinBox->setSingleStep(x_step);
+        ui->BottomCornerYSpinBox->setSingleStep(y_step);
+        ui->TopCornerYSpinBox->setSingleStep(y_step);
+
+
+
+        origin_x=grades.x.front();
+        origin_y=grades.y.front();
+
+
+        double xmin=grades.x.front()-10*(grades.x.back()-grades.x.front());
+        double xmax=grades.x.back()+10*(grades.x.back()-grades.x.front());
+        double ymin=grades.y.front()-10*(grades.y.back()-grades.y.front());
+        double ymax=grades.y.back()+10*(grades.y.back()-grades.y.front());
+
+        //these will never be changed
+        ui->BottomCornerXSpinBox->setMinimum(xmin);
+        ui->BottomCornerYSpinBox->setMinimum(ymin);
+        ui->TopCornerXSpinBox->setMaximum(xmax);
+        ui->TopCornerYSpinBox->setMinimum(ymax);
+
+        //these will be updated whenever one of the scroll boxes is changed
+        ui->BottomCornerXSpinBox->setMaximum(xmax);
+        ui->BottomCornerYSpinBox->setMaximum(ymax);
+        ui->TopCornerXSpinBox->setMinimum(xmin);
+        ui->TopCornerYSpinBox->setMinimum(ymin);
+
+
+        //only change the displayed value and the internal value of xmin_precise, etc.
+        ui->BottomCornerXSpinBox->setValue(grades.x.front());
+        ui->BottomCornerYSpinBox->setValue(grades.y.front());
+        ui->TopCornerXSpinBox->setValue(grades.x.back());
+        ui->TopCornerYSpinBox->setValue(grades.y.back());
+        slice_diagram_initialized=true;
+    }
 
     //create the SliceDiagram
     config_params.xLabel = QString::fromStdString(template_points->x_label);
@@ -163,26 +214,15 @@ void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMe
     ui->xi2CheckBox->setEnabled(true);
     ui->normCoordCheckBox->setEnabled(true);
 
-    ui->BottomCornerXSpinBox->setValue(grades.x.front());
-    ui->BottomCornerYSpinBox->setValue(grades.y.front());
-    ui->TopCornerXSpinBox->setValue(grades.x.back());
-    ui->TopCornerYSpinBox->setValue(grades.y.back());
-
-
-    double x_step=fmax(.0001, (grades.x.back()-grades.x.front())/20); //spin box has 4 digit precision, so shouldn't have step size be less than this
-    double y_step=fmax(.0001, (grades.y.back()-grades.y.front())/20);
-
-    ui->BottomCornerXSpinBox->setSingleStep(x_step);
-    ui->TopCornerXSpinBox->setSingleStep(x_step);
-    ui->BottomCornerYSpinBox->setSingleStep(y_step);
-    ui->TopCornerYSpinBox->setSingleStep(y_step);
 
 
 
-    origin_x=grades.x.front();
-    origin_y=grades.y.front();
 
-    update_origin();
+
+
+
+
+
     //update offset extents
     ///TODO: maybe these extents should be updated dynamically, based on the slope of the slice line
     ui->offsetSpinBox->setMinimum(grades.min_offset());
@@ -271,6 +311,10 @@ void VisualizationWindow::on_BottomCornerXSpinBox_valueChanged(double x_bottom)
 {
 
     xmin_precise=x_bottom;
+    if(!slice_diagram_initialized)
+    {
+        return;
+    }
     ui->TopCornerXSpinBox->setMinimum(x_bottom+.05);//the padding is to prevent overflow errors
     update_origin();
 
@@ -297,7 +341,7 @@ void VisualizationWindow::on_BottomCornerXSpinBox_valueChanged(double x_bottom)
 
     else if(persistence_diagram_drawn)
     {
-        update_persistence_diagram();
+        update_persistence_diagram(false);
     }
 
 
@@ -307,6 +351,11 @@ void VisualizationWindow::on_BottomCornerXSpinBox_valueChanged(double x_bottom)
 void VisualizationWindow::on_BottomCornerYSpinBox_valueChanged(double y_bottom)
 {
     ymin_precise=y_bottom;
+    if(!slice_diagram_initialized)
+    {
+        return;
+    }
+
     ui->TopCornerYSpinBox->setMinimum(y_bottom+.05);
     update_origin();
     double step=fmax(.0001,(ymax_precise-ymin_precise)/20);
@@ -325,7 +374,7 @@ void VisualizationWindow::on_BottomCornerYSpinBox_valueChanged(double y_bottom)
 
     else if(persistence_diagram_drawn)
     {
-        update_persistence_diagram();
+        update_persistence_diagram(false);
 
     }
 
@@ -337,6 +386,11 @@ void VisualizationWindow::on_BottomCornerYSpinBox_valueChanged(double y_bottom)
 void VisualizationWindow::on_TopCornerXSpinBox_valueChanged(double x_top)
 {
     xmax_precise=x_top;
+    if(!slice_diagram_initialized)
+    {
+        return;
+    }
+
     ui->BottomCornerXSpinBox->setMaximum(x_top-.05);
     update_origin();
     double step=fmax(.0001,(xmax_precise-xmin_precise)/20);
@@ -354,7 +408,7 @@ void VisualizationWindow::on_TopCornerXSpinBox_valueChanged(double x_top)
     }
     else if(persistence_diagram_drawn)
     {
-        update_persistence_diagram();
+        update_persistence_diagram(false);
     }
 
 
@@ -366,6 +420,11 @@ void VisualizationWindow::on_TopCornerXSpinBox_valueChanged(double x_top)
 void VisualizationWindow::on_TopCornerYSpinBox_valueChanged(double y_top)
 {
     ymax_precise=y_top;
+    if(!slice_diagram_initialized)
+    {
+        return;
+    }
+
     ui->BottomCornerYSpinBox->setMaximum(y_top-.05);
     update_origin();
     double step=fmax(.0001,(ymax_precise-ymin_precise)/20);
@@ -385,7 +444,7 @@ void VisualizationWindow::on_TopCornerYSpinBox_valueChanged(double y_top)
 
     else if(persistence_diagram_drawn)
     {
-        update_persistence_diagram();
+        update_persistence_diagram(false);
     }
 
 
@@ -462,34 +521,36 @@ void VisualizationWindow::on_xi2CheckBox_toggled(bool checked)
 }
 
 //updates the persistence diagram and barcode after a change in the slice line
-void VisualizationWindow::update_persistence_diagram()
+void VisualizationWindow::update_persistence_diagram(bool line_changed)
 {
 
     if (persistence_diagram_drawn) {
         //get the barcode
-        if (verbosity >= 0) {
-            qDebug() << "  QUERY: angle =" << angle_precise << ", offset =" << offset_precise;
+
+
+        if(line_changed)
+        {
+            if (verbosity >= 0) {
+                qDebug() << "  QUERY: angle =" << angle_precise << ", offset =" << offset_precise;
+            }
+            BarcodeTemplate dbc = arrangement->get_barcode_template(angle_precise, offset_precise);
+            barcode = dbc.rescale(angle_precise, offset_precise, template_points->template_points, grades);
+            //shift the barcode so that "zero" is where the selected line crosses the bottom or left side of the viewing window
+            double ll_corner = rivet::numeric::project_to_line(angle_precise, offset_precise, origin_x, origin_y); //lower-left corner of line selection window
+            barcode = barcode->shift(-1*ll_corner);
+            //TESTING
+            //qDebug() << "  XI SUPPORT VECTOR:";
+            //for (unsigned i = 0; i < template_points->template_points.size(); i++) {
+            //    TemplatePoint p = template_points->template_points[i];
+            //    qDebug().nospace() << "    [" << i << "]: (" << p.x << "," << p.y << ") --> (" << grades.x[p.x] << "," << grades.y[p.y] << ")";
+            //}
+            if (verbosity >= 0) {
+                 dbc.print();
+                 barcode->print();
+             }
         }
 
-        //update_origin();
 
-        BarcodeTemplate dbc = arrangement->get_barcode_template(angle_precise, offset_precise);
-        barcode = dbc.rescale(angle_precise, offset_precise, template_points->template_points, grades);
-
-        //shift the barcode so that "zero" is where the selected line crosses the bottom or left side of the viewing window
-        double ll_corner = rivet::numeric::project_to_line(angle_precise, offset_precise, origin_x, origin_y); //lower-left corner of line selection window
-        barcode = barcode->shift(-1*ll_corner);
-
-        //TESTING
-        //qDebug() << "  XI SUPPORT VECTOR:";
-        //for (unsigned i = 0; i < template_points->template_points.size(); i++) {
-        //    TemplatePoint p = template_points->template_points[i];
-        //    qDebug().nospace() << "    [" << i << "]: (" << p.x << "," << p.y << ") --> (" << grades.x[p.x] << "," << grades.y[p.y] << ")";
-        //}
-        if (verbosity >= 0) {
-            dbc.print();
-            barcode->print();
-        }
 
         //draw the barcode
         double new_max_len=sqrt((xmax_precise-xmin_precise)*(xmax_precise-xmin_precise)+(ymax_precise-ymin_precise)*(ymax_precise-ymin_precise));
@@ -502,6 +563,7 @@ void VisualizationWindow::update_persistence_diagram()
 
 void VisualizationWindow::set_line_parameters(double angle, double offset)
 {
+
     slice_update_lock = true;
 
     //correct for slight numerical errors that the interface might introduce
@@ -513,8 +575,8 @@ void VisualizationWindow::set_line_parameters(double angle, double offset)
     //store values internally
     angle_precise = angle;
     offset_precise = offset;
-
     update_origin();
+
     //update UI elements (values will be truncated)
     ui->angleDoubleSpinBox->setValue(angle);//note these calls do NOT call update_origin or update_persistence diagram because slice_update_lock=true
     ui->offsetSpinBox->setValue(offset);

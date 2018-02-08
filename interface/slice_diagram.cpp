@@ -725,6 +725,7 @@ void SliceDiagram::update_window_controls(bool from_dot)
     //remember whether the source of this change is the move of a ControlDot
     control_dot_moved = from_dot;
 
+
     //send updates
     emit set_line_control_elements(angle, offset);
 

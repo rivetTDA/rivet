@@ -25,3 +25,7 @@ ui_progressdialog.h
 ui_visualizationwindow.h
 build
 cmake-build-*
+RIVET.pro
+RIVET.pro.user
+moc_predefs.h
+RIVET.pro

@@ -144,8 +144,8 @@ private:
     //items for persistence diagram
     PersistenceDiagram p_diagram; //subclass of QGraphicsScene, contains all of the graphics elements for the persistence diagram
     bool persistence_diagram_drawn;
-
-    void update_persistence_diagram(); //updates the persistence diagram and barcode after a change in the slice line
+    bool slice_diagram_initialized;
+    void update_persistence_diagram(bool line_changed=true); //updates the persistence diagram and barcode after a change in the slice line and/or viewing window
     void reset_line(); //change the line so it connects the extreme points of the current window
 
     void update_origin();//computes the origin of the line after a change in parameters; updates the value of dist_to_origin
