@@ -99,7 +99,7 @@ private:
     int inf_dot_vpos; //vertical position (y-coordinate) of dots representing essential cycles
     int lt_inf_dot_vpos; //vertical position (y-coordinate) of dots representing non-infinite pairs above the diagram
     int gt_neg_inf_dot_hpos;
-    double max_line_length; //the length in data unit of the line segment inside the original data box
+    double max_line_length; //the length in data unit of the main diagonal of the visible window
     double dist_to_origin; //the distance from the left bottom dot in the diagram to the origin in the coordinate system defined in the paper, expressed in data units
 
     const Barcode* barcode; //reference to the barcode displayed in the persistence diagram

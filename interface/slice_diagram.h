@@ -102,7 +102,6 @@ public slots:
     void receive_bar_selection(std::vector<unsigned> indexes); //highlight the specified class of bars, which has been selected externally
     void receive_bar_secondary_selection(std::vector<unsigned> indexes); //secondary highlight, used for persistence dots that represent multiple classes of bars
     void receive_bar_deselection(); //remove bar highlighting in response to external command
-    //void update_dist_to_origin(double dist);
 
 signals:
     void set_line_control_elements(double angle, double offset); //sends updates to, e.g., the VisualizationWindow

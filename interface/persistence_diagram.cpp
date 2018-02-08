@@ -119,7 +119,6 @@ void PersistenceDiagram::resize_diagram(double slice_length, double diagram_scal
 //resizes diagram to fill the QGraphicsView; called after every window resize
 void PersistenceDiagram::resize_diagram()
 {
-    // TODO: change the raius of the dots based on the scale of the diagram?
     //parameters
     int scene_padding = 10; //pixels (minimum white space between diagram objects and edge of viewing window)
     int text_padding = 4; //pixels (white space on each side of text items)
@@ -229,8 +228,10 @@ void PersistenceDiagram::draw_dots()
     //map for long nonessential points; the key is the pair of coordinates
     std::map<std::pair<int, int>, PersistenceDot*> long_nonessential_dot_map; //includes nonessential cycles with invisible birth and death
 
+
     double radius_scale = diagram_size / 600.0; //used to change the radius in accordance with a change in size of application window
-    //EVIL "magic number"
+    //"magic number"-probably bad
+
     double slice_line_len = line_size / scale;
 
     double eps=pow(10.0,-3.0); //"wiggle room" to account for rounding errors
