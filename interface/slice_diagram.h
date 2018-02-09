@@ -170,6 +170,9 @@ private:
     int view_length; //width + height of the QGraphicsView that displays the diagram; used for drawing infinite bars
     int max_xi_value; //max value of the bigraded betti numbers
 
+    QString x_label_text;
+    QString y_label_text;
+
     double min_supp_xi_x; //the minimal x value in the support of the betti numbers
     double max_supp_xi_x;
     double min_supp_xi_y;

@@ -93,6 +93,9 @@ void SliceDiagram::create_diagram(const QString& x_text, const QString& y_text, 
     original_ymin = ymin;
     original_ymax = ymax;
 
+    x_label_text=x_text;
+    y_label_text=y_text;
+
     //pens and brushes
     QPen blackPen(Qt::black);
     blackPen.setWidth(2);
@@ -106,36 +109,36 @@ void SliceDiagram::create_diagram(const QString& x_text, const QString& y_text, 
     std::ostringstream s_xmin;
     s_xmin.precision(4);
     s_xmin << data_xmin;
-    data_xmin_text = addSimpleText(QString("xmin"));
+    data_xmin_text = addSimpleText(QString(" "));
     data_xmin_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
     data_xmin_text->setFont(config_params->diagramFont);
 
     std::ostringstream s_xmax;
     s_xmax.precision(4);
     s_xmax << data_xmax;
-    data_xmax_text = addSimpleText(QString("xmax"));
+    data_xmax_text = addSimpleText(QString(" "));
     data_xmax_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
     data_xmax_text->setFont(config_params->diagramFont);
 
     std::ostringstream s_ymin;
     s_ymin.precision(4);
     s_ymin << data_ymin;
-    data_ymin_text = addSimpleText(QString("ymin"));
+    data_ymin_text = addSimpleText(QString(" "));
     data_ymin_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
     data_ymin_text->setFont(config_params->diagramFont);
 
     std::ostringstream s_ymax;
     s_ymax.precision(4);
     s_ymax << data_ymax;
-    data_ymax_text = addSimpleText(QString("ymax"));
+    data_ymax_text = addSimpleText(QString(" "));
     data_ymax_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
     data_ymax_text->setFont(config_params->diagramFont);
 
-    x_label = addSimpleText(x_text);
+    x_label = addSimpleText(QString(" "));
     x_label->setFlag(QGraphicsItem::ItemIgnoresTransformations);
     x_label->setFont(config_params->diagramFont);
 
-    y_label = addSimpleText(y_text);
+    y_label = addSimpleText(QString(" "));
     y_label->setTransform(QTransform(0, 1, 1, 0, 0, 0));
     y_label->setFont(config_params->diagramFont);
 
@@ -233,6 +236,8 @@ void SliceDiagram::create_diagram(const QString& x_text, const QString& y_text, 
     line_vert = false; //IS IT POSSIBLE THAT THE INITIAL LINE COULD BE VERTICAL???????????????????????????????????
     line_slope = (data_ymax - data_ymin) / (data_xmax - data_xmin); //slope in data units
     line_pos = 0; //start the line at the lower left corner of the box
+
+    qDebug()<<"in SD::create_diagram, line_slope="<<line_slope;
 
     slice_line = new SliceLine(this, config_params);
     addItem(slice_line);
@@ -361,16 +366,18 @@ void SliceDiagram::resize_diagram()
 
     //reposition xi points
     redraw_dots();
+    qDebug()<<"in SD::resize_diagram, line_slope="<<line_slope;
 
     //reposition slice line
     slice_line->update_bounds(diagram_width, diagram_height, padding);
-
     double x = 0, y = 0;
     if (line_pos < 0) //then left-bottom endpoint is along bottom edge of box
         x = -1 * line_pos * diagram_width;
     else //then left-bottom endpoint is along left edge of box
         y = line_pos * diagram_height;
     slice_line->update_position(x, y, line_vert, line_slope * scale_y / scale_x);
+
+
 
     //reposition bars
 
@@ -457,6 +464,8 @@ void SliceDiagram::redraw_dots()
 //zoom in or out in response to a user-defined change in window bounds
 void SliceDiagram::zoom_diagram(double angle, double offset, double distance_to_origin)
 {
+
+
     int text_padding = 5; //pixels
 
     dist_to_origin = distance_to_origin;
@@ -466,6 +475,54 @@ void SliceDiagram::zoom_diagram(double angle, double offset, double distance_to_
 
     //reposition xi points
     redraw_dots();
+
+    //draw the labels
+
+
+    std::ostringstream s_xmin;
+    s_xmin.precision(4);
+    s_xmin << data_xmin;
+    delete data_xmin_text; //delete the old label, so the new one can be drawn on top of the rectangles
+    data_xmin_text = addSimpleText(QString(s_xmin.str().data()));
+    data_xmin_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+    data_xmin_text->setFont(config_params->diagramFont);
+
+    std::ostringstream s_xmax;
+    s_xmax.precision(4);
+    s_xmax << data_xmax;
+    delete data_xmax_text;
+    data_xmax_text = addSimpleText(QString(s_xmax.str().data()));
+    data_xmax_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+    data_xmax_text->setFont(config_params->diagramFont);
+
+    std::ostringstream s_ymin;
+    s_ymin.precision(4);
+    s_ymin << data_ymin;
+    delete data_ymin_text;
+    data_ymin_text = addSimpleText(QString(s_ymin.str().data()));
+    data_ymin_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+    data_ymin_text->setFont(config_params->diagramFont);
+
+    std::ostringstream s_ymax;
+    s_ymax.precision(4);
+    s_ymax << data_ymax;
+    delete data_ymax_text;
+    data_ymax_text = addSimpleText(QString(s_ymax.str().data()));
+    data_ymax_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+    data_ymax_text->setFont(config_params->diagramFont);
+
+
+    delete x_label;
+    x_label=addSimpleText(x_label_text);
+    x_label->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+    x_label->setFont(config_params->diagramFont);
+
+
+    delete y_label;
+    y_label=addSimpleText(y_label_text);
+    y_label->setTransform(QTransform(0, 1, 1, 0, 0, 0));
+    y_label->setFont(config_params->diagramFont);
+
 
     double gray_box_xmin = fmax(original_xmin - data_xmin, 0.0) / (data_xmax - data_xmin); //top left corner of gray box, relative units
     double gray_box_xmax = fmax(original_xmax - data_xmin, 0.0) / (data_xmax - data_xmin);
@@ -496,7 +553,7 @@ void SliceDiagram::zoom_diagram(double angle, double offset, double distance_to_
         x = relative_intercept_horz * diagram_width;
         line_visible = (0 <= relative_intercept_horz && relative_intercept_horz <= 1);
         slice_line->update_position(x, y, line_vert, 0);
-        slice_line->set_visibility(line_visible); //don't plot the line if it lies outisde of the viewing window
+        //slice_line->set_visibility(line_visible); //don't plot the line if it lies outisde of the viewing window
         line_pos = -1 * relative_intercept_horz;
     }
 
@@ -518,7 +575,7 @@ void SliceDiagram::zoom_diagram(double angle, double offset, double distance_to_
         }
 
         slice_line->update_position(x, y, line_vert, intrinsic_slope * scale_y / scale_x);
-        slice_line->set_visibility(line_visible);
+        //slice_line->set_visibility(line_visible);
     }
 
     if (line_visible) {
@@ -636,6 +693,8 @@ void SliceDiagram::receive_parameter_change()
 //NOTE: angle is in DEGREES
 void SliceDiagram::update_line(double angle, double offset, double distance_to_origin)
 {
+
+    qDebug()<<"sD::update_line called";
     dist_to_origin = distance_to_origin;
 
     if (angle == 90) //handle vertical line
@@ -647,9 +706,13 @@ void SliceDiagram::update_line(double angle, double offset, double distance_to_o
         line_visible = (-1 <= line_pos && line_pos <= 0); //vertical line has negative offset
 
         //update the SliceLine
-        int xpos = (-1 * offset - data_xmin) * scale_x; //pixel units
 
-        slice_line->update_position(xpos, 0, true, 0);
+            int xpos = (-1 * offset - data_xmin) * scale_x; //pixel units
+
+            slice_line->update_position(xpos, 0, true, 0);
+
+
+
     } else if (angle == 0) //handle horizontal line
     {
         //update SliceDiagram data values
@@ -659,8 +722,10 @@ void SliceDiagram::update_line(double angle, double offset, double distance_to_o
         line_visible = (0 <= line_pos && line_pos <= 1);
 
         //update the SliceLine
-        int ypos = (offset - data_ymin) * scale_y; //pixel units
-        slice_line->update_position(0, ypos, false, 0);
+            int ypos = (offset - data_ymin) * scale_y; //pixel units
+            slice_line->update_position(0, ypos, false, 0);
+
+
     } else //handle non-vertical and non-horizontal line
     {
         //update SliceDiagram data values
@@ -674,23 +739,27 @@ void SliceDiagram::update_line(double angle, double offset, double distance_to_o
         {
             line_pos = (y_coord - data_ymin) / (data_ymax - data_ymin); //relative units
             line_visible = (0 <= line_pos && line_pos < 1);
-            slice_line->update_position(0, (y_coord - data_ymin) * scale_y, false, line_slope * scale_y / scale_x);
+                slice_line->update_position(0, (y_coord - data_ymin) * scale_y, false, line_slope * scale_y / scale_x);
+
 
         } else //then slice line intersects bottom of box
         {
             double x_coord = (data_ymin - offset / cos(radians)) / line_slope; //x-coordinate of slice line at y=data_ymin; data units
             line_pos = -1 * (x_coord - data_xmin) / (data_xmax - data_xmin); //relative units
             line_visible = (-1 < line_pos && line_pos <= 0);
+
             slice_line->update_position((x_coord - data_xmin) * scale_x, 0, false, line_slope * scale_y / scale_x);
+
         }
     }
-    slice_line->set_visibility(line_visible);
+    //slice_line->set_visibility(line_visible);
     highlight_line->hide(); //since the line has changed, the highlighting is no longer valid
 } //end update_line()
 
 //updates controls in the VisualizationWindow in response to a change in the line (also update SliceDiagram data values)
 void SliceDiagram::update_window_controls(bool from_dot)
 {
+    qDebug()<<"update_window_controls called";
     //update SliceDiagram data values
     line_vert = slice_line->is_vertical();
     line_slope = slice_line->get_slope() * scale_x / scale_y; //convert pixel units to data units

@@ -72,8 +72,10 @@ private:
     QGraphicsLineItem* h_line;
     QGraphicsLineItem* v_line;
     QGraphicsLineItem* left_v_line;
-    QGraphicsLineItem* top_left_hline;
+    QGraphicsLineItem* top_left_hline; //the short lines circumscribing the counters on the left
     QGraphicsLineItem* top_left_vline;
+    QGraphicsLineItem* bottom_left_hline;
+    QGraphicsLineItem* bottom_left_vline;
 
     QGraphicsSimpleTextItem* inf_text;
     QGraphicsSimpleTextItem* lt_inf_text;

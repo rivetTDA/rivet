@@ -111,6 +111,7 @@ QVariant SliceLine::itemChange(GraphicsItemChange change, const QVariant& value)
             } else //then left endpoint of line is along bottom edge of box
             {
                 newpos.setX(std::min(mouse.x() - mouse.y() / slope, data_xmax));
+
                 newpos.setY(0);
             }
 
@@ -126,9 +127,15 @@ QVariant SliceLine::itemChange(GraphicsItemChange change, const QVariant& value)
             {
                 right_point.setX(box_xmax - newpos.x());
                 if (slope > 0)
+                {
                     right_point.setY(slope * (box_xmax - newpos.x()));
+                    qDebug()<<"rightpoint y="<<slope * (box_xmax - newpos.x());
+                }
+
                 else
+                    {
                     right_point.setY(0);
+                    }
             }
         }
 

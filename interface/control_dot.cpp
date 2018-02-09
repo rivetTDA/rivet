@@ -92,7 +92,9 @@ QVariant ControlDot::itemChange(GraphicsItemChange change, const QVariant& value
 
                 double max = std::min(slice_line->get_right_pt_x(), slice_line->get_data_xmax()); //don't let bottom dot go right of the top endpoint of line or right of data range
                 if (newpos.x() > max)
+                {
                     newpos.setX(max);
+                }
             } else //then place dot at origin
             {
                 newpos.setX(0);
@@ -127,6 +129,7 @@ QVariant ControlDot::itemChange(GraphicsItemChange change, const QVariant& value
         }
 
         //update line position
+
         if (left_bottom)
             slice_line->update_lb_endpoint(newpos);
         else

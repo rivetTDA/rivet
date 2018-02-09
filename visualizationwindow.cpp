@@ -263,6 +263,8 @@ void VisualizationWindow::augmented_arrangement_ready(std::shared_ptr<Arrangemen
         double ll_corner = rivet::numeric::project_to_line(angle_precise, offset_precise, grades.x[0], grades.y[0]); //lower-left corner of line selection window
         barcode = barcode->shift(-1*ll_corner);
 
+        //show slice line; necessary to do this here because successive functions use parameters of this diagram
+
         //draw the barcode
         p_diagram.set_barcode(*barcode);
         p_diagram.resize_diagram(slice_diagram.get_slice_length(), slice_diagram.get_pd_scale());
@@ -273,9 +275,6 @@ void VisualizationWindow::augmented_arrangement_ready(std::shared_ptr<Arrangemen
         //updates the diagram with the correct parameter values
 
 
-        slice_diagram.zoom_diagram(angle_precise, offset_precise,0);
-
-        slice_diagram.draw_barcode(*barcode, ui->barcodeCheckBox->isChecked());
 
         //enable slice diagram control items
         slice_diagram.enable_slice_line();
@@ -284,6 +283,11 @@ void VisualizationWindow::augmented_arrangement_ready(std::shared_ptr<Arrangemen
         ui->offsetLabel->setEnabled(true);
         ui->offsetSpinBox->setEnabled(true);
         ui->barcodeCheckBox->setEnabled(true);
+
+        //draw the slice diagram
+        slice_diagram.zoom_diagram(angle_precise, offset_precise,0);
+
+        slice_diagram.draw_barcode(*barcode, ui->barcodeCheckBox->isChecked());
 
         //update status
         if (verbosity >= 2) {
@@ -478,6 +482,8 @@ void VisualizationWindow::on_offsetSpinBox_valueChanged(double offset)
         update_origin();
         slice_diagram.update_line(ui->angleDoubleSpinBox->value(), offset_precise, dist_to_origin);
 
+
+
         update_persistence_diagram(); //updates the barcode in the slice diagram
         slice_diagram.zoom_diagram(angle_precise, offset_precise,dist_to_origin);//draws the diagram
 
@@ -584,6 +590,7 @@ void VisualizationWindow::set_line_parameters(double angle, double offset)
 
     update_persistence_diagram();
     slice_diagram.zoom_diagram(angle_precise, offset_precise,dist_to_origin);
+
 
 }
 

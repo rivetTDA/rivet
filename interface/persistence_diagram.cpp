@@ -62,6 +62,8 @@ void PersistenceDiagram::create_diagram()
     left_v_line = addLine(QLineF(), grayPen);
     top_left_hline = addLine(QLineF(), grayPen);
     top_left_vline = addLine(QLineF(), grayPen);
+    bottom_left_hline=addLine(QLineF(), grayPen);
+    bottom_left_vline=addLine(QLineF(), grayPen);
 
     //TODO: change the position of the text objects
     //create text objects
@@ -148,6 +150,8 @@ void PersistenceDiagram::resize_diagram()
     left_v_line->setLine(-gt_neg_inf_text->boundingRect().width(), 0, -gt_neg_inf_text->boundingRect().width(), diagram_size + 2 * v_space - text_padding);
     top_left_hline->setLine(-gt_neg_inf_text->boundingRect().width(), diagram_size, 0, diagram_size);
     top_left_vline->setLine(0, diagram_size, 0, diagram_size + 2 * v_space);
+    bottom_left_hline->setLine(-gt_neg_inf_text->boundingRect().width(), 0, 0, 0);
+    bottom_left_vline->setLine(0, 0, 0,h_space);
 
     //remove old dots
     selected = NULL; //remove any current selection
