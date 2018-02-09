@@ -46,7 +46,7 @@ public:
     void redraw_dots(); //redraws persistence dots; e.g. used after a change in parameters
 
     void update_diagram(double slice_length, double diagram_scale, const Barcode& bc); //updates the diagram after a change in the slice line
-    void update_diagram(double slice_length_pix, double diagram_scale, double slice_dist_dat, double max_len_dat, bool is_visible, const Barcode& bc); //updates the diagram after a change in the window bounds
+    void update_diagram(double slice_length_pix, double diagram_scale, double slice_dist_dat, bool is_visible, const Barcode& bc); //updates the diagram after a change in the window bounds
 
     void select_dot(PersistenceDot* clicked); //highlight the specified dot, selected in the persistence diagram, and propagate to the slice diagram
     void deselect_dot(); //remove selection and propagate to the slice diagram
@@ -101,7 +101,6 @@ private:
     int inf_dot_vpos; //vertical position (y-coordinate) of dots representing essential cycles
     int lt_inf_dot_vpos; //vertical position (y-coordinate) of dots representing non-infinite pairs above the diagram
     int gt_neg_inf_dot_hpos;
-    double max_line_length; //the length in data unit of the main diagonal of the visible window
     double dist_to_origin; //the distance from the left bottom dot in the diagram to the origin in the coordinate system defined in the paper, expressed in data units
 
     const Barcode* barcode; //reference to the barcode displayed in the persistence diagram

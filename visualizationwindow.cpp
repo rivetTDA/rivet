@@ -271,7 +271,7 @@ void VisualizationWindow::augmented_arrangement_ready(std::shared_ptr<Arrangemen
         //draws the diagram itself, but with incorrect parameter values
         double max_len=sqrt((grades.x.front()-grades.x.back())*(grades.x.front()-grades.x.back())+(grades.y.front()-grades.y.back())*(grades.y.front()-grades.y.back()));
 
-        p_diagram.update_diagram(slice_diagram.get_slice_length(), slice_diagram.get_pd_scale(), 0, max_len, slice_diagram.get_line_visible(), *barcode);
+        p_diagram.update_diagram(slice_diagram.get_slice_length(), slice_diagram.get_pd_scale(), 0, slice_diagram.get_line_visible(), *barcode);
         //updates the diagram with the correct parameter values
 
 
@@ -561,7 +561,7 @@ void VisualizationWindow::update_persistence_diagram(bool line_changed)
         double new_max_len=sqrt((xmax_precise-xmin_precise)*(xmax_precise-xmin_precise)+(ymax_precise-ymin_precise)*(ymax_precise-ymin_precise));
 
 
-        p_diagram.update_diagram(slice_diagram.get_slice_length(), slice_diagram.get_pd_scale(),dist_to_origin, new_max_len, is_visible,*barcode);
+        p_diagram.update_diagram(slice_diagram.get_slice_length(), slice_diagram.get_pd_scale(),dist_to_origin, is_visible,*barcode);
         slice_diagram.update_barcode(*barcode, ui->barcodeCheckBox->isChecked());
     }
 }

@@ -353,20 +353,15 @@ void SliceDiagram::resize_diagram()
     gray_line_vertical_left->setLine(diagram_width * gray_box_xmin, diagram_height * gray_box_ymin, diagram_width * gray_box_xmin, diagram_height * gray_box_ymax);
     gray_line_horizontal_bottom->setLine(diagram_width * gray_box_xmin, diagram_height * gray_box_ymin, diagram_width * gray_box_xmax, diagram_height * gray_box_ymin);
 
-    data_xmin_text->setPos(data_xmin_text->boundingRect().width() / (-2), -1 * text_padding);
-    data_xmax_text->setPos(diagram_width - data_xmax_text->boundingRect().width() / 2, -1 * text_padding);
-    data_ymin_text->setPos(-1 * text_padding - data_ymin_text->boundingRect().width(), data_ymin_text->boundingRect().height() / 2);
-    data_ymax_text->setPos(-1 * text_padding - data_ymax_text->boundingRect().width(), diagram_height + data_ymax_text->boundingRect().height() / 2);
-
-    x_label->setPos((diagram_width - x_label->boundingRect().width()) / 2, -1 * text_padding);
-    y_label->setPos(-1 * text_padding - y_label->boundingRect().height(), (diagram_height - y_label->boundingRect().width()) / 2);
 
     //reposition dimension rectangles
     redraw_dim_rects();
 
     //reposition xi points
     redraw_dots();
-    qDebug()<<"in SD::resize_diagram, line_slope="<<line_slope;
+
+    //redraw labels
+    redraw_labels();
 
     //reposition slice line
     slice_line->update_bounds(diagram_width, diagram_height, padding);
@@ -477,52 +472,7 @@ void SliceDiagram::zoom_diagram(double angle, double offset, double distance_to_
     redraw_dots();
 
     //draw the labels
-
-
-    std::ostringstream s_xmin;
-    s_xmin.precision(4);
-    s_xmin << data_xmin;
-    delete data_xmin_text; //delete the old label, so the new one can be drawn on top of the rectangles
-    data_xmin_text = addSimpleText(QString(s_xmin.str().data()));
-    data_xmin_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-    data_xmin_text->setFont(config_params->diagramFont);
-
-    std::ostringstream s_xmax;
-    s_xmax.precision(4);
-    s_xmax << data_xmax;
-    delete data_xmax_text;
-    data_xmax_text = addSimpleText(QString(s_xmax.str().data()));
-    data_xmax_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-    data_xmax_text->setFont(config_params->diagramFont);
-
-    std::ostringstream s_ymin;
-    s_ymin.precision(4);
-    s_ymin << data_ymin;
-    delete data_ymin_text;
-    data_ymin_text = addSimpleText(QString(s_ymin.str().data()));
-    data_ymin_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-    data_ymin_text->setFont(config_params->diagramFont);
-
-    std::ostringstream s_ymax;
-    s_ymax.precision(4);
-    s_ymax << data_ymax;
-    delete data_ymax_text;
-    data_ymax_text = addSimpleText(QString(s_ymax.str().data()));
-    data_ymax_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-    data_ymax_text->setFont(config_params->diagramFont);
-
-
-    delete x_label;
-    x_label=addSimpleText(x_label_text);
-    x_label->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-    x_label->setFont(config_params->diagramFont);
-
-
-    delete y_label;
-    y_label=addSimpleText(y_label_text);
-    y_label->setTransform(QTransform(0, 1, 1, 0, 0, 0));
-    y_label->setFont(config_params->diagramFont);
-
+    redraw_labels();
 
     double gray_box_xmin = fmax(original_xmin - data_xmin, 0.0) / (data_xmax - data_xmin); //top left corner of gray box, relative units
     double gray_box_xmax = fmax(original_xmax - data_xmin, 0.0) / (data_xmax - data_xmin);
@@ -1141,7 +1091,93 @@ double SliceDiagram::get_pd_scale()
     return scale_x * scale_y / denominator;
 }
 
-//void SliceDiagram::update_dist_to_origin(double dist)
-//{
-//    dist_to_origin=dist;
-//}
+void SliceDiagram::redraw_labels()
+{
+    int text_padding = 5; //pixels
+
+    data_xmin_text->setPos(data_xmin_text->boundingRect().width() / (-2), -1 * text_padding);
+    data_xmax_text->setPos(diagram_width - data_xmax_text->boundingRect().width() / 2, -1 * text_padding);
+    data_ymin_text->setPos(-1 * text_padding - data_ymin_text->boundingRect().width(), data_ymin_text->boundingRect().height() / 2);
+    data_ymax_text->setPos(-1 * text_padding - data_ymax_text->boundingRect().width(), diagram_height + data_ymax_text->boundingRect().height() / 2);
+
+    x_label->setPos((diagram_width - x_label->boundingRect().width()) / 2, -1 * text_padding);
+    y_label->setPos(-1 * text_padding - y_label->boundingRect().height(), (diagram_height - y_label->boundingRect().width()) / 2);
+
+    std::ostringstream s_xmin;
+    s_xmin.precision(4);
+    s_xmin << data_xmin;
+    data_xmin_text->setText(QString(s_xmin.str().data()));//update to get correct bounding rectangle
+    delete rect1;
+    rect1=addRect(0,0,data_xmin_text->sceneBoundingRect().width(),data_xmin_text->sceneBoundingRect().height() , Qt::NoPen,QBrush(QColor(255, 255, 255)));//white rectangle
+    rect1->setPos(data_xmin_text->pos().x(), data_xmin_text->pos().y()-data_xmin_text->boundingRect().height());
+    delete data_xmin_text; //delete the old label, so the new one can be drawn on top of the rectangles
+    data_xmin_text=addSimpleText(QString(s_xmin.str().data()));
+    data_xmin_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+    data_xmin_text->setFont(config_params->diagramFont);
+
+    std::ostringstream s_ymin;
+    s_ymin.precision(4);
+    s_ymin << data_ymin;
+    data_ymin_text->setText(QString(s_ymin.str().data()));//update to get correct bounding rectangle
+    delete rect2;
+    rect2=addRect(0,0,data_ymin_text->sceneBoundingRect().width(),data_ymin_text->sceneBoundingRect().height() , Qt::NoPen,QBrush(QColor(255, 255, 255)));//white rectangle
+    rect2->setPos(data_ymin_text->pos().x(), data_ymin_text->pos().y()-data_ymin_text->boundingRect().height());
+    delete data_ymin_text;
+    data_ymin_text = addSimpleText(QString(s_ymin.str().data()));
+    data_ymin_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+    data_ymin_text->setFont(config_params->diagramFont);
+
+
+    std::ostringstream s_xmax;
+    s_xmax.precision(4);
+    s_xmax << data_xmax;
+    data_xmax_text->setText(QString(s_xmax.str().data()));
+    delete rect3;
+    rect3=addRect(0,0,data_xmax_text->sceneBoundingRect().width(),data_xmax_text->sceneBoundingRect().height(), Qt::NoPen,QBrush(QColor(255, 255, 255)));
+    rect3->setPos(data_xmax_text->pos().x(), data_xmax_text->pos().y()-data_xmax_text->boundingRect().height());
+    delete data_xmax_text;
+    data_xmax_text = addSimpleText(QString(s_xmax.str().data()));
+    data_xmax_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+    data_xmax_text->setFont(config_params->diagramFont);
+
+
+
+    std::ostringstream s_ymax;
+    s_ymax.precision(4);
+    s_ymax << data_ymax;
+    data_ymax_text->setText(QString(s_ymax.str().data()));
+    delete rect4;
+    rect4=addRect(0,0,data_ymax_text->sceneBoundingRect().width(),data_ymax_text->sceneBoundingRect().height(), Qt::NoPen,QBrush(QColor(255, 255, 255)));
+    rect4->setPos(data_ymax_text->pos().x(), data_ymax_text->pos().y()-data_ymax_text->boundingRect().height());
+    delete data_ymax_text;
+    data_ymax_text = addSimpleText(QString(s_ymax.str().data()));
+    data_ymax_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+    data_ymax_text->setFont(config_params->diagramFont);
+
+
+    delete rect5;
+    rect5=addRect(0,0,x_label->boundingRect().width(), x_label->boundingRect().height(),Qt::NoPen,QBrush(QColor(255, 255, 255)));
+    rect5->setPos(x_label->pos().x(), x_label->pos().y()-x_label->boundingRect().height());
+    delete x_label;
+    x_label=addSimpleText(x_label_text);
+    x_label->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+    x_label->setFont(config_params->diagramFont);
+
+    delete rect6;
+    rect6=addRect(0,0,y_label->boundingRect().height(), y_label->boundingRect().width(),Qt::NoPen,QBrush(QColor(255, 255, 255)));
+    rect6->setPos(y_label->pos().x(), y_label->pos().y());
+    delete y_label;
+    y_label=addSimpleText(y_label_text);
+    y_label->setTransform(QTransform(0, 1, 1, 0, 0, 0));
+    y_label->setFont(config_params->diagramFont);
+
+    //these were previously deleted, so must set their positions again
+    data_xmin_text->setPos(data_xmin_text->boundingRect().width() / (-2), -1 * text_padding);
+    data_xmax_text->setPos(diagram_width - data_xmax_text->boundingRect().width() / 2, -1 * text_padding);
+    data_ymin_text->setPos(-1 * text_padding - data_ymin_text->boundingRect().width(), data_ymin_text->boundingRect().height() / 2);
+    data_ymax_text->setPos(-1 * text_padding - data_ymax_text->boundingRect().width(), diagram_height + data_ymax_text->boundingRect().height() / 2);
+
+    x_label->setPos((diagram_width - x_label->boundingRect().width()) / 2, -1 * text_padding);
+    y_label->setPos(-1 * text_padding - y_label->boundingRect().height(), (diagram_height - y_label->boundingRect().width()) / 2);
+
+}

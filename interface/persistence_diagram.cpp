@@ -18,6 +18,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **********************************************************************/
 
+//TODO: revert back to original convention where length in pixels of blue line matches
+//length in pixels of line in slice diagram
+//this seems almost done-should check and clean up (in particular, get rid of max_line_length)
+
 #include "persistence_diagram.h"
 
 #include "config_parameters.h"
@@ -140,7 +144,7 @@ void PersistenceDiagram::resize_diagram()
     bounding_rect->setRect(0, 0, diagram_size, diagram_size);
     diag_line->setLine(0, 0, diagram_size, diagram_size);
 
-    blue_line->setLine(0, 0, line_size * diagram_size / (scale * max_line_length), line_size * diagram_size / (scale * max_line_length));
+    blue_line->setLine(0, 0, line_size ,line_size);
 
     int v_space = lt_inf_text->boundingRect().height() + 2 * text_padding;
     int h_space = -gt_neg_inf_text->boundingRect().width();
@@ -265,7 +269,7 @@ void PersistenceDiagram::draw_dots()
                 inf_dot_map.insert(std::pair<int, PersistenceDot*>(x_pixel, dot));
 
                 //position dot properly
-                if (birth - dist_to_origin > max_line_length+eps) //it is an essential cycle born too late
+                if (birth - dist_to_origin > (diagram_size/scale)+eps) //it is an essential cycle born too late
                 {
                     num_big_cycles += it->multiplicity;
                     inf_dot_map.insert(std::pair<int, PersistenceDot*>(x_pixel, dot));
@@ -279,7 +283,7 @@ void PersistenceDiagram::draw_dots()
 
                 else //the birth is visible
                 {
-                    dot->setPos(((birth - dist_to_origin) / max_line_length) * diagram_size, inf_dot_vpos);
+                    dot->setPos((birth - dist_to_origin)  * scale, inf_dot_vpos);
                 }
             } else //then such dot exists, so add to its multiplicity
             {
@@ -290,7 +294,7 @@ void PersistenceDiagram::draw_dots()
                 dots_by_bc_index.push_back(dot); //necessary for dot lookup when persistence bars are highlighted
                 dot->add_index(bc_index);
 
-                if (birth - dist_to_origin > max_line_length+eps) //it is an essential cycle born too late
+                if (birth - dist_to_origin > (diagram_size/scale)+eps) //it is an essential cycle born too late
                 {
                     num_big_cycles += it->multiplicity;
                 } else if (birth < dist_to_origin-eps) //it is an essential cycle born too early
@@ -303,7 +307,7 @@ void PersistenceDiagram::draw_dots()
             double birth = it->birth;
             double death = it->death;
 
-            if (birth < dist_to_origin-eps && death - dist_to_origin < max_line_length+eps) //dot is in the gt_neg_inf strip
+            if (birth < dist_to_origin-eps && death - dist_to_origin < (diagram_size/scale)+eps) //dot is in the gt_neg_inf strip
             { //born too early, but does not die too late (might die too early)
 
                 int y_pixel = std::round(death * scale);
@@ -324,7 +328,7 @@ void PersistenceDiagram::draw_dots()
                         dot->setVisible(false);
                     } else //then dot will be visible in the left strip
                     {
-                        dot->setPos(gt_neg_inf_dot_hpos, diagram_size * (death - dist_to_origin) / max_line_length);
+                        dot->setPos(gt_neg_inf_dot_hpos, scale * (death - dist_to_origin));
                     }
 
                 } else //then such dot exists, so add to its multiplicity
@@ -344,7 +348,7 @@ void PersistenceDiagram::draw_dots()
 
             }
 
-            else if (birth > dist_to_origin-eps && death - dist_to_origin > max_line_length+eps) //dies too late and not born too early (might be born too late)
+            else if (birth > dist_to_origin-eps && death - dist_to_origin > (diagram_size/scale)+eps) //dies too late and not born too early (might be born too late)
             {
 
                 //check to see if a dot already exists in its position
@@ -361,13 +365,13 @@ void PersistenceDiagram::draw_dots()
                     dots_by_bc_index.push_back(dot);
                     lt_inf_dot_map.insert(std::pair<int, PersistenceDot*>(x_pixel, dot));
 
-                    if (birth - dist_to_origin > max_line_length+eps) //born too late
+                    if (birth - dist_to_origin > (diagram_size/scale)+eps) //born too late
                     {
                         num_big_points += it->multiplicity;
                         dot->setVisible(false);
                     } else //then dot will be visible in the top <inf strip
                     {
-                        dot->setPos(((birth - dist_to_origin) / max_line_length) * diagram_size, lt_inf_dot_vpos);
+                        dot->setPos((birth - dist_to_origin)*scale , lt_inf_dot_vpos);
                     }
 
                 } else //then such dot exists, so add to its multiplicity
@@ -379,12 +383,12 @@ void PersistenceDiagram::draw_dots()
                     dots_by_bc_index.push_back(dot); //necessary for dot lookup when persistence bars are highlighted
                     dot->add_index(bc_index);
 
-                    if (birth - dist_to_origin > max_line_length+eps) //born too late
+                    if (birth - dist_to_origin > (diagram_size/scale)+eps) //born too late
                     {
                         num_big_points += it->multiplicity;
                     }
                 }
-            } else if (birth < dist_to_origin-eps && death - dist_to_origin > max_line_length+eps) //born too early, dies too late
+            } else if (birth < dist_to_origin-eps && death - dist_to_origin > (diagram_size/scale)+eps) //born too early, dies too late
             { //dot is a long nonessential cycle, and contributes to the counter at the intersection of lt_inf and gt_neg_inf
 
                 int x_pixel = std::round(birth * scale);
@@ -425,7 +429,7 @@ void PersistenceDiagram::draw_dots()
                 dots_by_bc_index.push_back(dot);
 
                 //position dot properly
-                dot->setPos(((birth - dist_to_origin) / max_line_length) * diagram_size, ((death - dist_to_origin) / max_line_length) * diagram_size);
+                dot->setPos((birth - dist_to_origin)*scale , (death - dist_to_origin)*scale);
             }
         }
 
@@ -473,7 +477,7 @@ void PersistenceDiagram::update_diagram(double slice_length, double diagram_scal
     scale = diagram_scale / sqrt(2); //similarly, divide by sqrt(2)
     barcode = &bc;
 
-    blue_line->setLine(0, 0, line_size * diagram_size / (scale * max_line_length), line_size * diagram_size / (scale * max_line_length));
+    blue_line->setLine(0, 0, line_size,line_size);
 
     //remove old dots
     selected = NULL; //remove any current selection
@@ -489,10 +493,9 @@ void PersistenceDiagram::update_diagram(double slice_length, double diagram_scal
 } //end update_diagram()
 
 //updates only the slice length and diagram scale, called after a change in window bounds
-void PersistenceDiagram::update_diagram(double slice_length_pix, double diagram_scale, double slice_dist_dat, double max_len_dat, bool is_visible, const Barcode& bc)
+void PersistenceDiagram::update_diagram(double slice_length_pix, double diagram_scale, double slice_dist_dat, bool is_visible, const Barcode& bc)
 {
 
-    max_line_length = max_len_dat;
     barcode = &bc;
 
     if (is_visible) {
@@ -500,7 +503,7 @@ void PersistenceDiagram::update_diagram(double slice_length_pix, double diagram_
         //update parameters
         line_size = slice_length_pix / sqrt(2); //divide by sqrt(2) because the line is drawn at a 45-degree angle
         scale = diagram_scale / sqrt(2); //similarly, divide by sqrt(2)
-        blue_line->setLine(0, 0, line_size * diagram_size / (scale * max_line_length), line_size * diagram_size / (scale * max_line_length));
+        blue_line->setLine(0, 0, line_size,line_size);
 
     } else {
         dist_to_origin = slice_dist_dat;

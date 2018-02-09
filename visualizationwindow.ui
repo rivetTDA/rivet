@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1300</width>
+    <width>1500</width>
     <height>850</height>
    </rect>
   </property>
@@ -37,16 +37,6 @@
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QGraphicsView" name="sliceView">
-        <property name="verticalScrollBarPolicy">
-         <enum>Qt::ScrollBarAsNeeded</enum>
-        </property>
-        <property name="horizontalScrollBarPolicy">
-         <enum>Qt::ScrollBarAsNeeded</enum>
         </property>
        </widget>
       </item>
@@ -93,6 +83,18 @@
         </item>
         <item>
          <widget class="QLabel" name="homdimLabel">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>550</width>
+            <height>0</height>
+           </size>
+          </property>
           <property name="text">
            <string>Homology dimension:</string>
           </property>
@@ -591,6 +593,16 @@
         </item>
        </layout>
       </item>
+      <item row="1" column="0">
+       <widget class="QGraphicsView" name="sliceView">
+        <property name="verticalScrollBarPolicy">
+         <enum>Qt::ScrollBarAsNeeded</enum>
+        </property>
+        <property name="horizontalScrollBarPolicy">
+         <enum>Qt::ScrollBarAsNeeded</enum>
+        </property>
+       </widget>
+      </item>
      </layout>
     </item>
    </layout>
@@ -600,7 +612,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1300</width>
+     <width>1500</width>
      <height>22</height>
     </rect>
    </property>

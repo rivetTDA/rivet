@@ -56,6 +56,7 @@ public:
     void resize_diagram(); //resizes diagram to fill the QGraphicsView
     void redraw_dim_rects(); //redraws the rectangles for the homology dimension visualization
     void redraw_dots(); //redraws the support points of the multigraded Betti numbers
+    void redraw_labels(); //redraws axis labels in same position on top of rectangles
 
     void zoom_diagram(double angle, double offset, double distance_to_origin); //redraws diagram in response to a change in bounds
 
@@ -125,6 +126,14 @@ private:
     QGraphicsLineItem* gray_line_horizontal; //horizontal gray line at the top of the grading rectangle
     QGraphicsLineItem* gray_line_vertical_left; //vertical gray line at the left of the grading rectangle
     QGraphicsLineItem* gray_line_horizontal_bottom; //horizontal gray line at the bottom of the grading rectangle
+
+    QGraphicsRectItem* rect1;
+    QGraphicsRectItem* rect2;
+    QGraphicsRectItem* rect3;
+    QGraphicsRectItem* rect4;
+    QGraphicsRectItem* rect5;
+    QGraphicsRectItem* rect6;
+
 
     ControlDot* dot_left;
     ControlDot* dot_right;
