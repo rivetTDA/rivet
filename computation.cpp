@@ -90,7 +90,7 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(ComputationInput& in
         << timer.elapsed() << " milliseconds" << std::endl;
     }
     
-    pres.minimize();
+    pres.minimize(verbosity);
     if (verbosity >= 2) {
         debug() << "MINIMIZED PRESENTATION!";
     }

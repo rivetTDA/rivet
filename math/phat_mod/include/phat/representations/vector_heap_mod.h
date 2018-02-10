@@ -1,6 +1,18 @@
-//Modified for RIVET by Matthew Wright and Michael Lesnick.
-
-/*  Copyright 2013 IST Austria
+/*
+Modified for RIVET by Matthew Wright and Michael Lesnick, 2015, 2016, 2018
+ 
+Description: The file vector_heap.h from PHAT gives the core data structure 
+and algorithms for PHAT's lazy heap implementation of the 
+standard persistent homology reduction algorithm.
+ 
+Major changes:
+-Optimized functions for faster comlumn addition.
+-Child class to work with implicity permuted rows.
+-Various technical modifications and extensions for use with RIVET
+ 
+Original Header:
+********************************
+Copyright 2013 IST Austria
 Contributed by: Jan Reininghaus
 
 This file is part of PHAT.
@@ -190,7 +202,8 @@ namespace phat {
         {
             if (source != target)
             {
-                column temp_col = column();
+                column& temp_col = temp_column_buffer();
+                temp_col.clear();
                 matrix[target].swap(temp_col);
                 matrix[target].swap(matrix[source]);
             }
@@ -200,7 +213,8 @@ namespace phat {
         void _move_col(column& col,index idx)
         {
             //TODO: This is different than what PHAT does in the _prune function.  Which is better?
-            column temp_col = column();
+            column& temp_col = temp_column_buffer();
+            temp_col.clear();
             matrix[idx].swap(temp_col);
             matrix[idx].swap(col);
             inserts_since_last_prune[idx]=0;
@@ -209,7 +223,8 @@ namespace phat {
         // reindex column idx using the indices given in new_row_indices.
         void _reindex_column(index idx, const std::vector<int>& new_row_indices)
         {
-            column temp_col = column();
+            column temp_col = temp_column_buffer();
+            temp_col.clear();
             temp_col.reserve(matrix[idx].size());
             
             for( index j = 0; j < (index) matrix[idx].size(); j++ )
