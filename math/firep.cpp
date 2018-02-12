@@ -1,22 +1,24 @@
 /**********************************************************************
-Copyright 2014-2016 The RIVET Developers. See the COPYRIGHT file at
-the top-level directory of this distribution.
+ Copyright 2014-2018 The RIVET Developers. See the COPYRIGHT file at
+ the top-level directory of this distribution.
+ 
+ This file is part of RIVET.
+ 
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+ 
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ **********************************************************************/
 
-This file is part of RIVET.
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-**********************************************************************/
+// Authors: Roy Zhao (March 2017), Michael Lesnick (modified 2017-2018)
 
 #include "firep.h"
 
@@ -144,9 +146,9 @@ FIRep::FIRep(BifiltrationData& bif_data, int vbsty)
         low_mx.ind.fill_index_mx(prev_grade, Grade(0,low_mx.ind.height()), mid_generators.size()-1);
     //We're done building low_mx.
     
-    //We no longer need low_simplices
-    std::vector<LowSimplexData>().swap(bif_data.low_simplices); //"Free" memory of low_generators
-    std::unordered_map<Simplex* const, unsigned, VectorHash, deref_equal_fn>().swap(low_ht); //"Free" memory of hash_table.
+    //We no longer need low_simplices or the hash table, so replace by something trivial
+    std::vector<LowSimplexData>().swap(bif_data.low_simplices);
+    SimplexHashLow().swap(low_ht);
 
     if (verbosity >= 6)
         debug() << "Created low matrix";
@@ -327,6 +329,13 @@ FIRep::FIRep(BifiltrationData& bif_data, int vbsty)
         high_mx.ind.fill_index_mx(prev_grade, Grade(0,high_mx.ind.height()), high_generators.size()-1);
     //We're done building high_mx.
     
+    //We no longer need mid_simplices or high simplices, so replace with something trivial.
+    std::vector<MidHighSimplexData>().swap(bif_data.mid_simplices);
+    std::vector<MidHighSimplexData>().swap(bif_data.high_simplices);
+    
+    //Replace hash_table with something trivial.
+    SimplexHashMid().swap(mid_ht);
+    
     if (verbosity >= 6)
         debug() << "Created high matrix";
 
@@ -340,10 +349,7 @@ FIRep::FIRep(BifiltrationData& bif_data, int vbsty)
 }
 
 
-
-
-
-//This constructor is used when the FIRep is given directly as text input.  To understand this part of code, it may be helpful to review the conventions for the FIRep input format, as explained in the RIVET documentation.
+//This constructor is used when the FIRep is given directly as text input.  To understand this part of code, it may be helpful to review the conventions for the firep text input format, as explained in the RIVET documentation.
 FIRep::FIRep(BifiltrationData& bif_data, unsigned num_high_simplices, unsigned num_mid_simplices, unsigned num_low_simplices, std::vector<std::vector<unsigned>>& d2, std::vector<std::vector<unsigned>>& d1, const std::vector<unsigned> x_values, const std::vector<unsigned> y_values, int vbsty)
     : low_mx(num_low_simplices, num_mid_simplices, bif_data.num_y_grades(), bif_data.num_x_grades())
     , high_mx(num_mid_simplices, num_high_simplices, bif_data.num_y_grades(), bif_data.num_x_grades())

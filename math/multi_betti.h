@@ -1,5 +1,5 @@
 /**********************************************************************
-Copyright 2014-2016 The RIVET Developers. See the COPYRIGHT file at
+Copyright 2014-2018 The RIVET Developers. See the COPYRIGHT file at
 the top-level directory of this distribution.
 
 This file is part of RIVET.
@@ -17,13 +17,29 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **********************************************************************/
-/**
- * \class	MultiBetti
- * \brief	Computes the multi-graded Betti numbers of a bifiltration.
- * \author	Matthew L. Wright
- * \date	February 2014
- * 
- * Given a bifiltration and a dimension of homology, this class computes the bigraded Betti numbers (xi_0 and xi_1).
+/*
+ 
+ Author: Matthew L. Wright (February 2014- )
+ Minor modifications by Michael Lesnick (February 2018)
+ 
+ Class: MultiBetti
+ 
+ Description: This class provides functionality for computing the bigraded Betti numbers xi_i
+ and vector space dimensions (i.e., Hilbert function) of a bipersistence module.
+ MultiBetti objects store the Betti numbers, but not the Hilbert functions, which are 
+ stored elsewhere.
+ 
+ The main method of this class, compute_koszul, computes xi_0, xi_1  
+ and the Hilbert funtion from an FIRep, without computing a presentation,
+ via Mike and Matthew's Koszul homology algorithm.  
+ Another method, compute_xi2(), computes and stores xi_2 from the values of xi_0, xi_1 and 
+ the Hilbert function.
+ 
+ In this version of RIVET, a (rather trivial) method, read_betti(),
+ is also provided to read the 0th and 1st Betti numbers off of a minimal presentation.
+ (This is to be used in conjunction with the class Presentation, which can compute a minimal 
+ presentation from an FIRep).
+ 
  */
 
 #ifndef __MultiBetti_H__

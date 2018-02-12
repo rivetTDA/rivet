@@ -1,10 +1,24 @@
-//
-//  presentation.cpp
-//  
-//
-//  Created by mlesnick on 11/19/17.
-//
-//
+/**********************************************************************
+ Copyright 2014-2018 The RIVET Developers. See the COPYRIGHT file at
+ the top-level directory of this distribution.
+ 
+ This file is part of RIVET.
+ 
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+ 
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ **********************************************************************/
+
+ // Author: Michael Lesnick (2017-2018)
 
 #include "presentation.h"
 #include "firep.h"
@@ -12,7 +26,7 @@
 
 //Constructor
 //Builds a presentation from an FI-Rep.
-Presentation::Presentation(FIRep fir, Progress& progress, int verbosity)
+Presentation::Presentation(FIRep& fir, Progress& progress, int verbosity)
     : mat(0,0)
     , col_ind(fir.high_mx.ind.height(),fir.high_mx.ind.width())
     , row_ind(fir.high_mx.ind.height(),fir.high_mx.ind.width())
@@ -24,7 +38,7 @@ Presentation::Presentation(FIRep fir, Progress& progress, int verbosity)
     //note that unlike the IndexMatrices, is indexed by x-coordinate first, then y-coordinate.  This discrepancy seems a bit strange, but follows the exisiting convention.
     hom_dims.resize(boost::extents[fir.high_mx.ind.width()][fir.high_mx.ind.height()]);
     
-    if (verbosity > 7)
+    if (verbosity > 8)
     {
         std::cout<< "HIGH MATRIX:" << std::endl;
         fir.high_mx.print();
@@ -83,22 +97,14 @@ Presentation::Presentation(FIRep fir, Progress& progress, int verbosity)
         
     progress.progress(55);
     
-    //TODO: This step requires to copy the IndexMatrix.  Restructure to avoid this unnecessary copying?
-    //One solution would be to move kernel() from BigradedMatrix to presentation.
-    row_ind = low_kernel.ind;
-    
     //Low MapMatrix is no longer needed.  Replace it with something trivial.
     fir.low_mx.mat=MapMatrix(0,0);
-    
-    //set hom_dims to its final value.
-    //proceed in lexicographical order
     
     //Given that hom_dims contains the pointwise ranks of the high map, set each entry to its final value.
     compute_hom_dims(low_kernel.ind);
     
     //set the matrix to be the right size.
     mat = MapMatrix(low_kernel.mat.width(),high_min_gens.mat.width());
-    
     
     timer.restart();
     
@@ -111,8 +117,17 @@ Presentation::Presentation(FIRep fir, Progress& progress, int verbosity)
         << timer.elapsed() << " milliseconds." << std::endl;
     }
     
+    //TODO: This step requires to copy the IndexMatrix.  Restructure to avoid this unnecessary copying?
+    //One solution would be to move kernel() from BigradedMatrix to presentation.
+    //Perhaps a simpler solution would be to pass row_ind as a reference to BigradedMatrix::kernel().
+    row_ind = low_kernel.ind;
+    
+    //can get rid of low_kernel.ind now;
+    low_kernel.ind=IndexMatrix(0,0);
+    
     //emit progress message
     progress.progress(70);
+    
 }
 
 /*
@@ -185,7 +200,7 @@ void Presentation::min_gens_and_clearing_data_one_bigrade(BigradedMatrix& old_hi
             
             lows[l] = j;
             
-            //NOTE: Could be *lightly more efficient if the for loop was split into two parts, so that we didn't have to check this condition, but this may not be worth it.
+            //NOTE: Could be *slightly* more efficient if the for loop was split into two parts, so that we didn't have to check this condition, but it is probably worth not changing.
             if (j >= first_col_curr_bigrade) {
                 //copy this column into the new matrix.
                 new_high.mat.append_col(mx,j);
@@ -273,7 +288,7 @@ void Presentation::kernel_coordinates_one_bigrade(BigradedMatrixLex& high_mat, c
  This requires finding column entries which are not necessarily pivots, so this code sorts each column first, and then finds the entries using binary search.
  Columns are added in a way that maintains the order.
  */
-void Presentation::minimize()
+void Presentation::minimize(int verbosity)
 {
     if (! is_kernel_minimal)
         throw std::runtime_error("Presentation::minimize() : Presentation is not kernel minimal.\n");
@@ -284,9 +299,19 @@ void Presentation::minimize()
     //new_row_indices[i] stores the new index in the minimal presentation corresponding to the row index i in the unminimized presentation.
     std::vector<int> new_row_indices(mat.height(),0);
     
+    Timer timer;
+    timer.restart();
+    
     //sort each column of presentation
     for (unsigned i = 0; i < mat.width(); i++)
         mat.sort_col(i);
+    
+    if (verbosity >= 4) {
+        std::cout << "  --> sorting columns of unminimized presentation took "
+        << timer.elapsed() << " milliseconds." << std::endl;
+    }
+    
+    timer.restart();
     
     //stores the next place we should move a column that we are not minimizing.
     int num_cols_kept = 0;
@@ -356,6 +381,13 @@ void Presentation::minimize()
     update_col_and_row_inds(row_ind_new, curr_grade, Grade(0,col_ind.height()), num_cols_kept-1);
     row_ind=row_ind_new;
     
+    if (verbosity >= 4) {
+        std::cout << "  --> the column operations to minimize the presentation took "
+        << timer.elapsed() << " milliseconds." << std::endl;
+    }
+    
+    timer.restart();
+    
     unsigned new_height=mat.height()-(mat.width()-num_cols_kept);
     
     //Compute the reindexing vector.
@@ -377,6 +409,12 @@ void Presentation::minimize()
     //trim the unneeded rows.  (This amounts to just changing a stored number.)
     mat.resize(new_height,num_cols_kept);
 
+    if (verbosity >= 4) {
+        std::cout << "  --> resizing and reindexing the minimal presentation took "
+        << timer.elapsed() << " milliseconds." << std::endl;
+    }
+    
+    
     //we've finished minimizing the presentation
     is_minimized = true;
 }

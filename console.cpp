@@ -316,7 +316,7 @@ int main(int argc, char* argv[])
 
     InputManager inputManager(params);
     Progress progress;
-    Computation computation(params, progress);
+    Computation computation(verbosity, progress);
     if (binary || verbosity > 0) {
         progress.advanceProgressStage.connect([] {
             std::clog << "STAGE" << std::endl;

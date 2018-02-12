@@ -1,14 +1,33 @@
-/*
-Modified for RIVET by Matthew Wright and Michael Lesnick, 2015, 2016, 2018
+ /**********************************************************************
+ Copyright 2014-2018 The RIVET Developers. See the COPYRIGHT file at
+ the top-level directory of this distribution.
  
-Description: The file vector_heap.h from PHAT gives the core data structure 
-and algorithms for PHAT's lazy heap implementation of the 
-standard persistent homology reduction algorithm.
+ This file is part of RIVET.
+ **********************************************************************/
+
+/* 
  
-Major changes:
--Optimized functions for faster comlumn addition.
--Child class to work with implicity permuted rows.
--Various technical modifications and extensions for use with RIVET
+ Authors: Jan Reininghaus (original PHAT version),
+          Matthew Wright, Michael Lesnick (modifications for RIVET 2016-2018)
+ 
+ 
+ Class: vector_heap_mod
+ 
+ Description: PHAT's class vector_heap gives the core data structure
+ and algorithms for PHAT's lazy heap implementation of the
+ standard persistent homology reduction algorithm.  
+ vector_heap_mod is a modified version of this class which introduces various
+ technical changes and extensions for use with RIVET.
+ In particular, several methods are added to allow for more efficient column addition.
+ Functionality for working with sorted rows instead of lazy heaps is also added;
+ that is used by RIVET to minimize a presentation.
+ 
+ 
+ Class: vector_heap_perm : vetor_heap_perm
+ 
+ Description: Has similar functionality to vector_heap_mod,
+ but works with implicity permuted rows.  Used for barcode template computations.
+ 
  
 Original Header:
 ********************************

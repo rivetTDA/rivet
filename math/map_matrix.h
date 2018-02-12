@@ -1,5 +1,5 @@
 /**********************************************************************
-Copyright 2014-2016 The RIVET Developers. See the COPYRIGHT file at
+Copyright 2014-2018 The RIVET Developers. See the COPYRIGHT file at
 the top-level directory of this distribution.
 
 This file is part of RIVET.
@@ -17,23 +17,53 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **********************************************************************/
-/**
- * \class	MapMatrix and related classes
- * \brief	Stores a column sparse matrix with Z/2Z coefficients provides operations for persistence calculations.
- * \author	Matthew L. Wright.  Modified by Michael Lesnick.
- * \date	February 2014.  Modified 2017.
- * 
- * The MapMatrix class stores a column sparse matrix with Z/2Z coefficients.  The current implementation is based on a substantially modified version of the class vector_heap from the PHAT library by Bauer, Kerber, an Reininghaus.
+/*
  
+ Authors: Matthew L. Wright (February 2014- ), Michael Lesnick (Modifications 2017-2018)
  
- //TODO: After the incorporation of PHAT's lazy heaps, the MapMatrix_Base class seems to no longer be a heplful abstraction.  Get rid of this or reconsider the structure more carefully.
+ Classes: MapMatrix and related classes.
  
- //TODO: Update the below, as the structure has been changed a lot.
- * The MapMatrix_Base class provides the basic structures and functionality; it is the parent class and is not meant to be instantiated directly.
- * The class MapMatrix inherits MapMatrix_Base and stores matrices in a column-sparse format, designed for basic persistence calcuations.
- * The class MapMatrix_Perm inherits MapMatrix, adding functionality for row and column permutations; it is designed for the reduced matrices of vineyard updates.
- * Lastly, the class MapMatrix_RowPriority_Perm inherits MapMatrix_Base and stores matrices in a row-sparse format with row and column permutations; it is designed for the upper-triangular matrices of vineyard updates.
- */
+ Description: The classes introduces here store a column sparse matrix with Z/2Z coefficients,
+ and provide operations for persistence calculations.
+ The original version of this class was based on a custom linked list 
+ data structure for columns.  This updated version does away with linked lists,
+ and instead represents matrices using a modified version of the class vector_heap 
+ from the PHAT library, which stores columns as lazy heaps.
+ Here "lazy" means that multiple copies of an element 
+ are allowed to live in the heap.  See the PHAT paper for details.
+ 
+ This file introduces four related classes:
+ * MapMatrix_Base provides the basic structures and functionality; it is the parent class and is not meant to be instantiated directly.
+ * MapMatrix : MapMatrix_Base stores matrices in a column-sparse format, designed for basic persistence calcuations, and computations of bigraded betti numbers / presentations.
+ * MapMatrix_Perm : MapMatrix adds functionality for row and column permutations; it is designed for the reduced matrices of vineyard updates.
+ * MapMatrix_RowPriority_Perm : MapMatrix_Base stores matrices in a row-sparse format with row and column permutations; it is designed for the upper-triangular matrices of vineyard updates.
+*/
+
+
+
+/*
+ 
+ TODO [Mike]: Preliminary computational experiments indicate that using lazy heaps makes RIVET
+ significantly faster. However, the orginazation I have introduced is probably not optimizal.
+ Matthew's version of the MapMatrix hierarchy had 4 matrix classes.  
+ This update still has those four, plus the classes vector_heap_mod (a modification of PHAT's vector_heap class), and vector_heap_perm : vector_heap_mod.  That seems to be a bit much,
+ and the way the code is written, it has been a pain to add additional functionality, because
+ vector_heap_mod and MapMatrix typically both need to be modified.  On top of this, minimizing a presention
+ uses a matrix with sorted columns, and it may be appropriate to have a special place for such matrices in the
+ class structure, especially since some different methods are used with these.
+ 
+ The structure should be revisited.  Here are some specific ideas for cleaning up the structure.
+ 
+ -Get rid of the MapMatrix_Base class.  This seems to no longer be a heplful abstraction,
+ since vector_heap_mod now plays the role of the base class.
+ 
+ -It may be wise to make the vector_heap_mod object public, in order to reduce the number of wrapper classes.
+ 
+ -Revisit the names of the functions here, in relation to the functions in vector_heap mod.
+ 
+ -Perhaps the use of the PHAT integer typedef "index" vs. ordinary int should be more systematic.
+ 
+*/
 
 #ifndef __MapMatrix_H__
 #define __MapMatrix_H__
@@ -56,8 +86,7 @@ protected:
     MapMatrix_Base(unsigned size); //constructor to create a (square) identity matrix
     virtual ~MapMatrix_Base(); //destructor
     
-    //Uses the vector_heap_mod representation by default
-    phat::vector_heap_mod matrix; //modified PHAT boundary matrix
+    phat::vector_heap_mod matrix; //modified PHAT lazy heap matrix object
     unsigned num_rows; //number of rows in the matrix
 
     virtual unsigned width() const; //returns the number of columns in the matrix
@@ -66,12 +95,6 @@ protected:
     //WARNING: Current Implementation assumes the entry has not already been added.
     virtual void set(unsigned i, unsigned j); //sets (to 1) the entry in row i, column j
     
-    //TODO: Remove this
-    //virtual void clear(unsigned i, unsigned j); //clears (sets to 0) the entry in row i, column j
-
-    //TODO: Don't think we need this anymore.
-    //virtual bool entry(unsigned i, unsigned j) const; //returns true if entry (i,j) is 1, false otherwise
-
     virtual void add_to(unsigned j, unsigned k); //adds column j to column k; RESULT: column j is not changed, column k contains sum of columns j and k (with mod-2 arithmetic)
     
 };
@@ -98,9 +121,6 @@ public:
     
     //friend std::ostream& operator<<(std::ostream&, const MapMatrix&);
 
-    //Not needed; default will behave correctly.  In any case, do we ever need to compare two map matrices.?
-    //virtual bool operator==(MapMatrix& other);
-
     //requests that the columns vector have enough capacity for num_cols columns
     void reserve_cols(unsigned num_cols);
     
@@ -123,7 +143,7 @@ public:
     //Used for efficient implementation of standard reduction w/ lazy heaps.
     int remove_low(unsigned j);
     
-    //Assuming column l is already heapified, adds l to the column and fixes heap.
+    //Assuming column j is already heapified, adds l to the column and fixes heap.
     //Used for efficient implementation of standard reduction w/ lazy heaps.
     void push_index(unsigned j, unsigned l);
     
@@ -141,6 +161,7 @@ public:
     
     //same as above, but column j now comes from another matrix.
     void add_column_popped(const MapMatrix& other, unsigned j, unsigned k);
+    
     
     void prepare_col(unsigned j);
     
@@ -168,27 +189,7 @@ public:
     // reindex column col using the indices given in new_row_indices.
     void reindex_column(unsigned col, const std::vector<int>& new_row_indices);
     
-    
-/*** Next three functions are tehcnical functions used in Matthew's old Betti code. ***/
-    //TODO: These probably can be deleted in a few weeks.
-    //TODO: Make the int arguments in the next two functions unsigned?
-    
-    //copies NONZERO columns with indexes in [first, last] from other, appending them to this matrix to the right of all existing columns
-    //  all row indexes in copied columns are increased by offset
-    //Note: Only needed for the Koszul homology algorithm???
-    void copy_cols_from(const MapMatrix* other, int first, int last, unsigned offset);
-
-    //copies columns with indexes in [first, last] from other, inserting them in this matrix with the same column indexes
-    void copy_cols_same_indexes(const MapMatrix* other, int first, int last);
-
-    //removes zero columns from this matrix
-    //  ind_old gives grades of columns before zero columns are removed; new grade info stored in ind_new
-    void remove_zero_cols(const IndexMatrix& ind_old, IndexMatrix& ind_new);
-
-
-    
-    
-/*** Next two functions assume that column(s) in question are sorted ***/
+    /*** Next functions assume that column(s) in question are sorted ***/
     
     //same as add_column above, but requires columns to be sorted vectors.
     void add_column_sorted(unsigned j, unsigned k);
@@ -198,7 +199,24 @@ public:
     
     //returns entry with largest index, if the column is non empty.  Returns -1 otherwise.
     int low_sorted(unsigned i) const;
+    
+    
+/********* Tehcnical functions used in Matthew's old Betti code. *********/
+    //TODO: These probably can be deleted if we phase out the old Betti algorithm
+    
+    //TODO: Make the int arguments in the next two functions unsigned?
+    
+    //copies NONZERO columns with indexes in [first, last] from other, appending them to this matrix to the right of all existing columns
+    //  all row indexes in copied columns are increased by offset
+    void copy_cols_from(const MapMatrix* other, int first, int last, unsigned offset);
 
+    //copies columns with indexes in [first, last] from other, inserting them in this matrix with the same column indexes
+    void copy_cols_same_indexes(const MapMatrix* other, int first, int last);
+
+    //removes zero columns from this matrix
+    //  ind_old gives grades of columns before zero columns are removed; new grade info stored in ind_new
+    void remove_zero_cols(const IndexMatrix& ind_old, IndexMatrix& ind_new);
+    
 };
 
 
@@ -239,29 +257,12 @@ public:
     
     //TODO: Add lazy versions of these functions which don't redo the whole computation
     //clears the matrix, then rebuilds it from reference with columns permuted according to col_order
-    //NOTE: This funciton and the next do not remove columns or rows.
+    //NOTE: This functoon and the next do not remove columns or rows.
     
     void rebuild(MapMatrix_Perm* reference, const std::vector<unsigned>& col_order);
 
     //clears the matrix, then rebuilds it from reference with columns permuted according to col_order and rows permuted according to row_order
     void rebuild(MapMatrix_Perm* reference, const std::vector<unsigned>& col_order, const std::vector<unsigned>& row_order);
-    
-    
-    /***************************/
-    
-    // BIG TODO: Add functionality which does the following:
-    
-    //- Transpose both rows and columns of U.
-    //- Do the corresponding column perms to R.
-    //- If working on the high matrix, also permute rows of R.
-    //- Heapify all rows of U in permutation range.  (if still using vineyards, may have to heapify more rows of U.)
-    //- Heapify all cols of R in permutation range.
-    // -Use G.E. on these rows to make U upper triangular, doing the corresponding column additions to R
-    // -Fix R to be reduced again (column operations taking only the permuted cols and the columns which had permuted lows as pivots.
-
-    /***************************/
-    
-    
     
     //TODO: Add a finalize method here?
     
@@ -275,7 +276,7 @@ private:
 };
 
 //MapMatrix stored in row-priority format, with row/column permutations, designed for upper-triangular matrices in vineyard updates.
-//This class is just a simple interface for the vector_heap_perm class.
+//NOTE: In this new version of the code, the MapMatrix_RowPriority_Perm class is just a simple interface for the vector_heap_perm class.
 class MapMatrix_RowPriority_Perm {
 public:
     MapMatrix_RowPriority_Perm(unsigned size); //constructs the identity matrix of specified size

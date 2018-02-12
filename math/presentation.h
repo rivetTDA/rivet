@@ -1,6 +1,42 @@
+/**********************************************************************
+ Copyright 2014-2018 The RIVET Developers. See the COPYRIGHT file at
+ the top-level directory of this distribution.
+ 
+ This file is part of RIVET.
+ 
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+ 
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ **********************************************************************/
+
+/*
+
+ Author: Michael Lesnick (2017-2018).
+
+ Class: Presentation
+
+ Description: Stores a presentation of a 2-D persistence module.
+ Main constructor takes an FIRep as input.
+ Also has a method for minimizing a presentation, using only column-operations.
+ Whereas constructing the presentation uses lazy heaps,
+ minimization requires to sort the entries of the columns and
+ perform binary searches for specific entries.
+
+*/
+
+
 /**
  * \class	Presentation
- * \brief	Stores a presentation of a 2-D persistence module.  Constructor takes an FIRep as input.
+ * \brief
  * \author	Michael Lesnick
  * \date	9/28/17
  */
@@ -25,7 +61,7 @@ class BigradedMatrix;
 class BigradedMatrixLex;
 
 //Class stores a presentation of 2-parameter peristence module, as well as its Hilbert function.  Columns are assumed to be in colex order.
-//Constructor builds a presentation from an FIRep, which is one of the main steps in the new implementation of RIVET.
+//Constructor builds a presentation from an FIRep, which is one of the main steps in the new implementation of RIVET.  The constructor destroys the FIRep in the process.
 class Presentation {
 
 public:
@@ -43,7 +79,7 @@ public:
     
     //Constructor
     //Builds a presentation from an FI-Rep.  Also computes Hilbert function along the way.
-    Presentation(FIRep fir, Progress& progress, int verbosity);
+    Presentation(FIRep& fir, Progress& progress, int verbosity);
     
     /* 
     Throws an exception if !is_kernel_minimal.  Minimizes presentation using only column operations.
@@ -56,7 +92,7 @@ public:
     simply maintain an array which stores the updated incides.  On the other hand, the cost of reindexing is probably negligible relative to eveything else.
     */
     
-    void minimize();
+    void minimize(int verbosity);
     
     void print();
     
@@ -74,7 +110,7 @@ private:
     TODO: Add clearing functionality
     */
     
-    BigradedMatrixLex min_gens_and_clearing_data(FIRep & fir);
+    BigradedMatrixLex min_gens_and_clearing_data(FIRep& fir);
 
     //Re-express each column of high_mat in kernel coordinates.
     //Result is stored in mat and col_ind.

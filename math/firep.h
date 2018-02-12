@@ -1,5 +1,5 @@
 /**********************************************************************
- Copyright 2014-2016 The RIVET Developers. See the COPYRIGHT file at
+ Copyright 2014-2018 The RIVET Developers. See the COPYRIGHT file at
  the top-level directory of this distribution.
  
  This file is part of RIVET.
@@ -17,12 +17,31 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **********************************************************************/
-/**
- * \class   firep
- * \brief   Computes and stores an FI-Rep of the hom_dim^{th} homology module of a (possibly multicritical) bifiltered simplicial complex.  Takes either a bifiltration_data object, or a representation of the FI_Rep obtained directly from text input.
- * \author  Roy Zhao; edited by Michael Lesnick.
- * \date    March 2017; edited September 2017.
- */
+
+/*
+ 
+ Authors: Roy Zhao (March 2017), Michael Lesnick (modified 2017-2018)
+ 
+ 
+ Class: FIRep
+ 
+ Description: Computes and stores an FI-Rep of the hom_dim^{th} homology module
+ of a (possibly multicritical) bifiltered simplicial complex.  
+ Constructore takes as input a BifiltrationData object,
+ a representation of the FI_Rep obtained directly from text input, or
+ (at least for now) a presentation. 
+ In the future, we probably won't need the constructor taking a presentation.
+ The constructor taking a bifiltration data object can handle the multicritical case, using a
+ simple "trick" described in a paper of Scolamiero, Chacholski, and Vaccarino.
+
+ 
+ Structs: VectorHash, deref_equal_fn
+ 
+ Description:  To construct an FIRep from a BifiltrationData object, 
+ we construct hash tables whose keys are pointers to simplices.  These are used, respectively,
+ define the hash function and to compare compare two keys for equality.
+ 
+*/
 
 #ifndef __FIRep_H__
 #define __FIRep_H__
@@ -49,6 +68,7 @@ struct VectorHash {
     }
 };
 
+//used to compare compare two keys in the hash tables for equality.
 struct deref_equal_fn {
     bool operator()(Simplex* const& lhs, Simplex* const& rhs) const
     {
@@ -69,6 +89,7 @@ public:
     BigradedMatrix high_mx; //high matrix in the FIRep
     
     //constructor; requires verbosity parameter
+    //replaces the bif_data object with something trivial
     FIRep(BifiltrationData& bif_data, int vbsty);
     
     /*
@@ -82,15 +103,10 @@ public:
      */
     FIRep(Presentation pres, int vbsty);
     
-
-    
-    
     //This constructor is used when the FIRep is given directly as text input.
     //TODO: It seems a little hacky to be passing a BifiltrationData object to this constructor
     FIRep(BifiltrationData& bif_data, unsigned num_high_simplices, unsigned num_mid_simplices, unsigned num_low_simplices, std::vector<std::vector<unsigned>>& d2, std::vector<std::vector<unsigned>>& d1,
         const std::vector<unsigned> x_values, const std::vector<unsigned> y_values, int vbsty);
-
-    //TODO: should the following two return consts?  Are there places where we modify an index matrix as we zero out columns?
     
     unsigned num_x_grades() const; //returns the number of unique x-coordinates of the multi-grades
     unsigned num_y_grades() const; //returns the number of unique y-coordinates of the multi-grades
@@ -103,10 +119,10 @@ private:
     unsigned x_grades; //the number of x-grades that exist in this firep
     unsigned y_grades; //the number of y-grades that exist in this firep
     
-    //writes boundary column.
-    void write_boundary_column(MapMatrix& mat, const std::vector<unsigned>& entries, const unsigned col); //writes boundary information given boundary entries in column col of matrix mat
+    //writes boundary information given boundary entries in column col of matrix mat
+    void write_boundary_column(MapMatrix& mat, const std::vector<unsigned>& entries, const unsigned col);
 };
      
      
 
-#endif // __SimplexTree_H__
+#endif // __FIRep_H__

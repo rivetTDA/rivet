@@ -1,25 +1,24 @@
 /**********************************************************************
-Copyright 2014-2016 The RIVET Developers. See the COPYRIGHT file at
-the top-level directory of this distribution.
+ Copyright 2014-2018 The RIVET Developers. See the COPYRIGHT file at
+ the top-level directory of this distribution.
+ 
+ This file is part of RIVET.
+ 
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+ 
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ **********************************************************************/
 
-This file is part of RIVET.
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-**********************************************************************/
-/* map matrix class
- * stores a matrix representing a simplicial map
- */
+ //Authors: Matthew L. Wright (February 2014- ), Michael Lesnick (Modifications 2017-2018)
 
 #include "map_matrix.h"
 #include "phat_mod/include/phat/representations/vector_heap_mod.h"
@@ -196,7 +195,7 @@ int MapMatrix::remove_low(unsigned j)
     return matrix._remove_max(j);
 }
 
-//Assuming column l is already heapified, adds l to the column and fixes heap.
+//Assuming column j is already heapified, adds l to the column and fixes heap.
 void MapMatrix::push_index(unsigned j, unsigned l)
 {
     

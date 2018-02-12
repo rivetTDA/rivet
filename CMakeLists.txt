@@ -56,7 +56,7 @@ add_executable (rivet_console
 	math/presentation.cpp
         math/template_point.cpp
         math/template_points_matrix.cpp
-	math/phat_mod/include/phat/boundary_matrix_mod.h
+	math/phat_mod/include/phat/representations/vector_heap_mod.h
 	math/phat_mod/include/phat/helpers/misc.h
 	math/phat_mod/include/phat/helpers/thread_local_storage.h
 )

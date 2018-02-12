@@ -1,5 +1,5 @@
 /**********************************************************************
-Copyright 2014-2016 The RIVET Developers. See the COPYRIGHT file at
+Copyright 2014-2018 The RIVET Developers. See the COPYRIGHT file at
 the top-level directory of this distribution.
 
 This file is part of RIVET.
@@ -17,12 +17,31 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **********************************************************************/
-/**
- * \class	IndexMatrix
- * \brief	Stores a matrix of column indexes, one for each bigrade.  This, together with a MapMatrix, represents a morphism of free bigraded modules.
- * \author	Matthew L. Wright
- * \date	July 2014
- */
+/*
+ 
+ Authors: Matthew L. Wright (July 2014), Michael Lesnick (modifications 2017-2018)
+ 
+ 
+ Class: IndexMatrix
+ 
+ Description: Implicitly stores a list of bigrades in colexicographical order as a (dense) matrix.
+ Typically, the list of bigrades corresponds to the columns of a matrix, stored as a MapMatrix object;
+ The IndexMatrix and MapMatrix together represent a morphism of free bigraded modules.
+ (See also the BigradedMatrix class).
+
+ The entry of the IndexMatrix at (row, col) is to be the greatest column index of all columns that
+ appear at or before (row, col) in colexicographical order, or -1
+ if there are no such columns.  This representation can save memory when one has 
+ relatively few different x-grades and y-grades and many columns.  
+ Note though that this representation may be much *less* memory efficient than a naive representation 
+ when one has many x- and y-grades.
+ 
+ 
+ Class: IndexMatrixLex : IndexMatrix
+ 
+ Description: Similar to the parent class, but for lists of bigrades in lexicographical order
+ 
+*/
 
 #ifndef __IndexMatrix_H__
 #define __IndexMatrix_H__
@@ -30,9 +49,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 #include "grade.h"
 
-// The entry at (row, col) is to be the greatest column index of all columns that
-// appear at or before (row, col) in colexicographical order, or -1
-// if there are no such columns
 class IndexMatrix {
 public:
     //Initialize each entry in the matrix to be -1.

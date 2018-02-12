@@ -1,5 +1,5 @@
 /**********************************************************************
-Copyright 2014-2016 The RIVET Developers. See the COPYRIGHT file at
+Copyright 2014-2018 The RIVET Developers. See the COPYRIGHT file at
 the top-level directory of this distribution.
 
 This file is part of RIVET.
@@ -140,16 +140,6 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<std::shared_ptr<H
     //initial RU-decomposition
     U_low = R_low->decompose_RU();
     U_high = R_high->decompose_RU();
-
-    /*
-    //for debugging
-    debug() << "R_low, after reduction";
-    R_low->print();
-    
-    debug() << "R_high, after reduction";
-    R_high->print();
-    */
-    
     
     unsigned total_time_for_resets = timer.elapsed();
     if (verbosity >= 4) {

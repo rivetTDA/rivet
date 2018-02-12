@@ -1,9 +1,42 @@
-/**
- * \class	BigradedMatrix
- * \brief	Stores a SparseMatrix object (i.e., PHAT-type column-sparse matrix) and an IndexMatrix specifying the grade of appearance of each column.
- * \author	Michael Lesnick and Matthew Wright
- * \date	9/28/17
- */
+/**********************************************************************
+ Copyright 2014-2018 The RIVET Developers. See the COPYRIGHT file at
+ the top-level directory of this distribution.
+ 
+ This file is part of RIVET.
+ 
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+ 
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ **********************************************************************/
+
+/*
+   
+ Author: Michael Lesnick (2017)
+ 
+ 
+ Class: BigradedMatrix
+ 
+ Description: This is a wrapper class which stores a MapMatrix
+ and an associated IndexMatrix.  Most important method is kernel().
+ Used when columns are sorted in colex order of their bigrades of appearance.
+   
+ 
+ Class: BigradedMatrixLex
+ 
+ Description: This is a similar wrapper class which stores a MapMatrix and an associated
+ IndexMatrixLex.  Used when columns are sorted in lex order of their bigrades
+ of appearance.
+ 
+*/
 
 #ifndef __Bigraded_Matrix_H__
 #define __Bigraded_Matrix_H__
@@ -64,7 +97,7 @@ public:
     IndexMatrixLex ind;
     
     //constructor
-    //TODO: If I just declared the constructor here and defined it in the .cpp file, I could remove some include directives.  Is that better sturcture?  Doesn't seem to matter much.
+    //TODO: If I just declared the constructor here and defined it in the .cpp file, I could remove some include directives.  But it doesn't seem to matter much.
     BigradedMatrixLex(unsigned rows, unsigned cols, unsigned ind_rows, unsigned ind_cols)
         : mat(rows,cols),
         ind(ind_rows,ind_cols)

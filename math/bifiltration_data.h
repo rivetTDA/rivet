@@ -1,9 +1,44 @@
-/**
- * \class	BifiltrationData
- * \brief	Computes and stores the information about a bifiltration needed to compute homology in fixed dimension hom_dim.  Together with Input_Manager, handles 1-critical or multicritical Rips bifiltrations, as defined in the RIVET paper.  Only tracks the hom_dim-1, hom_dim, and hom_dim+1 -dimensional simplices
- * \author  Roy Zhao; edited by Michael Lesnick.
- * \date    March 2017; edited September 2017.
- */
+/**********************************************************************
+ Copyright 2014-2018 The RIVET Developers. See the COPYRIGHT file at
+ the top-level directory of this distribution.
+ 
+ This file is part of RIVET.
+ 
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+ 
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ **********************************************************************/
+
+/*
+  
+ Authors: Roy Zhao (March 2017), Michael Lesnick (modifications fall 2017).
+ 
+ 
+ Class: BifiltrationData
+   
+ Description: Computes and stores the information about a bifiltration
+ needed to compute homology in fixed dimension hom_dim.
+ Together with InputManager, handles 1-critical or
+ multicritical Rips bifiltrations, as defined in the RIVET paper.
+ Only tracks the hom_dim-1, hom_dim, and hom_dim+1 -dimensional simplices.
+ Replaces the SimplexTree class used in earlier versions of RIVET.
+ 
+ 
+ Structs: LowSimplexData, MidHighSimplexData
+   
+ Description: Used to store simplices, together with their bigrades of appearance.
+ MidHighSimplexData also has some additional structure which is useful for consturcting boundary matrices.
+
+*/
 
 #ifndef BIFILTRATION_DATA_H
 #define BIFILTRATION_DATA_H
@@ -79,6 +114,7 @@ public:
     //requires number of vertices, a list of distances between pairs of points, list for degree to y value exchange, and number of grade values in x- and y-directions
     //CONVENTION: the x-coordinate is "scale parameter" for points and the y-coordinate is "degree parameter"
 
+    //Note: Changed behavior of add_simplices so that it no longer recursively adds in faces.
     void add_simplex(const std::vector<int>& vertices, const AppearanceGrades& grades); //adds a simplex to BifiltrationData, grades is a vector of appearance grades
 
     void set_xy_grades(unsigned num_x, unsigned num_y); //Sets x_grades and y_grades. Used when reading in a bifiltration.
@@ -110,15 +146,9 @@ private:
 
     void combineMultigrades(AppearanceGrades& merged, const AppearanceGrades& grades1, const AppearanceGrades& grades2, unsigned mindist); //Finds the grades of appearance of when both simplices exist subject to minimal scale parameter, used in build_BR_complex()
 
-    //Note: Changed behavior of add_simplices so that it no longer recursively adds in faces.  The following helper function previously used for this is now removed.
-    /*
-        void add_faces(const std::vector<int>& vertices, const AppearanceGrades& grades);	//recursively adds faces of a simplex to the BifiltrationData; WARNING: doesn't make sure multigrades are incomparable
-        */
-
     void update_grades(AppearanceGrades& grades); //Sorts the grades of appearance in reverse lexicographic order and makes sure they are all incomparable
 
     //total number of simplces of dimensions hom_dim and hom_dim+1, counting mutiplicity in grades of appearance.
-    
     //used to avoid unnecessary resizing of arrays in firep constructor.
     unsigned mid_count;
     unsigned high_count;

@@ -1,5 +1,5 @@
 /**********************************************************************
-Copyright 2014-2016 The RIVET Developers. See the COPYRIGHT file at
+Copyright 2014-2018 The RIVET Developers. See the COPYRIGHT file at
 the top-level directory of this distribution.
 
 This file is part of RIVET.
@@ -44,6 +44,8 @@ struct TemplatePointsMatrixEntry;
 #include <interface/progress.h>
 #include <map>
 #include <vector>
+
+//TODO: If we take the input of persistence updater to be a (minimal) presentation, this file can be heavily simplified.
 
 class PersistenceUpdater {
 public:

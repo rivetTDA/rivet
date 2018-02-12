@@ -26,10 +26,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "timer.h"
 #include <chrono>
 
-Computation::Computation(InputParameters& params, Progress& progress)
-    : params(params)
-    , progress(progress)
-    , verbosity(params.verbosity)
+Computation::Computation(int vrbsty, Progress& progress)
+    : progress(progress)
+    , verbosity(vrbsty)
 {
 }
 
@@ -40,12 +39,10 @@ Computation::~Computation()
 std::unique_ptr<ComputationResult> Computation::compute_raw(ComputationInput& input)
 {
     if (verbosity >= 2) {
-        debug() << "\nBIFILTRATION:";
-        debug() << "   Number of simplices of dimension " << params.dim << " : " << input.bifiltration().get_size(params.dim);
-        debug() << "   Number of simplices of dimension " << (params.dim + 1) << " : " << input.bifiltration().get_size(params.dim + 1);
+        debug() << "FIRep computed:";
         
-        //TODO: At this point, I shouldn't ever need the bifiltation.  How do I get rid of it without breaking things?
-        debug() << "Important TODO: At this point, I shouldn't ever need the bifiltation.  How do I get rid of it without breaking things??? -Mike";
+        //debug() << "   Number of simplices of dimension " << params.dim << " : " << input.bifiltration().get_size(params.dim);
+        //debug() << "   Number of simplices of dimension " << (params.dim + 1) << " : " << input.bifiltration().get_size(params.dim + 1);
         
         if (verbosity >= 4) {
             debug() << "   Number of x-exact:" << input.x_exact.size();
@@ -59,25 +56,31 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(ComputationInput& in
         }
     }
 
-    //STAGE 3: COMPUTE MULTIGRADED BETTI NUMBERS
+    //STAGE 3: COMPUTE MINIMAL PRESENTTION AND MULTIGRADED BETTI NUMBERS
 
     std::unique_ptr<ComputationResult> result(new ComputationResult);
     //compute xi_0 and xi_1 at all bigrades
     if (verbosity >= 2) {
-        debug() << "COMPUTING xi_0, xi_1, AND xi_2 FOR HOMOLOGY DIMENSION " << params.dim << ":";
+        debug() << "COMPUTING MINIMAL PRESENTATION:";
     }
     
     MultiBetti mb(input.rep());
     
     Timer timer;
+    Timer timer_sub;
     timer.restart();
+    timer_sub.restart();
     
     Presentation pres(input.rep(),progress,verbosity);
     if (verbosity >= 2) {
-        debug() << "COMPUTED PRESENTATION!";
+        std::cout << "COMPUTED (UNMINIMIZED) PRESENTATION!" << std::endl;
+        std::cout << "Unminimized presentation has " << pres.row_ind.last()+1 << " rows and " << pres.col_ind.last()+1 << " cols." <<std::endl;
     }
     
-
+    if (verbosity >= 4) {
+        std::cout << "  --> computing the unminimized presentation took "
+        << timer_sub.elapsed() << " milliseconds" << std::endl;
+    }
     
     if (verbosity > 7)
     {
@@ -85,14 +88,17 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(ComputationInput& in
         pres.print();
     }
     
-    if (verbosity >= 4) {
-        std::cout << "  --> minimizing the presentation took "
-        << timer.elapsed() << " milliseconds" << std::endl;
-    }
+    timer_sub.restart();
     
     pres.minimize(verbosity);
     if (verbosity >= 2) {
-        debug() << "MINIMIZED PRESENTATION!";
+        std::cout << "COMPUTED MINIMAL PRESENTATION!" << std::endl;
+        std::cout << "Minimal presentation has " << pres.row_ind.last()+1 << " rows and " << pres.col_ind.last()+1 << " cols." <<std::endl;
+    }
+    
+    if (verbosity >= 4) {
+        std::cout << "  --> minimizing the presentation took "
+        << timer_sub.elapsed() << " milliseconds" << std::endl;
     }
     
     if (verbosity > 7)

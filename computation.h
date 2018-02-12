@@ -78,13 +78,12 @@ public:
     //TODO: these signals are a little strange, they should go away soon
     boost::signals2::signal<void(std::shared_ptr<Arrangement>)> arrangement_ready;
     boost::signals2::signal<void(TemplatePointsMessage)> template_points_ready;
-    Computation(InputParameters& params, Progress& progress);
+    Computation(int vrbsty, Progress& progress);
     ~Computation();
 
     std::unique_ptr<ComputationResult> compute(InputData data);
 
 private:
-    InputParameters& params;
     Progress& progress;
 
     const int verbosity;
