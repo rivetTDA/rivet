@@ -50,16 +50,14 @@ BifiltrationData::BifiltrationData(unsigned dim, int v)
     }
 }
 
-//destructor
-BifiltrationData::~BifiltrationData()
-{
-}
-
-//adds a simplex to the BifiltrationData
-//if the simplex does not have dimension hom_dim-1, hom_dim, or hom_dim+1, does nothing.
-//WARNING: Assumes but does not verify that multigrades are non-comparable
-//WARNING: Assumes that simplex has not already been added.  Does not check this.
-//WARNING: Assumes that simplex vertices are sorted (increasing order) and vector of grades of appearance is also sorted (colex order).
+/*
+Adds a simplex to the BifiltrationData.  If the simplex does not have dimension 
+hom_dim-1, hom_dim, or hom_dim+1, does nothing.
+WARNING: Assumes but does not verify that multigrades are non-comparable
+WARNING: Assumes that simplex has not already been added.  Does not check this.
+WARNING: Assumes that simplex vertices are sorted (increasing order)
+         and vector of grades of appearance is also sorted (colex order).
+ */
 void BifiltrationData::add_simplex(Simplex const& vertices, const AppearanceGrades& grades)
 {
     if (vertices.size() == 0) {
@@ -68,7 +66,8 @@ void BifiltrationData::add_simplex(Simplex const& vertices, const AppearanceGrad
 
     else if (vertices.size() == hom_dim) //simplex of dimension hom_dim - 1
     {
-        //For the homology computation, we only need the greatest lower bound of grades
+        //For the homology computation,
+        //we only need the greatest lower bound of grades
         low_simplices.push_back(LowSimplexData(vertices, Grade((grades.end() - 1)->x, grades.begin()->y)));
         return;
     } else if (vertices.size() == hom_dim + 1) //simplex of dimension hom_dim
@@ -85,10 +84,10 @@ void BifiltrationData::add_simplex(Simplex const& vertices, const AppearanceGrad
     }
 } //end add_faces()
 
-//builds BifiltrationData representing a bifiltered Vietoris-Rips complex from discrete data
-//requires a list of birth times (one for each point) and a list of distances between pairs of points
-//CONVENTION: the x-coordinate is "birth time" for points and the y-coordinate is "distance" between points
-void BifiltrationData::build_VR_complex(const std::vector<unsigned>& times, const std::vector<unsigned>& distances, const unsigned num_x, const unsigned num_y)
+void BifiltrationData::build_VR_complex(const std::vector<unsigned>& times,
+                                        const std::vector<unsigned>& distances,
+                                        const unsigned num_x,
+                                        const unsigned num_y)
 {
     x_grades = num_x;
     y_grades = num_y;
@@ -104,7 +103,11 @@ void BifiltrationData::build_VR_complex(const std::vector<unsigned>& times, cons
 } //end build_VR_complex()
 
 //function to add (recursively) a subcomplex of the bifiltration data
-void BifiltrationData::build_VR_subcomplex(const std::vector<unsigned>& times, const std::vector<unsigned>& distances, std::vector<int>& vertices, const unsigned prev_time, const unsigned prev_dist)
+void BifiltrationData::build_VR_subcomplex(const std::vector<unsigned>& times,
+                                           const std::vector<unsigned>& distances,
+                                           std::vector<int>& vertices,
+                                           const unsigned prev_time,
+                                           const unsigned prev_dist)
 {
     //Store the simplex info if it is of dimension (hom_dim - 1), hom_dim, or hom_dim+1. Dimension is vertices.size() - 1
     if (vertices.size() == hom_dim) //simplex of dimension hom_dim - 1
@@ -149,9 +152,7 @@ void BifiltrationData::build_VR_subcomplex(const std::vector<unsigned>& times, c
     }
 } //end build_subtree()
 
-//builds BifiltrationData representing a bifiltered Vietoris-Rips complex from discrete data
-//requires a list of vertices and a list of distances between pairs of points
-//CONVENTION: the x-coordinate is "degree threshold" for points and the y-coordinate is "scale threshold"
+//builds BifiltrationData representing a bifiltered Vietoris-Rips complex from metric data
 void BifiltrationData::build_BR_complex(const unsigned num_vertices, const std::vector<unsigned>& distances, const std::vector<unsigned>& degrees, const unsigned num_x, const unsigned num_y)
 {
     x_grades = num_x;

@@ -42,7 +42,8 @@ FIRep::FIRep(Presentation pres, int vbsty)
     , y_grades(pres.row_ind.height())
 {}
 
-//FIRep constructor; requires BifiltrationData object (which in particular specifies the homology dimension) and verbosity parameter
+//FIRep constructor; requires BifiltrationData object (which in particular
+//specifies the homology dimension) and verbosity parameter
 FIRep::FIRep(BifiltrationData& bif_data, int vbsty)
     : low_mx(0,0,bif_data.num_y_grades(),bif_data.num_x_grades())
     , high_mx(0,0,bif_data.num_y_grades(),bif_data.num_x_grades())
@@ -55,27 +56,37 @@ FIRep::FIRep(BifiltrationData& bif_data, int vbsty)
     }
 
     //We build the low matrix, then the high matrix.
-    //First, process simplices of dimension hom_dim-1.
+    //First, process the low simplices, i.e., simplices of dimension hom_dim-1.
 
-    //Sort the low_simplices in colexicographical order, using the comparator defined for Grade.  We constructed the simplices in
-    //lexicographical order on vertex indices, so use of stable sort preserves this within a grade.
+    //Sort the low_simplices in colexicographical order, using the comparator
+    //for the struct Grade.
+    //NOTE: We constructed the simplices in lexicographical
+    //order on vertex indices, so use of stable sort preserves this within a grade.
+    //Empirically, this turns out to make a difference in the speed of later
+    //matrix reductions.
 
-    std::stable_sort(bif_data.low_simplices.begin(), bif_data.low_simplices.end(), [](const LowSimplexData& left, const LowSimplexData& right) {
-        return left.gr < right.gr;
-    });
+    std::stable_sort(bif_data.low_simplices.begin(),
+                     bif_data.low_simplices.end(),
+                     [](const LowSimplexData& left, const LowSimplexData& right)
+                        {
+                            return left.gr < right.gr;
+                        }
+                    );
 
-    //Enter the low simplex indices into a hash table.  //Used to construct the low matrix
-    SimplexHashLow low_ht; //key = simplex; value = index of that simplex in Low_Simplices
-
+    //Enter the low simplex indices into a hash table.
+    //Used to construct the low matrix
+    //key = simplex; value = index of that simplex in Low_Simplices
+    SimplexHashLow low_ht;
     for (unsigned i = 0; i != bif_data.low_simplices.size(); i++) {
         low_ht.emplace(&(bif_data.low_simplices[i].s), i);
     }
 
-    //Now process simplices of dimension hom_dim
+    //Now process mid simplices (i.e., simplices of dimension hom_dim)
 
-    //construct a vector with one entry per simplex per grade of appearance.
+    //construct a vector with one entry per mid simplex per grade of appearance.
     //After sorting, this will index the columns of the low matrix
-    auto mid_generators = std::vector<std::pair<std::vector<MidHighSimplexData>::iterator, AppearanceGrades::iterator>>();
+    auto mid_generators = std::vector<std::pair<std::vector<MidHighSimplexData>::iterator,
+                                                AppearanceGrades::iterator>>();
     mid_generators.reserve(bif_data.mid_count);
 
     for (auto it = bif_data.mid_simplices.begin(); it != bif_data.mid_simplices.end(); it++) {
@@ -84,20 +95,31 @@ FIRep::FIRep(BifiltrationData& bif_data, int vbsty)
         //iterate through the grades
         for (auto it2 = it->ag.begin(); it2 != it->ag.end(); it2++)
 
-            //populate mid_generators with pairs of iterators which specify a simplex and its grade of appearance
-            mid_generators.push_back(std::pair<std::vector<MidHighSimplexData>::iterator, AppearanceGrades::iterator>(it, it2));
+            //populate mid_generators with pairs of iterators which specify a
+            //simplex and its grade of appearance
+            mid_generators.push_back(std::pair<std::vector<MidHighSimplexData>::iterator,
+                                               AppearanceGrades::iterator>(it, it2)
+                                    );
     }
 
     //stably sort mid_generators according to colex order on grades
-    std::stable_sort(mid_generators.begin(), mid_generators.end(), [](const auto& left, const auto& right) { return *(left.second) < *(right.second); });
+    std::stable_sort(mid_generators.begin(),
+                     mid_generators.end(),
+                     [](const auto& left, const auto& right)
+                        {
+                            return *(left.second) < *(right.second);
+                        }
+                    );
     
     //create the MapMatrix of the appropriate size
     low_mx.mat = MapMatrix(bif_data.low_simplices.size(), mid_generators.size());
 
     if (verbosity >= 6)
-        debug() << "Creating low matrix of dimension" << bif_data.low_simplices.size() << "x" << mid_generators.size();
+        debug() << "Creating low matrix of dimension"
+                << bif_data.low_simplices.size() << "x" << mid_generators.size();
 
-    //loop through simplices, writing columns to the matrix
+    //loop through simplices, writing columns to the matrix, and filling in the
+    //low IndexMatrix
     Grade prev_grade;
     
     if (bif_data.mid_count > 0)
@@ -117,7 +139,9 @@ FIRep::FIRep(BifiltrationData& bif_data, int vbsty)
             //call the simplex "vertices";
             Simplex& vertices = mid_generators[i].first->s;
         
-            //TODO: reserve space in the column of low_mx for the entries we will add in?  Because of the nested interfaces, a few classes would have to be changed.  Probably not worth it.
+            //TODO: reserve space in the column of low_mx for the entries we
+            //will add in?  Because of the nested interfaces, a few classes
+            //would have to be changed.  Probably not worth it.
         
             //find all faces of this simplex
             for (unsigned k = 0; k < vertices.size(); k++) {
@@ -141,11 +165,13 @@ FIRep::FIRep(BifiltrationData& bif_data, int vbsty)
         }
     }
     
-    //Now complete construction of the low_mx.ind.
+    //Now complete construction of the low IndexMatrix
     if (bif_data.mid_count > 0)
-        low_mx.ind.fill_index_mx(prev_grade, Grade(0,low_mx.ind.height()), mid_generators.size()-1);
-    //We're done building low_mx.
+        low_mx.ind.fill_index_mx(prev_grade,
+                                 Grade(0,low_mx.ind.height()),
+                                 mid_generators.size()-1);
     
+    //We're done building low_mx.
     //We no longer need low_simplices or the hash table, so replace by something trivial
     std::vector<LowSimplexData>().swap(bif_data.low_simplices);
     SimplexHashLow().swap(low_ht);

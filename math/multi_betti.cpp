@@ -48,7 +48,7 @@ struct ColumnList {
     void insert(int col_index, unsigned y_grade)
     {
         if (y_grade >= columns.size())
-            throw std::runtime_error("MultiBetti.cpp: attempting to insert column pointer with inproper y-grade");
+            throw std::runtime_error("MultiBetti.cpp: attempting to insert column pointer with improper y-grade");
 
         columns[y_grade].insert(col_index);
     }

@@ -34,8 +34,10 @@ Presentation::Presentation(FIRep& fir, Progress& progress, int verbosity)
     , is_kernel_minimal(true)
 {
     
-    //ensure hom_dims is the correct size
-    //note that unlike the IndexMatrices, is indexed by x-coordinate first, then y-coordinate.  This discrepancy seems a bit strange, but follows the exisiting convention.
+    //ensure hom_dims is the correct size.
+    //NOTE: unlike the IndexMatrices, is indexed by x-coordinate first,
+    //then y-coordinate.  This discrepancy is a bit strange,
+    //but follows the exisiting convention in the code.
     hom_dims.resize(boost::extents[fir.high_mx.ind.width()][fir.high_mx.ind.height()]);
     
     if (verbosity > 8)
@@ -44,7 +46,8 @@ Presentation::Presentation(FIRep& fir, Progress& progress, int verbosity)
         fir.high_mx.print();
     }
     
-    //Compute a minimal set of generators for the image of the high matrix.  Also compute pointwise ranks for the high matrix.
+    //Compute a minimal set of generators for the image of the high matrix.
+    Also compute pointwise ranks for the high matrix.
     //This is done by simple version of the standard reduction.
     //TODO: later, this will be modified to also yield clearing data.
     
@@ -61,7 +64,8 @@ Presentation::Presentation(FIRep& fir, Progress& progress, int verbosity)
     //emit progress message
     progress.progress(40);
     
-    //High matrix in the FIRep is no longer needed.  Replace it with something trivial.
+    //High matrix in the FIRep is no longer needed.
+    //Replace it with something trivial.
     fir.high_mx.mat=MapMatrix(0,0);
     
     if (verbosity > 8)
@@ -72,7 +76,7 @@ Presentation::Presentation(FIRep& fir, Progress& progress, int verbosity)
         
     //Compute the kernel of the low matrix.
     //TODO: later, this will be modified to take advantage of clearing data.
-    //TODO: I guess then that the kernel method might belong in the presentation class.
+    //TODO: Maybe kernel method belongs in the Presentation class?
     
     if (verbosity > 8)
     {
@@ -100,7 +104,8 @@ Presentation::Presentation(FIRep& fir, Progress& progress, int verbosity)
     //Low MapMatrix is no longer needed.  Replace it with something trivial.
     fir.low_mx.mat=MapMatrix(0,0);
     
-    //Given that hom_dims contains the pointwise ranks of the high map, set each entry to its final value.
+    //Given that hom_dims contains the pointwise ranks of the high map,
+    //set each entry to its final value.
     compute_hom_dims(low_kernel.ind);
     
     //set the matrix to be the right size.
@@ -108,8 +113,9 @@ Presentation::Presentation(FIRep& fir, Progress& progress, int verbosity)
     
     timer.restart();
     
-    //Complete computation of the presentation by re-expressing each column of high_min_gens in the low_kernel coordinates.
-    //Result is stored in mat and col_ind.
+    //Complete computation of the presentation by re-expressing each column of
+    //high_min_gens in the low_kernel coordinates. Result is stored in
+    //mat and col_ind.
     kernel_coordinates(high_min_gens, low_kernel);
     
     if (verbosity >= 4) {
@@ -117,9 +123,11 @@ Presentation::Presentation(FIRep& fir, Progress& progress, int verbosity)
         << timer.elapsed() << " milliseconds." << std::endl;
     }
     
-    //TODO: This step requires to copy the IndexMatrix.  Restructure to avoid this unnecessary copying?
-    //One solution would be to move kernel() from BigradedMatrix to presentation.
-    //Perhaps a simpler solution would be to pass row_ind as a reference to BigradedMatrix::kernel().
+    /* TODO: This step requires to copy the IndexMatrix. Restructure to avoid 
+       this unnecessary copying? One solution would be to move kernel() from
+       BigradedMatrix to Presentation.  Perhaps a simpler solution would be
+       to pass row_ind as a reference to BigradedMatrix::kernel().
+    */
     row_ind = low_kernel.ind;
     
     //can get rid of low_kernel.ind now;
@@ -131,8 +139,10 @@ Presentation::Presentation(FIRep& fir, Progress& progress, int verbosity)
 }
 
 /*
-Given the high matrix in the FIRep, gives a new BigradedMatrixLex with the same image.
-Also stores the pointwise ranks in hom_dim (This is an intermediate step in the calculation of the homology_dimensions)
+Given the high matrix in the FIRep, gives a new BigradedMatrixLex with the same 
+image.
+Also stores the pointwise ranks in hom_dim.  (This is an intermediate
+step in the calculation of the homology_dimensions.)
 TODO: Add clearing functionality
 */
 BigradedMatrixLex Presentation::min_gens_and_clearing_data(FIRep& fir)
@@ -153,9 +163,14 @@ BigradedMatrixLex Presentation::min_gens_and_clearing_data(FIRep& fir)
     return new_high_mx;
 }
 
-//Variant of the standard bigraded reduction which copies columns which are not zeroed out into a new matrix.
+//Variant of the standard bigraded reduction which copies columns which are not
+//zeroed out into a new matrix.
 //TODO: Add clearing functionality.
-void Presentation::min_gens_and_clearing_data_one_bigrade(BigradedMatrix& old_high, BigradedMatrixLex& new_high, unsigned curr_x, unsigned curr_y, std::vector<int>& lows)
+void Presentation::min_gens_and_clearing_data_one_bigrade(BigradedMatrix& old_high,
+                                                          BigradedMatrixLex& new_high,
+                                                          unsigned curr_x,
+                                                          unsigned curr_y,
+                                                          std::vector<int>& lows)
 {
     int c;
     int l;
@@ -182,7 +197,8 @@ void Presentation::min_gens_and_clearing_data_one_bigrade(BigradedMatrix& old_hi
             mx.remove_low(j);
         }
         
-        //while column j is nonempty and its low number is found in the low array, do column operations
+        //while column j is nonempty and its low number is found
+        //in the low array, do column operations
         while (l != -1 && lows[l] != -1 && lows[l] < j) {
             c = lows[l];
             mx.add_column_popped(c, j);
@@ -192,7 +208,7 @@ void Presentation::min_gens_and_clearing_data_one_bigrade(BigradedMatrix& old_hi
     
         if (l != -1) //column is still nonempty
         {
-            //if we changed the column, we have to put back the last entry we popped.
+            //if we changed the column, we must put back the last popped entry.
             if (changing_column) {
                 mx.push_index(j,l);
                 mx.finalize(j);
@@ -200,7 +216,9 @@ void Presentation::min_gens_and_clearing_data_one_bigrade(BigradedMatrix& old_hi
             
             lows[l] = j;
             
-            //NOTE: Could be *slightly* more efficient if the for loop was split into two parts, so that we didn't have to check this condition, but it is probably worth not changing.
+            //NOTE: Could be *slightly* more efficient if the for loop was split
+            //into two parts, so that we didn't have to check this condition,
+            //but it is probably worth not changing.
             if (j >= first_col_curr_bigrade) {
                 //copy this column into the new matrix.
                 new_high.mat.append_col(mx,j);
@@ -216,7 +234,8 @@ void Presentation::min_gens_and_clearing_data_one_bigrade(BigradedMatrix& old_hi
 } //min_gens_and_clearing_data_one_bigrade()
 
 
-void Presentation::kernel_coordinates(BigradedMatrixLex& high_mat, const BigradedMatrix& kernel)
+void Presentation::kernel_coordinates(BigradedMatrixLex& high_mat,
+                                      const BigradedMatrix& kernel)
 {
     //create and initialize the low array
     std::vector<int> ker_lows(kernel.mat.height(),-1);
@@ -227,19 +246,26 @@ void Presentation::kernel_coordinates(BigradedMatrixLex& high_mat, const Bigrade
     }
     
     unsigned num_cols_added = 0;
-    //proceeding in colex order on bigrades of columns of high_mat, rexpress each column of high_mat with respect to the columns of the kernel,
-    //and place the resulting values into mat.
-    //note that columns of high_mat is initially in lex order.
-    for (unsigned y = 0; y < high_mat.ind.height(); y++)
+    /* proceeding in colex order on bigrades of columns of high_mat, re-express 
+     each column of high_mat with respect to the columns of the kernel, and 
+     place the resulting values into mat. note that columns of high_mat are 
+     initially in lex order.
+    */
+     for (unsigned y = 0; y < high_mat.ind.height(); y++)
     {
         for (unsigned x = 0; x < high_mat.ind.width(); x++)
         {
-            kernel_coordinates_one_bigrade(high_mat,kernel, x, y,ker_lows, num_cols_added);
+            kernel_coordinates_one_bigrade(high_mat, kernel, x, y, ker_lows, num_cols_added);
         }
     }
 }
 
-void Presentation::kernel_coordinates_one_bigrade(BigradedMatrixLex& high_mat, const BigradedMatrix& kernel, const unsigned& curr_x, const unsigned& curr_y,const std::vector<int>& ker_lows,  unsigned& num_cols_added)
+void Presentation::kernel_coordinates_one_bigrade(BigradedMatrixLex& high_mat,
+                                                  const BigradedMatrix& kernel,
+                                                  const unsigned& curr_x,
+                                                  const unsigned& curr_y,
+                                                  const std::vector<int>& ker_lows,
+                                                  unsigned& num_cols_added)
 {
     int c;
     int l;
@@ -267,17 +293,21 @@ void Presentation::kernel_coordinates_one_bigrade(BigradedMatrixLex& high_mat, c
             l = hi_mx.remove_low(j);
         }
         
-        //column of high_mat is now empty and the corresponding column has been added to mat.
+        //column of high_mat is now empty and the corresponding column has been
+        //added to mat.
         
         
-        //now heapify that column?  In fact if we are just going to minimize presentation, there is no point in heapifying, because the minimization procedure will
+        //now heapify that column?
+        //In fact, if we are just going to minimize presentation,
+        //there is no point in heapifying, because the minimization procedure will
         //sort rows.
         //mat.prepare_col(num_cols_added);
         
         num_cols_added++;
     }
     
-    // to record the bigrades of the columns added to kernel, we update the IndexMatrix col_ind
+    //to record the bigrades of the columns added to kernel, we update the
+    //IndexMatrix col_ind
     col_ind.set(curr_y, curr_x, num_cols_added-1);
 } //kernel_coordinates_one_bigrade()
 
@@ -285,8 +315,9 @@ void Presentation::kernel_coordinates_one_bigrade(BigradedMatrixLex& high_mat, c
 /*
  Throws an exception if !is_kernel_minimal.
  Minimizes presentation using only column operations.
- This requires finding column entries which are not necessarily pivots, so this code sorts each column first, and then finds the entries using binary search.
- Columns are added in a way that maintains the order.
+ This requires finding column entries which are not necessarily pivots, so this 
+ code sorts each column first, and then finds the entries using binary search.
+ Columns are added in a way that maintains the sorted order.
  */
 void Presentation::minimize(int verbosity)
 {
@@ -322,8 +353,9 @@ void Presentation::minimize(int verbosity)
     
     int pivot_i;
     
-    //for each column i with bigrade equal to that of pivot_i,
-    //add column i to columns to its right, ensure that pivot_i does not appear as a nonzero entry to the right of column i.
+    //for each column i with bigrade equal to that of pivot_i, add column i to
+    //columns to its right, in order to ensure that pivot_i does not appear as a
+    //nonzero entry to the right of column i.
     
     for (unsigned i = 0; i < mat.width(); i++)
     {
@@ -344,7 +376,7 @@ void Presentation::minimize(int verbosity)
             new_row_indices[pivot_i] = -1;
             
             //zero out the part of the row pivot_i to the right of i.
-            //the part of the row to the left is already zero, since if it was ever non-zero
+            //The part of the row to the left is already zero.
             for(unsigned j = i+1; j < mat.width(); j++ ) {
                 
                 if (mat.entry_sorted(pivot_i,j)) {
@@ -356,15 +388,16 @@ void Presentation::minimize(int verbosity)
                 }
             }
         
-            //Note that this function also updates prev_grade to be equal to curr_grade
+            //NOTE: this function also sets prev_grade to curr_grade
             update_col_and_row_inds(row_ind_new, prev_grade, curr_grade, num_cols_kept-1);
         }
         
         else
         {
             
-            //if we get here then the grades of the column and pivot don't match
-            //We move this column to the appropriate place and update in IndexMatrix accordingly
+            //if we get here then the grades of the column and pivot don't match.
+            //We move this column to the appropriate place and update
+            //IndexMatrix accordingly
             
             //move column i to index num_cols_kept
             mat.move_col(i,num_cols_kept);
@@ -419,11 +452,13 @@ void Presentation::minimize(int verbosity)
     is_minimized = true;
 }
 
-//Technical function for constructing hom_dims at all indices from an FIRep.  Used by the Presentation constructor.
+//Technical function for constructing hom_dims at all indices from an FIRep.
+//Used by the Presentation constructor.
 void Presentation::compute_hom_dims(const IndexMatrix& ind)
 {
-    //to compute the pointwise dimension of the kernel at index (i,j), I need this quantity at (i,j-1).
-    //We store the values at the previous row in the following vector.
+    //to compute the pointwise dimension of the kernel at index (i,j), I need
+    //this quantity at (i,j-1).  We store the values at the previous row in the
+    //following vector.
     std::vector<unsigned> ker_dims_prev_row(col_ind.width(),0);
     
     //compute hom dims_along bottom row, and initialize ker_dims_prev_row
@@ -437,7 +472,8 @@ void Presentation::compute_hom_dims(const IndexMatrix& ind)
     {
         for (unsigned x = 0; x < col_ind.width(); x++)
         {
-            //before this line is executed, hom_dims[x][y] is equal to the pointwise rank of the high matrix in the firep at (x,y)
+            //before this line is executed, hom_dims[x][y] is equal to the
+            //pointwise rank of the high matrix in the firep at (x,y)
             ker_dims_prev_row[x] = ind.get(y,x) - ker_dims_prev_row[col_ind.width()-1] + ker_dims_prev_row[x] + 1;
             hom_dims[x][y]=ker_dims_prev_row[x] - hom_dims[x][y];
         }

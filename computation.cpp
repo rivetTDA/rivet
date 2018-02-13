@@ -59,6 +59,7 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(ComputationInput& in
     //STAGE 3: COMPUTE MINIMAL PRESENTTION AND MULTIGRADED BETTI NUMBERS
 
     std::unique_ptr<ComputationResult> result(new ComputationResult);
+    progress.advanceProgressStage(); //update progress box to stage 3
     //compute xi_0 and xi_1 at all bigrades
     if (verbosity >= 2) {
         debug() << "COMPUTING MINIMAL PRESENTATION:";

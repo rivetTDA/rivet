@@ -26,20 +26,19 @@
  Class: FIRep
  
  Description: Computes and stores an FI-Rep of the hom_dim^{th} homology module
- of a (possibly multicritical) bifiltered simplicial complex.  
- Constructore takes as input a BifiltrationData object,
- a representation of the FI_Rep obtained directly from text input, or
- (at least for now) a presentation. 
- In the future, we probably won't need the constructor taking a presentation.
- The constructor taking a bifiltration data object can handle the multicritical case, using a
+ of a (possibly multicritical) bifiltered simplicial complex.  Constructor takes 
+ as input a BifiltrationData object, a representation of the FI_Rep obtained 
+ directly from text input, or (at least for now) a presentation. In the future, 
+ we probably won't need the constructor taking a presentation. The constructor 
+ taking a bifiltration data object can handle the multicritical case, using a
  simple "trick" described in a paper of Scolamiero, Chacholski, and Vaccarino.
 
  
  Structs: VectorHash, deref_equal_fn
  
- Description:  To construct an FIRep from a BifiltrationData object, 
- we construct hash tables whose keys are pointers to simplices.  These are used, respectively,
- define the hash function and to compare compare two keys for equality.
+ Description:  To construct an FIRep from a BifiltrationData object, we 
+ construct hash tables whose keys are pointers to simplices.  These are used, 
+ respectively, to define the hash function and to compare compare two keys for equality.
  
 */
 
@@ -76,51 +75,74 @@ struct deref_equal_fn {
     }
 };
 
-typedef std::unordered_map<Simplex* const, unsigned, VectorHash, deref_equal_fn> SimplexHashLow;
-typedef std::unordered_map<Simplex* const, std::vector<MidHighSimplexData>::iterator, VectorHash, deref_equal_fn> SimplexHashMid;
+typedef std::unordered_map<Simplex* const, unsigned,
+                           VectorHash, deref_equal_fn> SimplexHashLow;
+typedef std::unordered_map<Simplex* const,
+                           std::vector<MidHighSimplexData>::iterator,
+                           VectorHash, deref_equal_fn> SimplexHashMid;
 //no need for a hash table in the high dimension
 
 class FIRep {
 
 public:
     
-    //Notes that grades are stored in discrete indexes, real ExactValues are stored in InputData.x_exact and y_exact
-    BigradedMatrix low_mx; //low matrix in the FIRep
-    BigradedMatrix high_mx; //high matrix in the FIRep
+    /* low matrix and high matrix in the firep
+    NOTE: grades are stored in discrete indexes, real ExactValues are
+    stored in InputData.x_exact and y_exact */
+    BigradedMatrix low_mx;
+    BigradedMatrix high_mx;
     
     //constructor; requires verbosity parameter
-    //replaces the bif_data object with something trivial
+    //as a side effect, replaces the bif_data object with something trivial
     FIRep(BifiltrationData& bif_data, int vbsty);
     
     /*
-    constructor taking a presentation.  High matrix is set to a copy of the presentation matrix;
-    low matrix is set to zero.
-    TODO: We need this only because persistence updater currently takes an FIRep as input.
-    Note also that this is inefficient, since we are making a copy fo the presentation matrix,
-    though that is not necessary. In the future, we can give persistence updater a presentation directly,
-    and this will be much simpler. Once that is implemented, we can remove this constructor,
-    and perhaps also remove an associated constructor in the BigradedMatrix class.
+    constructor taking a presentation.  High matrix is set to a copy of the 
+    presentation matrix; low matrix is set to zero.
+     
+    TODO: We need this only because persistence updater currently takes an FIRep
+    as input.  Note also that this is inefficient, since we are making a copy of
+    the presentation matrix, though that is not necessary. In the future, we can 
+    give persistence updater a presentation directly, and this will be much 
+    simpler. Once that is implemented, we can remove this constructor, and 
+    perhaps also remove an associated constructor in the BigradedMatrix class.
      */
     FIRep(Presentation pres, int vbsty);
     
     //This constructor is used when the FIRep is given directly as text input.
-    //TODO: It seems a little hacky to be passing a BifiltrationData object to this constructor
-    FIRep(BifiltrationData& bif_data, unsigned num_high_simplices, unsigned num_mid_simplices, unsigned num_low_simplices, std::vector<std::vector<unsigned>>& d2, std::vector<std::vector<unsigned>>& d1,
-        const std::vector<unsigned> x_values, const std::vector<unsigned> y_values, int vbsty);
+    //TODO: It seems a little hacky to be passing a BifiltrationData object to
+    //this constructor
+    FIRep(BifiltrationData& bif_data,
+          unsigned num_high_simplices,
+          unsigned num_mid_simplices,
+          unsigned num_low_simplices,
+          std::vector<std::vector<unsigned>>& d2,
+          std::vector<std::vector<unsigned>>& d1,
+          const std::vector<unsigned> x_values,
+          const std::vector<unsigned> y_values,
+          int vbsty);
     
-    unsigned num_x_grades() const; //returns the number of unique x-coordinates of the multi-grades
-    unsigned num_y_grades() const; //returns the number of unique y-coordinates of the multi-grades
+    //returns number of unique x-coordinates (y-coordinates) of the multi-grades
+    //NOTE: In the current design, this value is not intrinsic to the FIRep, but
+    //is determined by the InputManager class from the input data.
+    unsigned num_x_grades() const;
+    unsigned num_y_grades() const;
 
-    void print(); //Print the matrices and appearance grades
+    //Print the matrices and appearance grades
+    void print();
 
-    const unsigned verbosity; //controls display of output, for debugging
+    //controls display of output, for debugging
+    const unsigned verbosity;
 
 private:
-    unsigned x_grades; //the number of x-grades that exist in this firep
-    unsigned y_grades; //the number of y-grades that exist in this firep
+    //number of unique x-coordinates (y-coordinates) of the multi-grades
+    unsigned x_grades;
+    unsigned y_grades;
     
     //writes boundary information given boundary entries in column col of matrix mat
-    void write_boundary_column(MapMatrix& mat, const std::vector<unsigned>& entries, const unsigned col);
+    void write_boundary_column(MapMatrix& mat,
+                               const std::vector<unsigned>& entries,
+                               const unsigned col);
 };
      
      
