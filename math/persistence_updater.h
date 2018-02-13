@@ -54,11 +54,11 @@ public:
     //PersistenceUpdater(Arrangement& m, std::vector<TemplatePoint>& xi_pts); //constructor for when we load the pre-computed barcode templates from a RIVET data file
 
     //functions to compute and store barcode templates in each 2-cell of the arrangement
-    void store_barcodes_with_reset(std::vector<std::shared_ptr<Halfedge>>& path, Progress& progress); //hybrid approach -- for expensive crossings, resets the matrices and does a standard persistence calculation
-    void store_barcodes_quicksort(std::vector<std::shared_ptr<Halfedge>>& path); ///TODO -- for expensive crossings, rearranges columns via quicksort and fixes the RU-decomposition globally
+    void store_barcodes_with_reset(std::vector<Halfedge*>& path, Progress& progress); //hybrid approach -- for expensive crossings, resets the matrices and does a standard persistence calculation
+    void store_barcodes_quicksort(std::vector<Halfedge*>& path); ///TODO -- for expensive crossings, rearranges columns via quicksort and fixes the RU-decomposition globally
 
     //function to set the "edge weights" for each anchor line
-    void set_anchor_weights(std::vector<std::shared_ptr<Halfedge>>& path);
+    void set_anchor_weights(std::vector<Halfedge*>& path);
 
     //function to clear the levelset lists -- e.g., following the edge-weight calculation
     void clear_levelsets();
@@ -73,8 +73,8 @@ private:
 
     TemplatePointsMatrix template_points_matrix; //sparse matrix to hold xi support points -- used for finding anchors (to build the arrangement) and tracking simplices during the vineyard updates (when computing barcodes to store in the arrangement)
 
-    std::map<unsigned, std::shared_ptr<TemplatePointsMatrixEntry>> lift_low; //map from "low" columns to xiMatrixEntrys
-    std::map<unsigned, std::shared_ptr<TemplatePointsMatrixEntry>> lift_high; //map from "high" columns to xiMatrixEntrys
+    std::map<unsigned, TemplatePointsMatrixEntry*> lift_low; //map from "low" columns to xiMatrixEntrys
+    std::map<unsigned, TemplatePointsMatrixEntry*> lift_high; //map from "high" columns to xiMatrixEntrys
 
     MapMatrix_Perm* R_low; //boundary matrix for "low" simplices
     MapMatrix_Perm* R_high; //boundary matrix for "high" simplices
@@ -108,26 +108,26 @@ private:
     unsigned build_simplex_order(IndexMatrix* ind, bool low, std::vector<int>& simplex_order);
 
     //counts the number of transpositions that will happen if we cross an anchor and do vineyeard-updates
-    unsigned long count_transpositions(std::shared_ptr<TemplatePointsMatrixEntry> at_anchor, bool from_below);
+    unsigned long count_transpositions(TemplatePointsMatrixEntry* at_anchor, bool from_below);
 
     //counts the number of transpositions that result from separations; used in the above function
-    void count_transpositions_from_separations(std::shared_ptr<TemplatePointsMatrixEntry> greater, std::shared_ptr<TemplatePointsMatrixEntry> lesser, bool horiz, bool low, unsigned long& count_trans, unsigned& count_lesser);
+    void count_transpositions_from_separations(TemplatePointsMatrixEntry* greater, TemplatePointsMatrixEntry* lesser, bool horiz, bool low, unsigned long& count_trans, unsigned& count_lesser);
 
     //moves grades associated with TemplatePointsMatrixEntry greater, that come before TemplatePointsMatrixEntry lesser in R^2, so that they become associated with lesser
     //   horiz is true iff greater and lesser are on the same horizontal line (i.e., they share the same y-coordinate)
     //   returns a count of the number transpositions performed
-    unsigned long split_grade_lists(std::shared_ptr<TemplatePointsMatrixEntry> greater, std::shared_ptr<TemplatePointsMatrixEntry> lesser, bool horiz);
+    unsigned long split_grade_lists(TemplatePointsMatrixEntry* greater, TemplatePointsMatrixEntry* lesser, bool horiz);
 
     //splits grade lists and updates the permutation vectors, but does NOT do vineyard updates
-    void split_grade_lists_no_vineyards(std::shared_ptr<TemplatePointsMatrixEntry> greater, std::shared_ptr<TemplatePointsMatrixEntry> lesser, bool horiz);
+    void split_grade_lists_no_vineyards(TemplatePointsMatrixEntry* greater, TemplatePointsMatrixEntry* lesser, bool horiz);
 
     //moves all grades associated with TemplatePointsMatrixEntry lesser so that they become associated with TemplatePointsMatrixEntry greater
-    void merge_grade_lists(std::shared_ptr<TemplatePointsMatrixEntry> greater, std::shared_ptr<TemplatePointsMatrixEntry> lesser);
+    void merge_grade_lists(TemplatePointsMatrixEntry* greater, TemplatePointsMatrixEntry* lesser);
 
-    //moves columns from an equivalence class given by std::shared_ptr<TemplatePointsMatrixEntry> first to their new positions after or among the columns in the equivalence class given by std::shared_ptr<TemplatePointsMatrixEntry> second
+    //moves columns from an equivalence class given by TemplatePointsMatrixEntry* first to their new positions after or among the columns in the equivalence class given by TemplatePointsMatrixEntry* second
     //  the boolean argument indicates whether an anchor is being crossed from below (or from above)
     //  returns a count of the number of transpositions performed
-    unsigned long move_columns(std::shared_ptr<TemplatePointsMatrixEntry> first, std::shared_ptr<TemplatePointsMatrixEntry> second, bool from_below);
+    unsigned long move_columns(TemplatePointsMatrixEntry* first, TemplatePointsMatrixEntry* second, bool from_below);
 
     //moves a block of n columns, the rightmost of which is column s, to a new position following column t (NOTE: assumes s <= t)
     //  returns a count of the number of transpositions performed
@@ -139,26 +139,26 @@ private:
     void vineyard_update_high(unsigned a);
 
     //swaps two blocks of columns by updating the total order on columns, then rebuilding the matrices and computing a new RU-decomposition
-    void update_order_and_reset_matrices(std::shared_ptr<TemplatePointsMatrixEntry> first, std::shared_ptr<TemplatePointsMatrixEntry> second, bool from_below, MapMatrix_Perm* RL_initial, MapMatrix_Perm* RH_initial);
+    void update_order_and_reset_matrices(TemplatePointsMatrixEntry* first, TemplatePointsMatrixEntry* second, bool from_below, MapMatrix_Perm* RL_initial, MapMatrix_Perm* RH_initial);
 
     //updates the total order on columns, rebuilds the matrices, and computes a new RU-decomposition for a NON-STRICT anchor
     void update_order_and_reset_matrices(MapMatrix_Perm* RL_initial, MapMatrix_Perm* RH_initial);
 
     //swaps two blocks of simplices in the total order, and counts switches and separations
-    void count_switches_and_separations(std::shared_ptr<TemplatePointsMatrixEntry> at_anchor, bool from_below, unsigned long& switches, unsigned long& seps);
+    void count_switches_and_separations(TemplatePointsMatrixEntry* at_anchor, bool from_below, unsigned long& switches, unsigned long& seps);
 
     //used by the previous function to split grade lists at each anchor crossing
-    void do_separations(std::shared_ptr<TemplatePointsMatrixEntry> greater, std::shared_ptr<TemplatePointsMatrixEntry> lesser, bool horiz);
+    void do_separations(TemplatePointsMatrixEntry* greater, TemplatePointsMatrixEntry* lesser, bool horiz);
 
-    //removes entries corresponding to a TemplatePointsMatrixEntry from lift_low and lift_high
-    void remove_lift_entries(std::shared_ptr<TemplatePointsMatrixEntry> entry);
+    //removes entries corresponding to an TemplatePointsMatrixEntry from lift_low and lift_high
+    void remove_lift_entries(TemplatePointsMatrixEntry* entry);
 
-    //creates the appropriate entries in lift_low and lift_high for a TemplatePointsMatrixEntry with nonempty sets of "low" or "high" simplices
-    void add_lift_entries(std::shared_ptr<TemplatePointsMatrixEntry> entry);
+    //creates the appropriate entries in lift_low and lift_high for an TemplatePointsMatrixEntry with nonempty sets of "low" or "high" simplices
+    void add_lift_entries(TemplatePointsMatrixEntry* entry);
 
     //stores a barcode template in a 2-cell of the arrangement
     ///TODO: IMPROVE THIS -- track most recent barcode at the simplicial level and re-examine only the necessary columns!!!
-    void store_barcode_template(std::shared_ptr<Face> cell);
+    void store_barcode_template(Face* cell);
 
     //chooses an initial threshold by timing vineyard updates corresponding to random transpositions
     void choose_initial_threshold(unsigned decomp_time, unsigned long& num_trans, unsigned& trans_time, unsigned long& threshold);

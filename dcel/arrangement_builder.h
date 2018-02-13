@@ -49,12 +49,12 @@ public:
 
 private:
     unsigned verbosity;
-    void build_interior(std::shared_ptr<Arrangement> arrangement);
+    void build_interior(Arrangement &arrangement);
     //builds the interior of DCEL arrangement using a version of the Bentley-Ottmann algorithm
     //precondition: all achors have been stored via find_anchors()
     void find_edge_weights(Arrangement& arrangement, PersistenceUpdater& updater);
-    void find_path(Arrangement& arrangement, std::vector<std::shared_ptr<Halfedge>>& pathvec);
-    void find_subpath(Arrangement& arrangement, unsigned cur_node, std::vector<std::vector<unsigned>>& adj, std::vector<std::shared_ptr<Halfedge>>& pathvec);
+    void find_path(Arrangement& arrangement, std::vector<Halfedge*>& pathvec);
+    void find_subpath(Arrangement& arrangement, unsigned cur_node, std::vector<std::vector<unsigned>>& adj, std::vector<Halfedge*>& pathvec);
 };
 
 #endif //RIVET_CONSOLE_ARRANGEMENT_BUILDER_H

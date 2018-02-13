@@ -30,6 +30,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "type_tag.h"
 #include <boost/optional.hpp>
 #include <boost/serialization/split_member.hpp>
+#include <msgpack.hpp>
+#include "dcel/msgpack_adapters.h"
 
 class ArrangementMessage {
 
@@ -44,11 +46,13 @@ public:
         ar& x_grades& y_grades& x_exact& y_exact& half_edges& vertices& anchors& faces& topleft& topright& bottomleft& bottomright& vertical_line_query_list;
     }
 
+    MSGPACK_DEFINE(x_grades, y_grades, x_exact , y_exact , half_edges, vertices, anchors, faces, topleft, topright, bottomleft, bottomright, vertical_line_query_list);
+
     BarcodeTemplate get_barcode_template(double degrees, double offset);
 
     friend bool operator==(ArrangementMessage const& left, ArrangementMessage const& right);
 
-    Arrangement to_arrangement() const;
+    Arrangement* to_arrangement() const;
 
     bool is_empty() const;
 
@@ -92,6 +96,8 @@ private:
         {
             ar& x_coord& y_coord& dual_line& position& above_line& weight;
         }
+
+        MSGPACK_DEFINE(x_coord, y_coord, dual_line, position, above_line, weight);
     };
 
     friend bool operator==(AnchorM const& left, AnchorM const& right);
@@ -113,6 +119,8 @@ private:
         {
             ar& origin& twin& next& prev& face& anchor;
         }
+
+        MSGPACK_DEFINE(origin, twin, next, prev, face, anchor);
     };
 
     friend bool operator==(HalfedgeM const& left, HalfedgeM const& right);
@@ -126,6 +134,8 @@ private:
         {
             ar& boundary& dbc;
         }
+
+        MSGPACK_DEFINE(boundary, dbc);
     };
 
     friend bool operator==(FaceM const& left, FaceM const& right);
@@ -140,6 +150,7 @@ private:
         {
             ar& incident_edge& x& y;
         }
+        MSGPACK_DEFINE(incident_edge, x, y);
     };
 
     friend bool operator==(VertexM const& left, VertexM const& right);

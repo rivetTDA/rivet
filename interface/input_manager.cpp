@@ -179,7 +179,7 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
 {
     //TODO : switch to YAML or JSON input or switch to proper parser generator or combinators
     FileInputReader reader(stream);
-    auto data = std::make_unique<InputData>();
+    auto data = std::unique_ptr<InputData>(new InputData());
     if (verbosity >= 6) {
         debug() << "InputManager: Found a point cloud file.";
     }

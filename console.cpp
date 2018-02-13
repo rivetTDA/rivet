@@ -35,6 +35,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "dcel/arrangement_message.h"
 #include "dcel/serialization.h"
+#include "api.h"
 
 static const char USAGE[] =
     R"(RIVET: Rank Invariant Visualization and Exploration Tool
@@ -51,8 +52,8 @@ static const char USAGE[] =
       rivet_console <input_file> --identify
       rivet_console <input_file> --betti [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>]
       rivet_console <input_file> <output_file> --betti [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>]
-      rivet_console <precomputed_file> --bounds
-      rivet_console <precomputed_file> --barcodes <line_file>
+      rivet_console <precomputed_file> --bounds [-V <verbosity>]
+      rivet_console <precomputed_file> --barcodes <line_file> [-V <verbosity>]
       rivet_console <input_file> <output_file> [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [-f <format>] [--binary]
 
     Options:
@@ -95,6 +96,9 @@ static const char USAGE[] =
 
 )";
 
+std::unique_ptr<ComputationResult>
+from_messages(const TemplatePointsMessage &templatePointsMessage, const ArrangementMessage &arrangementMessage);
+
 unsigned int get_uint_or_die(std::map<std::string, docopt::value>& args, const std::string& key)
 {
     try {
@@ -106,7 +110,6 @@ unsigned int get_uint_or_die(std::map<std::string, docopt::value>& args, const s
     }
 }
 
-//TODO: this doesn't really belong here, look for a better place.
 void write_boost_file(InputParameters const& params, TemplatePointsMessage const& message, ArrangementMessage const& arrangement)
 {
     std::ofstream file(params.outputFile, std::ios::binary);
@@ -116,6 +119,19 @@ void write_boost_file(InputParameters const& params, TemplatePointsMessage const
     file << "RIVET_1\n";
     boost::archive::binary_oarchive oarchive(file);
     oarchive& params& message& arrangement;
+    file.flush();
+}
+
+void write_msgpack_file(InputParameters const& params, TemplatePointsMessage const& message, ArrangementMessage const& arrangement)
+{
+    std::ofstream file(params.outputFile, std::ios::binary);
+    if (!file.is_open()) {
+        throw std::runtime_error("Could not open " + params.outputFile + " for writing.");
+    }
+    file << "RIVET_msgpack\n";
+    msgpack::pack(file, params);
+    msgpack::pack(file, message);
+    msgpack::pack(file, arrangement);
     file.flush();
 }
 
@@ -158,13 +174,9 @@ void print_betti(TemplatePointsMessage const& message, std::ostream& ostream)
 }
 
 void process_bounds(const ComputationResult &computation_result) {
-    const auto grades = Grades(computation_result.arrangement->x_exact, computation_result.arrangement->y_exact);
-    const auto x_low = grades.x.front();
-    const auto y_low = grades.y.front();
-    const auto x_high = grades.x.back();
-    const auto y_high = grades.y.back();
-    std::cout << "low: " << x_low << ", " << y_low << std::endl;
-    std::cout << "high: " << x_high << ", " << y_high << std::endl;
+    auto bounds = compute_bounds(computation_result);
+    std::cout << "low: " << bounds.x_low << ", " << bounds.y_low << std::endl;
+    std::cout << "high: " << bounds.x_high << ", " << bounds.y_high << std::endl;
 }
 
 void process_barcode_queries(std::string query_file_name, const ComputationResult& computation_result)
@@ -200,14 +212,14 @@ void process_barcode_queries(std::string query_file_name, const ComputationResul
             return;
         }
     }
-    Grades grades(computation_result.arrangement->x_exact, computation_result.arrangement->y_exact);
 
-    for (auto query : queries) {
+    auto vec = query_barcodes(computation_result, queries);
+    for(auto i = 0; i < queries.size(); i++) {
+        auto query = queries[i];
         auto angle = query.first;
         auto offset = query.second;
         std::cout << angle << " " << offset << ": ";
-        auto templ = computation_result.arrangement->get_barcode_template(angle, offset);
-        auto barcode = templ.rescale(angle, offset, computation_result.template_points, grades);
+        auto barcode = vec[i].get();
         for (auto it = barcode->begin(); it != barcode->end(); it++) {
             auto bar = *it;
             std::cout << bar.birth << " ";
@@ -237,35 +249,14 @@ bool is_precomputed(std::string file_name)
     return line == "RIVET_1";
 }
 
-std::unique_ptr<ComputationResult> load_from_precomputed(std::string file_name)
-{
+std::unique_ptr<ComputationResult> load_from_precomputed(std::string file_name) {
     std::ifstream file(file_name);
     if (!file.is_open()) {
         throw std::runtime_error("Couldn't open " + file_name + " for reading");
     }
-    std::string type;
-    std::getline(file, type);
-    if (type != "RIVET_1") {
-        throw std::runtime_error("Expected a precomputed RIVET file");
-    }
-    boost::archive::binary_iarchive archive(file);
-    InputParameters params;
-    TemplatePointsMessage templatePointsMessage;
-    ArrangementMessage arrangementMessage;
-    archive >> params;
-    archive >> templatePointsMessage;
-    archive >> arrangementMessage;
-    std::unique_ptr<ComputationResult> result(new ComputationResult);
-    result->arrangement.reset(new Arrangement);
-    *(result->arrangement) = arrangementMessage.to_arrangement();
-    std::vector<size_t> ex;
-    const size_t* shape = templatePointsMessage.homology_dimensions.shape();
-    ex.assign(shape, shape + templatePointsMessage.homology_dimensions.num_dimensions());
-    result->homology_dimensions.resize(ex);
-    result->homology_dimensions = templatePointsMessage.homology_dimensions;
-    result->template_points = templatePointsMessage.template_points;
-    return result;
+    return from_istream(file);
 }
+
 
 int main(int argc, char* argv[])
 {
@@ -352,8 +343,9 @@ int main(int argc, char* argv[])
 //        if (!(*arrangement_message == test)) {
 //            throw std::runtime_error("Original and deserialized don't match!");
 //        }
-//        Arrangement reconstituted = arrangement_message->to_arrangement();
-//        ArrangementMessage round_trip(reconstituted);
+//        Arrangement *reconstituted = arrangement_message->to_arrangement();
+//        //reconstituted->test_consistency();
+//        ArrangementMessage round_trip(*reconstituted);
 //        if (!(round_trip == *arrangement_message)) {
 //            throw std::runtime_error("Original and reconstituted don't match!");
 //        }
@@ -484,6 +476,8 @@ int main(int argc, char* argv[])
                 fw.write_augmented_arrangement(file);
             } else if (params.outputFormat == "R1") {
                 write_boost_file(params, *points_message, *arrangement_message);
+            } else if (params.outputFormat == "msgpack") {
+                write_msgpack_file(params, *points_message, *arrangement_message);
             } else {
                 throw std::runtime_error("Unsupported output format: " + params.outputFormat);
             }

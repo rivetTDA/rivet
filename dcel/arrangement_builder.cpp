@@ -65,7 +65,7 @@ std::shared_ptr<Arrangement> ArrangementBuilder::build_arrangement(FIRep& fir,
     //now that we have all the anchors, we can build the interior of the arrangement
     progress.progress(25);
     timer.restart();
-    build_interior(arrangement);
+    build_interior(*arrangement);
     if (verbosity >= 2) {
         debug() << "Line arrangement constructed; this took " << timer.elapsed() << " milliseconds.";
         if (verbosity >= 4) {
@@ -83,7 +83,7 @@ std::shared_ptr<Arrangement> ArrangementBuilder::build_arrangement(FIRep& fir,
 
     //now that the arrangement is constructed, we can find a path -- NOTE: path starts with a (near-vertical) line to the right of all multigrades
     progress.progress(75);
-    std::vector<std::shared_ptr<Halfedge>> path;
+    std::vector<Halfedge*> path;
     timer.restart();
     find_path(*arrangement, path);
     if (verbosity >= 2) {
@@ -122,7 +122,7 @@ std::shared_ptr<Arrangement> ArrangementBuilder::build_arrangement(std::vector<e
     //now that we have all the anchors, we can build the interior of the arrangement
     progress.progress(30);
     timer.restart();
-    build_interior(arrangement); ///TODO: build_interior() should update its status!
+    build_interior(*arrangement); ///TODO: build_interior() should update its status!
     if (verbosity >= 2) {
         debug() << "Line arrangement constructed; this took " << timer.elapsed() << " milliseconds.";
         if (verbosity >= 4) {
@@ -151,29 +151,28 @@ std::shared_ptr<Arrangement> ArrangementBuilder::build_arrangement(std::vector<e
 //preconditions:
 //   all Anchors are in a list, ordered by Anchor_LeftComparator
 //   boundary of the arrangement is created (as in the arrangement constructor)
-void ArrangementBuilder::build_interior(std::shared_ptr<Arrangement> arrangement)
+void ArrangementBuilder::build_interior(Arrangement &arrangement)
 {
     if (verbosity >= 8) {
         debug() << "BUILDING ARRANGEMENT:  Anchors sorted for left edge of strip: ";
-        for (std::set<std::shared_ptr<Anchor>, Anchor_LeftComparator>::iterator it = arrangement->all_anchors.begin();
-             it != arrangement->all_anchors.end(); ++it)
+        for (auto it = arrangement.all_anchors.begin();
+             it != arrangement.all_anchors.end(); ++it)
             debug(true) << "(" << (*it)->get_x() << "," << (*it)->get_y() << ") ";
     }
 
     // DATA STRUCTURES
 
     //data structure for ordered list of lines
-    std::vector<std::shared_ptr<Halfedge>> lines;
-    lines.reserve(arrangement->all_anchors.size());
+    std::vector<Halfedge*> lines;
+    lines.reserve(arrangement.all_anchors.size());
 
     //data structure for queue of future intersections
-    std::priority_queue<std::shared_ptr<Arrangement::Crossing>,
-        std::vector<std::shared_ptr<Arrangement::Crossing>>,
-        PointerComparator<Arrangement::Crossing, Arrangement::CrossingComparator>>
-        crossings;
+    std::priority_queue<Arrangement::Crossing*,
+            std::vector<Arrangement::Crossing*>,
+            PointerComparator<Arrangement::Crossing, Arrangement::CrossingComparator>> crossings;
 
     //data structure for all pairs of Anchors whose potential crossings have been considered
-    typedef std::pair<std::shared_ptr<Anchor>, std::shared_ptr<Anchor>> Anchor_pair;
+    typedef std::pair<Anchor*, Anchor*> Anchor_pair;
     std::set<Anchor_pair> considered_pairs;
 
     // PART 1: INSERT VERTICES AND EDGES ALONG LEFT EDGE OF THE ARRANGEMENT
@@ -182,11 +181,11 @@ void ArrangementBuilder::build_interior(std::shared_ptr<Arrangement> arrangement
     }
 
     //for each Anchor, create vertex and associated halfedges, anchored on the left edge of the strip
-    std::shared_ptr<Halfedge> leftedge = arrangement->bottomleft;
+    auto leftedge = arrangement.bottomleft;
     unsigned prev_y = std::numeric_limits<unsigned>::max();
-    for (std::set<std::shared_ptr<Anchor>, Anchor_LeftComparator>::iterator it = arrangement->all_anchors.begin();
-         it != arrangement->all_anchors.end(); ++it) {
-        std::shared_ptr<Anchor> cur_anchor = *it;
+    for (auto it = arrangement.all_anchors.begin();
+         it != arrangement.all_anchors.end(); ++it) {
+        auto cur_anchor = *it;
 
         if (verbosity >= 10) {
             debug() << "  Processing Anchor"
@@ -195,13 +194,13 @@ void ArrangementBuilder::build_interior(std::shared_ptr<Arrangement> arrangement
 
         if (cur_anchor->get_y() != prev_y) //then create new vertex
         {
-            double dual_point_y_coord = -1 * arrangement->y_grades[cur_anchor->get_y()]; //point-line duality requires multiplying by -1
-            leftedge = arrangement->insert_vertex(leftedge, 0, dual_point_y_coord); //set leftedge to edge that will follow the new edge
+            double dual_point_y_coord = -1 * arrangement.y_grades[cur_anchor->get_y()]; //point-line duality requires multiplying by -1
+            leftedge = arrangement.insert_vertex(leftedge, 0, dual_point_y_coord); //set leftedge to edge that will follow the new edge
             prev_y = cur_anchor->get_y(); //remember the discrete y-index
         }
 
         //now insert new edge at origin vertex of leftedge
-        std::shared_ptr<Halfedge> new_edge = arrangement->create_edge_left(leftedge, cur_anchor);
+        auto new_edge = arrangement.create_edge_left(leftedge, cur_anchor);
 
         //remember Halfedge corresponding to this Anchor
         lines.push_back(new_edge);
@@ -215,10 +214,10 @@ void ArrangementBuilder::build_interior(std::shared_ptr<Arrangement> arrangement
 
     //for each pair of consecutive lines, if they intersect, store the intersection
     for (unsigned i = 0; i + 1 < lines.size(); i++) {
-        std::shared_ptr<Anchor> a = lines[i]->get_anchor();
-        std::shared_ptr<Anchor> b = lines[i + 1]->get_anchor();
+        auto a = lines[i]->get_anchor();
+        auto b = lines[i + 1]->get_anchor();
         if (a->comparable(*b)) //then the Anchors are (strongly) comparable, so we must store an intersection
-            crossings.push(std::make_shared<Arrangement::Crossing>(a, b, arrangement));
+            crossings.push(new Arrangement::Crossing(a, b, &arrangement));
 
         //remember that we have now considered this intersection
         considered_pairs.insert(Anchor_pair(a, b));
@@ -234,7 +233,7 @@ void ArrangementBuilder::build_interior(std::shared_ptr<Arrangement> arrangement
     int status_interval = 10000; //controls frequency of output
 
     //current position of sweep line
-    std::shared_ptr<Arrangement::Crossing> sweep = NULL;
+    Arrangement::Crossing *sweep = nullptr;
 
     while (!crossings.empty()) {
         //get the next intersection from the queue
@@ -247,13 +246,14 @@ void ArrangementBuilder::build_interior(std::shared_ptr<Arrangement> arrangement
         unsigned last_pos = cur->b->get_position(); //most recent edge in the curve corresponding to Anchor b
 
         if (last_pos != first_pos + 1) {
-            throw std::runtime_error("intersection between non-consecutive curves [1]: x = "
-                + std::to_string(sweep->x) + ", last_pos = " + std::to_string(last_pos)
-                + std::to_string(last_pos) + ", first_pos + 1 = " + std::to_string(first_pos + 1));
+            throw std::runtime_error("intersection between non-consecutive curves [1]: x = ["
+                + std::to_string(lower(sweep->x)) + ", " + std::to_string(upper(sweep->x)) 
+                + ", last_pos = " + std::to_string(last_pos)
+                + ", first_pos + 1 = " + std::to_string(first_pos + 1));
         }
 
         //find out if more than two curves intersect at this point
-        while (!crossings.empty() && sweep->x_equal(crossings.top().get()) && (cur->b == crossings.top()->a)) {
+        while (!crossings.empty() && sweep->x_equal(crossings.top()) && (cur->b == crossings.top()->a)) {
             cur = crossings.top();
             crossings.pop();
 
@@ -264,32 +264,34 @@ void ArrangementBuilder::build_interior(std::shared_ptr<Arrangement> arrangement
             last_pos++; //last_pos = cur->b->get_position();
         }
 
-        //compute y-coordinate of intersection
-        double intersect_y = arrangement->x_grades[sweep->a->get_x()] * (sweep->x) - arrangement->y_grades[sweep->a->get_y()];
+        //compute (approximate) coordinates of intersection
+        double intersect_x = ( arrangement.y_grades[sweep->a->get_y()] - arrangement.y_grades[sweep->b->get_y()] ) /
+                             ( arrangement.x_grades[sweep->a->get_x()] - arrangement.x_grades[sweep->b->get_x()] );
+        double intersect_y = arrangement.x_grades[sweep->a->get_x()] * intersect_x - arrangement.y_grades[sweep->a->get_y()];
 
         if (verbosity >= 10) {
             debug() << "  found intersection between"
-                    << (last_pos - first_pos + 1) << "edges at x =" << sweep->x << ", y =" << intersect_y;
+                    << (last_pos - first_pos + 1) << "edges at x =" << intersect_x << ", y =" << intersect_y;
         }
 
         //create new vertex
-        auto new_vertex = std::make_shared<Vertex>(sweep->x, intersect_y);
-        arrangement->vertices.push_back(new_vertex);
+        auto new_vertex = new Vertex(intersect_x, intersect_y);
+        arrangement.vertices.push_back(new_vertex);
 
         //anchor edges to vertex and create new face(s) and edges	//TODO: check this!!!
-        std::shared_ptr<Halfedge> prev_new_edge = NULL; //necessary to remember the previous new edge at each interation of the loop
-        std::shared_ptr<Halfedge> first_incoming = lines[first_pos]; //necessary to remember the first incoming edge
-        std::shared_ptr<Halfedge> prev_incoming = NULL; //necessary to remember the previous incoming edge at each iteration of the loop
+        Halfedge* prev_new_edge = NULL; //necessary to remember the previous new edge at each interation of the loop
+        Halfedge* first_incoming = lines[first_pos]; //necessary to remember the first incoming edge
+        Halfedge* prev_incoming = NULL; //necessary to remember the previous incoming edge at each iteration of the loop
         for (unsigned cur_pos = first_pos; cur_pos <= last_pos; cur_pos++) {
             //anchor edge to vertex
-            std::shared_ptr<Halfedge> incoming = lines[cur_pos];
+            auto incoming = lines[cur_pos];
             incoming->get_twin()->set_origin(new_vertex);
 
             //create next pair of twin halfedges along the current curve (i.e. curves[incident_edges[i]] )
-            std::shared_ptr<Halfedge> new_edge(new Halfedge(new_vertex, incoming->get_anchor())); //points AWAY FROM new_vertex
-            arrangement->halfedges.push_back(new_edge);
-            std::shared_ptr<Halfedge> new_twin(new Halfedge(NULL, incoming->get_anchor())); //points TOWARDS new_vertex
-            arrangement->halfedges.push_back(new_twin);
+            auto new_edge = new Halfedge(new_vertex, incoming->get_anchor()); //points AWAY FROM new_vertex
+            arrangement.halfedges.push_back(new_edge);
+            auto new_twin = new Halfedge(NULL, incoming->get_anchor()); //points TOWARDS new_vertex
+            arrangement.halfedges.push_back(new_twin);
 
             //update halfedge pointers
             new_edge->set_twin(new_twin);
@@ -306,8 +308,8 @@ void ArrangementBuilder::build_interior(std::shared_ptr<Arrangement> arrangement
                 incoming->set_next(prev_incoming->get_twin());
                 incoming->get_next()->set_prev(incoming);
 
-                std::shared_ptr<Face> new_face(new Face(new_twin, arrangement->faces.size()));
-                arrangement->faces.push_back(new_face);
+                auto new_face = new Face(new_twin, arrangement.faces.size());
+                arrangement.faces.push_back(new_face);
 
                 new_twin->set_face(new_face);
                 prev_new_edge->set_face(new_face);
@@ -338,7 +340,7 @@ void ArrangementBuilder::build_interior(std::shared_ptr<Arrangement> arrangement
         //update lines vector: flip portion of vector [first_pos, last_pos]
         for (unsigned i = 0; i < (last_pos - first_pos + 1) / 2; i++) {
             //swap curves[first_pos + i] and curves[last_pos - i]
-            std::shared_ptr<Halfedge> temp = lines[first_pos + i];
+            auto temp = lines[first_pos + i];
             lines[first_pos + i] = lines[last_pos - i];
             lines[last_pos - i] = temp;
         }
@@ -346,34 +348,34 @@ void ArrangementBuilder::build_interior(std::shared_ptr<Arrangement> arrangement
         //find new intersections and add them to intersections queue
         if (first_pos > 0) //then consider lower intersection
         {
-            std::shared_ptr<Anchor> a = lines[first_pos - 1]->get_anchor();
-            std::shared_ptr<Anchor> b = lines[first_pos]->get_anchor();
+            auto a = lines[first_pos - 1]->get_anchor();
+            auto b = lines[first_pos]->get_anchor();
 
             if (considered_pairs.find(Anchor_pair(a, b)) == considered_pairs.end()
                 && considered_pairs.find(Anchor_pair(b, a)) == considered_pairs.end()) //then this pair has not yet been considered
             {
                 considered_pairs.insert(Anchor_pair(a, b));
                 if (a->comparable(*b)) //then the Anchors are (strongly) comparable, so we have found an intersection to store
-                    crossings.push(std::make_shared<Arrangement::Crossing>(a, b, arrangement));
+                    crossings.push(new Arrangement::Crossing(a, b, &arrangement));
             }
         }
 
         if (last_pos + 1 < lines.size()) //then consider upper intersection
         {
-            std::shared_ptr<Anchor> a = lines[last_pos]->get_anchor();
-            std::shared_ptr<Anchor> b = lines[last_pos + 1]->get_anchor();
+            auto a = lines[last_pos]->get_anchor();
+            auto b = lines[last_pos + 1]->get_anchor();
 
             if (considered_pairs.find(Anchor_pair(a, b)) == considered_pairs.end()
                 && considered_pairs.find(Anchor_pair(b, a)) == considered_pairs.end()) //then this pair has not yet been considered
             {
                 considered_pairs.insert(Anchor_pair(a, b));
                 if (a->comparable(*b)) //then the Anchors are (strongly) comparable, so we have found an intersection to store
-                    crossings.push(std::make_shared<Arrangement::Crossing>(a, b, arrangement));
+                    crossings.push(new Arrangement::Crossing(a, b, &arrangement));
             }
         }
 
         //output status
-        if (verbosity >= 8) {
+        if (verbosity >= 4) {
             status_counter++;
             if (status_counter % status_interval == 0)
                 debug() << "      processed" << status_counter << "intersections"; //TODO: adding this makes debug go into an infinite loop: <<  "sweep position =" << *sweep;
@@ -385,7 +387,7 @@ void ArrangementBuilder::build_interior(std::shared_ptr<Arrangement> arrangement
         debug() << "PART 3: RIGHT EDGE OF THE ARRANGEMENT";
     }
 
-    std::shared_ptr<Halfedge> rightedge = arrangement->bottomright; //need a reference halfedge along the right side of the strip
+    auto rightedge = arrangement.bottomright; //need a reference halfedge along the right side of the strip
     unsigned cur_x = 0; //keep track of discrete x-coordinate of last Anchor whose line was connected to right edge (x-coordinate of Anchor is slope of line)
 
     //connect each line to the right edge of the arrangement (at x = INFTY)
@@ -393,28 +395,28 @@ void ArrangementBuilder::build_interior(std::shared_ptr<Arrangement> arrangement
     //    lines that have the same slope m are "tied together" at the same vertex, with coordinates (INFTY, Y)
     //    where Y = INFTY if m is positive, Y = -INFTY if m is negative, and Y = 0 if m is zero
     for (unsigned cur_pos = 0; cur_pos < lines.size(); cur_pos++) {
-        std::shared_ptr<Halfedge> incoming = lines[cur_pos];
-        std::shared_ptr<Anchor> cur_anchor = incoming->get_anchor();
+        auto incoming = lines[cur_pos];
+        auto cur_anchor = incoming->get_anchor();
 
         if (cur_anchor->get_x() > cur_x || cur_pos == 0) //then create a new vertex for this line
         {
             cur_x = cur_anchor->get_x();
 
             double Y = INFTY; //default, for lines with positive slope
-            if (arrangement->x_grades[cur_x] < 0)
+            if (arrangement.x_grades[cur_x] < 0)
                 Y = -1 * Y; //for lines with negative slope
-            else if (arrangement->x_grades[cur_x] == 0)
+            else if (arrangement.x_grades[cur_x] == 0)
                 Y = 0; //for horizontal lines
 
-            rightedge = arrangement->insert_vertex(rightedge, INFTY, Y);
+            rightedge = arrangement.insert_vertex(rightedge, INFTY, Y);
         } else //no new vertex required, but update previous entry for vertical-line queries
-            arrangement->vertical_line_query_list.pop_back();
+            arrangement.vertical_line_query_list.pop_back();
 
         //store Halfedge for vertical-line queries
-        arrangement->vertical_line_query_list.push_back(incoming->get_twin());
+        arrangement.vertical_line_query_list.push_back(incoming->get_twin());
 
         //connect current line to the most-recently-inserted vertex
-        std::shared_ptr<Vertex> cur_vertex = rightedge->get_origin();
+        auto cur_vertex = rightedge->get_origin();
         incoming->get_twin()->set_origin(cur_vertex);
 
         //update halfedge pointers
@@ -434,8 +436,8 @@ void ArrangementBuilder::build_interior(std::shared_ptr<Arrangement> arrangement
 //computes and stores the edge weight for each anchor line
 void ArrangementBuilder::find_edge_weights(Arrangement& arrangement, PersistenceUpdater& updater)
 {
-    std::vector<std::shared_ptr<Halfedge>> pathvec;
-    std::shared_ptr<Halfedge> cur_edge = arrangement.topright;
+    std::vector<Halfedge*> pathvec;
+    auto cur_edge = arrangement.topright;
 
     //find a path across all anchor lines
     while (cur_edge->get_twin() != arrangement.bottomright) //then there is another vertex to consider on the right edge
@@ -460,7 +462,7 @@ void ArrangementBuilder::find_edge_weights(Arrangement& arrangement, Persistence
 //finds a pseudo-optimal path through all 2-cells of the arrangement
 // path consists of a vector of Halfedges
 // at each step of the path, the Halfedge points to the Anchor being crossed and the 2-cell (Face) being entered
-void ArrangementBuilder::find_path(Arrangement& arrangement, std::vector<std::shared_ptr<Halfedge>>& pathvec)
+void ArrangementBuilder::find_path(Arrangement& arrangement, std::vector<Halfedge*>& pathvec)
 {
     // PART 1: BUILD THE DUAL GRAPH OF THE ARRANGEMENT
 
@@ -478,11 +480,11 @@ void ArrangementBuilder::find_path(Arrangement& arrangement, std::vector<std::sh
     //loop over all arrangement.faces
     for (unsigned i = 0; i < arrangement.faces.size(); i++) {
         //consider all neighbors of this arrangement.faces
-        std::shared_ptr<Halfedge> boundary = (arrangement.faces[i])->get_boundary();
-        std::shared_ptr<Halfedge> current = boundary;
+        auto boundary = (arrangement.faces[i])->get_boundary();
+        auto current = boundary;
         do {
             //find index of neighbor
-            std::shared_ptr<Face> neighbor = current->get_twin()->get_face();
+            auto neighbor = current->get_twin()->get_face();
             if (neighbor != NULL) {
                 unsigned long j = neighbor->id();
 
@@ -533,7 +535,7 @@ void ArrangementBuilder::find_path(Arrangement& arrangement, std::vector<std::sh
     }
 
     //make sure to start at the proper node (2-cell)
-    std::shared_ptr<Face> initial_cell = arrangement.topleft->get_twin()->get_face();
+    auto initial_cell = arrangement.topleft->get_twin()->get_face();
     unsigned long start = initial_cell->id();
 
     //store the children of each node (with initial_cell regarded as the root of the tree)
@@ -563,11 +565,14 @@ void ArrangementBuilder::find_path(Arrangement& arrangement, std::vector<std::sh
 //   children[i] is a vector of indexes of the children of node i, in decreasing order of branch weight
 //   (branch weight is total weight of all edges below a given node, plus weight of edge to parent node)
 // Output: vector pathvec contains a Halfedge pointer for each step of the path
-void ArrangementBuilder::find_subpath(Arrangement& arrangement, unsigned start_node, std::vector<std::vector<unsigned>>& children, std::vector<std::shared_ptr<Halfedge>>& pathvec)
+void ArrangementBuilder::find_subpath(Arrangement& arrangement,
+                                      unsigned start_node,
+                                      std::vector<std::vector<unsigned>>& children,
+                                      std::vector<Halfedge*>& pathvec)
 {
     std::stack<unsigned> nodes; // stack for nodes as we do DFS
     nodes.push(start_node); // push node onto the node stack
-    std::stack<std::shared_ptr<Halfedge>> backtrack; // stack for storing extra copy of std::shared_ptr<Halfedge>* so we don't have to recalculate when popping
+    std::stack<Halfedge*> backtrack; // stack for storing extra copy of std::shared_ptr<Halfedge>* so we don't have to recalculate when popping
     unsigned numDiscovered = 1, numNodes = children.size();
 
     while (numDiscovered != numNodes) // while we have not traversed the whole tree
@@ -580,7 +585,7 @@ void ArrangementBuilder::find_subpath(Arrangement& arrangement, unsigned start_n
             unsigned next_node = children[node].back();
             children[node].pop_back();
 
-            std::shared_ptr<Halfedge> cur_edge = (arrangement.faces[node])->get_boundary();
+            auto cur_edge = (arrangement.faces[node])->get_boundary();
             while (cur_edge->get_twin()->get_face() != arrangement.faces[next_node]) {
                 cur_edge = cur_edge->get_next();
 

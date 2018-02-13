@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "math/template_points_matrix.h"
 #include <ostream>
 
-Anchor::Anchor(std::shared_ptr<TemplatePointsMatrixEntry> e)
+Anchor::Anchor(TemplatePointsMatrixEntry* e)
     : x_coord(e->x)
     , y_coord(e->y)
     , entry(e)
@@ -77,12 +77,12 @@ unsigned Anchor::get_y() const
     return y_coord;
 }
 
-void Anchor::set_line(std::shared_ptr<Halfedge> e)
+void Anchor::set_line(Halfedge* e)
 {
     dual_line = e;
 }
 
-std::shared_ptr<Halfedge> Anchor::get_line() const
+Halfedge* Anchor::get_line() const
 {
     return dual_line;
 }
@@ -107,7 +107,7 @@ void Anchor::toggle()
     above_line = !above_line;
 }
 
-std::shared_ptr<TemplatePointsMatrixEntry> Anchor::get_entry()
+TemplatePointsMatrixEntry* Anchor::get_entry()
 {
     return entry;
 }

@@ -34,7 +34,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "math/template_points_matrix.h"
 #include "progress.h"
 #include <boost/multiprecision/cpp_int.hpp>
-typedef boost::multiprecision::cpp_rational exact;
 
 #include "numerics.h"
 #include <fstream>
