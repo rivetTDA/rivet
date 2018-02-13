@@ -91,9 +91,9 @@ FIRep::FIRep(BifiltrationData& bif_data, int vbsty)
 
     for (auto it = bif_data.mid_simplices.begin(); it != bif_data.mid_simplices.end(); it++) {
         //set aside space for indices in each MidHighSimplexData struct.
-        it->ind.reserve(it->ag.size());
+        it->col_inds.reserve(it->grades_vec.size());
         //iterate through the grades
-        for (auto it2 = it->ag.begin(); it2 != it->ag.end(); it2++)
+        for (auto it2 = it->grades_vec.begin(); it2 != it->grades_vec.end(); it2++)
 
             //populate mid_generators with pairs of iterators which specify a
             //simplex and its grade of appearance
@@ -185,12 +185,12 @@ FIRep::FIRep(BifiltrationData& bif_data, int vbsty)
     //Record the sorted indices in the MidHighSimplexData structs.
     for (unsigned i = 0; i != mid_generators.size(); i++) {
         //this funky line uses the iterator in ag to access the corresponding element in ind, and also increments the iterator in ag
-        *(mid_generators[i].first->ind.begin() + std::distance(mid_generators[i].first->ag.begin(), mid_generators[i].first->ag_it++)) = i;
+        *(mid_generators[i].first->col_inds.begin() + std::distance(mid_generators[i].first->grades_vec.begin(), mid_generators[i].first->grades_it++)) = i;
     }
 
-    //Reset all of the ag_it iterators to their start position.  This is needed for when we build the high matrix.
+    //Reset all of the grades_it iterators to their start position.  This is needed for when we build the high matrix.
     for (auto it = bif_data.mid_simplices.begin(); it != bif_data.mid_simplices.end(); it++) {
-        it->ag_it = it->ag.begin();
+        it->grades_it = it->grades_vec.begin();
     }
 
     //Enter the mid_simplex indices into a hash table.
@@ -213,7 +213,7 @@ FIRep::FIRep(BifiltrationData& bif_data, int vbsty)
     //The relation represented is the one between *it2 and *(it2+1).
     
     for (auto it = bif_data.mid_simplices.begin(); it != bif_data.mid_simplices.end(); it++) {
-        for (AppearanceGrades::iterator it2 = it->ag.begin(); (it2 + 1) != it->ag.end(); it2++) {
+        for (AppearanceGrades::iterator it2 = it->grades_vec.begin(); (it2 + 1) != it->grades_vec.end(); it2++) {
             high_generators.push_back(std::pair<std::vector<MidHighSimplexData>::iterator, AppearanceGrades::iterator>(it, it2));
         }
     }
@@ -221,7 +221,7 @@ FIRep::FIRep(BifiltrationData& bif_data, int vbsty)
     //Add each (simplex,grade) pair of dimension (hom_dim+1) to high_generators
     for (auto it = bif_data.high_simplices.begin(); it != bif_data.high_simplices.end(); it++) {
         //iterate through the grades
-        for (auto it2 = it->ag.begin(); it2 != it->ag.end(); it2++) {
+        for (auto it2 = it->grades_vec.begin(); it2 != it->grades_vec.end(); it2++) {
             //populate high_generators with pairs
             high_generators.push_back(std::pair<std::vector<MidHighSimplexData>::iterator, AppearanceGrades::iterator>(it, it2));
         }
@@ -311,21 +311,21 @@ FIRep::FIRep(BifiltrationData& bif_data, int vbsty)
                 //face_node->second gives an iterator pointing to the face.
                 //Now choose a suitable bigrade for the face.
 
-                //A COOL TRICK: Simplices are colex ordered, and so is each AppearanceGrades vector ag.  Thus, it can be shown that if we reject a grade of appearance once, we do not need to consider it again.  This saves us time in building the FI-Rep.
+                //A COOL TRICK: Simplices are colex ordered, and so is each AppearanceGrades vector grades_vec.  Thus, it can be shown that if we reject a grade of appearance once, we do not need to consider it again.  This saves us time in building the FI-Rep.
 
                 //Note however, that the construction of the matrix depends on the choice of the grade of the boundary element, and it is not clear how this choice impacts the speed of subsequent computations taking the FIRep as input.  In the absense of any insight into this, we simply make the choice that allows us to build the FI-Rep most quickly.
 
                 bool found_match = false;
                 while (!found_match) {
                     //Did we find a grade for this boundary simplex that is less than the grade of the simplex itself, in the partial order on R^2?
-                    if ((face_node->second->ag_it->x <= high_generators[i].second->x) && (face_node->second->ag_it->y <= high_generators[i].second->y)) {
+                    if ((face_node->second->grades_it->x <= high_generators[i].second->x) && (face_node->second->grades_it->y <= high_generators[i].second->y)) {
                         //insert the index in mid_generators corresponding to this (simplex,grade) pair.
                         
                         
-                        high_mx.mat.set(*(face_node->second->ind.begin() + std::distance(face_node->second->ag.begin(), face_node->second->ag_it)),i);
+                        high_mx.mat.set(*(face_node->second->col_inds.begin() + std::distance(face_node->second->grades_vec.begin(), face_node->second->grades_it)),i);
                         found_match = true;
                     } else {
-                        face_node->second->ag_it++;
+                        face_node->second->grades_it++;
                     }
                 }
                 face.clear();
@@ -341,10 +341,10 @@ FIRep::FIRep(BifiltrationData& bif_data, int vbsty)
             high_mx.ind.fill_index_mx(prev_grade, curr_grade, i-1);
 
             //add the second index of the relation to the ith column of high_mx
-            high_mx.mat.set(*(high_generators[i].first->ind.begin() + std::distance(high_generators[i].first->ag.begin(), high_generators[i].second) + 1),i);
+            high_mx.mat.set(*(high_generators[i].first->col_inds.begin() + std::distance(high_generators[i].first->grades_vec.begin(), high_generators[i].second) + 1),i);
             
             //add the first index of the relation to the ith column of high_mx
-            high_mx.mat.set(*(high_generators[i].first->ind.begin() + std::distance(high_generators[i].first->ag.begin(), high_generators[i].second)),i);
+            high_mx.mat.set(*(high_generators[i].first->col_inds.begin() + std::distance(high_generators[i].first->grades_vec.begin(), high_generators[i].second)),i);
             
             //Note: The order in which we add the two elements matters; by construction, column is in heap order (see documentation for std::pop_heap), so no need to call high_mx.mat.prepare_col().
         }

@@ -403,7 +403,7 @@ void BifiltrationData::print_bifiltration()
             std::cout << *it2 << " ";
         }
         std::cout << "; "; //Separator of vertex and grade info
-        for (AppearanceGrades::const_iterator it2 = it->ag.begin(); it2 != it->ag.end(); it2++) {
+        for (AppearanceGrades::const_iterator it2 = it->grades_vec.begin(); it2 != it->grades_vec.end(); it2++) {
             std::cout << it2->x << " " << it2->y << " ";
         }
         std::cout << std::endl;
@@ -414,7 +414,7 @@ void BifiltrationData::print_bifiltration()
             std::cout << *it2 << " ";
         }
         std::cout << "; "; //Separator of vertex and grade info
-        for (AppearanceGrades::const_iterator it2 = it->ag.begin(); it2 != it->ag.end(); it2++) {
+        for (AppearanceGrades::const_iterator it2 = it->grades_vec.begin(); it2 != it->grades_vec.end(); it2++) {
             std::cout << it2->x << " " << it2->y << " ";
         }
         std::cout << std::endl;

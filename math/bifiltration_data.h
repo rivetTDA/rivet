@@ -33,7 +33,7 @@
  Replaces the SimplexTree class used in earlier versions of RIVET.
  
  
- Structs: LowSimplexData, 
+ Structs: LowSimplexData,
    
  Description: Used to store simplices, together with their bigrades of
  appearance.  LowSimplex data stores a simplex s of dimension hom_dim-1, and
@@ -88,11 +88,12 @@ struct MidHighSimplexData {
     std::vector<unsigned> col_inds; //formerly ind
 
     //TODO: Maybe slightly cleaner to use an iterator pointing to ind than an
-    //iterator pointing to ag?
+    //iterator pointing to grades_vec?
     
     //std::vector<unsigned>::iterator ind_it;
-    AppearanceGrades::iterator ag_it;
+    AppearanceGrades::iterator grades_it;
 
+    //
     bool high;
 
     virtual bool is_high() const
@@ -101,24 +102,17 @@ struct MidHighSimplexData {
     }
 
     //TODO: This is a little inefficient, since high_simplex data doesn't
-    //actually need the data of col_inds or ag_it.
+    //actually need the data of col_inds or grades_it.
     //But this is convenient and not terrible.
-    MidHighSimplexData(Simplex simp, AppearanceGrades app_gr, bool h)
+    MidHighSimplexData(Simplex simp, AppearanceGrades app_gr, bool is_high)
         : s(simp)
-        , ag(app_gr)
+        , grades_vec(app_gr)
         , col_inds(std::vector<unsigned>())
-        , ag_it(ag.begin())
-        , high(h)
+        , grades_it(grades_vec.begin())
+        , high(is_high)
     {
     }
 };
-
-
-
-
-
-
-
 
 class BifiltrationData {
     friend class FIRep;

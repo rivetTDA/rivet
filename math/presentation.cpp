@@ -46,9 +46,10 @@ Presentation::Presentation(FIRep& fir, Progress& progress, int verbosity)
         fir.high_mx.print();
     }
     
-    //Compute a minimal set of generators for the image of the high matrix.
+    /* Compute a minimal set of generators for the image of the high matrix.
     Also compute pointwise ranks for the high matrix.
-    //This is done by simple version of the standard reduction.
+    This is done by simple version of the standard reduction.
+     */
     //TODO: later, this will be modified to also yield clearing data.
     
     Timer timer;
