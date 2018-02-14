@@ -1,7 +1,8 @@
 In order to take advantage of PHAT's lazy heap 
-representation of column-sparse matrices, RIVET uses three 
+representation of column-sparse matrices, RIVET uses code from four  
 files from the PHAT software package for persistent homology computation:
-vector_heap.h (this is heavily modified/extended and is now called vector_heap_mod.h.)
+vector_heap.h (this is heavily modified/extended in RIVET and is now called vector_heap_mod.h.)
+vector_vector.h (not included in RIVET, but one function from this file appears in vector_heap_mod.h)
 misc.h
 thead_local_storage.h
 

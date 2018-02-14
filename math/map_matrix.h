@@ -19,50 +19,63 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **********************************************************************/
 /*
  
- Authors: Matthew L. Wright (February 2014- ), Michael Lesnick (Modifications 2017-2018)
+ Authors: Matthew L. Wright (February 2014- ), 
+          Michael Lesnick (Modifications 2017-2018)
  
  Classes: MapMatrix and related classes.
  
- Description: The classes introduces here store a column sparse matrix with Z/2Z coefficients,
- and provide operations for persistence calculations.
- The original version of this class was based on a custom linked list 
- data structure for columns.  This updated version does away with linked lists,
- and instead represents matrices using a modified version of the class vector_heap 
- from the PHAT library, which stores columns as lazy heaps.
- Here "lazy" means that multiple copies of an element 
- are allowed to live in the heap.  See the PHAT paper for details.
+ Description: The classes introduces here store a column sparse matrix with Z/2Z 
+ coefficients, and provide operations for persistence calculations. The original 
+ version of this class was based on a custom linked list data structure for 
+ columns.  This updated version does away with linked lists, and instead 
+ represents matrices using a modified version of the class vector_heap from the 
+ PHAT library, which stores columns as lazy heaps.  Here "lazy" means that 
+ multiple copies of an element are allowed to live in the heap.  See the PHAT 
+ paper for details.
  
  This file introduces four related classes:
- * MapMatrix_Base provides the basic structures and functionality; it is the parent class and is not meant to be instantiated directly.
- * MapMatrix : MapMatrix_Base stores matrices in a column-sparse format, designed for basic persistence calcuations, and computations of bigraded betti numbers / presentations.
- * MapMatrix_Perm : MapMatrix adds functionality for row and column permutations; it is designed for the reduced matrices of vineyard updates.
- * MapMatrix_RowPriority_Perm : MapMatrix_Base stores matrices in a row-sparse format with row and column permutations; it is designed for the upper-triangular matrices of vineyard updates.
+ * MapMatrix_Base provides the basic structures and functionality; it is the 
+   parent class and is not meant to be instantiated directly.
+ * MapMatrix : MapMatrix_Base stores matrices in a column-sparse format, 
+   designed for basic persistence calcuations, and computations of bigraded 
+   betti numbers / presentations.
+ * MapMatrix_Perm : MapMatrix adds functionality for row and column 
+   permutations; it is designed for the reduced matrices of vineyard updates.
+ * MapMatrix_RowPriority_Perm : MapMatrix_Base stores matrices in a row-sparse 
+   format with row and column permutations; it is designed for the 
+   upper-triangular matrices of vineyard updates.
 */
 
 
 
 /*
  
- TODO [Mike]: Preliminary computational experiments indicate that using lazy heaps makes RIVET
- significantly faster. However, the orginazation I have introduced is probably not optimizal.
- Matthew's version of the MapMatrix hierarchy had 4 matrix classes.  
- This update still has those four, plus the classes vector_heap_mod (a modification of PHAT's vector_heap class), and vector_heap_perm : vector_heap_mod.  That seems to be a bit much,
- and the way the code is written, it has been a pain to add additional functionality, because
- vector_heap_mod and MapMatrix typically both need to be modified.  On top of this, minimizing a presention
- uses a matrix with sorted columns, and it may be appropriate to have a special place for such matrices in the
- class structure, especially since some different methods are used with these.
+ TODO [Mike]: Preliminary computational experiments indicate that using lazy 
+ heaps makes RIVET significantly faster. However, the orginazation I have 
+ introduced is probably not optimizal.  Matthew's version of the MapMatrix 
+ hierarchy had 4 matrix classes.  This update still has those four, plus the 
+ classes vector_heap_mod (a modification of PHAT's vector_heap class), and 
+ vector_heap_perm : vector_heap_mod.  That seems to be a bit much, and the way 
+ the code is written, it has been a pain to add additional functionality, 
+ because vector_heap_mod and MapMatrix typically both need to be modified.  
+ On top of this, minimizing a presention uses a matrix with sorted columns, and 
+ it may be appropriate to have a special place for such matrices in the class 
+ structure, especially since some different methods are used with these.
  
- The structure should be revisited.  Here are some specific ideas for cleaning up the structure.
+ The structure should be revisited.  Here are some specific ideas for cleaning 
+ up the structure:
  
- -Get rid of the MapMatrix_Base class.  This seems to no longer be a heplful abstraction,
- since vector_heap_mod now plays the role of the base class.
+ -Get rid of the MapMatrix_Base class.  This seems to no longer be a heplful 
+  abstraction, since vector_heap_mod now plays the role of the base class.
  
- -It may be wise to make the vector_heap_mod object public, in order to reduce the number of wrapper classes.
+ -It may be wise to make the vector_heap_mod object public, in order to reduce 
+  the number of wrapper classes.
  
- -Revisit the names of the functions here, in relation to the functions in vector_heap mod.
+ -Revisit the names of the functions here, in relation to the functions in 
+  vector_heap_mod.
  
- -Perhaps the use of the PHAT integer typedef "index" vs. ordinary int should be more systematic.
- 
+ -Perhaps the use of the PHAT integer typedef "index" vs. ordinary int should be 
+  more systematic.
 */
 
 #ifndef __MapMatrix_H__
@@ -76,9 +89,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 class IndexMatrix;
 class FIRep;
 
-//base class simply implements features common to all MapMatrices, whether column-priority or row-priority
-//written here using column-priority terminology, but this class is meant to be inherited, not instantiated directly
+/*
+Base class simply implements features common to all MapMatrices, whether
+column-priority or row-priority. Written here using column-priority terminology,
+but this class is meant to be inherited, not instantiated directly
+*/
 
+ 
 class MapMatrix_Base {
 protected:
 
@@ -113,8 +130,7 @@ public:
 
     MapMatrix(); // creates an empty MapMatrix
     
-    //NOTE: Commenting this out for now.  Constructor probably should be rewritten to be more column-sparse friendly.
-    //MapMatrix(std::initializer_list<std::initializer_list<int>>);
+    MapMatrix(std::initializer_list<std::initializer_list<int>>);
     
     virtual unsigned width() const; //returns the number of columns in the matrix
     virtual unsigned height() const; //returns the number of rows in the matrix
@@ -219,10 +235,6 @@ public:
     
 };
 
-
-
-
-
 //MapMatrix with row/column permutations and low array, designed for "vineyard updates."
 class MapMatrix_RowPriority_Perm; //forward declaration
 class MapMatrix_Perm {
@@ -230,10 +242,15 @@ public:
   
     //Constructors
     
-    //Special constructor to create the initial low matrix used in the computation of barcode templates.  Permutes and trims columns as described in section 6 of the RIVET paper.
+    
+    //Special constructor to create the initial low matrix used in the
+    //computation of barcode templates.  Permutes and trims columns as described
+    //in section 6 of the RIVET paper.
     MapMatrix_Perm(const MapMatrix& mat, const std::vector<int>& coface_order, unsigned num_cofaces);
     
-    //Special constructor to create the initial high matrix used in the computation of barcode templates.  Permutes and trims rows and columns as described in section 6 of the RIVET paper.
+    //Special constructor to create the initial high matrix used in the
+    //computation of barcode templates.  Permutes and trims rows and columns as
+    //described in section 6 of the RIVET paper.
     MapMatrix_Perm(const MapMatrix& mat, const std::vector<int>& face_order, unsigned num_faces, const std::vector<int>& coface_order, const unsigned num_cofaces);
     
     unsigned width() const; //returns the number of columns in the matrix
@@ -255,13 +272,14 @@ public:
     void swap_rows(unsigned i, bool update_lows); //transposes rows i and i+1, optionally updates low array
     void swap_columns(unsigned j, bool update_lows); //transposes columns j and j+1, optionally updates low array
     
-    //TODO: Add lazy versions of these functions which don't redo the whole computation
+    
     //clears the matrix, then rebuilds it from reference with columns permuted according to col_order
     //NOTE: This functoon and the next do not remove columns or rows.
-    
+    //TODO: Add lazy versions of these functions which don't redo the whole computation
     void rebuild(MapMatrix_Perm* reference, const std::vector<unsigned>& col_order);
 
-    //clears the matrix, then rebuilds it from reference with columns permuted according to col_order and rows permuted according to row_order
+    //clears the matrix, then rebuilds it from reference with columns permuted
+    //according to col_order and rows permuted according to row_order
     void rebuild(MapMatrix_Perm* reference, const std::vector<unsigned>& col_order, const std::vector<unsigned>& row_order);
     
     //TODO: Add a finalize method here?
@@ -275,7 +293,8 @@ private:
     std::vector<int> low_by_col; //stores the low number for each column, or -1 if the column is empty -- NOTE: only accurate after decompose_RU() is called
 };
 
-//MapMatrix stored in row-priority format, with row/column permutations, designed for upper-triangular matrices in vineyard updates.
+//MapMatrix stored in row-priority format, with row/column permutations,
+//designed for upper-triangular matrices in vineyard updates.
 //NOTE: In this new version of the code, the MapMatrix_RowPriority_Perm class is just a simple interface for the vector_heap_perm class.
 class MapMatrix_RowPriority_Perm {
 public:
@@ -286,8 +305,6 @@ public:
     unsigned width() const; //returns the number of columns in the matrix
     unsigned height() const; //returns the number of rows in the matrix
 
-    //We don't need this clear function.  It has been commented out of the PersistenceUpdater class.
-    //void clear(unsigned i, unsigned j); //clears (sets to 0) the entry in row i, column j
     bool entry(unsigned i, unsigned j) const; //returns true if entry (i,j) is 1, false otherwise
 
     void add_row(unsigned j, unsigned k); //adds row j to row k; RESULT: row j is not changed, row k contains sum of rows j and k (with mod-2 arithmetic)

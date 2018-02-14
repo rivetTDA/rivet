@@ -26,25 +26,30 @@
  Class: BifiltrationData
    
  Description: Computes and stores the information about a bifiltration
- needed to compute homology in fixed dimension hom_dim.
- Together with InputManager, handles 1-critical or
- multicritical Rips bifiltrations, as defined in the RIVET paper.
- Only tracks simplices in dimension hom_dim-1, hom_dim, and hom_dim+1.
+ needed to compute a free implicit representation for homology in fixed
+ dimension hom_dim.  Together with InputManager, handles 1-critical or
+ multicritical Rips bifiltrations.  Only tracks simplices in dimension hom_dim-1, 
+ hom_dim, and hom_dim+1, and does not store simplices of lower dimension.
  Replaces the SimplexTree class used in earlier versions of RIVET.
  
  
- Structs: LowSimplexData,
+ Struct: LowSimplexData
    
- Description: Used to store simplices, together with their bigrades of
- appearance.  LowSimplex data stores a simplex s of dimension hom_dim-1, and
- MidHighSimplexData stores a simplex s of dimension hom_dim or hom_dim+1.
- LowSimplex stores exactly one bigrade, this is the greatest lower bound of
- all bigrades of appearance of s. 
- MidHighSimplexData stores a vector of bigrades.
+ Description: Stores a simplex of dimension hom_dim - 1, together
+ with the greatest lower bound of all grades of appearance of that simplex.
  
- MidHighSimplexData also stores some additional data which is
- used to consturct boundary matrices.
-
+ 
+ Struct: MidHighSimplexData s
+ 
+ Description: Stores a simplex s of dimension hom_dim or
+ hom_dim+1, together with the bigrades of appearance of s.  Also can store the
+ column indices corresponding corresponding to copies of s, though this is only 
+ used for simplices of dimension hom_dim.  The reason for using a single data
+ structure to handle simplces of dimension hom_dim and hom_dim+1 is that for 
+ multicritical filtrations, columns in the high matrix in an FIRep can correspond 
+ to either simplicies of dimension hom_dim + 1, or relations.  The relations are
+ indexed by simplcies of dimension hom_dim; working with a single data structure 
+ for both types is convenient for sorting the columns of the high matrix.
 */
 
 #ifndef BIFILTRATION_DATA_H
@@ -64,36 +69,34 @@
 typedef std::vector<int> Simplex;
 typedef std::vector<Grade> AppearanceGrades;
 
-//stores a Simplex and a single Grade.
 struct LowSimplexData {
     Simplex s;
     Grade gr;
 
-    LowSimplexData(Simplex simp, Grade g)
-        : s(simp)
-        , gr(g)
+    LowSimplexData(Simplex simplex, Grade grade)
+        : s(simplex)
+        , gr(grade)
     {
     }
 };
 
-
-//stores a Simplex and a vector of Grades,
-//And for
 struct MidHighSimplexData {
     Simplex s;
-    AppearanceGrades grades_vec; //formerly app_gr
-
-    //column index of the generator corresponding to each bigrade.
-    //Used to construct high boundary matrix.
-    std::vector<unsigned> col_inds; //formerly ind
-
-    //TODO: Maybe slightly cleaner to use an iterator pointing to ind than an
-    //iterator pointing to grades_vec?
     
-    //std::vector<unsigned>::iterator ind_it;
-    AppearanceGrades::iterator grades_it;
+    //vector of grades of appearance of s
+    AppearanceGrades grades_vec;
 
-    //
+    //Vector of the column indices in the low matrix corresponding to s.
+    //Used to construct high boundary matrix.
+    //Only used for simplcies of dimension hom_dim, not hom_dim_1.
+    std::vector<unsigned> col_inds;
+    
+    AppearanceGrades::iterator grades_it;
+    
+    //TODO: Maybe slightly cleaner to use an iterator pointing to col_ind than an
+    //iterator pointing to grades_vec?
+    //std::vector<unsigned>::iterator ind_it;
+
     bool high;
 
     virtual bool is_high() const
@@ -102,11 +105,12 @@ struct MidHighSimplexData {
     }
 
     //TODO: This is a little inefficient, since high_simplex data doesn't
-    //actually need the data of col_inds or grades_it.
-    //But this is convenient and not terrible.
-    MidHighSimplexData(Simplex simp, AppearanceGrades app_gr, bool is_high)
-        : s(simp)
-        , grades_vec(app_gr)
+    //actually need the data of col_inds or grades_it.  Since building the high
+    //simplices can be very demanding of memory, it is probably worthwhile to
+    //optimize this more.
+    MidHighSimplexData(Simplex simplex, AppearanceGrades grades, bool is_high)
+        : s(simplex)
+        , grades_vec(grades)
         , col_inds(std::vector<unsigned>())
         , grades_it(grades_vec.begin())
         , high(is_high)
@@ -122,9 +126,10 @@ public:
     //constructor
     BifiltrationData(unsigned dim, int verbosity);
     
-    /* build_VR_complex() builds BifiltrationData representing a bifiltered 
+    /* 
+    build_VR_complex() builds BifiltrationData representing a bifiltered
     Vietoris-Rips complex from metric data, via a straighforward recursive
-    algorithm similar to the Bron–Kerbosch_algorithm.
+    algorithm.
     NOTE: This gives a 1-critical bifiltration, i.e., one where each simplex
     has a unique bigrade of appearance.
     
@@ -141,7 +146,8 @@ public:
                           const unsigned num_x,
                           const unsigned num_y);
     
-    /* build_BR_complex() builds BifiltrationData representing a bifiltered 
+    /* 
+    build_BR_complex() builds BifiltrationData representing a bifiltered
     Rips complex from metric data.  The algorithm for this uses a sweepline
      procedure designed by Roy.
      
@@ -168,7 +174,7 @@ public:
     grades is a vector of appearance grades
     NOTE: Changed behavior of add_simplex so that it no longer recursively
           adds in faces.
-     */
+    */
     void add_simplex(const std::vector<int>& vertices,
                      const AppearanceGrades& grades);
     

@@ -32,9 +32,9 @@
  
  Class: BigradedMatrixLex
  
- Description: This is a similar wrapper class which stores a MapMatrix and an associated
- IndexMatrixLex.  Used when columns are sorted in lex order of their bigrades
- of appearance.
+ Description: This is a similar wrapper class which stores a MapMatrix and an 
+ associated IndexMatrixLex.  Used when columns are sorted in lex order of their 
+ bigrades of appearance.
  
 */
 
@@ -55,7 +55,8 @@ class BigradedMatrix {
 public:
     //column-sparse matrix
     MapMatrix mat;
-    //bigrade info for each column of mat.  Columns are assumed to be in colex order.
+    //bigrade info for each column of mat.  Columns are assumed to be in colex
+    //order.
     IndexMatrix ind;
     
     //Constructor.  Builds an zero matrix of the appropropriate dimensions
@@ -64,14 +65,17 @@ public:
     //Constructor.  Copies the arguments.
     BigradedMatrix(const MapMatrix& m,const IndexMatrix& i);
     
-    //Constructor taking a BigradedMatrixLex object.  Moves the cols of lex_mat into this matrix, and builds the corresponding index matrix.
-    //Also trivialized lex_mat in the process
-    BigradedMatrix(BigradedMatrixLex lex_mat);
+    /*
+    Constructor taking a BigradedMatrixLex object.  Moves the cols of lex_mat
+    into this matrix, and builds the corresponding index matrix.
+    Also trivializes lex_mat in the process.
+    */
+    BigradedMatrix(BigradedMatrixLex& lex_mat);
     
     
     
     //Compute the kernel of this bigraded matrix via a standard reduction:
-    //Note: This destroys the matrix.
+    //NOTE: This destroys the matrix.
     BigradedMatrix kernel();
 
     void print();
@@ -81,12 +85,18 @@ public:
 private:
 
      /*
-     Performs a step of the kernel computation at a single bigrade.
-     This is a variant on the standard bigraded reduction.
-     When a column in mat is zeroed out, the corresponding column of slave is appended to the back working_ker.mat, and then zeroed out in the slave.
-     The function also records the bigrades of the generators for the kernel by updating working_ker.ind.
+     Performs a step of the kernel computation at a single bigrade. This is a 
+     variant on the standard bigraded reduction.  When a column in mat is zeroed
+     out, the corresponding column of slave is appended to the back 
+     working_ker.mat, and then zeroed out in the slave.  The function also 
+     records the bigrades of the generators for the kernel by updating 
+     working_ker.ind.
      */
-    void kernel_one_bigrade(MapMatrix& slave, BigradedMatrixLex& ker_lex, unsigned curr_x, unsigned curr_y, std::vector<int>& lows);
+     void kernel_one_bigrade(MapMatrix& slave,
+                             BigradedMatrixLex& ker_lex,
+                             unsigned curr_x,
+                             unsigned curr_y,
+                             std::vector<int>& lows);
 
 };
 
@@ -97,8 +107,10 @@ public:
     IndexMatrixLex ind;
     
     //constructor
-    //TODO: If I just declared the constructor here and defined it in the .cpp file, I could remove some include directives.  But it doesn't seem to matter much.
-    BigradedMatrixLex(unsigned rows, unsigned cols, unsigned ind_rows, unsigned ind_cols)
+    BigradedMatrixLex(unsigned rows,
+                      unsigned cols,
+                      unsigned ind_rows,
+                      unsigned ind_cols)
         : mat(rows,cols),
         ind(ind_rows,ind_cols)
     {}

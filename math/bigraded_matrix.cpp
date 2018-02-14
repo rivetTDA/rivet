@@ -43,7 +43,7 @@ BigradedMatrix::BigradedMatrix(const MapMatrix& m, const IndexMatrix& i)
 
 //Constructor taking a BigradedMatrixLex object.  Moves the cols of lex_mat into this matrix, and builds the corresponding index matrix.
 //Also trivializes lex_mat in the process
-BigradedMatrix::BigradedMatrix(BigradedMatrixLex lex_mat)
+BigradedMatrix::BigradedMatrix(BigradedMatrixLex& lex_mat)
     : BigradedMatrix(lex_mat.mat.height(), lex_mat.mat.width(), lex_mat.ind.height(), lex_mat.ind.width())
 {
     

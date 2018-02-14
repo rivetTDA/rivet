@@ -5,7 +5,7 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
 set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-ftemplate-depth=1024 -Wall -Wextra -pedantic -fPIC")
-#set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 include(ExternalProject)
 
 externalproject_add(
@@ -49,14 +49,16 @@ add_library(rivet
         dcel/barcode_template.cpp
         dcel/dcel.cpp
         dcel/arrangement_message.cpp
+	math/bifiltration_data.cpp
+	math/bigraded_matrix.cpp
+	math/firep.cpp
         math/map_matrix.cpp
         math/multi_betti.cpp
-        math/simplex_tree.cpp
-        math/st_node.cpp
         math/template_point.cpp
         math/template_points_matrix.cpp
         math/index_matrix.cpp
         math/persistence_updater.cpp
+        math/presentation.cpp
         numerics.cpp
         timer.cpp
         debug.cpp
@@ -65,6 +67,9 @@ add_library(rivet
         math/bool_array.cpp
         math/bool_array.h
         interface/c_api.cpp
+	math/phat_mod/include/phat/representations/vector_heap_mod.h
+	math/phat_mod/include/phat/helpers/misc.h
+	math/phat_mod/include/phat/helpers/thread_local_storage.h
         interface/c_api.h api.h api.cpp)
 
 add_dependencies(rivet msgpack_project)
@@ -139,7 +144,7 @@ target_link_libraries(rivet_console ${CMAKE_CURRENT_BINARY_DIR}/docopt/src/docop
 #        debug.cpp
 #        test/unit_tests.cpp dcel/grades.cpp dcel/grades.h math/bool_array.cpp math/#bool_array.h)
 
-add_dependencies(unit_tests msgpack_project)
+#add_dependencies(unit_tests msgpack_project)
 
 include_directories("${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/include" ${Boost_INCLUDE_DIR} ${PROJECT_SOURCE_DIR}/test)
 

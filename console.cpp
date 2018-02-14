@@ -214,7 +214,7 @@ void process_barcode_queries(std::string query_file_name, const ComputationResul
     }
 
     auto vec = query_barcodes(computation_result, queries);
-    for(auto i = 0; i < queries.size(); i++) {
+    for(unsigned i = 0; i < queries.size(); i++) {
         auto query = queries[i];
         auto angle = query.first;
         auto offset = query.second;

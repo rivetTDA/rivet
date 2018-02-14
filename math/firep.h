@@ -38,7 +38,8 @@
  
  Description:  To construct an FIRep from a BifiltrationData object, we 
  construct hash tables whose keys are pointers to simplices.  These are used, 
- respectively, to define the hash function and to compare compare two keys for equality.
+ respectively, to define the hash function and to compare compare two keys for 
+ equality.
  
 */
 
@@ -101,7 +102,7 @@ public:
     presentation matrix; low matrix is set to zero.
      
     TODO: We need this only because persistence updater currently takes an FIRep
-    as input.  Note also that this is inefficient, since we are making a copy of
+    as input.  This is slightly inefficient, since we are making a copy of
     the presentation matrix, though that is not necessary. In the future, we can 
     give persistence updater a presentation directly, and this will be much 
     simpler. Once that is implemented, we can remove this constructor, and 
@@ -111,7 +112,7 @@ public:
     
     //This constructor is used when the FIRep is given directly as text input.
     //TODO: It seems a little hacky to be passing a BifiltrationData object to
-    //this constructor
+    //this constructor.  Can we avoid this?
     FIRep(BifiltrationData& bif_data,
           unsigned num_high_simplices,
           unsigned num_mid_simplices,
@@ -139,7 +140,34 @@ private:
     unsigned x_grades;
     unsigned y_grades;
     
-    //writes boundary information given boundary entries in column col of matrix mat
+    //A pair of iterators; first points to a simplex, second points to a grade
+    //of appearance of that simplex.
+    typedef std::pair<std::vector<MidHighSimplexData>::iterator, AppearanceGrades::iterator> MidHiGenIterPair;
+    
+    //Techinical functions for constructing FIRep from bifiltration data.
+    
+    //loop through simplices, writing columns to the matrix, and filling in the
+    //low IndexMatrix
+    void construct_low_mx(const std::vector<MidHiGenIterPair>& mid_gens,
+                          const BifiltrationData& bif_data,
+                          const SimplexHashLow& low_ht);
+    
+    //construct a column for each (high-simplex, grade-of-appearance) pair,
+    //and also a column for each "neighboring bigrade" relation for the
+    //mid-simplices.
+    void construct_high_mx(const std::vector<MidHiGenIterPair>& mid_gens,
+                          const std::vector<MidHiGenIterPair>& high_gens,
+                          const BifiltrationData& bif_data,
+                          const SimplexHashMid& mid_ht
+                           );
+    
+    
+    //Technical sorting function used to sort the MidHiGenIterPair objects that
+    //index the high_matrix.
+    bool sort_high_gens(const MidHiGenIterPair& left, const MidHiGenIterPair& right);
+    
+
+    //writes boundary, given boundary entries in column col of matrix mat
     void write_boundary_column(MapMatrix& mat,
                                const std::vector<unsigned>& entries,
                                const unsigned col);

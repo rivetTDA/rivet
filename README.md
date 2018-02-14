@@ -1,15 +1,24 @@
 # RIVET
 
 Program to visualize two-parameter persistent homology. 
-Designed by Michael Lesnick and Matthew Wright. 
-Created December 2013.  
+
+## About this Version
+This is a development version of RIVET.  Relative to the main version, it features additions and changes to make RIVET faster, and to allow it to handle more types of input.
+
+## Project Founders
+Michael Lesnick  
+Matthew Wright
 
 ## Contributors
-Michael Lesnick (Princeton)
-Matthew Wright (St. Olaf College)
-Bryn Keller (Intel Labs)
+Madkour Abdel-Rahman   
+Bryn Keller    
+Matthew Wright  
+Phil Nadolny  
+Simon Segert  
+Roy Zhao  
 
-TODO: Other contributors please add yourselves!
+## Dependencies
+RIVET depends on the qt and boost libraries.  This development version of RIVET uses some code from the PHAT repository for persistence computation by Ulrich Bauer, Michael Kerber, Jan Reininghaus.
 
 ## Requirements
 Before starting to build RIVET, you will need to have the following installed:
