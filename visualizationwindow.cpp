@@ -40,7 +40,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <sstream>
 
 const QString VisualizationWindow::DEFAULT_SAVE_DIR_KEY("default_save_dir");
-//TODO:COMMAND LINE OPTION
+//TODO: see if there are still bugs with horizontal line
 VisualizationWindow::VisualizationWindow(InputParameters& params)
     : QMainWindow()
     , ui(new Ui::VisualizationWindow)
@@ -249,7 +249,6 @@ void VisualizationWindow::augmented_arrangement_ready(std::shared_ptr<Arrangemen
 
     //create persistence diagram
     p_diagram.create_diagram();
-    //p_diagram.set_max_line_length(sqrt((grades.y.back()-grades.y.front())*(grades.y.back()-grades.y.front())+(grades.x.back()-grades.x.front())*(grades.x.back()-grades.x.front())));
 
     //get the barcode
     BarcodeTemplate dbc = arrangement->get_barcode_template(angle_precise, offset_precise);
@@ -481,11 +480,8 @@ void VisualizationWindow::on_offsetSpinBox_valueChanged(double offset)
         offset_precise = offset;
         update_origin();
         slice_diagram.update_line(ui->angleDoubleSpinBox->value(), offset_precise, dist_to_origin);
-
-
-
         update_persistence_diagram(); //updates the barcode in the slice diagram
-        slice_diagram.zoom_diagram(angle_precise, offset_precise,dist_to_origin);//draws the diagram
+        slice_diagram.zoom_diagram(angle_precise, offset_precise,dist_to_origin);//draws the diagram,with the updated barcode
 
     }
 
@@ -528,8 +524,9 @@ void VisualizationWindow::on_xi2CheckBox_toggled(bool checked)
 //updates the persistence diagram and barcode after a change in the slice line
 void VisualizationWindow::update_persistence_diagram(bool line_changed)
 {
-
     if (persistence_diagram_drawn) {
+
+
         //get the barcode
 
 
@@ -553,16 +550,15 @@ void VisualizationWindow::update_persistence_diagram(bool line_changed)
                  dbc.print();
                  barcode->print();
              }
+           slice_diagram.update_barcode(*barcode, ui->barcodeCheckBox->isChecked());
         }
 
 
 
-        //draw the barcode
-        double new_max_len=sqrt((xmax_precise-xmin_precise)*(xmax_precise-xmin_precise)+(ymax_precise-ymin_precise)*(ymax_precise-ymin_precise));
-
 
         p_diagram.update_diagram(slice_diagram.get_slice_length(), slice_diagram.get_pd_scale(),dist_to_origin, is_visible,*barcode);
-        slice_diagram.update_barcode(*barcode, ui->barcodeCheckBox->isChecked());
+        //slice_diagram.update_barcode(*barcode, ui->barcodeCheckBox->isChecked());
+
     }
 }
 
@@ -586,10 +582,10 @@ void VisualizationWindow::set_line_parameters(double angle, double offset)
     ui->angleDoubleSpinBox->setValue(angle);//note these calls do NOT call update_origin or update_persistence diagram because slice_update_lock=true
     ui->offsetSpinBox->setValue(offset);
 
-    slice_update_lock = false;
 
     update_persistence_diagram();
     slice_diagram.zoom_diagram(angle_precise, offset_precise,dist_to_origin);
+    slice_update_lock = false;
 
 
 }

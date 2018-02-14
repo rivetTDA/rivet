@@ -408,7 +408,8 @@ void SliceDiagram::resize_diagram()
 //redraws the rectangles for the homology dimension visualization
 void SliceDiagram::redraw_dim_rects()
 {
-    //TODO: handle rectangles going out of bounds
+    qDebug()<<"diagram width="<<diagram_width+padding;
+    qDebug()<<"diagram height="<<diagram_height+padding;
     for (unsigned i = 0; i < x_grades.size(); i++) {
         for (unsigned j = 0; j < y_grades.size(); j++) {
             double left = (x_grades[i] - data_xmin) * scale_x;
@@ -421,7 +422,15 @@ void SliceDiagram::redraw_dim_rects()
             if (j + 1 < y_grades.size())
                 top = (y_grades[j + 1] - data_ymin) * scale_y + 1;
 
-            hom_dim_rects[i][j]->setRect(left, bottom, right - left, top - bottom);
+
+
+            left=fmin(fmax(0,left),diagram_width+padding);
+            bottom=fmin(fmax(0,bottom),diagram_height+padding);
+            right=fmin(fmax(0,right),diagram_width+padding);
+            top=fmin(fmax(0,top),diagram_height+padding);
+            //ensure the corners are never drawn outside of the window
+
+            hom_dim_rects[i][j]->setRect(left,bottom, right-left,top-bottom);
         }
     }
 } //end redraw_dim_rects()
@@ -429,28 +438,52 @@ void SliceDiagram::redraw_dim_rects()
 //redraws the support points of the multigraded Betti numbers
 void SliceDiagram::redraw_dots()
 {
-    //TODO: handle going out of bounds
     //NOTE: this should be fine, but if it is too slow, we could store the radius of each dot so that we don't have to compute it on each resize
     std::vector<QGraphicsEllipseItem*>::iterator it0 = xi0_dots.begin();
     std::vector<QGraphicsEllipseItem*>::iterator it1 = xi1_dots.begin();
     std::vector<QGraphicsEllipseItem*>::iterator it2 = xi2_dots.begin();
+    bool visible;//whether the center of the dot is visible in the window
     for (unsigned i = 0; i < points.size(); i++) {
         if (points[i].zero > 0) //then draw a xi_0 dot
         {
             double radius = round(config_params->bettiDotRadius * sqrt(points[i].zero));
-            (*it0)->setRect((points[i].x - data_xmin) * scale_x - radius, (points[i].y - data_ymin) * scale_y - radius, 2 * radius, 2 * radius);
+            visible=(data_xmin<=points[i].x)&&(points[i].x<=data_xmax+padding/scale_x)&&(data_ymin<=points[i].y)&&(points[i].y<=data_ymax+padding/scale_y);
+            if(visible)
+            {
+                (*it0)->setRect((points[i].x - data_xmin) * scale_x - radius, (points[i].y - data_ymin) * scale_y - radius, 2 * radius, 2 * radius);
+            }
+            else
+            {
+                (*it0)->setRect(0,0,0,0);
+            }
             ++it0;
         }
         if (points[i].one > 0) //then draw a xi_1 dot
         {
             double radius = round(config_params->bettiDotRadius * sqrt(points[i].one));
-            (*it1)->setRect((points[i].x - data_xmin) * scale_x - radius, (points[i].y - data_ymin) * scale_y - radius, 2 * radius, 2 * radius);
+            visible=(data_xmin<=points[i].x)&&(points[i].x<=data_xmax+padding/scale_x)&&(data_ymin<=points[i].y)&&(points[i].y<=data_ymax+padding/scale_y);
+            if(visible)
+            {
+                (*it1)->setRect((points[i].x - data_xmin) * scale_x - radius, (points[i].y - data_ymin) * scale_y - radius, 2 * radius, 2 * radius);
+            }
+            else
+            {
+                (*it1)->setRect(0,0,0,0);
+            }
             ++it1;
         }
         if (points[i].two > 0) //then draw a xi_2 dot
         {
             double radius = round(config_params->bettiDotRadius * sqrt(points[i].two));
-            (*it2)->setRect((points[i].x - data_xmin) * scale_x - radius, (points[i].y - data_ymin) * scale_y - radius, 2 * radius, 2 * radius);
+            visible=(data_xmin<=points[i].x)&&(points[i].x<=data_xmax+padding/scale_x)&&(data_ymin<=points[i].y)&&(points[i].y<=data_ymax+padding/scale_y);
+            if(visible)
+            {
+                (*it2)->setRect((points[i].x - data_xmin) * scale_x - radius, (points[i].y - data_ymin) * scale_y - radius, 2 * radius, 2 * radius);
+            }
+            else
+            {
+                (*it2)->setRect(0,0,0,0);
+            }
             ++it2;
         }
     }
@@ -461,7 +494,7 @@ void SliceDiagram::zoom_diagram(double angle, double offset, double distance_to_
 {
 
 
-    int text_padding = 5; //pixels
+    //int text_padding = 5; //pixels
 
     dist_to_origin = distance_to_origin;
 
@@ -479,18 +512,12 @@ void SliceDiagram::zoom_diagram(double angle, double offset, double distance_to_
     double gray_box_ymin = fmax(original_ymin - data_ymin, 0.0) / (data_ymax - data_ymin);
     double gray_box_ymax = fmax(original_ymax - data_ymin, 0.0) / (data_ymax - data_ymin);
 
-    data_xmin_text->setPos(data_xmin_text->boundingRect().width() / (-2), -1 * text_padding);
-    data_xmax_text->setPos(diagram_width - data_xmax_text->boundingRect().width() / 2, -1 * text_padding);
-    data_ymin_text->setPos(-1 * text_padding - data_ymin_text->boundingRect().width(), data_ymin_text->boundingRect().height() / 2);
-    data_ymax_text->setPos(-1 * text_padding - data_ymax_text->boundingRect().width(), diagram_height + data_ymax_text->boundingRect().height() / 2);
 
     gray_line_vertical->setLine(diagram_width * gray_box_xmax, diagram_height * gray_box_ymin, diagram_width * gray_box_xmax, diagram_height * gray_box_ymax);
     gray_line_horizontal->setLine(diagram_width * gray_box_xmin, diagram_height * gray_box_ymax, diagram_width * gray_box_xmax, diagram_height * gray_box_ymax);
     gray_line_vertical_left->setLine(diagram_width * gray_box_xmin, diagram_height * gray_box_ymin, diagram_width * gray_box_xmin, diagram_height * gray_box_ymax);
     gray_line_horizontal_bottom->setLine(diagram_width * gray_box_xmin, diagram_height * gray_box_ymin, diagram_width * gray_box_xmax, diagram_height * gray_box_ymin);
 
-    x_label->setPos((diagram_width - x_label->boundingRect().width()) / 2, -1 * text_padding);
-    y_label->setPos(-1 * text_padding - y_label->boundingRect().height(), (diagram_height - y_label->boundingRect().width()) / 2);
 
     double intrinsic_y_int = offset / cos(angle * PI / 180);
     double intrinsic_slope = tan(angle * PI / 180);
@@ -530,6 +557,7 @@ void SliceDiagram::zoom_diagram(double angle, double offset, double distance_to_
 
     if (line_visible) {
         //reposition bars
+        qDebug()<<"in zoom_diagram, redrawing bars";
         unsigned count = 1;
         for (unsigned i = 0; i < bars.size(); i++) {
             for (std::list<PersistenceBar*>::iterator it = bars[i].begin(); it != bars[i].end(); ++it) {
@@ -853,6 +881,9 @@ std::pair<double, double> SliceDiagram::compute_endpoint(double coordinate, unsi
 
     //int step_size = old_step_size * conversion;
 
+
+
+
     int step_size=config_params->persistenceBarWidth + config_params->persistenceBarSpace;
     //compute x and y relative to slice line (pixel units)
     double x = 0;
@@ -860,6 +891,7 @@ std::pair<double, double> SliceDiagram::compute_endpoint(double coordinate, unsi
     if (line_vert) {
         if (coordinate == std::numeric_limits<double>::infinity()) { //should change to upper bound of view
             //choose y outside of the viewable window
+            //if coordinate is much larger than max_coord, then coord should be infinite, but is not due to numerical error
             y = view_length;
         } else {
             //find y along the line
@@ -871,8 +903,9 @@ std::pair<double, double> SliceDiagram::compute_endpoint(double coordinate, unsi
     } else {
         double angle = atan(line_slope); //angle (data)      NOTE: it would be slightly more efficient to only compute this once per barcode update
 
-        if (coordinate == std::numeric_limits<double>::infinity()) {
+        if (coordinate == std::numeric_limits<double>::infinity()|| coordinate>pow(10.0,10.0)) {
             //set coordinate so that it will be outside the viewable window
+            //the finite cutoff seems to patch over the issue with phantom barcodes-not sure why
             coordinate = view_length / std::min(scale_x, scale_y);
         }
 

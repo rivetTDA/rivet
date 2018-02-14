@@ -84,14 +84,14 @@
         <item>
          <widget class="QLabel" name="homdimLabel">
           <property name="sizePolicy">
-           <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
           <property name="minimumSize">
            <size>
-            <width>550</width>
+            <width>0</width>
             <height>0</height>
            </size>
           </property>
@@ -108,14 +108,14 @@
       <item row="1" column="1">
        <widget class="QGraphicsView" name="pdView">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+         <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
         <property name="minimumSize">
          <size>
-          <width>0</width>
+          <width>550</width>
           <height>450</height>
          </size>
         </property>

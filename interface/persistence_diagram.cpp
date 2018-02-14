@@ -201,7 +201,7 @@ void PersistenceDiagram::resize_diagram()
     setSceneRect(scene_rect_x, scene_rect_y, scene_rect_w, scene_rect_h);
 } //end resize_diagram()
 
-//sets the barcode and the zero coordinate
+//sets the barcode
 void PersistenceDiagram::set_barcode(const Barcode& bc)
 {
     barcode = &bc;
@@ -215,12 +215,13 @@ void PersistenceDiagram::set_barcode(const Barcode& bc)
 void PersistenceDiagram::draw_dots()
 {
 
+
+
     //counters
     unsigned bc_index = 0;
     unsigned num_big_cycles = 0; //nonessential cycle born after
     unsigned num_big_points = 0;
     unsigned num_short_cycles = 0; //cycles that die before the visible portion of the diagram
-    unsigned num_short_points = 0; //cycles that are born before the visible portion of the line, and die within the line
     unsigned num_long_nonessential_points = 0; //nonessential cycles which span the entire line
     unsigned num_long_essential_points = 0; //essential cycles which span the entire line
 
@@ -342,7 +343,7 @@ void PersistenceDiagram::draw_dots()
 
                     if (death < dist_to_origin-eps) //dies too early
                     {
-                        num_short_points += it->multiplicity;
+                        num_short_cycles += it->multiplicity;
                     }
                 }
 
@@ -612,3 +613,4 @@ void PersistenceDiagram::receive_parameter_change()
     //update diagram
     resize_diagram();
 }
+
