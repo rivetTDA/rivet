@@ -5,7 +5,6 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
 set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-ftemplate-depth=1024 -Wall -Wextra -pedantic -fPIC")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 include(ExternalProject)
 
 externalproject_add(
@@ -64,13 +63,14 @@ add_library(rivet
         debug.cpp
         dcel/grades.cpp
         dcel/grades.h
-        math/bool_array.cpp
-        math/bool_array.h
+        #math/bool_array.cpp
+        #math/bool_array.h
         interface/c_api.cpp
 	math/phat_mod/include/phat/representations/vector_heap_mod.h
 	math/phat_mod/include/phat/helpers/misc.h
 	math/phat_mod/include/phat/helpers/thread_local_storage.h
-        interface/c_api.h api.h api.cpp)
+        interface/c_api.h api.h api.cpp
+        )
 
 add_dependencies(rivet msgpack_project)
 target_link_libraries(rivet ${Boost_LIBRARIES})
@@ -95,7 +95,7 @@ add_executable (rivet_console
         dcel/grades.cpp 
 	dcel/grades.h 
 	math/bool_array.cpp 
-	#math/bool_array.h
+	math/bool_array.h
 	math/bifiltration_data.cpp
 	math/bigraded_matrix.cpp
 	math/firep.cpp
@@ -119,33 +119,44 @@ target_link_libraries(rivet_console ${CMAKE_CURRENT_BINARY_DIR}/docopt/src/docop
 # TODO: make this not recompile everything we just compiled for rivet_console.
 # Maybe using https://cmake.org/Wiki/CMake/Tutorials/Object_Library ?
 
-#add_executable(unit_tests
-#        computation.cpp
-#        interface/progress.cpp
-#        interface/file_writer.cpp
-#        interface/file_input_reader.cpp
-#        interface/input_manager.cpp
-#        dcel/arrangement.cpp
-#        dcel/arrangement_builder.cpp
-#        dcel/anchor.cpp
-#        dcel/barcode.cpp
-#        dcel/barcode_template.cpp
-#        dcel/dcel.cpp
-#        math/map_matrix.cpp
-#        math/multi_betti.cpp
-#	math/bifiltration_data.cpp
-#	math/firep.cpp
-#        math/template_point.cpp
-#        math/template_points_matrix.cpp
-#        math/index_matrix.cpp
-#        math/persistence_updater.cpp
-#        numerics.cpp
-#        timer.cpp
-#        debug.cpp
-#        test/unit_tests.cpp dcel/grades.cpp dcel/grades.h math/bool_array.cpp math/#bool_array.h)
+add_executable(unit_tests
+        computation.cpp
+        debug.cpp  
+        interface/file_writer.cpp
+        interface/file_input_reader.cpp
+        interface/input_manager.cpp
+	interface/progress.cpp
+        numerics.cpp
+        timer.cpp      
+        dcel/anchor.cpp
+        dcel/arrangement.cpp
+        dcel/arrangement_builder.cpp
+        dcel/arrangement_message.cpp
+	dcel/barcode.cpp
+        dcel/barcode_template.cpp
+        dcel/dcel.cpp
+        dcel/grades.cpp 
+	dcel/grades.h 
+	math/bool_array.cpp 
+	math/bool_array.h
+	math/bifiltration_data.cpp
+	math/bigraded_matrix.cpp
+	math/firep.cpp
+     	math/index_matrix.cpp
+        math/map_matrix.cpp
+        math/multi_betti.cpp
+        math/persistence_updater.cpp
+	math/presentation.cpp
+        math/template_point.cpp
+        math/template_points_matrix.cpp
+	math/phat_mod/include/phat/representations/vector_heap_mod.h
+	math/phat_mod/include/phat/helpers/misc.h
+	math/phat_mod/include/phat/helpers/thread_local_storage.h
+        test/unit_tests.cpp 
+        dcel/grades.cpp 
+)
 
-#add_dependencies(unit_tests msgpack_project)
+add_dependencies(unit_tests msgpack_project)
 
-include_directories("${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/include" ${Boost_INCLUDE_DIR} ${PROJECT_SOURCE_DIR}/test)
-
-#target_link_libraries(unit_tests ${Boost_LIBRARIES} )
+include_directories("${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/include" ${Boost_INCLUDE_DIR} ${PROJECT_SOURCE_DIR}/test )
+target_link_libraries(unit_tests ${Boost_LIBRARIES} )
