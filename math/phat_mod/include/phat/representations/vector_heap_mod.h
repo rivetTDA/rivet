@@ -13,20 +13,19 @@
  
  Class: vector_heap_mod
  
- Description: PHAT's class vector_heap gives the core data structure
- and algorithms for PHAT's lazy heap implementation of the
- standard persistent homology reduction algorithm.  
- vector_heap_mod is a modified version of this class which introduces various
- technical changes and extensions for use with RIVET.
- In particular, several methods are added to allow for more efficient column addition.
- Functionality for working with sorted rows instead of lazy heaps is also added;
- that is used by RIVET to minimize a presentation.
+ Description: PHAT's class vector_heap gives the core data structure and 
+ algorithms for PHAT's lazy heap implementation of the standard persistent 
+ homology reduction algorithm.  vector_heap_mod is a modified version of this 
+ class which introduces various technical changes and extensions for use with 
+ RIVET.  In particular, several methods are added to allow for more efficient 
+ column addition.  Functionality for working with sorted rows instead of lazy 
+ heaps is also added; that is used by RIVET to minimize a presentation.
  
  
  Class: vector_heap_perm : vetor_heap_perm
  
- Description: Has similar functionality to vector_heap_mod,
- but works with implicity permuted rows.  Used for barcode template computations.
+ Description: Has similar functionality to vector_heap_mod, but works with 
+ implicity permuted rows.  Used for barcode template computations.
  
  
 Original Header:
@@ -53,9 +52,6 @@ along with PHAT.  If not, see <http://www.gnu.org/licenses/>. */
 
 #include "../helpers/misc.h"
 
-//File defines vector_heap_mod, a modification of PHAT's vector_heap class, a column sparse representation of a matrix with binary coefficients, using lazy heaps for columns.
-//The file also defines child class vector_heap_perm, which supports row permutations, represented implicitly via a permutation vector and its inverse.
-
 namespace phat {
     class vector_heap_mod {
     protected:
@@ -79,8 +75,9 @@ namespace phat {
             }
             col = temp_col;
             
-            //Remark: Interesting that this reverse step is here in the original PHAT code.  Is this more efficient than just calling make_heap?  -Mike
-            //TODO: Maybe experiment with deleting std::reverse?
+            //REMARK: Interesting that this reverse step is here in the original
+            //PHAT code.  Is this more efficient than just calling make_heap
+            //directly?  -Mike
             std::reverse( col.begin( ), col.end( ) );
             std::make_heap( col.begin( ), col.end( )  );
             inserts_since_last_prune[ idx ] = 0;
@@ -168,22 +165,6 @@ namespace phat {
             matrix[ idx ] = col;
             std::make_heap( matrix[ idx ].begin( ), matrix[ idx ].end( ) );
         }
-    
-        //TODO: I don't think we need this.  Delete.
-        /*
-        //sets column, where indices are the image of those appearing in col under the permutation map row_order.  Required by RIVET for resets during vineyard updates.  Similar to the above, but assumes that all indices in row_order are non-negative (whereas we cannot assume that in the version of _set_col above, because we may see an index -1.
-        void _set_col( index idx, const column& col)
-        {
-            matrix[idx].clear();
-            matrix[idx].shrink_to_fit();
-            matrix[idx].reserve(col.size());
-            for (auto it=col.begin(); it != col.end(); it++)
-            {
-                matrix[idx].push_back(row_order[*it]);
-            }
-            std::make_heap( matrix[ idx ].begin( ), matrix[ idx ].end( ), permutation_comparison );
-        }
-        */
          
         // _set_entry is needed by RIVET.
         // Adds an entry to a column.  Does not do any sorting or heapification.
@@ -198,16 +179,6 @@ namespace phat {
         {
             return _get_max_index( idx ) == -1;
         }
-        
-        /*
-        //TODO:Delete?  Only need this in ROW and COLUMN permuted settings.
-        //Modification of PHAT v1.5. for handling vineyards.
-        // true iff index (row, col) is non-empty
-
-        bool _is_in_matrix( index row, index col ) const {
-            return std::count(matrix[col].begin(), matrix[col].end(), row) % 2;
-        }
-        */
 
         // append copy of column to back of matrix
         void _append_col(const column& col)
@@ -216,7 +187,8 @@ namespace phat {
             inserts_since_last_prune.push_back(0);
         }
         
-        // moves a column into another location, overwriting the column originally in that location.
+        // moves a column into another location, overwriting the column
+        //originally in that location.
         void _move_col(index source, index target)
         {
             if (source != target)
@@ -231,7 +203,6 @@ namespace phat {
         // move column col to index idx, while clearing the original column
         void _move_col(column& col,index idx)
         {
-            //TODO: This is different than what PHAT does in the _prune function.  Which is better?
             column& temp_col = temp_column_buffer();
             temp_col.clear();
             matrix[idx].swap(temp_col);
@@ -263,9 +234,12 @@ namespace phat {
             return max_element;
         }
         
-        // largest row index of given column idx.
-        // NOTE: Only works correctly when this column has no repeat entries, i.e. if nothing has been added to the column since it was itialized or finalized.
-        // But in this case this is a bit faster than get_max_index.
+        /* 
+        largest row index of given column idx.
+        NOTE: Only works correctly when this column has no repeat entries,
+        i.e. if nothing has been added to the column since it was itialized
+        or finalized. But in this case, it is a bit faster than get_max_index.
+        */
         index _get_max_index_finalized( index idx ) const
         {
             if( matrix[ idx ].empty( ) )
@@ -273,7 +247,8 @@ namespace phat {
             return matrix[ idx ].front();
         }
         
-        // RIVET modification; part of an optimization of the standard reduction when columns are lazy heaps.
+        // RIVET modification; part of an optimization of the standard reduction
+        //when columns are lazy heaps.
         void _push_index(index col_idx,index entry)
         {
             column& col = matrix[ col_idx ];
@@ -281,9 +256,7 @@ namespace phat {
             std::push_heap( col.begin( ), col.end( ) );
         }
     
-        
-        //TODO: I don't really need this, since we could just call _pop_max_index directly.
-        // removes the maximal index of a column
+        //Removes the maximal index of a column
         index _remove_max( index idx )
         {
             return _pop_max_index( idx );
@@ -295,16 +268,16 @@ namespace phat {
             column().swap(matrix[ idx ]);
         }
 
-        //TODO: Delete Don't need, I think.
+        //NOTE: Not needed by RIVET
         // syncronizes all data structures (essential for openmp stuff)
         /*
         void _sync( ) {}
         */
         
         // adds column 'source' to column 'target'
-        //TODO: If the two vectors are similar length, it is probably more efficient to just concatenate and then re-heapify.
-        //PHAT does not exploit this optimization, but when we do have to add vectors, this is probably usually the case.
-        //Also below.
+        //TODO [Mike]: If the two vectors are similar length, it is probably more
+        //efficient to just concatenate and then re-heapify.
+        //Also for the variants below.
         void _add_to( index source, index target )
         {              
             for( index idx = 0; idx < (index)matrix[ source ].size( ); idx++ ) {
@@ -316,10 +289,10 @@ namespace phat {
             if( 2 * inserts_since_last_prune[ target ] > ( index )matrix[ target ].size() )
                 _prune( target );
         }
-        
-        //TODO: Can I get rid of this?  Perhaps we are going to only use the vector_heap_perm version...
-        // this version of _add_to() is needed by RIVET
+    
+        // Added for RIVET
         // adds column 'source' from 'other' matrix to column 'target' in this matrix
+        //TODO: Can I get rid of this?  Perhaps we only need the "popped version"
         void _add_to(const  vector_heap_mod& other, index source, index target ) {
             for( index idx = 0; idx < (index) other.matrix[ source ].size( ); idx++ ) {
                 matrix[ target ].push_back( other.matrix[ source ][ idx ] );
@@ -332,12 +305,14 @@ namespace phat {
         }
         
         
-        // this technical method is used by RIVET in an optimization of the standard reduction.  It assumes that
+        // this technical method is used by RIVET in an optimization of the
+        //standard reduction.  It assumes that
         //1)the column at index target has already had its pivot p popped off
         //2)the pivot of the column of at index source is also p
         //3)p is finalized, i.e., each entry appears at most once.
         void _add_to_popped(index source, index target ) {
-            //in the implementation of the heap used here, the pivot is stored at the 0th index, so we start the addition from index 1.
+            //in the implementation of the heap used here, the pivot is stored
+            //at the 0th index, so we start the addition from index 1.
             for( index idx = 1; idx < (index) matrix[ source ].size( ); idx++ ) {
                 matrix[ target ].push_back( matrix[ source ][ idx ] );
                 std::push_heap( matrix[ target ].begin(), matrix[ target ].end() );
@@ -349,7 +324,8 @@ namespace phat {
         }
         
         void _add_to_popped(const  vector_heap_mod& other, index source, index target ) {
-            //in the implementation of the heap used here, the pivot is stored at the 0th index, so we start the addition from index 1.
+            //in the implementation of the heap used here, the pivot is stored
+            //at the 0th index, so we start the addition from index 1.
             for( index idx = 1; idx < (index) other.matrix[ source ].size( ); idx++ ) {
                 matrix[ target ].push_back( other.matrix[ source ][ idx ] );
                 std::push_heap( matrix[ target ].begin(), matrix[ target ].end() );
@@ -366,14 +342,6 @@ namespace phat {
             std::make_heap(matrix[idx].begin( ),matrix[idx].end( ) );
         }
         
-        //TODO: Remove and only have a version for child classes?
-        /*
-        //This is needed by RIVET.
-        void _swap_columns(index idx) {
-            matrix[idx].swap(matrix[idx+1]);
-        }
-        */
-        
         // finalizes given column
         void _finalize( index idx ) {
             _prune( idx );
@@ -385,10 +353,14 @@ namespace phat {
             std::sort(matrix[idx].begin(),matrix[idx].end());
         }
         
-        // print the matrix.  since a PHAT matrix doesn't know the number of rows, this has to be passed as an argument.
-        // WARNING: For now, assumes that the column is finalized.  Otherwise, the finalization process may destroy a sorted
-        // column when minimizing a presentation.
-        // TODO: The above limitation is probably indicative of bad structure.  Revisit.
+        // print the matrix.  since a PHAT matrix doesn't know the number of
+        // rows, this has to be passed as an argument.
+        // WARNING: For now, assumes that the column is finalized.
+        // Otherwise, the finalization process may destroy a sorted
+        // column, which can cause confusion when debugging code for minimizing
+        // a Presenation.
+        // TODO: The above limitation is probably indicative of bad structure.
+        //       Revisit.
         
         void _print( index num_rows ) {
             //Print matrix dimensions
@@ -441,8 +413,8 @@ namespace phat {
 //TODO: Would it be cleaner to introduce a child class which implements these?
     
     // adds column 'source' to column 'target'
-    // NOTE: taken from PHAT's vector_vector file, without modification, except for a change in name.
-    // For use in Presentation.minimize().
+    // NOTE: taken from PHAT's vector_vector file, without modification,
+    ///except for a change in name.  For use in Presentation.minimize().
         void _add_to_sorted( index source, index target ) {
             column& source_col = matrix[ source ];
             column& target_col = matrix[ target ];
@@ -480,6 +452,9 @@ namespace phat {
     
     class vector_heap_perm : public vector_heap_mod {
         
+    //TODO [Mike]: This profusion of lambda functions is probably bad style, but
+    //suffices for now.
+        
     protected:
         
         //Stores the permuation of the row indices.
@@ -487,7 +462,7 @@ namespace phat {
         
         //the inverse permutation
         std::vector< unsigned > mrep;
-    
+        
         //we redefine some of the functions above to use the permuted order.
         void _prune( index idx )
         {
@@ -501,7 +476,11 @@ namespace phat {
             }
             col = temp_col;
             std::reverse( col.begin( ), col.end( ) );
-            std::make_heap( col.begin( ), col.end( ), [this](const index left, const index right) { return perm[left]<perm[right]; } );
+            std::make_heap( col.begin( ), col.end( ),
+                           [this](const index left, const index right)
+                           {
+                               return perm[left]<perm[right];
+                           } );
             inserts_since_last_prune[ idx ] = 0;
         }
         
@@ -511,16 +490,28 @@ namespace phat {
                 return -1;
             else {
                 index max_element = col.front( );
-                std::pop_heap( col.begin( ), col.end( ), [this](const index left, const index right) { return perm[left]<perm[right]; } );
+                std::pop_heap( col.begin( ), col.end( ),
+                              [this](const index left, const index right)
+                              {
+                                  return perm[left]<perm[right];
+                              } );
                 col.pop_back( );
                 while( !col.empty( ) && col.front( ) == max_element ) {
-                    std::pop_heap( col.begin( ), col.end( ), [this](const index left, const index right) { return perm[left]<perm[right]; } );
+                    std::pop_heap( col.begin( ), col.end( ),
+                                  [this](const index left, const index right)
+                                  {
+                                      return perm[left]<perm[right];
+                                  } );
                     col.pop_back( );
                     if( col.empty( ) )
                         return -1;
                     else {
                         max_element = col.front( );
-                        std::pop_heap( col.begin( ), col.end( ), [this](const index left, const index right) { return perm[left]<perm[right]; } );
+                        std::pop_heap( col.begin( ), col.end( ),
+                                      [this](const index left, const index right)
+                        {
+                            return perm[left]<perm[right];
+                        } );
                         col.pop_back( );
                     }
                 }
@@ -536,8 +527,8 @@ namespace phat {
     
     public:
         
-        //constructor
-        //initializes empty rows x cols matrix, with the identity permutation on rows.
+        //Constructor: Initializes empty rows x cols matrix, with the identity
+        //permutation on rows.
         vector_heap_perm(unsigned rows, unsigned cols)
         : perm(rows)
         , mrep(rows)
@@ -552,8 +543,8 @@ namespace phat {
         }
         // end of def. of constructor.
         
-        //constructor
-        //initializes a size x size identity matrix, with the identity permutation on rows.
+        //Constructor: Initializes a size x size identity matrix, with the
+        //identity permutation on rows.
         vector_heap_perm(unsigned size)
         : perm(size)
         , mrep(size)
@@ -596,11 +587,21 @@ namespace phat {
         void _set_col( index idx, const column& col )
         {
             matrix[ idx ] = col;
-            std::make_heap( matrix[ idx ].begin( ), matrix[ idx ].end( ),[this](const index left, const index right) { return perm[left]<perm[right];} );
+            std::make_heap(matrix[ idx ].begin( ),
+                           matrix[ idx ].end( ),
+                           [this](const index left, const index right)
+                           {
+                               return perm[left]<perm[right];
+                           } );
         }
         
-        //sets column, where indices are the image of those appearing in col under the permutation map row_order.  Required by RIVET for the initialization of the barcode template computations.
-        //NOTE: This actually explicitly stores the permuted indices.
+        /*
+        Sets column, where indices are the image of those appearing in col under 
+        the permutation map row_order.  Required by RIVET for the initialization 
+        of the barcode template computations.
+        
+         NOTE: This actually explicitly stores the permuted indices.
+        */
         void _set_col( index idx, const column& col, const std::vector<int>& row_perm_order)
         {
             matrix[idx].clear();
@@ -615,16 +616,6 @@ namespace phat {
             std::make_heap( matrix[ idx ].begin( ), matrix[ idx ].end( ) );
         }
         
-        // TODO: Do we need this function in this child class?  Commenting for now.
-        // Adds an entry to a column.  Does not do any sorting or heapification.
-        // NOTE: Assumes the entry has not yet been added.
-        /*
-        void _set_entry(index row,index col)
-        {
-            matrix[col].push_back(mrep[row]);
-        }
-        */
-         
         //Used for handling vineyards.
         // returns true iff index (row, col) is non-empty
         bool _is_in_matrix( index row, index col ) const {
@@ -637,15 +628,21 @@ namespace phat {
             column& col = const_cast< column& >( matrix[ idx ] );
             index max_element = _pop_max_index( col );
             col.push_back( max_element );
-            std::push_heap( col.begin( ), col.end( ), [this](const index left, const index right) { return perm[left]<perm[right]; });
+            std::push_heap(col.begin( ),
+                           col.end( ),
+                           [this](const index left, const index right)
+                           {
+                               return perm[left]<perm[right];
+                           });
             if ((int) max_element == -1)
                 return -1;
             return perm[max_element];
         }
         
         // largest row index of given column idx.
-        // NOTE: Only works correctly when this column has no repeat entries, i.e. if nothing has been added to the column since it was itialized or finalized.
-        // But in this case this is a bit faster than get_max_index.
+        // NOTE: Only works correctly when this column has no repeat entries,
+        //i.e. if nothing has been added to the column since it was itialized or
+        //finalized.  But in this case this is a bit faster than get_max_index.
         index _get_max_index_finalized( index idx ) const
         {
             if( matrix[ idx ].empty( ) )
@@ -665,16 +662,25 @@ namespace phat {
         void _push_index(index col_idx,index entry)
         {
             matrix[ col_idx ].push_back(mrep[entry]);
-            std::push_heap( matrix[ col_idx ].begin( ), matrix[ col_idx ].end( ), [this](const index left, const index right) { return perm[left]<perm[right]; } );
+            std::push_heap(matrix[ col_idx ].begin( ),
+                           matrix[ col_idx ].end( ),
+                           [this](const index left, const index right)
+                           {
+                               return perm[left]<perm[right];
+                           } );
         }
         
         // adds column 'source' to column 'target'
-        // TODO: As above, add and then heapify if the column is large, instead of maintaining the heap entry by entry?
         void _add_to( index source, index target )
         {
             for( index idx = 0; idx < (index)matrix[ source ].size( ); idx++ ) {
                 matrix[ target ].push_back( matrix[ source ][ idx ] );
-                std::push_heap( matrix[ target ].begin(), matrix[ target ].end(), [this](const index left, const index right) { return perm[left]<perm[right]; } );
+                std::push_heap(matrix[ target ].begin(),
+                               matrix[ target ].end(),
+                               [this](const index left, const index right)
+                               {
+                                   return perm[left]<perm[right];
+                               } );
             }
             inserts_since_last_prune[ target ] += matrix[ source ].size();
             
@@ -682,46 +688,28 @@ namespace phat {
                 _prune( target );
         }
         
-        //TODO: I think this should not be needed by vector_heap_perm.
-        /*
-        // this version of _add_to() is needed by RIVET
-        // adds column 'source' from 'other' matrix to column 'target' in this matrix
-        void _add_to(const  vector_heap_mod& other, index source, index target ) {
-            for( index idx = 0; idx < (index) other.matrix[ source ].size( ); idx++ ) {
-                matrix[ target ].push_back( other.matrix[ source ][ idx ] );
-                std::push_heap( matrix[ target ].begin(), matrix[ target ].end(), permutation_comparison );
-            }
-            inserts_since_last_prune[ target ] += other.matrix[ source ].size();
-            
-            if( 2 * inserts_since_last_prune[ target ] > ( index )matrix[ target ].size() )
-                _prune( target );
-        }
-        */
-        
-        // this technical method is used by RIVET in an optimization of the standard reduction.  It assumes that
+        // this technical method is used by RIVET in an optimization of the
+        //standard reduction.  It assumes that
         //1)the column at index target has already had its pivot p popped off
         //2)the pivot of the column of at index source is also p
         //3)the column target is finalized, i.e., each entry appears at most once.
-        //TODO: As above, if the source column is nearly as large as the target column, then this can be faster.
         void _add_to_popped(index source, index target ) {
-            //in the implementation of the heap used here, the pivot is stored at the 0th index, so we start the addition from index 1.
+            //in the implementation of the heap used here, the pivot is stored
+            //at the 0th index, so we start the addition from index 1.
             for( index idx = 1; idx < (index) matrix[ source ].size( ); idx++ ) {
                 matrix[ target ].push_back( matrix[ source ][ idx ] );
-                std::push_heap( matrix[ target ].begin(), matrix[ target ].end(), [this](const index left, const index right) { return perm[left]<perm[right]; } );
+                std::push_heap(matrix[ target ].begin(),
+                               matrix[ target ].end(),
+                               [this](const index left, const index right)
+                               {
+                                   return perm[left]<perm[right];
+                               } );
             }
             inserts_since_last_prune[ target ] += matrix[ source ].size()-1;
             
             if( 2 * inserts_since_last_prune[ target ] > ( index )matrix[ target ].size() )
                 _prune( target );
         }
-        
-        //TODO: Delete?  I don't think this is necessary.
-        /*
-        void _heapify_col(index idx)
-        {
-            std::make_heap(matrix[idx].begin( ),matrix[idx].end( ), [this](const index left, const index right) { return perm[left]<perm[right]; } );
-        }
-        */
         
         //swap column a with column b
         void _swap_columns(index a, index b) {
@@ -744,8 +732,8 @@ namespace phat {
         }
         
         // finalizes column idx.
-        // I redefine this, relative to the base class, since _prune is now different.
-        // TODO: Is it good style to redefine this, rather than making _finalize virtual in the base class?  My intent is to choose at compile time which version of finalize to use.
+        // NOTE: I redefine this, relative to the base class, since _prune is now different.
+        // TODO: Is that acceptable style?
         void _finalize( index idx ) {
             _prune( idx );
         }
@@ -769,7 +757,8 @@ namespace phat {
                 _finalize(i);
                 for (unsigned j=0; j< matrix[i].size(); j++)
                 {
-                    //The only difference between the print function for the base class and this one is the following line.
+                    //The only difference between the print function for the
+                    //base class and this one is the following line.
                     dense_mat[i][perm[matrix[i][j]]]=1;
                 }
             }
@@ -792,7 +781,11 @@ namespace phat {
             {
                 col.push_back(matrix[idx][j]);
             }
-            std::sort(col.begin(),col.end(),[this](const index left, const index right) { return perm[left]<perm[right]; });
+            std::sort(col.begin(),col.end(),
+                      [this](const index left, const index right)
+                      {
+                          return perm[left]<perm[right];
+                      });
             for (unsigned j=0; j < col.size(); j++)
                 std::cout << perm[col[j]] << " ";
             std::cout << std::endl;
