@@ -162,7 +162,7 @@ void SliceDiagram::create_diagram(const QString& x_text, const QString& y_text, 
             else if (hom_dims[i][j] >= 80)
                 gray_value = 0; //black
 
-            QGraphicsRectItem* item = addRect(QRectF(), Qt::NoPen, QBrush(QColor(gray_value, gray_value, gray_value, 240))); //last value refers to the trasparency, max value=255
+            QGraphicsRectItem* item = addRect(QRectF(), Qt::NoPen, QBrush(QColor(gray_value, gray_value, gray_value)));
             item->setToolTip(QString("dimension = ") + QString::number(hom_dims[i][j]));
             hom_dim_rects[i][j] = item;
         }
@@ -408,8 +408,6 @@ void SliceDiagram::resize_diagram()
 //redraws the rectangles for the homology dimension visualization
 void SliceDiagram::redraw_dim_rects()
 {
-    qDebug()<<"diagram width="<<diagram_width+padding;
-    qDebug()<<"diagram height="<<diagram_height+padding;
     for (unsigned i = 0; i < x_grades.size(); i++) {
         for (unsigned j = 0; j < y_grades.size(); j++) {
             double left = (x_grades[i] - data_xmin) * scale_x;
@@ -557,7 +555,6 @@ void SliceDiagram::zoom_diagram(double angle, double offset, double distance_to_
 
     if (line_visible) {
         //reposition bars
-        qDebug()<<"in zoom_diagram, redrawing bars";
         unsigned count = 1;
         for (unsigned i = 0; i < bars.size(); i++) {
             for (std::list<PersistenceBar*>::iterator it = bars[i].begin(); it != bars[i].end(); ++it) {
@@ -860,6 +857,10 @@ void SliceDiagram::update_barcode(Barcode const& bc, bool show)
 //computes an endpoint of a bar in the barcode
 std::pair<double, double> SliceDiagram::compute_endpoint(double coordinate, unsigned offset)
 {
+    if(dist_to_origin>.0001)
+    {
+    qDebug()<<"in compute_endpoint, dist to origin="<<dist_to_origin;
+    }
     //the commented code is for keeping the spacing constant in data units
     //as is, the spacing is constant in pixel units
 
@@ -903,7 +904,7 @@ std::pair<double, double> SliceDiagram::compute_endpoint(double coordinate, unsi
     } else {
         double angle = atan(line_slope); //angle (data)      NOTE: it would be slightly more efficient to only compute this once per barcode update
 
-        if (coordinate == std::numeric_limits<double>::infinity()|| coordinate>pow(10.0,10.0)) {
+        if (coordinate == std::numeric_limits<double>::infinity()|| coordinate*std::min(scale_x,scale_y)>pow(10.0,7.0)) {
             //set coordinate so that it will be outside the viewable window
             //the finite cutoff seems to patch over the issue with phantom barcodes-not sure why
             coordinate = view_length / std::min(scale_x, scale_y);
@@ -927,6 +928,8 @@ std::pair<double, double> SliceDiagram::compute_endpoint(double coordinate, unsi
         x += dot_left->pos().x();
         y += dot_left->pos().y();
     }
+
+    //is it a problem to draw barcodes outside the window?
 
     return std::pair<double, double>(x, y);
 } //end compute_endpoint()
@@ -1124,8 +1127,10 @@ double SliceDiagram::get_pd_scale()
     return scale_x * scale_y / denominator;
 }
 
+//draws labels on top of white rectangles, so they don't get obscured by other graphics
 void SliceDiagram::redraw_labels()
 {
+
     int text_padding = 5; //pixels
 
     data_xmin_text->setPos(data_xmin_text->boundingRect().width() / (-2), -1 * text_padding);
