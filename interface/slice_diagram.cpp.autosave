@@ -1158,12 +1158,7 @@ void SliceDiagram::redraw_labels()
     data_xmin_text->setText(QString(s_xmin.str().data()));//update to get correct bounding rectangle
     delete rect1;
     rect1=addRect(0,0,data_xmin_text->sceneBoundingRect().width(), data_xmin_text->sceneBoundingRect().height(),Qt::NoPen, QBrush(QColor(255,255,255)) );
-
-
     rect1->setPos(data_xmin_text->pos().x(), data_xmin_text->pos().y()-data_xmin_text->boundingRect().height());
-
-
-
     delete data_xmin_text; //delete the old label, so the new one can be drawn on top of the rectangles
     data_xmin_text=addSimpleText(QString(s_xmin.str().data()));
     data_xmin_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
