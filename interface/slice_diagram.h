@@ -135,6 +135,7 @@ private:
     QGraphicsRectItem* rect6;
 
 
+
     ControlDot* dot_left;
     ControlDot* dot_right;
 

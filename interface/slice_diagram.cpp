@@ -134,21 +134,35 @@ void SliceDiagram::create_diagram(const QString& x_text, const QString& y_text, 
     data_ymax_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
     data_ymax_text->setFont(config_params->diagramFont);
 
-    x_label = addSimpleText(QString(" "));
+    x_label = addSimpleText(x_label_text);
     x_label->setFlag(QGraphicsItem::ItemIgnoresTransformations);
     x_label->setFont(config_params->diagramFont);
 
-    y_label = addSimpleText(QString(" "));
+    y_label = addSimpleText(y_label_text);
     y_label->setTransform(QTransform(0, 1, 1, 0, 0, 0));
     y_label->setFont(config_params->diagramFont);
 
-    rect1=new QGraphicsRectItem;
-    rect2=new QGraphicsRectItem;
-    rect3=new QGraphicsRectItem;
-    rect4=new QGraphicsRectItem;
-    rect5=new QGraphicsRectItem;
-    rect6=new QGraphicsRectItem;
+    rect1=addRect(0,0,0,0,Qt::NoPen, QBrush(QColor(255,255,255)));
+    rect2=addRect(0,0,0,0,Qt::NoPen, QBrush(QColor(255,255,255)));
+    rect3=addRect(0,0,0,0,Qt::NoPen, QBrush(QColor(255,255,255)));
+    rect4=addRect(0,0,0,0,Qt::NoPen, QBrush(QColor(255,255,255)));
+    rect5=addRect(0,0,0,0,Qt::NoPen, QBrush(QColor(255,255,255)));
+    rect6=addRect(0,0,0,0,Qt::NoPen, QBrush(QColor(255,255,255)));
 
+    int BigZValue=1000; //probably not the best way to do this...
+    rect1->setZValue(BigZValue);
+    rect2->setZValue(BigZValue);
+    rect3->setZValue(BigZValue);
+    rect4->setZValue(BigZValue);
+    rect5->setZValue(BigZValue);
+    rect6->setZValue(BigZValue);
+
+    data_xmin_text->setZValue(BigZValue+1);
+    data_ymin_text->setZValue(BigZValue+1);
+    data_xmax_text->setZValue(BigZValue+1);
+    data_ymax_text->setZValue(BigZValue+1);
+    x_label->setZValue(BigZValue+1);
+    y_label->setZValue(BigZValue+1);
 
 
 
@@ -371,8 +385,7 @@ void SliceDiagram::resize_diagram()
     //reposition xi points
     redraw_dots();
 
-    //redraw labels
-    redraw_labels();
+
 
     //reposition slice line
     slice_line->update_bounds(diagram_width, diagram_height, padding);
@@ -398,6 +411,8 @@ void SliceDiagram::resize_diagram()
             count++;
         }
     }
+    //redraw labels
+    redraw_labels();
 
     //clear selection (because resizing window might combine or split dots in the upper strip of the persistence diagram)
     clear_selection();
@@ -406,12 +421,12 @@ void SliceDiagram::resize_diagram()
     //reposition highlighting
     if (primary_selected.size() > 0)
         update_highlight();
-
     //set scene rectangle (necessary to prevent auto-scrolling)
     double scene_rect_x = -left_text_width - text_padding;
     double scene_rect_y = -lower_text_height - text_padding;
     double scene_rect_w = diagram_width + padding + text_padding + left_text_width;
     double scene_rect_h = diagram_height + padding + text_padding + lower_text_height;
+    redraw_labels();
     setSceneRect(scene_rect_x, scene_rect_y, scene_rect_w, scene_rect_h);
 
 } //end resize_diagram()
@@ -513,8 +528,6 @@ void SliceDiagram::zoom_diagram(double angle, double offset, double distance_to_
     //reposition xi points
     redraw_dots();
 
-    //draw the labels
-    redraw_labels();
 
     double gray_box_xmin = fmax(original_xmin - data_xmin, 0.0) / (data_xmax - data_xmin); //top left corner of gray box, relative units
     double gray_box_xmax = fmax(original_xmax - data_xmin, 0.0) / (data_xmax - data_xmin);
@@ -578,6 +591,8 @@ void SliceDiagram::zoom_diagram(double angle, double offset, double distance_to_
             }
         }
     }
+    //draw the labels
+    redraw_labels();
 
     //clear selection (because resizing window might combine or split dots in the upper strip of the persistence diagram)
     clear_selection();
@@ -1142,8 +1157,8 @@ double SliceDiagram::get_pd_scale()
 void SliceDiagram::redraw_labels()
 {
 
-    int text_padding = 5; //pixels
 
+    int text_padding = 5; //pixels
     data_xmin_text->setPos(data_xmin_text->boundingRect().width() / (-2), -1 * text_padding);
     data_xmax_text->setPos(diagram_width - data_xmax_text->boundingRect().width() / 2, -1 * text_padding);
     data_ymin_text->setPos(-1 * text_padding - data_ymin_text->boundingRect().width(), data_ymin_text->boundingRect().height() / 2);
@@ -1155,44 +1170,36 @@ void SliceDiagram::redraw_labels()
     std::ostringstream s_xmin;
     s_xmin.precision(4);
     s_xmin << data_xmin;
-    data_xmin_text->setText(QString(s_xmin.str().data()));//update to get correct bounding rectangle
-    delete rect1;
-    rect1=addRect(0,0,data_xmin_text->sceneBoundingRect().width(), data_xmin_text->sceneBoundingRect().height(),Qt::NoPen, QBrush(QColor(255,255,255)) );
+    data_xmin_text->setText(QString(s_xmin.str().data()));
 
-
+    rect1->setRect(0,0,data_xmin_text->sceneBoundingRect().width(), data_xmin_text->sceneBoundingRect().height());
     rect1->setPos(data_xmin_text->pos().x(), data_xmin_text->pos().y()-data_xmin_text->boundingRect().height());
+    addItem(rect1);
+    addItem(data_xmin_text);
 
 
-
-    delete data_xmin_text; //delete the old label, so the new one can be drawn on top of the rectangles
-    data_xmin_text=addSimpleText(QString(s_xmin.str().data()));
-    data_xmin_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-    data_xmin_text->setFont(config_params->diagramFont);
 
     std::ostringstream s_ymin;
     s_ymin.precision(4);
     s_ymin << data_ymin;
-    data_ymin_text->setText(QString(s_ymin.str().data()));//update to get correct bounding rectangle
-    delete rect2;
-    rect2=addRect(0,0,data_ymin_text->sceneBoundingRect().width(),data_ymin_text->sceneBoundingRect().height() , Qt::NoPen,QBrush(QColor(255, 255, 255)));//white rectangle
-    rect2->setPos(data_ymin_text->pos().x(), data_ymin_text->pos().y()-data_ymin_text->boundingRect().height());
-    delete data_ymin_text;
-    data_ymin_text = addSimpleText(QString(s_ymin.str().data()));
-    data_ymin_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-    data_ymin_text->setFont(config_params->diagramFont);
+    data_ymin_text->setText(QString(s_ymin.str().data()));
 
+    rect2->setRect(0,0,data_ymin_text->sceneBoundingRect().width(),data_ymin_text->sceneBoundingRect().height());
+    rect2->setPos(data_ymin_text->pos().x(), data_ymin_text->pos().y()-data_ymin_text->boundingRect().height());
+
+    addItem(rect2);
+    addItem(data_ymin_text);
 
     std::ostringstream s_xmax;
     s_xmax.precision(4);
     s_xmax << data_xmax;
     data_xmax_text->setText(QString(s_xmax.str().data()));
-    delete rect3;
-    rect3=addRect(0,0,data_xmax_text->sceneBoundingRect().width(),data_xmax_text->sceneBoundingRect().height(), Qt::NoPen,QBrush(QColor(255, 255, 255)));
+
+    rect3->setRect(0,0,data_xmax_text->sceneBoundingRect().width(),data_xmax_text->sceneBoundingRect().height());
     rect3->setPos(data_xmax_text->pos().x(), data_xmax_text->pos().y()-data_xmax_text->boundingRect().height());
-    delete data_xmax_text;
-    data_xmax_text = addSimpleText(QString(s_xmax.str().data()));
-    data_xmax_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-    data_xmax_text->setFont(config_params->diagramFont);
+
+    addItem(rect3);
+    addItem(data_xmax_text);
 
 
 
@@ -1200,38 +1207,24 @@ void SliceDiagram::redraw_labels()
     s_ymax.precision(4);
     s_ymax << data_ymax;
     data_ymax_text->setText(QString(s_ymax.str().data()));
-    delete rect4;
-    rect4=addRect(0,0,data_ymax_text->sceneBoundingRect().width(),data_ymax_text->sceneBoundingRect().height(), Qt::NoPen,QBrush(QColor(255, 255, 255)));
+
+    rect4->setRect(0,0,data_ymax_text->sceneBoundingRect().width(),data_ymax_text->sceneBoundingRect().height());
     rect4->setPos(data_ymax_text->pos().x(), data_ymax_text->pos().y()-data_ymax_text->boundingRect().height());
-    delete data_ymax_text;
-    data_ymax_text = addSimpleText(QString(s_ymax.str().data()));
-    data_ymax_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-    data_ymax_text->setFont(config_params->diagramFont);
 
+    addItem(rect4);
+    addItem(data_ymax_text);
 
-    delete rect5;
-    rect5=addRect(0,0,x_label->boundingRect().width(), x_label->boundingRect().height(),Qt::NoPen,QBrush(QColor(255, 255, 255)));
+    rect5->setRect(0,0,x_label->boundingRect().width(), x_label->boundingRect().height());
     rect5->setPos(x_label->pos().x(), x_label->pos().y()-x_label->boundingRect().height());
-    delete x_label;
-    x_label=addSimpleText(x_label_text);
-    x_label->setFlag(QGraphicsItem::ItemIgnoresTransformations);
-    x_label->setFont(config_params->diagramFont);
 
-    delete rect6;
-    rect6=addRect(0,0,y_label->boundingRect().height(), y_label->boundingRect().width(),Qt::NoPen,QBrush(QColor(255, 255, 255)));
+    addItem(rect5);
+    addItem(x_label);
+
+    rect6->setRect(0,0,y_label->boundingRect().height(), y_label->boundingRect().width());
     rect6->setPos(y_label->pos().x(), y_label->pos().y());
-    delete y_label;
-    y_label=addSimpleText(y_label_text);
-    y_label->setTransform(QTransform(0, 1, 1, 0, 0, 0));
-    y_label->setFont(config_params->diagramFont);
 
-    //these were previously deleted, so must set their positions again
-    data_xmin_text->setPos(data_xmin_text->boundingRect().width() / (-2), -1 * text_padding);
-    data_xmax_text->setPos(diagram_width - data_xmax_text->boundingRect().width() / 2, -1 * text_padding);
-    data_ymin_text->setPos(-1 * text_padding - data_ymin_text->boundingRect().width(), data_ymin_text->boundingRect().height() / 2);
-    data_ymax_text->setPos(-1 * text_padding - data_ymax_text->boundingRect().width(), diagram_height + data_ymax_text->boundingRect().height() / 2);
+    addItem(rect6);
+    addItem(y_label);
 
-    x_label->setPos((diagram_width - x_label->boundingRect().width()) / 2, -1 * text_padding);
-    y_label->setPos(-1 * text_padding - y_label->boundingRect().height(), (diagram_height - y_label->boundingRect().width()) / 2);
 
 }
