@@ -147,8 +147,8 @@ public:
                           const unsigned num_y);
     
     /* 
-    build_BR_complex() builds BifiltrationData representing a bifiltered
-    Rips complex from metric data.  The algorithm for this uses a sweepline
+    build_DR_complex() builds BifiltrationData representing a degree-Rips 
+     complex from metric data.  The algorithm for this uses a sweepline
      procedure designed by Roy.
      
     NOTE: This gives a multi-critical bifiltration, i.e., one where each simplex
@@ -163,7 +163,7 @@ public:
      /CONVENTION: the x-coordinate is "scale parameter" for points 
      and the y-coordinate is "degree parameter"
     */
-    void build_BR_complex(const unsigned num_vertices,
+    void build_DR_complex(const unsigned num_vertices,
                           const std::vector<unsigned>& distances,
                           const std::vector<unsigned>& degrees,
                           const unsigned num_x,
@@ -218,21 +218,21 @@ private:
                              const unsigned prev_time,
                              const unsigned prev_dist);
 
-    //recursive function used in build_BR_complex()
-    void build_BR_subcomplex(const std::vector<unsigned>& distances,
+    //recursive function used in build_DR_complex()
+    void build_DR_subcomplex(const std::vector<unsigned>& distances,
                              std::vector<int>& parent_indexes,
                              const std::vector<int>& candidates,
                              const AppearanceGrades& parent_grades,
                              const std::vector<AppearanceGrades>& vertexMultigrades);
 
-    //Generates required multigrades for build_BR_complex()
+    //Generates required multigrades for build_DR_complex()
     void generateVertexMultigrades(std::vector<AppearanceGrades>& multigrades,
                                    const unsigned vertices,
                                    const std::vector<unsigned>& distances,
                                    const std::vector<unsigned>& degrees);
 
     //Finds the grades of appearance of when both simplices exist.
-    //subject to minimum scale parameter. Used in build_BR_complex()
+    //subject to minimum scale parameter. Used in build_DR_complex()
     void combineMultigrades(AppearanceGrades& merged,
                             const AppearanceGrades& grades1,
                             const AppearanceGrades& grades2,

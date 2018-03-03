@@ -212,7 +212,7 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
         }
         dimension = static_cast<unsigned>(dim);
 
-        //read maximum distance for edges in Bifiltration-Rips complex
+        //read maximum distance for edges in Degree-Rips complex
         line_info = reader.next_line();
         std::vector<std::string> distance_line = line_info.first;
         if (distance_line.size() != 1) {
@@ -220,6 +220,7 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
         }
 
         max_dist = str_to_exact(distance_line[0]);
+        
         if (max_dist <= 0) {
             throw std::runtime_error("An invalid input was received for the max distance.");
         }
@@ -227,7 +228,7 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
         if (verbosity >= 4) {
             std::ostringstream oss;
             oss << max_dist;
-            debug() << "  Maximum distance of edges in Bifiltration-Rips complex:" << oss.str();
+            debug() << "  Maximum distance of edges in Degree-Rips complex:" << oss.str();
         }
 
         unsigned expectedNumTokens;
@@ -240,7 +241,7 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
             data->x_label = "codegree";
             expectedNumTokens = dimension;
             if (verbosity >= 6) {
-                debug() << "InputManager: Point cloud file does not have function values. Creating Bifiltration-Rips complex.";
+                debug() << "InputManager: Point cloud file does not have function values. Creating Degree-Rips complex.";
             }
         } else {
             hasFunction = true;
@@ -307,7 +308,6 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
 
     ret = dist_set.insert(ExactValue(exact(0))); //distance from a point to itself is always zero
     (ret.first)->indexes.push_back(0); //store distance 0 at 0th index
-
     //consider all points
     for (unsigned i = 0; i < num_points; i++) {
         if (hasFunction) {
@@ -340,7 +340,7 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
                 //remember that the pair of points (i,j) has this distance value, which will go in entry j(j-1)/2 + i + 1
                 (ret.first)->indexes.push_back((j * (j - 1)) / 2 + i + 1);
 
-                //need to keep track of degree for bifiltration-rips complex
+                //need to keep track of degree for degree-Rips complex
                 if (!hasFunction) {
                     //there is an edge between i and j so update degree
                     degree[i]++;
@@ -359,7 +359,7 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
     ExactSet degree_set;
     unsigned max_unsigned = std::numeric_limits<unsigned>::max();
 
-    //X axis is degrees for Bifiltration-Rips complex
+    //X axis is degrees for degree-Rips complex
     if (!hasFunction) {
         //determine the max degree
         unsigned maxDegree = 0;
@@ -403,7 +403,7 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
         if (hasFunction) {
             debug() << "  Building Vietoris-Rips bifiltration.";
         } else {
-            debug() << "  Building Bifiltration-Rips bifiltration.";
+            debug() << "  Building Degree-Rips bifiltration.";
         }
         debug() << "     x-grades: " << data->x_exact.size();
         debug() << "     y-grades: " << data->y_exact.size();
@@ -413,7 +413,7 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
     if (hasFunction) {
         data->bifiltration_data->build_VR_complex(time_indexes, dist_indexes, data->x_exact.size(), data->y_exact.size());
     } else {
-        data->bifiltration_data->build_BR_complex(num_points, dist_indexes, degree_indexes, data->x_exact.size(), data->y_exact.size());
+        data->bifiltration_data->build_DR_complex(num_points, dist_indexes, degree_indexes, data->x_exact.size(), data->y_exact.size());
     }
 
     if (verbosity >= 8) {
@@ -461,7 +461,7 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
             //set label for x-axis to "codegree"
             data->x_label = "codegree";
             if (verbosity >= 6) {
-                debug() << "InputManager: Discrete metric space file does not have function values. Creating Bifiltration-Rips complex.";
+                debug() << "InputManager: Discrete metric space file does not have function values. Creating Degree-Rips complex.";
             }
             //TODO Probably should find new way to get number of points
             //now read the number of points
@@ -549,7 +549,7 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
                             //remember that the pair of points (i,j) has this distance value, which will go in entry j(j-1)/2 + i + 1
                             (ret.first)->indexes.push_back((j * (j - 1)) / 2 + i + 1);
 
-                            //need to keep track of degree for bifiltration-rips complex
+                            //need to keep track of degree for degree-Rips complex
                             if (!hasFunction) {
                                 //there is an edge between i and j so update degree
                                 degree[i]++;
@@ -579,7 +579,7 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
     ExactSet degree_set;
     unsigned max_unsigned = std::numeric_limits<unsigned>::max();
 
-    //X axis is degrees for Bifiltration-Rips complex
+    //X axis is degrees for Degree-Rips complex
     if (!hasFunction) {
         //determine the max degree
         unsigned maxDegree = 0;
@@ -617,7 +617,7 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
         if (hasFunction) {
             debug() << "  Building Vietoris-Rips bifiltration.";
         } else {
-            debug() << "  Building Bifiltration-Rips bifiltration.";
+            debug() << "  Building Degree-Rips bifiltration.";
         }
         debug() << "     x-grades: " << data->x_exact.size();
         debug() << "     y-grades: " << data->y_exact.size();
@@ -628,7 +628,7 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
     if (hasFunction) {
         data->bifiltration_data->build_VR_complex(value_indexes, dist_indexes, data->x_exact.size(), data->y_exact.size());
     } else {
-        data->bifiltration_data->build_BR_complex(num_points, dist_indexes, degree_indexes, data->x_exact.size(), data->y_exact.size());
+        data->bifiltration_data->build_DR_complex(num_points, dist_indexes, degree_indexes, data->x_exact.size(), data->y_exact.size());
     }
 
     if (verbosity >= 8) {

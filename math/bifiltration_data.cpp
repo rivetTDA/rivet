@@ -153,7 +153,7 @@ void BifiltrationData::build_VR_subcomplex(const std::vector<unsigned>& times,
 } //end build_subtree()
 
 //builds BifiltrationData representing a bifiltered Vietoris-Rips complex from metric data
-void BifiltrationData::build_BR_complex(const unsigned num_vertices, const std::vector<unsigned>& distances, const std::vector<unsigned>& degrees, const unsigned num_x, const unsigned num_y)
+void BifiltrationData::build_DR_complex(const unsigned num_vertices, const std::vector<unsigned>& distances, const std::vector<unsigned>& degrees, const unsigned num_x, const unsigned num_y)
 {
     x_grades = num_x;
     y_grades = num_y;
@@ -161,7 +161,7 @@ void BifiltrationData::build_BR_complex(const unsigned num_vertices, const std::
     //build complex recursively
     //this also assigns global indexes to each simplex
     if (verbosity >= 6) {
-        debug() << "BUILDING BRIPS COMPLEX";
+        debug() << "BUILDING DEGREE-RIPS COMPLEX";
     }
 
     std::vector<AppearanceGrades> vertexMultigrades;
@@ -180,13 +180,13 @@ void BifiltrationData::build_BR_complex(const unsigned num_vertices, const std::
                 candidates.push_back(j);
         }
         //recursion
-        build_BR_subcomplex(distances, simplex_indices, candidates, vertexMultigrades[i], vertexMultigrades);
+        build_DR_subcomplex(distances, simplex_indices, candidates, vertexMultigrades[i], vertexMultigrades);
         simplex_indices.pop_back();
     }
-} //end build_BR_complex()
+} //end build_DR_complex()
 
-//function to build (recursively) a subcomplex for the BRips complex
-void BifiltrationData::build_BR_subcomplex(const std::vector<unsigned>& distances, std::vector<int>& parent_vertices, const std::vector<int>& candidates, const AppearanceGrades& parent_grades, const std::vector<AppearanceGrades>& vertexMultigrades)
+//function to build (recursively) a subcomplex for the DRips complex
+void BifiltrationData::build_DR_subcomplex(const std::vector<unsigned>& distances, std::vector<int>& parent_vertices, const std::vector<int>& candidates, const AppearanceGrades& parent_grades, const std::vector<AppearanceGrades>& vertexMultigrades)
 {
     //Store the simplex info if it is of dimension (hom_dim - 1), hom_dim, or hom_dim+1. Dimension is parent_vertices.size() - 1
     if (parent_vertices.size() == hom_dim) //simplex of dimension hom_dim - 1
@@ -227,13 +227,13 @@ void BifiltrationData::build_BR_subcomplex(const std::vector<unsigned>& distance
 
         parent_vertices.push_back(*it);
         //recurse
-        build_BR_subcomplex(distances, parent_vertices, newCandidates, newGrades, vertexMultigrades);
+        build_DR_subcomplex(distances, parent_vertices, newCandidates, newGrades, vertexMultigrades);
         parent_vertices.pop_back(); //Finished looking at cliques adding *it as well
     }
 
 } //end build_subcomplex()
 
-//For each point in a BRips bifiltration, generates an array of incomparable grades of appearance. distances should be of size vertices(vertices - 1)/2
+//For each point in a degree-Rips bifiltration, generates an array of incomparable grades of appearance. distances should be of size vertices(vertices - 1)/2
 //Degrees are stored in negative form to align with correct ordering on R
 //Stores result in the vector container "multigrades". Each vector of grades is sorted in reverse lexicographic order
 void BifiltrationData::generateVertexMultigrades(std::vector<AppearanceGrades>& multigrades, const unsigned vertices, const std::vector<unsigned>& distances, const std::vector<unsigned>& degrees)

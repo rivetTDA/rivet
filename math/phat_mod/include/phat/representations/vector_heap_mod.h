@@ -75,9 +75,6 @@ namespace phat {
             }
             col = temp_col;
             
-            //REMARK: Interesting that this reverse step is here in the original
-            //PHAT code.  Is this more efficient than just calling make_heap
-            //directly?  -Mike
             std::reverse( col.begin( ), col.end( ) );
             std::make_heap( col.begin( ), col.end( )  );
             inserts_since_last_prune[ idx ] = 0;

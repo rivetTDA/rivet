@@ -328,7 +328,8 @@ void Presentation::minimize(int verbosity)
     //new index matrix
     IndexMatrix row_ind_new(row_ind.height(),row_ind.width());
     
-    //new_row_indices[i] stores the new index in the minimal presentation corresponding to the row index i in the unminimized presentation.
+    //new_row_indices[i] stores the new index in the minimal presentation
+    //corresponding to the row index i in the unminimized presentation.
     std::vector<int> new_row_indices(mat.height(),0);
     
     Timer timer;
@@ -481,7 +482,10 @@ void Presentation::compute_hom_dims(const IndexMatrix& ind)
     }
 }
 
-void Presentation::update_col_and_row_inds(IndexMatrix& row_ind_new, Grade& start_grade, const Grade& end_grade, const int& value)
+void Presentation::update_col_and_row_inds(IndexMatrix& row_ind_new,
+                                           Grade& start_grade,
+                                           const Grade& end_grade,
+                                           const int& value)
 {
     Grade& gr = start_grade;
     while (! (gr == end_grade) )
