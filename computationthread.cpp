@@ -64,6 +64,7 @@ void ComputationThread::compute()
 //this function does the work
 void ComputationThread::run()
 {
+    std::cerr << "Computation thread running" << std::endl;
     if (is_precomputed(params.fileName)) {
         load_from_file();
     } else {
@@ -73,13 +74,15 @@ void ComputationThread::run()
 
 bool ComputationThread::is_precomputed(std::string file_name)
 {
+    std::cerr << "Checking if precomputed" << std::endl;
     std::ifstream file(file_name);
     if (!file.is_open()) {
         throw std::runtime_error("Couldn't open " + file_name + " for reading");
     }
     std::string line;
     std::getline(file, line);
-    return line == "RIVET_1";
+    std::cerr << line.substr(0, 5) << std::endl;
+    return line.substr(0, 5) == "RIVET";
 }
 
 void ComputationThread::load_from_file()

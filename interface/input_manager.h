@@ -95,25 +95,43 @@ struct ExactValueComparator {
 //ExactSet will help sort grades
 typedef std::set<ExactValue, ExactValueComparator> ExactSet;
 
-struct InputData;
-
-struct FileType {
-    std::string identifier;
-    std::string description;
-    bool is_data;
-    std::function<std::unique_ptr<InputData>(std::ifstream&, Progress&)> parser;
-};
+struct ComputationResult;
 
 struct InputData {
     std::string x_label;
     std::string y_label;
-    bool is_data;
     std::vector<exact> x_exact; //exact (e.g. rational) values of all x-grades, sorted
     std::vector<exact> y_exact; //exact (e.g. rational) values of all y-grades, sorted
     std::shared_ptr<SimplexTree> simplex_tree; // will be non-null if we read raw data
     std::vector<TemplatePoint> template_points; // will be non-empty if we read RIVET data
     std::vector<BarcodeTemplate> barcode_templates; //only used if we read a RIVET data file and need to store the barcode templates before the arrangement is ready
-    FileType file_type;
+};
+
+enum FileContentType {
+    INVALID = 0,
+    DATA = 1,
+    PRECOMPUTED = 2
+};
+
+struct FileContent {
+    FileContentType type;
+
+    std::shared_ptr<InputData> input_data;
+
+    std::shared_ptr<ComputationResult> result;
+
+    FileContent();
+    FileContent(InputData *data);
+    FileContent(ComputationResult *result);
+    FileContent& operator=(const FileContent &other);
+    FileContent(const FileContent &other);
+};
+
+struct FileType {
+    std::string identifier;
+    std::string description;
+    bool is_data;
+    std::function<FileContent(std::ifstream&, Progress&)> parser;
 };
 
 class InputError : public std::runtime_error {
@@ -130,7 +148,7 @@ class InputManager {
 public:
     InputManager(InputParameters& input_params);
 
-    std::unique_ptr<InputData> start(Progress& progress); //function to run the input manager
+    FileContent start(Progress& progress); //function to run the input manager
 
     FileType identify();
 
@@ -148,10 +166,14 @@ private:
 
     void register_file_type(FileType file_type);
 
-    std::unique_ptr<InputData> read_point_cloud(std::ifstream& stream, Progress& progress); //reads a point cloud and constructs a simplex tree representing the bifiltered Vietoris-Rips complex
-    std::unique_ptr<InputData> read_discrete_metric_space(std::ifstream& stream, Progress& progress); //reads data representing a discrete metric space with a real-valued function and constructs a simplex tree
-    std::unique_ptr<InputData> read_bifiltration(std::ifstream& stream, Progress& progress); //reads a bifiltration and constructs a simplex tree
-    std::unique_ptr<InputData> read_RIVET_data(std::ifstream& stream, Progress& progress); //reads a file of previously-computed data from RIVET
+    //TODO: these methods could move to a separate file-per-filetype model rather
+    //than living in InputManager.
+    FileContent read_point_cloud(std::ifstream& stream, Progress& progress); //reads a point cloud and constructs a simplex tree representing the bifiltered Vietoris-Rips complex
+    FileContent read_discrete_metric_space(std::ifstream& stream, Progress& progress); //reads data representing a discrete metric space with a real-valued function and constructs a simplex tree
+    FileContent read_bifiltration(std::ifstream& stream, Progress& progress); //reads a bifiltration and constructs a simplex tree
+    FileContent read_RIVET_data(std::ifstream& stream, Progress& progress); //reads a file of previously-computed data from RIVET
+    FileContent read_messagepack(std::ifstream& stream, Progress& progress);
+    FileContent read_boost(std::ifstream& stream, Progress& progress);
 
     void build_grade_vectors(InputData& data, ExactSet& value_set, std::vector<unsigned>& indexes, std::vector<exact>& grades_exact, unsigned num_bins); //converts an ExactSets of values to the vectors of discrete values that SimplexTree uses to build the bifiltration, and also builds the grade vectors (floating-point and exact)
 

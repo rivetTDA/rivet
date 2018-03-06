@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../math/simplex_tree.h"
 #include "file_input_reader.h"
 #include "input_parameters.h"
-
+#include "dcel/serialization.h"
 #include "debug.h"
 
 #include <algorithm>
@@ -32,7 +32,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <sstream>
 #include <vector>
 #include <memory>
-
+#include <dcel/arrangement_message.h>
+#include <api.h>
+#include <boost/archive/binary_iarchive.hpp>
 //epsilon value for use in comparisons
 double ExactValue::epsilon = pow(2, -30);
 
@@ -100,6 +102,39 @@ private:
     unsigned line;
 };
 
+FileContent::FileContent() {
+    type = FileContentType::INVALID;
+    input_data = nullptr;
+    result = nullptr;
+}
+
+FileContent::FileContent(InputData *data) {
+    type = FileContentType::DATA;
+    input_data = std::make_shared<InputData>(*data);
+}
+
+FileContent::FileContent(ComputationResult *result) {
+    type = FileContentType::PRECOMPUTED;
+    FileContent::result = std::make_shared<ComputationResult>(*result);
+}
+
+FileContent& FileContent::operator=(const FileContent &other) {
+    type = other.type;
+    input_data = other.input_data;
+    result = other.result;
+    return *this;
+}
+
+FileContent::FileContent(const FileContent &other) {
+    type = other.type;
+    input_data = other.input_data;
+    result = other.result;
+}
+
+//FileContent::~FileContent() {
+//
+//}
+
 //==================== InputManager class ====================
 using namespace rivet::numeric;
 
@@ -115,6 +150,10 @@ InputManager::InputManager(InputParameters& params)
         std::bind(&InputManager::read_discrete_metric_space, this, std::placeholders::_1, std::placeholders::_2) });
     register_file_type(FileType{ "bifiltration", "bifiltration data", true,
         std::bind(&InputManager::read_bifiltration, this, std::placeholders::_1, std::placeholders::_2) });
+    register_file_type(FileType{ "RIVET_1", "pre-computed RIVET data", false,
+                                 std::bind(&InputManager::read_boost, this, std::placeholders::_1, std::placeholders::_2) });
+    register_file_type(FileType{ "RIVET_msgpack", "pre-computed RIVET data", false,
+                                 std::bind(&InputManager::read_messagepack, this, std::placeholders::_1, std::placeholders::_2) });
     //    register_file_type(FileType {"RIVET_0", "pre-computed RIVET data", false,
     //                                 std::bind(&InputManager::read_RIVET_data, this, std::placeholders::_1, std::placeholders::_2) });
 }
@@ -147,7 +186,7 @@ FileType& InputManager::get_file_type(std::string fileName)
 //function to run the input manager, requires a filename
 //  post condition: x_grades and x_exact have size x_bins, and they contain the grade values for the 2-D persistence module in double and exact form (respectively)
 //                  similarly for y_grades and y_exact
-std::unique_ptr<InputData> InputManager::start(Progress& progress)
+FileContent InputManager::start(Progress& progress)
 {
     //read the file
     if (verbosity >= 2) {
@@ -159,8 +198,6 @@ std::unique_ptr<InputData> InputManager::start(Progress& progress)
         throw std::runtime_error("Could not open input file.");
     }
     auto data = file_type.parser(infile, progress);
-    data->file_type = file_type;
-    data->is_data = file_type.is_data;
     return data;
 } //end start()
 
@@ -169,14 +206,72 @@ InputError::InputError(unsigned line, std::string message)
 {
 }
 
+FileContent InputManager::read_boost(std::ifstream& stream, Progress& progress) {
+
+    std::string type;
+    std::getline(stream, type);
+    InputParameters params;
+    TemplatePointsMessage templatePointsMessage;
+    ArrangementMessage arrangementMessage;
+    boost::archive::binary_iarchive archive(stream);
+    archive >> params;
+    progress.setProgressMaximum(100);
+    progress.progress(20);
+    archive >> templatePointsMessage;
+    progress.progress(50);
+    archive >> arrangementMessage;
+    progress.progress(100);
+    return FileContent(
+            from_messages(templatePointsMessage, arrangementMessage).release());
+}
+
+FileContent InputManager::read_messagepack(std::ifstream& stream, Progress& progress) {
+
+    std::string type;
+    std::getline(stream, type);
+    InputParameters params;
+    TemplatePointsMessage templatePointsMessage;
+    ArrangementMessage arrangementMessage;
+    std::string buffer((std::istreambuf_iterator<char>(stream)),
+                       std::istreambuf_iterator<char>());
+
+    msgpack::unpacker pac;
+    pac.reserve_buffer( buffer.size() );
+    std::copy( buffer.begin(), buffer.end(), pac.buffer() );
+    pac.buffer_consumed( buffer.size() );
+    progress.setProgressMaximum(100);
+
+    msgpack::object_handle oh;
+    pac.next(oh);
+    auto m1 = oh.get();
+//        std::cout << "params" << std::endl;
+    m1.convert(params);
+    progress.progress(20);
+    pac.next(oh);
+    auto m2 = oh.get();
+//        std::cout << "points" << std::endl;
+//        break_stream stream;
+//        std::cout.rdbuf(&stream);
+//        std::cerr.rdbuf(&stream);
+    m2.convert(templatePointsMessage);
+    progress.progress(50);
+    pac.next(oh);
+    auto m3 = oh.get();
+//        std::cout << "arrangement message" << std::endl;
+    m3.convert(arrangementMessage);
+    progress.progress(100);
+    return FileContent(
+            from_messages(templatePointsMessage, arrangementMessage).release());
+}
+
 //reads a point cloud
 //  points are given by coordinates in Euclidean space, and each point has a "birth time"
 //  constructs a simplex tree representing the bifiltered Vietoris-Rips complex
-std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream, Progress& progress)
+FileContent InputManager::read_point_cloud(std::ifstream& stream, Progress& progress)
 {
     //TODO : switch to YAML or JSON input or switch to proper parser generator or combinators
     FileInputReader reader(stream);
-    auto data = std::unique_ptr<InputData>(new InputData());
+    auto data = new InputData();
     if (verbosity >= 6) {
         debug() << "InputManager: Found a point cloud file.";
     }
@@ -350,16 +445,16 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
         data->simplex_tree->print_bifiltration();
     }
 
-    return data;
+    return FileContent(data);
 } //end read_point_cloud()
 
 //reads data representing a discrete metric space with a real-valued function and constructs a simplex tree
-std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstream& stream, Progress& progress)
+FileContent InputManager::read_discrete_metric_space(std::ifstream& stream, Progress& progress)
 {
     if (verbosity >= 2) {
         debug() << "InputManager: Found a discrete metric space file.";
     }
-    std::unique_ptr<InputData> data(new InputData);
+    auto data = new InputData();
     FileInputReader reader(stream);
 
     //prepare data structures
@@ -479,13 +574,13 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
     data->simplex_tree.reset(new SimplexTree(input_params.dim, input_params.verbosity));
     data->simplex_tree->build_VR_complex(value_indexes, dist_indexes, data->x_exact.size(), data->y_exact.size());
 
-    return data;
+    return FileContent(data);
 } //end read_discrete_metric_space()
 
 //reads a bifiltration and constructs a simplex tree
-std::unique_ptr<InputData> InputManager::read_bifiltration(std::ifstream& stream, Progress& progress)
+FileContent InputManager::read_bifiltration(std::ifstream& stream, Progress& progress)
 {
-    std::unique_ptr<InputData> data(new InputData);
+    auto data = new InputData();
     FileInputReader reader(stream);
     if (verbosity >= 2) {
         debug() << "InputManager: Found a bifiltration file.\n";
@@ -560,13 +655,13 @@ std::unique_ptr<InputData> InputManager::read_bifiltration(std::ifstream& stream
     data->simplex_tree->update_global_indexes();
     data->simplex_tree->update_dim_indexes();
 
-    return data;
+    return FileContent(data);
 } //end read_bifiltration()
 
 //reads a file of previously-computed data from RIVET
-std::unique_ptr<InputData> InputManager::read_RIVET_data(std::ifstream& stream, Progress& progress)
+FileContent InputManager::read_RIVET_data(std::ifstream& stream, Progress& progress)
 {
-    std::unique_ptr<InputData> data(new InputData);
+    auto data = new InputData();
     FileInputReader reader(stream);
 
     //read parameters
@@ -646,7 +741,7 @@ std::unique_ptr<InputData> InputManager::read_RIVET_data(std::ifstream& stream, 
     ///TODO: maybe make a different progress box for RIVET input???
     progress.advanceProgressStage(); //advance progress box to stage 2: building bifiltration
 
-    return data;
+    return FileContent(data);
 } //end read_RIVET_data()
 
 //converts an ExactSet of values to the vectors of discrete

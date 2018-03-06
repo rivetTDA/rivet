@@ -65,7 +65,9 @@ add_library(rivet
         math/bool_array.cpp
         math/bool_array.h
         interface/c_api.cpp
-        interface/c_api.h api.h api.cpp)
+        interface/c_api.h
+        api.h
+        api.cpp)
 
 add_dependencies(rivet msgpack_project)
 target_link_libraries(rivet ${Boost_LIBRARIES})
@@ -132,7 +134,13 @@ add_executable(unit_tests
         numerics.cpp
         timer.cpp
         debug.cpp
-        test/unit_tests.cpp dcel/grades.cpp dcel/grades.h math/bool_array.cpp math/bool_array.h)
+        test/unit_tests.cpp
+        dcel/grades.cpp
+        dcel/grades.h
+        math/bool_array.cpp
+        math/bool_array.h
+        dcel/arrangement_message.cpp
+        api.cpp)
 
 add_dependencies(unit_tests msgpack_project)
 

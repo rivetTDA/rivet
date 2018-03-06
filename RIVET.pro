@@ -36,9 +36,6 @@ SOURCES	+= main.cpp                         \
 	    math/bool_array.cpp                 \
 		math/index_matrix.cpp               \
 		math/map_matrix.cpp                 \
-		#math/multi_betti.cpp                \
-		#math/simplex_tree.cpp               \
-		#math/st_node.cpp                    \
 		dcel/barcode.cpp               \
 		dcel/barcode_template.cpp           \
 		dcel/anchor.cpp                     \
@@ -53,12 +50,11 @@ SOURCES	+= main.cpp                         \
 		interface/configuredialog.cpp       \
 		interface/config_parameters.cpp     \
 		interface/file_input_reader.cpp \
-    #driver.cpp \
-    interface/file_writer.cpp \
-    debug.cpp \
-    timer.cpp \
-    interface/console_interaction.cpp \
-    numerics.cpp \
+        interface/file_writer.cpp \
+        debug.cpp \
+        timer.cpp \
+        interface/console_interaction.cpp \
+        numerics.cpp \
 
 
 HEADERS  += visualizationwindow.h			\

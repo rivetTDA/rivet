@@ -179,7 +179,7 @@ void process_bounds(const ComputationResult &computation_result) {
     std::cout << "high: " << bounds.x_high << ", " << bounds.y_high << std::endl;
 }
 
-void process_barcode_queries(std::string query_file_name, const ComputationResult& computation_result)
+void process_barcode_queries(const std::string &query_file_name, const ComputationResult& computation_result)
 {
     std::ifstream query_file(query_file_name);
     if (!query_file.is_open()) {
@@ -206,7 +206,7 @@ void process_barcode_queries(std::string query_file_name, const ComputationResul
                 return;
             }
 
-            queries.push_back(std::make_pair(angle, offset));
+            queries.emplace_back(angle, offset);
         } else {
             std::clog << "Parse error on line " << line_number << std::endl;
             return;
@@ -214,7 +214,7 @@ void process_barcode_queries(std::string query_file_name, const ComputationResul
     }
 
     auto vec = query_barcodes(computation_result, queries);
-    for(auto i = 0; i < queries.size(); i++) {
+    for(size_t i = 0; i < queries.size(); i++) {
         auto query = queries[i];
         auto angle = query.first;
         auto offset = query.second;
@@ -238,25 +238,12 @@ void process_barcode_queries(std::string query_file_name, const ComputationResul
     }
 }
 
-bool is_precomputed(std::string file_name)
-{
-    std::ifstream file(file_name);
-    if (!file.is_open()) {
-        throw std::runtime_error("Couldn't open " + file_name + " for reading");
-    }
-    std::string line;
-    std::getline(file, line);
-    return line == "RIVET_1";
-}
+void input_error(std::string message) {
 
-std::unique_ptr<ComputationResult> load_from_precomputed(std::string file_name) {
-    std::ifstream file(file_name);
-    if (!file.is_open()) {
-        throw std::runtime_error("Couldn't open " + file_name + " for reading");
-    }
-    return from_istream(file);
+    std::cerr << "INPUT ERROR: " << message << " :END" << std::endl;
+    std::cerr << "Exiting" << std::endl
+              << std::flush;
 }
-
 
 int main(int argc, char* argv[])
 {
@@ -423,39 +410,43 @@ int main(int argc, char* argv[])
         std::cout.flush();
         return 0;
     }
-    std::unique_ptr<ComputationResult> result;
 
-    std::unique_ptr<InputData> input;
+    FileContent content;
 
     std::shared_ptr<Arrangement> arrangement;
 
-    if (barcodes || bounds) {
-        result = load_from_precomputed(params.fileName);
-        if (barcodes) {
-            if (!slices.empty()) {
-                process_barcode_queries(slices, *result);
-            }
-        } else {
-            process_bounds(*result);
-        }
-    } else {
+    try {
+        content = inputManager.start(progress);
+    } catch (const std::exception& e) {
+        input_error(e.what());
+        return 1;
+    }
+    if (params.verbosity >= 4) {
+        debug() << "Input processed.";
+    }
 
-        try {
-            input = inputManager.start(progress);
-        } catch (const std::exception& e) {
-            std::cerr << "INPUT ERROR: " << e.what() << " :END" << std::endl;
-            std::cerr << "Exiting" << std::endl
-                      << std::flush;
+    if (barcodes || bounds) {
+        if (content.type != FileContentType::PRECOMPUTED) {
+            input_error("This function requires a precomputed RIVET file as input");
             return 1;
         }
-        if (params.verbosity >= 4) {
-            debug() << "Input processed.";
+        if (barcodes) {
+            if (!slices.empty()) {
+                process_barcode_queries(slices, *content.result);
+            }
+        } else {
+            process_bounds(*content.result);
         }
-        result = computation.compute(*input);
+    } else {
+        if (content.type != FileContentType::DATA) {
+            input_error("This function requires a data file, not a precomputed RIVET file");
+            return 1;
+        }
+        content.result = computation.compute(*content.input_data);
         if (params.verbosity >= 2) {
             debug() << "Computation complete; augmented arrangement ready.";
         }
-        arrangement = result->arrangement;
+        arrangement = content.result->arrangement;
         if (params.verbosity >= 4) {
             arrangement->print_stats();
         }
@@ -472,7 +463,8 @@ int main(int argc, char* argv[])
                 debug() << "Writing file:" << params.outputFile;
             }
             if (params.outputFormat == "R0") {
-                FileWriter fw(params, *input, *(arrangement), result->template_points);
+                FileWriter fw(params, *content.input_data, *(arrangement),
+                              content.result->template_points);
                 fw.write_augmented_arrangement(file);
             } else if (params.outputFormat == "R1") {
                 write_boost_file(params, *points_message, *arrangement_message);
