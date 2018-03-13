@@ -39,6 +39,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <fstream>
 #include <sstream>
 
+//TODO: modify the bounds spin boxes to account for possibly reversed indices
 const QString VisualizationWindow::DEFAULT_SAVE_DIR_KEY("default_save_dir");
 //TODO: see if there are still bugs with horizontal line
 VisualizationWindow::VisualizationWindow(InputParameters& params)
@@ -137,6 +138,7 @@ void VisualizationWindow::start_computation()
 void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMessage> points)
 {
 
+    
     qDebug() << "VisualizationWindow: Received template points";
 
     template_points = points;
@@ -144,7 +146,9 @@ void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMe
     //first load our local copies of the data
     grades = Grades(template_points->x_exact, template_points->y_exact);
 
-
+    //todo: the x/ymin/max spin boxes should have reverse scrolling depending on xrev/yrev
+    //something like
+    //if input_params.x_reverse: ui->BottomXSpinBox->setReversedArrows();
 
     //send xi support points to the SliceDiagram
     slice_diagram.clear_points();
@@ -154,9 +158,14 @@ void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMe
 
     if(!slice_diagram_initialized)
     {
+        double xrev_sign=1-2*input_params.x_reverse;
+        double yrev_sign=1-2*input_params.y_reverse;
+
         double x_step=fmax(.0001, (grades.x.back()-grades.x.front())/20); //spin box has 4 digit precision, so shouldn't have step size be less than this
         double y_step=fmax(.0001, (grades.y.back()-grades.y.front())/20);
 
+
+        //note that setting a negative step is the same as setting a 0 step, according to QT docs
         ui->BottomCornerXSpinBox->setSingleStep(x_step);
         ui->TopCornerXSpinBox->setSingleStep(x_step);
         ui->BottomCornerYSpinBox->setSingleStep(y_step);
@@ -167,30 +176,84 @@ void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMe
         origin_x=grades.x.front();
         origin_y=grades.y.front();
 
+        double max_x_length=10*(grades.x.back()-grades.x.front());
+        double max_y_length=10*(grades.y.back()-grades.y.front());
+        double xmin, xmax,ymin,ymax;
+        //absolute bounds on the maximum/minimum window, to prevent numerical issues
+        if (input_params.x_reverse){
+            xmin=-1*grades.x.back()-max_x_length;
+            xmax=-1*grades.x.front()+max_x_length;
+        }
+        else{
+            xmin=grades.x.front()-max_x_length;
+            xmax=grades.x.back()+max_x_length;
+        }
+        if (input_params.y_reverse){
+            ymin=-1*grades.y.back()-max_y_length;
+            ymax=-1*grades.y.front()+max_y_length;
+        }
+        else{
+            ymin=grades.y.front()-max_y_length;
+            ymax=grades.y.back()+max_y_length;
+        }
 
-        double xmin=grades.x.front()-10*(grades.x.back()-grades.x.front());
-        double xmax=grades.x.back()+10*(grades.x.back()-grades.x.front());
-        double ymin=grades.y.front()-10*(grades.y.back()-grades.y.front());
-        double ymax=grades.y.back()+10*(grades.y.back()-grades.y.front());
+        qDebug()<<"xmin="<<xmin<<",xmax="<<xmax;
 
-        //these will never be changed
         ui->BottomCornerXSpinBox->setMinimum(xmin);
-        ui->BottomCornerYSpinBox->setMinimum(ymin);
         ui->TopCornerXSpinBox->setMaximum(xmax);
-        ui->TopCornerYSpinBox->setMinimum(ymax);
-
-        //these will be updated whenever one of the scroll boxes is changed
         ui->BottomCornerXSpinBox->setMaximum(xmax);
-        ui->BottomCornerYSpinBox->setMaximum(ymax);
         ui->TopCornerXSpinBox->setMinimum(xmin);
+        ui->BottomCornerYSpinBox->setMinimum(ymin);
         ui->TopCornerYSpinBox->setMinimum(ymin);
+        ui->BottomCornerYSpinBox->setMaximum(ymax);
+        ui->TopCornerYSpinBox->setMaximum(ymax);
 
+        //TODO: verify that the signs are correct....
+        /*
+        if (input_params.x_reverse){
+            ui->BottomCornerXSpinBox->setMaximum(-1*xmin);
+            ui->TopCornerXSpinBox->setMinimum(-1*xmax);
+            ui->BottomCornerXSpinBox->setMinimum(-1*xmax);
+            ui->TopCornerXSpinBox->setMaximum(-1*xmax);
+            }
+        
+        else{
+            ui->BottomCornerXSpinBox->setMinimum(xmin);
+            ui->TopCornerXSpinBox->setMaximum(xmax);
+            ui->BottomCornerXSpinBox->setMaximum(xmax);
+            ui->TopCornerXSpinBox->setMinimum(xmin);
+        }
+        
+
+ 
+        if (input_params.y_reverse){
+            ui->BottomCornerYSpinBox->setMaximum(-1*ymin);
+            ui->TopCornerYSpinBox->setMinimum(-1*ymax);
+            ui->BottomCornerYSpinBox->setMinimum(-1*ymax);
+            ui->TopCornerYSpinBox->setMaximum(-1*ymin);
+        }
+        
+        else{
+            ui->BottomCornerYSpinBox->setMinimum(ymin);
+            ui->TopCornerYSpinBox->setMinimum(ymax);
+            ui->BottomCornerYSpinBox->setMaximum(ymax);
+            ui->TopCornerYSpinBox->setMinimum(ymin);
+        }
+    */
 
         //only change the displayed value and the internal value of xmin_precise, etc.
-        ui->BottomCornerXSpinBox->setValue(grades.x.front());
-        ui->BottomCornerYSpinBox->setValue(grades.y.front());
-        ui->TopCornerXSpinBox->setValue(grades.x.back());
-        ui->TopCornerYSpinBox->setValue(grades.y.back());
+        qDebug()<<"grades.x.front()="<<grades.x.front();
+        qDebug()<<"grades.x.front()*xrev_sign="<<grades.x.front()*xrev_sign;
+        qDebug()<<"grades.y.front()="<<grades.y.front();
+        qDebug()<<"grades.y.front()*yrev_sign="<<grades.y.front()*yrev_sign;
+
+        qDebug()<<"ymin="<<ymin;
+        qDebug()<<"ymax="<<ymax;
+
+        ui->BottomCornerXSpinBox->setValue(grades.x.front()*xrev_sign);
+        ui->BottomCornerYSpinBox->setValue(grades.y.front()*yrev_sign);
+        ui->TopCornerXSpinBox->setValue(grades.x.back()*xrev_sign);
+        ui->TopCornerYSpinBox->setValue(grades.y.back()*yrev_sign);
         slice_diagram_initialized=true;
     }
 
@@ -203,7 +266,8 @@ void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMe
             config_params.yLabel,
             grades.x.front(), grades.x.back(),
             grades.y.front(), grades.y.back(),
-            ui->normCoordCheckBox->isChecked(), template_points->homology_dimensions);
+            ui->normCoordCheckBox->isChecked(), template_points->homology_dimensions,
+            input_params.x_reverse, input_params.y_reverse);
     }
 
     //enable control items
@@ -312,12 +376,19 @@ void VisualizationWindow::augmented_arrangement_ready(std::shared_ptr<Arrangemen
 void VisualizationWindow::on_BottomCornerXSpinBox_valueChanged(double x_bottom)
 {
 
-    xmin_precise=x_bottom;
+    xmin_precise=x_bottom*double(1-2*input_params.x_reverse);
+    
+    
     if(!slice_diagram_initialized)
     {
         return;
     }
-    ui->TopCornerXSpinBox->setMinimum(x_bottom+.05);//the padding is to prevent overflow errors
+    if(input_params.x_reverse){
+        ui->TopCornerXSpinBox->setMaximum(x_bottom-.05);
+    }
+    else{
+        ui->TopCornerXSpinBox->setMinimum(x_bottom+.05);//the padding is to prevent overflow errors
+    }
     update_origin();
 
     double step=fmax(.0001,(xmax_precise-xmin_precise)/20);
@@ -326,7 +397,7 @@ void VisualizationWindow::on_BottomCornerXSpinBox_valueChanged(double x_bottom)
 
 
 
-    slice_diagram.update_BottomX(x_bottom,dist_to_origin,is_visible);
+    slice_diagram.update_BottomX(xmin_precise,dist_to_origin,is_visible);
     slice_diagram.zoom_diagram(angle_precise, offset_precise,dist_to_origin);
     //this needs to be done before calling update_persistence_diagram so that
     //slice_diagram contains the updated slice length and scale;
@@ -352,19 +423,23 @@ void VisualizationWindow::on_BottomCornerXSpinBox_valueChanged(double x_bottom)
 
 void VisualizationWindow::on_BottomCornerYSpinBox_valueChanged(double y_bottom)
 {
-    ymin_precise=y_bottom;
+    ymin_precise=y_bottom*double(1-2*input_params.y_reverse);
     if(!slice_diagram_initialized)
     {
         return;
     }
-
-    ui->TopCornerYSpinBox->setMinimum(y_bottom+.05);
+    if(input_params.y_reverse){
+        ui->TopCornerYSpinBox->setMaximum(y_bottom-.05);
+    }
+    else{
+        ui->TopCornerYSpinBox->setMinimum(y_bottom+.05);
+    }
     update_origin();
     double step=fmax(.0001,(ymax_precise-ymin_precise)/20);
     ui->TopCornerYSpinBox->setSingleStep(step);
     ui->BottomCornerYSpinBox->setSingleStep(step);
 
-    slice_diagram.update_BottomY(y_bottom,dist_to_origin,is_visible);
+    slice_diagram.update_BottomY(ymin_precise,dist_to_origin,is_visible);
     slice_diagram.zoom_diagram(angle_precise, offset_precise,dist_to_origin);
 
 
@@ -387,19 +462,23 @@ void VisualizationWindow::on_BottomCornerYSpinBox_valueChanged(double y_bottom)
 
 void VisualizationWindow::on_TopCornerXSpinBox_valueChanged(double x_top)
 {
-    xmax_precise=x_top;
+    xmax_precise=x_top*double(1-2*input_params.x_reverse);
     if(!slice_diagram_initialized)
     {
         return;
     }
-
-    ui->BottomCornerXSpinBox->setMaximum(x_top-.05);
+    if (input_params.x_reverse){
+        ui->BottomCornerXSpinBox->setMinimum(x_top+.05);
+    }
+    else{
+        ui->BottomCornerXSpinBox->setMaximum(x_top-.05);
+    }
     update_origin();
     double step=fmax(.0001,(xmax_precise-xmin_precise)/20);
     ui->TopCornerXSpinBox->setSingleStep(step);
     ui->BottomCornerXSpinBox->setSingleStep(step);
 
-    slice_diagram.update_TopX(x_top,dist_to_origin,is_visible);
+    slice_diagram.update_TopX(xmax_precise,dist_to_origin,is_visible);
     slice_diagram.zoom_diagram(angle_precise, offset_precise,dist_to_origin);
 
 
@@ -421,19 +500,24 @@ void VisualizationWindow::on_TopCornerXSpinBox_valueChanged(double x_top)
 
 void VisualizationWindow::on_TopCornerYSpinBox_valueChanged(double y_top)
 {
-    ymax_precise=y_top;
+    ymax_precise=y_top*double(1-2*input_params.y_reverse);
     if(!slice_diagram_initialized)
     {
         return;
     }
 
-    ui->BottomCornerYSpinBox->setMaximum(y_top-.05);
+    if (input_params.y_reverse){
+        ui->BottomCornerYSpinBox->setMinimum(y_top+.05);
+    }
+    else{
+        ui->BottomCornerYSpinBox->setMaximum(y_top-.05);
+    }
     update_origin();
     double step=fmax(.0001,(ymax_precise-ymin_precise)/20);
     ui->TopCornerYSpinBox->setSingleStep(step);
     ui->BottomCornerYSpinBox->setSingleStep(step);
 
-    slice_diagram.update_TopY(y_top,dist_to_origin,is_visible);
+    slice_diagram.update_TopY(ymax_precise,dist_to_origin,is_visible);
     slice_diagram.zoom_diagram(angle_precise, offset_precise,dist_to_origin);
 
 

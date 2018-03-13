@@ -79,8 +79,14 @@ void SliceDiagram::clear_points()
 }
 
 //NOTE: create_diagram() simply creates all objects; resize_diagram() handles positioning of objects
-void SliceDiagram::create_diagram(const QString& x_text, const QString& y_text, double xmin, double xmax, double ymin, double ymax, bool norm_coords, unsigned_matrix& hom_dims)
+void SliceDiagram::create_diagram(const QString x_text, const QString y_text, double xmin, double xmax, double ymin, double ymax, bool norm_coords, unsigned_matrix& hom_dims, bool x_reverse, bool y_reverse)
 {
+    //xmin is always less than xmax
+    //x_reverse controls whetehr the values are shown with smallest on the left or the right
+    xrev_sign=-2*(x_reverse)+1;
+    yrev_sign=-2*(y_reverse)+1;
+    
+
     //set data-dependent parameters
     data_xmin = xmin;
     data_xmax = xmax;
@@ -1169,7 +1175,7 @@ void SliceDiagram::redraw_labels()
 
     std::ostringstream s_xmin;
     s_xmin.precision(4);
-    s_xmin << data_xmin;
+    s_xmin << data_xmin*xrev_sign;
     data_xmin_text->setText(QString(s_xmin.str().data()));
 
     rect1->setRect(0,0,data_xmin_text->sceneBoundingRect().width(), data_xmin_text->sceneBoundingRect().height());
@@ -1181,7 +1187,7 @@ void SliceDiagram::redraw_labels()
 
     std::ostringstream s_ymin;
     s_ymin.precision(4);
-    s_ymin << data_ymin;
+    s_ymin << data_ymin*yrev_sign;
     data_ymin_text->setText(QString(s_ymin.str().data()));
 
     rect2->setRect(0,0,data_ymin_text->sceneBoundingRect().width(),data_ymin_text->sceneBoundingRect().height());
@@ -1192,7 +1198,7 @@ void SliceDiagram::redraw_labels()
 
     std::ostringstream s_xmax;
     s_xmax.precision(4);
-    s_xmax << data_xmax;
+    s_xmax << data_xmax*xrev_sign;
     data_xmax_text->setText(QString(s_xmax.str().data()));
 
     rect3->setRect(0,0,data_xmax_text->sceneBoundingRect().width(),data_xmax_text->sceneBoundingRect().height());
@@ -1205,7 +1211,7 @@ void SliceDiagram::redraw_labels()
 
     std::ostringstream s_ymax;
     s_ymax.precision(4);
-    s_ymax << data_ymax;
+    s_ymax << data_ymax*yrev_sign;
     data_ymax_text->setText(QString(s_ymax.str().data()));
 
     rect4->setRect(0,0,data_ymax_text->sceneBoundingRect().width(),data_ymax_text->sceneBoundingRect().height());

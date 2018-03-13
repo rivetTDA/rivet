@@ -36,6 +36,8 @@ struct InputParameters {
     std::string x_label; //used by configuration dialog
     std::string y_label; //used by configuration dialog
     std::string outputFormat; // Supported values: R0, R1
+    bool x_reverse; //true if the simplices are added in order of decrasing x
+    bool y_reverse;
 
     template <typename Archive>
     void serialize(Archive& ar, const unsigned int /*version*/)

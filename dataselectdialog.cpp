@@ -41,12 +41,16 @@ DataSelectDialog::DataSelectDialog(InputParameters& params, QWidget* parent)
 {
     ui->setupUi(this);
     //set initial values
-    if (!params.fileName.empty()) {
-        detect_file_type();
+    if (!params.fileName.empty())
+    {
+            detect_file_type();
         ui->homDimSpinBox->setValue(params.dim);
         ui->xbinSpinBox->setValue(params.x_bins);
         ui->ybinSpinBox->setValue(params.y_bins);
-    } else {
+        ui->xrevCheckBox->setChecked(params.x_reverse);
+        ui->yrevCheckBox->setChecked(params.y_reverse);
+    }
+    else {
         ui->homDimSpinBox->setValue(0);
         ui->xbinSpinBox->setValue(10);
         ui->ybinSpinBox->setValue(10);
@@ -71,7 +75,9 @@ void DataSelectDialog::on_computeButton_clicked()
     params.dim = ui->homDimSpinBox->value();
     params.x_bins = ui->xbinSpinBox->value();
     params.y_bins = ui->ybinSpinBox->value();
-
+    params.x_reverse=ui->xrevCheckBox->isChecked();
+    params.y_reverse=ui->yrevCheckBox->isChecked();
+    
     data_selected = true;
 
     emit dataSelected();
@@ -100,6 +106,7 @@ void DataSelectDialog::on_openFileButton_clicked()
 void DataSelectDialog::detect_file_type()
 {
     std::ifstream infile(params.fileName);
+    //ui->fileTypeLabel->setText(QString::fromStdString(params.fileName));
 
     if (!infile.is_open()) {
         invalid_file("Unable to read file.");
@@ -160,8 +167,18 @@ void DataSelectDialog::detect_file_type()
                 ui->fileTypeLabel->setText("This file appears to contain " + line.mid(QString("FILE TYPE DESCRIPTION: ").length()).trimmed() + ".");
                 QFileInfo fileInfo(QString::fromStdString(params.fileName));
                 ui->fileLabel->setText("Selected file: " + fileInfo.fileName());
-
-                //TODO: this updating of the params will need to happen in console also, need to refactor
+                QString file_des=line.mid(QString("FILE TYPE DESCRIPTION: ").length()).trimmed();
+                if(file_des==QString("point-cloud data")|| file_des==QString("metric data"))
+                {
+                    params.y_reverse=false;
+                    ui->yrevCheckBox->setEnabled(false);
+                    
+                }
+                else if(file_des==QString("bifiltration data"))
+                {
+                    ui->yrevCheckBox->setEnabled(true);
+                }
+                    //TODO: this updating of the params will need to happen in console also, need to refactor
                 params.shortName = fileInfo.fileName().toUtf8().constData();
             } else if (partial.length() != 0) {
                 if (line.endsWith(":END")) {

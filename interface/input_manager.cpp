@@ -182,6 +182,12 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
     }
     unsigned dimension;
     exact max_dist;
+    
+    exact xrev_sign=-2*(input_params.x_reverse)+1;
+    //1 if xreverse=false, -1 otherwise
+    
+    //reversing y indexes (distances) does not give valid filtration,
+    //so ignore the value of yrev
 
     //read points
     std::vector<DataPoint> points;
@@ -249,6 +255,9 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
                 throw std::runtime_error(ss.str());
             }
             DataPoint p(tokens);
+            if (input_params.x_reverse) {
+                p.birth *= -1;
+            }
             points.push_back(p);
         }
     } catch (std::exception& e) {
@@ -366,6 +375,9 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
     ExactSet value_set; //stores all unique values of the function; must DELETE all elements later
     ExactSet dist_set; //stores all unique values of the distance metric; must DELETE all elements later
     unsigned num_points;
+    exact xrev_sign=-2*(input_params.x_reverse)+1; //-1 if x_reverse=true, 1 if not
+    
+    //ignore yrev-shouldn't be true anyway
 
     // STEP 1: read data file and store exact (rational) values of the function for each point
 
@@ -383,7 +395,8 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
         values.reserve(line.size());
 
         for (size_t i = 0; i < line.size(); i++) {
-            values.push_back(str_to_exact(line.at(i)));
+            values.push_back(xrev_sign*str_to_exact(line.at(i)));
+
         }
 
         // STEP 2: read data file and store exact (rational) values for all distances
@@ -485,6 +498,9 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
 //reads a bifiltration and constructs a simplex tree
 std::unique_ptr<InputData> InputManager::read_bifiltration(std::ifstream& stream, Progress& progress)
 {
+    exact xrev_sign=-2*(input_params.x_reverse)+1; //-1 if x_reverse=true, 1 if not
+    exact yrev_sign=-2*(input_params.y_reverse)+1;
+
     std::unique_ptr<InputData> data(new InputData);
     FileInputReader reader(stream);
     if (verbosity >= 2) {
@@ -530,9 +546,9 @@ std::unique_ptr<InputData> InputManager::read_bifiltration(std::ifstream& stream
             }
 
             //read multigrade and remember that it corresponds to this simplex
-            ret = x_set.insert(ExactValue(str_to_exact(tokens.at(dim + 1))));
+            ret = x_set.insert(ExactValue(xrev_sign*str_to_exact(tokens.at(dim + 1))));
             (ret.first)->indexes.push_back(num_simplices);
-            ret = y_set.insert(ExactValue(str_to_exact(tokens.at(dim + 2))));
+            ret = y_set.insert(ExactValue(yrev_sign*str_to_exact(tokens.at(dim + 2))));
             (ret.first)->indexes.push_back(num_simplices);
 
             //add the simplex to the simplex tree
