@@ -51,12 +51,6 @@ public:
     friend bool operator==(ID a, ID b) { return a.m_val == b.m_val; }
     friend bool operator!=(ID a, ID b) { return a.m_val != b.m_val; }
 
-    template <class Archive>
-    void serialize(Archive& ar, unsigned const int /*version*/)
-    {
-        ar& m_val;
-    }
-
     MSGPACK_DEFINE(m_val);
 
 private:

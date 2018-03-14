@@ -7,25 +7,8 @@
 #include "dcel/anchor.h"
 #include "dcel/arrangement.h"
 #include "dcel/dcel.h"
-#include "dcel/serialization.h"
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
-
-template <typename T>
-T round_trip(const T& thing)
-{
-    std::stringstream ss;
-    {
-        boost::archive::text_oarchive out(ss);
-        out << thing;
-    }
-    T result;
-    {
-        boost::archive::text_iarchive in(ss);
-        in >> result;
-    }
-    return result;
-}
 
 template <typename T>
 T round_trip_msgpack(const T& thing)

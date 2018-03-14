@@ -173,7 +173,6 @@ private:
     FileContent read_bifiltration(std::ifstream& stream, Progress& progress); //reads a bifiltration and constructs a simplex tree
     FileContent read_RIVET_data(std::ifstream& stream, Progress& progress); //reads a file of previously-computed data from RIVET
     FileContent read_messagepack(std::ifstream& stream, Progress& progress);
-    FileContent read_boost(std::ifstream& stream, Progress& progress);
 
     void build_grade_vectors(InputData& data, ExactSet& value_set, std::vector<unsigned>& indexes, std::vector<exact>& grades_exact, unsigned num_bins); //converts an ExactSets of values to the vectors of discrete values that SimplexTree uses to build the bifiltration, and also builds the grade vectors (floating-point and exact)
 

@@ -23,7 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../math/simplex_tree.h"
 #include "file_input_reader.h"
 #include "input_parameters.h"
-#include "dcel/serialization.h"
 #include "debug.h"
 
 #include <algorithm>
@@ -150,8 +149,6 @@ InputManager::InputManager(InputParameters& params)
         std::bind(&InputManager::read_discrete_metric_space, this, std::placeholders::_1, std::placeholders::_2) });
     register_file_type(FileType{ "bifiltration", "bifiltration data", true,
         std::bind(&InputManager::read_bifiltration, this, std::placeholders::_1, std::placeholders::_2) });
-    register_file_type(FileType{ "RIVET_1", "pre-computed RIVET data", false,
-                                 std::bind(&InputManager::read_boost, this, std::placeholders::_1, std::placeholders::_2) });
     register_file_type(FileType{ "RIVET_msgpack", "pre-computed RIVET data", false,
                                  std::bind(&InputManager::read_messagepack, this, std::placeholders::_1, std::placeholders::_2) });
     //    register_file_type(FileType {"RIVET_0", "pre-computed RIVET data", false,
@@ -206,25 +203,6 @@ InputError::InputError(unsigned line, std::string message)
 {
 }
 
-FileContent InputManager::read_boost(std::ifstream& stream, Progress& progress) {
-
-    std::string type;
-    std::getline(stream, type);
-    InputParameters params;
-    TemplatePointsMessage templatePointsMessage;
-    ArrangementMessage arrangementMessage;
-    boost::archive::binary_iarchive archive(stream);
-    archive >> params;
-    progress.setProgressMaximum(100);
-    progress.progress(20);
-    archive >> templatePointsMessage;
-    progress.progress(50);
-    archive >> arrangementMessage;
-    progress.progress(100);
-    return FileContent(
-            from_messages(templatePointsMessage, arrangementMessage).release());
-}
-
 FileContent InputManager::read_messagepack(std::ifstream& stream, Progress& progress) {
 
     std::string type;
@@ -244,20 +222,14 @@ FileContent InputManager::read_messagepack(std::ifstream& stream, Progress& prog
     msgpack::object_handle oh;
     pac.next(oh);
     auto m1 = oh.get();
-//        std::cout << "params" << std::endl;
     m1.convert(params);
     progress.progress(20);
     pac.next(oh);
     auto m2 = oh.get();
-//        std::cout << "points" << std::endl;
-//        break_stream stream;
-//        std::cout.rdbuf(&stream);
-//        std::cerr.rdbuf(&stream);
     m2.convert(templatePointsMessage);
     progress.progress(50);
     pac.next(oh);
     auto m3 = oh.get();
-//        std::cout << "arrangement message" << std::endl;
     m3.convert(arrangementMessage);
     progress.progress(100);
     return FileContent(

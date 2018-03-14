@@ -26,7 +26,7 @@ externalproject_add(
         INSTALL_COMMAND ""
 )
 
-find_package(Boost "1.60" COMPONENTS serialization system)
+find_package(Boost "1.60")
 
 #note this must come before add_executable or it will be ignored
 link_directories(${CMAKE_CURRENT_BINARY_DIR}/docopt/src/docopt_project-build)
@@ -70,7 +70,6 @@ add_library(rivet
         api.cpp)
 
 add_dependencies(rivet msgpack_project)
-target_link_libraries(rivet ${Boost_LIBRARIES})
 
 add_executable (rivet_console
         console.cpp
@@ -122,7 +121,6 @@ add_executable(unit_tests
         dcel/barcode.cpp
         dcel/barcode_template.cpp
         dcel/dcel.cpp
-        dcel/serialization.h
         math/map_matrix.cpp
         math/multi_betti.cpp
         math/simplex_tree.cpp
@@ -146,4 +144,4 @@ add_dependencies(unit_tests msgpack_project)
 
 include_directories("${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/include" ${Boost_INCLUDE_DIR} ${PROJECT_SOURCE_DIR}/test)
 
-target_link_libraries(unit_tests ${Boost_LIBRARIES} )
+target_link_libraries(unit_tests)

@@ -23,18 +23,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "docopt.h"
 #include "interface/input_manager.h"
 #include "interface/input_parameters.h"
-#include <boost/archive/tmpdir.hpp>
 #include <boost/multi_array.hpp> // for print_betti
 #include <interface/file_writer.h>
 
-#include <boost/archive/binary_iarchive.hpp>
-#include <boost/archive/binary_oarchive.hpp>
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
 #include <dcel/grades.h>
 
 #include "dcel/arrangement_message.h"
-#include "dcel/serialization.h"
 #include "api.h"
 
 static const char USAGE[] =
@@ -110,28 +104,31 @@ unsigned int get_uint_or_die(std::map<std::string, docopt::value>& args, const s
     }
 }
 
-void write_boost_file(InputParameters const& params, TemplatePointsMessage const& message, ArrangementMessage const& arrangement)
+void write_msgpack_file(const std::string &file_name,
+                        InputParameters const& params,
+                        TemplatePointsMessage const& message,
+                        ArrangementMessage const& arrangement)
 {
-    std::ofstream file(params.outputFile, std::ios::binary);
+    std::ofstream file(file_name, std::ios::binary);
     if (!file.is_open()) {
-        throw std::runtime_error("Could not open " + params.outputFile + " for writing.");
+        throw std::runtime_error("Could not open " + file_name + " for writing.");
     }
-    file << "RIVET_1\n";
-    boost::archive::binary_oarchive oarchive(file);
-    oarchive& params& message& arrangement;
-    file.flush();
-}
-
-void write_msgpack_file(InputParameters const& params, TemplatePointsMessage const& message, ArrangementMessage const& arrangement)
-{
-    std::ofstream file(params.outputFile, std::ios::binary);
-    if (!file.is_open()) {
-        throw std::runtime_error("Could not open " + params.outputFile + " for writing.");
-    }
-    file << "RIVET_msgpack\n";
+    file << "RIVET_msgpack" << std::endl;
     msgpack::pack(file, params);
     msgpack::pack(file, message);
     msgpack::pack(file, arrangement);
+    file.flush();
+}
+
+void write_template_points_file(const std::string &file_name,
+                        TemplatePointsMessage const& message)
+{
+    std::ofstream file(file_name, std::ios::binary);
+    if (!file.is_open()) {
+        throw std::runtime_error("Could not open " + file_name + " for writing.");
+    }
+    file << "RIVET_msgpack" << std::endl;
+    msgpack::pack(file, message);
     file.flush();
 }
 
@@ -245,6 +242,14 @@ void input_error(std::string message) {
               << std::flush;
 }
 
+std::vector<std::string> temp_files;
+
+void clean_temp_files() {
+    for (auto file_name : temp_files) {
+        std::remove(file_name.c_str());
+    }
+}
+
 int main(int argc, char* argv[])
 {
     InputParameters params; //parameter values stored here
@@ -292,6 +297,7 @@ int main(int argc, char* argv[])
         debug() << "Verbosity: " << params.verbosity;
     }
 
+    std::atexit(clean_temp_files);
     InputManager inputManager(params);
     Progress progress;
     Computation computation(params, progress);
@@ -309,33 +315,6 @@ int main(int argc, char* argv[])
     }
     computation.arrangement_ready.connect([&arrangement_message, &params, &binary, &verbosity](std::shared_ptr<Arrangement> arrangement) {
         arrangement_message.reset(new ArrangementMessage(*arrangement));
-        //TODO: this should become a system test with a known dataset
-        //Note we no longer write the arrangement to stdout, it goes to a file at the end
-        //of the run. This message just announces the absolute path of the file.
-        //The viewer should capture the file name from the stdout stream, and
-        //then wait for the console program to finish before attempting to read the file.
-//        std::stringstream ss(std::ios_base::binary | std::ios_base::out | std::ios_base::in);
-//        {
-//            boost::archive::binary_oarchive archive(ss);
-//            archive << *arrangement_message;
-//        }
-//        std::clog << "Testing deserialization locally..." << std::endl;
-//        std::string original = ss.str();
-//        ArrangementMessage test;
-//        {
-//            boost::archive::binary_iarchive inarch(ss);
-//            inarch >> test;
-//            std::clog << "Deserialized!";
-//        }
-//        if (!(*arrangement_message == test)) {
-//            throw std::runtime_error("Original and deserialized don't match!");
-//        }
-//        Arrangement *reconstituted = arrangement_message->to_arrangement();
-//        //reconstituted->test_consistency();
-//        ArrangementMessage round_trip(*reconstituted);
-//        if (!(round_trip == *arrangement_message)) {
-//            throw std::runtime_error("Original and reconstituted don't match!");
-//        }
         if (binary) {
             std::cout << "ARRANGEMENT: " << params.outputFile << std::endl;
         } else if (verbosity > 0) {
@@ -346,33 +325,15 @@ int main(int argc, char* argv[])
         points_message.reset(new TemplatePointsMessage(message));
 
         if (binary) {
-            std::cout << "XI" << std::endl;
-            {
-                boost::archive::text_oarchive archive(std::cout);
-                archive << message;
-            }
-            std::cout << "END XI" << std::endl;
-            std::cout.flush();
+            auto temp_name = params.outputFile + ".rivet-tmp";
+            temp_files.push_back(temp_name);
+            write_template_points_file(temp_name, *points_message);
+            std::cout << "XI: " << temp_name << std::endl;
         }
 
         if (verbosity >= 4 || betti_only) {
             FileWriter::write_grades(std::cout, message.x_exact, message.y_exact);
         }
-        //TODO: Add a flag to re-enable this code?
-        //        std::stringstream ss;
-        //        {
-        //            std::cerr << "Local deserialization test" << std::endl;
-        //            boost::archive::text_oarchive out(ss);
-        //            out << message;
-        //        }
-        //        {
-        //            boost::archive::text_iarchive in(ss);
-        //            TemplatePointsMessage result;
-        //            in >> result;
-        //            if (!(message == result)) {
-        //                throw std::runtime_error("Original TemplatePointsMessage and reconstituted don't match!");
-        //            }
-        //        }
         if (betti_only) {
             print_dims(message, std::cout);
             std::cout << std::endl;
@@ -388,7 +349,7 @@ int main(int argc, char* argv[])
                     if (verbosity > 0) {
                         debug() << "Writing file:" << params.outputFile;
                     }
-                    write_boost_file(params, *points_message, *temp_am);
+                    write_msgpack_file(params.outputFile, params, *points_message, *temp_am);
                 } else {
                     std::stringstream ss;
                     ss << "Error: Unable to write file:" << params.outputFile;
@@ -466,10 +427,8 @@ int main(int argc, char* argv[])
                 FileWriter fw(params, *content.input_data, *(arrangement),
                               content.result->template_points);
                 fw.write_augmented_arrangement(file);
-            } else if (params.outputFormat == "R1") {
-                write_boost_file(params, *points_message, *arrangement_message);
             } else if (params.outputFormat == "msgpack") {
-                write_msgpack_file(params, *points_message, *arrangement_message);
+                write_msgpack_file(params.outputFile, params, *points_message, *arrangement_message);
             } else {
                 throw std::runtime_error("Unsupported output format: " + params.outputFormat);
             }

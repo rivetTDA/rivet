@@ -40,12 +40,6 @@ struct BarTemplate {
 
     bool operator<(const BarTemplate other) const;
 
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int /*version*/)
-    {
-        ar& begin& end& multiplicity;
-    }
-
     MSGPACK_DEFINE(begin, end, multiplicity);
 
     friend bool operator==(BarTemplate const& left, BarTemplate const& right);
@@ -77,11 +71,6 @@ public:
 
     void print(); //for testing only
 
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int /*version*/)
-    {
-        ar& bars;
-    }
     MSGPACK_DEFINE(bars);
     friend bool operator==(BarcodeTemplate const& left, BarcodeTemplate const& right);
 

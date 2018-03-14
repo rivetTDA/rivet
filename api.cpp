@@ -1,8 +1,6 @@
 //
 // Created by Bryn Keller on 11/16/17.
 //
-#include <boost/archive/binary_iarchive.hpp>
-#include "dcel/serialization.h"
 #include "api.h"
 
 std::unique_ptr<ComputationResult> from_istream(std::istream &file) {
@@ -11,12 +9,7 @@ std::unique_ptr<ComputationResult> from_istream(std::istream &file) {
     InputParameters params;
     TemplatePointsMessage templatePointsMessage;
     ArrangementMessage arrangementMessage;
-    if (type == "RIVET_1") {
-        boost::archive::binary_iarchive archive(file);
-        archive >> params;
-        archive >> templatePointsMessage;
-        archive >> arrangementMessage;
-    } else if (type == "RIVET_msgpack") {
+    if (type == "RIVET_msgpack") {
         std::string buffer((std::istreambuf_iterator<char>(file)),
                            std::istreambuf_iterator<char>());
 

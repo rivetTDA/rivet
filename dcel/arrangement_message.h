@@ -40,13 +40,6 @@ public:
 
     ArrangementMessage();
 
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int /*version*/)
-    {
-        ar& x_grades& y_grades& x_exact & y_exact & half_edges& vertices
-        & anchors& faces& topleft& topright& bottomleft& bottomright& vertical_line_query_list;
-    }
-
     MSGPACK_DEFINE(x_grades, y_grades, x_exact , y_exact , half_edges, vertices, anchors, faces, topleft, topright, bottomleft, bottomright, vertical_line_query_list);
 
     BarcodeTemplate get_barcode_template(double degrees, double offset);
@@ -92,12 +85,6 @@ private:
         bool above_line; //true iff this Anchor is above the current slice line, used for the vineyard-update process of storing persistence data in cells of the arrangement
         unsigned long weight; //estimate of the cost of updating the RU-decomposition when crossing this anchor
 
-        template <typename Archive>
-        void serialize(Archive& ar, const unsigned int /*version*/)
-        {
-            ar& x_coord& y_coord& dual_line& position& above_line& weight;
-        }
-
         MSGPACK_DEFINE(x_coord, y_coord, dual_line, position, above_line, weight);
     };
 
@@ -115,12 +102,6 @@ private:
         FaceId face; //pointer to the face to the right of this halfedge
         AnchorId anchor; //stores the coordinates of the anchor corresponding to this halfedge
 
-        template <typename Archive>
-        void serialize(Archive& ar, const unsigned int /*version*/)
-        {
-            ar& origin& twin& next& prev& face& anchor;
-        }
-
         MSGPACK_DEFINE(origin, twin, next, prev, face, anchor);
     };
 
@@ -129,12 +110,6 @@ private:
     struct FaceM {
         HalfedgeId boundary; //pointer to one halfedge in the boundary of this cell
         BarcodeTemplate dbc; //barcode template stored in this cell
-
-        template <typename Archive>
-        void serialize(Archive& ar, const unsigned int /*version*/)
-        {
-            ar& boundary& dbc;
-        }
 
         MSGPACK_DEFINE(boundary, dbc);
     };
@@ -146,11 +121,6 @@ private:
         double x; //x-coordinate of this vertex
         double y; //y-coordinate of this vertex
 
-        template <typename Archive>
-        void serialize(Archive& ar, const unsigned int /*version*/)
-        {
-            ar& incident_edge& x& y;
-        }
         MSGPACK_DEFINE(incident_edge, x, y);
     };
 

@@ -55,9 +55,6 @@ public:
 
     bool operator==(Vertex const& other);
 
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int version);
-
 private:
     Halfedge* incident_edge; //pointer to one edge incident to this vertex
     double x; //x-coordinate of this vertex
@@ -93,9 +90,6 @@ public:
 
     friend Debug& operator<<(Debug& qd, const Halfedge& e); //for printing the halfedge
 
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int version);
-
 private:
     Vertex* origin; //pointer to the vertex from which this halfedge originates
     Halfedge* twin; //pointer to the halfedge that, together with this halfedge, make one edge
@@ -123,9 +117,6 @@ public:
 
     friend Debug& operator<<(Debug& os, const Face& f); //for printing the face
 
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int version);
-
     unsigned long id() const;
 
 private:
@@ -146,11 +137,6 @@ struct TemplatePointsMessage {
 
     friend bool operator==(TemplatePointsMessage const& left, TemplatePointsMessage const& right);
 
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int /*version*/)
-    {
-        ar& x_label& y_label& template_points& homology_dimensions& x_exact& y_exact;
-    }
     MSGPACK_DEFINE(x_label, y_label, template_points, homology_dimensions, x_exact, y_exact);
 };
 
