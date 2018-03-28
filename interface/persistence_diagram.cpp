@@ -151,7 +151,7 @@ void PersistenceDiagram::resize_diagram()
 
     h_line->setLine(-gt_neg_inf_text->boundingRect().width(), diagram_size + v_space, diagram_size + number_space, diagram_size + v_space);
     v_line->setLine(diagram_size, diagram_size + text_padding, diagram_size, diagram_size + 2 * v_space - text_padding);
-    left_v_line->setLine(-gt_neg_inf_text->boundingRect().width(), 0, -gt_neg_inf_text->boundingRect().width(), diagram_size + 2 * v_space - text_padding);
+    //left_v_line->setLine(-gt_neg_inf_text->boundingRect().width(), 0, -gt_neg_inf_text->boundingRect().width(), diagram_size + 2 * v_space - text_padding);
     top_left_hline->setLine(-gt_neg_inf_text->boundingRect().width(), diagram_size, 0, diagram_size);
     top_left_vline->setLine(0, diagram_size, 0, diagram_size + 2 * v_space);
     bottom_left_hline->setLine(-gt_neg_inf_text->boundingRect().width(), 0, 0, 0);

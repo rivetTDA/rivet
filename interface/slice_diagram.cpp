@@ -282,6 +282,9 @@ void SliceDiagram::create_diagram(const QString x_text, const QString y_text, do
     addItem(dot_right);
     dot_right->hide();
 
+    dot_left->other=dot_right;
+    dot_right->other=dot_left;
+
     slice_line->setDots(dot_left, dot_right);
 
     //add highlight line object, which is hidden until it is requested
@@ -1143,6 +1146,7 @@ double SliceDiagram::get_slice_length()
 
     if (dx < 0 || dy < 0) { //this happens if the line is not visible in the window
         return 0;
+        qDebug()<<"in get_slice_length, dx<0 or dy<0";
     }
     return sqrt(dx * dx + dy * dy);
 }
@@ -1164,7 +1168,7 @@ void SliceDiagram::redraw_labels()
 {
 
 
-    int text_padding = 5; //pixels
+    int text_padding = 15; //pixels
     data_xmin_text->setPos(data_xmin_text->boundingRect().width() / (-2), -1 * text_padding);
     data_xmax_text->setPos(diagram_width - data_xmax_text->boundingRect().width() / 2, -1 * text_padding);
     data_ymin_text->setPos(-1 * text_padding - data_ymin_text->boundingRect().width(), data_ymin_text->boundingRect().height() / 2);
