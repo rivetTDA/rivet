@@ -49,7 +49,7 @@ public:
     void add_point(double x_coord, double y_coord, int xi0m, int xi1m, int xi2m); //receives an xi support point, which will be drawn when create_diagram() is called
     void clear_points(); //removes all previously-created points from the diagram
 
-    void create_diagram(const QString& x_text, const QString& y_text, double xmin, double xmax, double ymin, double ymax, bool norm_coords, unsigned_matrix& hom_dims); //simply creates all objects; resize_diagram() handles positioning of objects
+    void create_diagram(const QString& x_text, const QString& y_text, double xmin, double xmax, double ymin, double ymax, bool norm_coords, unsigned_matrix& hom_dims, bool x_reverse=false, bool y_reverse=false); //simply creates all objects; resize_diagram() handles positioning of objects
     void enable_slice_line(); //enables the slice line and control dots
     bool is_created(); //true if the diagram has been created; false otherwise
     void resize_diagram(); //resizes diagram to fill the QGraphicsView
@@ -149,6 +149,8 @@ private:
     int diagram_width, diagram_height; //pixel size of the diagram
     bool normalized_coords; //whether the user has selected "normalize coordinates"
     double scale_x, scale_y; //x- and y-scales for drawing data points
+    double xrev_sign, yrev_sign; //these are 1/-1 depending on whether the corresponding axis
+    //is shown in reverse order
 
     double line_slope; //slope of the slice line in data units
     bool line_vert; //true if the line is vertical, false otherwise

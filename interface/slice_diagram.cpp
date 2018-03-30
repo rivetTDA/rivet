@@ -77,7 +77,7 @@ void SliceDiagram::clear_points()
 }
 
 //NOTE: create_diagram() simply creates all objects; resize_diagram() handles positioning of objects
-void SliceDiagram::create_diagram(const QString& x_text, const QString& y_text, double xmin, double xmax, double ymin, double ymax, bool norm_coords, unsigned_matrix& hom_dims)
+void SliceDiagram::create_diagram(const QString& x_text, const QString& y_text, double xmin, double xmax, double ymin, double ymax, bool norm_coords, unsigned_matrix& hom_dims, bool x_reverse, bool y_reverse)
 {
     //set data-dependent parameters
     data_xmin = xmin;
@@ -85,6 +85,9 @@ void SliceDiagram::create_diagram(const QString& x_text, const QString& y_text, 
     data_ymin = ymin;
     data_ymax = ymax;
     normalized_coords = norm_coords;
+
+    xrev_sign=-2*(x_reverse)+1;
+    yrev_sign=-2*(y_reverse)+1;
 
     //pens and brushes
     QPen blackPen(Qt::black);
@@ -98,28 +101,28 @@ void SliceDiagram::create_diagram(const QString& x_text, const QString& y_text, 
     //draw labels
     std::ostringstream s_xmin;
     s_xmin.precision(4);
-    s_xmin << data_xmin;
+    s_xmin << data_xmin*xrev_sign;
     data_xmin_text = addSimpleText(QString(s_xmin.str().data()));
     data_xmin_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
     data_xmin_text->setFont(config_params->diagramFont);
 
     std::ostringstream s_xmax;
     s_xmax.precision(4);
-    s_xmax << data_xmax;
+    s_xmax << data_xmax*xrev_sign;
     data_xmax_text = addSimpleText(QString(s_xmax.str().data()));
     data_xmax_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
     data_xmax_text->setFont(config_params->diagramFont);
 
     std::ostringstream s_ymin;
     s_ymin.precision(4);
-    s_ymin << data_ymin;
+    s_ymin << data_ymin*yrev_sign;
     data_ymin_text = addSimpleText(QString(s_ymin.str().data()));
     data_ymin_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
     data_ymin_text->setFont(config_params->diagramFont);
 
     std::ostringstream s_ymax;
     s_ymax.precision(4);
-    s_ymax << data_ymax;
+    s_ymax << data_ymax*yrev_sign;
     data_ymax_text = addSimpleText(QString(s_ymax.str().data()));
     data_ymax_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
     data_ymax_text->setFont(config_params->diagramFont);

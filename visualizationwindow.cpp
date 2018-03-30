@@ -135,6 +135,7 @@ void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMe
     //first load our local copies of the data
     grades = Grades(template_points->x_exact, template_points->y_exact);
 
+    qDebug()<<"grades.x.front="<<grades.x.front()<<", grades.x.back="<<grades.x.back();
     //send xi support points to the SliceDiagram
     slice_diagram.clear_points();
     for (auto point : template_points->template_points)
@@ -149,7 +150,8 @@ void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMe
             config_params.yLabel,
             grades.x.front(), grades.x.back(),
             grades.y.front(), grades.y.back(),
-            ui->normCoordCheckBox->isChecked(), template_points->homology_dimensions);
+            ui->normCoordCheckBox->isChecked(), template_points->homology_dimensions,
+            input_params.x_reverse, input_params.y_reverse);
     }
 
     //enable control items

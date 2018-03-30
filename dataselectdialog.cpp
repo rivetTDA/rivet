@@ -51,6 +51,8 @@ DataSelectDialog::DataSelectDialog(InputParameters& params, QWidget* parent)
         ui->homDimSpinBox->setValue(0);
         ui->xbinSpinBox->setValue(10);
         ui->ybinSpinBox->setValue(10);
+        ui->xrevCheckBox->setChecked(params.x_reverse);
+        ui->yrevCheckBox->setChecked(params.y_reverse);
     }
 }
 
@@ -72,6 +74,8 @@ void DataSelectDialog::on_computeButton_clicked()
     params.dim = ui->homDimSpinBox->value();
     params.x_bins = ui->xbinSpinBox->value();
     params.y_bins = ui->ybinSpinBox->value();
+    params.x_reverse=ui->xrevCheckBox->isChecked();
+    params.y_reverse=ui->yrevCheckBox->isChecked();
 
     data_selected = true;
 
@@ -135,6 +139,7 @@ void DataSelectDialog::detect_file_type()
         }
 
         bool raw = false;
+        bool function=true;
         QString partial("");
         auto error_header_len = QString("INPUT ERROR: ").length();
         auto error_footer_len = QString(" :END").length();
@@ -163,8 +168,33 @@ void DataSelectDialog::detect_file_type()
                 ui->fileLabel->setText("Selected file: " + fileInfo.fileName());
 
                 //TODO: this updating of the params will need to happen in console also, need to refactor
+                QString file_des=line.mid(QString("FILE TYPE DESCRIPTION: ").length()).trimmed();
+                if(file_des==QString("point-cloud data")|| file_des==QString("metric data"))
+                {
+                    params.y_reverse=false;
+                    ui->yrevCheckBox->setEnabled(false);
+                    
+                }
+                else if(file_des==QString("bifiltration data"))
+                {
+                    ui->yrevCheckBox->setEnabled(true);
+                }
+                //TODO: this updating of the params will need to happen in console also, need to refactor
+
+                
+                
                 params.shortName = fileInfo.fileName().toUtf8().constData();
-            } else if (partial.length() != 0) {
+            }
+            else if (line.startsWith("HAS FUNCTION: ")) {
+                function= line.contains("1");
+                if(!function){
+                    params.x_reverse=true;
+                    ui->xrevCheckBox->setChecked(true);
+                    ui->xrevCheckBox->setEnabled(false);
+                    //in this case, the other checkbox should be set to false and disabled
+                    //because this can only happen for metric or point cloud data
+                }
+            }else if (partial.length() != 0) {
                 if (line.endsWith(":END")) {
                     line = partial + line;
                     line = line.mid(error_header_len, line.length() - (error_footer_len + error_header_len));

@@ -116,7 +116,7 @@
      <number>999</number>
     </property>
     <property name="value">
-     <number>10</number>
+     <number>0</number>
     </property>
    </widget>
    <widget class="QSpinBox" name="ybinSpinBox">
@@ -136,9 +136,6 @@
     </property>
     <property name="maximum">
      <number>999</number>
-    </property>
-    <property name="value">
-     <number>10</number>
     </property>
    </widget>
    <widget class="QLabel" name="homDimLabel">
@@ -201,6 +198,51 @@
     </property>
     <property name="text">
      <string>Coarsening</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label">
+    <property name="geometry">
+     <rect>
+      <x>190</x>
+      <y>70</y>
+      <width>91</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>Directions</string>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="xrevCheckBox">
+    <property name="geometry">
+     <rect>
+      <x>190</x>
+      <y>97</y>
+      <width>81</width>
+      <height>27</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Reverse x</string>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="yrevCheckBox">
+    <property name="geometry">
+     <rect>
+      <x>190</x>
+      <y>130</y>
+      <width>81</width>
+      <height>27</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Reverse y</string>
     </property>
    </widget>
   </widget>

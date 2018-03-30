@@ -102,6 +102,7 @@ struct FileType {
     std::string identifier;
     std::string description;
     bool is_data;
+    bool has_function; //this is false precisely when we construct the BRips complex
     std::function<std::unique_ptr<InputData>(std::ifstream&, Progress&)> parser;
 };
 
