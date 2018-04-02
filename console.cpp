@@ -33,8 +33,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <boost/archive/text_oarchive.hpp>
 #include <dcel/grades.h>
 
+
 #include "dcel/arrangement_message.h"
 #include "dcel/serialization.h"
+
 
 static const char USAGE[] =
     R"(RIVET: Rank Invariant Visualization and Exploration Tool
@@ -169,6 +171,8 @@ void process_bounds(const ComputationResult &computation_result) {
     std::cout << "high: " << x_high << ", " << y_high << std::endl;
 }
 
+
+
 void process_barcode_queries(std::string query_file_name, const ComputationResult& computation_result)
 {
     std::ifstream query_file(query_file_name);
@@ -207,6 +211,7 @@ void process_barcode_queries(std::string query_file_name, const ComputationResul
     for (auto query : queries) {
         auto angle = query.first;
         auto offset = query.second;
+
         std::cout << angle << " " << offset << ": ";
         auto templ = computation_result.arrangement->get_barcode_template(angle, offset);
         auto barcode = templ.rescale(angle, offset, computation_result.template_points, grades);
@@ -225,6 +230,7 @@ void process_barcode_queries(std::string query_file_name, const ComputationResul
             }
         }
         std::cout << std::endl;
+        
     }
 }
 
@@ -247,6 +253,7 @@ std::unique_ptr<ComputationResult> load_from_precomputed(std::string file_name)
     }
     std::string type;
     std::getline(file, type);
+    std::cout<<"type="<<type<<std::endl;
     if (type != "RIVET_1") {
         throw std::runtime_error("Expected a precomputed RIVET file");
     }
@@ -303,7 +310,7 @@ int main(int argc, char* argv[])
     bool barcodes = args["--barcodes"].isString();
     params.x_reverse=args["--xrev"].isBool() && args["--xrev"].asBool();
     params.y_reverse=args["--yrev"].isBool() && args["--yrev"].asBool();
-
+    
     std::string slices;
     if (barcodes) {
         slices = args["--barcodes"].asString();

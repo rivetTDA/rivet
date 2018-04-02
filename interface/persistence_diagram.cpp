@@ -195,7 +195,7 @@ void PersistenceDiagram::resize_diagram()
 
     //set scene rectangle (necessary to prevent auto-scrolling)
     double scene_rect_x = -lt_inf_text->boundingRect().width() - text_padding;
-    double scene_rect_y = 0;
+    double scene_rect_y = -v_space;
     double scene_rect_w = diagram_size + number_space - scene_rect_x;
     double scene_rect_h = diagram_size + 2 * v_space - scene_rect_y;
     setSceneRect(scene_rect_x, scene_rect_y, scene_rect_w, scene_rect_h);
