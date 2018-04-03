@@ -38,6 +38,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <set>
 #include <sstream>
 #include <utility> // for std::pair
+#include <unordered_set>
 PersistenceDiagram::PersistenceDiagram(ConfigParameters* params, QObject* parent)
     : QGraphicsScene(parent)
     , config_params(params)
@@ -135,10 +136,27 @@ void PersistenceDiagram::resize_diagram()
     int view_width = view_list[0]->width();
     int view_height = view_list[0]->height();
 
-    //compute diagram size
-    int available_width = view_width - (gt_neg_inf_text->boundingRect().width() + lt_inf_text->boundingRect().width() + text_padding + number_space + 2 * scene_padding);
-    int available_height = view_height - (gt_neg_inf_count_text->boundingRect().height() + 2 * lt_inf_text->boundingRect().height() + 4 * text_padding + 2 * scene_padding);
+    //the space occupied by the labels/counters on each side of the main window
+    int space_above=2 * lt_inf_text->boundingRect().height() + 4 * text_padding + scene_padding;
+    int space_below=gt_neg_inf_count_text->boundingRect().height()+2*text_padding+scene_padding;
+    int space_left=gt_neg_inf_text->boundingRect().width() +2*text_padding+scene_padding;
+    int space_right=number_space+scene_padding;
+
+    //the (fixed) sizes of the labels in the directions which limit the min size of the diagram
+    //these shouldn't ever be the limiting factors, due to the minimum size constraint imposed in the
+    //visualizationwindow.ui file, but included just for safety
+    int min_width=lt_inf_text->boundingRect().width()+2*text_padding;
+    int min_height=gt_neg_inf_count_text->boundingRect().height()+2*text_padding;
+
+
+    //compute size of main diagram (not including bars/counters on left and top)
+    int available_width=std::max(view_width-(space_left+space_right), min_width+space_left+space_right);
+    int available_height=std::max(view_height-(space_above+space_below), min_height+space_left+space_right);
+
     diagram_size = std::min(available_height, available_width);
+
+    //the bottom left point of the main diagram, chosen so that the entire diagram (including bars/counters) is centered (i.e., equal whitespace above/below and left/right)
+     diagram_origin=QPointF((space_right-space_left)/2, (space_below-space_above)/2);
 
     //resize frame
     bounding_rect->setRect(0, 0, diagram_size, diagram_size);
@@ -146,16 +164,29 @@ void PersistenceDiagram::resize_diagram()
 
     blue_line->setLine(0, 0, line_size ,line_size);
 
+    //draw lines delineating counters and labels
     int v_space = lt_inf_text->boundingRect().height() + 2 * text_padding;
     int h_space = -gt_neg_inf_text->boundingRect().width();
 
-    h_line->setLine(-gt_neg_inf_text->boundingRect().width(), diagram_size + v_space, diagram_size + number_space, diagram_size + v_space);
-    v_line->setLine(diagram_size, diagram_size + text_padding, diagram_size, diagram_size + 2 * v_space - text_padding);
-    //left_v_line->setLine(-gt_neg_inf_text->boundingRect().width(), 0, -gt_neg_inf_text->boundingRect().width(), diagram_size + 2 * v_space - text_padding);
-    top_left_hline->setLine(-gt_neg_inf_text->boundingRect().width(), diagram_size, 0, diagram_size);
-    top_left_vline->setLine(0, diagram_size, 0, diagram_size + 2 * v_space);
-    bottom_left_hline->setLine(-gt_neg_inf_text->boundingRect().width(), 0, 0, 0);
-    bottom_left_vline->setLine(0, 0, 0,h_space);
+    h_line->setLine(-space_left+scene_padding, diagram_size+v_space, diagram_size+space_right-scene_padding, diagram_size+v_space);
+    v_line->setLine(diagram_size, diagram_size+text_padding, diagram_size, diagram_size+space_above-scene_padding);
+    top_left_hline->setLine(-space_left+scene_padding, diagram_size, 0, diagram_size);
+    top_left_vline->setLine(0,diagram_size,0, diagram_size+space_above-scene_padding);
+    bottom_left_hline->setLine(-space_left+scene_padding,0,0,0);
+    bottom_left_vline->setLine(0,0,0,-space_below+scene_padding);
+
+
+    //translate everything to origin
+    bounding_rect->setPos(diagram_origin);
+    diag_line->setPos(diagram_origin);
+    blue_line->setPos(diagram_origin);
+
+    std::unordered_set<QGraphicsLineItem*> graphics={h_line,v_line,top_left_hline, top_left_vline, bottom_left_hline, bottom_left_vline};
+    for(auto g: graphics)
+    {
+        g->setPos(diagram_origin);
+    }
+
 
     //remove old dots
     selected = NULL; //remove any current selection
@@ -171,7 +202,9 @@ void PersistenceDiagram::resize_diagram()
     inf_dot_vpos = lt_inf_dot_vpos + v_space;
     gt_neg_inf_dot_hpos = h_space / 2;
     if (barcode != NULL)
+    {
         draw_dots();
+    }
 
     //move text items
     double inf_text_vpos = diagram_size + v_space + text_padding + inf_text->boundingRect().height();
@@ -193,12 +226,21 @@ void PersistenceDiagram::resize_diagram()
     big_nonessential_count_text->setPos(-gt_neg_inf_text->boundingRect().width() + text_padding, lt_inf_text_vpos);
     big_essential_count_text->setPos(-gt_neg_inf_text->boundingRect().width() + text_padding, inf_text_vpos);
 
+    //translate to origin
+    std::unordered_set<QGraphicsSimpleTextItem*> texts={inf_text, lt_inf_text, gt_neg_inf_text, inf_count_text, lt_inf_count_text,gt_neg_inf_count_text, big_nonessential_count_text, big_essential_count_text};
+    for(auto g: texts)
+    {
+        g->setPos(g->pos()+diagram_origin);
+    }
+
+
     //set scene rectangle (necessary to prevent auto-scrolling)
-    double scene_rect_x = -lt_inf_text->boundingRect().width() - text_padding;
-    double scene_rect_y = -v_space;
-    double scene_rect_w = diagram_size + number_space - scene_rect_x;
-    double scene_rect_h = diagram_size + 2 * v_space - scene_rect_y;
+    int scene_rect_x=-space_left+scene_padding+diagram_origin.x();
+    int scene_rect_y=-space_below+scene_padding+diagram_origin.y();
+    int scene_rect_w=diagram_size+space_right+space_left-2*scene_padding;
+    int scene_rect_h=diagram_size+space_above+space_below-2*scene_padding;
     setSceneRect(scene_rect_x, scene_rect_y, scene_rect_w, scene_rect_h);
+
 } //end resize_diagram()
 
 //sets the barcode
@@ -209,8 +251,6 @@ void PersistenceDiagram::set_barcode(const Barcode& bc)
 
 //creates and draws persistence dots at the correct locations, using current parameters
 
-//note: the diagonal of the persistence diagram corresponds to the visible portion of the MAIN DIAGONAL of the visible box
-//the blue line is always drawn through the bottom corner and is drawn to scale
 
 void PersistenceDiagram::draw_dots()
 {
@@ -226,12 +266,12 @@ void PersistenceDiagram::draw_dots()
     unsigned num_long_essential_points = 0; //essential cycles which span the entire line
 
     //maps to help combine dots in the upper horizontal strips
-    //  in each, the key is the x-position, rounded to the nearest pixel
+    //  in each, the key is the x-position relative to origin, rounded to the nearest pixel
 
     std::map<int, PersistenceDot*> lt_inf_dot_map; //includes nonessential cycles with visible birth, but invisible death
     std::map<int, PersistenceDot*> inf_dot_map; //includes all essential cycles
 
-    //same, but for the vertical strip, key is y-position
+    //same, but for the vertical strip, key is y-position relative to origin
     std::map<int, PersistenceDot*> gt_neg_inf_dot_map; //includes nonessential cycles with invisible birth, but visible death
 
     //map for long nonessential points; the key is the pair of coordinates
@@ -247,6 +287,7 @@ void PersistenceDiagram::draw_dots()
     //dots will be shown on the persistence diagram if they lie in the epsilon-neighborhood of the diagram
     //otherwise they will appear on one of the counters
 
+    //first calculate the positions of the dots relative to the origin of the diagram
 
     //loop over all bars
     for (std::multiset<MultiBar>::iterator it = barcode->begin(); it != barcode->end(); ++it) {
@@ -262,7 +303,7 @@ void PersistenceDiagram::draw_dots()
             if (dot_it == inf_dot_map.end()) //then no such dot exists, so create a new dot
             {
                 //create dot object
-                PersistenceDot* dot = new PersistenceDot(this, config_params, birth, it->death, it->multiplicity, config_params->persistenceDotRadius * sqrt((double)(it->multiplicity) * radius_scale), bc_index);
+                PersistenceDot* dot = new PersistenceDot(this, config_params, it->birth, it->death, it->multiplicity, config_params->persistenceDotRadius * sqrt((double)(it->multiplicity) * radius_scale), bc_index);
                 dot->setToolTip(QString::number(it->multiplicity));
                 addItem(dot);
                 all_dots.push_back(dot);
@@ -435,6 +476,19 @@ void PersistenceDiagram::draw_dots()
         }
 
         bc_index++; //don't forget to increment the barcode index
+    }
+
+    //the dot positions are now correct relative to the origin
+
+    //translate the dots so they are in the correct absolute position
+    //TODO: would it be better to do this above, rather than make a separate steP?
+    for(auto dot: all_dots)
+    {
+        if(dot->isVisible())
+        {
+            dot->setPos(dot->pos()+diagram_origin);
+        }
+
     }
 
     //draw counts

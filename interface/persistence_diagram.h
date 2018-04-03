@@ -103,6 +103,7 @@ private:
     int lt_inf_dot_vpos; //vertical position (y-coordinate) of dots representing non-infinite pairs above the diagram
     int gt_neg_inf_dot_hpos;
     double dist_to_origin; //the distance from the left bottom dot in the diagram to the origin in the coordinate system defined in the paper, expressed in data units
+    QPointF diagram_origin; //the position, in pixels, of the bottom left corner of the persistence diagram; used for centering graphics items
 
     const Barcode* barcode; //reference to the barcode displayed in the persistence diagram
 
