@@ -36,7 +36,7 @@ struct InputParameters {
     std::string x_label; //used by configuration dialog
     std::string y_label; //used by configuration dialog
     std::string outputFormat; // Supported values: R0, R1
-
+    
     template <typename Archive>
     void serialize(Archive& ar, const unsigned int /*version*/)
     {

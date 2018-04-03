@@ -24,6 +24,15 @@
 #include "firep.h"
 #include "timer.h"
 
+//Constructor for empty presentation
+Presentation::Presentation()
+    : mat(0,0)
+    , col_ind(0,0)
+    , row_ind(0,0)
+    , is_minimized(false)
+    , is_kernel_minimal(false)
+{}
+
 //Constructor
 //Builds a presentation from an FI-Rep.
 Presentation::Presentation(FIRep& fir, Progress& progress, int verbosity)

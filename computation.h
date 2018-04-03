@@ -81,12 +81,12 @@ public:
     Computation(int vrbsty, Progress& progress);
     ~Computation();
 
-    std::unique_ptr<ComputationResult> compute(InputData data);
+    std::unique_ptr<ComputationResult> compute(InputData data, bool koszul);
 
 private:
     Progress& progress;
 
     const int verbosity;
 
-    std::unique_ptr<ComputationResult> compute_raw(ComputationInput& input);
+    std::unique_ptr<ComputationResult> compute_raw(ComputationInput& input, bool koszul);
 };

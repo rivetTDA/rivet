@@ -80,6 +80,9 @@ public:
     */
     unsigned_matrix hom_dims;
 
+    //Constructor: Builds an empty presentation.
+    Presentation();
+    
     //Constructor: Builds a presentation from an FI-Rep.  Also computes Hilbert
     //function along the way.
     Presentation(FIRep& fir, Progress& progress, int verbosity);

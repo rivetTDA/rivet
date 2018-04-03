@@ -50,8 +50,8 @@ static const char USAGE[] =
       rivet_console (-h | --help)
       rivet_console --version
       rivet_console <input_file> --identify
-      rivet_console <input_file> --betti [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>]
-      rivet_console <input_file> <output_file> --betti [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>]
+      rivet_console <input_file> --betti [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [--koszul]
+      rivet_console <input_file> <output_file> --betti [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [--koszul]
       rivet_console <precomputed_file> --bounds [-V <verbosity>]
       rivet_console <precomputed_file> --barcodes <line_file> [-V <verbosity>]
       rivet_console <input_file> <output_file> [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [-f <format>] [--binary]
@@ -72,6 +72,8 @@ static const char USAGE[] =
       -f <format>                              Output format for file [default: R1]
       -b --betti                               Print dimension and Betti number information, then exit.        
       --bounds                                 Print lower and upper bounds for the module in <precomputed_file> and exit
+      -k --koszul                              Use koszul homology-based algorithm to compute Betti numbers, instead of
+                                               an approach based on computing presentations.
       --barcodes <line_file>                   Print barcodes for the line queries in line_file, then exit.
                                                line_file consists of pairs "m o", each representing a query line.
                                                m is the slope of the query line, given in degrees (0 to 90); o is the
@@ -290,6 +292,7 @@ int main(int argc, char* argv[])
     bool identify = args["--identify"].isBool() && args["--identify"].asBool();
     bool bounds = args["--bounds"].isBool() && args["--bounds"].asBool();
     bool barcodes = args["--barcodes"].isString();
+    bool koszul = args["--koszul"].isBool() && args["--koszul"].asBool();
     std::string slices;
     if (barcodes) {
         slices = args["--barcodes"].asString();
@@ -451,7 +454,7 @@ int main(int argc, char* argv[])
         if (params.verbosity >= 4) {
             debug() << "Input processed.";
         }
-        result = computation.compute(*input);
+        result = computation.compute(*input,koszul);
         if (params.verbosity >= 2) {
             debug() << "Computation complete; augmented arrangement ready.";
         }
