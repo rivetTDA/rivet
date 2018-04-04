@@ -39,8 +39,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <fstream>
 #include <sstream>
 
+//TODO: modify the bounds spin boxes to account for possibly reversed indices
 const QString VisualizationWindow::DEFAULT_SAVE_DIR_KEY("default_save_dir");
-
+//TODO: see if there are still bugs with horizontal line
 VisualizationWindow::VisualizationWindow(InputParameters& params)
     : QMainWindow()
     , ui(new Ui::VisualizationWindow)
@@ -61,6 +62,7 @@ VisualizationWindow::VisualizationWindow(InputParameters& params)
     , slice_update_lock(false)
     , p_diagram(&config_params, this)
     , persistence_diagram_drawn(false)
+    , slice_diagram_initialized(false)
 {
     ui->setupUi(this);
 
@@ -74,6 +76,9 @@ VisualizationWindow::VisualizationWindow(InputParameters& params)
     ui->pdView->setScene(&p_diagram);
     ui->pdView->scale(1, -1);
     ui->pdView->setRenderHint(QPainter::Antialiasing);
+
+
+
 
     //connect signal from DataSelectDialog to start the computation
     QObject::connect(&ds_dialog, &DataSelectDialog::dataSelected, this, &VisualizationWindow::start_computation);
@@ -90,9 +95,11 @@ VisualizationWindow::VisualizationWindow(InputParameters& params)
     QObject::connect(&slice_diagram, &SliceDiagram::set_line_control_elements, this, &VisualizationWindow::set_line_parameters);
     QObject::connect(&slice_diagram, &SliceDiagram::persistence_bar_selected, &p_diagram, &PersistenceDiagram::receive_dot_selection);
     QObject::connect(&slice_diagram, &SliceDiagram::persistence_bar_deselected, &p_diagram, &PersistenceDiagram::receive_dot_deselection);
+
     QObject::connect(&p_diagram, &PersistenceDiagram::persistence_dot_selected, &slice_diagram, &SliceDiagram::receive_bar_selection);
     QObject::connect(&p_diagram, &PersistenceDiagram::persistence_dot_secondary_selection, &slice_diagram, &SliceDiagram::receive_bar_secondary_selection);
     QObject::connect(&p_diagram, &PersistenceDiagram::persistence_dot_deselected, &slice_diagram, &SliceDiagram::receive_bar_deselection);
+
 
     //connect other signals and slots
     QObject::connect(&prog_dialog, &ProgressDialog::stopComputation, &cthread, &ComputationThread::terminate); ///TODO: don't use QThread::terminate()! modify ComputationThread so that it can stop gracefully and clean up after itself
@@ -102,6 +109,8 @@ VisualizationWindow::~VisualizationWindow()
 {
     delete ui;
 }
+
+
 
 //slot that starts the persistent homology computation in a new thread
 void VisualizationWindow::start_computation()
@@ -128,6 +137,8 @@ void VisualizationWindow::start_computation()
 //this slot is signaled when the xi support points are ready to be drawn
 void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMessage> points)
 {
+
+    
     qDebug() << "VisualizationWindow: Received template points";
 
     template_points = points;
@@ -135,11 +146,120 @@ void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMe
     //first load our local copies of the data
     grades = Grades(template_points->x_exact, template_points->y_exact);
 
-    qDebug()<<"grades.x.front="<<grades.x.front()<<", grades.x.back="<<grades.x.back();
+    //todo: the x/ymin/max spin boxes should have reverse scrolling depending on xrev/yrev
+    //something like
+    //if input_params.x_reverse: ui->BottomXSpinBox->setReversedArrows();
+
     //send xi support points to the SliceDiagram
     slice_diagram.clear_points();
     for (auto point : template_points->template_points)
         slice_diagram.add_point(grades.x[point.x], grades.y[point.y], point.zero, point.one, point.two);
+
+
+    if(!slice_diagram_initialized)
+    {
+        double xrev_sign=1-2*input_params.x_reverse;
+        double yrev_sign=1-2*input_params.y_reverse;
+
+        double x_step=fmax(.0001, (grades.x.back()-grades.x.front())/20); //spin box has 4 digit precision, so shouldn't have step size be less than this
+        double y_step=fmax(.0001, (grades.y.back()-grades.y.front())/20);
+
+
+        //note that setting a negative step is the same as setting a 0 step, according to QT docs
+        ui->BottomCornerXSpinBox->setSingleStep(x_step);
+        ui->TopCornerXSpinBox->setSingleStep(x_step);
+        ui->BottomCornerYSpinBox->setSingleStep(y_step);
+        ui->TopCornerYSpinBox->setSingleStep(y_step);
+
+
+
+        origin_x=grades.x.front();
+        origin_y=grades.y.front();
+
+        double max_x_length=10*(grades.x.back()-grades.x.front());
+        double max_y_length=10*(grades.y.back()-grades.y.front());
+        double xmin, xmax,ymin,ymax;
+        //absolute bounds on the maximum/minimum window, to prevent numerical issues
+        if (input_params.x_reverse){
+            xmin=-1*grades.x.back()-max_x_length;
+            xmax=-1*grades.x.front()+max_x_length;
+        }
+        else{
+            xmin=grades.x.front()-max_x_length;
+            xmax=grades.x.back()+max_x_length;
+        }
+        if (input_params.y_reverse){
+            ymin=-1*grades.y.back()-max_y_length;
+            ymax=-1*grades.y.front()+max_y_length;
+        }
+        else{
+            ymin=grades.y.front()-max_y_length;
+            ymax=grades.y.back()+max_y_length;
+        }
+
+        qDebug()<<"xmin="<<xmin<<",xmax="<<xmax;
+
+        ui->BottomCornerXSpinBox->setMinimum(xmin);
+        ui->TopCornerXSpinBox->setMaximum(xmax);
+        ui->BottomCornerXSpinBox->setMaximum(xmax);
+        ui->TopCornerXSpinBox->setMinimum(xmin);
+        ui->BottomCornerYSpinBox->setMinimum(ymin);
+        ui->TopCornerYSpinBox->setMinimum(ymin);
+        ui->BottomCornerYSpinBox->setMaximum(ymax);
+        ui->TopCornerYSpinBox->setMaximum(ymax);
+
+        //TODO: verify that the signs are correct....
+        /*
+        if (input_params.x_reverse){
+            ui->BottomCornerXSpinBox->setMaximum(-1*xmin);
+            ui->TopCornerXSpinBox->setMinimum(-1*xmax);
+            ui->BottomCornerXSpinBox->setMinimum(-1*xmax);
+            ui->TopCornerXSpinBox->setMaximum(-1*xmax);
+            }
+        
+        else{
+            ui->BottomCornerXSpinBox->setMinimum(xmin);
+            ui->TopCornerXSpinBox->setMaximum(xmax);
+            ui->BottomCornerXSpinBox->setMaximum(xmax);
+            ui->TopCornerXSpinBox->setMinimum(xmin);
+        }
+        
+
+ 
+        if (input_params.y_reverse){
+            ui->BottomCornerYSpinBox->setMaximum(-1*ymin);
+            ui->TopCornerYSpinBox->setMinimum(-1*ymax);
+            ui->BottomCornerYSpinBox->setMinimum(-1*ymax);
+            ui->TopCornerYSpinBox->setMaximum(-1*ymin);
+        }
+        
+        else{
+            ui->BottomCornerYSpinBox->setMinimum(ymin);
+            ui->TopCornerYSpinBox->setMinimum(ymax);
+            ui->BottomCornerYSpinBox->setMaximum(ymax);
+            ui->TopCornerYSpinBox->setMinimum(ymin);
+        }
+    */
+
+        //only change the displayed value and the internal value of xmin_precise, etc.
+        qDebug()<<"grades.x.front()="<<grades.x.front();
+        qDebug()<<"grades.x.front()*xrev_sign="<<grades.x.front()*xrev_sign;
+        qDebug()<<"grades.x.back="<<grades.x.back();
+
+        qDebug()<<"grades.y.front()="<<grades.y.front();
+        qDebug()<<"grades.y.front()*yrev_sign="<<grades.y.front()*yrev_sign;
+        qDebug()<<"grades.y.back="<<grades.y.back();
+
+
+        qDebug()<<"ymin="<<ymin;
+        qDebug()<<"ymax="<<ymax;
+
+        ui->BottomCornerXSpinBox->setValue(grades.x.front()*xrev_sign);
+        ui->BottomCornerYSpinBox->setValue(grades.y.front()*yrev_sign);
+        ui->TopCornerXSpinBox->setValue(grades.x.back()*xrev_sign);
+        ui->TopCornerYSpinBox->setValue(grades.y.back()*yrev_sign);
+        slice_diagram_initialized=true;
+    }
 
     //create the SliceDiagram
     config_params.xLabel = QString::fromStdString(template_points->x_label);
@@ -161,10 +281,20 @@ void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMe
     ui->xi2CheckBox->setEnabled(true);
     ui->normCoordCheckBox->setEnabled(true);
 
+
+
+
+
+
+
+
+
+
     //update offset extents
     ///TODO: maybe these extents should be updated dynamically, based on the slope of the slice line
     ui->offsetSpinBox->setMinimum(grades.min_offset());
     ui->offsetSpinBox->setMaximum(grades.max_offset());
+
 
     //update status
     line_selection_ready = true;
@@ -197,14 +327,21 @@ void VisualizationWindow::augmented_arrangement_ready(std::shared_ptr<Arrangemen
 
     if (!grades.x.empty() && !grades.y.empty()) {
         //shift the barcode so that "zero" is where the selected line crosses the bottom or left side of the viewing window
-    	double ll_corner = rivet::numeric::project_to_line(angle_precise, offset_precise, grades.x[0], grades.y[0]); //lower-left corner of line selection window
-    	barcode = barcode->shift(-1*ll_corner);
+        double ll_corner = rivet::numeric::project_to_line(angle_precise, offset_precise, grades.x[0], grades.y[0]); //lower-left corner of line selection window
+        barcode = barcode->shift(-1*ll_corner);
 
-    	//draw the barcode
+        //show slice line; necessary to do this here because successive functions use parameters of this diagram
+
+        //draw the barcode
         p_diagram.set_barcode(*barcode);
         p_diagram.resize_diagram(slice_diagram.get_slice_length(), slice_diagram.get_pd_scale());
+        //draws the diagram itself, but with incorrect parameter values
+        double max_len=sqrt((grades.x.front()-grades.x.back())*(grades.x.front()-grades.x.back())+(grades.y.front()-grades.y.back())*(grades.y.front()-grades.y.back()));
 
-        slice_diagram.draw_barcode(*barcode, ui->barcodeCheckBox->isChecked());
+        p_diagram.update_diagram(slice_diagram.get_slice_length(), slice_diagram.get_pd_scale(), 0, slice_diagram.get_line_visible(), *barcode);
+        //updates the diagram with the correct parameter values
+
+
 
         //enable slice diagram control items
         slice_diagram.enable_slice_line();
@@ -214,11 +351,17 @@ void VisualizationWindow::augmented_arrangement_ready(std::shared_ptr<Arrangemen
         ui->offsetSpinBox->setEnabled(true);
         ui->barcodeCheckBox->setEnabled(true);
 
+        //draw the slice diagram
+        slice_diagram.zoom_diagram(angle_precise, offset_precise,0);
+
+        slice_diagram.draw_barcode(*barcode, ui->barcodeCheckBox->isChecked());
+
         //update status
         if (verbosity >= 2) {
             qDebug() << "COMPUTATION FINISHED; READY FOR INTERACTIVITY.";
         }
         persistence_diagram_drawn = true;
+
         ui->statusBar->showMessage("ready for interactive barcode exploration");
 
         //Enable save menu item
@@ -233,24 +376,203 @@ void VisualizationWindow::augmented_arrangement_ready(std::shared_ptr<Arrangemen
     }
 } //end augmented_arrangement_ready()
 
-void VisualizationWindow::on_angleDoubleSpinBox_valueChanged(double angle)
+
+void VisualizationWindow::on_BottomCornerXSpinBox_valueChanged(double x_bottom)
 {
-    if (line_selection_ready && !slice_update_lock) {
-        angle_precise = angle;
-        slice_diagram.update_line(angle_precise, ui->offsetSpinBox->value());
+
+    xmin_precise=x_bottom*double(1-2*input_params.x_reverse);
+    
+    
+    if(!slice_diagram_initialized)
+    {
+        return;
+    }
+    if(input_params.x_reverse){
+        ui->TopCornerXSpinBox->setMaximum(x_bottom-.05);
+    }
+    else{
+        ui->TopCornerXSpinBox->setMinimum(x_bottom+.05);//the padding is to prevent overflow errors
+    }
+    update_origin();
+
+    double step=fmax(.0001,(xmax_precise-xmin_precise)/20);
+    ui->TopCornerXSpinBox->setSingleStep(step);
+    ui->BottomCornerXSpinBox->setSingleStep(step);
+
+
+
+    slice_diagram.update_BottomX(xmin_precise,dist_to_origin,is_visible);
+    slice_diagram.zoom_diagram(angle_precise, offset_precise,dist_to_origin);
+    //this needs to be done before calling update_persistence_diagram so that
+    //slice_diagram contains the updated slice length and scale;
+    //note that changing the value of xmin (or any other bound) does not change
+    //the value of origin_x or origin_y, so the updated barcode sent to slice_diagram
+    //in the call to update_persistence_diagram is identical to the barcode stored in slice_diagram
+    //at this point in the program, therefore this call to zoom_diagram draws the barcode in the right place
+
+    if(ui->actionAutomatically_reset_line->isChecked() && !slice_diagram.get_line_visible())
+    {
+        reset_line();
+        update_persistence_diagram();
     }
 
-    update_persistence_diagram();
+    else if(persistence_diagram_drawn)
+    {
+        update_persistence_diagram(false);
+    }
+
+
+
+}
+
+void VisualizationWindow::on_BottomCornerYSpinBox_valueChanged(double y_bottom)
+{
+    ymin_precise=y_bottom*double(1-2*input_params.y_reverse);
+    if(!slice_diagram_initialized)
+    {
+        return;
+    }
+    if(input_params.y_reverse){
+        ui->TopCornerYSpinBox->setMaximum(y_bottom-.05);
+    }
+    else{
+        ui->TopCornerYSpinBox->setMinimum(y_bottom+.05);
+    }
+    update_origin();
+    double step=fmax(.0001,(ymax_precise-ymin_precise)/20);
+    ui->TopCornerYSpinBox->setSingleStep(step);
+    ui->BottomCornerYSpinBox->setSingleStep(step);
+
+    slice_diagram.update_BottomY(ymin_precise,dist_to_origin,is_visible);
+    slice_diagram.zoom_diagram(angle_precise, offset_precise,dist_to_origin);
+
+
+    if(ui->actionAutomatically_reset_line->isChecked() && !slice_diagram.get_line_visible())
+    {
+        reset_line();
+        update_persistence_diagram();
+    }
+
+    else if(persistence_diagram_drawn)
+    {
+        update_persistence_diagram(false);
+
+    }
+
+
+
+
+}
+
+void VisualizationWindow::on_TopCornerXSpinBox_valueChanged(double x_top)
+{
+    xmax_precise=x_top*double(1-2*input_params.x_reverse);
+    if(!slice_diagram_initialized)
+    {
+        return;
+    }
+    if (input_params.x_reverse){
+        ui->BottomCornerXSpinBox->setMinimum(x_top+.05);
+    }
+    else{
+        ui->BottomCornerXSpinBox->setMaximum(x_top-.05);
+    }
+    update_origin();
+    double step=fmax(.0001,(xmax_precise-xmin_precise)/20);
+    ui->TopCornerXSpinBox->setSingleStep(step);
+    ui->BottomCornerXSpinBox->setSingleStep(step);
+
+    slice_diagram.update_TopX(xmax_precise,dist_to_origin,is_visible);
+    slice_diagram.zoom_diagram(angle_precise, offset_precise,dist_to_origin);
+
+
+    if(ui->actionAutomatically_reset_line->isChecked() && !slice_diagram.get_line_visible())
+    {
+        reset_line();
+        update_persistence_diagram();
+    }
+    else if(persistence_diagram_drawn)
+    {
+        update_persistence_diagram(false);
+    }
+
+
+
+
+
+}
+
+void VisualizationWindow::on_TopCornerYSpinBox_valueChanged(double y_top)
+{
+    ymax_precise=y_top*double(1-2*input_params.y_reverse);
+    if(!slice_diagram_initialized)
+    {
+        return;
+    }
+
+    if (input_params.y_reverse){
+        ui->BottomCornerYSpinBox->setMinimum(y_top+.05);
+    }
+    else{
+        ui->BottomCornerYSpinBox->setMaximum(y_top-.05);
+    }
+    update_origin();
+    double step=fmax(.0001,(ymax_precise-ymin_precise)/20);
+    ui->TopCornerYSpinBox->setSingleStep(step);
+    ui->BottomCornerYSpinBox->setSingleStep(step);
+
+    slice_diagram.update_TopY(ymax_precise,dist_to_origin,is_visible);
+    slice_diagram.zoom_diagram(angle_precise, offset_precise,dist_to_origin);
+
+
+
+    if(ui->actionAutomatically_reset_line->isChecked() && !slice_diagram.get_line_visible())
+    {
+        reset_line();
+        update_persistence_diagram();
+    }
+
+    else if(persistence_diagram_drawn)
+    {
+        update_persistence_diagram(false);
+    }
+
+
+
+}
+
+
+//TODO: update the value of dist_to_origin when these two boxes are changed
+void VisualizationWindow::on_angleDoubleSpinBox_valueChanged(double angle)
+{
+
+
+    if (line_selection_ready && !slice_update_lock) {
+        angle_precise = angle;
+        update_origin();
+        slice_diagram.update_line(angle_precise, ui->offsetSpinBox->value(), dist_to_origin);
+        update_persistence_diagram();//updates the barcode in the slice diagram
+        //note that the x and y scales of the diagram do not need to be updated, so the values
+        //passed to the pd in this function will be correct
+        slice_diagram.zoom_diagram(angle_precise, offset_precise,dist_to_origin); //draws the diagram
+
+    }
+
+
 }
 
 void VisualizationWindow::on_offsetSpinBox_valueChanged(double offset)
 {
+
     if (line_selection_ready && !slice_update_lock) {
         offset_precise = offset;
-        slice_diagram.update_line(ui->angleDoubleSpinBox->value(), offset_precise);
+        update_origin();
+        slice_diagram.update_line(ui->angleDoubleSpinBox->value(), offset_precise, dist_to_origin);
+        update_persistence_diagram(); //updates the barcode in the slice diagram
+        slice_diagram.zoom_diagram(angle_precise, offset_precise,dist_to_origin);//draws the diagram,with the updated barcode
+
     }
 
-    update_persistence_diagram();
 }
 
 void VisualizationWindow::on_normCoordCheckBox_clicked(bool checked)
@@ -288,39 +610,49 @@ void VisualizationWindow::on_xi2CheckBox_toggled(bool checked)
 }
 
 //updates the persistence diagram and barcode after a change in the slice line
-void VisualizationWindow::update_persistence_diagram()
+void VisualizationWindow::update_persistence_diagram(bool line_changed)
 {
     if (persistence_diagram_drawn) {
+
+
         //get the barcode
-        if (verbosity >= 0) {
-            qDebug() << "  QUERY: angle =" << angle_precise << ", offset =" << offset_precise;
+
+
+        if(line_changed)
+        {
+            if (verbosity >= 0) {
+                qDebug() << "  QUERY: angle =" << angle_precise << ", offset =" << offset_precise;
+            }
+            BarcodeTemplate dbc = arrangement->get_barcode_template(angle_precise, offset_precise);
+            barcode = dbc.rescale(angle_precise, offset_precise, template_points->template_points, grades);
+            //shift the barcode so that "zero" is where the selected line crosses the bottom or left side of the viewing window
+            double ll_corner = rivet::numeric::project_to_line(angle_precise, offset_precise, origin_x, origin_y); //lower-left corner of line selection window
+            barcode = barcode->shift(-1*ll_corner);
+            //TESTING
+            //qDebug() << "  XI SUPPORT VECTOR:";
+            //for (unsigned i = 0; i < template_points->template_points.size(); i++) {
+            //    TemplatePoint p = template_points->template_points[i];
+            //    qDebug().nospace() << "    [" << i << "]: (" << p.x << "," << p.y << ") --> (" << grades.x[p.x] << "," << grades.y[p.y] << ")";
+            //}
+            if (verbosity >= 0) {
+                 dbc.print();
+                 barcode->print();
+             }
+           slice_diagram.update_barcode(*barcode, ui->barcodeCheckBox->isChecked());
         }
-        BarcodeTemplate dbc = arrangement->get_barcode_template(angle_precise, offset_precise);
-        barcode = dbc.rescale(angle_precise, offset_precise, template_points->template_points, grades);
 
-        //shift the barcode so that "zero" is where the selected line crosses the bottom or left side of the viewing window
-    	double ll_corner = rivet::numeric::project_to_line(angle_precise, offset_precise, grades.x[0], grades.y[0]); //lower-left corner of line selection window
-    	barcode = barcode->shift(-1*ll_corner);
 
-        //TESTING
-        //qDebug() << "  XI SUPPORT VECTOR:";
-        //for (unsigned i = 0; i < template_points->template_points.size(); i++) {
-        //    TemplatePoint p = template_points->template_points[i];
-        //    qDebug().nospace() << "    [" << i << "]: (" << p.x << "," << p.y << ") --> (" << grades.x[p.x] << "," << grades.y[p.y] << ")";
-        //}
-        if (verbosity >= 0) {
-            dbc.print();
-            barcode->print();
-        }
 
-        //draw the barcode
-        p_diagram.update_diagram(slice_diagram.get_slice_length(), slice_diagram.get_pd_scale(), *barcode);
-        slice_diagram.update_barcode(*barcode, ui->barcodeCheckBox->isChecked());
+
+        p_diagram.update_diagram(slice_diagram.get_slice_length(), slice_diagram.get_pd_scale(),dist_to_origin, is_visible,*barcode);
+        //slice_diagram.update_barcode(*barcode, ui->barcodeCheckBox->isChecked());
+
     }
 }
 
 void VisualizationWindow::set_line_parameters(double angle, double offset)
 {
+
     slice_update_lock = true;
 
     //correct for slight numerical errors that the interface might introduce
@@ -332,14 +664,18 @@ void VisualizationWindow::set_line_parameters(double angle, double offset)
     //store values internally
     angle_precise = angle;
     offset_precise = offset;
+    update_origin();
 
     //update UI elements (values will be truncated)
-    ui->angleDoubleSpinBox->setValue(angle);
+    ui->angleDoubleSpinBox->setValue(angle);//note these calls do NOT call update_origin or update_persistence diagram because slice_update_lock=true
     ui->offsetSpinBox->setValue(offset);
 
-    slice_update_lock = false;
 
     update_persistence_diagram();
+    slice_diagram.zoom_diagram(angle_precise, offset_precise,dist_to_origin);
+    slice_update_lock = false;
+
+
 }
 
 void VisualizationWindow::showEvent(QShowEvent* event)
@@ -354,9 +690,10 @@ void VisualizationWindow::resizeEvent(QResizeEvent* /*unused*/)
 {
     if (line_selection_ready) {
         slice_diagram.resize_diagram();
-
-        if (persistence_diagram_drawn)
-            p_diagram.resize_diagram(slice_diagram.get_slice_length(), slice_diagram.get_pd_scale());
+    }
+    if (persistence_diagram_drawn)
+    {
+        p_diagram.resize_diagram(slice_diagram.get_slice_length(), slice_diagram.get_pd_scale());
     }
 }
 
@@ -466,6 +803,95 @@ void VisualizationWindow::on_actionOpen_triggered()
     ///TODO: open the data select dialog box and load new data
 } //end on_actionOpen_triggered()
 
+
+
+
+void VisualizationWindow::on_actionRestore_default_window_triggered()
+{
+    double orig_xmin=slice_diagram.get_original_xmin();
+    double orig_xmax=slice_diagram.get_original_xmax();
+    double orig_ymin=slice_diagram.get_original_ymin();
+    double orig_ymax=slice_diagram.get_original_ymax();
+
+
+    ui->BottomCornerXSpinBox->setValue(orig_xmin);
+    ui->BottomCornerYSpinBox->setValue(orig_ymin);
+    ui->TopCornerXSpinBox->setValue(orig_xmax);
+    ui->TopCornerYSpinBox->setValue(orig_ymax);
+
+    xmin_precise=orig_xmin; //overwrite the value set by the call to setValue to avoid rounding errors in reset_line()
+    xmax_precise=orig_xmax;
+    ymin_precise=orig_ymin;
+    ymax_precise=orig_ymax;
+
+    reset_line();
+    update_origin();
+    slice_diagram.zoom_diagram(angle_precise, offset_precise, dist_to_origin);
+
+    update_persistence_diagram();
+
+
+
+
+}//end on_actionRestore_default_window_triggered()
+
+
+//sets the window to be the smallest one containing all nonzero Betti numbers, with the slice line connecting the corners
+void VisualizationWindow::on_actionBetti_number_window_triggered()
+{
+    double xmin=slice_diagram.get_min_supp_xi_x();
+    double xmax=slice_diagram.get_max_supp_xi_x();
+    double ymin=slice_diagram.get_min_supp_xi_y();
+    double ymax=slice_diagram.get_max_supp_xi_y();
+
+    ui->BottomCornerXSpinBox->setValue(xmin);
+    ui->BottomCornerYSpinBox->setValue(ymin);
+    ui->TopCornerXSpinBox->setValue(xmax);
+    ui->TopCornerYSpinBox->setValue(ymax);
+
+    xmin_precise=xmin; //overwrite the value set by the call to setValue to avoid rounding errors in reset_line()
+    xmax_precise=xmax;
+    ymin_precise=ymin;
+    ymax_precise=ymax;
+
+    reset_line();
+    update_origin();
+    slice_diagram.zoom_diagram(angle_precise, offset_precise, dist_to_origin);
+
+    update_persistence_diagram();
+
+
+}//end on_actionBetti_number_window_triggered()
+
+//resets the line if it is not currently visible, and the option is set to true
+void VisualizationWindow::on_actionAutomatically_reset_line_toggled()
+{
+    if(ui->actionAutomatically_reset_line->isChecked()&& ! slice_diagram.get_line_visible())
+    {
+        reset_line();
+        update_persistence_diagram();
+    }
+}//end on_actionAutomatically_reset_line_toggled()
+
+
+//changes the line so that it connects the extreme corners of the window
+void VisualizationWindow::reset_line()
+{
+
+    double new_slope=(ymax_precise-ymin_precise)/(xmax_precise-xmin_precise);
+    double new_angle=atan(new_slope)*180/PI;
+    double new_offset=(ymin_precise-new_slope*xmin_precise)*cos(new_angle*PI/180);
+
+    angle_precise=new_angle;
+    offset_precise=new_offset;
+    ui->angleDoubleSpinBox->setValue(new_angle);
+    ui->offsetSpinBox->setValue(new_offset);
+    is_visible=true;
+    update_origin();
+
+}//end reset_line()
+
+
 QString VisualizationWindow::suggestedName(QString extension)
 {
     QSettings settings;
@@ -477,4 +903,88 @@ QString VisualizationWindow::suggestedName(QString extension)
         + extension;
     auto suggested = QDir(settings.value(DEFAULT_SAVE_DIR_KEY).toString()).filePath(name);
     return suggested;
+}
+//updates the values of origin_x/y, dist_to_origin,is_visible, slice_length,called after a change in slice line or window bounds
+void VisualizationWindow::update_origin()
+{
+    if(angle_precise==90.0)
+    {
+        origin_y=grades.y[0];
+        origin_x=-1.0*offset_precise;
+        dist_to_origin=ymin_precise-origin_y;
+        is_visible=(xmin_precise<=origin_x)&&(origin_x<=xmax_precise);
+
+        slice_length=ymax_precise-ymin_precise;
+
+    }
+    else if(angle_precise==0.0)
+    {
+        origin_x=grades.x[0];
+        origin_y=offset_precise;
+        dist_to_origin=xmin_precise-origin_x;
+        is_visible=(ymin_precise<=origin_y)&&(origin_y<=ymax_precise);
+        slice_length=xmax_precise-xmin_precise;
+
+    }
+
+
+    else
+    {
+        double slope=tan(angle_precise*PI/180);
+        double y_int=offset_precise/cos(angle_precise*PI/180);
+        if(y_int+slope*grades.x[0]>grades.y[0])
+        {//origin is on left side of box
+            origin_x=grades.x[0];
+            origin_y=y_int+slope*grades.x[0];
+
+        }
+        else
+        {//origin is on bottom side of box
+            origin_x=(grades.y[0]-y_int)/slope;
+            origin_y=grades.y[0];
+        }
+
+        double dot_pos_x=0; //data coordinates of the bottom dot in the visible window
+        double dot_pos_y=0;
+
+        if(y_int+slope*xmin_precise>ymin_precise)
+        {//bottom dot is on the left edge of the visible window
+            dot_pos_x=xmin_precise;
+            dot_pos_y=y_int+slope*xmin_precise;
+            dist_to_origin=sqrt(pow(dot_pos_x-origin_x,2.0)+pow(dot_pos_y-origin_y,2.0));
+            is_visible=(ymin_precise<=dot_pos_y)&&(dot_pos_y<=ymax_precise);
+            
+        }
+        else
+        {//bottom dot is on the bottom edge of the visible window
+            dot_pos_x=(ymin_precise-y_int)/slope;
+            dot_pos_y=ymin_precise;
+            dist_to_origin=sqrt(pow(dot_pos_x-origin_x,2.0)+pow(dot_pos_y-origin_y,2.0));
+            is_visible=(xmin_precise<=dot_pos_x)&&(dot_pos_x<=xmax_precise);
+            
+
+        }
+        if(dot_pos_x<origin_x || dot_pos_y<origin_y)
+        {
+            dist_to_origin*=-1;
+        }
+
+
+        double top_corner_x=0; //the coordinates of the top corner of the line, in the visible window
+        double top_corner_y=0;
+
+        if(y_int+slope*xmax_precise>ymax_precise)
+        {//then the top corner is on the top edge
+            top_corner_x=(ymax_precise-y_int)/slope;
+            top_corner_y=ymax_precise;
+
+        }
+        else
+        {//the top corner is on the right edge
+            top_corner_x=xmax_precise;
+            top_corner_y=top_corner_x*slope+y_int;
+        }
+
+        slice_length=sqrt((top_corner_x-dot_pos_x)*(top_corner_x-dot_pos_x)+(top_corner_y-dot_pos_y)*(top_corner_y-dot_pos_y));
+    }
 }
