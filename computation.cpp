@@ -79,6 +79,10 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(ComputationInput& in
             debug() << "COMPUTING MINIMAL PRESENTATION:";
         }
         
+        //Because the assignment operator for the unsigned_matrix class doesn't work properly,
+        //have to resize the object by hand before assignment.
+        pres.hom_dims.resize(boost::extents[input.x_exact.size()][input.y_exact.size()]);
+        
         pres = Presentation(input.rep(),progress,verbosity);
         if (verbosity >= 2) {
             std::cout << "COMPUTED (UNMINIMIZED) PRESENTATION!" << std::endl;
@@ -117,17 +121,25 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(ComputationInput& in
     
         progress.progress(95);
     
-        //TODO: In the new code, the Presentation class keeps its own public hom_dims matrix,
-        //so the one stored by the object named "result" is no longer necessary.
-        //However, for compatibility with the old Betti number algorithm, for now I am keeping the latter.
-        //A more uniform way to do this would be to also make the hom_dims a public member of MultiBetti.
+        mb.read_betti(pres);
+        mb.compute_xi2(pres.hom_dims);
+        
+        //TODO: In the new code, the Presentation class keeps its own public
+        //hom_dims matrix, so the one stored by the object named "result" is no
+        //longer necessary.  However, for compatibility with the old Betti
+        //number algorithm, for now I am keeping the latter.  A more uniform way
+        //to do this would be to also make the hom_dims a public member of
+        //MultiBetti.
+        
+        //NOTE: The boost matrix package actually requires to resize the matrix
+        //before assignment.
+        result->homology_dimensions.resize(boost::extents[pres.col_ind.width()][pres.col_ind.height()]);
         result->homology_dimensions = pres.hom_dims;
-    
-        //Now that I've copied the hom_dims matrix, I might as well make the original one trivial.
+        
+        //Now that I've copied the hom_dims matrix, I might as well make the
+        //original one trivial.
         pres.hom_dims.resize(boost::extents[0][0]);
         
-        mb.read_betti(pres);
-        mb.compute_xi2(result->homology_dimensions);
     }
     
     // If --koszul flag is given, then we use the old Betti number computation
@@ -142,7 +154,6 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(ComputationInput& in
         mb.compute_xi2(result->homology_dimensions);
     
     }
-    
     
     
     if (verbosity >= 2) {
@@ -177,10 +188,10 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(ComputationInput& in
         FIRep fir(pres, verbosity);
         ArrangementBuilder builder(verbosity);
 
-        arrangement = builder.build_arrangement(fir, input.x_exact, input.y_exact, result->template_points, progress); ///TODO: update this -- does not need to store list of xi support points in xi_support
+        arrangement = builder.build_arrangement(fir, input.x_exact, input.y_exact, result->template_points, progress);
+        //TODO: update this -- does not need to store list of xi support points in xi_support
         //NOTE: this also computes and stores barcode templates in the arrangement
     }
-
     else
     {
         ArrangementBuilder builder(verbosity);

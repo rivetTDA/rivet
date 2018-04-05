@@ -67,7 +67,7 @@ public:
     //computes xi_0 and xi_1 from a (possibly unminimized) presentation, using a
     //modified version of the standard reduction.  Note that the Presentation is
     //not passed by reference, but is copied.  This is intentional.
-    void compute_from_pres(Presentation pres, unsigned_matrix& hom_dims, Progress& progress);
+    void compute_from_pres(Presentation pres, Progress& progress);
     
     //computes xi_0 and xi_1, and also stores dimension of homology at each grade in the supplied matrix
     //This is the orginal RIVET algorithm, based on Koszul homology
