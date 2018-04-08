@@ -164,7 +164,7 @@ private:
     
     //Technical sorting function used to sort the MidHiGenIterPair objects that
     //index the high_matrix.
-    bool sort_high_gens(const MidHiGenIterPair& left, const MidHiGenIterPair& right);
+    static bool sort_high_gens(const MidHiGenIterPair& left, const MidHiGenIterPair& right);
     
 
     //writes boundary, given boundary entries in column col of matrix mat
