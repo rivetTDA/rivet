@@ -1,6 +1,6 @@
  /**********************************************************************
- Copyright 2014-2018 The RIVET Developers. See the COPYRIGHT file at
- the top-level directory of this distribution.
+ Copyright 2013 IST Austria, 2014-2018 The RIVET Developers. See the 
+ COPYRIGHT file at the top-level directory of this distribution.
  
  This file is part of RIVET.
  **********************************************************************/
@@ -359,7 +359,7 @@ namespace phat {
         // TODO: The above limitation is probably indicative of bad structure.
         //       Revisit.
         
-        void _print( index num_rows ) {
+        void _print( index num_rows ) const {
             //Print matrix dimensions
             std::cout << num_rows << " x " << matrix.size() << " matrix:" << std::endl;
             //First we convert to a dense matrix
@@ -390,7 +390,7 @@ namespace phat {
         
         // print the non-zero entries of a column of the matrix.
         // for debugging
-        void _print_sparse() {
+        void _print_sparse() const {
             for (unsigned i=0; i < matrix.size(); i ++)
             {
                 auto col=std::vector<index>();
