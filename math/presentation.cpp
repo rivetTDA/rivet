@@ -550,14 +550,25 @@ bool Presentation::row_index_has_matching_bigrade(int j, unsigned row, unsigned 
     }
 }
 
-void Presentation::print()
+void Presentation::print() const
 {
-    std::cout << "Row bigrades: " << std::endl;
+    std::cout << "Number of rows:" << row_ind.last()+1  << std::endl;
+    std::cout << "Row bigrades:" << std::endl;
     row_ind.print_bigrades_vector();
-    std::cout << "Column bigrades " << std::endl;
+    std::cout << "Number of columns:" << col_ind.last()+1  << std::endl;
+    std::cout << "Column bigrades:" << std::endl;
     col_ind.print_bigrades_vector();
     mat.print();
 }
 
-
+void Presentation::print_sparse() const
+{
+    std::cout << "Number of rows:" << row_ind.last()+1  << std::endl;
+    std::cout << "Row bigrades:" << std::endl;
+    row_ind.print_bigrades_vector();
+    std::cout << "Number of columns:" << col_ind.last()+1  << std::endl;
+    std::cout << "Column bigrades:" << std::endl;
+    col_ind.print_bigrades_vector();
+    mat.print_sparse();
+}
 

@@ -50,8 +50,8 @@ static const char USAGE[] =
       rivet_console (-h | --help)
       rivet_console --version
       rivet_console <input_file> --identify
-      rivet_console <input_file> --betti [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [--koszul]
-      rivet_console <input_file> <output_file> --betti [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [--koszul]
+      rivet_console <input_file> --minpres [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [--koszul]
+      rivet_console <input_file> [output_file] --betti [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [--koszul]
       rivet_console <precomputed_file> --bounds [-V <verbosity>]
       rivet_console <precomputed_file> --barcodes <line_file> [-V <verbosity>]
       rivet_console <input_file> <output_file> [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [-f <format>] [--binary] [--koszul]
@@ -70,7 +70,9 @@ static const char USAGE[] =
       -y <ybins> --ybins=<ybins>               Number of bins in the y direction [default: 0]
       -V <verbosity> --verbosity=<verbosity>   Verbosity level: 0 (no console output) to 10 (lots of output) [default: 0]
       -f <format>                              Output format for file [default: R1]
-      -b --betti                               Print dimension and Betti number information, then exit.        
+      --minpres                                Print the minimal presentation, then exit.
+      -b --betti                               Print dimension and Betti number information.  Optionally, also save this info
+                                               to a file in a binary format for later viewing in the visualizer.  Then exit.
       --bounds                                 Print lower and upper bounds for the module in <precomputed_file> and exit
       -k --koszul                              Use koszul homology-based algorithm to compute Betti numbers, instead of
                                                an approach based on computing presentations.
@@ -287,6 +289,7 @@ int main(int argc, char* argv[])
     params.y_bins = get_uint_or_die(args, "--ybins");
     params.verbosity = get_uint_or_die(args, "--verbosity");
     params.outputFormat = args["-f"].asString();
+    bool minpres_only = args["--minpres"].isBool() && args["--minpres"].asBool();
     bool betti_only = args["--betti"].isBool() && args["--betti"].asBool();
     bool binary = args["--binary"].isBool() && args["--binary"].asBool();
     bool identify = args["--identify"].isBool() && args["--identify"].asBool();
@@ -358,7 +361,29 @@ int main(int argc, char* argv[])
             std::clog << "Wrote arrangement to " << params.outputFile << std::endl;
         }
     });
-    computation.template_points_ready.connect([&points_message, &binary, &betti_only, &verbosity, &params](TemplatePointsMessage message) {
+    
+    
+    //This function gets called by the computation object after the minimal
+    //presentation is computed.  If minpres_only==true, it prints the
+    //presentation and then exits RIVET console
+    computation.minpres_ready.connect(
+                                      [&minpres_only](const Presentation& pres) {
+                                          if (minpres_only) {
+                                              std::cout << "MINIMAL PRESENTATION:" << std::endl;
+                                              pres.print_sparse();
+                                              //TODO: this seems a little abrupt...
+                                              std::cout.flush();
+                                              exit(0);
+                                          }
+                                      });
+    
+    computation.template_points_ready.connect(
+                                              
+        //the argument to computation.template_points_ready.connect is the
+        //following lambda function
+        //TODO: Probably would improve readibility to actually make this a private
+        //member function
+        [&points_message, &binary, &minpres_only, &betti_only, &verbosity, &params](TemplatePointsMessage message) {
         points_message.reset(new TemplatePointsMessage(message));
 
         if (binary) {
@@ -371,7 +396,7 @@ int main(int argc, char* argv[])
             std::cout.flush();
         }
 
-        if (verbosity >= 4 || betti_only) {
+        if (verbosity >= 4 || betti_only || minpres_only) {
             FileWriter::write_grades(std::cout, message.x_exact, message.y_exact);
         }
         //TODO: Add a flag to re-enable this code?

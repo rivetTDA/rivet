@@ -348,12 +348,19 @@ void MapMatrix::remove_zero_cols(const IndexMatrix& ind_old, IndexMatrix& ind_ne
     //        ind_new->print();
 } //end remove_zero_cols
 
-//function to print the matrix to standard output, for testing purposes
-void MapMatrix::print()
+//function to print the matrix to standard output
+void MapMatrix::print() const
 {
     matrix._print(num_rows);
-    //std::cout << "MapMatrix::print() finished call to _print!" << std::endl;
 } //end print()
+
+//function to print the matrix to standard output
+void MapMatrix::print_sparse() const
+{
+    matrix._print_sparse();
+} //end print()
+
+
 
 
 /********** methods of the class MapMatrix which assume that the column(s) in question are sorted  **********/

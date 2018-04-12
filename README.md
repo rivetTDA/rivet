@@ -18,7 +18,9 @@ Simon Segert
 Roy Zhao  
 
 ## Dependencies
-RIVET depends on the qt and boost libraries.  This development version of RIVET uses some code from the PHAT repository for persistence computation by Ulrich Bauer, Michael Kerber, Jan Reininghaus.
+RIVET depends on the qt and boost libraries.  This version of RIVET uses some 
+code from the PHAT repository for persistence computation by Ulrich Bauer, 
+Michael Kerber, Jan Reininghaus.
 
 ## Requirements
 Before starting to build RIVET, you will need to have the following installed:

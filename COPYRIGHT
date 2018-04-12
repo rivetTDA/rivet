@@ -1,5 +1,4 @@
-RIVET Copyright 2014-2016 The RIVET Developers
-
+RIVET Copyright 2014-2018 The RIVET Developers
 
 Principal contributors to RIVET:
 
@@ -11,6 +10,14 @@ Other contributors to RIVET:
 
   Philip Nadolny
   Abdel-Rahman Madkour
+  Simon Segert
+  Dave Turner
+  Alexander Yu
+  Roy Zhao
+
+This version of RIVET uses some modified code from the PHAT 
+repository for persistence computation by Ulrich Bauer, 
+Michael Kerber, and Jan Reininghaus, Copyright 2013 IST Austria.
 
 
 RIVET is free software: you can redistribute it and/or modify

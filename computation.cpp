@@ -103,6 +103,7 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(ComputationInput& in
         timer_sub.restart();
     
         pres.minimize(verbosity);
+        
         if (verbosity >= 2) {
             std::cout << "COMPUTED MINIMAL PRESENTATION!" << std::endl;
             std::cout << "Minimal presentation has " << pres.row_ind.last()+1 << " rows and " << pres.col_ind.last()+1 << " cols." <<std::endl;
@@ -163,7 +164,20 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(ComputationInput& in
     //store the xi support points
     mb.store_support_points(result->template_points);
     
-    template_points_ready(TemplatePointsMessage{ input.x_label, input.y_label, result->template_points, result->homology_dimensions, input.x_exact, input.y_exact }); //signal that xi support points are ready for visualization
+    //signal that xi support points are ready for visualization.
+    //Also will print Betti numbers and exit if rivet_console is called with
+    //--betti flag.
+    template_points_ready(TemplatePointsMessage{ input.x_label, input.y_label, result->template_points, result->homology_dimensions, input.x_exact, input.y_exact });
+    
+    //Will print minimal presentation and exit if rivet_console is called with
+    //--minpres flag.
+    
+    /* TODO: Code could be restructured to do slightly less work before printing
+       minpres and exiting.  But putting minpres_ready() after
+       templates_points_ready() allows us to print the exact bigrades using
+       templates_points_ready(), which is convenient for now. */
+    minpres_ready(pres);
+    
     progress.advanceProgressStage(); //update progress box to stage 4
 
     //STAGES 4 and 5: BUILD THE LINE ARRANGEMENT AND COMPUTE BARCODE TEMPLATES

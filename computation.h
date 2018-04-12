@@ -75,9 +75,12 @@ struct ComputationResult {
 
 class Computation {
 public:
-    //TODO: these signals are a little strange, they should go away soon
+    //TODO: these signals are a little strange.  It would be better to do away
+    //with these, and to factor Computation::compute_raw into several functions
+    //that can be called separately depending on the arguments to rivet_console.
     boost::signals2::signal<void(std::shared_ptr<Arrangement>)> arrangement_ready;
     boost::signals2::signal<void(TemplatePointsMessage)> template_points_ready;
+    boost::signals2::signal<void(const Presentation&)> minpres_ready;
     Computation(int vrbsty, Progress& progress);
     ~Computation();
 

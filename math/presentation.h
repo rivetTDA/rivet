@@ -102,7 +102,8 @@ public:
     */
     void minimize(int verbosity);
     
-    void print();
+    void print() const;
+    void print_sparse() const;
     
 private:
   

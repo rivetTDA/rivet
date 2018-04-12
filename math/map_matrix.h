@@ -183,7 +183,9 @@ public:
     
     void finalize(unsigned i);
     
-    void print();
+    void print() const;
+    
+    void print_sparse() const;
     
 
 /*** For use in the new code to compute presentations ***/

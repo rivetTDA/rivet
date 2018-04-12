@@ -136,7 +136,7 @@ void IndexMatrix::print() const
 
 void IndexMatrix::print_bigrades_vector() const
 {
-    debug() << "IndexMatrix number of columns is:" << last()+1;
+    //debug() << "Number umber of columns is:" << last()+1;
     
     int prev_entry=-1;
     //print the matrix
