@@ -59,9 +59,7 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(ComputationInput& in
     //STAGE 3: COMPUTE MINIMAL PRESENTTION AND MULTIGRADED BETTI NUMBERS
 
     std::unique_ptr<ComputationResult> result(new ComputationResult);
-    progress.advanceProgressStage(); //update progress box to stage 3
-    //compute xi_0 and xi_1 at all bigrades
-    
+
     MultiBetti mb(input.rep());
 
     Timer timer;
@@ -84,6 +82,7 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(ComputationInput& in
         pres.hom_dims.resize(boost::extents[input.x_exact.size()][input.y_exact.size()]);
         
         pres = Presentation(input.rep(),progress,verbosity);
+        
         if (verbosity >= 2) {
             std::cout << "COMPUTED (UNMINIMIZED) PRESENTATION!" << std::endl;
             std::cout << "Unminimized presentation has " << pres.row_ind.last()+1 << " rows and " << pres.col_ind.last()+1 << " cols." <<std::endl;
