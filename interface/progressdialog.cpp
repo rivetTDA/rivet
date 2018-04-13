@@ -55,8 +55,6 @@ void ProgressDialog::advanceToNextStage()
     font.setBold(false);
     prevLabel->setFont(font);
 
-    ui->progressBar->setValue(stage_progress[current_stage]);
-
     current_stage++;
     stage_maximum = 100;
 
@@ -64,6 +62,8 @@ void ProgressDialog::advanceToNextStage()
     font.setBold(true);
     nextLabel->setFont(font);
     nextLabel->setEnabled(true);
+    
+    ui->progressBar->setValue(stage_progress[current_stage-1]);
 }
 
 void ProgressDialog::setStageMaximum(unsigned max)
