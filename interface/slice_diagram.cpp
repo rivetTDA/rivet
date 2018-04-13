@@ -129,7 +129,9 @@ void SliceDiagram::create_diagram(const QString x_text, const QString y_text, do
     std::ostringstream s_ymin;
     s_ymin.precision(4);
     s_ymin << data_ymin;
-    data_ymin_text = addSimpleText(QString(" "));
+    //initialize the y label with a dummy value so that the
+    //horizontal spacing relative to the boundary is correct
+    data_ymin_text = addSimpleText(QString("9.999"));
     data_ymin_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
     data_ymin_text->setFont(config_params->diagramFont);
 
