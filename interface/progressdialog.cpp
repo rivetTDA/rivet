@@ -34,6 +34,7 @@ ProgressDialog::ProgressDialog(QWidget* parent)
     , computation_finished(false)
 {
     ui->setupUi(this);
+    this->setWindowFlags(Qt::Window | Qt::WindowStaysOnTopHint);
 
     stage_progress.push_back(0);
     stage_progress.push_back(2); //we'll say that when the file is read we are 2% done,
