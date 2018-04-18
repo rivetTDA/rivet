@@ -470,7 +470,7 @@ void ArrangementBuilder::find_path(Arrangement& arrangement, std::vector<Halfedg
         boost::no_property, EdgeWeightProperty>
         Graph; //TODO: probably listS is a better choice than vecS, but I don't know how to make the adjacency_list work with listS
     Graph dual_graph;
-     
+    
     //loop over all arrangement.faces
     for (unsigned i = 0; i < arrangement.faces.size(); i++) {
         //consider all neighbors of this arrangement.faces
@@ -500,7 +500,7 @@ void ArrangementBuilder::find_path(Arrangement& arrangement, std::vector<Halfedg
         for (edge_iterator it = ei.first; it != ei.second; ++it)
             debug(true) << "  (" << boost::source(*it, dual_graph) << "\t, " << boost::target(*it, dual_graph) << "\t) \tweight = " << boost::get(boost::edge_weight_t(), dual_graph, *it);
     }
-
+    
     // PART 2: FIND A MINIMAL SPANNING TREE
 
     typedef boost::graph_traits<Graph>::edge_descriptor Edge;
@@ -535,8 +535,8 @@ void ArrangementBuilder::find_path(Arrangement& arrangement, std::vector<Halfedg
 
     // convert undirected tree representation to a directed representation
     //NOTE: no longer sorts children according to weight of subtree.
-    treeToDirectedRep(adjList, start, children);
-
+    treeToDirectedTree(adjList, start, children);
+    
     // now we can find the path
     find_subpath(arrangement, start, children, pathvec);
 
@@ -607,15 +607,10 @@ void ArrangementBuilder::find_subpath(Arrangement& arrangement,
 } //end find_subpath()
 
 
-void ArrangementBuilder::treeToDirectedRep(std::vector<std::vector<unsigned>>& adjList, unsigned start, std::vector<std::vector<unsigned>>& children)
+void ArrangementBuilder::treeToDirectedTree(std::vector<std::vector<unsigned>>& adjList, unsigned start, std::vector<std::vector<unsigned>>& children)
 {
-    std::vector<bool> discovered(adjList.size());// c++ vector for keeping track of which nodes have been visited
-    // populate the boolean array with false
-    for (unsigned i = 0; i < adjList.size(); ++i) {
-        discovered[i] = false;
-        //branchWeight[i] = 0;
-    }
-    
+    std::vector<bool> discovered(adjList.size(),false);// c++ vector for keeping track of which nodes have been visited
+
     std::stack<unsigned> nodes; // stack for nodes as we do DFS
     nodes.push(start); // push start node onto the node stack
     discovered[start] = true; // mark start node as discovered
@@ -639,7 +634,7 @@ void ArrangementBuilder::treeToDirectedRep(std::vector<std::vector<unsigned>>& a
         }
         
         if (!found_new_child)
-            // we have found all of node's children, so we can sort them and compute branch weight for node
+            // we have found all of node's children
         {
             nodes.pop(); // pop node off of the node stack
             
@@ -650,7 +645,7 @@ void ArrangementBuilder::treeToDirectedRep(std::vector<std::vector<unsigned>>& a
                 if (!nodes.empty() && nodes.top() == adjList[node][i]) // then this adjacency is the parent node
                     continue;
                 
-                //add this child to the toBeSorted vector
+                //add this child to childrenOfNode vector
                 unsigned child = adjList[node][i];
                 childrenOfNode.push_back(child);
             }
@@ -662,7 +657,7 @@ void ArrangementBuilder::treeToDirectedRep(std::vector<std::vector<unsigned>>& a
             }
         }
     } // end while
-} // end treeToDirectedRep()
+} // end treeToDirectedTree()
 
 
 
