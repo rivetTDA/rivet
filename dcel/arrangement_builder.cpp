@@ -32,7 +32,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <math/persistence_updater.h>
 
 #include <algorithm> //for find function in version 3 of find_subpath
-#include <cutgraph.h>
 #include <stack> //for find_subpath
 
 using rivet::numeric::INFTY;
@@ -471,12 +470,7 @@ void ArrangementBuilder::find_path(Arrangement& arrangement, std::vector<Halfedg
         boost::no_property, EdgeWeightProperty>
         Graph; //TODO: probably listS is a better choice than vecS, but I don't know how to make the adjacency_list work with listS
     Graph dual_graph;
-
-    // distance vector for sorting the adjacency list
-    std::vector<std::vector<unsigned>> distances(arrangement.faces.size(), std::vector<unsigned>(arrangement.faces.size(), -1));
-    for (size_t i = 0; i < distances.size(); ++i)
-        distances.at(i).at(i) = 0;
-
+     
     //loop over all arrangement.faces
     for (unsigned i = 0; i < arrangement.faces.size(); i++) {
         //consider all neighbors of this arrangement.faces
@@ -491,8 +485,6 @@ void ArrangementBuilder::find_path(Arrangement& arrangement, std::vector<Halfedg
                 //if i < j, then create an (undirected) edge between these arrangement.faces
                 if (i < j) {
                     boost::add_edge(i, j, current->get_anchor()->get_weight(), dual_graph);
-                    distances.at(i).at(j) = current->get_anchor()->get_weight();
-                    distances.at(j).at(i) = current->get_anchor()->get_weight();
                 }
             }
             //move to the next neighbor
@@ -514,7 +506,7 @@ void ArrangementBuilder::find_path(Arrangement& arrangement, std::vector<Halfedg
     typedef boost::graph_traits<Graph>::edge_descriptor Edge;
     std::vector<Edge> spanning_tree_edges;
     boost::kruskal_minimum_spanning_tree(dual_graph, std::back_inserter(spanning_tree_edges));
-
+    
     //TESTING -- print the MST
     if (verbosity >= 10) {
         debug() << "num MST edges: " << spanning_tree_edges.size() << "\n";
@@ -541,8 +533,9 @@ void ArrangementBuilder::find_path(Arrangement& arrangement, std::vector<Halfedg
     //store the children of each node (with initial_cell regarded as the root of the tree)
     std::vector<std::vector<unsigned>> children(arrangement.faces.size(), std::vector<unsigned>());
 
-    // sort child nodes in decreasing order of branch weight to minimize backtracking in the path
-    sortAdjacencies(adjList, distances, start, children);
+    // convert undirected tree representation to a directed representation
+    //NOTE: no longer sorts children according to weight of subtree.
+    treeToDirectedRep(adjList, start, children);
 
     // now we can find the path
     find_subpath(arrangement, start, children, pathvec);
@@ -612,3 +605,64 @@ void ArrangementBuilder::find_subpath(Arrangement& arrangement,
     }
 
 } //end find_subpath()
+
+
+void ArrangementBuilder::treeToDirectedRep(std::vector<std::vector<unsigned>>& adjList, unsigned start, std::vector<std::vector<unsigned>>& children)
+{
+    std::vector<bool> discovered(adjList.size());// c++ vector for keeping track of which nodes have been visited
+    // populate the boolean array with false
+    for (unsigned i = 0; i < adjList.size(); ++i) {
+        discovered[i] = false;
+        //branchWeight[i] = 0;
+    }
+    
+    std::stack<unsigned> nodes; // stack for nodes as we do DFS
+    nodes.push(start); // push start node onto the node stack
+    discovered[start] = true; // mark start node as discovered
+    std::vector<unsigned> childrenOfNode; // vector of pairs to contain the children of a given node
+    
+    while (!nodes.empty()) // while we have not traversed the whole tree
+    {
+        unsigned node = nodes.top(); // the current node that we are considering
+        
+        // find the next undiscovered child of node
+        bool found_new_child = false;
+        for (unsigned i = 0; i < adjList[node].size(); ++i) // look for an undiscovered node
+        {
+            if (!discovered[adjList[node][i]]) // found a node
+            {
+                discovered[adjList[node][i]] = true; // discover the next node
+                nodes.push(adjList[node][i]); // push the next node onto the stack
+                found_new_child = true;
+                break;
+            }
+        }
+        
+        if (!found_new_child)
+            // we have found all of node's children, so we can sort them and compute branch weight for node
+        {
+            nodes.pop(); // pop node off of the node stack
+            
+            childrenOfNode.clear(); // reset childrenOfNode
+            
+            for (unsigned i = 0; i < adjList[node].size(); i++) // loop over all children of node
+            {
+                if (!nodes.empty() && nodes.top() == adjList[node][i]) // then this adjacency is the parent node
+                    continue;
+                
+                //add this child to the toBeSorted vector
+                unsigned child = adjList[node][i];
+                childrenOfNode.push_back(child);
+            }
+            
+            // copy the children indexes to the children vector
+            for (std::vector<unsigned>::iterator it = childrenOfNode.begin();
+                 it != childrenOfNode.end(); ++it) {
+                children[node].push_back(*it);
+            }
+        }
+    } // end while
+} // end treeToDirectedRep()
+
+
+

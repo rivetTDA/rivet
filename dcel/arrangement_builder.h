@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **********************************************************************/
 //
 // Created by Bryn Keller on 6/28/16.
+// Modifications by Mike Lesnick April 18, 2018.
 //
 
 #ifndef RIVET_CONSOLE_ARRANGEMENT_BUILDER_H
@@ -27,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "dcel/arrangement.h"
 #include "interface/progress.h"
 #include "math/firep.h"
+#include <stack>
 
 class ArrangementBuilder {
 public:
@@ -55,6 +57,28 @@ private:
     void find_edge_weights(Arrangement& arrangement, PersistenceUpdater& updater);
     void find_path(Arrangement& arrangement, std::vector<Halfedge*>& pathvec);
     void find_subpath(Arrangement& arrangement, unsigned cur_node, std::vector<std::vector<unsigned>>& adj, std::vector<Halfedge*>& pathvec);
+
+    
+    
+    // technical function to convert an undirected tree into a directed representation
+    // a simplified version of a function formerly called sortAdjacencies
+    //(though this name did not fully capture what the function did.)
+    // input:
+    //    adjList: list of all adjacencies in the tree; adjList[a] = b iff nodes a and b are adjacent
+    //    start: index of the node in the tree that will be regarded as root
+    // output: children[i] is a vector of indexes of the children of node i
+    
+    // NOTE: unlike its predecessor sortAdjacencies, treeToDirectedRep does not
+    //sort children in decreasing rder of branch weight.  That sorting was
+    // introduced to speed up barcode template computation, but the
+    //implementation was problematic and cuasing a memory issue.  For now, I have
+    //implemented the quickest fix, which is to do away with the sorting altogether.
+    //I don't expect this to impact the performance of RIVET signicantly, especially since the cost of the barcode template
+    //computation is often negligible compared to that of computing a mimimal
+    //presentation.
+    //-Mike Lesnick, April 18 2018.
+    void treeToDirectedRep(std::vector<std::vector<unsigned>>& adjList, unsigned start, std::vector<std::vector<unsigned>>& children);
+
 };
 
 #endif //RIVET_CONSOLE_ARRANGEMENT_BUILDER_H

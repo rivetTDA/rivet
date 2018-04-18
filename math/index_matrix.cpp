@@ -185,7 +185,7 @@ int IndexMatrixLex::start_index(unsigned row, unsigned col)
 
 void IndexMatrixLex::print_bigrades_vector() const
 {
-    debug() << "IndexMatrix number of columns is:" << last()+1;
+    //debug() << "IndexMatrix number of columns is:" << last()+1;
     
     int prev_entry=-1;
     //print the matrix
