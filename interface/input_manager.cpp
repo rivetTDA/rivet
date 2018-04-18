@@ -516,9 +516,9 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
         //store distance 0 at index 0
         (ret.first)->indexes.push_back(0);
 
-        //consider all points
-        num_points = values.size();
         TokenReader tokens(reader);
+        
+        //consider all points
         for (unsigned i = 0; i < num_points; i++) {
             if (hasFunction) {
                 //store value, if it doesn't exist already
@@ -533,13 +533,14 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
             {
                 try {
                     for (unsigned j = i + 1; j < num_points; j++) {
+                        
                         //read distance between points i and j
                         if (!tokens.has_next_token())
                             throw std::runtime_error("no distance between points " + std::to_string(i)
                                 + " and " + std::to_string(j));
 
                         std::string str = tokens.next_token();
-
+                        
                         exact cur_dist = str_to_exact(str);
 
                         if (cur_dist <= max_dist) //then this distance is allowed
