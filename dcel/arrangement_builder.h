@@ -58,7 +58,7 @@ private:
     void find_path(Arrangement& arrangement, std::vector<Halfedge*>& pathvec);
     void find_subpath(Arrangement& arrangement, unsigned cur_node, std::vector<std::vector<unsigned>>& adj, std::vector<Halfedge*>& pathvec);
 
-    
+    typedef std::vector<std::pair<unsigned,long>> NodeAdjacencyList;
     
     /* technical function to convert an undirected tree into a directed representation
        a simplified version of a function formerly called sortAdjacencies
@@ -78,7 +78,7 @@ private:
        negligible compared to that of computing a mimimal presentation.
        -Mike Lesnick, April 18 2018.
     */
-    void treeToDirectedTree(std::vector<std::vector<unsigned>>& adjList, unsigned start, std::vector<std::vector<unsigned>>& children);
+    void treeToDirectedTree(std::vector<NodeAdjacencyList>& adjList, unsigned start, std::vector<std::vector<unsigned>>& children);
 
 };
 
