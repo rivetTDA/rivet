@@ -129,14 +129,17 @@ void SliceDiagram::create_diagram(const QString x_text, const QString y_text, do
     std::ostringstream s_ymin;
     s_ymin.precision(4);
     s_ymin << data_ymin;
-    data_ymin_text = addSimpleText(QString(" "));
+    //initialize the y label with the initial value so that the
+    //horizontal spacing relative to the boundary is correct
+    data_ymin_text = addSimpleText(QString(s_ymin.str().data()));
+
     data_ymin_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
     data_ymin_text->setFont(config_params->diagramFont);
 
     std::ostringstream s_ymax;
     s_ymax.precision(4);
     s_ymax << data_ymax;
-    data_ymax_text = addSimpleText(QString(" "));
+    data_ymax_text = addSimpleText(QString(s_ymax.str().data()));
     data_ymax_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
     data_ymax_text->setFont(config_params->diagramFont);
 
@@ -1179,7 +1182,8 @@ void SliceDiagram::redraw_labels()
 
     std::ostringstream s_xmin;
     s_xmin.precision(4);
-    s_xmin << data_xmin*xrev_sign;
+    //possible fix to sometimes showing "-0"
+    s_xmin << (data_xmin==0? 0 : data_xmin*xrev_sign);
     data_xmin_text->setText(QString(s_xmin.str().data()));
 
     rect1->setRect(0,0,data_xmin_text->sceneBoundingRect().width(), data_xmin_text->sceneBoundingRect().height());
@@ -1191,7 +1195,7 @@ void SliceDiagram::redraw_labels()
 
     std::ostringstream s_ymin;
     s_ymin.precision(4);
-    s_ymin << data_ymin*yrev_sign;
+    s_ymin << (data_ymin==0? 0: data_ymin*yrev_sign);
     data_ymin_text->setText(QString(s_ymin.str().data()));
 
     rect2->setRect(0,0,data_ymin_text->sceneBoundingRect().width(),data_ymin_text->sceneBoundingRect().height());
@@ -1202,7 +1206,7 @@ void SliceDiagram::redraw_labels()
 
     std::ostringstream s_xmax;
     s_xmax.precision(4);
-    s_xmax << data_xmax*xrev_sign;
+    s_xmax << (data_xmax==0? 0: data_xmax*xrev_sign);
     data_xmax_text->setText(QString(s_xmax.str().data()));
 
     rect3->setRect(0,0,data_xmax_text->sceneBoundingRect().width(),data_xmax_text->sceneBoundingRect().height());
@@ -1215,7 +1219,7 @@ void SliceDiagram::redraw_labels()
 
     std::ostringstream s_ymax;
     s_ymax.precision(4);
-    s_ymax << data_ymax*yrev_sign;
+    s_ymax << (data_ymax==0? 0: data_ymax*yrev_sign);
     data_ymax_text->setText(QString(s_ymax.str().data()));
 
     rect4->setRect(0,0,data_ymax_text->sceneBoundingRect().width(),data_ymax_text->sceneBoundingRect().height());

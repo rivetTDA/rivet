@@ -849,6 +849,9 @@ std::unique_ptr<InputData> InputManager::read_firep(std::ifstream& stream, Progr
     if (verbosity >= 2) {
         debug() << "InputManager: Found a firep file.\n";
     }
+    
+    exact xrev_sign=-2*(input_params.x_reverse)+1; //-1 if x_reverse=true, 1 if not
+    exact yrev_sign=-2*(input_params.y_reverse)+1;
 
     //Skip file type line
     reader.next_line();
@@ -896,8 +899,8 @@ std::unique_ptr<InputData> InputManager::read_firep(std::ifstream& stream, Progr
                 d2.push_back(std::vector<unsigned>());
                 line_info = reader.next_line();
                 tokens = line_info.first;
-                x_values.push_back(str_to_exact(tokens.at(0)));
-                y_values.push_back(str_to_exact(tokens.at(1)));
+                x_values.push_back(xrev_sign*str_to_exact(tokens.at(0)));
+                y_values.push_back(yrev_sign*str_to_exact(tokens.at(1)));
                 //store value, if it doesn't exist already
                 ret = x_set.insert(ExactValue(x_values[i]));
                 //remember that point i has this value
@@ -926,8 +929,8 @@ std::unique_ptr<InputData> InputManager::read_firep(std::ifstream& stream, Progr
                 d1.push_back(std::vector<unsigned>());
                 line_info = reader.next_line();
                 tokens = line_info.first;
-                x_values.push_back(str_to_exact(tokens.at(0)));
-                y_values.push_back(str_to_exact(tokens.at(1)));
+                x_values.push_back(xrev_sign*str_to_exact(tokens.at(0)));
+                y_values.push_back(yrev_sign*str_to_exact(tokens.at(1)));
                 //store value, if it doesn't exist already
                 ret = x_set.insert(ExactValue(x_values[i + t]));
                 //remember that point i has this value
