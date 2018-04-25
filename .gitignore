@@ -26,3 +26,4 @@ ui_visualizationwindow.h
 build
 cmake-build-*
 msgpack
+RIVET.pro.user

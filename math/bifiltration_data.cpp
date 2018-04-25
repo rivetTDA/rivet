@@ -152,6 +152,10 @@ void BifiltrationData::build_VR_subcomplex(const std::vector<unsigned>& times,
     }
 } //end build_subtree()
 
+//TODO: will the degree vector have to be treated differently? I don't think so, because it is actually
+//the vector of degree *indexes*
+
+
 //builds BifiltrationData representing a bifiltered Vietoris-Rips complex from metric data
 void BifiltrationData::build_DR_complex(const unsigned num_vertices, const std::vector<unsigned>& distances, const std::vector<unsigned>& degrees, const unsigned num_x, const unsigned num_y)
 {
@@ -236,6 +240,7 @@ void BifiltrationData::build_DR_subcomplex(const std::vector<unsigned>& distance
 //For each point in a degree-Rips bifiltration, generates an array of incomparable grades of appearance. distances should be of size vertices(vertices - 1)/2
 //Degrees are stored in negative form to align with correct ordering on R
 //Stores result in the vector container "multigrades". Each vector of grades is sorted in reverse lexicographic order
+
 void BifiltrationData::generateVertexMultigrades(std::vector<AppearanceGrades>& multigrades, const unsigned vertices, const std::vector<unsigned>& distances, const std::vector<unsigned>& degrees)
 {
     for (unsigned i = 0; i < vertices; i++) {

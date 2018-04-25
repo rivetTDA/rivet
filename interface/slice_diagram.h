@@ -42,6 +42,7 @@ typedef boost::multi_array<QGraphicsRectItem*, 2> QGRI_matrix;
 class SliceDiagram : public QGraphicsScene {
     Q_OBJECT
 
+    //todo: make the gray outline of the gradings visible
 public:
     SliceDiagram(ConfigParameters* params, std::vector<double>& x_grades, std::vector<double>& y_grades, QObject* parent = 0);
     ~SliceDiagram();
@@ -49,15 +50,23 @@ public:
     void add_point(double x_coord, double y_coord, int xi0m, int xi1m, int xi2m); //receives an xi support point, which will be drawn when create_diagram() is called
     void clear_points(); //removes all previously-created points from the diagram
 
-    void create_diagram(const QString& x_text, const QString& y_text, double xmin, double xmax, double ymin, double ymax, bool norm_coords, unsigned_matrix& hom_dims); //simply creates all objects; resize_diagram() handles positioning of objects
+    void create_diagram(const QString x_text, const QString y_text, double xmin, double xmax, double ymin, double ymax, bool norm_coords, unsigned_matrix& hom_dims, bool x_reverse=false, bool y_reverse=false); //simply creates all objects; resize_diagram() handles positioning of objects
     void enable_slice_line(); //enables the slice line and control dots
     bool is_created(); //true if the diagram has been created; false otherwise
     void resize_diagram(); //resizes diagram to fill the QGraphicsView
     void redraw_dim_rects(); //redraws the rectangles for the homology dimension visualization
     void redraw_dots(); //redraws the support points of the multigraded Betti numbers
+    void redraw_labels(); //redraws axis labels in same position on top of rectangles
 
-    void update_line(double angle, double offset); //updates the line, in response to a change in the controls in the VisualizationWindow
+    void zoom_diagram(double angle, double offset, double distance_to_origin); //redraws diagram in response to a change in bounds
+
+    void update_line(double angle, double offset, double distance_to_origin); //updates the line, in response to a change in the controls in the VisualizationWindow
     void update_window_controls(bool from_dot); //computes new angle and offset in response to a change in the line, emits signal for the VisualizationWindow
+
+    void update_BottomX(double bottom_x, double distance_to_origin, bool visible); //called when the window bounds are changed; distance to origin and visible refer to the corresponding values in the new window
+    void update_BottomY(double bottom_y, double distance_to_origin, bool visible);
+    void update_TopX(double top_x, double distance_to_origin, bool visible);
+    void update_TopY(double top_y, double distance_to_origin, bool visible);
 
     void draw_barcode(const Barcode& bc, bool show); //draws the barcode parallel to the slice line; "show" determines whether or not bars are visible
     void update_barcode(const Barcode& bc, bool show); //updates the barcode (e.g. after a change in the slice line)
@@ -75,6 +84,18 @@ public:
 
     double get_slice_length(); //gets the length of the slice, for scaling the persistence diagram
     double get_pd_scale(); //gets the number of pixels per unit, for the persistence diagram
+
+    double get_original_xmin();
+    double get_original_xmax();
+    double get_original_ymin();
+    double get_original_ymax();
+
+    double get_min_supp_xi_x();
+    double get_max_supp_xi_x();
+    double get_min_supp_xi_y();
+    double get_max_supp_xi_y();
+
+    bool get_line_visible(); //true if the line is visible
 
     void receive_parameter_change(); //updates the diagram after a change in configuration parameters
 
@@ -101,8 +122,20 @@ private:
     QGraphicsSimpleTextItem* y_label;
 
     QGraphicsRectItem* control_rect; //control dots live on this rectangle
-    QGraphicsLineItem* gray_line_vertical; //vertical gray line at the right of the diagram
-    QGraphicsLineItem* gray_line_horizontal; //horizontal gray line at the top of the diagram
+    QGraphicsLineItem* gray_line_vertical; //vertical gray line at the right of the grading rectangle
+    QGraphicsLineItem* gray_line_horizontal; //horizontal gray line at the top of the grading rectangle
+    QGraphicsLineItem* gray_line_vertical_left; //vertical gray line at the left of the grading rectangle
+    QGraphicsLineItem* gray_line_horizontal_bottom; //horizontal gray line at the bottom of the grading rectangle
+
+    QGraphicsRectItem* rect1;
+    QGraphicsRectItem* rect2;
+    QGraphicsRectItem* rect3;
+    QGraphicsRectItem* rect4;
+    QGraphicsRectItem* rect5;
+    QGraphicsRectItem* rect6;
+
+
+
     ControlDot* dot_left;
     ControlDot* dot_right;
 
@@ -142,18 +175,32 @@ private:
     const std::vector<double>& y_grades; // "
 
     ///TODO: the next four values can be obtained from x_grades and y_grades
-    double data_xmin, data_xmax, data_ymin, data_ymax; //min and max coordinates of the data
+    double original_xmin, original_xmax, original_ymin, original_ymax; //default bounds-these are unchanged after initialization
+    double data_xmin, data_xmax, data_ymin, data_ymax; //min and max coordinates of the CURRENT WINDOW
     int view_length; //width + height of the QGraphicsView that displays the diagram; used for drawing infinite bars
     int max_xi_value; //max value of the bigraded betti numbers
+
+    QString x_label_text;
+    QString y_label_text;
+
+    double min_supp_xi_x; //the minimal x value in the support of the betti numbers
+    double max_supp_xi_x;
+    double min_supp_xi_y;
+    double max_supp_xi_y;
 
     int diagram_width, diagram_height; //pixel size of the diagram
     bool normalized_coords; //whether the user has selected "normalize coordinates"
     double scale_x, scale_y; //x- and y-scales for drawing data points
-
+    double xrev_sign, yrev_sign; //these are 1/-1 depending on whether the corresponding axis
+    //is shown in reverse order
+    
     double line_slope; //slope of the slice line in data units
     bool line_vert; //true if the line is vertical, false otherwise
     double line_pos; //relative position of left endpoint of line: 0 is lower left corner, positive values (up to 1) are along left side, negative values (to -1) are along bottom edge of box
 
+    bool line_visible; //true if the line is visible in the current window
+
+    double dist_to_origin; //signed distance in data units from the bottom left corner to the origin
     const int padding; //distance between xi support point area and control rectangle (on the top and right sides)
 
     bool created; //true once the diagram has been created

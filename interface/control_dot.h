@@ -40,8 +40,10 @@ public:
     QRectF boundingRect() const;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWidget*);
     QVariant itemChange(GraphicsItemChange change, const QVariant& value);
-
     void set_position(const QPointF& newpos);
+    //should these next two be private/protected?
+    ControlDot* other; //the other dot
+    bool position_lock; //prevents errant motion; is true whenever the other dot is being moved
 
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent* event);
@@ -50,6 +52,7 @@ protected:
 private:
     SliceLine* slice_line;
     ConfigParameters* config_params;
+
 
     bool pressed;
     bool left_bottom; //TRUE if this is a left-bottom control dot, FALSE if this is a right-top control dot

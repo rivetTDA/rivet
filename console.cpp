@@ -50,11 +50,11 @@ static const char USAGE[] =
       rivet_console (-h | --help)
       rivet_console --version
       rivet_console <input_file> --identify
-      rivet_console <input_file> --minpres [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [--koszul]
-      rivet_console <input_file> [output_file] --betti [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [--koszul]
+      rivet_console <input_file> --minpres [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [--koszul] [--xrev] [--yrev]
+      rivet_console <input_file> [output_file] --betti [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [--koszul] [--xrev] [--yrev]
       rivet_console <precomputed_file> --bounds [-V <verbosity>]
       rivet_console <precomputed_file> --barcodes <line_file> [-V <verbosity>]
-      rivet_console <input_file> <output_file> [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [-f <format>] [--binary] [--koszul]
+      rivet_console <input_file> <output_file> [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [-f <format>] [--binary] [--koszul] [--xrev] [--yrev]
 
     Options:
       <input_file>                             A text file with suitably formatted point cloud, bifiltration, or
@@ -68,6 +68,8 @@ static const char USAGE[] =
       -H <dimension> --homology=<dimension>    Dimension of homology to compute [default: 0]
       -x <xbins> --xbins=<xbins>               Number of bins in the x direction [default: 0]
       -y <ybins> --ybins=<ybins>               Number of bins in the y direction [default: 0]
+      --xrev                                   Add simplices in order of decreasing x
+      --yrev
       -V <verbosity> --verbosity=<verbosity>   Verbosity level: 0 (no console output) to 10 (lots of output) [default: 0]
       -f <format>                              Output format for file [default: R1]
       --minpres                                Print the minimal presentation, then exit.
@@ -296,6 +298,9 @@ int main(int argc, char* argv[])
     bool bounds = args["--bounds"].isBool() && args["--bounds"].asBool();
     bool barcodes = args["--barcodes"].isString();
     bool koszul = args["--koszul"].isBool() && args["--koszul"].asBool();
+    params.x_reverse=args["--xrev"].isBool() && args["--xrev"].asBool();
+    params.y_reverse=args["--yrev"].isBool() && args["--yrev"].asBool();
+
     std::string slices;
     if (barcodes) {
         slices = args["--barcodes"].asString();
@@ -448,7 +453,11 @@ int main(int argc, char* argv[])
         std::cout << "FILE TYPE: " << file_type.identifier << std::endl;
         std::cout << "FILE TYPE DESCRIPTION: " << file_type.description << std::endl;
         std::cout << "RAW DATA: " << file_type.is_data << std::endl;
+        std::cout << "HAS FUNCTION: "<<file_type.has_function<<std::endl;
         std::cout.flush();
+        if(!file_type.has_function){
+            params.x_reverse=true;
+        }
         return 0;
     }
     std::unique_ptr<ComputationResult> result;

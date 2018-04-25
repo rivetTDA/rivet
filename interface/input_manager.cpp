@@ -110,13 +110,18 @@ InputManager::InputManager(InputParameters& params)
     : input_params(params)
     , verbosity(params.verbosity)
 {
-    register_file_type(FileType{ "points", "point-cloud data", true,
+    register_file_type(FileType{ "points", "point-cloud data", true,true,
         std::bind(&InputManager::read_point_cloud, this, std::placeholders::_1, std::placeholders::_2) });
-    register_file_type(FileType{ "metric", "metric data", true,
+    register_file_type(FileType{ "points", "point-cloud data", true,false,
+        std::bind(&InputManager::read_point_cloud, this, std::placeholders::_1, std::placeholders::_2) });
+
+    register_file_type(FileType{ "metric", "metric data", true,true,
         std::bind(&InputManager::read_discrete_metric_space, this, std::placeholders::_1, std::placeholders::_2) });
-    register_file_type(FileType{ "bifiltration", "bifiltration data", true,
+    register_file_type(FileType{ "metric", "metric data", true, false,
+        std::bind(&InputManager::read_discrete_metric_space, this, std::placeholders::_1, std::placeholders::_2) });
+    register_file_type(FileType{ "bifiltration", "bifiltration data", true, true,
         std::bind(&InputManager::read_bifiltration, this, std::placeholders::_1, std::placeholders::_2) });
-    register_file_type(FileType{ "firep", "free implicit representation data", true,
+    register_file_type(FileType{ "firep", "free implicit representation data", true, true,
         std::bind(&InputManager::read_firep, this, std::placeholders::_1, std::placeholders::_2) });
     //    register_file_type(FileType {"RIVET_0", "pre-computed RIVET data", false,
     //                                 std::bind(&InputManager::read_RIVET_data, this, std::placeholders::_1, std::placeholders::_2) });
@@ -136,9 +141,38 @@ FileType& InputManager::get_file_type(std::string fileName)
     if (!reader.has_next_line()) {
         throw std::runtime_error("Empty file: " + fileName);
     }
-    std::string filetype_name = reader.next_line().first[0];
-
-    auto it = std::find_if(supported_types.begin(), supported_types.end(), [filetype_name](FileType t) { return t.identifier == filetype_name; });
+    auto from_reader=reader.next_line();
+    std::string filetype_name = from_reader.first[0];
+    bool function=true;
+    
+    
+    //check whether the x axis label is "no function"
+    //if the file type is point cloud, then this would appear on the 4th line
+    //if it is metric, then it would appear on the 2nd line
+    //if another type, then function=true
+    if(filetype_name=="points")
+    {
+        for(int i=0; i<3; i++){
+            if(!reader.has_next_line()){
+                throw std::runtime_error("Point cloud data has less than 4 lines: " + fileName);
+            }
+            from_reader=reader.next_line();
+        }
+        if(join(from_reader.first).compare("no function") == 0){
+            function=false;
+        }
+    }
+    else if (filetype_name=="metric")
+    {
+        if(!reader.has_next_line()){
+            throw std::runtime_error("Metric data has less than 2 lines: " + fileName);
+        }
+        if(join(reader.next_line().first).compare("no function") == 0){
+            function=false;
+        }
+    }
+    
+    auto it = std::find_if(supported_types.begin(), supported_types.end(), [filetype_name, function](FileType t) { return (t.identifier == filetype_name) &&(function==t.has_function); });
 
     if (it == supported_types.end()) {
         throw std::runtime_error("Unsupported file type");
@@ -237,12 +271,16 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
         line_info = reader.next_line();
         if (join(line_info.first).compare("no function") == 0) {
             hasFunction = false;
-            //set label for x-axis to "codegree"
-            data->x_label = "codegree";
+            //set label for x-axis to "degree"
+            data->x_label = "degree";
             expectedNumTokens = dimension;
             if (verbosity >= 6) {
                 debug() << "InputManager: Point cloud file does not have function values. Creating Degree-Rips complex.";
             }
+            
+            input_params.x_reverse=true; //higher degrees will be shown on the left
+            //note this only modifies the internal copy of input_params,but is done just for the sake of consistency
+            
         } else {
             hasFunction = true;
             data->x_label = line_info.first[0];
@@ -276,6 +314,10 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
                 tokens.push_back("0");
             }
             DataPoint p(tokens);
+            if (input_params.x_reverse&& hasFunction) {
+                p.birth *= -1;
+            }
+
             points.push_back(p);
         }
     } catch (std::exception& e) {
@@ -375,7 +417,18 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
         }
         //make degrees
         degree_indexes = std::vector<unsigned>(maxDegree + 1, 0);
+        
         build_grade_vectors(*data, degree_set, degree_indexes, data->x_exact, input_params.x_bins);
+        //data->x_exact is now an increasing list of codegrees
+        //consider the sublevel set codeg<=k
+        //this is the same as deg>=maxDeg-k
+        //thus to convert from sublevelset to superlevel set, must replace the kth element of data->x_exact
+        //with -1*(codeg-(kth element)) (the negative 1 is to the values are still increasing)
+        //this is just the sequence of NEGATIVE degrees
+        //e.g codeg=(0,1,2,...,10)
+        //goes to (-(10-0), -(10-1), ...,-(10-10))=(-10,-9,...,0)
+    
+        
     }
     //X axis is given by function in Vietoris-Rips complex
     else {
@@ -412,8 +465,13 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
     data->bifiltration_data.reset(new BifiltrationData(input_params.dim, input_params.verbosity));
     if (hasFunction) {
         data->bifiltration_data->build_VR_complex(time_indexes, dist_indexes, data->x_exact.size(), data->y_exact.size());
+        
     } else {
+        
         data->bifiltration_data->build_DR_complex(num_points, dist_indexes, degree_indexes, data->x_exact.size(), data->y_exact.size());
+        //convert data->x_exact from codegree sequence to negative degree sequence
+        exact max_x_exact=*(data->x_exact.end()-1);//should it be maxdegree instead?
+        std::transform(data->x_exact.begin(),data->x_exact.end(), data->x_exact.begin(),[max_x_exact](exact x){return x-max_x_exact;});
     }
 
     if (verbosity >= 8) {
@@ -427,7 +485,15 @@ std::unique_ptr<InputData> InputManager::read_point_cloud(std::ifstream& stream,
     }
 
     data->free_implicit_rep.reset(new FIRep(*(data->bifiltration_data), input_params.verbosity));
+    
+    if(!hasFunction){
+        delete degree;
+    }
     return data;
+    
+    
+    
+    
 } //end read_point_cloud()
 
 //reads data representing a discrete metric space with a real-valued function and stores in a BifiltrationData
@@ -443,6 +509,10 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
     ExactSet value_set; //stores all unique values of the function; must DELETE all elements later
     ExactSet dist_set; //stores all unique values of the distance metric; must DELETE all elements later
     unsigned num_points;
+    exact xrev_sign=-2*(input_params.x_reverse)+1; //-1 if x_reverse=true, 1 if not
+    
+    //doesn't make sense to reverse y, so ignore y_reverse
+    
     bool hasFunction;
     unsigned* degree; //stores the degree of each point; must FREE later if used
     std::pair<ExactSet::iterator, bool> ret; //for return value upon insert()
@@ -458,10 +528,15 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
 
         if (join(line_info.first).compare("no function") == 0) {
             hasFunction = false;
-            //set label for x-axis to "codegree"
-            data->x_label = "codegree";
+            //set label for x-axis to "degree"
+            data->x_label = "degree";
             if (verbosity >= 6) {
                 debug() << "InputManager: Discrete metric space file does not have function values. Creating Degree-Rips complex.";
+            }
+            //overwrite the value of xrev_sign if necessary
+            if(!input_params.x_reverse){
+            input_params.x_reverse=true;
+            xrev_sign=-1;
             }
             //TODO Probably should find new way to get number of points
             //now read the number of points
@@ -487,7 +562,7 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
             values.reserve(line.size());
 
             for (size_t i = 0; i < line.size(); i++) {
-                values.push_back(str_to_exact(line.at(i)));
+                values.push_back(xrev_sign*str_to_exact(line.at(i)));
             }
             num_points = values.size();
         }
@@ -593,7 +668,7 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
         //WARNING: assumes that the number of distinct degree grades will be equal to maxDegree which may not hold
         for (unsigned i = 0; i <= maxDegree; i++) {
             ret = degree_set.insert(ExactValue(maxDegree - i)); //store degree -i because degree is wrt opposite ordering on R
-            (ret.first)->indexes.push_back(i); //degree -i is stored at index i
+            (ret.first)->indexes.push_back(i); //degree i is stored at index i
         }
         //make degrees
         degree_indexes = std::vector<unsigned>(maxDegree + 1, 0);
@@ -630,7 +705,12 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
     if (hasFunction) {
         data->bifiltration_data->build_VR_complex(value_indexes, dist_indexes, data->x_exact.size(), data->y_exact.size());
     } else {
+        
         data->bifiltration_data->build_DR_complex(num_points, dist_indexes, degree_indexes, data->x_exact.size(), data->y_exact.size());
+        
+        //convert data->x_exact from codegree sequence to negative degree sequence
+        exact max_x_exact=*(data->x_exact.end()-1);//should it be maxdegree instead?
+        std::transform(data->x_exact.begin(),data->x_exact.end(), data->x_exact.begin(), [max_x_exact](exact x){return x-max_x_exact;});
     }
 
     if (verbosity >= 8) {
@@ -656,6 +736,10 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
 //reads a bifiltration and stores in BifiltrationData
 std::unique_ptr<InputData> InputManager::read_bifiltration(std::ifstream& stream, Progress& progress)
 {
+    exact xrev_sign=-2*(input_params.x_reverse)+1; //-1 if x_reverse=true, 1 if not
+    exact yrev_sign=-2*(input_params.y_reverse)+1;
+    
+
     std::unique_ptr<InputData> data(new InputData);
     FileInputReader reader(stream);
     if (verbosity >= 2) {
@@ -703,9 +787,9 @@ std::unique_ptr<InputData> InputManager::read_bifiltration(std::ifstream& stream
             unsigned grades = (tokens.size() - pos) / 2; //remaining tokens are xy pairs
             for (unsigned i = 0; i < grades; i++) {
                 //read multigrade and remember that it corresponds to this grade
-                ret = x_set.insert(ExactValue(str_to_exact(tokens.at(pos))));
+                ret = x_set.insert(ExactValue(xrev_sign*str_to_exact(tokens.at(pos))));
                 (ret.first)->indexes.push_back(num_grades);
-                ret = y_set.insert(ExactValue(str_to_exact(tokens.at(pos + 1))));
+                ret = y_set.insert(ExactValue(yrev_sign*str_to_exact(tokens.at(pos + 1))));
                 (ret.first)->indexes.push_back(num_grades);
                 num_grades++;
                 pos += 2;

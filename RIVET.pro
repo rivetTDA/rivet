@@ -104,7 +104,7 @@ CONFIG += c++11
 QMAKE_CFLAGS += -std=c++11 -stdlib=libc++ -mmacosx-version-min=10.9
 QMAKE_CXXFLAGS += -std=c++11 -stdlib=libc++ -mmacosx-version-min=10.9
 
-LIBS += -L"/usr/local/Cellar/boost/1.63.0/lib"
-INCLUDEPATH += "/usr/local/Cellar/boost/1.63.0/include"
+LIBS += -L"/usr/local/Cellar/boost/1.66.0/lib"
+INCLUDEPATH += "/usr/local/Cellar/boost/1.66.0/include"
 
-LIBS += -L"/usr/local/Cellar/boost/1.63.0/lib" -lboost_random
+LIBS += -L"/usr/local/Cellar/boost/1.66.0/lib" -lboost_random

@@ -69,6 +69,8 @@ int main(int argc, char* argv[])
     params.verbosity = parser.value(verbosityOption).toInt();
     params.x_bins = 0;
     params.y_bins = 0;
+    params.x_reverse=false;
+    params.y_reverse=false;
 
     qRegisterMetaType<std::shared_ptr<ArrangementMessage>>();
     qRegisterMetaType<std::shared_ptr<TemplatePointsMessage>>();
