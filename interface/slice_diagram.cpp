@@ -129,14 +129,17 @@ void SliceDiagram::create_diagram(const QString x_text, const QString y_text, do
     std::ostringstream s_ymin;
     s_ymin.precision(4);
     s_ymin << data_ymin;
-    data_ymin_text = addSimpleText(QString(" "));
+    //initialize the y label with the initial value so that the
+    //horizontal spacing relative to the boundary is correct
+    data_ymin_text = addSimpleText(QString(s_ymin.str().data()));
+
     data_ymin_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
     data_ymin_text->setFont(config_params->diagramFont);
 
     std::ostringstream s_ymax;
     s_ymax.precision(4);
     s_ymax << data_ymax;
-    data_ymax_text = addSimpleText(QString(" "));
+    data_ymax_text = addSimpleText(QString(s_ymax.str().data()));
     data_ymax_text->setFlag(QGraphicsItem::ItemIgnoresTransformations);
     data_ymax_text->setFont(config_params->diagramFont);
 
