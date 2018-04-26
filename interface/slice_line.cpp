@@ -73,8 +73,27 @@ void SliceLine::paint(QPainter* painter, const QStyleOptionGraphicsItem* /*unuse
 
     painter->setRenderHint(QPainter::Antialiasing);
     painter->setPen(pen);
+
+    //handle vertical lines, in particular vertical lines along the left or right boundaries
+    //in this case, draw the line along the entire boundary, even though one of the control dots
+    //might not be at the corner
+
+    //since this also gives correct behavior for vertical lines not along the boundaries, all vertical lines
+    //are handled in this case, to avoid floating point comparisons
+    if(vertical){
+        painter->drawLine(0, 0, 0,box_ymax);
+    }
+
+    //handle horizontal lines similarly
+    else if(fabs(left_dot->pos().y()-right_dot->pos().y())<=.001)
+    {
+        painter->drawLine(0,0,box_xmax,0);
+    }
+
+    //if neither horizontal nor vertical, draw the line connecting the two control dots
+    else{
     painter->drawLine(0, 0, right_dot->pos().x()-left_dot->pos().x(),right_dot->pos().y()-left_dot->pos().y());
-    //painter->drawLine(0,0,right_point.x(), right_point.y());
+    }
 }
 
 //left-click and drag to move line, maintaining the same slope

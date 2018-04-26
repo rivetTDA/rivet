@@ -1144,6 +1144,14 @@ void SliceDiagram::set_normalized_coords(bool toggle)
 //gets the length of the slice, for scaling the persistence diagram
 double SliceDiagram::get_slice_length()
 {
+    //handle edge case where the line is vertical but on the left or right edge
+    //in this case, the control dots can move up or down, but the line is drawn over the entire edge
+    if(line_vert){
+        return slice_line->get_box_ymax();
+    }
+
+    //if we get here, then the line is not vertical, and the length is simply the distance
+    //between the control dots
     double dx = slice_line->get_right_pt_x() - slice_line->pos().x();
     double dy = slice_line->get_right_pt_y() - slice_line->pos().y();
 

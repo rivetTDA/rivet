@@ -100,3 +100,4 @@ FORMS   += visualizationwindow.ui			\
     interface/progressdialog.ui \
     interface/aboutmessagebox.ui \
     interface/configuredialog.ui
+
