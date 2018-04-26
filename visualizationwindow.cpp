@@ -840,7 +840,6 @@ void VisualizationWindow::on_actionRestore_default_window_triggered()
 
 
 
-
 }//end on_actionRestore_default_window_triggered()
 
 
@@ -852,10 +851,14 @@ void VisualizationWindow::on_actionBetti_number_window_triggered()
     double ymin=slice_diagram.get_min_supp_xi_y();
     double ymax=slice_diagram.get_max_supp_xi_y();
 
-    ui->BottomCornerXSpinBox->setValue(xmin);
-    ui->BottomCornerYSpinBox->setValue(ymin);
-    ui->TopCornerXSpinBox->setValue(xmax);
-    ui->TopCornerYSpinBox->setValue(ymax);
+    double xrev_sign=input_params.x_reverse? -1 :1;
+
+    double yrev_sign=input_params.y_reverse? -1 :1;
+
+    ui->BottomCornerXSpinBox->setValue(xmin*xrev_sign);
+    ui->BottomCornerYSpinBox->setValue(ymin*yrev_sign);
+    ui->TopCornerXSpinBox->setValue(xmax*xrev_sign);
+    ui->TopCornerYSpinBox->setValue(ymax*yrev_sign);
 
     xmin_precise=xmin; //overwrite the value set by the call to setValue to avoid rounding errors in reset_line()
     xmax_precise=xmax;
