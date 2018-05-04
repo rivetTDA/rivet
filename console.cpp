@@ -67,9 +67,10 @@ static const char USAGE[] =
       --binary                                 Include binary data (used by RIVET viewer only)
       -H <dimension> --homology=<dimension>    Dimension of homology to compute [default: 0]
       -x <xbins> --xbins=<xbins>               Number of bins in the x direction [default: 0]
-      -y <ybins> --ybins=<ybins>               Number of bins in the y direction [default: 0]
-      --xrev                                   Add simplices in order of decreasing x
-      --yrev
+      -y <ybins> --ybins=<ybins>               Number of bins in the x direction [default: 0]
+      --xrev                                   Build bifiltration with respect to descending order on x-coordinate, if the input
+                                               type permits this.
+      --yrev                                   Same as above, but for the y-coordinate
       -V <verbosity> --verbosity=<verbosity>   Verbosity level: 0 (no console output) to 10 (lots of output) [default: 0]
       -f <format>                              Output format for file [default: R1]
       --minpres                                Print the minimal presentation, then exit.
