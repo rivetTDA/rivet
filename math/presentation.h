@@ -39,7 +39,7 @@
  behave as you might expect; namely, the size of the matrix has to be specified
  manually before copy/assignment to get the expected behavior.  As a result, 
  the Presentation class also currently does not have the desired copy/assignment
- behavior.  (The copy assignment operators are currently the defaults.  
+ behavior.  The copy assignment operators are currently the defaults.  
  (See computation.cpp for an example of how to deal with this.)
  Of course, one coud simply specify the correct assignment and copy behavior,
  for the Presentiton class, and this should be easy.  But the right solution 
