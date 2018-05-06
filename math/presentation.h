@@ -30,7 +30,22 @@
  Whereas constructing the presentation uses lazy heaps,
  minimization requires to sort the entries of the columns and
  perform binary searches for specific entries.
-
+ 
+ This class also has a member hom_dims, which stores the Hilbert function of the
+ presentation.
+ 
+ WARNING/TODO: In the current implementation, hom_dims is stored as a
+ boost::multi_array.  The copy/assignment operators for these objects do not 
+ behave as you might expect; namely, the size of the matrix has to be specified
+ manually before copy/assignment to get the expected behavior.  As a result, 
+ the Presentation class also currently does not have the desired copy/assignment
+ behavior.  The copy assignment operators are currently the defaults.  
+ (See computation.cpp for an example of how to deal with this.)
+ Of course, one coud simply specify the correct assignment and copy behavior,
+ for the Presentiton class, and this should be easy.  But the right solution 
+ seems to be to get rid of unsigned matrices in the code, at least in most places.  
+ (Anywhere the unsigned_matrix typedef is used.) However, this edit involves 
+ tinkering with Bryn's serialization code, so requires some care.  -Mike
 */
 
 
