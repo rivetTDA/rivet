@@ -808,16 +808,24 @@ void VisualizationWindow::on_actionOpen_triggered()
 
 void VisualizationWindow::on_actionRestore_default_window_triggered()
 {
+    //the internal values of the bounds
+    //e.g. xmin is always less than xmax.
+    //if xreverse=true, and the window goes from, e.g. 10 to 0
+    //then orig_xmin=-10 and orig_xmax=0
     double orig_xmin=slice_diagram.get_original_xmin();
     double orig_xmax=slice_diagram.get_original_xmax();
     double orig_ymin=slice_diagram.get_original_ymin();
     double orig_ymax=slice_diagram.get_original_ymax();
 
+    double xrev_sign=input_params.x_reverse? -1 :1;
 
-    ui->BottomCornerXSpinBox->setValue(orig_xmin);
-    ui->BottomCornerYSpinBox->setValue(orig_ymin);
-    ui->TopCornerXSpinBox->setValue(orig_xmax);
-    ui->TopCornerYSpinBox->setValue(orig_ymax);
+    double yrev_sign=input_params.y_reverse? -1 :1;
+
+    //set the values displayed in the controls
+    ui->BottomCornerXSpinBox->setValue(orig_xmin*xrev_sign);
+    ui->BottomCornerYSpinBox->setValue(orig_ymin*yrev_sign);
+    ui->TopCornerXSpinBox->setValue(orig_xmax*xrev_sign);
+    ui->TopCornerYSpinBox->setValue(orig_ymax*yrev_sign);
 
     xmin_precise=orig_xmin; //overwrite the value set by the call to setValue to avoid rounding errors in reset_line()
     xmax_precise=orig_xmax;
@@ -832,7 +840,6 @@ void VisualizationWindow::on_actionRestore_default_window_triggered()
 
 
 
-
 }//end on_actionRestore_default_window_triggered()
 
 
@@ -844,10 +851,14 @@ void VisualizationWindow::on_actionBetti_number_window_triggered()
     double ymin=slice_diagram.get_min_supp_xi_y();
     double ymax=slice_diagram.get_max_supp_xi_y();
 
-    ui->BottomCornerXSpinBox->setValue(xmin);
-    ui->BottomCornerYSpinBox->setValue(ymin);
-    ui->TopCornerXSpinBox->setValue(xmax);
-    ui->TopCornerYSpinBox->setValue(ymax);
+    double xrev_sign=input_params.x_reverse? -1 :1;
+
+    double yrev_sign=input_params.y_reverse? -1 :1;
+
+    ui->BottomCornerXSpinBox->setValue(xmin*xrev_sign);
+    ui->BottomCornerYSpinBox->setValue(ymin*yrev_sign);
+    ui->TopCornerXSpinBox->setValue(xmax*xrev_sign);
+    ui->TopCornerYSpinBox->setValue(ymax*yrev_sign);
 
     xmin_precise=xmin; //overwrite the value set by the call to setValue to avoid rounding errors in reset_line()
     xmax_precise=xmax;

@@ -27,3 +27,4 @@ build
 cmake-build-*
 msgpack
 RIVET.pro.user
+moc_predefs.h

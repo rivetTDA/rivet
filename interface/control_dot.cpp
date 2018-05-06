@@ -81,7 +81,7 @@ QVariant ControlDot::itemChange(GraphicsItemChange change, const QVariant& value
                 if (mouse.y() < 2 * mouse.x()) //smooth transition in region around y=x
                     newpos.setY(2 * (mouse.y() - mouse.x()));
 
-                double max = std::min(slice_line->get_right_pt_y(), slice_line->get_data_ymax()); //don't let left dot go above right endpoint of line or above data range
+                double max = std::min(slice_line->get_right_pt_y(),slice_line->get_box_ymax());//don't let left dot go above right endpoint of line or above visible window
                 if (newpos.y() > max)
                     newpos.setY(max);
             } else if (mouse.x() > 0) //then project dot onto bottom side of box (the x-axis)
@@ -91,7 +91,7 @@ QVariant ControlDot::itemChange(GraphicsItemChange change, const QVariant& value
                 if (mouse.x() < 2 * mouse.y()) //smooth transition in region around y=x
                     newpos.setX(2 * (mouse.x() - mouse.y()));
 
-                double max = std::min(slice_line->get_right_pt_x(), slice_line->get_data_xmax()); //don't let bottom dot go right of the top endpoint of line or right of data range
+                double max = std::min(slice_line->get_right_pt_x(), slice_line->get_box_xmax()); //don't let bottom dot go right of the top endpoint of line or right of visible window
                 if (newpos.x() > max)
                 {
                     newpos.setX(max);
