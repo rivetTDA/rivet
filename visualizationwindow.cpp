@@ -35,13 +35,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QMessageBox>
 #include <QTime>
 
+
+
 #include <algorithm>
 #include <fstream>
 #include <sstream>
 
-//TODO: modify the bounds spin boxes to account for possibly reversed indices
 const QString VisualizationWindow::DEFAULT_SAVE_DIR_KEY("default_save_dir");
-//TODO: see if there are still bugs with horizontal line
 VisualizationWindow::VisualizationWindow(InputParameters& params)
     : QMainWindow()
     , ui(new Ui::VisualizationWindow)
@@ -79,6 +79,7 @@ VisualizationWindow::VisualizationWindow(InputParameters& params)
 
 
 
+    ui->BottomCornerXSpinBox->installEventFilter(this);
 
     //connect signal from DataSelectDialog to start the computation
     QObject::connect(&ds_dialog, &DataSelectDialog::dataSelected, this, &VisualizationWindow::start_computation);
@@ -146,9 +147,6 @@ void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMe
     //first load our local copies of the data
     grades = Grades(template_points->x_exact, template_points->y_exact);
 
-    //todo: the x/ymin/max spin boxes should have reverse scrolling depending on xrev/yrev
-    //something like
-    //if input_params.x_reverse: ui->BottomXSpinBox->setReversedArrows();
 
     //send xi support points to the SliceDiagram
     slice_diagram.clear_points();
@@ -179,6 +177,7 @@ void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMe
         double max_x_length=10*(grades.x.back()-grades.x.front());
         double max_y_length=10*(grades.y.back()-grades.y.front());
         double xmin, xmax,ymin,ymax;
+
         //absolute bounds on the maximum/minimum window, to prevent numerical issues
         if (input_params.x_reverse){
             xmin=-1*grades.x.back()-max_x_length;
@@ -208,38 +207,6 @@ void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMe
         ui->BottomCornerYSpinBox->setMaximum(ymax);
         ui->TopCornerYSpinBox->setMaximum(ymax);
 
-        //TODO: verify that the signs are correct....
-        /*
-        if (input_params.x_reverse){
-            ui->BottomCornerXSpinBox->setMaximum(-1*xmin);
-            ui->TopCornerXSpinBox->setMinimum(-1*xmax);
-            ui->BottomCornerXSpinBox->setMinimum(-1*xmax);
-            ui->TopCornerXSpinBox->setMaximum(-1*xmax);
-            }
-        
-        else{
-            ui->BottomCornerXSpinBox->setMinimum(xmin);
-            ui->TopCornerXSpinBox->setMaximum(xmax);
-            ui->BottomCornerXSpinBox->setMaximum(xmax);
-            ui->TopCornerXSpinBox->setMinimum(xmin);
-        }
-        
-
- 
-        if (input_params.y_reverse){
-            ui->BottomCornerYSpinBox->setMaximum(-1*ymin);
-            ui->TopCornerYSpinBox->setMinimum(-1*ymax);
-            ui->BottomCornerYSpinBox->setMinimum(-1*ymax);
-            ui->TopCornerYSpinBox->setMaximum(-1*ymin);
-        }
-        
-        else{
-            ui->BottomCornerYSpinBox->setMinimum(ymin);
-            ui->TopCornerYSpinBox->setMinimum(ymax);
-            ui->BottomCornerYSpinBox->setMaximum(ymax);
-            ui->TopCornerYSpinBox->setMinimum(ymin);
-        }
-    */
 
         //only change the displayed value and the internal value of xmin_precise, etc.
         qDebug()<<"grades.x.front()="<<grades.x.front();
@@ -258,6 +225,18 @@ void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMe
         ui->BottomCornerYSpinBox->setValue(grades.y.front()*yrev_sign);
         ui->TopCornerXSpinBox->setValue(grades.x.back()*xrev_sign);
         ui->TopCornerYSpinBox->setValue(grades.y.back()*yrev_sign);
+
+        std::vector<QDoubleSpinBox*> spin_boxes={ui->BottomCornerXSpinBox,ui->BottomCornerYSpinBox,
+                                                 ui->TopCornerXSpinBox,ui->TopCornerYSpinBox};
+
+        for(auto spinbox: spin_boxes)
+        {
+            QSizePolicy sp_retain = spinbox->sizePolicy();
+            sp_retain.setRetainSizeWhenHidden(true);
+            spinbox->setSizePolicy(sp_retain);
+            //spinbox->setEnabled(false);
+        }
+
         slice_diagram_initialized=true;
     }
 
@@ -376,6 +355,40 @@ void VisualizationWindow::augmented_arrangement_ready(std::shared_ptr<Arrangemen
     }
 } //end augmented_arrangement_ready()
 
+//detects mouse enter and mouse leave events, used to set visibility of the bounds spin boxes
+bool VisualizationWindow::eventFilter(QObject* watched, QEvent* event){
+
+    if(event->type()==QEvent::Enter)
+    {
+        qDebug()<<"enter";
+        QDoubleSpinBox *watchedBox=static_cast<QDoubleSpinBox *>(watched);
+        watchedBox->setVisible(true);
+        return false;
+
+    }
+    else if(event->type()==QEvent::Leave)
+    {
+        qDebug()<<"leave";
+        QDoubleSpinBox *watchedBox=static_cast<QDoubleSpinBox *>(watched);
+        watchedBox->setVisible(false);
+        return false;
+    }
+    else if(event->type()==QEvent::MouseMove)
+    {
+        qDebug()<<"mouse move";
+        QDoubleSpinBox *watchedBox=static_cast<QDoubleSpinBox *>(watched);
+        QMouseEvent *mouseEvent = static_cast<QMouseEvent*>(event);
+        if(watchedBox->rect().contains(mouseEvent->pos()) && !watchedBox->isVisible())
+        {
+            watchedBox->setVisible(true);
+        }
+    }
+
+
+
+    return QMainWindow::eventFilter(watched, event);
+
+}
 
 void VisualizationWindow::on_BottomCornerXSpinBox_valueChanged(double x_bottom)
 {

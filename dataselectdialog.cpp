@@ -51,8 +51,8 @@ DataSelectDialog::DataSelectDialog(InputParameters& params, QWidget* parent)
         ui->homDimSpinBox->setValue(0);
         ui->xbinSpinBox->setValue(10);
         ui->ybinSpinBox->setValue(10);
-        ui->xrevCheckBox->setChecked(params.x_reverse);
-        ui->yrevCheckBox->setChecked(params.y_reverse);
+        ui->xrevCheckBox->setChecked(false);
+        ui->yrevCheckBox->setChecked(false);
     }
 }
 
@@ -74,8 +74,7 @@ void DataSelectDialog::on_computeButton_clicked()
     params.dim = ui->homDimSpinBox->value();
     params.x_bins = ui->xbinSpinBox->value();
     params.y_bins = ui->ybinSpinBox->value();
-    params.x_reverse=ui->xrevCheckBox->isChecked();
-    params.y_reverse=ui->yrevCheckBox->isChecked();
+    
 
     data_selected = true;
 
@@ -95,10 +94,18 @@ void DataSelectDialog::on_openFileButton_clicked()
         this, tr("Open Data File"), settings.value(DEFAULT_DIR_KEY).toString(), "");
 
     if (!selected_file.isNull()) {
+        //set boxes to enabled, to allow them to be changed
+        //todo: maybe will want to change this to be something other than an always disabled chekbox??
+        ui->xrevCheckBox->setEnabled(true);
+        ui->yrevCheckBox->setEnabled(true);
+
         params.fileName = selected_file.toUtf8().constData();
         QDir current_dir;
         settings.setValue(DEFAULT_DIR_KEY, current_dir.absoluteFilePath(selected_file));
         detect_file_type();
+        ui->xrevCheckBox->setEnabled(false);
+        ui->yrevCheckBox->setEnabled(false);
+
     }
 } //end on_openFileButton_clicked()
 
@@ -169,16 +176,7 @@ void DataSelectDialog::detect_file_type()
 
                 //TODO: this updating of the params will need to happen in console also, need to refactor
                 QString file_des=line.mid(QString("FILE TYPE DESCRIPTION: ").length()).trimmed();
-                if(file_des==QString("point-cloud data")|| file_des==QString("metric data"))
-                {
-                    params.y_reverse=false;
-                    ui->yrevCheckBox->setEnabled(false);
-                    
-                }
-                else if(file_des==QString("bifiltration data"))
-                {
-                    ui->yrevCheckBox->setEnabled(true);
-                }
+                
                 //TODO: this updating of the params will need to happen in console also, need to refactor
 
                 
@@ -187,14 +185,15 @@ void DataSelectDialog::detect_file_type()
             }
             else if (line.startsWith("HAS FUNCTION: ")) {
                 function= line.contains("1");
-                if(!function){
-                    params.x_reverse=true;
-                    ui->xrevCheckBox->setChecked(true);
-                    ui->xrevCheckBox->setEnabled(false);
-                    //in this case, the other checkbox should be set to false and disabled
-                    //because this can only happen for metric or point cloud data
-                }
-            }else if (partial.length() != 0) {
+            }
+            else if(line.startsWith("X REVERSED: ")){
+                params.x_reverse=line.contains("1");
+            }
+            else if(line.startsWith("Y REVERSED: ")){
+                params.y_reverse=line.contains("1");
+            }
+            
+            else if (partial.length() != 0) {
                 if (line.endsWith(":END")) {
                     line = partial + line;
                     line = line.mid(error_header_len, line.length() - (error_footer_len + error_header_len));
@@ -207,7 +206,9 @@ void DataSelectDialog::detect_file_type()
         }
         ui->parameterFrame->setEnabled(raw);
     }
-
+    ui->xrevCheckBox->setChecked(params.x_reverse);
+    ui->yrevCheckBox->setChecked(params.y_reverse);
+    
     ui->computeButton->setEnabled(true);
     //force black text because on Mac Qt autodefault buttons have white text when enabled,
     //so they still look like they're disabled or weird in some way.

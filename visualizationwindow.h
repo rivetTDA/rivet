@@ -84,6 +84,9 @@ private slots:
     void on_TopCornerXSpinBox_valueChanged(double x_top);
     void on_TopCornerYSpinBox_valueChanged(double y_top);
 
+
+
+
     void on_actionExit_triggered();
     void on_actionAbout_triggered();
     void on_actionConfigure_triggered();
@@ -96,11 +99,13 @@ private slots:
     void on_actionAutomatically_reset_line_toggled();
 
 
-
 private:
     static const QString DEFAULT_SAVE_DIR_KEY;
 
     Ui::VisualizationWindow* ui;
+
+    QGraphicsSimpleTextItem* xlabel;
+    bool eventFilter(QObject* watched, QEvent* event);
 
     //data items
     const int verbosity;

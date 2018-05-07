@@ -17,6 +17,55 @@
    <layout class="QGridLayout" name="gridLayout_3">
     <item row="1" column="0">
      <layout class="QGridLayout" name="gridLayout_main">
+      <item row="0" column="0">
+       <widget class="QLabel" name="sliceLabel">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>14</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Line Selection Window</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QGraphicsView" name="sliceView">
+        <property name="verticalScrollBarPolicy">
+         <enum>Qt::ScrollBarAsNeeded</enum>
+        </property>
+        <property name="horizontalScrollBarPolicy">
+         <enum>Qt::ScrollBarAsNeeded</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QGraphicsView" name="pdView">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>450</width>
+          <height>450</height>
+         </size>
+        </property>
+       </widget>
+      </item>
       <item row="2" column="0" colspan="2">
        <layout class="QHBoxLayout" name="horizontalLayout_controls">
         <item>
@@ -247,30 +296,14 @@
                   </property>
                  </widget>
                 </item>
-                <item row="0" column="1">
-                 <widget class="QDoubleSpinBox" name="BottomCornerXSpinBox">
-                  <property name="minimumSize">
-                   <size>
-                    <width>90</width>
-                    <height>0</height>
-                   </size>
-                  </property>
-                  <property name="decimals">
-                   <number>4</number>
-                  </property>
-                  <property name="minimum">
-                   <double>-1000.000000000000000</double>
-                  </property>
-                  <property name="maximum">
-                   <double>1000.000000000000000</double>
-                  </property>
-                  <property name="singleStep">
-                   <double>0.000000000000000</double>
-                  </property>
-                 </widget>
-                </item>
                 <item row="1" column="1">
                  <widget class="QDoubleSpinBox" name="BottomCornerYSpinBox">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
                   <property name="minimumSize">
                    <size>
                     <width>90</width>
@@ -290,6 +323,34 @@
                    <double>0.000000000000000</double>
                   </property>
                   <property name="value">
+                   <double>0.000000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="1">
+                 <widget class="QDoubleSpinBox" name="BottomCornerXSpinBox">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>90</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="decimals">
+                   <number>4</number>
+                  </property>
+                  <property name="minimum">
+                   <double>-1000.000000000000000</double>
+                  </property>
+                  <property name="maximum">
+                   <double>1000.000000000000000</double>
+                  </property>
+                  <property name="singleStep">
                    <double>0.000000000000000</double>
                   </property>
                  </widget>
@@ -311,6 +372,12 @@
                 </item>
                 <item row="1" column="1">
                  <widget class="QDoubleSpinBox" name="TopCornerYSpinBox">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
                   <property name="minimumSize">
                    <size>
                     <width>90</width>
@@ -330,6 +397,12 @@
                 </item>
                 <item row="0" column="1">
                  <widget class="QDoubleSpinBox" name="TopCornerXSpinBox">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
                   <property name="minimumSize">
                    <size>
                     <width>90</width>
@@ -635,32 +708,6 @@
         </item>
        </layout>
       </item>
-      <item row="1" column="0">
-       <widget class="QGraphicsView" name="sliceView">
-        <property name="verticalScrollBarPolicy">
-         <enum>Qt::ScrollBarAsNeeded</enum>
-        </property>
-        <property name="horizontalScrollBarPolicy">
-         <enum>Qt::ScrollBarAsNeeded</enum>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QGraphicsView" name="pdView">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>450</width>
-          <height>450</height>
-         </size>
-        </property>
-       </widget>
-      </item>
       <item row="0" column="1">
        <widget class="QLabel" name="pdLabel">
         <property name="minimumSize">
@@ -678,29 +725,6 @@
         </property>
         <property name="text">
          <string>Persistence Diagram</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="sliceLabel">
-        <property name="minimumSize">
-         <size>
-          <width>0</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="font">
-         <font>
-          <pointsize>14</pointsize>
-          <weight>75</weight>
-          <bold>true</bold>
-         </font>
-        </property>
-        <property name="text">
-         <string>Line Selection Window</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>

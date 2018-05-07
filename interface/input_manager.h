@@ -98,11 +98,15 @@ typedef std::set<ExactValue, ExactValueComparator> ExactSet;
 
 struct InputData;
 
+//TODO: I think the has_function datum is superfluous now that we are not allowing the user to
+//set the axis direction in the data select dialog
 struct FileType {
     std::string identifier;
     std::string description;
     bool is_data;
     bool has_function; //this is false precisely when we construct the BRips complex
+    bool x_reverse=false;
+    bool y_reverse=false;
     std::function<std::unique_ptr<InputData>(std::ifstream&, Progress&)> parser;
 };
 
