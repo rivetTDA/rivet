@@ -79,8 +79,6 @@ VisualizationWindow::VisualizationWindow(InputParameters& params)
 
 
 
-    ui->BottomCornerXSpinBox->installEventFilter(this);
-
     //connect signal from DataSelectDialog to start the computation
     QObject::connect(&ds_dialog, &DataSelectDialog::dataSelected, this, &VisualizationWindow::start_computation);
 
@@ -355,40 +353,6 @@ void VisualizationWindow::augmented_arrangement_ready(std::shared_ptr<Arrangemen
     }
 } //end augmented_arrangement_ready()
 
-//detects mouse enter and mouse leave events, used to set visibility of the bounds spin boxes
-bool VisualizationWindow::eventFilter(QObject* watched, QEvent* event){
-
-    if(event->type()==QEvent::Enter)
-    {
-        qDebug()<<"enter";
-        QDoubleSpinBox *watchedBox=static_cast<QDoubleSpinBox *>(watched);
-        watchedBox->setVisible(true);
-        return false;
-
-    }
-    else if(event->type()==QEvent::Leave)
-    {
-        qDebug()<<"leave";
-        QDoubleSpinBox *watchedBox=static_cast<QDoubleSpinBox *>(watched);
-        watchedBox->setVisible(false);
-        return false;
-    }
-    else if(event->type()==QEvent::MouseMove)
-    {
-        qDebug()<<"mouse move";
-        QDoubleSpinBox *watchedBox=static_cast<QDoubleSpinBox *>(watched);
-        QMouseEvent *mouseEvent = static_cast<QMouseEvent*>(event);
-        if(watchedBox->rect().contains(mouseEvent->pos()) && !watchedBox->isVisible())
-        {
-            watchedBox->setVisible(true);
-        }
-    }
-
-
-
-    return QMainWindow::eventFilter(watched, event);
-
-}
 
 void VisualizationWindow::on_BottomCornerXSpinBox_valueChanged(double x_bottom)
 {
