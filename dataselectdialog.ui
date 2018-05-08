@@ -160,6 +160,9 @@
       <height>27</height>
      </rect>
     </property>
+    <property name="maximum">
+     <number>99</number>
+    </property>
    </widget>
    <widget class="QLabel" name="parameterLabel">
     <property name="geometry">
@@ -200,7 +203,7 @@
      <string>Coarsening</string>
     </property>
    </widget>
-   <widget class="QLabel" name="label">
+   <widget class="QLabel" name="directionsLabel">
     <property name="geometry">
      <rect>
       <x>190</x>
@@ -219,30 +222,56 @@
      <string>Directions</string>
     </property>
    </widget>
-   <widget class="QCheckBox" name="xrevCheckBox">
+   <widget class="QLabel" name="xAxisLabel">
     <property name="geometry">
      <rect>
       <x>190</x>
-      <y>97</y>
-      <width>81</width>
-      <height>27</height>
+      <y>102</y>
+      <width>59</width>
+      <height>16</height>
      </rect>
     </property>
     <property name="text">
-     <string>Reverse x</string>
+     <string>x-axis:</string>
     </property>
    </widget>
-   <widget class="QCheckBox" name="yrevCheckBox">
+   <widget class="QLabel" name="yAxisLabel">
     <property name="geometry">
      <rect>
       <x>190</x>
-      <y>130</y>
-      <width>81</width>
-      <height>27</height>
+      <y>135</y>
+      <width>59</width>
+      <height>16</height>
      </rect>
     </property>
     <property name="text">
-     <string>Reverse y</string>
+     <string>y-axis:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="xDirLabel">
+    <property name="geometry">
+     <rect>
+      <x>240</x>
+      <y>102</y>
+      <width>75</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>TextLabel</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="yDirLabel">
+    <property name="geometry">
+     <rect>
+      <x>240</x>
+      <y>135</y>
+      <width>75</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>TextLabel</string>
     </property>
    </widget>
   </widget>

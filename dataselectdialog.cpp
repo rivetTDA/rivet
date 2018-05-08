@@ -34,6 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QStringList>
 #include <fstream>
 
+
 DataSelectDialog::DataSelectDialog(InputParameters& params, QWidget* parent)
     : QDialog(parent)
     , ui(new Ui::DataSelectDialog)
@@ -51,9 +52,11 @@ DataSelectDialog::DataSelectDialog(InputParameters& params, QWidget* parent)
         ui->homDimSpinBox->setValue(0);
         ui->xbinSpinBox->setValue(10);
         ui->ybinSpinBox->setValue(10);
-        ui->xrevCheckBox->setChecked(params.x_reverse);
-        ui->yrevCheckBox->setChecked(params.y_reverse);
     }
+    ui->xDirLabel->setVisible(false);
+    ui->yDirLabel->setVisible(false);
+
+
 }
 
 DataSelectDialog::~DataSelectDialog()
@@ -74,8 +77,7 @@ void DataSelectDialog::on_computeButton_clicked()
     params.dim = ui->homDimSpinBox->value();
     params.x_bins = ui->xbinSpinBox->value();
     params.y_bins = ui->ybinSpinBox->value();
-    params.x_reverse=ui->xrevCheckBox->isChecked();
-    params.y_reverse=ui->yrevCheckBox->isChecked();
+    
 
     data_selected = true;
 
@@ -95,10 +97,14 @@ void DataSelectDialog::on_openFileButton_clicked()
         this, tr("Open Data File"), settings.value(DEFAULT_DIR_KEY).toString(), "");
 
     if (!selected_file.isNull()) {
+
         params.fileName = selected_file.toUtf8().constData();
         QDir current_dir;
         settings.setValue(DEFAULT_DIR_KEY, current_dir.absoluteFilePath(selected_file));
         detect_file_type();
+
+
+
     }
 } //end on_openFileButton_clicked()
 
@@ -169,32 +175,57 @@ void DataSelectDialog::detect_file_type()
 
                 //TODO: this updating of the params will need to happen in console also, need to refactor
                 QString file_des=line.mid(QString("FILE TYPE DESCRIPTION: ").length()).trimmed();
-                if(file_des==QString("point-cloud data")|| file_des==QString("metric data"))
-                {
-                    params.y_reverse=false;
-                    ui->yrevCheckBox->setEnabled(false);
-                    
-                }
-                else if(file_des==QString("bifiltration data"))
-                {
-                    ui->yrevCheckBox->setEnabled(true);
-                }
+                
                 //TODO: this updating of the params will need to happen in console also, need to refactor
 
                 
                 
                 params.shortName = fileInfo.fileName().toUtf8().constData();
+
+                //firep data does not have a homology dimension
+                if(file_des=="free implicit representation data"){
+
+                    ui->homDimSpinBox->setSpecialValueText("N/A");
+                    //the spinbox will show the special value text when the value is the minimum value (i.e. zero)
+
+                    ui->homDimSpinBox->setValue(0);
+                    ui->homDimSpinBox->setEnabled(false);
+                }
+                else if(!ui->homDimSpinBox->isEnabled()){
+                    //if an firep file was previously selected, and the new file is not an firep
+
+                    ui->homDimSpinBox->setSpecialValueText("");
+                    //this turns off the special value text (i.e. zero is displayed like normal)
+
+                    ui->homDimSpinBox->setEnabled(true);
+                    ui->homDimSpinBox->setValue(0);
+                }
+
             }
             else if (line.startsWith("HAS FUNCTION: ")) {
                 function= line.contains("1");
-                if(!function){
-                    params.x_reverse=true;
-                    ui->xrevCheckBox->setChecked(true);
-                    ui->xrevCheckBox->setEnabled(false);
-                    //in this case, the other checkbox should be set to false and disabled
-                    //because this can only happen for metric or point cloud data
+            }
+
+            else if(line.startsWith("X REVERSED: ")){
+                if(!ui->xDirLabel->isVisible()){
+                    ui->xDirLabel->setVisible(true);
                 }
-            }else if (partial.length() != 0) {
+                params.x_reverse=line.contains("1");
+                QString dirLabel=params.x_reverse? "Descending": "Ascending";
+                ui->xDirLabel->setText(dirLabel);
+            }
+            else if(line.startsWith("Y REVERSED: ")){
+                if(!ui->yDirLabel->isVisible()){
+                    ui->yDirLabel->setVisible(true);
+                }
+
+                params.y_reverse=line.contains("1");
+                QString dirLabel=params.y_reverse? "Descending": "Ascending";
+                ui->yDirLabel->setText(dirLabel);
+
+            }
+            
+            else if (partial.length() != 0) {
                 if (line.endsWith(":END")) {
                     line = partial + line;
                     line = line.mid(error_header_len, line.length() - (error_footer_len + error_header_len));
@@ -207,7 +238,7 @@ void DataSelectDialog::detect_file_type()
         }
         ui->parameterFrame->setEnabled(raw);
     }
-
+    
     ui->computeButton->setEnabled(true);
     //force black text because on Mac Qt autodefault buttons have white text when enabled,
     //so they still look like they're disabled or weird in some way.

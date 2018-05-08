@@ -123,14 +123,6 @@ void ComputationThread::compute_from_file()
          << "-f"
          << "R1"
          << "--binary";
-    if(params.x_reverse)
-    {
-        args.append("--xrev");
-    }
-    if(params.y_reverse)
-    {
-        args.append("--yrev");
-    }
 
     auto console = RivetConsoleApp::start(args);
 

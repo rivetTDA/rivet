@@ -67,10 +67,7 @@ static const char USAGE[] =
       --binary                                 Include binary data (used by RIVET viewer only)
       -H <dimension> --homology=<dimension>    Dimension of homology to compute [default: 0]
       -x <xbins> --xbins=<xbins>               Number of bins in the x direction [default: 0]
-      -y <ybins> --ybins=<ybins>               Number of bins in the x direction [default: 0]
-      --xrev                                   Build bifiltration with respect to descending order on x-coordinate, if the input
-                                               type permits this.
-      --yrev                                   Same as above, but for the y-coordinate
+      -y <ybins> --ybins=<ybins>               Number of bins in the y direction [default: 0]
       -V <verbosity> --verbosity=<verbosity>   Verbosity level: 0 (no console output) to 10 (lots of output) [default: 0]
       -f <format>                              Output format for file [default: R1]
       --minpres                                Print the minimal presentation, then exit.
@@ -455,10 +452,13 @@ int main(int argc, char* argv[])
         std::cout << "FILE TYPE DESCRIPTION: " << file_type.description << std::endl;
         std::cout << "RAW DATA: " << file_type.is_data << std::endl;
         std::cout << "HAS FUNCTION: "<<file_type.has_function<<std::endl;
+        std::cout << "X REVERSED: "<< file_type.x_reverse<<std::endl;
+        std::cout << "Y REVERSED: "<< file_type.y_reverse<<std::endl;
         std::cout.flush();
-        if(!file_type.has_function){
-            params.x_reverse=true;
-        }
+        //copy axis directions into input_parameters, so they can be shown in the data select dialog
+        //and passed to the visualization window
+        params.x_reverse=file_type.x_reverse;
+        params.y_reverse=file_type.y_reverse;
         return 0;
     }
     std::unique_ptr<ComputationResult> result;

@@ -17,6 +17,55 @@
    <layout class="QGridLayout" name="gridLayout_3">
     <item row="1" column="0">
      <layout class="QGridLayout" name="gridLayout_main">
+      <item row="0" column="0">
+       <widget class="QLabel" name="sliceLabel">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>14</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Line Selection Window</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QGraphicsView" name="sliceView">
+        <property name="verticalScrollBarPolicy">
+         <enum>Qt::ScrollBarAsNeeded</enum>
+        </property>
+        <property name="horizontalScrollBarPolicy">
+         <enum>Qt::ScrollBarAsNeeded</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QGraphicsView" name="pdView">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>450</width>
+          <height>450</height>
+         </size>
+        </property>
+       </widget>
+      </item>
       <item row="2" column="0" colspan="2">
        <layout class="QHBoxLayout" name="horizontalLayout_controls">
         <item>
@@ -230,47 +279,24 @@
           <item row="0" column="0">
            <layout class="QHBoxLayout" name="horizontalLayout_bounds">
             <item>
-             <layout class="QVBoxLayout" name="VerticalLayout_BottomCorner">
+             <layout class="QVBoxLayout" name="VerticalLayout_YAxis">
               <item>
-               <layout class="QGridLayout" name="gridLayout_BottomCorner">
+               <layout class="QGridLayout" name="gridLayout_YAxis">
                 <item row="1" column="0">
                  <widget class="QLabel" name="BottomCornerYLabel">
                   <property name="text">
-                   <string>y min:</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="0">
-                 <widget class="QLabel" name="BottomCornerXLabel">
-                  <property name="text">
-                   <string>x min:</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="1">
-                 <widget class="QDoubleSpinBox" name="BottomCornerXSpinBox">
-                  <property name="minimumSize">
-                   <size>
-                    <width>90</width>
-                    <height>0</height>
-                   </size>
-                  </property>
-                  <property name="decimals">
-                   <number>4</number>
-                  </property>
-                  <property name="minimum">
-                   <double>-1000.000000000000000</double>
-                  </property>
-                  <property name="maximum">
-                   <double>1000.000000000000000</double>
-                  </property>
-                  <property name="singleStep">
-                   <double>0.000000000000000</double>
+                   <string>Bottom:</string>
                   </property>
                  </widget>
                 </item>
                 <item row="1" column="1">
                  <widget class="QDoubleSpinBox" name="BottomCornerYSpinBox">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
                   <property name="minimumSize">
                    <size>
                     <width>90</width>
@@ -290,6 +316,107 @@
                    <double>0.000000000000000</double>
                   </property>
                   <property name="value">
+                   <double>0.000000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="0">
+                 <widget class="QLabel" name="TopCornerYLabel">
+                  <property name="text">
+                   <string>Top:</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="1">
+                 <widget class="QDoubleSpinBox" name="TopCornerYSpinBox">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>90</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="decimals">
+                   <number>4</number>
+                  </property>
+                  <property name="singleStep">
+                   <double>0.000000000000000</double>
+                  </property>
+                  <property name="value">
+                   <double>5.000000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QVBoxLayout" name="VerticalLayout_XMax">
+              <item>
+               <layout class="QGridLayout" name="gridLayout_XMax">
+                <item row="1" column="1">
+                 <spacer name="horizontalSpacer_15">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item row="1" column="0">
+                 <spacer name="horizontalSpacer_14">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item row="2" column="0">
+                 <widget class="QLabel" name="BottomCornerXLabel">
+                  <property name="text">
+                   <string>Left :</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="1">
+                 <widget class="QDoubleSpinBox" name="BottomCornerXSpinBox">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>90</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="decimals">
+                   <number>4</number>
+                  </property>
+                  <property name="minimum">
+                   <double>-1000.000000000000000</double>
+                  </property>
+                  <property name="maximum">
+                   <double>1000.000000000000000</double>
+                  </property>
+                  <property name="singleStep">
                    <double>0.000000000000000</double>
                   </property>
                  </widget>
@@ -299,37 +426,17 @@
              </layout>
             </item>
             <item>
-             <layout class="QVBoxLayout" name="VerticalLayout_TopCorner">
+             <layout class="QVBoxLayout" name="VerticalLayout_XMin">
               <item>
-               <layout class="QGridLayout" name="gridLayout_TopCorner">
-                <item row="0" column="0">
-                 <widget class="QLabel" name="TopCornerXLabel">
-                  <property name="text">
-                   <string>x max:</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="1">
-                 <widget class="QDoubleSpinBox" name="TopCornerYSpinBox">
-                  <property name="minimumSize">
-                   <size>
-                    <width>90</width>
-                    <height>0</height>
-                   </size>
-                  </property>
-                  <property name="decimals">
-                   <number>4</number>
-                  </property>
-                  <property name="singleStep">
-                   <double>0.000000000000000</double>
-                  </property>
-                  <property name="value">
-                   <double>5.000000000000000</double>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="1">
+               <layout class="QGridLayout" name="gridLayout_XMin">
+                <item row="2" column="1">
                  <widget class="QDoubleSpinBox" name="TopCornerXSpinBox">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
                   <property name="minimumSize">
                    <size>
                     <width>90</width>
@@ -353,10 +460,36 @@
                   </property>
                  </widget>
                 </item>
-                <item row="1" column="0">
-                 <widget class="QLabel" name="TopCornerYLabel">
+                <item row="0" column="1">
+                 <spacer name="horizontalSpacer_16">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item row="0" column="0">
+                 <spacer name="horizontalSpacer_13">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item row="2" column="0">
+                 <widget class="QLabel" name="TopCornerXLabel">
                   <property name="text">
-                   <string>y max:</string>
+                   <string>Right :</string>
                   </property>
                  </widget>
                 </item>
@@ -635,32 +768,6 @@
         </item>
        </layout>
       </item>
-      <item row="1" column="0">
-       <widget class="QGraphicsView" name="sliceView">
-        <property name="verticalScrollBarPolicy">
-         <enum>Qt::ScrollBarAsNeeded</enum>
-        </property>
-        <property name="horizontalScrollBarPolicy">
-         <enum>Qt::ScrollBarAsNeeded</enum>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QGraphicsView" name="pdView">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>450</width>
-          <height>450</height>
-         </size>
-        </property>
-       </widget>
-      </item>
       <item row="0" column="1">
        <widget class="QLabel" name="pdLabel">
         <property name="minimumSize">
@@ -678,29 +785,6 @@
         </property>
         <property name="text">
          <string>Persistence Diagram</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="sliceLabel">
-        <property name="minimumSize">
-         <size>
-          <width>0</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="font">
-         <font>
-          <pointsize>14</pointsize>
-          <weight>75</weight>
-          <bold>true</bold>
-         </font>
-        </property>
-        <property name="text">
-         <string>Line Selection Window</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
