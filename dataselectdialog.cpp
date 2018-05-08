@@ -34,6 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QStringList>
 #include <fstream>
 
+
 DataSelectDialog::DataSelectDialog(InputParameters& params, QWidget* parent)
     : QDialog(parent)
     , ui(new Ui::DataSelectDialog)
@@ -54,6 +55,8 @@ DataSelectDialog::DataSelectDialog(InputParameters& params, QWidget* parent)
         ui->xrevCheckBox->setChecked(false);
         ui->yrevCheckBox->setChecked(false);
     }
+
+
 }
 
 DataSelectDialog::~DataSelectDialog()
@@ -105,6 +108,8 @@ void DataSelectDialog::on_openFileButton_clicked()
         detect_file_type();
         ui->xrevCheckBox->setEnabled(false);
         ui->yrevCheckBox->setEnabled(false);
+
+
 
     }
 } //end on_openFileButton_clicked()
@@ -182,6 +187,26 @@ void DataSelectDialog::detect_file_type()
                 
                 
                 params.shortName = fileInfo.fileName().toUtf8().constData();
+
+                //firep data does not have a homology dimension
+                if(file_des=="free implicit representation data"){
+
+                    ui->homDimSpinBox->setSpecialValueText("N/A");
+                    //the spinbox will show the special value text when the value is the minimum value (i.e. zero)
+
+                    ui->homDimSpinBox->setValue(0);
+                    ui->homDimSpinBox->setEnabled(false);
+                }
+                else if(!ui->homDimSpinBox->isEnabled()){
+                    //if an firep file was previously selected, and the new file is not an firep
+
+                    ui->homDimSpinBox->setSpecialValueText("");
+                    //this turns off the special value text (i.e. zero is displayed like normal)
+
+                    ui->homDimSpinBox->setEnabled(true);
+                    ui->homDimSpinBox->setValue(0);
+                }
+
             }
             else if (line.startsWith("HAS FUNCTION: ")) {
                 function= line.contains("1");

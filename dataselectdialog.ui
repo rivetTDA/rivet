@@ -160,6 +160,9 @@
       <height>27</height>
      </rect>
     </property>
+    <property name="maximum">
+     <number>99</number>
+    </property>
    </widget>
    <widget class="QLabel" name="parameterLabel">
     <property name="geometry">
