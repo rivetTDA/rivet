@@ -52,9 +52,9 @@ DataSelectDialog::DataSelectDialog(InputParameters& params, QWidget* parent)
         ui->homDimSpinBox->setValue(0);
         ui->xbinSpinBox->setValue(10);
         ui->ybinSpinBox->setValue(10);
-        ui->xrevCheckBox->setChecked(false);
-        ui->yrevCheckBox->setChecked(false);
     }
+    ui->xDirLabel->setVisible(false);
+    ui->yDirLabel->setVisible(false);
 
 
 }
@@ -97,17 +97,11 @@ void DataSelectDialog::on_openFileButton_clicked()
         this, tr("Open Data File"), settings.value(DEFAULT_DIR_KEY).toString(), "");
 
     if (!selected_file.isNull()) {
-        //set boxes to enabled, to allow them to be changed
-        //todo: maybe will want to change this to be something other than an always disabled chekbox??
-        ui->xrevCheckBox->setEnabled(true);
-        ui->yrevCheckBox->setEnabled(true);
 
         params.fileName = selected_file.toUtf8().constData();
         QDir current_dir;
         settings.setValue(DEFAULT_DIR_KEY, current_dir.absoluteFilePath(selected_file));
         detect_file_type();
-        ui->xrevCheckBox->setEnabled(false);
-        ui->yrevCheckBox->setEnabled(false);
 
 
 
@@ -211,11 +205,24 @@ void DataSelectDialog::detect_file_type()
             else if (line.startsWith("HAS FUNCTION: ")) {
                 function= line.contains("1");
             }
+
             else if(line.startsWith("X REVERSED: ")){
+                if(!ui->xDirLabel->isVisible()){
+                    ui->xDirLabel->setVisible(true);
+                }
                 params.x_reverse=line.contains("1");
+                QString dirLabel=params.x_reverse? "Descending": "Ascending";
+                ui->xDirLabel->setText(dirLabel);
             }
             else if(line.startsWith("Y REVERSED: ")){
+                if(!ui->yDirLabel->isVisible()){
+                    ui->yDirLabel->setVisible(true);
+                }
+
                 params.y_reverse=line.contains("1");
+                QString dirLabel=params.y_reverse? "Descending": "Ascending";
+                ui->yDirLabel->setText(dirLabel);
+
             }
             
             else if (partial.length() != 0) {
@@ -231,8 +238,6 @@ void DataSelectDialog::detect_file_type()
         }
         ui->parameterFrame->setEnabled(raw);
     }
-    ui->xrevCheckBox->setChecked(params.x_reverse);
-    ui->yrevCheckBox->setChecked(params.y_reverse);
     
     ui->computeButton->setEnabled(true);
     //force black text because on Mac Qt autodefault buttons have white text when enabled,
