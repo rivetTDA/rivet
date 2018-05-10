@@ -104,8 +104,6 @@ private:
 
     Ui::VisualizationWindow* ui;
 
-    QGraphicsSimpleTextItem* xlabel;
-    bool eventFilter(QObject* watched, QEvent* event);
 
     //data items
     const int verbosity;

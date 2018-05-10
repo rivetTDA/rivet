@@ -183,12 +183,12 @@ InputManager::InputManager(InputParameters& params)
 
     // for metric data, the possible cases are exactly the same
     register_file_type(FileType{ "metric", "metric data", true,true, true, false,
-        std::bind(&InputManager::read_point_cloud, this, std::placeholders::_1, std::placeholders::_2) });
+        std::bind(&InputManager::read_discrete_metric_space, this, std::placeholders::_1, std::placeholders::_2) });
     register_file_type(FileType{ "metric", "metric data", true,true, false, false,
-        std::bind(&InputManager::read_point_cloud, this, std::placeholders::_1, std::placeholders::_2) });
+        std::bind(&InputManager::read_discrete_metric_space, this, std::placeholders::_1, std::placeholders::_2) });
     //now the case when has_function=false
     register_file_type(FileType{ "metric", "metric data", true,false, true, false,
-        std::bind(&InputManager::read_point_cloud, this, std::placeholders::_1, std::placeholders::_2) });
+        std::bind(&InputManager::read_discrete_metric_space, this, std::placeholders::_1, std::placeholders::_2) });
 
    //for a bifiltraion and FIRep, has_function is always true, but x_reverse and y_reverse can in principle take
     //any combination of values
@@ -661,7 +661,7 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
             
             //x_reverse is true in this case
             input_params.x_reverse=true;
-            
+        
             //TODO Probably should find new way to get number of points
             //now read the number of points
             line_info = reader.next_line();
@@ -674,7 +674,8 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
                 throw std::runtime_error("Number of points must be at least 1");
             }
             num_points = static_cast<unsigned>(dim);
-        } else {
+        }
+        else {
             hasFunction = true;
             
             //check for axis reversal
@@ -683,7 +684,7 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
             data->x_label = is_reversed_and_label.second;
             
             exact xrev_sign= input_params.x_reverse? -1 :1;
-
+        
             
             if (verbosity >= 6) {
                 debug() << "InputManager: Discrete metric space file has function values. Creating Vietoris-Rips complex.";
@@ -729,6 +730,9 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
         TokenReader tokens(reader);
         
         //consider all points
+        num_points=values.size();
+        TokenReader tokens(reader);
+
         for (unsigned i = 0; i < num_points; i++) {
             if (hasFunction) {
                 //store value, if it doesn't exist already
