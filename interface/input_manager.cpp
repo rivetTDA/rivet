@@ -728,11 +728,8 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
         (ret.first)->indexes.push_back(0);
 
         TokenReader tokens(reader);
-        
-        //consider all points
-        num_points=values.size();
-        TokenReader tokens(reader);
 
+        //consider all points
         for (unsigned i = 0; i < num_points; i++) {
             if (hasFunction) {
                 //store value, if it doesn't exist already
