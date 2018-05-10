@@ -1,9 +1,6 @@
 # RIVET
 
-Program to visualize two-parameter persistent homology. 
-
-## About this Version
-This is a development version of RIVET.  Relative to the main version, it features additions and changes to make RIVET faster, and to allow it to handle more types of input.
+Program for the visualization and analysis of two-parameter persistent homology.
 
 ## Project Founders
 Michael Lesnick  
