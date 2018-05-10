@@ -50,11 +50,11 @@ static const char USAGE[] =
       rivet_console (-h | --help)
       rivet_console --version
       rivet_console <input_file> --identify
-      rivet_console <input_file> --minpres [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [--koszul] [--xrev] [--yrev]
-      rivet_console <input_file> [output_file] --betti [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [--koszul] [--xrev] [--yrev]
+      rivet_console <input_file> --minpres [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [--koszul]
+      rivet_console <input_file> [output_file] --betti [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [--koszul]
       rivet_console <precomputed_file> --bounds [-V <verbosity>]
       rivet_console <precomputed_file> --barcodes <line_file> [-V <verbosity>]
-      rivet_console <input_file> <output_file> [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [-f <format>] [--binary] [--koszul] [--xrev] [--yrev]
+      rivet_console <input_file> <output_file> [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [-f <format>] [--binary] [--koszul]
 
     Options:
       <input_file>                             A text file with suitably formatted point cloud, bifiltration, or
@@ -296,8 +296,6 @@ int main(int argc, char* argv[])
     bool bounds = args["--bounds"].isBool() && args["--bounds"].asBool();
     bool barcodes = args["--barcodes"].isString();
     bool koszul = args["--koszul"].isBool() && args["--koszul"].asBool();
-    params.x_reverse=args["--xrev"].isBool() && args["--xrev"].asBool();
-    params.y_reverse=args["--yrev"].isBool() && args["--yrev"].asBool();
 
     std::string slices;
     if (barcodes) {
