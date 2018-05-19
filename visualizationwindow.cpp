@@ -364,11 +364,15 @@ void VisualizationWindow::on_BottomCornerXSpinBox_valueChanged(double x_bottom)
     {
         return;
     }
+
+    //set minimum value in other x spin box, to prevent overflow errors
+    double padding=std::min(.01, .5*(grades.x.back()-grades.x.front()));
+
     if(input_params.x_reverse){
-        ui->TopCornerXSpinBox->setMaximum(x_bottom-.05);
+        ui->TopCornerXSpinBox->setMaximum(x_bottom-padding);
     }
     else{
-        ui->TopCornerXSpinBox->setMinimum(x_bottom+.05);//the padding is to prevent overflow errors
+        ui->TopCornerXSpinBox->setMinimum(x_bottom+padding);
     }
     update_origin();
 
@@ -404,16 +408,19 @@ void VisualizationWindow::on_BottomCornerXSpinBox_valueChanged(double x_bottom)
 
 void VisualizationWindow::on_BottomCornerYSpinBox_valueChanged(double y_bottom)
 {
+
     ymin_precise=y_bottom*double(1-2*input_params.y_reverse);
     if(!slice_diagram_initialized)
     {
         return;
     }
+    double padding=std::min(.01, .5*(grades.y.back()-grades.y.front()));
+
     if(input_params.y_reverse){
-        ui->TopCornerYSpinBox->setMaximum(y_bottom-.05);
+        ui->TopCornerYSpinBox->setMaximum(y_bottom-padding);
     }
     else{
-        ui->TopCornerYSpinBox->setMinimum(y_bottom+.05);
+        ui->TopCornerYSpinBox->setMinimum(y_bottom+padding);
     }
     update_origin();
     double step=fmax(.0001,(ymax_precise-ymin_precise)/20);
@@ -443,16 +450,19 @@ void VisualizationWindow::on_BottomCornerYSpinBox_valueChanged(double y_bottom)
 
 void VisualizationWindow::on_TopCornerXSpinBox_valueChanged(double x_top)
 {
+
     xmax_precise=x_top*double(1-2*input_params.x_reverse);
     if(!slice_diagram_initialized)
     {
         return;
     }
+    double padding=std::min(.01, .5*(grades.x.back()-grades.x.front()));
+
     if (input_params.x_reverse){
-        ui->BottomCornerXSpinBox->setMinimum(x_top+.05);
+        ui->BottomCornerXSpinBox->setMinimum(x_top+padding);
     }
     else{
-        ui->BottomCornerXSpinBox->setMaximum(x_top-.05);
+        ui->BottomCornerXSpinBox->setMaximum(x_top-padding);
     }
     update_origin();
     double step=fmax(.0001,(xmax_precise-xmin_precise)/20);
@@ -481,17 +491,19 @@ void VisualizationWindow::on_TopCornerXSpinBox_valueChanged(double x_top)
 
 void VisualizationWindow::on_TopCornerYSpinBox_valueChanged(double y_top)
 {
+
     ymax_precise=y_top*double(1-2*input_params.y_reverse);
     if(!slice_diagram_initialized)
     {
         return;
     }
+    double padding=std::min(.01, .5*(grades.y.back()-grades.y.front()));
 
     if (input_params.y_reverse){
-        ui->BottomCornerYSpinBox->setMinimum(y_top+.05);
+        ui->BottomCornerYSpinBox->setMinimum(y_top+padding);
     }
     else{
-        ui->BottomCornerYSpinBox->setMaximum(y_top-.05);
+        ui->BottomCornerYSpinBox->setMaximum(y_top-padding);
     }
     update_origin();
     double step=fmax(.0001,(ymax_precise-ymin_precise)/20);
