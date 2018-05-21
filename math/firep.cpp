@@ -604,6 +604,9 @@ void FIRep::write_boundary_column(MapMatrix& mat,
         //for this boundary simplex, enter "1" in the appropriate cell in matrix
         mat.set(entries[k], col);
     }
+    
+    //now heapify column
+    mat.prepare_col(col);
 } //end write_boundary_column();
 
 
