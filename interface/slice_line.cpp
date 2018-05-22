@@ -149,7 +149,6 @@ QVariant SliceLine::itemChange(GraphicsItemChange change, const QVariant& value)
                 if (slope > 0)
                 {
                     right_point.setY(slope * (box_xmax - newpos.x()));
-                    qDebug()<<"rightpoint y="<<slope * (box_xmax - newpos.x());
                 }
 
                 else

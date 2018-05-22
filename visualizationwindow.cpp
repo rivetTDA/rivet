@@ -194,8 +194,6 @@ void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMe
             ymax=grades.y.back()+max_y_length;
         }
 
-        qDebug()<<"xmin="<<xmin<<",xmax="<<xmax;
-
         ui->BottomCornerXSpinBox->setMinimum(xmin);
         ui->TopCornerXSpinBox->setMaximum(xmax);
         ui->BottomCornerXSpinBox->setMaximum(xmax);
@@ -207,18 +205,6 @@ void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMe
 
 
         //only change the displayed value and the internal value of xmin_precise, etc.
-        qDebug()<<"grades.x.front()="<<grades.x.front();
-        qDebug()<<"grades.x.front()*xrev_sign="<<grades.x.front()*xrev_sign;
-        qDebug()<<"grades.x.back="<<grades.x.back();
-
-        qDebug()<<"grades.y.front()="<<grades.y.front();
-        qDebug()<<"grades.y.front()*yrev_sign="<<grades.y.front()*yrev_sign;
-        qDebug()<<"grades.y.back="<<grades.y.back();
-
-
-        qDebug()<<"ymin="<<ymin;
-        qDebug()<<"ymax="<<ymax;
-
         ui->BottomCornerXSpinBox->setValue(grades.x.front()*xrev_sign);
         ui->BottomCornerYSpinBox->setValue(grades.y.front()*yrev_sign);
         ui->TopCornerXSpinBox->setValue(grades.x.back()*xrev_sign);
