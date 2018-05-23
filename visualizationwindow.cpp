@@ -63,6 +63,8 @@ VisualizationWindow::VisualizationWindow(InputParameters& params)
     , p_diagram(&config_params, this)
     , persistence_diagram_drawn(false)
     , slice_diagram_initialized(false)
+    , degenerate_x(false)
+    , degenerate_y(false)
 {
     ui->setupUi(this);
 
@@ -151,6 +153,7 @@ void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMe
     for (auto point : template_points->template_points)
         slice_diagram.add_point(grades.x[point.x], grades.y[point.y], point.zero, point.one, point.two);
 
+    double initial_xmax, initial_ymax;
 
     if(!slice_diagram_initialized)
     {
@@ -172,11 +175,39 @@ void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMe
         origin_x=grades.x.front();
         origin_y=grades.y.front();
 
-        double max_x_length=10*(grades.x.back()-grades.x.front());
-        double max_y_length=10*(grades.y.back()-grades.y.front());
+        degenerate_x=(grades.x.size()==1);
+        degenerate_y=(grades.y.size()==1);
+
+        //set the maximal values of the initial window
+
+
+        if(degenerate_x&& degenerate_y){
+            //doubly degenerate case-choose window scale arbitrarily
+            initial_xmax=grades.x.front()+1;
+            initial_ymax=grades.y.front()+1;
+        }
+        //in the singly degenerate case, choose the default window to be square
+        else if(degenerate_x){
+            initial_xmax=grades.x.front()+grades.y.back()-grades.y.front();
+            initial_ymax=grades.y.back();
+        }
+        else if(degenerate_y){
+            initial_xmax=grades.x.back();
+            initial_ymax=grades.y.front()+grades.x.back()-grades.x.front();
+        }
+        else{
+            initial_xmax=grades.x.back();
+            initial_ymax=grades.y.back();
+        }
+
+
+        //set absolute bounds on the maximum/minimum window scroll boxes, to prevent numerical issues
+
+        double max_x_length=10*(initial_xmax-grades.x.front());
+        double max_y_length=10*(initial_ymax-grades.y.front());
+
         double xmin, xmax,ymin,ymax;
 
-        //absolute bounds on the maximum/minimum window, to prevent numerical issues
         if (input_params.x_reverse){
             xmin=-1*grades.x.back()-max_x_length;
             xmax=-1*grades.x.front()+max_x_length;
@@ -204,11 +235,15 @@ void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMe
         ui->TopCornerYSpinBox->setMaximum(ymax);
 
 
-        //only change the displayed value and the internal value of xmin_precise, etc.
+
+        //set the iniital bounds of the slice window
+
+
+        //these calls to setValue will only update the internal value and then return (since slice_diagram_initialized is false)
         ui->BottomCornerXSpinBox->setValue(grades.x.front()*xrev_sign);
         ui->BottomCornerYSpinBox->setValue(grades.y.front()*yrev_sign);
-        ui->TopCornerXSpinBox->setValue(grades.x.back()*xrev_sign);
-        ui->TopCornerYSpinBox->setValue(grades.y.back()*yrev_sign);
+        ui->TopCornerXSpinBox->setValue(initial_xmax*xrev_sign);
+        ui->TopCornerYSpinBox->setValue(initial_ymax*yrev_sign);
 
         std::vector<QDoubleSpinBox*> spin_boxes={ui->BottomCornerXSpinBox,ui->BottomCornerYSpinBox,
                                                  ui->TopCornerXSpinBox,ui->TopCornerYSpinBox};
@@ -228,11 +263,15 @@ void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMe
     config_params.xLabel = QString::fromStdString(template_points->x_label);
     config_params.yLabel = QString::fromStdString(template_points->y_label);
     if (!slice_diagram.is_created() && !grades.x.empty() && !grades.y.empty()) {
+
+
+
+
         slice_diagram.create_diagram(
             config_params.xLabel,
             config_params.yLabel,
-            grades.x.front(), grades.x.back(),
-            grades.y.front(), grades.y.back(),
+            grades.x.front(), initial_xmax,
+            grades.y.front(), initial_ymax,
             ui->normCoordCheckBox->isChecked(), template_points->homology_dimensions,
             input_params.x_reverse, input_params.y_reverse);
     }
@@ -243,9 +282,6 @@ void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMe
     ui->xi1CheckBox->setEnabled(true);
     ui->xi2CheckBox->setEnabled(true);
     ui->normCoordCheckBox->setEnabled(true);
-
-
-
 
 
 
@@ -352,7 +388,11 @@ void VisualizationWindow::on_BottomCornerXSpinBox_valueChanged(double x_bottom)
     }
 
     //set minimum value in other x spin box, to prevent overflow errors
-    double padding=std::min(.01, .5*(grades.x.back()-grades.x.front()));
+    double padding=degenerate_x? .01: std::min(.01, .5*(grades.x.back()-grades.x.front()));
+
+
+
+
 
     if(input_params.x_reverse){
         ui->TopCornerXSpinBox->setMaximum(x_bottom-padding);
@@ -400,7 +440,7 @@ void VisualizationWindow::on_BottomCornerYSpinBox_valueChanged(double y_bottom)
     {
         return;
     }
-    double padding=std::min(.01, .5*(grades.y.back()-grades.y.front()));
+    double padding=degenerate_y? .01: std::min(.01, .5*(grades.y.back()-grades.y.front()));
 
     if(input_params.y_reverse){
         ui->TopCornerYSpinBox->setMaximum(y_bottom-padding);
@@ -442,7 +482,7 @@ void VisualizationWindow::on_TopCornerXSpinBox_valueChanged(double x_top)
     {
         return;
     }
-    double padding=std::min(.01, .5*(grades.x.back()-grades.x.front()));
+    double padding=degenerate_x? .01: std::min(.01, .5*(grades.x.back()-grades.x.front()));
 
     if (input_params.x_reverse){
         ui->BottomCornerXSpinBox->setMinimum(x_top+padding);
@@ -483,7 +523,8 @@ void VisualizationWindow::on_TopCornerYSpinBox_valueChanged(double y_top)
     {
         return;
     }
-    double padding=std::min(.01, .5*(grades.y.back()-grades.y.front()));
+
+    double padding=degenerate_y? .01: std::min(.01, .5*(grades.y.back()-grades.y.front()));
 
     if (input_params.y_reverse){
         ui->BottomCornerYSpinBox->setMinimum(y_top+padding);
@@ -821,6 +862,12 @@ void VisualizationWindow::on_actionRestore_default_window_triggered()
 //sets the window to be the smallest one containing all nonzero Betti numbers, with the slice line connecting the corners
 void VisualizationWindow::on_actionBetti_number_window_triggered()
 {
+    if(degenerate_x|| degenerate_y){
+        on_actionRestore_default_window_triggered();
+        return;
+    }
+
+
     double xmin=slice_diagram.get_min_supp_xi_x();
     double xmax=slice_diagram.get_max_supp_xi_x();
     double ymin=slice_diagram.get_min_supp_xi_y();

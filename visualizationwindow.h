@@ -135,6 +135,8 @@ private:
     std::shared_ptr<ArrangementMessage> arrangement; //pointer to the DCEL arrangement
     std::unique_ptr<Barcode> barcode; //pointer to the currently-displayed barcode
 
+    bool degenerate_x,degenerate_y; //these are true if there is exactly one x/y grade
+
     //computation items
     ComputationThread cthread;
     ProgressDialog prog_dialog;
