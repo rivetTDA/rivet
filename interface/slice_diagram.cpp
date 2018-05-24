@@ -271,7 +271,6 @@ void SliceDiagram::create_diagram(const QString x_text, const QString y_text, do
     line_slope = (data_ymax - data_ymin) / (data_xmax - data_xmin); //slope in data units
     line_pos = 0; //start the line at the lower left corner of the box
 
-    qDebug()<<"in SD::create_diagram, line_slope="<<line_slope;
 
     slice_line = new SliceLine(this, config_params);
     addItem(slice_line);
@@ -707,7 +706,6 @@ void SliceDiagram::receive_parameter_change()
 void SliceDiagram::update_line(double angle, double offset, double distance_to_origin)
 {
 
-    qDebug()<<"sD::update_line called";
     dist_to_origin = distance_to_origin;
 
     if (angle == 90) //handle vertical line
@@ -772,7 +770,6 @@ void SliceDiagram::update_line(double angle, double offset, double distance_to_o
 //updates controls in the VisualizationWindow in response to a change in the line (also update SliceDiagram data values)
 void SliceDiagram::update_window_controls(bool from_dot)
 {
-    qDebug()<<"update_window_controls called";
     //update SliceDiagram data values
     line_vert = slice_line->is_vertical();
     line_slope = slice_line->get_slope() * scale_x / scale_y; //convert pixel units to data units
@@ -895,10 +892,6 @@ void SliceDiagram::update_barcode(Barcode const& bc, bool show)
 //computes an endpoint of a bar in the barcode
 std::pair<double, double> SliceDiagram::compute_endpoint(double coordinate, unsigned offset)
 {
-    if(dist_to_origin>.0001)
-    {
-    qDebug()<<"in compute_endpoint, dist to origin="<<dist_to_origin;
-    }
     //the commented code is for keeping the spacing constant in data units
     //as is, the spacing is constant in pixel units
 
@@ -1157,7 +1150,6 @@ double SliceDiagram::get_slice_length()
 
     if (dx < 0 || dy < 0) { //this happens if the line is not visible in the window
         return 0;
-        qDebug()<<"in get_slice_length, dx<0 or dy<0";
     }
     return sqrt(dx * dx + dy * dy);
 }
@@ -1190,16 +1182,12 @@ void SliceDiagram::redraw_labels()
 
     std::ostringstream s_xmin;
     s_xmin.precision(4);
-    //possible fix to sometimes showing "-0"
+    // fix to sometimes showing "-0"
     s_xmin << (data_xmin==0? 0 : data_xmin*xrev_sign);
     data_xmin_text->setText(QString(s_xmin.str().data()));
 
     rect1->setRect(0,0,data_xmin_text->sceneBoundingRect().width(), data_xmin_text->sceneBoundingRect().height());
     rect1->setPos(data_xmin_text->pos().x(), data_xmin_text->pos().y()-data_xmin_text->boundingRect().height());
-    addItem(rect1);
-    addItem(data_xmin_text);
-
-
 
     std::ostringstream s_ymin;
     s_ymin.precision(4);
@@ -1209,9 +1197,6 @@ void SliceDiagram::redraw_labels()
     rect2->setRect(0,0,data_ymin_text->sceneBoundingRect().width(),data_ymin_text->sceneBoundingRect().height());
     rect2->setPos(data_ymin_text->pos().x(), data_ymin_text->pos().y()-data_ymin_text->boundingRect().height());
 
-    addItem(rect2);
-    addItem(data_ymin_text);
-
     std::ostringstream s_xmax;
     s_xmax.precision(4);
     s_xmax << (data_xmax==0? 0: data_xmax*xrev_sign);
@@ -1219,9 +1204,6 @@ void SliceDiagram::redraw_labels()
 
     rect3->setRect(0,0,data_xmax_text->sceneBoundingRect().width(),data_xmax_text->sceneBoundingRect().height());
     rect3->setPos(data_xmax_text->pos().x(), data_xmax_text->pos().y()-data_xmax_text->boundingRect().height());
-
-    addItem(rect3);
-    addItem(data_xmax_text);
 
 
 
@@ -1233,20 +1215,13 @@ void SliceDiagram::redraw_labels()
     rect4->setRect(0,0,data_ymax_text->sceneBoundingRect().width(),data_ymax_text->sceneBoundingRect().height());
     rect4->setPos(data_ymax_text->pos().x(), data_ymax_text->pos().y()-data_ymax_text->boundingRect().height());
 
-    addItem(rect4);
-    addItem(data_ymax_text);
 
     rect5->setRect(0,0,x_label->boundingRect().width(), x_label->boundingRect().height());
     rect5->setPos(x_label->pos().x(), x_label->pos().y()-x_label->boundingRect().height());
 
-    addItem(rect5);
-    addItem(x_label);
-
     rect6->setRect(0,0,y_label->boundingRect().height(), y_label->boundingRect().width());
     rect6->setPos(y_label->pos().x(), y_label->pos().y());
 
-    addItem(rect6);
-    addItem(y_label);
 
 
 }
