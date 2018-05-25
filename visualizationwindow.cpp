@@ -55,6 +55,8 @@ VisualizationWindow::VisualizationWindow(InputParameters& params)
     , angle_precise(0)
     , offset_precise(0)
     , template_points()
+    , degenerate_x(false)
+    , degenerate_y(false)
     , cthread(input_params)
     , prog_dialog(this)
     , line_selection_ready(false)
@@ -63,8 +65,6 @@ VisualizationWindow::VisualizationWindow(InputParameters& params)
     , p_diagram(&config_params, this)
     , persistence_diagram_drawn(false)
     , slice_diagram_initialized(false)
-    , degenerate_x(false)
-    , degenerate_y(false)
 {
     ui->setupUi(this);
 
