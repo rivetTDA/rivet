@@ -335,7 +335,6 @@ void VisualizationWindow::augmented_arrangement_ready(std::shared_ptr<Arrangemen
         p_diagram.set_barcode(*barcode);
         p_diagram.resize_diagram(slice_diagram.get_slice_length(), slice_diagram.get_pd_scale());
         //draws the diagram itself, but with incorrect parameter values
-        double max_len=sqrt((grades.x.front()-grades.x.back())*(grades.x.front()-grades.x.back())+(grades.y.front()-grades.y.back())*(grades.y.front()-grades.y.back()));
 
         p_diagram.update_diagram(slice_diagram.get_slice_length(), slice_diagram.get_pd_scale(), 0, slice_diagram.get_line_visible(), *barcode);
         //updates the diagram with the correct parameter values
