@@ -234,118 +234,6 @@ FIRep::FIRep(BifiltrationData& bif_data, int vbsty)
 }
 
 
-/* This constructor is used when the FIRep is given directly as text input.
-   NOTE:To understand this part of code, it may be helpful to review the
-   conventions for the firep text input format, as explained in the RIVET
-   documentation. */
-FIRep::FIRep(BifiltrationData& bif_data,
-             unsigned num_high_simplices,
-             unsigned num_mid_simplices,
-             unsigned num_low_simplices,
-             std::vector<std::vector<unsigned>>& d2,
-             std::vector<std::vector<unsigned>>& d1,
-             const std::vector<unsigned> x_values,
-             const std::vector<unsigned> y_values,
-             int vbsty)
-
-    : low_mx(num_low_simplices,
-             num_mid_simplices,
-             bif_data.num_y_grades(),
-             bif_data.num_x_grades())
-
-    , high_mx(num_mid_simplices,
-              num_high_simplices,
-              bif_data.num_y_grades(),
-              bif_data.num_x_grades())
-
-    , verbosity(vbsty)
-    , x_grades(bif_data.num_x_grades())
-    , y_grades(bif_data.num_y_grades())
-
-{
-    /* TODO: Instead of using separate x_value and y_value vectors, it would be
-       more efficient to use a vector of pairs.  Then we could just store pointers
-       to these grades instead of copying them. */
-    std::vector<std::pair<Grade, unsigned>> mid_indexes;
-    Grade temp_grade;
-    for (unsigned i = 0; i < num_mid_simplices; i++) {
-        temp_grade = Grade(x_values[i + num_high_simplices],
-                           y_values[i + num_high_simplices]);
-        mid_indexes.push_back(std::pair<Grade, unsigned>(temp_grade, i));
-    }
-
-    std::sort(mid_indexes.begin(),
-              mid_indexes.end(),
-              [](const auto& left, const auto& right)
-              {
-                  return left.first < right.first;
-              });
-    
-    
-    std::vector<unsigned> inverse_map(num_mid_simplices);
-    for (unsigned i = 0; i < num_mid_simplices; i++) {
-        inverse_map[mid_indexes[i].second] = i;
-    }
-
-    Grade prev_grade;
-    
-    if (num_mid_simplices > 0)
-        prev_grade = mid_indexes[0].first;
-    
-    for (unsigned i = 0; i < num_mid_simplices; i++) {
-        write_boundary_column(low_mx.mat, d1[mid_indexes[i].second], i);
-        
-        low_mx.ind.fill_index_mx(prev_grade, mid_indexes[i].first, i-1);
-    }
-    
-    //Now complete construction of low_mx.ind.
-    if (num_mid_simplices > 0)
-        low_mx.ind.fill_index_mx(prev_grade,
-                                 Grade(0,low_mx.ind.height()),
-                                 mid_indexes.size()-1);
-    
-    std::vector<std::pair<Grade, unsigned>> high_indexes;
-    for (unsigned i = 0; i < num_high_simplices; i++) {
-        temp_grade = Grade(x_values[i], y_values[i]);
-        high_indexes.push_back(std::pair<Grade, unsigned>(temp_grade, i));
-    }
-
-    std::sort(high_indexes.begin(),
-              high_indexes.end(),
-              [](const auto& left, const auto& right)
-              {
-                  return left.first < right.first;
-              });
-
-    if (num_high_simplices > 0)
-        prev_grade = high_indexes[0].first;
-    
-    for (unsigned i = 0; i < num_high_simplices; i++) {
-        std::vector<unsigned> entries = d2[high_indexes[i].second];
-        for (unsigned j = 0; j < entries.size(); j++) {
-            entries[j] = inverse_map[entries[j]];
-        }
-        write_boundary_column(high_mx.mat, entries, i);
-        
-        high_mx.ind.fill_index_mx(prev_grade, high_indexes[i].first, i-1);
-    }
-
-    //Now we complete construction of high_mx.ind
-    if (num_high_simplices > 0)
-        high_mx.ind.fill_index_mx(prev_grade,
-                                  Grade(0,high_mx.ind.height()),
-                                  high_indexes.size()-1);
-    
-    if (verbosity >= 8)
-        debug() << "Created FIRep";
-
-    if (verbosity >= 10)
-        print();
-}
-
-
-
-
 //Techinical function for constructing FIRep from bifiltration data.
 //loop through simplices, writing columns to the matrix, and filling in the
 //low IndexMatrix
@@ -592,6 +480,117 @@ bool FIRep::sort_high_gens(const MidHiGenIterPair& left, const MidHiGenIterPair&
             return left.first->is_high() < right.first->is_high();
         }
     }
+}
+
+
+
+/* This constructor is used when the FIRep is given directly as text input.
+ NOTE:To understand this part of code, it may be helpful to review the
+ conventions for the firep text input format, as explained in the RIVET
+ documentation. */
+FIRep::FIRep(BifiltrationData& bif_data,
+             unsigned num_high_simplices,
+             unsigned num_mid_simplices,
+             unsigned num_low_simplices,
+             std::vector<std::vector<unsigned>>& d2,
+             std::vector<std::vector<unsigned>>& d1,
+             const std::vector<unsigned> x_values,
+             const std::vector<unsigned> y_values,
+             int vbsty)
+
+: low_mx(num_low_simplices,
+         num_mid_simplices,
+         bif_data.num_y_grades(),
+         bif_data.num_x_grades())
+
+, high_mx(num_mid_simplices,
+          num_high_simplices,
+          bif_data.num_y_grades(),
+          bif_data.num_x_grades())
+
+, verbosity(vbsty)
+, x_grades(bif_data.num_x_grades())
+, y_grades(bif_data.num_y_grades())
+
+{
+    /* TODO: Instead of using separate x_value and y_value vectors, it would be
+     more efficient to use a vector of pairs.  Then we could just store pointers
+     to these grades instead of copying them. */
+    std::vector<std::pair<Grade, unsigned>> mid_indexes;
+    Grade temp_grade;
+    for (unsigned i = 0; i < num_mid_simplices; i++) {
+        temp_grade = Grade(x_values[i + num_high_simplices],
+                           y_values[i + num_high_simplices]);
+        mid_indexes.push_back(std::pair<Grade, unsigned>(temp_grade, i));
+    }
+    
+    std::sort(mid_indexes.begin(),
+              mid_indexes.end(),
+              [](const auto& left, const auto& right)
+              {
+                  return left.first < right.first;
+              });
+    
+    
+    std::vector<unsigned> inverse_map(num_mid_simplices);
+    for (unsigned i = 0; i < num_mid_simplices; i++) {
+        inverse_map[mid_indexes[i].second] = i;
+    }
+    
+    Grade prev_grade;
+    
+    if (num_mid_simplices > 0)
+        prev_grade = mid_indexes[0].first;
+    
+    for (unsigned i = 0; i < num_mid_simplices; i++) {
+        write_boundary_column(low_mx.mat, d1[mid_indexes[i].second], i);
+        
+        low_mx.ind.fill_index_mx(prev_grade, mid_indexes[i].first, i-1);
+    }
+    
+    //Now complete construction of low_mx.ind.
+    if (num_mid_simplices > 0)
+        low_mx.ind.fill_index_mx(prev_grade,
+                                 Grade(0,low_mx.ind.height()),
+                                 mid_indexes.size()-1);
+    
+    std::vector<std::pair<Grade, unsigned>> high_indexes;
+    for (unsigned i = 0; i < num_high_simplices; i++) {
+        temp_grade = Grade(x_values[i], y_values[i]);
+        high_indexes.push_back(std::pair<Grade, unsigned>(temp_grade, i));
+    }
+    
+    std::sort(high_indexes.begin(),
+              high_indexes.end(),
+              [](const auto& left, const auto& right)
+              {
+                  return left.first < right.first;
+              });
+    
+    if (num_high_simplices > 0)
+        prev_grade = high_indexes[0].first;
+    
+    for (unsigned i = 0; i < num_high_simplices; i++) {
+        std::vector<unsigned> entries = d2[high_indexes[i].second];
+        for (unsigned j = 0; j < entries.size(); j++) {
+            entries[j] = inverse_map[entries[j]];
+        }
+        write_boundary_column(high_mx.mat, entries, i);
+        
+        high_mx.ind.fill_index_mx(prev_grade, high_indexes[i].first, i-1);
+    }
+    
+    //Now we complete construction of high_mx.ind
+    if (num_high_simplices > 0)
+        high_mx.ind.fill_index_mx(prev_grade,
+                                  Grade(0,high_mx.ind.height()),
+                                  high_indexes.size()-1);
+    
+    if (verbosity >= 8)
+        debug() << "Created FIRep";
+    
+    if (verbosity >= 10)
+        print();
 }
 
 
