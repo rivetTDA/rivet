@@ -60,9 +60,6 @@ public:
     void set_weight(unsigned long w); //sets the estimate of the cost of updating the RU-decomposition when crossing this anchor
     unsigned long get_weight(); //returns estimate of the cost of updating the RU-decomposition when crossing this anchor
 
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int version);
-
 private:
     unsigned x_coord; //discrete x-coordinate
     unsigned y_coord; //discrete y-coordinate
