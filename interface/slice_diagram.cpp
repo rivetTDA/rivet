@@ -44,11 +44,11 @@ SliceDiagram::SliceDiagram(ConfigParameters* params, std::vector<double>& x_grad
     , x_grades(x_grades)
     , y_grades(y_grades)
     , max_xi_value(0)
+    , line_visible(true)
     , padding(20)
     , created(false)
     , control_dot_moved(false)
     , PI(3.14159265358979323846)
-    , line_visible(true)
 
 {
 }
