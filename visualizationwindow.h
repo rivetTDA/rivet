@@ -122,11 +122,14 @@ private:
     double angle_precise; //sufficiently-precise internal value of the slice-line angle in DEGREES, necessary because QDoubleSpinBox truncates this value
     double offset_precise; //sufficiently-precise internal value of the slice-line offset, necessary because QDoubleSpinBox truncates this value
 
+    
     double xmin_precise; //internal value of the coordinates of the current window
     double xmax_precise;
     double ymin_precise;
     double ymax_precise;
 
+    bool x_reverse,y_reverse; //true when the grades are shown in decreasing order
+    
     double origin_x, origin_y;//the coordinates in data units of the origin on the line; i.e. the point where it intersects the box circumscribing the gradings
     double dist_to_origin; //signed distance in data units from bottom left control dot in visible window to the origin; positive if the dot is up and to the right of the origin; negative otherwise
     double slice_length;//length of the visible slice in DATA units

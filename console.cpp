@@ -358,7 +358,9 @@ int main(int argc, char* argv[])
     });
     computation.template_points_ready.connect([&points_message, &binary, &betti_only, &verbosity, &params](TemplatePointsMessage message) {
         points_message.reset(new TemplatePointsMessage(message));
-
+        
+        
+        
         if (binary) {
             std::cout << "XI" << std::endl;
             {
@@ -421,14 +423,7 @@ int main(int argc, char* argv[])
         std::cout << "FILE TYPE: " << file_type.identifier << std::endl;
         std::cout << "FILE TYPE DESCRIPTION: " << file_type.description << std::endl;
         std::cout << "RAW DATA: " << file_type.is_data << std::endl;
-        std::cout << "HAS FUNCTION: "<<file_type.has_function<<std::endl;
-        std::cout << "X REVERSED: "<< file_type.x_reverse<<std::endl;
-        std::cout << "Y REVERSED: "<< file_type.y_reverse<<std::endl;
         std::cout.flush();
-        //copy axis directions into input_parameters, so they can be shown in the data select dialog
-        //and passed to the visualization window
-        params.x_reverse=file_type.x_reverse;
-        params.y_reverse=file_type.y_reverse;
         return 0;
     }
     std::unique_ptr<ComputationResult> result;
@@ -450,6 +445,7 @@ int main(int argc, char* argv[])
 
         try {
             input = inputManager.start(progress);
+            
         } catch (const std::exception& e) {
             std::cerr << "INPUT ERROR: " << e.what() << " :END" << std::endl;
             std::cerr << "Exiting" << std::endl

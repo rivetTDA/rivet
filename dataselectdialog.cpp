@@ -53,8 +53,6 @@ DataSelectDialog::DataSelectDialog(InputParameters& params, QWidget* parent)
         ui->xbinSpinBox->setValue(10);
         ui->ybinSpinBox->setValue(10);
     }
-    ui->xDirLabel->setVisible(false);
-    ui->yDirLabel->setVisible(false);
 
 
 }
@@ -202,29 +200,8 @@ void DataSelectDialog::detect_file_type()
                 }
 
             }
-            else if (line.startsWith("HAS FUNCTION: ")) {
-                function= line.contains("1");
-            }
-
-            else if(line.startsWith("X REVERSED: ")){
-                if(!ui->xDirLabel->isVisible()){
-                    ui->xDirLabel->setVisible(true);
-                }
-                params.x_reverse=line.contains("1");
-                QString dirLabel=params.x_reverse? "Descending": "Ascending";
-                ui->xDirLabel->setText(dirLabel);
-            }
-            else if(line.startsWith("Y REVERSED: ")){
-                if(!ui->yDirLabel->isVisible()){
-                    ui->yDirLabel->setVisible(true);
-                }
-
-                params.y_reverse=line.contains("1");
-                QString dirLabel=params.y_reverse? "Descending": "Ascending";
-                ui->yDirLabel->setText(dirLabel);
-
-            }
             
+           
             else if (partial.length() != 0) {
                 if (line.endsWith(":END")) {
                     line = partial + line;

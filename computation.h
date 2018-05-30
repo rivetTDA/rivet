@@ -46,6 +46,8 @@ public:
     std::string x_label;
     std::string y_label;
 
+    bool x_reverse;
+    bool y_reverse;
     BifiltrationData& bifiltration()
     {
         return *(data.bifiltration_data);
@@ -62,6 +64,8 @@ public:
         , y_exact(data.y_exact)
         , x_label(data.x_label)
         , y_label(data.y_label)
+        , x_reverse(data.x_reverse)
+        , y_reverse(data.y_reverse)
     {
     }
 };

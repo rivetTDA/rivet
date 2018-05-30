@@ -134,7 +134,9 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(ComputationInput& in
     //store the xi support points
     mb.store_support_points(result->template_points);
 
-    template_points_ready(TemplatePointsMessage{ input.x_label, input.y_label, result->template_points, result->homology_dimensions, input.x_exact, input.y_exact }); //signal that xi support points are ready for visualization
+
+    
+    template_points_ready(TemplatePointsMessage{ input.x_label, input.y_label, result->template_points, result->homology_dimensions, input.x_exact, input.y_exact,input.x_reverse,input.y_reverse }); //signal that xi support points are ready for visualization
     progress.advanceProgressStage(); //update progress box to stage 4
 
     //STAGES 4 and 5: BUILD THE LINE ARRANGEMENT AND COMPUTE BARCODE TEMPLATES
@@ -168,8 +170,12 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(ComputationInput& in
     if (verbosity >= 8) {
         debug() << "Sending" << result->template_points.size() << "anchors";
     }
+    
+    
+
+    
     template_points_ready(TemplatePointsMessage{ input.x_label, input.y_label, result->template_points,
-                                                 result->homology_dimensions, input.x_exact, input.y_exact });
+                                                 result->homology_dimensions, input.x_exact, input.y_exact, input.x_reverse,input.y_reverse });
     if (verbosity >= 10) {
         //TODO: Make this a separate flag, rather than using verbosity?
         arrangement->test_consistency();
@@ -185,5 +191,9 @@ std::unique_ptr<ComputationResult> Computation::compute(InputData data)
     auto input = ComputationInput(data);
     //print bifiltration statistics
     //debug() << "Computing from raw data";
+    
+    
+    
+    
     return compute_raw(input);
 }

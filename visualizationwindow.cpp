@@ -54,6 +54,8 @@ VisualizationWindow::VisualizationWindow(InputParameters& params)
     , grades()
     , angle_precise(0)
     , offset_precise(0)
+    , x_reverse(false)
+    , y_reverse(false)
     , template_points()
     , degenerate_x(false)
     , degenerate_y(false)
@@ -139,8 +141,9 @@ void VisualizationWindow::start_computation()
 void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMessage> points)
 {
 
-    
-    qDebug() << "VisualizationWindow: Received template points";
+
+    x_reverse=points->x_reverse;
+    y_reverse=points->y_reverse;
 
     template_points = points;
 
@@ -157,8 +160,8 @@ void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMe
 
     if(!slice_diagram_initialized)
     {
-        double xrev_sign=1-2*input_params.x_reverse;
-        double yrev_sign=1-2*input_params.y_reverse;
+        double xrev_sign=x_reverse? -1: 1;
+        double yrev_sign=y_reverse? -1: 1;
 
         double x_step=fmax(.0001, (grades.x.back()-grades.x.front())/20); //spin box has 4 digit precision, so shouldn't have step size be less than this
         double y_step=fmax(.0001, (grades.y.back()-grades.y.front())/20);
@@ -208,7 +211,7 @@ void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMe
 
         double xmin, xmax,ymin,ymax;
 
-        if (input_params.x_reverse){
+        if (x_reverse){
             xmin=-1*grades.x.back()-max_x_length;
             xmax=-1*grades.x.front()+max_x_length;
         }
@@ -216,7 +219,7 @@ void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMe
             xmin=grades.x.front()-max_x_length;
             xmax=grades.x.back()+max_x_length;
         }
-        if (input_params.y_reverse){
+        if (y_reverse){
             ymin=-1*grades.y.back()-max_y_length;
             ymax=-1*grades.y.front()+max_y_length;
         }
@@ -273,7 +276,7 @@ void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMe
             grades.x.front(), initial_xmax,
             grades.y.front(), initial_ymax,
             ui->normCoordCheckBox->isChecked(), template_points->homology_dimensions,
-            input_params.x_reverse, input_params.y_reverse);
+            x_reverse, y_reverse);
     }
 
     //enable control items
@@ -378,7 +381,7 @@ void VisualizationWindow::augmented_arrangement_ready(std::shared_ptr<Arrangemen
 void VisualizationWindow::on_BottomCornerXSpinBox_valueChanged(double x_bottom)
 {
 
-    xmin_precise=x_bottom*double(1-2*input_params.x_reverse);
+    xmin_precise=x_bottom*double(1-2*x_reverse);
     
     
     if(!slice_diagram_initialized)
@@ -393,7 +396,7 @@ void VisualizationWindow::on_BottomCornerXSpinBox_valueChanged(double x_bottom)
 
 
 
-    if(input_params.x_reverse){
+    if(x_reverse){
         ui->TopCornerXSpinBox->setMaximum(x_bottom-padding);
     }
     else{
@@ -434,14 +437,14 @@ void VisualizationWindow::on_BottomCornerXSpinBox_valueChanged(double x_bottom)
 void VisualizationWindow::on_BottomCornerYSpinBox_valueChanged(double y_bottom)
 {
 
-    ymin_precise=y_bottom*double(1-2*input_params.y_reverse);
+    ymin_precise=y_bottom*double(1-2*y_reverse);
     if(!slice_diagram_initialized)
     {
         return;
     }
     double padding=degenerate_y? .01: std::min(.01, .5*(grades.y.back()-grades.y.front()));
 
-    if(input_params.y_reverse){
+    if(y_reverse){
         ui->TopCornerYSpinBox->setMaximum(y_bottom-padding);
     }
     else{
@@ -476,14 +479,14 @@ void VisualizationWindow::on_BottomCornerYSpinBox_valueChanged(double y_bottom)
 void VisualizationWindow::on_TopCornerXSpinBox_valueChanged(double x_top)
 {
 
-    xmax_precise=x_top*double(1-2*input_params.x_reverse);
+    xmax_precise=x_top*double(1-2*x_reverse);
     if(!slice_diagram_initialized)
     {
         return;
     }
     double padding=degenerate_x? .01: std::min(.01, .5*(grades.x.back()-grades.x.front()));
 
-    if (input_params.x_reverse){
+    if (x_reverse){
         ui->BottomCornerXSpinBox->setMinimum(x_top+padding);
     }
     else{
@@ -517,7 +520,7 @@ void VisualizationWindow::on_TopCornerXSpinBox_valueChanged(double x_top)
 void VisualizationWindow::on_TopCornerYSpinBox_valueChanged(double y_top)
 {
 
-    ymax_precise=y_top*double(1-2*input_params.y_reverse);
+    ymax_precise=y_top*double(1-2*y_reverse);
     if(!slice_diagram_initialized)
     {
         return;
@@ -525,7 +528,7 @@ void VisualizationWindow::on_TopCornerYSpinBox_valueChanged(double y_top)
 
     double padding=degenerate_y? .01: std::min(.01, .5*(grades.y.back()-grades.y.front()));
 
-    if (input_params.y_reverse){
+    if (y_reverse){
         ui->BottomCornerYSpinBox->setMinimum(y_top+padding);
     }
     else{
@@ -832,9 +835,9 @@ void VisualizationWindow::on_actionRestore_default_window_triggered()
     double orig_ymin=slice_diagram.get_original_ymin();
     double orig_ymax=slice_diagram.get_original_ymax();
 
-    double xrev_sign=input_params.x_reverse? -1 :1;
+    double xrev_sign=x_reverse? -1 :1;
 
-    double yrev_sign=input_params.y_reverse? -1 :1;
+    double yrev_sign=y_reverse? -1 :1;
 
     //set the values displayed in the controls
     ui->BottomCornerXSpinBox->setValue(orig_xmin*xrev_sign);
@@ -872,9 +875,9 @@ void VisualizationWindow::on_actionBetti_number_window_triggered()
     double ymin=slice_diagram.get_min_supp_xi_y();
     double ymax=slice_diagram.get_max_supp_xi_y();
 
-    double xrev_sign=input_params.x_reverse? -1 :1;
+    double xrev_sign=x_reverse? -1 :1;
 
-    double yrev_sign=input_params.y_reverse? -1 :1;
+    double yrev_sign=y_reverse? -1 :1;
 
     ui->BottomCornerXSpinBox->setValue(xmin*xrev_sign);
     ui->BottomCornerYSpinBox->setValue(ymin*yrev_sign);
