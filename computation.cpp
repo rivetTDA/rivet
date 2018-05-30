@@ -226,8 +226,12 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(ComputationInput& in
     if (verbosity >= 8) {
         debug() << "Sending" << result->template_points.size() << "anchors";
     }
+    
+    
+
+    
     template_points_ready(TemplatePointsMessage{ input.x_label, input.y_label, result->template_points,
-                                                 result->homology_dimensions, input.x_exact, input.y_exact });
+                                                 result->homology_dimensions, input.x_exact, input.y_exact, input.x_reverse,input.y_reverse });
     if (verbosity >= 10) {
         //TODO: Make this a separate flag, rather than using verbosity?
         arrangement->test_consistency();
