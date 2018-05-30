@@ -140,6 +140,7 @@ void VisualizationWindow::start_computation()
 //this slot is signaled when the xi support points are ready to be drawn
 void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMessage> points)
 {
+    qDebug() << "VisualizationWindow: Received template points";
 
 
     x_reverse=points->x_reverse;

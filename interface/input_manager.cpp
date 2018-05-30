@@ -566,8 +566,6 @@ std::unique_ptr<InputData> InputManager::read_discrete_metric_space(std::ifstrea
     bool x_reverse=false;
     bool y_reverse=false;
     
-    //for debugging to see if the distances are actually being read
-    int number_of_distances=0;
 
     // STEP 1: read data file and store exact (rational) values of the function for each point
 
