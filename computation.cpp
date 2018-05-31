@@ -166,7 +166,7 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(ComputationInput& in
     //signal that xi support points are ready for visualization.
     //Also will print Betti numbers and exit if rivet_console is called with
     //--betti flag.
-    template_points_ready(TemplatePointsMessage{ input.x_label, input.y_label, result->template_points, result->homology_dimensions, input.x_exact, input.y_exact });
+    template_points_ready(TemplatePointsMessage{ input.x_label, input.y_label, result->template_points, result->homology_dimensions, input.x_exact, input.y_exact,input.x_reverse,input.y_reverse }); 
     
     //Will print minimal presentation and exit if rivet_console is called with
     //--minpres flag.
