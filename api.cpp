@@ -1,29 +1,15 @@
 //
 // Created by Bryn Keller on 11/16/17.
 //
-#include <boost/archive/binary_iarchive.hpp>
-#include "dcel/serialization.h"
 #include "api.h"
 
-//class break_stream: public std::streambuf {
-//protected:
-//    int overflow(int __c) override {
-//        throw std::runtime_error("no!");
-//        //return basic_streambuf::overflow(__c);
-//    }
-//};
 std::unique_ptr<ComputationResult> from_istream(std::istream &file) {
     std::string type;
     std::getline(file, type);
     InputParameters params;
     TemplatePointsMessage templatePointsMessage;
     ArrangementMessage arrangementMessage;
-    if (type == "RIVET_1") {
-        boost::archive::binary_iarchive archive(file);
-        archive >> params;
-        archive >> templatePointsMessage;
-        archive >> arrangementMessage;
-    } else if (type == "RIVET_msgpack") {
+    if (type == "RIVET_msgpack") {
         std::string buffer((std::istreambuf_iterator<char>(file)),
                            std::istreambuf_iterator<char>());
 

@@ -71,10 +71,11 @@ private:
 
     void compute_from_file();
     void unpack_message_fields();
-    bool is_precomputed(std::string file_name);
-    void load_from_file();
+    bool is_precomputed(const std::string &file_name);
+    void load_template_points_from_file(const std::string &file_name);
+    void load_from_file(const std::string &file_name);
 };
 
 //TODO: Move this somewhere. See comments on implementation for details.
-void write_boost_file(QString file_name, InputParameters const& params, TemplatePointsMessage const& message, ArrangementMessage const& arrangement);
+void write_msgpack_file(QString file_name, InputParameters const& params, TemplatePointsMessage const& message, ArrangementMessage const& arrangement);
 #endif // COMPUTATIONTHREAD_H

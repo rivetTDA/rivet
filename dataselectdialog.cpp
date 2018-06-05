@@ -75,7 +75,7 @@ void DataSelectDialog::on_computeButton_clicked()
     params.dim = ui->homDimSpinBox->value();
     params.x_bins = ui->xbinSpinBox->value();
     params.y_bins = ui->ybinSpinBox->value();
-    
+
 
     data_selected = true;
 
@@ -121,26 +121,15 @@ void DataSelectDialog::detect_file_type()
         return;
     }
 
-    auto line = reader.next_line().first;
-    if (line[0] == "RIVET_1") {
-        //TODO: It would be nice to support RIVET_1 in the console like other file types
-        // rather than having this special case here
-        ui->fileTypeLabel->setText("This file appears to contain pre-computed RIVET data");
-        QFileInfo fileInfo(QString::fromStdString(params.fileName));
-        ui->fileLabel->setText("Selected file: " + fileInfo.fileName());
-        //TODO: this updating of the params will need to happen in console also, need to refactor
-        params.shortName = fileInfo.fileName().toUtf8().constData();
-        ui->parameterFrame->setEnabled(false);
-    } else {
-        QStringList args;
-        args.append(QString::fromStdString(params.fileName));
-        args.append("--identify");
-        auto console = RivetConsoleApp::start(args);
+    QStringList args;
+    args.append(QString::fromStdString(params.fileName));
+    args.append("--identify");
+    auto console = RivetConsoleApp::start(args);
 
-        if (!console->waitForStarted()) {
-            invalid_file(RivetConsoleApp::errorMessage(console->error()));
-            return;
-        }
+    if (!console->waitForStarted()) {
+        invalid_file(RivetConsoleApp::errorMessage(console->error()));
+        return;
+    }
 
         bool raw = false;
         bool function=true;
@@ -167,17 +156,17 @@ void DataSelectDialog::detect_file_type()
                 }
             } else if (line.startsWith("FILE TYPE DESCRIPTION: ")) {
 
-                ui->fileTypeLabel->setText("This file appears to contain " + line.mid(QString("FILE TYPE DESCRIPTION: ").length()).trimmed() + ".");
-                QFileInfo fileInfo(QString::fromStdString(params.fileName));
-                ui->fileLabel->setText("Selected file: " + fileInfo.fileName());
+            ui->fileTypeLabel->setText("This file appears to contain " + line.mid(QString("FILE TYPE DESCRIPTION: ").length()).trimmed() + ".");
+            QFileInfo fileInfo(QString::fromStdString(params.fileName));
+            ui->fileLabel->setText("Selected file: " + fileInfo.fileName());
 
                 //TODO: this updating of the params will need to happen in console also, need to refactor
                 QString file_des=line.mid(QString("FILE TYPE DESCRIPTION: ").length()).trimmed();
-                
+
                 //TODO: this updating of the params will need to happen in console also, need to refactor
 
-                
-                
+
+
                 params.shortName = fileInfo.fileName().toUtf8().constData();
 
                 //firep data does not have a homology dimension
@@ -200,8 +189,8 @@ void DataSelectDialog::detect_file_type()
                 }
 
             }
-            
-           
+
+
             else if (partial.length() != 0) {
                 if (line.endsWith(":END")) {
                     line = partial + line;
@@ -214,8 +203,7 @@ void DataSelectDialog::detect_file_type()
             }
         }
         ui->parameterFrame->setEnabled(raw);
-    }
-    
+
     ui->computeButton->setEnabled(true);
     //force black text because on Mac Qt autodefault buttons have white text when enabled,
     //so they still look like they're disabled or weird in some way.

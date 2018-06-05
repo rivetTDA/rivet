@@ -803,7 +803,7 @@ void VisualizationWindow::on_actionSave_triggered()
 void VisualizationWindow::save_arrangement(const QString& filename)
 {
     try {
-        write_boost_file(filename, input_params, *template_points, *arrangement);
+        write_msgpack_file(filename, input_params, *template_points, *arrangement);
     } catch (std::exception& e) {
         QMessageBox errorBox(QMessageBox::Warning, "Error",
             QString("Unable to save arrangement: ").append(filename).append(": ").append(e.what()));

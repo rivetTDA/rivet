@@ -5,6 +5,7 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
 set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-ftemplate-depth=1024 -Wall -Wextra -pedantic -fPIC")
+
 include(ExternalProject)
 
 externalproject_add(
@@ -25,7 +26,7 @@ externalproject_add(
         INSTALL_COMMAND ""
 )
 
-find_package(Boost "1.60" COMPONENTS serialization system)
+find_package(Boost "1.60")
 
 #note this must come before add_executable or it will be ignored
 link_directories(${CMAKE_CURRENT_BINARY_DIR}/docopt/src/docopt_project-build)
@@ -69,22 +70,23 @@ add_library(rivet
 	math/phat_mod/include/phat/representations/vector_heap_mod.h
 	math/phat_mod/include/phat/helpers/misc.h
 	math/phat_mod/include/phat/helpers/thread_local_storage.h
-        interface/c_api.h api.h api.cpp
+        interface/c_api.h
+        api.h
+        api.cpp
         )
 
 add_dependencies(rivet msgpack_project)
-target_link_libraries(rivet ${Boost_LIBRARIES})
 
 add_executable (rivet_console
         console.cpp
         computation.cpp
-        debug.cpp  
+        debug.cpp
         interface/file_writer.cpp
         interface/file_input_reader.cpp
         interface/input_manager.cpp
 	interface/progress.cpp
         numerics.cpp
-        timer.cpp      
+        timer.cpp
         dcel/anchor.cpp
         dcel/arrangement.cpp
         dcel/arrangement_builder.cpp
@@ -92,9 +94,9 @@ add_executable (rivet_console
 	dcel/barcode.cpp
         dcel/barcode_template.cpp
         dcel/dcel.cpp
-        dcel/grades.cpp 
-	dcel/grades.h 
-	math/bool_array.cpp 
+        dcel/grades.cpp
+	dcel/grades.h
+	math/bool_array.cpp
 	math/bool_array.h
 	math/bifiltration_data.cpp
 	math/bigraded_matrix.cpp
@@ -111,7 +113,7 @@ add_executable (rivet_console
 	math/phat_mod/include/phat/helpers/thread_local_storage.h
         api.cpp
         )
-	
+
 add_dependencies(rivet_console docopt_project msgpack_project)
 
 target_link_libraries(rivet_console ${CMAKE_CURRENT_BINARY_DIR}/docopt/src/docopt_project-build/libdocopt_s.a ${Boost_LIBRARIES})
@@ -121,13 +123,13 @@ target_link_libraries(rivet_console ${CMAKE_CURRENT_BINARY_DIR}/docopt/src/docop
 
 add_executable(unit_tests
         computation.cpp
-        debug.cpp  
+        debug.cpp
         interface/file_writer.cpp
         interface/file_input_reader.cpp
         interface/input_manager.cpp
 	interface/progress.cpp
         numerics.cpp
-        timer.cpp      
+        timer.cpp
         dcel/anchor.cpp
         dcel/arrangement.cpp
         dcel/arrangement_builder.cpp
@@ -135,9 +137,9 @@ add_executable(unit_tests
 	dcel/barcode.cpp
         dcel/barcode_template.cpp
         dcel/dcel.cpp
-        dcel/grades.cpp 
-	dcel/grades.h 
-	math/bool_array.cpp 
+        dcel/grades.cpp
+	dcel/grades.h
+	math/bool_array.cpp
 	math/bool_array.h
 	math/bifiltration_data.cpp
 	math/bigraded_matrix.cpp
@@ -152,11 +154,13 @@ add_executable(unit_tests
 	math/phat_mod/include/phat/representations/vector_heap_mod.h
 	math/phat_mod/include/phat/helpers/misc.h
 	math/phat_mod/include/phat/helpers/thread_local_storage.h
-        test/unit_tests.cpp 
-        dcel/grades.cpp 
+        test/unit_tests.cpp
+        dcel/grades.cpp
+        api.cpp
 )
 
 add_dependencies(unit_tests msgpack_project)
 
-include_directories("${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/include" ${Boost_INCLUDE_DIR} ${PROJECT_SOURCE_DIR}/test )
-target_link_libraries(unit_tests ${Boost_LIBRARIES} )
+include_directories("${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/include" ${Boost_INCLUDE_DIR} ${PROJECT_SOURCE_DIR}/test)
+
+target_link_libraries(unit_tests)

@@ -19,7 +19,6 @@ TEMPLATE = app
 
 QMAKE_LIBDIR += /usr/local/lib #TODO: figure out how to generalize
 INCLUDEPATH += $$PWD/build/msgpack/src/msgpack_project/include
-LIBS        += -lboost_serialization
 
 SOURCES	+= main.cpp                         \
 		visualizationwindow.cpp             \
@@ -51,12 +50,11 @@ SOURCES	+= main.cpp                         \
 		interface/configuredialog.cpp       \
 		interface/config_parameters.cpp     \
 		interface/file_input_reader.cpp \
-    #driver.cpp \
-    interface/file_writer.cpp \
-    debug.cpp \
-    timer.cpp \
-    interface/console_interaction.cpp \
-    numerics.cpp \
+        interface/file_writer.cpp \
+        debug.cpp \
+        timer.cpp \
+        interface/console_interaction.cpp \
+        numerics.cpp \
 
 
 HEADERS  += visualizationwindow.h			\

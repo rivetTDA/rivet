@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "dcel/arrangement.h"
 #include "dcel/arrangement_message.h"
-#include "dcel/serialization.h"
 #include "interface/input_manager.h"
 #include "interface/input_parameters.h"
 #include "math/multi_betti.h"
@@ -35,11 +34,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QProcess>
 #include <QString>
 #include <QTime>
-#include <boost/archive/binary_iarchive.hpp>
-#include <boost/archive/binary_oarchive.hpp>
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/archive/tmpdir.hpp>
 #include <fstream>
 #include <string>
 #include <vector>
@@ -63,40 +57,77 @@ void ComputationThread::compute()
 //this function does the work
 void ComputationThread::run()
 {
+    std::cerr << "Computation thread running" << std::endl;
     if (is_precomputed(params.fileName)) {
-        load_from_file();
+        load_from_file(params.fileName);
     } else {
         compute_from_file();
     }
 }
 
-bool ComputationThread::is_precomputed(std::string file_name)
+bool ComputationThread::is_precomputed(const std::string &file_name)
 {
+    std::cerr << "Checking if precomputed" << std::endl;
     std::ifstream file(file_name);
     if (!file.is_open()) {
         throw std::runtime_error("Couldn't open " + file_name + " for reading");
     }
     std::string line;
     std::getline(file, line);
-    return line == "RIVET_1";
+    std::cerr << line.substr(0, 5) << std::endl;
+    return line.substr(0, 5) == "RIVET";
 }
 
-void ComputationThread::load_from_file()
+void ComputationThread::load_template_points_from_file(const std::string &file_name)
 {
-    std::ifstream file(params.fileName);
+    std::ifstream file(file_name);
     if (!file.is_open()) {
-        throw std::runtime_error("Couldn't open " + params.fileName + " for reading");
+        throw std::runtime_error("Couldn't open " + file_name + " for reading");
     }
     std::string type;
     std::getline(file, type);
-    assert(type == "RIVET_1");
-    boost::archive::binary_iarchive archive(file);
-
-    arrangement.reset(new ArrangementMessage());
+    assert(type == "RIVET_msgpack");
     message.reset(new TemplatePointsMessage());
+    std::string buffer((std::istreambuf_iterator<char>(file)),
+                       std::istreambuf_iterator<char>());
+
+    msgpack::unpacker pac;
+    pac.reserve_buffer( buffer.size() );
+    std::copy( buffer.begin(), buffer.end(), pac.buffer() );
+    pac.buffer_consumed( buffer.size() );
+
+    msgpack::object_handle oh;
+    pac.next(oh);
+    auto m2 = oh.get();
+    m2.convert(*message);
+    emit templatePointsReady(message);
+}
+
+void ComputationThread::load_from_file(const std::string &file_name)
+{
+    std::ifstream file(file_name);
+    if (!file.is_open()) {
+        throw std::runtime_error("Couldn't open " + file_name + " for reading");
+    }
     std::string oldFileName = params.fileName;
     std::string oldShortName = params.shortName;
-    archive >> params;
+    std::string type;
+    std::getline(file, type);
+    assert(type == "RIVET_msgpack");
+    arrangement.reset(new ArrangementMessage());
+    message.reset(new TemplatePointsMessage());
+    std::string buffer((std::istreambuf_iterator<char>(file)),
+                       std::istreambuf_iterator<char>());
+
+    msgpack::unpacker pac;
+    pac.reserve_buffer( buffer.size() );
+    std::copy( buffer.begin(), buffer.end(), pac.buffer() );
+    pac.buffer_consumed( buffer.size() );
+
+    msgpack::object_handle oh;
+    pac.next(oh);
+    auto m1 = oh.get();
+    m1.convert(params);
     //We're not interested in the output file from the original invocation, and if it is non-empty,
     //the viewer will try to save the output also, which will most likely fail.
     params.outputFile = "";
@@ -104,9 +135,13 @@ void ComputationThread::load_from_file()
     //files were called
     params.fileName = oldFileName;
     params.shortName = oldShortName;
-    archive >> *message;
+    pac.next(oh);
+    auto m2 = oh.get();
+    m2.convert(*message);
     emit templatePointsReady(message);
-    archive >> *arrangement;
+    pac.next(oh);
+    auto m3 = oh.get();
+    m3.convert(*arrangement);
     emit arrangementReady(arrangement);
 }
 
@@ -121,7 +156,7 @@ void ComputationThread::compute_from_file()
          << "-y" << QString::number(params.y_bins)
          << "-V" << QString::number(params.verbosity)
          << "-f"
-         << "R1"
+         << "msgpack"
          << "--binary";
 
     auto console = RivetConsoleApp::start(args);
@@ -131,51 +166,20 @@ void ComputationThread::compute_from_file()
         return;
     }
 
-    bool reading_xi = false;
     std::stringstream ss;
     while (console->waitForReadyRead(-1)) {
         while (console->canReadLine()) {
             QString line = console->readLine();
             qDebug().noquote() << "console: " << line;
-            if (reading_xi) {
-                if (line.startsWith("END XI")) {
-                    {
-                        message.reset(new TemplatePointsMessage());
-                        boost::archive::text_iarchive archive(ss);
-                        archive >> *message;
-                    }
-                    reading_xi = false;
-                    emit templatePointsReady(message);
-                } else {
-                    ss << line.toStdString();
-                }
+            if (line.startsWith("XI: ")) {
+                auto file_name = line.mid(QString("XI: ").length()).trimmed().toStdString();
+                std::clog << "Loading file " << file_name << std::endl;
+                load_template_points_from_file(file_name);
             } else if (line.startsWith("ARRANGEMENT: ")) {
-                {
-                    console->waitForFinished();
-                    std::ifstream input(line.mid(QString("ARRANGEMENT: ").length()).trimmed().toStdString());
-                    if (!input.is_open()) {
-                        throw std::runtime_error("Could not open console arrangement file");
-                    }
-                    std::string type;
-                    std::getline(input, type);
-                    if (type != "RIVET_1") {
-                        throw std::runtime_error("Unsupported file format");
-                    }
-                    //qDebug() << "ComputationThread::compute_from_file() : checkpoint A -- template_points.size() = "
-                    //         << message->template_points.size();
-                    boost::archive::binary_iarchive archive(input);
-                    message.reset(new TemplatePointsMessage());
-                    arrangement.reset(new ArrangementMessage());
-                    InputParameters p;
-                    archive >> p;
-                    archive >> *message;
-                    archive >> *arrangement;
-                    //qDebug() << "ComputationThread::compute_from_file() : checkpoint B -- template_points.size() = "
-                    //         << message->template_points.size();
-                    emit templatePointsReady(message);
-                }
-                //                qDebug() << "Arrangement received: " << arrangement->x_exact.size() << " x " << arrangement->y_exact.size();
-                emit arrangementReady(arrangement);
+                console->waitForFinished();
+                auto file_name = line.mid(QString("ARRANGEMENT: ").length()).trimmed().toStdString();
+                std::clog << "Loading file " << file_name << std::endl;
+                load_from_file(file_name);
                 return;
             } else if (line.startsWith("PROGRESS ")) {
                 auto progress = line.mid(QString("PROGRESS ").length()).trimmed();
@@ -185,29 +189,25 @@ void ComputationThread::compute_from_file()
             } else if (line.startsWith("STEPS_IN_STAGE")) {
                 auto steps = line.mid(QString("STEPS_IN_STAGE ").length()).trimmed();
                 emit setProgressMaximum(steps.toInt());
-            } else if (line.startsWith("XI")) {
-                reading_xi = true;
-                ss.clear();
             }
         }
     }
+    console->waitForFinished();
 
     throw std::runtime_error("Arrangement was not delivered");
 
 } //end run()
 
-//TODO: this doesn't really belong here, look for a better place.
-//NOTE this is a copy of a function in the console
-//It has to be here because we get duplicate symbol errors when we use binary_oarchive in a different compilation
-//unit in addition to this one.
-void write_boost_file(QString file_name, InputParameters const& params, TemplatePointsMessage const& message, ArrangementMessage const& arrangement)
+//TODO: this is basically a copy of a method in the console. Move file handling to librivet and link?
+void write_msgpack_file(QString file_name, InputParameters const& params, TemplatePointsMessage const& message, ArrangementMessage const& arrangement)
 {
     std::ofstream file(file_name.toStdString(), std::ios::binary);
     if (!file.is_open()) {
-        throw std::runtime_error("Could not open " + file_name.toStdString() + " for writing");
+        throw std::runtime_error("Could not open " + file_name.toStdString() + " for writing.");
     }
-    file << "RIVET_1\n";
-    boost::archive::binary_oarchive oarchive(file);
-    oarchive& params& message& arrangement;
+    file << "RIVET_msgpack\n";
+    msgpack::pack(file, params);
+    msgpack::pack(file, message);
+    msgpack::pack(file, arrangement);
     file.flush();
 }

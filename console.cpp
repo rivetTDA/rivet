@@ -23,18 +23,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "docopt.h"
 #include "interface/input_manager.h"
 #include "interface/input_parameters.h"
-#include <boost/archive/tmpdir.hpp>
 #include <boost/multi_array.hpp> // for print_betti
 #include <interface/file_writer.h>
 
-#include <boost/archive/binary_iarchive.hpp>
-#include <boost/archive/binary_oarchive.hpp>
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
 #include <dcel/grades.h>
 
 #include "dcel/arrangement_message.h"
-#include "dcel/serialization.h"
 #include "api.h"
 
 static const char USAGE[] =
@@ -69,7 +63,7 @@ static const char USAGE[] =
       -x <xbins> --xbins=<xbins>               Number of bins in the x direction [default: 0]
       -y <ybins> --ybins=<ybins>               Number of bins in the y direction [default: 0]
       -V <verbosity> --verbosity=<verbosity>   Verbosity level: 0 (no console output) to 10 (lots of output) [default: 0]
-      -f <format>                              Output format for file [default: R1]
+      -f <format>                              Output format for file [default: messagepack]
       --minpres                                Print the minimal presentation, then exit.
       -b --betti                               Print dimension and Betti number information.  Optionally, also save this info
                                                to a file in a binary format for later viewing in the visualizer.  Then exit.
@@ -114,28 +108,31 @@ unsigned int get_uint_or_die(std::map<std::string, docopt::value>& args, const s
     }
 }
 
-void write_boost_file(InputParameters const& params, TemplatePointsMessage const& message, ArrangementMessage const& arrangement)
+void write_msgpack_file(const std::string &file_name,
+                        InputParameters const& params,
+                        TemplatePointsMessage const& message,
+                        ArrangementMessage const& arrangement)
 {
-    std::ofstream file(params.outputFile, std::ios::binary);
+    std::ofstream file(file_name, std::ios::binary);
     if (!file.is_open()) {
-        throw std::runtime_error("Could not open " + params.outputFile + " for writing.");
+        throw std::runtime_error("Could not open " + file_name + " for writing.");
     }
-    file << "RIVET_1\n";
-    boost::archive::binary_oarchive oarchive(file);
-    oarchive& params& message& arrangement;
-    file.flush();
-}
-
-void write_msgpack_file(InputParameters const& params, TemplatePointsMessage const& message, ArrangementMessage const& arrangement)
-{
-    std::ofstream file(params.outputFile, std::ios::binary);
-    if (!file.is_open()) {
-        throw std::runtime_error("Could not open " + params.outputFile + " for writing.");
-    }
-    file << "RIVET_msgpack\n";
+    file << "RIVET_msgpack" << std::endl;
     msgpack::pack(file, params);
     msgpack::pack(file, message);
     msgpack::pack(file, arrangement);
+    file.flush();
+}
+
+void write_template_points_file(const std::string &file_name,
+                        TemplatePointsMessage const& message)
+{
+    std::ofstream file(file_name, std::ios::binary);
+    if (!file.is_open()) {
+        throw std::runtime_error("Could not open " + file_name + " for writing.");
+    }
+    file << "RIVET_msgpack" << std::endl;
+    msgpack::pack(file, message);
     file.flush();
 }
 
@@ -183,7 +180,7 @@ void process_bounds(const ComputationResult &computation_result) {
     std::cout << "high: " << bounds.x_high << ", " << bounds.y_high << std::endl;
 }
 
-void process_barcode_queries(std::string query_file_name, const ComputationResult& computation_result)
+void process_barcode_queries(const std::string &query_file_name, const ComputationResult& computation_result)
 {
     std::ifstream query_file(query_file_name);
     if (!query_file.is_open()) {
@@ -210,7 +207,7 @@ void process_barcode_queries(std::string query_file_name, const ComputationResul
                 return;
             }
 
-            queries.push_back(std::make_pair(angle, offset));
+            queries.emplace_back(angle, offset);
         } else {
             std::clog << "Parse error on line " << line_number << std::endl;
             return;
@@ -218,7 +215,7 @@ void process_barcode_queries(std::string query_file_name, const ComputationResul
     }
 
     auto vec = query_barcodes(computation_result, queries);
-    for(unsigned i = 0; i < queries.size(); i++) {
+    for(size_t i = 0; i < queries.size(); i++) {
         auto query = queries[i];
         auto angle = query.first;
         auto offset = query.second;
@@ -242,25 +239,20 @@ void process_barcode_queries(std::string query_file_name, const ComputationResul
     }
 }
 
-bool is_precomputed(std::string file_name)
-{
-    std::ifstream file(file_name);
-    if (!file.is_open()) {
-        throw std::runtime_error("Couldn't open " + file_name + " for reading");
-    }
-    std::string line;
-    std::getline(file, line);
-    return line == "RIVET_1";
+void input_error(std::string message) {
+
+    std::cerr << "INPUT ERROR: " << message << " :END" << std::endl;
+    std::cerr << "Exiting" << std::endl
+              << std::flush;
 }
 
-std::unique_ptr<ComputationResult> load_from_precomputed(std::string file_name) {
-    std::ifstream file(file_name);
-    if (!file.is_open()) {
-        throw std::runtime_error("Couldn't open " + file_name + " for reading");
-    }
-    return from_istream(file);
-}
+std::vector<std::string> temp_files;
 
+void clean_temp_files() {
+    for (auto file_name : temp_files) {
+        std::remove(file_name.c_str());
+    }
+}
 
 int main(int argc, char* argv[])
 {
@@ -312,6 +304,7 @@ int main(int argc, char* argv[])
         debug() << "Verbosity: " << params.verbosity;
     }
 
+    std::atexit(clean_temp_files);
     InputManager inputManager(params);
     Progress progress;
     Computation computation(verbosity, progress);
@@ -329,41 +322,14 @@ int main(int argc, char* argv[])
     }
     computation.arrangement_ready.connect([&arrangement_message, &params, &binary, &verbosity](std::shared_ptr<Arrangement> arrangement) {
         arrangement_message.reset(new ArrangementMessage(*arrangement));
-        //TODO: this should become a system test with a known dataset
-        //Note we no longer write the arrangement to stdout, it goes to a file at the end
-        //of the run. This message just announces the absolute path of the file.
-        //The viewer should capture the file name from the stdout stream, and
-        //then wait for the console program to finish before attempting to read the file.
-//        std::stringstream ss(std::ios_base::binary | std::ios_base::out | std::ios_base::in);
-//        {
-//            boost::archive::binary_oarchive archive(ss);
-//            archive << *arrangement_message;
-//        }
-//        std::clog << "Testing deserialization locally..." << std::endl;
-//        std::string original = ss.str();
-//        ArrangementMessage test;
-//        {
-//            boost::archive::binary_iarchive inarch(ss);
-//            inarch >> test;
-//            std::clog << "Deserialized!";
-//        }
-//        if (!(*arrangement_message == test)) {
-//            throw std::runtime_error("Original and deserialized don't match!");
-//        }
-//        Arrangement *reconstituted = arrangement_message->to_arrangement();
-//        //reconstituted->test_consistency();
-//        ArrangementMessage round_trip(*reconstituted);
-//        if (!(round_trip == *arrangement_message)) {
-//            throw std::runtime_error("Original and reconstituted don't match!");
-//        }
         if (binary) {
             std::cout << "ARRANGEMENT: " << params.outputFile << std::endl;
         } else if (verbosity > 0) {
             std::clog << "Wrote arrangement to " << params.outputFile << std::endl;
         }
     });
-    
-    
+
+
     //This function gets called by the computation object after the minimal
     //presentation is computed.  If minpres_only==true, it prints the
     //presentation and then exits RIVET console
@@ -377,46 +343,28 @@ int main(int argc, char* argv[])
                                               exit(0);
                                           }
                                       });
-    
+
     computation.template_points_ready.connect(
-                                              
+
         //the argument to computation.template_points_ready.connect is the
         //following lambda function
         //TODO: Probably would improve readibility to actually make this a private
         //member function
         [&points_message, &binary, &minpres_only, &betti_only, &verbosity, &params](TemplatePointsMessage message) {
         points_message.reset(new TemplatePointsMessage(message));
-        
-        
-        
+
+
+
         if (binary) {
-            std::cout << "XI" << std::endl;
-            {
-                boost::archive::text_oarchive archive(std::cout);
-                archive << message;
-            }
-            std::cout << "END XI" << std::endl;
-            std::cout.flush();
+            auto temp_name = params.outputFile + ".rivet-tmp";
+            temp_files.push_back(temp_name);
+            write_template_points_file(temp_name, *points_message);
+            std::cout << "XI: " << temp_name << std::endl;
         }
 
         if (verbosity >= 4 || betti_only || minpres_only) {
             FileWriter::write_grades(std::cout, message.x_exact, message.y_exact);
         }
-        //TODO: Add a flag to re-enable this code?
-        //        std::stringstream ss;
-        //        {
-        //            std::cerr << "Local deserialization test" << std::endl;
-        //            boost::archive::text_oarchive out(ss);
-        //            out << message;
-        //        }
-        //        {
-        //            boost::archive::text_iarchive in(ss);
-        //            TemplatePointsMessage result;
-        //            in >> result;
-        //            if (!(message == result)) {
-        //                throw std::runtime_error("Original TemplatePointsMessage and reconstituted don't match!");
-        //            }
-        //        }
         if (betti_only) {
             print_dims(message, std::cout);
             std::cout << std::endl;
@@ -432,7 +380,7 @@ int main(int argc, char* argv[])
                     if (verbosity > 0) {
                         debug() << "Writing file:" << params.outputFile;
                     }
-                    write_boost_file(params, *points_message, *temp_am);
+                    write_msgpack_file(params.outputFile, params, *points_message, *temp_am);
                 } else {
                     std::stringstream ss;
                     ss << "Error: Unable to write file:" << params.outputFile;
@@ -454,40 +402,43 @@ int main(int argc, char* argv[])
         std::cout.flush();
         return 0;
     }
-    std::unique_ptr<ComputationResult> result;
 
-    std::unique_ptr<InputData> input;
+    FileContent content;
 
     std::shared_ptr<Arrangement> arrangement;
 
-    if (barcodes || bounds) {
-        result = load_from_precomputed(params.fileName);
-        if (barcodes) {
-            if (!slices.empty()) {
-                process_barcode_queries(slices, *result);
-            }
-        } else {
-            process_bounds(*result);
-        }
-    } else {
+    try {
+        content = inputManager.start(progress);
+    } catch (const std::exception& e) {
+        input_error(e.what());
+        return 1;
+    }
+    if (params.verbosity >= 4) {
+        debug() << "Input processed.";
+    }
 
-        try {
-            input = inputManager.start(progress);
-            
-        } catch (const std::exception& e) {
-            std::cerr << "INPUT ERROR: " << e.what() << " :END" << std::endl;
-            std::cerr << "Exiting" << std::endl
-                      << std::flush;
+    if (barcodes || bounds) {
+        if (content.type != FileContentType::PRECOMPUTED) {
+            input_error("This function requires a precomputed RIVET file as input");
             return 1;
         }
-        if (params.verbosity >= 4) {
-            debug() << "Input processed.";
+        if (barcodes) {
+            if (!slices.empty()) {
+                process_barcode_queries(slices, *content.result);
+            }
+        } else {
+            process_bounds(*content.result);
         }
-        result = computation.compute(*input,koszul);
+    } else {
+        if (content.type != FileContentType::DATA) {
+            input_error("This function requires a data file, not a precomputed RIVET file");
+            return 1;
+        }
+        content.result = computation.compute(*content.input_data, koszul);
         if (params.verbosity >= 2) {
             debug() << "Computation complete; augmented arrangement ready.";
         }
-        arrangement = result->arrangement;
+        arrangement = content.result->arrangement;
         if (params.verbosity >= 4) {
             arrangement->print_stats();
         }
@@ -504,12 +455,11 @@ int main(int argc, char* argv[])
                 debug() << "Writing file:" << params.outputFile;
             }
             if (params.outputFormat == "R0") {
-                FileWriter fw(params, *input, *(arrangement), result->template_points);
+                FileWriter fw(params, *content.input_data, *(arrangement),
+                              content.result->template_points);
                 fw.write_augmented_arrangement(file);
-            } else if (params.outputFormat == "R1") {
-                write_boost_file(params, *points_message, *arrangement_message);
             } else if (params.outputFormat == "msgpack") {
-                write_msgpack_file(params, *points_message, *arrangement_message);
+                write_msgpack_file(params.outputFile, params, *points_message, *arrangement_message);
             } else {
                 throw std::runtime_error("Unsupported output format: " + params.outputFormat);
             }
