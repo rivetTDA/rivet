@@ -112,7 +112,7 @@
       <item>
        <layout class="QGridLayout" name="gridLayout">
         <item row="0" column="2">
-         <widget class="QDoubleSpinBox" name="angleDoubleSpinBox">
+         <widget class="CustomSpinBox" name="angleDoubleSpinBox">
           <property name="enabled">
            <bool>false</bool>
           </property>
@@ -144,7 +144,7 @@
          </widget>
         </item>
         <item row="1" column="2">
-         <widget class="QDoubleSpinBox" name="offsetSpinBox">
+         <widget class="CustomSpinBox" name="offsetSpinBox">
           <property name="enabled">
            <bool>false</bool>
           </property>
@@ -320,7 +320,7 @@
         <item row="0" column="0">
          <layout class="QGridLayout" name="gridLayout_YAxis">
           <item row="1" column="5">
-           <widget class="QDoubleSpinBox" name="TopCornerXSpinBox">
+           <widget class="CustomSpinBox" name="TopCornerXSpinBox">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -351,7 +351,7 @@
            </widget>
           </item>
           <item row="1" column="3">
-           <widget class="QDoubleSpinBox" name="BottomCornerXSpinBox">
+           <widget class="CustomSpinBox" name="BottomCornerXSpinBox">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -379,7 +379,7 @@
            </widget>
           </item>
           <item row="0" column="1">
-           <widget class="QDoubleSpinBox" name="TopCornerYSpinBox">
+           <widget class="CustomSpinBox" name="TopCornerYSpinBox">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -432,7 +432,7 @@
            </widget>
           </item>
           <item row="1" column="1">
-           <widget class="QDoubleSpinBox" name="BottomCornerYSpinBox">
+           <widget class="CustomSpinBox" name="BottomCornerYSpinBox">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -873,6 +873,13 @@
   </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>CustomSpinBox</class>
+   <extends>QDoubleSpinBox</extends>
+   <header>customspinbox.h</header>
+  </customwidget>
+ </customwidgets>
  <tabstops>
   <tabstop>sliceView</tabstop>
   <tabstop>pdView</tabstop>

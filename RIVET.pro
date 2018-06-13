@@ -90,6 +90,7 @@ HEADERS  += visualizationwindow.h			\
     interface/file_writer.h \
     interface/console_interaction.h \
     numerics.h \
+    customspinbox.h
 
 FORMS   += visualizationwindow.ui			\
 		dataselectdialog.ui \
