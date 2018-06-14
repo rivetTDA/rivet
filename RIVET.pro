@@ -88,7 +88,6 @@ HEADERS  += visualizationwindow.h			\
     interface/file_input_reader.h \
     #driver.h \
     interface/file_writer.h \
-    dcel/serialization.h \
     interface/console_interaction.h \
     numerics.h \
 
