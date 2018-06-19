@@ -63,7 +63,7 @@ static const char USAGE[] =
       -x <xbins> --xbins=<xbins>               Number of bins in the x direction [default: 0]
       -y <ybins> --ybins=<ybins>               Number of bins in the y direction [default: 0]
       -V <verbosity> --verbosity=<verbosity>   Verbosity level: 0 (no console output) to 10 (lots of output) [default: 0]
-      -f <format>                              Output format for file [default: messagepack]
+      -f <format>                              Output format for file [default: msgpack]
       --minpres                                Print the minimal presentation, then exit.
       -b --betti                               Print dimension and Betti number information.  Optionally, also save this info
                                                to a file in a binary format for later viewing in the visualizer.  Then exit.

@@ -21,12 +21,12 @@ externalproject_add(
         msgpack_project
         PREFIX msgpack
         GIT_REPOSITORY https://github.com/msgpack/msgpack-c
-        GIT_TAG 83a4b89818d4ed3b84d69cbf36e782c641ffab53
+        GIT_TAG cpp-3.0.1
         CMAKE_ARGS -D CMAKE_CXX_STANDARD=11 -D CMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
         INSTALL_COMMAND ""
 )
 
-find_package(Boost "1.60")
+find_package(Boost "1.58")
 
 #note this must come before add_executable or it will be ignored
 link_directories(${CMAKE_CURRENT_BINARY_DIR}/docopt/src/docopt_project-build)
