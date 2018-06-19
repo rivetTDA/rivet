@@ -281,7 +281,6 @@ void PersistenceDiagram::draw_dots()
     double radius_scale = diagram_size / 600.0; //used to change the radius in accordance with a change in size of application window
     //"magic number"-probably bad
 
-    double slice_line_len = line_size / scale;
 
     double eps=pow(10.0,-3.0); //"wiggle room" to account for rounding errors
     //dots will be shown on the persistence diagram if they lie in the epsilon-neighborhood of the diagram

@@ -132,7 +132,6 @@ void DataSelectDialog::detect_file_type()
     }
 
         bool raw = false;
-        bool function=true;
         QString partial("");
         auto error_header_len = QString("INPUT ERROR: ").length();
         auto error_footer_len = QString(" :END").length();

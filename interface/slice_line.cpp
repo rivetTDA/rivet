@@ -177,7 +177,7 @@ QVariant SliceLine::itemChange(GraphicsItemChange change, const QVariant& value)
 
 //updates left-bottom endpoint
 //is the newpos argument needed????
-void SliceLine::update_lb_endpoint(QPointF& newpos)
+void SliceLine::update_lb_endpoint()
 {
     //ensure that top right point does not change
     update_lock = true;
@@ -209,7 +209,7 @@ void SliceLine::update_lb_endpoint(QPointF& newpos)
 }
 
 //updates right-top endpoint
-void SliceLine::update_rt_endpoint(QPointF& newpos)
+void SliceLine::update_rt_endpoint()
 {
 
     update_lock = true;

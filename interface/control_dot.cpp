@@ -34,12 +34,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <sstream>
 
 ControlDot::ControlDot(SliceLine* line, bool left_bottom, ConfigParameters* params)
-    : slice_line(line)
+    :
+    position_lock(false)
+    , slice_line(line)
     , config_params(params)
     , pressed(false)
     , left_bottom(left_bottom)
     , update_lock(false)
-    , position_lock(false)
 {
     setFlag(ItemIsMovable);
     setFlag(ItemSendsGeometryChanges);
@@ -133,10 +134,10 @@ QVariant ControlDot::itemChange(GraphicsItemChange change, const QVariant& value
 
         set_position(newpos);
         if (left_bottom){
-            slice_line->update_lb_endpoint(newpos);
+            slice_line->update_lb_endpoint();
         }
         else
-            slice_line->update_rt_endpoint(newpos);
+            slice_line->update_rt_endpoint();
 
         //return
         return newpos;
