@@ -13,16 +13,12 @@ public:
     //this function controls the appearance of the text
     QString textFromValue(double val) const {
 
-        //determine how many trailing zeros there are in the decimals shown
-        int sig_figs=(val-int(val))*pow(10.0,decimals());
-        int num_trailing_zeros=0;
+        QString str = QString::number( val, 'f', decimals() );
 
-        while(num_trailing_zeros!=decimals()&&sig_figs%10==0){
-            sig_figs=sig_figs/10;
-            num_trailing_zeros+=1;
-        }
+        str.remove( QRegExp("0+$") ); // Remove any number of trailing 0's
+        str.remove( QRegExp("\\.$") ); // If the last character is just a '.' then remove it
 
-        return QLocale().toString(val, 'f', decimals()-num_trailing_zeros);
+        return str;
     }
 };
 
