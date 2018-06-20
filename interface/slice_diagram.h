@@ -99,6 +99,12 @@ public:
 
     void receive_parameter_change(); //updates the diagram after a change in configuration parameters
 
+    //functions used in the visualization window, to detect when the line goes out of bounds
+    int control_width(){return control_rect->rect().width();};//the width of the region in which the line is allowed to move (in pixels)
+    int control_height(){return control_rect->rect().height();};
+    int get_diagram_width(){return diagram_width;}; //the width of the above region corresponding to the displayed window bounds
+    int get_diagram_height(){return diagram_height;};
+
 public slots:
     void receive_bar_selection(std::vector<unsigned> indexes); //highlight the specified class of bars, which has been selected externally
     void receive_bar_secondary_selection(std::vector<unsigned> indexes); //secondary highlight, used for persistence dots that represent multiple classes of bars

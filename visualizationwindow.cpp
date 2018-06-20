@@ -544,7 +544,6 @@ void VisualizationWindow::on_TopCornerYSpinBox_valueChanged(double y_top)
     slice_diagram.zoom_diagram(angle_precise, offset_precise,dist_to_origin);
 
 
-
     if(ui->actionAutomatically_reset_line->isChecked() && !slice_diagram.get_line_visible())
     {
         reset_line();
@@ -659,7 +658,6 @@ void VisualizationWindow::update_persistence_diagram(bool line_changed)
              }
            slice_diagram.update_barcode(*barcode, ui->barcodeCheckBox->isChecked());
         }
-
 
 
 
@@ -943,12 +941,35 @@ QString VisualizationWindow::suggestedName(QString extension)
 //updates the values of origin_x/y, dist_to_origin,is_visible, slice_length,called after a change in slice line or window bounds
 void VisualizationWindow::update_origin()
 {
+    //determine the length of the padding between the maximal value and the boundary of the diagram, in data units
+
+    //the dimensions of the entire diagram
+    int cr_width=slice_diagram.control_width();
+    int cr_height=slice_diagram.control_height();
+    //left bottom side of control rect is always at (x_min,y_min)
+
+    //the dimensions corresponding to the ranges (x_min,x_max) and (y_min,y_max)
+    int diagram_width=slice_diagram.get_diagram_width();
+    int diagram_height=slice_diagram.get_diagram_height();
+
+    //multiplication factors from data units to pixel units
+    double scale_x=diagram_width/(xmax_precise-xmin_precise);
+    double scale_y=diagram_height/(ymax_precise-ymin_precise);
+
+    double right_padding=(cr_width-diagram_width)/scale_x; //padding in data units
+    double top_padding=(cr_height-diagram_height)/scale_y;
+
+
+
+
+
     if(angle_precise==90.0)
     {
         origin_y=grades.y[0];
         origin_x=-1.0*offset_precise;
         dist_to_origin=ymin_precise-origin_y;
-        is_visible=(xmin_precise<=origin_x)&&(origin_x<=xmax_precise);
+        is_visible=(xmin_precise<=origin_x)&&(origin_x<=xmax_precise+right_padding);
+
 
         slice_length=ymax_precise-ymin_precise;
 
@@ -958,7 +979,7 @@ void VisualizationWindow::update_origin()
         origin_x=grades.x[0];
         origin_y=offset_precise;
         dist_to_origin=xmin_precise-origin_x;
-        is_visible=(ymin_precise<=origin_y)&&(origin_y<=ymax_precise);
+        is_visible=(ymin_precise<=origin_y)&&(origin_y<=ymax_precise+top_padding);
         slice_length=xmax_precise-xmin_precise;
 
     }
@@ -988,7 +1009,8 @@ void VisualizationWindow::update_origin()
             dot_pos_x=xmin_precise;
             dot_pos_y=y_int+slope*xmin_precise;
             dist_to_origin=sqrt(pow(dot_pos_x-origin_x,2.0)+pow(dot_pos_y-origin_y,2.0));
-            is_visible=(ymin_precise<=dot_pos_y)&&(dot_pos_y<=ymax_precise);
+            is_visible=(ymin_precise<=dot_pos_y)&&(dot_pos_y<=ymax_precise+top_padding);
+
             
         }
         else
@@ -996,7 +1018,7 @@ void VisualizationWindow::update_origin()
             dot_pos_x=(ymin_precise-y_int)/slope;
             dot_pos_y=ymin_precise;
             dist_to_origin=sqrt(pow(dot_pos_x-origin_x,2.0)+pow(dot_pos_y-origin_y,2.0));
-            is_visible=(xmin_precise<=dot_pos_x)&&(dot_pos_x<=xmax_precise);
+            is_visible=(xmin_precise<=dot_pos_x)&&(dot_pos_x<=xmax_precise+right_padding);
             
 
         }
