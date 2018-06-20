@@ -301,7 +301,7 @@ void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMe
 
     //update status
     line_selection_ready = true;
-    ui->statusBar->showMessage("bigraded Betti number visualization ready");
+  //  ui->statusBar->showMessage("bigraded Betti number visualization ready"); STATUS BAR CURRENTLY DISABLED
 }
 
 //this slot is signaled when the augmented arrangement is ready
@@ -364,7 +364,7 @@ void VisualizationWindow::augmented_arrangement_ready(std::shared_ptr<Arrangemen
         }
         persistence_diagram_drawn = true;
 
-        ui->statusBar->showMessage("ready for interactive barcode exploration");
+  //      ui->statusBar->showMessage("ready for interactive barcode exploration");  STATUS BAR CURRENTLY DISABLED
 
         //Enable save menu item
         ui->actionSave->setEnabled(true);
