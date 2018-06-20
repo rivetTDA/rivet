@@ -94,6 +94,19 @@
     <item row="2" column="0">
      <layout class="QHBoxLayout" name="horizontalLayout_controls">
       <item>
+       <spacer name="horizontalSpacer_0">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>60</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
        <layout class="QGridLayout" name="gridLayout">
         <item row="0" column="2">
          <widget class="QDoubleSpinBox" name="angleDoubleSpinBox">
@@ -173,11 +186,11 @@
          <enum>Qt::Horizontal</enum>
         </property>
         <property name="sizeType">
-         <enum>QSizePolicy::MinimumExpanding</enum>
+         <enum>QSizePolicy::Maximum</enum>
         </property>
         <property name="sizeHint" stdset="0">
          <size>
-          <width>13</width>
+          <width>50</width>
           <height>20</height>
          </size>
         </property>
@@ -196,11 +209,11 @@
          <enum>Qt::Horizontal</enum>
         </property>
         <property name="sizeType">
-         <enum>QSizePolicy::MinimumExpanding</enum>
+         <enum>QSizePolicy::Maximum</enum>
         </property>
         <property name="sizeHint" stdset="0">
          <size>
-          <width>13</width>
+          <width>50</width>
           <height>20</height>
          </size>
         </property>
@@ -266,11 +279,11 @@
          <enum>Qt::Horizontal</enum>
         </property>
         <property name="sizeType">
-         <enum>QSizePolicy::MinimumExpanding</enum>
+         <enum>QSizePolicy::Maximum</enum>
         </property>
         <property name="sizeHint" stdset="0">
          <size>
-          <width>13</width>
+          <width>50</width>
           <height>20</height>
          </size>
         </property>
@@ -289,11 +302,11 @@
          <enum>Qt::Horizontal</enum>
         </property>
         <property name="sizeType">
-         <enum>QSizePolicy::MinimumExpanding</enum>
+         <enum>QSizePolicy::Maximum</enum>
         </property>
         <property name="sizeHint" stdset="0">
          <size>
-          <width>13</width>
+          <width>50</width>
           <height>20</height>
          </size>
         </property>
@@ -456,11 +469,11 @@
          <enum>Qt::Horizontal</enum>
         </property>
         <property name="sizeType">
-         <enum>QSizePolicy::MinimumExpanding</enum>
+         <enum>QSizePolicy::Maximum</enum>
         </property>
         <property name="sizeHint" stdset="0">
          <size>
-          <width>13</width>
+          <width>50</width>
           <height>20</height>
          </size>
         </property>
@@ -479,11 +492,11 @@
          <enum>Qt::Horizontal</enum>
         </property>
         <property name="sizeType">
-         <enum>QSizePolicy::MinimumExpanding</enum>
+         <enum>QSizePolicy::Maximum</enum>
         </property>
         <property name="sizeHint" stdset="0">
          <size>
-          <width>13</width>
+          <width>50</width>
           <height>20</height>
          </size>
         </property>
@@ -612,7 +625,7 @@
             </property>
             <property name="sizeHint" stdset="0">
              <size>
-              <width>1</width>
+              <width>10</width>
               <height>2</height>
              </size>
             </property>
@@ -621,6 +634,19 @@
          </layout>
         </item>
        </layout>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer_7">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>60</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
       </item>
      </layout>
     </item>
