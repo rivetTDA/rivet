@@ -98,9 +98,12 @@
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
         </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::Maximum</enum>
+        </property>
         <property name="sizeHint" stdset="0">
          <size>
-          <width>60</width>
+          <width>20</width>
           <height>20</height>
          </size>
         </property>
@@ -190,7 +193,7 @@
         </property>
         <property name="sizeHint" stdset="0">
          <size>
-          <width>50</width>
+          <width>30</width>
           <height>20</height>
          </size>
         </property>
@@ -213,7 +216,7 @@
         </property>
         <property name="sizeHint" stdset="0">
          <size>
-          <width>50</width>
+          <width>30</width>
           <height>20</height>
          </size>
         </property>
@@ -283,7 +286,7 @@
         </property>
         <property name="sizeHint" stdset="0">
          <size>
-          <width>50</width>
+          <width>30</width>
           <height>20</height>
          </size>
         </property>
@@ -306,7 +309,7 @@
         </property>
         <property name="sizeHint" stdset="0">
          <size>
-          <width>50</width>
+          <width>30</width>
           <height>20</height>
          </size>
         </property>
@@ -473,7 +476,7 @@
         </property>
         <property name="sizeHint" stdset="0">
          <size>
-          <width>50</width>
+          <width>30</width>
           <height>20</height>
          </size>
         </property>
@@ -496,7 +499,7 @@
         </property>
         <property name="sizeHint" stdset="0">
          <size>
-          <width>50</width>
+          <width>30</width>
           <height>20</height>
          </size>
         </property>
