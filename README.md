@@ -15,7 +15,7 @@ Simon Segert
 Roy Zhao  
 
 ## Dependencies
-RIVET depends on the qt, boost, and msgpack libraries.  In addition RIVET now incorporates some 
+RIVET depends on the qt, boost, and msgpack libraries.  In addition, RIVET now incorporates some 
 code from the PHAT repository for persistence computation by Ulrich Bauer, 
 Michael Kerber, Jan Reininghaus.
 
