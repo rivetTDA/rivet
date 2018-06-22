@@ -35,6 +35,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <interface/progress.h>
 #include <vector>
 
+class Presentation;
+class MultiBetti;
+
 //TODO: Remove either this or InputData, since there's no need for both anymore now that RIVET_0 files aren't supported.
 class ComputationInput {
 protected:
@@ -96,4 +99,6 @@ private:
     const int verbosity;
 
     std::unique_ptr<ComputationResult> compute_raw(ComputationInput& input, bool koszul);
+    
+    void compute_min_pres_and_betti_nums(ComputationInput& input, MultiBetti& mb, Presentation& pres, std::unique_ptr<ComputationResult>& result);
 };

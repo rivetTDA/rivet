@@ -56,16 +56,14 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(ComputationInput& in
         }
     }
 
-    //STAGE 3: COMPUTE MINIMAL PRESENTTION AND MULTIGRADED BETTI NUMBERS
+    //STAGE 3: COMPUTE MINIMAL PRESENTATION AND MULTIGRADED BETTI NUMBERS
 
     std::unique_ptr<ComputationResult> result(new ComputationResult);
 
     MultiBetti mb(input.rep());
 
     Timer timer;
-    Timer timer_sub;
     timer.restart();
-    timer_sub.restart();
     
     Presentation pres;
     
@@ -73,73 +71,7 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(ComputationInput& in
     //computing a minimal presentation
     if (!koszul)
     {
-        if (verbosity >= 2) {
-            debug() << "COMPUTING MINIMAL PRESENTATION:";
-        }
-        
-        //Because the assignment operator for the unsigned_matrix class doesn't work properly,
-        //have to resize the object by hand before assignment.
-        pres.hom_dims.resize(boost::extents[input.x_exact.size()][input.y_exact.size()]);
-        
-        pres = Presentation(input.rep(),progress,verbosity);
-        
-        if (verbosity >= 2) {
-            std::cout << "COMPUTED (UNMINIMIZED) PRESENTATION!" << std::endl;
-            std::cout << "Unminimized presentation has " << pres.row_ind.last()+1 << " rows and " << pres.col_ind.last()+1 << " cols." <<std::endl;
-        }
-    
-        if (verbosity >= 4) {
-            std::cout << "  --> computing the unminimized presentation took "
-            << timer_sub.elapsed() << " milliseconds" << std::endl;
-        }
-    
-        if (verbosity > 7)
-        {
-            std::cout << "UNMINIMIZED PRESENTATION: " << std::endl;
-            pres.print();
-        }
-    
-        timer_sub.restart();
-    
-        pres.minimize(verbosity);
-        
-        if (verbosity >= 2) {
-            std::cout << "COMPUTED MINIMAL PRESENTATION!" << std::endl;
-            std::cout << "Minimal presentation has " << pres.row_ind.last()+1 << " rows and " << pres.col_ind.last()+1 << " cols." <<std::endl;
-        }
-    
-        if (verbosity >= 4) {
-            std::cout << "  --> minimizing the presentation took "
-            << timer_sub.elapsed() << " milliseconds" << std::endl;
-        }
-    
-        if (verbosity > 7)
-        {
-            std::cout << "MINIMAL PRESENTATION: " << std::endl;
-            pres.print();
-        }
-    
-        progress.progress(95);
-    
-        mb.read_betti(pres);
-        mb.compute_xi2(pres.hom_dims);
-        
-        //TODO: In the new code, the Presentation class keeps its own public
-        //hom_dims matrix, so the one stored by the object named "result" is no
-        //longer necessary.  However, for compatibility with the old Betti
-        //number algorithm, for now I am keeping the latter.  A more uniform way
-        //to do this would be to also make the hom_dims a public member of
-        //MultiBetti.
-        
-        //NOTE: The boost matrix package actually requires to resize the matrix
-        //before assignment.
-        result->homology_dimensions.resize(boost::extents[pres.col_ind.width()][pres.col_ind.height()]);
-        result->homology_dimensions = pres.hom_dims;
-        
-        //Now that I've copied the hom_dims matrix, I might as well make the
-        //original one trivial.
-        pres.hom_dims.resize(boost::extents[0][0]);
-        
+        compute_min_pres_and_betti_nums(input,mb,pres,result);
     }
     
     // If --koszul flag is given, then we use the old Betti number computation
@@ -152,7 +84,6 @@ std::unique_ptr<ComputationResult> Computation::compute_raw(ComputationInput& in
         mb.compute_koszul(input.rep(),result->homology_dimensions, progress);
         
         mb.compute_xi2(result->homology_dimensions);
-    
     }
     
     
@@ -249,3 +180,79 @@ std::unique_ptr<ComputationResult> Computation::compute(InputData data, bool kos
     //debug() << "Computing from raw data";
     return compute_raw(input, koszul);
 }
+
+void Computation::compute_min_pres_and_betti_nums(ComputationInput& input, MultiBetti& mb, Presentation& pres,std::unique_ptr<ComputationResult>& result)
+{
+    Timer timer_sub;
+    timer_sub.restart();
+    
+    if (verbosity >= 2) {
+        debug() << "COMPUTING MINIMAL PRESENTATION:";
+    }
+    
+    //Because the assignment operator for the unsigned_matrix class doesn't work properly,
+    //have to resize the object by hand before assignment.
+    pres.hom_dims.resize(boost::extents[input.x_exact.size()][input.y_exact.size()]);
+    
+    pres = Presentation(input.rep(),progress,verbosity);
+    
+    if (verbosity >= 2) {
+        std::cout << "COMPUTED (UNMINIMIZED) PRESENTATION!" << std::endl;
+        std::cout << "Unminimized presentation has " << pres.row_ind.last()+1 << " rows and " << pres.col_ind.last()+1 << " cols." <<std::endl;
+    }
+    
+    if (verbosity >= 4) {
+        std::cout << "  --> computing the unminimized presentation took "
+        << timer_sub.elapsed() << " milliseconds" << std::endl;
+    }
+    
+    if (verbosity > 7)
+    {
+        std::cout << "UNMINIMIZED PRESENTATION: " << std::endl;
+        pres.print();
+    }
+    
+    timer_sub.restart();
+    
+    pres.minimize(verbosity);
+    
+    if (verbosity >= 2) {
+        std::cout << "COMPUTED MINIMAL PRESENTATION!" << std::endl;
+        std::cout << "Minimal presentation has " << pres.row_ind.last()+1 << " rows and " << pres.col_ind.last()+1 << " cols." <<std::endl;
+    }
+    
+    if (verbosity >= 4) {
+        std::cout << "  --> minimizing the presentation took "
+        << timer_sub.elapsed() << " milliseconds" << std::endl;
+    }
+    
+    if (verbosity > 7)
+    {
+        std::cout << "MINIMAL PRESENTATION: " << std::endl;
+        pres.print();
+    }
+    
+    progress.progress(95);
+    
+    mb.read_betti(pres);
+    mb.compute_xi2(pres.hom_dims);
+    
+    //TODO: In the new code, the Presentation class keeps its own public
+    //hom_dims matrix, so the one stored by the object named "result" is no
+    //longer necessary.  However, for compatibility with the old Betti
+    //number algorithm, for now I am keeping the latter.  A more uniform way
+    //to do this would be to also make the hom_dims a public member of
+    //MultiBetti.
+    
+    //NOTE: The boost matrix package actually requires to resize the matrix
+    //before assignment.
+    result->homology_dimensions.resize(boost::extents[pres.col_ind.width()][pres.col_ind.height()]);
+    result->homology_dimensions = pres.hom_dims;
+    
+    //Now that I've copied the hom_dims matrix, I might as well make the
+    //original one trivial.
+    pres.hom_dims.resize(boost::extents[0][0]);
+}
+
+
+
