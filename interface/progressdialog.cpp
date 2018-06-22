@@ -37,10 +37,10 @@ ProgressDialog::ProgressDialog(QWidget* parent)
     this->setWindowFlags(Qt::Window | Qt::WindowStaysOnTopHint);
 
     stage_progress.push_back(0);
-    stage_progress.push_back(2); //we'll say that when the file is read we are 2% done,
-    stage_progress.push_back(4); // and when the bifiltration is built we are 4% done,
-    stage_progress.push_back(10); // and when the Betti numbers are computed we are 10% done
-    stage_progress.push_back(12); // and when the line arrangement is built we are 12% done
+    stage_progress.push_back(5); //we'll say that when the file is read we are 5% done,
+    stage_progress.push_back(15); // and when the bifiltration is built we are 15% done,
+    stage_progress.push_back(65); // and when the Betti numbers are computed we are 65% done
+    stage_progress.push_back(80); // and when the line arrangement is built we are 80% done
     stage_progress.push_back(100); // and when the barcode templates are computed we are 100% done
 }
 
@@ -57,14 +57,17 @@ void ProgressDialog::advanceToNextStage()
     prevLabel->setFont(font);
 
     current_stage++;
-    stage_maximum = 100;
+
+    //TODO: Why is this here?  --Mike.
+    //stage_maximum = 100;
 
     QLabel* nextLabel = getLabel(current_stage);
+
     font.setBold(true);
     nextLabel->setFont(font);
     nextLabel->setEnabled(true);
-    
-    ui->progressBar->setValue(stage_progress[current_stage-1]);
+
+    ui->progressBar->setValue(stage_progress[current_stage - 1]);
 }
 
 void ProgressDialog::setStageMaximum(unsigned max)

@@ -47,7 +47,6 @@ class Vertex;
 
 class ArrangementMessage;
 
-
 class Arrangement {
     //TODO: refactor so Arrangement doesn't need friends.
     friend class PersistenceUpdater;

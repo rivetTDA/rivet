@@ -40,8 +40,10 @@ public:
     QRectF boundingRect() const;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWidget*);
     QVariant itemChange(GraphicsItemChange change, const QVariant& value);
-
     void set_position(const QPointF& newpos);
+    //should these next two be private/protected?
+    ControlDot* other; //the other dot
+    bool position_lock; //prevents errant motion; is true whenever the other dot is being moved
 
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent* event);

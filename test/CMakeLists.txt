@@ -18,8 +18,6 @@ add_executable (unit_tests
         ../dcel/dcel.cpp
         ../math/map_matrix.cpp
         ../math/multi_betti.cpp
-        ../math/simplex_tree.cpp
-        ../math/st_node.cpp
         ../math/template_point.cpp
         ../math/template_points_matrix.cpp
         ../math/index_matrix.cpp

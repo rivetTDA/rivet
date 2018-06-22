@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "arrangement.h"
 
 #include "../dcel/barcode_template.h"
-#include "../math/multi_betti.h" //this include might not be necessary
+//#include "../math/multi_betti.h" //this include might not be necessary
 #include "../math/persistence_updater.h"
 #include "dcel.h"
 
@@ -104,17 +104,18 @@ Arrangement::Arrangement(std::vector<exact> xe,
     }
 } //end constructor
 
-Arrangement::~Arrangement() {
-    for(auto face : faces) {
+Arrangement::~Arrangement()
+{
+    for (auto face : faces) {
         delete face;
     }
-    for(auto halfedge: halfedges) {
+    for (auto halfedge : halfedges) {
         delete halfedge;
     }
-    for(auto anchor: all_anchors) {
+    for (auto anchor : all_anchors) {
         delete anchor;
     }
-    for(auto vertex: vertices) {
+    for (auto vertex : vertices) {
         delete vertex;
     }
 }
@@ -521,7 +522,7 @@ long Arrangement::AID(Anchor* a) const
             return i;
         ++it;
     }
-    debug() << "WARNING: no anchor found.";//" for " << *a;
+    debug() << "WARNING: no anchor found."; //" for " << *a;
     //we should only get here if f is nullptr (meaning the unbounded, outside face)
     return -1;
 }
@@ -701,7 +702,7 @@ typedef boost::numeric::interval<double> DoubleInterval;
 //precondition: v is the double value nearest to the desired real value
 DoubleInterval Arrangement::to_interval(double v)
 {
-	return DoubleInterval(nextafter(v, -DBL_MAX), nextafter(v, DBL_MAX));
+    return DoubleInterval(nextafter(v, -DBL_MAX), nextafter(v, DBL_MAX));
 }
 
 //Crossing constructor
@@ -712,8 +713,7 @@ Arrangement::Crossing::Crossing(Anchor* a, Anchor* b, Arrangement* m)
     , m(m)
 {
     //compute the x-coordinate of the crossing as an interval for fast (inexact) comparisons
-    x = ( to_interval(m->y_grades[a->get_y()]) - to_interval(m->y_grades[b->get_y()]) ) / 
-        ( to_interval(m->x_grades[a->get_x()]) - to_interval(m->x_grades[b->get_x()]) );
+    x = (to_interval(m->y_grades[a->get_y()]) - to_interval(m->y_grades[b->get_y()])) / (to_interval(m->x_grades[a->get_x()]) - to_interval(m->x_grades[b->get_x()]));
 }
 
 //returns true iff this Crossing has (exactly) the same x-coordinate as other Crossing
@@ -784,8 +784,8 @@ bool Arrangement::almost_equal(const DoubleInterval a, const DoubleInterval b)
 {
     using namespace boost::numeric::interval_lib::compare::certain;
 
-    if(a != b) { // then the intervals are disjoint, so the values are not almost equal
-    	return false;
+    if (a != b) { // then the intervals are disjoint, so the values are not almost equal
+        return false;
     }
     // else -- the intervals are not disjoint, so the values might be equal
     return true;

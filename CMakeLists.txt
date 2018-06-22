@@ -21,12 +21,12 @@ externalproject_add(
         msgpack_project
         PREFIX msgpack
         GIT_REPOSITORY https://github.com/msgpack/msgpack-c
-        GIT_TAG 83a4b89818d4ed3b84d69cbf36e782c641ffab53
+        GIT_TAG cpp-3.0.1
         CMAKE_ARGS -D CMAKE_CXX_STANDARD=11 -D CMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
         INSTALL_COMMAND ""
 )
 
-find_package(Boost "1.60")
+find_package(Boost "1.58")
 
 #note this must come before add_executable or it will be ignored
 link_directories(${CMAKE_CURRENT_BINARY_DIR}/docopt/src/docopt_project-build)
@@ -49,58 +49,70 @@ add_library(rivet
         dcel/barcode_template.cpp
         dcel/dcel.cpp
         dcel/arrangement_message.cpp
+	math/bifiltration_data.cpp
+	math/bigraded_matrix.cpp
+	math/firep.cpp
         math/map_matrix.cpp
         math/multi_betti.cpp
-        math/simplex_tree.cpp
-        math/st_node.cpp
         math/template_point.cpp
         math/template_points_matrix.cpp
         math/index_matrix.cpp
         math/persistence_updater.cpp
+        math/presentation.cpp
         numerics.cpp
         timer.cpp
         debug.cpp
         dcel/grades.cpp
         dcel/grades.h
-        math/bool_array.cpp
-        math/bool_array.h
+        #math/bool_array.cpp
+        #math/bool_array.h
         interface/c_api.cpp
+	math/phat_mod/include/phat/representations/vector_heap_mod.h
+	math/phat_mod/include/phat/helpers/misc.h
+	math/phat_mod/include/phat/helpers/thread_local_storage.h
         interface/c_api.h
         api.h
-        api.cpp)
+        api.cpp
+        )
 
 add_dependencies(rivet msgpack_project)
 
 add_executable (rivet_console
         console.cpp
         computation.cpp
-        interface/progress.cpp
+        debug.cpp
         interface/file_writer.cpp
         interface/file_input_reader.cpp
         interface/input_manager.cpp
-        dcel/barcode.cpp
-        dcel/arrangement.cpp
-        dcel/arrangement_builder.cpp
-        dcel/anchor.cpp
-        dcel/barcode_template.cpp
-        dcel/dcel.cpp
-        dcel/arrangement_message.cpp
-        math/map_matrix.cpp
-        math/multi_betti.cpp
-        math/simplex_tree.cpp
-        math/st_node.cpp
-        math/template_point.cpp
-        math/template_points_matrix.cpp
-        math/index_matrix.cpp
-        math/persistence_updater.cpp
+	interface/progress.cpp
         numerics.cpp
         timer.cpp
-        debug.cpp
+        dcel/anchor.cpp
+        dcel/arrangement.cpp
+        dcel/arrangement_builder.cpp
+        dcel/arrangement_message.cpp
+	dcel/barcode.cpp
+        dcel/barcode_template.cpp
+        dcel/dcel.cpp
         dcel/grades.cpp
-        dcel/grades.h
-        math/bool_array.cpp
-        math/bool_array.h
-        api.cpp)
+	dcel/grades.h
+	math/bool_array.cpp
+	math/bool_array.h
+	math/bifiltration_data.cpp
+	math/bigraded_matrix.cpp
+	math/firep.cpp
+     	math/index_matrix.cpp
+        math/map_matrix.cpp
+        math/multi_betti.cpp
+        math/persistence_updater.cpp
+	math/presentation.cpp
+        math/template_point.cpp
+        math/template_points_matrix.cpp
+	math/phat_mod/include/phat/representations/vector_heap_mod.h
+	math/phat_mod/include/phat/helpers/misc.h
+	math/phat_mod/include/phat/helpers/thread_local_storage.h
+        api.cpp
+        )
 
 add_dependencies(rivet_console docopt_project msgpack_project)
 
@@ -111,34 +123,41 @@ target_link_libraries(rivet_console ${CMAKE_CURRENT_BINARY_DIR}/docopt/src/docop
 
 add_executable(unit_tests
         computation.cpp
-        interface/progress.cpp
+        debug.cpp
         interface/file_writer.cpp
         interface/file_input_reader.cpp
         interface/input_manager.cpp
-        dcel/arrangement.cpp
-        dcel/arrangement_builder.cpp
-        dcel/anchor.cpp
-        dcel/barcode.cpp
-        dcel/barcode_template.cpp
-        dcel/dcel.cpp
-        math/map_matrix.cpp
-        math/multi_betti.cpp
-        math/simplex_tree.cpp
-        math/st_node.cpp
-        math/template_point.cpp
-        math/template_points_matrix.cpp
-        math/index_matrix.cpp
-        math/persistence_updater.cpp
+	interface/progress.cpp
         numerics.cpp
         timer.cpp
-        debug.cpp
+        dcel/anchor.cpp
+        dcel/arrangement.cpp
+        dcel/arrangement_builder.cpp
+        dcel/arrangement_message.cpp
+	dcel/barcode.cpp
+        dcel/barcode_template.cpp
+        dcel/dcel.cpp
+        dcel/grades.cpp
+	dcel/grades.h
+	math/bool_array.cpp
+	math/bool_array.h
+	math/bifiltration_data.cpp
+	math/bigraded_matrix.cpp
+	math/firep.cpp
+     	math/index_matrix.cpp
+        math/map_matrix.cpp
+        math/multi_betti.cpp
+        math/persistence_updater.cpp
+	math/presentation.cpp
+        math/template_point.cpp
+        math/template_points_matrix.cpp
+	math/phat_mod/include/phat/representations/vector_heap_mod.h
+	math/phat_mod/include/phat/helpers/misc.h
+	math/phat_mod/include/phat/helpers/thread_local_storage.h
         test/unit_tests.cpp
         dcel/grades.cpp
-        dcel/grades.h
-        math/bool_array.cpp
-        math/bool_array.h
-        dcel/arrangement_message.cpp
-        api.cpp)
+        api.cpp
+)
 
 add_dependencies(unit_tests msgpack_project)
 

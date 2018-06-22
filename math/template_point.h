@@ -21,8 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef TEMPLATE_POINT_H
 #define TEMPLATE_POINT_H
 
-#include <msgpack.hpp>
 #include "dcel/msgpack_adapters.h"
+#include <msgpack.hpp>
 
 //class to store xi points, to help send data from the Arrangement to the VisualizationWindow
 class TemplatePoint {

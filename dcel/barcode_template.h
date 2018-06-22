@@ -25,9 +25,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "grades.h"
 #include "math/template_point.h"
 #include <memory>
+#include <msgpack.hpp>
 #include <set>
 #include <vector>
-#include <msgpack.hpp>
 struct BarTemplate {
     unsigned begin; //index of TemplatePointsMatrixEntry of the equivalence class corresponding to the beginning of this bar
     unsigned end; //index of TemplatePointsMatrixEntry of the equivalence class corresponding to the end of this bar

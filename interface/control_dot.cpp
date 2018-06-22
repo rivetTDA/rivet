@@ -34,7 +34,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <sstream>
 
 ControlDot::ControlDot(SliceLine* line, bool left_bottom, ConfigParameters* params)
-    : slice_line(line)
+    : position_lock(false)
+    , slice_line(line)
     , config_params(params)
     , pressed(false)
     , left_bottom(left_bottom)
@@ -47,7 +48,7 @@ ControlDot::ControlDot(SliceLine* line, bool left_bottom, ConfigParameters* para
 QRectF ControlDot::boundingRect() const
 {
     int radius = config_params->sliceLineWidth + 4;
-    return QRectF(-1*radius, -1*radius, 2*radius, 2*radius);
+    return QRectF(-1 * radius, -1 * radius, 2 * radius, 2 * radius);
 }
 
 void ControlDot::paint(QPainter* painter, const QStyleOptionGraphicsItem* /*unused*/, QWidget* /*unused*/)
@@ -80,7 +81,7 @@ QVariant ControlDot::itemChange(GraphicsItemChange change, const QVariant& value
                 if (mouse.y() < 2 * mouse.x()) //smooth transition in region around y=x
                     newpos.setY(2 * (mouse.y() - mouse.x()));
 
-                double max = std::min(slice_line->get_right_pt_y(), slice_line->get_data_ymax()); //don't let left dot go above right endpoint of line or above data range
+                double max = std::min(slice_line->get_right_pt_y(), slice_line->get_box_ymax()); //don't let left dot go above right endpoint of line or above visible window
                 if (newpos.y() > max)
                     newpos.setY(max);
             } else if (mouse.x() > 0) //then project dot onto bottom side of box (the x-axis)
@@ -90,9 +91,10 @@ QVariant ControlDot::itemChange(GraphicsItemChange change, const QVariant& value
                 if (mouse.x() < 2 * mouse.y()) //smooth transition in region around y=x
                     newpos.setX(2 * (mouse.x() - mouse.y()));
 
-                double max = std::min(slice_line->get_right_pt_x(), slice_line->get_data_xmax()); //don't let bottom dot go right of the top endpoint of line or right of data range
-                if (newpos.x() > max)
+                double max = std::min(slice_line->get_right_pt_x(), slice_line->get_box_xmax()); //don't let bottom dot go right of the top endpoint of line or right of visible window
+                if (newpos.x() > max) {
                     newpos.setX(max);
+                }
             } else //then place dot at origin
             {
                 newpos.setX(0);
@@ -109,16 +111,16 @@ QVariant ControlDot::itemChange(GraphicsItemChange change, const QVariant& value
 
                 if ((ymax - mouse.y()) < 2 * (xmax - mouse.x())) //smooth transition in region around y-ymax=x-xmax
                     newpos.setY(ymax - 2 * (ymax - mouse.y() - xmax + mouse.x()));
-                if (newpos.y() < slice_line->pos().y()) //don't let right dot go below left endpoint of line
-                    newpos.setY(slice_line->pos().y());
+                if (newpos.y() < other->pos().y()) //don't let right dot go below left endpoint of line
+                    newpos.setY(other->pos().y());
             } else if (mouse.x() < xmax) //then project dot onto top side of box
             {
                 newpos.setY(ymax); //default: orthongonal projection
 
                 if (xmax - mouse.x() < 2 * (ymax - mouse.y())) //smooth transition in region around y=x
                     newpos.setX(xmax - 2 * (xmax - mouse.x() - ymax + mouse.y()));
-                if (newpos.x() < slice_line->pos().x()) //don't let top dot go left of the bottom endpoint of line
-                    newpos.setX(slice_line->pos().x());
+                if (newpos.x() < other->pos().x()) //don't let top dot go left of the bottom endpoint of line
+                    newpos.setX(other->pos().x());
             } else //then place dot at top-right corner of box
             {
                 newpos.setX(xmax);
@@ -127,15 +129,17 @@ QVariant ControlDot::itemChange(GraphicsItemChange change, const QVariant& value
         }
 
         //update line position
-        if (left_bottom)
-            slice_line->update_lb_endpoint(newpos);
-        else
-            slice_line->update_rt_endpoint(newpos);
+
+        set_position(newpos);
+        if (left_bottom) {
+            slice_line->update_lb_endpoint();
+        } else
+            slice_line->update_rt_endpoint();
 
         //return
         return newpos;
     }
-    
+
     return QGraphicsItem::itemChange(change, value);
 }
 
@@ -143,14 +147,17 @@ void ControlDot::set_position(const QPointF& newpos)
 {
     update_lock = true;
 
-    setPos(newpos);
-
+    if (!position_lock) {
+        setPos(newpos);
+    }
     update_lock = false;
 }
 
 void ControlDot::mousePressEvent(QGraphicsSceneMouseEvent* event)
 {
     pressed = true;
+    position_lock = false;
+    other->position_lock = true;
     update();
     QGraphicsItem::mousePressEvent(event);
 }
@@ -158,6 +165,7 @@ void ControlDot::mousePressEvent(QGraphicsSceneMouseEvent* event)
 void ControlDot::mouseReleaseEvent(QGraphicsSceneMouseEvent* event)
 {
     pressed = false;
+    other->position_lock = false;
     update();
     QGraphicsItem::mouseReleaseEvent(event);
 }

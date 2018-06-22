@@ -1,0 +1,8 @@
+The data files in this folder are adapted from Nina Otter’s repository of metric spaces, originally assembled for benchmarking persistent homology computations.  Nina’s repository is available at:
+https://github.com/n-otter/PH-roadmap
+
+The corresponding paper, with references to the original sources of the data, is:
+
+“A roadmap for the computation of persistent homology,” Nina Otter, Mason A Porter, Ulrike Tillmann, Peter Grindrod, and Heather A Harrington, EPJ Data Science, 2017.
+https://link.springer.com/article/10.1140/epjds/s13688-017-0109-5
+

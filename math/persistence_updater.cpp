@@ -1,5 +1,5 @@
 /**********************************************************************
-Copyright 2014-2016 The RIVET Developers. See the COPYRIGHT file at
+Copyright 2014-2018 The RIVET Developers. See the COPYRIGHT file at
 the top-level directory of this distribution.
 
 This file is part of RIVET.
@@ -25,10 +25,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../dcel/dcel.h"
 #include "dcel/arrangement.h"
 #include "debug.h"
+#include "firep.h"
 #include "index_matrix.h"
 #include "map_matrix.h"
 #include "multi_betti.h"
-#include "simplex_tree.h"
 
 #include <chrono>
 #include <stdexcept> //for error-checking and debugging
@@ -36,10 +36,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <timer.h>
 
 //constructor for when we must compute all of the barcode templates
-PersistenceUpdater::PersistenceUpdater(Arrangement& m, SimplexTree& b, std::vector<TemplatePoint>& xi_pts, unsigned verbosity)
+PersistenceUpdater::PersistenceUpdater(Arrangement& m, FIRep& b, std::vector<TemplatePoint>& xi_pts, unsigned verbosity)
     : arrangement(m)
-    , bifiltration(b)
-    , dim(b.hom_dim)
+    , fir(b)
     , verbosity(verbosity)
     , template_points_matrix(m.x_exact.size(), m.y_exact.size())
 //    , testing(false)
@@ -75,41 +74,46 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
     if (verbosity >= 10) {
         debug() << "  Mapping low simplices:";
     }
-    IndexMatrix* ind_low = bifiltration.get_index_mx(dim); //can we improve this with something more efficient than IndexMatrix?
+
+    //TODO:Probably could be cleaned up.  We don't need pointers here, do we?
+    IndexMatrix* ind_low = &(fir.low_mx.ind); //can we improve this with something more efficient than IndexMatrix?
     store_multigrades(ind_low, true);
 
     if (verbosity >= 10) {
         debug() << "  Mapping high simplices:";
     }
-    IndexMatrix* ind_high = bifiltration.get_index_mx(dim + 1); //again, could be improved?
+    IndexMatrix* ind_high = &(fir.high_mx.ind); //again, could be improved?
     store_multigrades(ind_high, false);
 
     //get the proper simplex ordering
     std::vector<int> low_simplex_order; //this will be a map : dim_index --> order_index for dim-simplices; -1 indicates simplices not in the order
     unsigned num_low_simplices = build_simplex_order(ind_low, true, low_simplex_order);
-    delete ind_low;
+    //delete ind_low;
 
     std::vector<int> high_simplex_order; //this will be a map : dim_index --> order_index for (dim+1)-simplices; -1 indicates simplices not in the order
     unsigned num_high_simplices = build_simplex_order(ind_high, false, high_simplex_order);
-    delete ind_high;
+    //delete ind_high;
 
-    //get boundary matrices (R) and identity matrices (U) for RU-decomposition
-    R_low = bifiltration.get_boundary_mx(low_simplex_order, num_low_simplices);
-    R_high = bifiltration.get_boundary_mx(low_simplex_order, num_low_simplices, high_simplex_order, num_high_simplices);
+    //get intial boundary matrices R_low and R_high for RU-decomposition.  These are permuted and trimmed,
+    //as described in Section 6 of the RIVET paper.
+    R_low = new MapMatrix_Perm(fir.low_mx.mat, low_simplex_order, num_low_simplices); //NOTE: must be deleted
+
+    R_high = new MapMatrix_Perm(fir.high_mx.mat, low_simplex_order, num_low_simplices, high_simplex_order, num_high_simplices); //NOTE: must be deleted
 
     //print runtime data
     if (verbosity >= 4) {
         debug() << "  --> computing initial order on simplices and building the boundary matrices took"
-                << timer.elapsed() << "milliseconds";
+                << timer.elapsed() << " milliseconds";
     }
 
     //copy the boundary matrices (R) for fast reset later
     timer.restart();
     MapMatrix_Perm* R_low_initial = new MapMatrix_Perm(*R_low);
     MapMatrix_Perm* R_high_initial = new MapMatrix_Perm(*R_high);
+
     if (verbosity >= 4) {
         debug() << "  --> copying the boundary matrices took"
-                << timer.elapsed() << "milliseconds";
+                << timer.elapsed() << " milliseconds";
     }
 
     //initialize the permutation vectors
@@ -117,6 +121,7 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
     inv_perm_low.resize(R_low->width());
     perm_high.resize(R_high->width());
     inv_perm_high.resize(R_high->width());
+
     for (unsigned j = 0; j < perm_low.size(); j++) {
         perm_low[j] = j;
         inv_perm_low[j] = j;
@@ -161,14 +166,13 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
 
     // choose the initial value of the threshold intelligently
     unsigned long threshold;
-    choose_initial_threshold(total_time_for_resets, total_transpositions, total_time_for_transpositions, threshold); 
-        //if the number of swaps might exceed this threshold, then we will do a persistence calculation from scratch instead of vineyard updates
+    choose_initial_threshold(total_time_for_resets, total_transpositions, total_time_for_transpositions, threshold);
+    //if the number of swaps might exceed this threshold, then we will do a persistence calculation from scratch instead of vineyard updates
     if (verbosity >= 4) {
         debug() << "initial reset threshold set to" << threshold;
     }
 
     timer.restart();
-
 
     //traverse the path
     Timer steptimer;
@@ -312,7 +316,7 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
             max_time = step_time;
 
         //update the treshold
-        if(swap_counter > 0 || num_trans >= threshold) {
+        if (swap_counter > 0 || num_trans >= threshold) {
             threshold = (unsigned long)(((double)total_transpositions / total_time_for_transpositions) * ((double)total_time_for_resets / number_of_resets));
             if (verbosity >= 6) {
                 // debug() << "===>>> UPDATING THRESHOLD:";
@@ -358,16 +362,16 @@ void PersistenceUpdater::set_anchor_weights(std::vector<Halfedge*>& path)
     if (verbosity >= 10) {
         debug() << "  Mapping low simplices:";
     }
-    IndexMatrix* ind_low = bifiltration.get_index_mx(dim); //can we improve this with something more efficient than IndexMatrix?
+    IndexMatrix* ind_low = &fir.low_mx.ind; //can we improve this with something more efficient than IndexMatrix?
     store_multigrades(ind_low, true);
-    delete ind_low;
+    //delete ind_low;
 
     if (verbosity >= 10) {
         debug() << "  Mapping high simplices:";
     }
-    IndexMatrix* ind_high = bifiltration.get_index_mx(dim + 1); //again, could be improved?
+    IndexMatrix* ind_high = &fir.high_mx.ind; //again, could be improved?
     store_multigrades(ind_high, false);
-    delete ind_high;
+    //delete ind_high;
 
     // PART 2: TRAVERSE THE PATH AND COUNT SWITCHES & SEPARATIONS AT EACH STEP
 
@@ -945,6 +949,7 @@ unsigned long PersistenceUpdater::move_high_columns(int s, unsigned n, int t)
 
 //performs a vineyard update corresponding to the transposition of columns a and (a + 1)
 //  for LOW simplices
+//Assumes U does not specify the addition of a zero column in R to another column.
 void PersistenceUpdater::vineyard_update_low(unsigned a)
 {
     unsigned b = a + 1;
@@ -962,7 +967,8 @@ void PersistenceUpdater::vineyard_update_low(unsigned a)
             bool RHal = (l > -1 && R_high->entry(a, l)); //entry (a,l) in matrix RH
 
             //ensure that UL[a,b]=0
-            U_low->clear(a, b);
+            //Note: Can comment this, under the assumption that U does not specify the addition of a zero column in R to another column. This allows us to get rid of clear(a,b) in the MapMatrix altogether -Mike
+            //U_low->clear(a, b);
 
             //transpose rows and columns (don't need to swap columns of RL, because these columns are zero)
             U_low->swap_columns(a);
@@ -985,7 +991,8 @@ void PersistenceUpdater::vineyard_update_low(unsigned a)
         } else //simplex b is negative (Case 4)
         {
             //ensure that UL[a,b]=0
-            U_low->clear(a, b);
+            //Note: As above, can comment this, under the assumption that U does not specify the addition of a zero column in R to another column. -Mike
+            //U_low->clear(a, b);
 
             //transpose rows and columns and update low arrays
             R_low->swap_columns(a, true);
@@ -1049,6 +1056,7 @@ void PersistenceUpdater::vineyard_update_low(unsigned a)
 
 //performs a vineyard update corresponding to the transposition of columns a and (a + 1)
 //  for HIGH simplices
+//Assumes U does not specify the addition of a zero column in R to another column.
 void PersistenceUpdater::vineyard_update_high(unsigned a)
 {
     unsigned b = a + 1;
@@ -1061,8 +1069,9 @@ void PersistenceUpdater::vineyard_update_high(unsigned a)
         if (!b_pos) //only have to swap columns of R if column b is nonzero
             R_high->swap_columns(a, true);
 
-        //ensure that UL[a,b]=0
-        U_high->clear(a, b);
+        //ensure that UH[a,b]=0
+        //Note: As above, can comment this, under the assumption that U does not specify the addition of a zero column in R to another column. -Mike
+        //U_high->clear(a, b);
 
         //transpose rows and columns of U
         U_high->swap_columns(a);
@@ -1242,13 +1251,13 @@ void PersistenceUpdater::update_order_and_reset_matrices(TemplatePointsMatrixEnt
         inv_perm_high[perm_high[i]] = i;
 
     //STEP 3: re-build the matrix R based on the new order
-
     R_low->rebuild(RL_initial, perm_low);
     R_high->rebuild(RH_initial, perm_high, perm_low);
 
     //STEP 4: compute the new RU-decomposition
 
-    ///TODO: should I avoid deleting and reallocating matrix U?
+    // TODO: In the future, we will only reset part of U, and we won't delete this matrix here.
+
     delete U_low;
     U_low = R_low->decompose_RU();
     delete U_high;
@@ -1437,7 +1446,7 @@ void PersistenceUpdater::store_barcode_template(Face* cell)
 } //end store_barcode_template()
 
 //chooses an initial threshold by timing vineyard updates corresponding to random transpositions
-void PersistenceUpdater::choose_initial_threshold(unsigned decomp_time, unsigned long & num_trans, unsigned & trans_time, unsigned long & threshold)
+void PersistenceUpdater::choose_initial_threshold(unsigned decomp_time, unsigned long& num_trans, unsigned& trans_time, unsigned long& threshold)
 {
     if (verbosity >= 4) {
         debug() << "RANDOM VINEYARD UPDATES TO CHOOSE THE INITIAL THRESHOLD";
@@ -1465,8 +1474,7 @@ void PersistenceUpdater::choose_initial_threshold(unsigned decomp_time, unsigned
     if (verbosity >= 8) {
         debug() << "  -->Doing some random vineyard updates...";
     }
-    while ( (timer.elapsed() < runtime || trans_list.size() == 0) &&
-        (timer.elapsed() < 5 || trans_list.size() < 5000) ) //do a transposition
+    while ((timer.elapsed() < runtime || trans_list.size() == 0) && (timer.elapsed() < 5 || trans_list.size() < 5000)) //do a transposition
     {
         unsigned rand_col = rand() % (num_cols - 1); //random integer in {0, 1, ..., num_cols - 2}
 

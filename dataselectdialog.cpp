@@ -34,6 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QStringList>
 #include <fstream>
 
+
 DataSelectDialog::DataSelectDialog(InputParameters& params, QWidget* parent)
     : QDialog(parent)
     , ui(new Ui::DataSelectDialog)
@@ -52,6 +53,8 @@ DataSelectDialog::DataSelectDialog(InputParameters& params, QWidget* parent)
         ui->xbinSpinBox->setValue(10);
         ui->ybinSpinBox->setValue(10);
     }
+
+
 }
 
 DataSelectDialog::~DataSelectDialog()
@@ -73,6 +76,7 @@ void DataSelectDialog::on_computeButton_clicked()
     params.x_bins = ui->xbinSpinBox->value();
     params.y_bins = ui->ybinSpinBox->value();
 
+
     data_selected = true;
 
     emit dataSelected();
@@ -91,10 +95,14 @@ void DataSelectDialog::on_openFileButton_clicked()
         this, tr("Open Data File"), settings.value(DEFAULT_DIR_KEY).toString(), "");
 
     if (!selected_file.isNull()) {
+
         params.fileName = selected_file.toUtf8().constData();
         QDir current_dir;
         settings.setValue(DEFAULT_DIR_KEY, current_dir.absoluteFilePath(selected_file));
         detect_file_type();
+
+
+
     }
 } //end on_openFileButton_clicked()
 
@@ -123,48 +131,77 @@ void DataSelectDialog::detect_file_type()
         return;
     }
 
-    bool raw = false;
-    QString partial("");
-    auto error_header_len = QString("INPUT ERROR: ").length();
-    auto error_footer_len = QString(" :END").length();
-    qDebug() << "Reading from console";
-    while (console->canReadLine() || console->waitForReadyRead()) {
-        QString line = console->readLine();
-        line = line.trimmed();
-        if (line.length() == 0)
-            continue;
-        qDebug() << line;
-        if (line.startsWith("RAW DATA: ")) {
-            raw = line.contains("1");
-        } else if (line.startsWith("INPUT ERROR: ")) {
-            if (line.endsWith(":END")) {
-                line = line.mid(error_header_len, line.length() - (error_footer_len + error_header_len));
-                invalid_file(line);
-                break;
-            } else {
-                qDebug() << "Partial:" << line;
-                partial = line;
-            }
-        } else if (line.startsWith("FILE TYPE DESCRIPTION: ")) {
+        bool raw = false;
+        QString partial("");
+        auto error_header_len = QString("INPUT ERROR: ").length();
+        auto error_footer_len = QString(" :END").length();
+        qDebug() << "Reading from console";
+        while (console->canReadLine() || console->waitForReadyRead()) {
+            QString line = console->readLine();
+            line = line.trimmed();
+            if (line.length() == 0)
+                continue;
+            qDebug() << line;
+            if (line.startsWith("RAW DATA: ")) {
+                raw = line.contains("1");
+            } else if (line.startsWith("INPUT ERROR: ")) {
+                if (line.endsWith(":END")) {
+                    line = line.mid(error_header_len, line.length() - (error_footer_len + error_header_len));
+                    invalid_file(line);
+                    break;
+                } else {
+                    qDebug() << "Partial:" << line;
+                    partial = line;
+                }
+            } else if (line.startsWith("FILE TYPE DESCRIPTION: ")) {
 
             ui->fileTypeLabel->setText("This file appears to contain " + line.mid(QString("FILE TYPE DESCRIPTION: ").length()).trimmed() + ".");
             QFileInfo fileInfo(QString::fromStdString(params.fileName));
             ui->fileLabel->setText("Selected file: " + fileInfo.fileName());
 
-            //TODO: this updating of the params will need to happen in console also, need to refactor
-            params.shortName = fileInfo.fileName().toUtf8().constData();
-        } else if (partial.length() != 0) {
-            if (line.endsWith(":END")) {
-                line = partial + line;
-                line = line.mid(error_header_len, line.length() - (error_footer_len + error_header_len));
-                invalid_file(line);
-                break;
-            } else {
-                partial += line;
+                //TODO: this updating of the params will need to happen in console also, need to refactor
+                QString file_des=line.mid(QString("FILE TYPE DESCRIPTION: ").length()).trimmed();
+
+                //TODO: this updating of the params will need to happen in console also, need to refactor
+
+
+
+                params.shortName = fileInfo.fileName().toUtf8().constData();
+
+                //firep data does not have a homology dimension
+                if(file_des=="free implicit representation data"){
+
+                    ui->homDimSpinBox->setSpecialValueText("N/A");
+                    //the spinbox will show the special value text when the value is the minimum value (i.e. zero)
+
+                    ui->homDimSpinBox->setValue(0);
+                    ui->homDimSpinBox->setEnabled(false);
+                }
+                else if(!ui->homDimSpinBox->isEnabled()){
+                    //if an firep file was previously selected, and the new file is not an firep
+
+                    ui->homDimSpinBox->setSpecialValueText("");
+                    //this turns off the special value text (i.e. zero is displayed like normal)
+
+                    ui->homDimSpinBox->setEnabled(true);
+                    ui->homDimSpinBox->setValue(0);
+                }
+
+            }
+
+
+            else if (partial.length() != 0) {
+                if (line.endsWith(":END")) {
+                    line = partial + line;
+                    line = line.mid(error_header_len, line.length() - (error_footer_len + error_header_len));
+                    invalid_file(line);
+                    break;
+                } else {
+                    partial += line;
+                }
             }
         }
-    }
-    ui->parameterFrame->setEnabled(raw);
+        ui->parameterFrame->setEnabled(raw);
 
     ui->computeButton->setEnabled(true);
     //force black text because on Mac Qt autodefault buttons have white text when enabled,

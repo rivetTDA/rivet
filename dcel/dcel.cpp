@@ -171,14 +171,14 @@ Debug& operator<<(Debug& qd, const Halfedge& e)
 Face::Face(Halfedge* e, unsigned long id)
     : boundary(e)
     , visited(false)
-, identifier(id)
+    , identifier(id)
 {
 }
 
 Face::Face()
     : boundary()
     , visited(false)
-, identifier(-1)
+    , identifier(-1)
 {
 }
 
@@ -228,7 +228,8 @@ Debug& operator<<(Debug& qd, const Face& f)
     return qd;
 }
 
-unsigned long Face::id() const {
+unsigned long Face::id() const
+{
     return this->identifier;
 }
 

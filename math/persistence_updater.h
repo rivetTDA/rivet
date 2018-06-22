@@ -1,5 +1,5 @@
 /**********************************************************************
-Copyright 2014-2016 The RIVET Developers. See the COPYRIGHT file at
+Copyright 2014-2018 The RIVET Developers. See the COPYRIGHT file at
 the top-level directory of this distribution.
 
 This file is part of RIVET.
@@ -35,7 +35,7 @@ class MapMatrix_Perm;
 class MapMatrix_RowPriority_Perm;
 class Arrangement;
 class MultiBetti;
-class SimplexTree;
+class FIRep;
 class TemplatePoint;
 struct TemplatePointsMatrixEntry;
 
@@ -45,9 +45,11 @@ struct TemplatePointsMatrixEntry;
 #include <map>
 #include <vector>
 
+//TODO: If we take the input of persistence updater to be a (minimal) presentation, this file can be heavily simplified.
+
 class PersistenceUpdater {
 public:
-    PersistenceUpdater(Arrangement& m, SimplexTree& b, std::vector<TemplatePoint>& xi_pts, unsigned verbosity); //constructor for when we must compute all of the barcode templates
+    PersistenceUpdater(Arrangement& m, FIRep& b, std::vector<TemplatePoint>& xi_pts, unsigned verbosity); //constructor for when we must compute all of the barcode templates
 
     //PersistenceUpdater(Arrangement& m, std::vector<TemplatePoint>& xi_pts); //constructor for when we load the pre-computed barcode templates from a RIVET data file
 
@@ -65,8 +67,7 @@ private:
     //data structures
 
     Arrangement& arrangement; //pointer to the DCEL arrangement in which the barcodes will be stored
-    SimplexTree& bifiltration; //pointer to the bifiltration
-    int dim; //dimension of homology to be computed
+    FIRep& fir; //pointer to the FIRep
 
     unsigned verbosity;
 
@@ -140,7 +141,7 @@ private:
     //swaps two blocks of columns by updating the total order on columns, then rebuilding the matrices and computing a new RU-decomposition
     void update_order_and_reset_matrices(TemplatePointsMatrixEntry* first, TemplatePointsMatrixEntry* second, bool from_below, MapMatrix_Perm* RL_initial, MapMatrix_Perm* RH_initial);
 
-    //updates the total order on columns, rebuilds the matrices, and computing a new RU-decomposition for a NON-STRICT anchor
+    //updates the total order on columns, rebuilds the matrices, and computes a new RU-decomposition for a NON-STRICT anchor
     void update_order_and_reset_matrices(MapMatrix_Perm* RL_initial, MapMatrix_Perm* RH_initial);
 
     //swaps two blocks of simplices in the total order, and counts switches and separations
@@ -160,7 +161,7 @@ private:
     void store_barcode_template(Face* cell);
 
     //chooses an initial threshold by timing vineyard updates corresponding to random transpositions
-    void choose_initial_threshold(unsigned decomp_time, unsigned long & num_trans, unsigned & trans_time, unsigned long & threshold);
+    void choose_initial_threshold(unsigned decomp_time, unsigned long& num_trans, unsigned& trans_time, unsigned long& threshold);
 
     ///TESTING ONLY
     //void check_low_matrix(MapMatrix_Perm* RL, MapMatrix_RowPriority_Perm* UL);

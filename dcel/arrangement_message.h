@@ -27,11 +27,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "dcel/arrangement.h"
 #include "dcel/barcode_template.h"
 #include "dcel/dcel.h"
+#include "dcel/msgpack_adapters.h"
 #include "type_tag.h"
 #include <boost/optional.hpp>
 #include <boost/serialization/split_member.hpp>
 #include <msgpack.hpp>
-#include "dcel/msgpack_adapters.h"
 
 class ArrangementMessage {
 
@@ -40,7 +40,7 @@ public:
 
     ArrangementMessage();
 
-    MSGPACK_DEFINE(x_grades, y_grades, x_exact , y_exact , half_edges, vertices, anchors, faces, topleft, topright, bottomleft, bottomright, vertical_line_query_list);
+    MSGPACK_DEFINE(x_grades, y_grades, x_exact, y_exact, half_edges, vertices, anchors, faces, topleft, topright, bottomleft, bottomright, vertical_line_query_list);
 
     BarcodeTemplate get_barcode_template(double degrees, double offset);
 

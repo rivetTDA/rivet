@@ -1,0 +1,10 @@
+The data files in this folder are adapted from a data file 
+“pnas2013/avian_all_nt_concat_jukes_cantor.csv” available at 
+
+https://github.com/RabadanLab/ph_datasets
+
+The associated paper is:
+
+“Topology of viral evolution,” Chan, J., Carlsson, G., and Rabadan, R.  
+Proceedings of the National Academy of Sciences 110.46 (2013) 18566-18571.
+http://www.pnas.org/content/110/46/18566

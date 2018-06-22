@@ -44,8 +44,8 @@ public:
 
     QVariant itemChange(GraphicsItemChange change, const QVariant& value);
 
-    void update_lb_endpoint(QPointF& newpos); //updates left-bottom endpoint; called by ControlDot on move event
-    void update_rt_endpoint(QPointF& newpos); //updates right-top endpoint; called by ControlDot on move event
+    void update_lb_endpoint(); //updates left-bottom endpoint; called by ControlDot on move event
+    void update_rt_endpoint(); //updates right-top endpoint; called by ControlDot on move event
 
     double get_right_pt_x(); //gets x-coordinate of right-top endpoint (units: pixels)
     double get_right_pt_y(); //gets y-coordinate of right-top endpoint (units: pixels)
@@ -61,13 +61,15 @@ public:
     double get_box_xmax();
     double get_box_ymax();
 
+    void set_visibility(bool visible);
+
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent* event);
     void mouseReleaseEvent(QGraphicsSceneMouseEvent* event);
     void mouseMoveEvent(QGraphicsSceneMouseEvent* event);
 
 private:
-    double data_xmax, data_ymax; //pixel dimensions slightly greater than the largest possible data values (i.e. largest multi-grade)
+    double data_xmax, data_ymax; //pixel dimensions slightly greater than the largest bounds of the current window
     double box_xmax, box_ymax; //pixel dimensions of the on-screen box in which this line is allowed to move
 
     bool vertical; //true if the line is currently vertical

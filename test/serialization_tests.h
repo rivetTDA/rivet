@@ -24,7 +24,6 @@ T round_trip_msgpack(const T& thing)
     return result;
 }
 
-
 TEST_CASE("InputParameters can be roundtripped with msgpack", "[serialization - msgpack]")
 {
 
@@ -49,6 +48,5 @@ TEST_CASE("InputParameters can be roundtripped with msgpack", "[serialization - 
     REQUIRE(params.y_bins == result.y_bins);
     REQUIRE(params.x_label == result.x_label);
     REQUIRE(params.y_label == result.y_label);
-
 }
 #endif //RIVET_CONSOLE_SERIALIZATION_TESTS_H_H

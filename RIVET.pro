@@ -35,6 +35,7 @@ SOURCES	+= main.cpp                         \
 	    math/bool_array.cpp                 \
 		math/index_matrix.cpp               \
 		math/map_matrix.cpp                 \
+		#math/multi_betti.cpp                \
 		dcel/barcode.cpp               \
 		dcel/barcode_template.cpp           \
 		dcel/anchor.cpp                     \
@@ -71,8 +72,6 @@ HEADERS  += visualizationwindow.h			\
 		math/index_matrix.h					\
 		math/map_matrix.h					\
 		math/multi_betti.h					\
-		math/simplex_tree.h					\
-		math/st_node.h						\
 		dcel/barcode.h	    				\
 		dcel/barcode_template.h				\
 		dcel/anchor.h						\
@@ -89,12 +88,13 @@ HEADERS  += visualizationwindow.h			\
     interface/file_input_reader.h \
     #driver.h \
     interface/file_writer.h \
-    cutgraph.h \
     interface/console_interaction.h \
     numerics.h \
+    customspinbox.h
 
 FORMS   += visualizationwindow.ui			\
 		dataselectdialog.ui \
     interface/progressdialog.ui \
     interface/aboutmessagebox.ui \
     interface/configuredialog.ui
+

@@ -25,7 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "interface/input_manager.h"
 #include "interface/input_parameters.h"
 #include "math/multi_betti.h"
-#include "math/simplex_tree.h"
 #include "math/template_point.h"
 
 #include "interface/console_interaction.h"
@@ -159,6 +158,7 @@ void ComputationThread::compute_from_file()
          << "-f"
          << "msgpack"
          << "--binary";
+
     auto console = RivetConsoleApp::start(args);
 
     if (!console->waitForStarted()) {

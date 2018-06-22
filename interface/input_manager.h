@@ -28,7 +28,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "dcel/barcode_template.h"
 #include "interface/file_input_reader.h"
 #include "interface/input_parameters.h"
-#include "math/simplex_tree.h"
+#include "math/bifiltration_data.h"
+#include "math/firep.h"
 #include "math/template_point.h"
 #include "math/template_points_matrix.h"
 #include "progress.h"
@@ -102,7 +103,13 @@ struct InputData {
     std::string y_label;
     std::vector<exact> x_exact; //exact (e.g. rational) values of all x-grades, sorted
     std::vector<exact> y_exact; //exact (e.g. rational) values of all y-grades, sorted
-    std::shared_ptr<SimplexTree> simplex_tree; // will be non-null if we read raw data
+
+    bool x_reverse = false; //whether the simplices are to be added in order of decreasing x grades
+    bool y_reverse = false;
+
+    std::shared_ptr<BifiltrationData> bifiltration_data; //TODO: This is only needed to build the FIRep.  To save memory, I have fixed the code to set bifiltration_data to the null pointer once the FIRep is built.  But perhaps it would be better design to remove this member from the struct altogether. -Mike
+
+    std::shared_ptr<FIRep> free_implicit_rep;
     std::vector<TemplatePoint> template_points; // will be non-empty if we read RIVET data
     std::vector<BarcodeTemplate> barcode_templates; //only used if we read a RIVET data file and need to store the barcode templates before the arrangement is ready
 };
@@ -121,10 +128,10 @@ struct FileContent {
     std::shared_ptr<ComputationResult> result;
 
     FileContent();
-    FileContent(InputData *data);
-    FileContent(ComputationResult *result);
-    FileContent& operator=(const FileContent &other);
-    FileContent(const FileContent &other);
+    FileContent(InputData* data);
+    FileContent(ComputationResult* result);
+    FileContent& operator=(const FileContent& other);
+    FileContent(const FileContent& other);
 };
 
 struct FileType {
@@ -173,8 +180,9 @@ private:
     FileContent read_bifiltration(std::ifstream& stream, Progress& progress); //reads a bifiltration and constructs a simplex tree
     FileContent read_RIVET_data(std::ifstream& stream, Progress& progress); //reads a file of previously-computed data from RIVET
     FileContent read_messagepack(std::ifstream& stream, Progress& progress);
+    FileContent read_firep(std::ifstream& stream, Progress& progress); //reads a free implicit representation and constructs a FIRep
 
-    void build_grade_vectors(InputData& data, ExactSet& value_set, std::vector<unsigned>& indexes, std::vector<exact>& grades_exact, unsigned num_bins); //converts an ExactSets of values to the vectors of discrete values that SimplexTree uses to build the bifiltration, and also builds the grade vectors (floating-point and exact)
+    void build_grade_vectors(InputData& data, ExactSet& value_set, std::vector<unsigned>& indexes, std::vector<exact>& grades_exact, unsigned num_bins); //converts an ExactSets of values to the vectors of discrete values that BifiltrationData uses to build the bifiltration, and also builds the grade vectors (floating-point and exact)
 
     exact approx(double x); //finds a rational approximation of a floating-point value; precondition: x > 0
     FileType& get_file_type(std::string fileName);

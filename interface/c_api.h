@@ -19,9 +19,9 @@ extern "C" {
 //
 
 typedef struct {
-    void * input_params;
-    void * template_points;
-    void * arrangement;
+    void* input_params;
+    void* template_points;
+    void* arrangement;
 } Computed;
 
 typedef struct {
@@ -52,21 +52,19 @@ typedef struct {
 struct rivet_comp;
 typedef rivet_comp RivetComputation;
 
-RivetComputation * read_rivet_computation(const char* bytes, size_t length);
+RivetComputation* read_rivet_computation(const char* bytes, size_t length);
 
 //Computed* compute_arrangement_from_point_cloud(PointCloud);
 BarCodesResult* barcodes_from_computation(RivetComputation* rivet_computation,
-                                    double* offsets,
-                                    double* angles,
-                                    size_t query_length
-                                    );
+    double* offsets,
+    double* angles,
+    size_t query_length);
 
 ArrangementBounds bounds_from_computation(RivetComputation* rivet_computation);
 
-void free_rivet_computation(RivetComputation * rivet_computation);
+void free_rivet_computation(RivetComputation* rivet_computation);
 
-void free_barcodes_result(BarCodesResult *result);
-
+void free_barcodes_result(BarCodesResult* result);
 }
 
 #endif //RIVET_CONSOLE_C_API_H

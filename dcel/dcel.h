@@ -134,10 +134,12 @@ struct TemplatePointsMessage {
     unsigned_matrix homology_dimensions;
     std::vector<exact> x_exact;
     std::vector<exact> y_exact;
+    bool x_reverse;
+    bool y_reverse;
 
     friend bool operator==(TemplatePointsMessage const& left, TemplatePointsMessage const& right);
 
-    MSGPACK_DEFINE(x_label, y_label, template_points, homology_dimensions, x_exact, y_exact);
+    MSGPACK_DEFINE(x_label, y_label, template_points, homology_dimensions, x_exact, y_exact, x_reverse, y_reverse);
 };
 
 #endif // __DCEL_H__

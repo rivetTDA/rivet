@@ -2,6 +2,12 @@
 <ui version="4.0">
  <class>ProgressDialog</class>
  <widget class="QDialog" name="ProgressDialog">
+  <property name="windowModality">
+   <enum>Qt::NonModal</enum>
+  </property>
+  <property name="enabled">
+   <bool>true</bool>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -30,6 +36,9 @@
   </property>
   <property name="windowTitle">
    <string>RIVET: Computation in Progress</string>
+  </property>
+  <property name="autoFillBackground">
+   <bool>true</bool>
   </property>
   <widget class="QPushButton" name="stopButton">
    <property name="geometry">
@@ -111,7 +120,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Computing multigraded Betti numbers...</string>
+    <string>Computing presentation and bigraded Betti numbers...</string>
    </property>
    <property name="alignment">
     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>

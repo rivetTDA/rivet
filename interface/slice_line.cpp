@@ -73,7 +73,26 @@ void SliceLine::paint(QPainter* painter, const QStyleOptionGraphicsItem* /*unuse
 
     painter->setRenderHint(QPainter::Antialiasing);
     painter->setPen(pen);
-    painter->drawLine(0, 0, right_point.x(), right_point.y());
+
+    //handle vertical lines, in particular vertical lines along the left or right boundaries
+    //in this case, draw the line along the entire boundary, even though one of the control dots
+    //might not be at the corner
+
+    //since this also gives correct behavior for vertical lines not along the boundaries, all vertical lines
+    //are handled in this case, to avoid floating point comparisons
+    if (vertical) {
+        painter->drawLine(0, 0, 0, box_ymax);
+    }
+
+    //handle horizontal lines similarly
+    else if (fabs(left_dot->pos().y() - right_dot->pos().y()) <= .001) {
+        painter->drawLine(0, 0, box_xmax, 0);
+    }
+
+    //if neither horizontal nor vertical, draw the line connecting the two control dots
+    else {
+        painter->drawLine(0, 0, right_dot->pos().x() - left_dot->pos().x(), right_dot->pos().y() - left_dot->pos().y());
+    }
 }
 
 //left-click and drag to move line, maintaining the same slope
@@ -111,6 +130,7 @@ QVariant SliceLine::itemChange(GraphicsItemChange change, const QVariant& value)
             } else //then left endpoint of line is along bottom edge of box
             {
                 newpos.setX(std::min(mouse.x() - mouse.y() / slope, data_xmax));
+
                 newpos.setY(0);
             }
 
@@ -125,10 +145,13 @@ QVariant SliceLine::itemChange(GraphicsItemChange change, const QVariant& value)
             } else //then right endpoint of line is along right edge of box
             {
                 right_point.setX(box_xmax - newpos.x());
-                if (slope > 0)
+                if (slope > 0) {
                     right_point.setY(slope * (box_xmax - newpos.x()));
-                else
+                }
+
+                else {
                     right_point.setY(0);
+                }
             }
         }
 
@@ -138,25 +161,34 @@ QVariant SliceLine::itemChange(GraphicsItemChange change, const QVariant& value)
         //update control dots
         left_dot->set_position(newpos);
         right_dot->set_position(newpos + right_point);
-
+        update_lock = true;
+        setPos(left_dot->x(), left_dot->y());
         //update ui control objects
-        sdgm->update_window_controls(false);
 
+        sdgm->update_window_controls(false);
+        update_lock = false;
         return newpos;
     }
     return QGraphicsItem::itemChange(change, value);
 } //end itemChange()
 
 //updates left-bottom endpoint
-void SliceLine::update_lb_endpoint(QPointF& newpos)
+//is the newpos argument needed????
+void SliceLine::update_lb_endpoint()
 {
+    //ensure that top right point does not change
     update_lock = true;
 
     //reposition the right endpoint
-    right_point = right_point - (newpos - pos());
+    right_point = right_dot->pos() - left_dot->pos();
 
+    //notify the QGraphicsScene that the line is changing
+    prepareGeometryChange();
     //move the line so that the left endpoint is correct
-    setPos(newpos);
+
+    setPos(left_dot->pos());
+
+    update();
 
     //calculate new slope
     if (right_point.x() <= 0.001) //caution: floating-point comparison; if line is within 1/1000 pixel of vertical, then we consider it vertical
@@ -165,9 +197,6 @@ void SliceLine::update_lb_endpoint(QPointF& newpos)
         vertical = false;
         slope = right_point.y() / right_point.x();
     }
-
-    //notify the QGraphicsScene that the line is changing
-    prepareGeometryChange();
 
     //update ui control objects
     sdgm->update_window_controls(true);
@@ -176,12 +205,13 @@ void SliceLine::update_lb_endpoint(QPointF& newpos)
 }
 
 //updates right-top endpoint
-void SliceLine::update_rt_endpoint(QPointF& newpos)
+void SliceLine::update_rt_endpoint()
 {
+
     update_lock = true;
 
     //reposition the right endpoint where it should be
-    right_point = newpos - pos();
+    right_point = right_dot->pos() - left_dot->pos();
 
     //calculate new slope
     if (right_point.x() <= 0.001) //caution: floating-point comparison; if line is within 1/1000 pixel of vertical, then we consider it vertical
@@ -193,7 +223,8 @@ void SliceLine::update_rt_endpoint(QPointF& newpos)
 
     //notify the QGraphicsScene that the line is changing
     prepareGeometryChange();
-
+    setPos(left_dot->pos());
+    update();
     //update ui control objects
     sdgm->update_window_controls(true);
 
@@ -203,14 +234,15 @@ void SliceLine::update_rt_endpoint(QPointF& newpos)
 //gets x-coordinate of right-top endpoint
 double SliceLine::get_right_pt_x()
 {
-    return mapToScene(right_point).x();
+    //return mapToScene(right_point).x();
+    return right_dot->pos().x();
 }
 
 //gets y-coordinate of right-top endpoint
 double SliceLine::get_right_pt_y()
 {
-    return mapToScene(right_point).y();
-    ;
+    //return mapToScene(right_point).y();
+    return right_dot->pos().y();
 }
 
 //gets the slope of the line
@@ -362,4 +394,11 @@ double SliceLine::get_box_xmax()
 double SliceLine::get_box_ymax()
 {
     return box_ymax;
+}
+
+void SliceLine::set_visibility(bool visible)
+{
+    left_dot->setVisible(visible);
+    right_dot->setVisible(visible);
+    setVisible(visible);
 }
