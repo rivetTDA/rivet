@@ -98,11 +98,14 @@ void MultiBetti::read_betti(const Presentation & pres)
 
 //computes xi_0 and xi_1 from a (possibly unminimized) presentation, using a
 //modified version of the standard reduction.
+//TODO: Implement this!
+/*
 void MultiBetti::compute_from_pres(Presentation pres, Progress& progress)
 {
     std::cout << "compute from pres not implemented yet!" << std::endl;
     throw(1);
 }
+*/
 
 //computes xi_0 and xi_1, and also stores dimension of homology at each grade in the supplied matrix
 void MultiBetti::compute_koszul(FIRep& fir, unsigned_matrix& hom_dims, Progress& progress)

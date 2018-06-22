@@ -503,19 +503,19 @@ FileContent InputManager::read_point_cloud(std::ifstream& stream, Progress& prog
     //X axis is degrees for degree-Rips complex
     if (!hasFunction) {
         //determine the max degree
-        unsigned maxDegree = 0;
+        unsigned max_degree = 0;
         for (unsigned i = 0; i < num_points; i++)
-            if (maxDegree < degree[i])
-                maxDegree = degree[i];
+            if (max_degree < degree[i])
+                max_degree = degree[i];
 
-        //build vector of discrete degree indices from 0 to maxDegree and bins those degree values
-        //WARNING: assumes that the number of distinct degree grades will be equal to maxDegree which may not hold
-        for (unsigned i = 0; i <= maxDegree; i++) {
-            ret = degree_set.insert(ExactValue(maxDegree - i)); //store degree -i because degree is wrt opposite ordering on R
+        //build vector of discrete degree indices from 0 to max_degree and bins those degree values
+        //WARNING: assumes that the number of distinct degree grades will be equal to max_degree which may not hold
+        for (unsigned i = 0; i <= max_degree; i++) {
+            ret = degree_set.insert(ExactValue(max_degree - i)); //store degree -i because degree is wrt opposite ordering on R
             (ret.first)->indexes.push_back(i); //degree i is stored at index i
         }
         //make degrees
-        degree_indexes = std::vector<unsigned>(maxDegree + 1, 0);
+        degree_indexes = std::vector<unsigned>(max_degree + 1, 0);
 
         build_grade_vectors(*data, degree_set, degree_indexes, data->x_exact, input_params.x_bins);
         //data->x_exact is now an increasing list of codegrees
@@ -569,7 +569,7 @@ FileContent InputManager::read_point_cloud(std::ifstream& stream, Progress& prog
 
         data->bifiltration_data->build_DR_complex(num_points, dist_indexes, degree_indexes, data->x_exact.size(), data->y_exact.size());
         //convert data->x_exact from codegree sequence to negative degree sequence
-        exact max_x_exact=*(data->x_exact.end()-1);//should it be maxdegree instead?
+        exact max_x_exact=*(data->x_exact.end()-1);//should it be max_degree instead?
         std::transform(data->x_exact.begin(),data->x_exact.end(), data->x_exact.begin(),[max_x_exact](exact x){return x-max_x_exact;});
     }
 
@@ -777,20 +777,20 @@ FileContent InputManager::read_discrete_metric_space(std::ifstream& stream, Prog
     //X axis is degrees for Degree-Rips complex
     if (!hasFunction) {
         //determine the max degree
-        unsigned maxDegree = 0;
+        unsigned max_degree = 0;
         for (unsigned i = 0; i < num_points; i++)
-            if (maxDegree < degree[i])
-                maxDegree = degree[i];
+            if (max_degree < degree[i])
+                max_degree = degree[i];
 
 
-        //build vector of discrete degree indices from 0 to maxDegree and bins those degree values
-        //WARNING: assumes that the number of distinct degree grades will be equal to maxDegree which may not hold
-        for (unsigned i = 0; i <= maxDegree; i++) {
-            ret = degree_set.insert(ExactValue(maxDegree - i)); //store degree -i because degree is wrt opposite ordering on R
+        //build vector of discrete degree indices from 0 to max_degree and bins those degree values
+        //WARNING: assumes that the number of distinct degree grades will be equal to max_degree which may not hold
+        for (unsigned i = 0; i <= max_degree; i++) {
+            ret = degree_set.insert(ExactValue(max_degree - i)); //store degree -i because degree is wrt opposite ordering on R
             (ret.first)->indexes.push_back(i); //degree i is stored at index i
         }
         //make degrees
-        degree_indexes = std::vector<unsigned>(maxDegree + 1, 0);
+        degree_indexes = std::vector<unsigned>(max_degree + 1, 0);
         build_grade_vectors(*data, degree_set, degree_indexes, data->x_exact, input_params.x_bins);
     }
     //X axis is given by function in Vietoris-Rips complex
@@ -828,7 +828,7 @@ FileContent InputManager::read_discrete_metric_space(std::ifstream& stream, Prog
         data->bifiltration_data->build_DR_complex(num_points, dist_indexes, degree_indexes, data->x_exact.size(), data->y_exact.size());
 
         //convert data->x_exact from codegree sequence to negative degree sequence
-        exact max_x_exact=*(data->x_exact.end()-1);//should it be maxdegree instead?
+        exact max_x_exact=*(data->x_exact.end()-1);//should it be max_degree instead?
         std::transform(data->x_exact.begin(),data->x_exact.end(), data->x_exact.begin(), [max_x_exact](exact x){return x-max_x_exact;});
     }
 
@@ -991,9 +991,9 @@ FileContent InputManager::read_firep(std::ifstream& stream, Progress& progress)
     std::pair<ExactSet::iterator, bool> ret; //for return value upon insert()
 
     //Temporary data structures to store matrices
-    int t, s, r;
+    int num_high_simplices, num_mid_simplices, num_low_simplices;
     std::vector<exact> x_values, y_values;
-    std::vector<std::vector<unsigned>> d2, d1; //matrices d2: hom_dim+1->hom_dim, d1: hom_dim->hom_dim-1
+    std::vector<std::vector<unsigned>> boundary_mat_2, boundary_mat_1; //matrices boundary_mat_2: hom_dim+1->hom_dim, boundary_mat_1: hom_dim->hom_dim-1
 
     //read simplices
     while (reader.has_next_line()) {
@@ -1022,16 +1022,16 @@ FileContent InputManager::read_firep(std::ifstream& stream, Progress& progress)
                     "Expected 3 tokens");
             }
 
-            t = std::stoi(line_info.first[0]);
-            s = std::stoi(line_info.first[1]);
-            r = std::stoi(line_info.first[2]);
+            num_high_simplices = std::stoi(line_info.first[0]);
+            num_mid_simplices = std::stoi(line_info.first[1]);
+            num_low_simplices = std::stoi(line_info.first[2]);
 
             //read matrices
-            //Read d2 first
-            x_values.reserve(t + s);
-            y_values.reserve(t + s);
-            for (int i = 0; i < t; i++) {
-                d2.push_back(std::vector<unsigned>());
+            //Read boundary_mat_2 first
+            x_values.reserve(num_high_simplices + num_mid_simplices);
+            y_values.reserve(num_high_simplices + num_mid_simplices);
+            for (int i = 0; i < num_high_simplices; i++) {
+                boundary_mat_2.push_back(std::vector<unsigned>());
                 line_info = reader.next_line();
                 tokens = line_info.first;
                 x_values.push_back(xrev_sign*str_to_exact(tokens.at(0)));
@@ -1052,29 +1052,29 @@ FileContent InputManager::read_firep(std::ifstream& stream, Progress& progress)
                 }
                 for (unsigned pos = 3; pos < tokens.size(); pos++) {
                     int v = std::stoi(tokens[pos]);
-                    if (v < 0 || v >= s) {
+                    if (v < 0 || v >= num_mid_simplices) {
                         throw InputError(line_info.second, "Matrix index input out of bounds.");
                     }
-                    d2[i].push_back(v);
+                    boundary_mat_2[i].push_back(v);
                 }
             }
 
-            //read d1
-            for (int i = 0; i < s; i++) {
-                d1.push_back(std::vector<unsigned>());
+            //read boundary_mat_1
+            for (int i = 0; i < num_mid_simplices; i++) {
+                boundary_mat_1.push_back(std::vector<unsigned>());
                 line_info = reader.next_line();
                 tokens = line_info.first;
                 x_values.push_back(xrev_sign*str_to_exact(tokens.at(0)));
                 y_values.push_back(yrev_sign*str_to_exact(tokens.at(1)));
                 //store value, if it doesn't exist already
-                ret = x_set.insert(ExactValue(x_values[i + t]));
+                ret = x_set.insert(ExactValue(x_values[i + num_high_simplices]));
                 //remember that point i has this value
-                (ret.first)->indexes.push_back(i + t);
+                (ret.first)->indexes.push_back(i + num_high_simplices);
 
                 //store value, if it doesn't exist already
-                ret = y_set.insert(ExactValue(y_values[i + t]));
+                ret = y_set.insert(ExactValue(y_values[i + num_high_simplices]));
                 //remember that point i has this value
-                (ret.first)->indexes.push_back(i + t);
+                (ret.first)->indexes.push_back(i + num_high_simplices);
 
                 //Process ith column
                 if (tokens.at(2).at(0) != ';') {
@@ -1082,10 +1082,10 @@ FileContent InputManager::read_firep(std::ifstream& stream, Progress& progress)
                 }
                 for (unsigned pos = 3; pos < tokens.size(); pos++) {
                     int v = std::stoi(tokens[pos]);
-                    if (v < 0 || v >= r) {
+                    if (v < 0 || v >= num_low_simplices) {
                         throw InputError(line_info.second, "Matrix index input out of bounds.");
                     }
-                    d1[i].push_back(v);
+                    boundary_mat_1[i].push_back(v);
                 }
             }
         } catch (std::exception& e) {
@@ -1101,15 +1101,15 @@ FileContent InputManager::read_firep(std::ifstream& stream, Progress& progress)
 
     //build vectors of discrete grades, using bins
     unsigned max_unsigned = std::numeric_limits<unsigned>::max();
-    std::vector<unsigned> x_indexes(t + s, max_unsigned); //x_indexes[i] gives the discrete x-index for simplex i in the input order
-    std::vector<unsigned> y_indexes(t + s, max_unsigned); //y_indexes[i] gives the discrete y-index for simplex i in the input order
+    std::vector<unsigned> x_indexes(num_high_simplices + num_mid_simplices, max_unsigned); //x_indexes[i] gives the discrete x-index for simplex i in the input order
+    std::vector<unsigned> y_indexes(num_high_simplices + num_mid_simplices, max_unsigned); //y_indexes[i] gives the discrete y-index for simplex i in the input order
 
     build_grade_vectors(*data, x_set, x_indexes, data->x_exact, input_params.x_bins);
     build_grade_vectors(*data, y_set, y_indexes, data->y_exact, input_params.y_bins);
 
     //Set x_grades and y_grades
     data->bifiltration_data->set_xy_grades(data->x_exact.size(), data->y_exact.size());
-    data->free_implicit_rep.reset(new FIRep(*(data->bifiltration_data), t, s, r, d2, d1, x_indexes, y_indexes, input_params.verbosity));
+    data->free_implicit_rep.reset(new FIRep(*(data->bifiltration_data), num_high_simplices, num_mid_simplices, num_low_simplices, boundary_mat_2, boundary_mat_1, x_indexes, y_indexes, input_params.verbosity));
 
     data->x_reverse=x_reverse;
     data->y_reverse=y_reverse;

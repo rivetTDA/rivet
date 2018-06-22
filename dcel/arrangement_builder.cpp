@@ -696,7 +696,7 @@ void ArrangementBuilder::tree_to_directed_tree(std::vector<NodeAdjacencyList>& a
                 running_sum += cur_branch_weight;
             }
             
-            branchWeight[node] = running_sum; // assign running_sum to branchWeight at the current node
+            branch_weight[node] = running_sum; // assign running_sum to branchWeight at the current node
             
             //sort the children of current node (sorts in increasing order by branch weight)
             std::sort(current_children.begin(), current_children.end());

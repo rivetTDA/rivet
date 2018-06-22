@@ -150,7 +150,7 @@ void BifiltrationData::build_VR_subcomplex(const std::vector<unsigned>& times,
             vertices.pop_back(); //finished adding children of node j
         }
     }
-} //end build_subtree()
+} //end build_VR_subcomplex()
 
 //TODO: will the degree vector have to be treated differently? I don't think so, because it is actually
 //the vector of degree *indexes*
@@ -215,7 +215,7 @@ void BifiltrationData::build_DR_subcomplex(const std::vector<unsigned>& distance
         //First determine the minimal scale parameter necessary for all the edges between the clique parent_vertices, and *it to appear
         unsigned min_dist = distances[0];
         for (std::vector<int>::const_iterator it2 = parent_vertices.begin(); it2 != parent_vertices.end(); it2++)
-            if (distances[(*it) * (*it - 1) / 2 + *it2 + 1] > minDist) //By construction, each of the parent indices are strictly less than *it
+            if (distances[(*it) * (*it - 1) / 2 + *it2 + 1] > min_dist) //By construction, each of the parent indices are strictly less than *it
                 min_dist = distances[(*it) * (*it - 1) / 2 + *it2 + 1];
         AppearanceGrades new_grades;
         combine_multigrades(new_grades, parent_grades, vertex_multigrades[*it], min_dist);
@@ -235,7 +235,7 @@ void BifiltrationData::build_DR_subcomplex(const std::vector<unsigned>& distance
         parent_vertices.pop_back(); //Finished looking at cliques adding *it as well
     }
 
-} //end build_subcomplex()
+} //end build_DR_subcomplex()
 
 //For each point in a degree-Rips bifiltration, generates an array of incomparable grades of appearance. distances should be of size vertices(vertices - 1)/2
 //Degrees are stored in negative form to align with correct ordering on R
@@ -254,24 +254,24 @@ void BifiltrationData::generate_vertex_multigrades(std::vector<AppearanceGrades>
                 neighbor_dists.push_back(distances[j * (j - 1) / 2 + i + 1]);
             }
         }
-        std::sort(neighbor_dists.begin(), neighborDists.end());
+        std::sort(neighbor_dists.begin(), neighbor_dists.end());
         AppearanceGrades i_grades; //Stores grades of appearance for vertex i
         unsigned min_scale;
-        iGrades.push_back(Grade(degrees[0], distances[0])); //Every point has a grade of appearance at degree = 0, scale = 0
-        for (unsigned j = 0; j < neighborDists.size();) {
+        i_grades.push_back(Grade(degrees[0], distances[0])); //Every point has a grade of appearance at degree = 0, scale = 0
+        for (unsigned j = 0; j < neighbor_dists.size();) {
             min_scale = neighbor_dists[j];
             while (j < neighbor_dists.size() && neighbor_dists[j] == min_scale)
                 j++; //Iterate until the next distance is > minScale
-            i_grades.push_back(Grade(degrees[j], min_scale)); //If the scale parameter is >= minScale, then vertex i has at least neighborDists.size() - (j + 1) neighbors.
+            i_grades.push_back(Grade(degrees[j], min_scale)); //If the scale parameter is >= minScale, then vertex i has at least neighbor_dists.size() - (j + 1) neighbors.
         }
         update_grades(i_grades); //Makes sure all of them are incomparable after the binning
         multigrades.push_back(i_grades);
     }
-} //end generateVertexMultigrades()
+} //end generate_vertex_multigrades()
 
-//Determines the grades of appearance of when both simplices exist subject to some minimal distance parameter mindist
+//Determines the grades of appearance of when both simplices exist subject to some minimal distance parameter min_dist
 //Grade arrays are assumed to be sorted in reverse lexicographic order, output will be sorted in reverse lexicographic order
-//Takes the intersection of the grades of appearances and the half plane y >= minDist
+//Takes the intersection of the grades of appearances and the half plane y >= min_dist
 void BifiltrationData::combine_multigrades(AppearanceGrades& merged, const AppearanceGrades& grades1, const AppearanceGrades& grades2, const unsigned min_dist)
 {
     AppearanceGrades::const_iterator it1 = grades1.begin();
@@ -310,7 +310,7 @@ void BifiltrationData::combine_multigrades(AppearanceGrades& merged, const Appea
             curr_y_max = new_y_max;
         }
     }
-} //end combineMultigrades
+} //end combine_multigrades
 
 //Given a list of multigrades, sort them and remove all comparable multigrades
 void BifiltrationData::update_grades(AppearanceGrades& grades)
@@ -359,35 +359,6 @@ int BifiltrationData::get_size(unsigned dim)
     else
         return -1;
 }
-
-//returns the list of simplices and their grades of appearance in dimension (hom_dim-1), hom_dim, or (hom_dim+1)
-//Returns NULL if incorrect dimension is given
-
-/*
-SimplexInfo* BifiltrationData::getSimplices(int dim)
-{
-    if(dim == hom_dim - 1)
-        return ordered_low_simplices;
-    else if(dim == hom_dim)
-        return ordered_simplices;
-    else if(dim == hom_dim + 1)
-        return ordered_high_simplices;
-    else
-        return NULL;
-}
-
-SimplexInfo* BifiltrationData::getSimplices(int dim)
-{
-    if(dim == hom_dim - 1)
-        return ordered_low_simplices;
-    else if(dim == hom_dim)
-        return ordered_simplices;
-    else if(dim == hom_dim + 1)
-        return ordered_high_simplices;
-    else
-        return NULL;
-}
-*/
 
 //print bifiltration in the RIVET bifiltration input format
 //prints simplices in no particular order, grades are in reverse-lexicographic order

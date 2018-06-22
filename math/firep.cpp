@@ -281,7 +281,7 @@ void FIRep::construct_low_mx(const std::vector<MidHiGenIterPair>& mid_gens,
                         face.push_back(vertices[l]);
                         //use hash table to look up the index of this face in
                         //low_simplices;
-                        auto face_node = low_ht.find(&face);
+                auto face_node = low_ht.find(&face);
                 //now write the row index to row_indices
                 low_mx.mat.set(face_node->second,i);
                 face.clear();
@@ -343,11 +343,13 @@ void FIRep::construct_high_mx(const std::vector<MidHiGenIterPair>& mid_gens,
                         face.push_back(vertices[l]);
                     
                         //use hash table to look up the index of this face in mid_simplices;
-                        auto face_node = mid_ht.find(&face);
-                    
-                        if (face_node == mid_ht.end())
-                            throw std::runtime_error("FIRep constructor: face simplex not found.");
+                auto face_node = mid_ht.find(&face);
+                
+                //NOTE: Commenting out this error check for speed
+                //if (face_node == mid_ht.end())
+                //    throw std::runtime_error("FIRep constructor: face simplex not found.");
             
+                
                 /*face_node->second gives an iterator pointing to the face.
                  Now choose a suitable bigrade for the face.
              

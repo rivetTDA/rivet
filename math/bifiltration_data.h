@@ -226,14 +226,14 @@ private:
                              const std::vector<AppearanceGrades>& vertex_multigrades);
 
     //Generates required multigrades for build_DR_complex()
-    void generateVertexMultigrades(std::vector<AppearanceGrades>& multigrades,
+    void generate_vertex_multigrades(std::vector<AppearanceGrades>& multigrades,
                                    const unsigned vertices,
                                    const std::vector<unsigned>& distances,
                                    const std::vector<unsigned>& degrees);
 
     //Finds the grades of appearance of when both simplices exist.
     //subject to minimum scale parameter. Used in build_DR_complex()
-    void combineMultigrades(AppearanceGrades& merged,
+    void combine_multigrades(AppearanceGrades& merged,
                             const AppearanceGrades& grades1,
                             const AppearanceGrades& grades2,
                             unsigned mindist);
