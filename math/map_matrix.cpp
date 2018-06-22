@@ -18,14 +18,14 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **********************************************************************/
 
- //Authors: Matthew L. Wright (February 2014- ),
- //         Michael Lesnick (Modifications 2017-2018)
+//Authors: Matthew L. Wright (February 2014- ),
+//         Michael Lesnick (Modifications 2017-2018)
 
 #include "map_matrix.h"
-#include "phat_mod/include/phat/representations/vector_heap_mod.h"
 #include "bool_array.h"
 #include "debug.h"
 #include "index_matrix.h"
+#include "phat_mod/include/phat/representations/vector_heap_mod.h"
 #include <numeric> //for std::accumulate
 #include <stdexcept> //for error-checking and debugging
 
@@ -45,9 +45,9 @@ MapMatrix_Base::MapMatrix_Base(unsigned size)
     matrix._set_num_cols(size);
     for (unsigned i = 0; i < size; i++) {
         //correct syntax?
-        auto temp_col=std::vector<phat::index>();
+        auto temp_col = std::vector<phat::index>();
         temp_col.push_back(i);
-        matrix._set_col(i,temp_col);
+        matrix._set_col(i, temp_col);
     }
 }
 
@@ -65,12 +65,11 @@ unsigned MapMatrix_Base::height() const
     return num_rows;
 }
 
-
 //sets (to 1) the entry in row i, column j
 //WARNING: The implementation assumes this entry has not been set yet.
 void MapMatrix_Base::set(unsigned i, unsigned j)
 {
-    matrix._set_entry(i,j);
+    matrix._set_entry(i, j);
 } //end set()
 
 //TODO: Don't think we need this anymore.
@@ -81,13 +80,13 @@ bool MapMatrix_Base::entry(unsigned i, unsigned j) const
     return matrix._is_in_matrix(i,j);
 } //end entry()
 */
- 
+
 //adds column j to column k
 //  RESULT: column j is not changed, column k contains sum of columns j and k
 //  (with mod-2 arithmetic)
 void MapMatrix_Base::add_to(unsigned j, unsigned k)
 {
-    matrix._add_to(j,k);
+    matrix._add_to(j, k);
 } //end add_to()
 
 /******* implementation of class MapMatrix, for column-sparse matrices *******/
@@ -112,7 +111,7 @@ MapMatrix::MapMatrix(std::initializer_list<std::initializer_list<int>> values)
                   return std::max(max_so_far, static_cast<unsigned>(row.size()));
               }))
 {
-    
+
     //TODO: Make this fast once we pick a representation.
     auto row_it = values.begin();
     for (unsigned row = 0; row < values.size(); row++) {
@@ -125,7 +124,6 @@ MapMatrix::MapMatrix(std::initializer_list<std::initializer_list<int>> values)
         ++row_it;
     }
 }
- 
 
 //returns the number of columns in the matrix
 unsigned MapMatrix::width() const
@@ -138,7 +136,6 @@ unsigned MapMatrix::height() const
 {
     return MapMatrix_Base::height();
 }
-
 
 //requests that the columns vector have enough capacity for num_cols columns
 void MapMatrix::reserve_cols(unsigned num_cols)
@@ -159,7 +156,6 @@ void MapMatrix::resize(unsigned n_rows, unsigned n_cols)
     num_rows = n_rows;
 }
 
-
 //sets (to 1) the entry in row i, column j
 void MapMatrix::set(unsigned i, unsigned j)
 {
@@ -173,7 +169,7 @@ bool MapMatrix::entry(unsigned i, unsigned j) const
     return MapMatrix_Base::entry(i, j);
 }
 */
- 
+
 //returns the "low" index in the specified column, or 0 if the column is empty or does not exist
 int MapMatrix::low(unsigned j) const
 {
@@ -196,8 +192,8 @@ int MapMatrix::remove_low(unsigned j)
 //Assuming column j is already heapified, adds l to the column and fixes heap.
 void MapMatrix::push_index(unsigned j, unsigned l)
 {
-    
-    return matrix._push_index(j,l);
+
+    return matrix._push_index(j, l);
 }
 
 //returns true iff column j is empty
@@ -218,19 +214,19 @@ void MapMatrix::add_column(unsigned j, unsigned k)
 //adds column j from MapMatrix other to column k of this matrix
 void MapMatrix::add_column(const MapMatrix* other, unsigned j, unsigned k)
 {
-    matrix._add_to(other->matrix,j,k);
+    matrix._add_to(other->matrix, j, k);
 }
 
 //wraps the add_to_popped() function in vector_heap_mod. See that code for an explanation.
 void MapMatrix::add_column_popped(unsigned j, unsigned k)
 {
-    matrix._add_to_popped(j,k);
+    matrix._add_to_popped(j, k);
 }
 
 //same as above, but column j now comes from another matrix.
 void MapMatrix::add_column_popped(const MapMatrix& other, unsigned j, unsigned k)
 {
-    matrix._add_to_popped(other.matrix,j,k);
+    matrix._add_to_popped(other.matrix, j, k);
 }
 
 //heapify the column
@@ -244,14 +240,13 @@ void MapMatrix::finalize(unsigned i)
     matrix._finalize(i);
 }
 
-
 /********* Methods used to compute a presentation *********/
 
- //copies with index j from other to the back of this matrix
- void MapMatrix::append_col(const MapMatrix& other, unsigned j)
- {
-     matrix._append_col(*other.matrix._get_const_col_iter(j));
- }
+//copies with index j from other to the back of this matrix
+void MapMatrix::append_col(const MapMatrix& other, unsigned j)
+{
+    matrix._append_col(*other.matrix._get_const_col_iter(j));
+}
 
 //Move column with index source to index target, zeroing out this column source in the process.
 void MapMatrix::move_col(unsigned source, unsigned target)
@@ -262,8 +257,7 @@ void MapMatrix::move_col(unsigned source, unsigned target)
 //Move the ith column of other to jth this matrix, zeroing out ith column of other in the process.
 void MapMatrix::move_col(MapMatrix& other, unsigned i, unsigned j)
 {
-    matrix._move_col(*(other.matrix._get_col_iter(i)),j);
-    
+    matrix._move_col(*(other.matrix._get_col_iter(i)), j);
 }
 
 /********* Methods used to minimize a presentation *********/
@@ -275,14 +269,12 @@ void MapMatrix::sort_col(int i)
 
 // reindex column col using the indices given in new_row_indices.
 void MapMatrix::reindex_column(unsigned col,
-                               const std::vector<int>& new_row_indices)
+    const std::vector<int>& new_row_indices)
 {
-    matrix._reindex_column(col,new_row_indices);
+    matrix._reindex_column(col, new_row_indices);
 }
 
-
 /********* Next three methods are used only by the MultiBetti class *********/
-
 
 //copies NONZERO columns with indexes in [first, last] from other, appending
 //them to this matrix to the right of all existing columns.
@@ -291,14 +283,14 @@ void MapMatrix::copy_cols_from(const MapMatrix* other, int first, int last, unsi
 {
     phat::index idx = matrix._get_num_cols();
     matrix._set_num_cols(idx + (last - first + 1));
-    
+
     std::vector<phat::index> temp_col;
-    for(phat::index j = first; j <= last; j++) {
-        
+    for (phat::index j = first; j <= last; j++) {
+
         //it is an iterator pointing to the jth column of matrix.
-        auto it=other->matrix._get_const_col_iter(j);
-        for(unsigned i = 0; i < it->size(); i++)
-                matrix._set_entry(*(it->begin()+i)+offset,idx);
+        auto it = other->matrix._get_const_col_iter(j);
+        for (unsigned i = 0; i < it->size(); i++)
+            matrix._set_entry(*(it->begin() + i) + offset, idx);
         idx++;
     }
 }
@@ -308,8 +300,8 @@ void MapMatrix::copy_cols_from(const MapMatrix* other, int first, int last, unsi
 void MapMatrix::copy_cols_same_indexes(const MapMatrix* other, int first, int last)
 {
     //std::vector<phat::index> temp_col;
-    for(phat::index j = first; j <= last; j++) {
-        matrix._set_col(j,*(other->matrix._get_const_col_iter(j)));
+    for (phat::index j = first; j <= last; j++) {
+        matrix._set_col(j, *(other->matrix._get_const_col_iter(j)));
     }
 }
 
@@ -324,25 +316,25 @@ void MapMatrix::remove_zero_cols(const IndexMatrix& ind_old, IndexMatrix& ind_ne
     //debug() << "REMOVING ZERO COLS: (" << matrix._get_num_cols() << "cols)";
     //        print();
     //        ind_old->print();
-    
+
     //loop over all grades
-    for(unsigned y = 0; y < ind_old.height(); y++) {
-        for(unsigned x = 0; x < ind_old.width(); x++) {
+    for (unsigned y = 0; y < ind_old.height(); y++) {
+        for (unsigned x = 0; x < ind_old.width(); x++) {
             end_col = ind_old.get(y, x); //index of rightmost column at this grade
-            for(; cur_idx <= end_col; cur_idx++) { //loop over all columns at this grade
-                if( !matrix._is_empty(cur_idx) ) { //then move column
+            for (; cur_idx <= end_col; cur_idx++) { //loop over all columns at this grade
+                if (!matrix._is_empty(cur_idx)) { //then move column
                     new_idx++; //new index of this column
-                    matrix._set_col(new_idx,*matrix._get_col_iter(cur_idx));
+                    matrix._set_col(new_idx, *matrix._get_col_iter(cur_idx));
                 }
             }
             ind_new.set(y, x, new_idx); //rightmost column index for this grade
         }
     }
-    
+
     //resize the columns vector
     //TODO: For the heap representation of a column, this resets the insert count to 0.  Is this what we want? should be okay if the columns are being finalized appropriately elsewhere, otherwise is wierd.
     matrix._set_num_cols(new_idx + 1);
-    
+
     //debug() << "RESULTING MATRIX: (" << matrix._get_num_cols() << "cols)";
     //        print();
     //        ind_new->print();
@@ -360,29 +352,25 @@ void MapMatrix::print_sparse() const
     matrix._print_sparse();
 } //end print()
 
-
-
-
 /********** methods of the class MapMatrix which assume that the column(s) in question are sorted  **********/
 
 //same as add_column above, but requires columns to be sorted vectors.
 void MapMatrix::add_column_sorted(unsigned j, unsigned k)
 {
-    matrix._add_to_sorted(j , k);
+    matrix._add_to_sorted(j, k);
 }
 
-
 //returns true if entry (i,j) is 1, false otherwise
-bool MapMatrix::entry_sorted(unsigned i, unsigned j) const {
-    return matrix._is_in_matrix_sorted(i,j);
+bool MapMatrix::entry_sorted(unsigned i, unsigned j) const
+{
+    return matrix._is_in_matrix_sorted(i, j);
 }
 
 //returns entry of column i with largest index, if the column is non empty.  Returns -1 otherwise.
-int MapMatrix::low_sorted(unsigned i) const {
+int MapMatrix::low_sorted(unsigned i) const
+{
     return matrix._get_max_index_sorted(i);
 }
-
-
 
 /********** implementation of class MapMatrix_Perm, supports row swaps (and stores a low array) **********/
 
@@ -399,20 +387,20 @@ int MapMatrix::low_sorted(unsigned i) const {
   in the vector that are NOT -1).
 */
 MapMatrix_Perm::MapMatrix_Perm(const MapMatrix& mat, const std::vector<int>& coface_order, unsigned num_cofaces)
-    : matrix(mat.height(),num_cofaces)
+    : matrix(mat.height(), num_cofaces)
     , low_by_row(mat.height(), -1)
     , low_by_col(num_cofaces, -1)
 
 {
-    
+
     int order_index;
     //loop through all simplices, writing columns to the matrix
     for (unsigned i = 0; i < mat.width(); i++) {
         //index of the matrix column which will store the boundary of this simplex
-        order_index  = coface_order[i];
+        order_index = coface_order[i];
         if (order_index != -1) {
             //NOTE: Permissions here are okay because MapMatrix is a friend class.
-            matrix._set_col(order_index,*(mat.matrix._get_const_col_iter(i)));
+            matrix._set_col(order_index, *(mat.matrix._get_const_col_iter(i)));
         }
     }
 
@@ -429,21 +417,20 @@ Each unsigned is the number of simplices in the corresponding order (i.e., the
 number of entries in the vector that are NOT -1)
 */
 MapMatrix_Perm::MapMatrix_Perm(const MapMatrix& mat, const std::vector<int>& face_order, unsigned num_faces, const std::vector<int>& coface_order, const unsigned num_cofaces)
-    : matrix(num_faces,num_cofaces)
+    : matrix(num_faces, num_cofaces)
     , low_by_row(num_faces, -1)
     , low_by_col(num_cofaces, -1) // col_perm(cols)
-    
-    {
+
+{
     //create the matrix
     int order_index;
     for (unsigned i = 0; i < mat.width(); i++) {
         order_index = coface_order[i]; //index of the matrix column which will store the boundary of this simplex
         if (order_index != -1) {
-            matrix._set_col(order_index,*(mat.matrix._get_const_col_iter(i)),face_order);
+            matrix._set_col(order_index, *(mat.matrix._get_const_col_iter(i)), face_order);
         }
     }
 } //end constructor
-
 
 //returns the number of columns in the matrix
 unsigned MapMatrix_Perm::width() const
@@ -468,57 +455,54 @@ bool MapMatrix_Perm::entry(unsigned i, unsigned j) const
 //NOTE -- this is just the standard persistence algorithm, but with some tweaks
 MapMatrix_RowPriority_Perm* MapMatrix_Perm::decompose_RU()
 {
-    
+
     //Create U
     MapMatrix_RowPriority_Perm* U = new MapMatrix_RowPriority_Perm(width()); //NOTE: must be deleted
-    
+
     int c;
     int l;
     bool changing_column;
-    
+
     //loop through columns of this matrix
     for (unsigned j = 0; j < width(); j++) {
         //while column j is nonempty and its low number is found in the low
         //array, do column operations
-        
+
         //NOTE: We don't call MapMatrix_Perm::low() because in our application
         //of this method, low_by_col has not yet been properly initialized.
-        
+
         changing_column = false;
-        l=matrix._get_max_index_finalized(j);
-        
-        if (l != -1 && low_by_row[l] != -1 )
-        {
+        l = matrix._get_max_index_finalized(j);
+
+        if (l != -1 && low_by_row[l] != -1) {
             //if we get here then we are going to change the j^{th} column.
             changing_column = true;
             matrix._remove_max(j);
         }
-        
-        while (l != -1  && low_by_row[l] != -1 )
-        {
+
+        while (l != -1 && low_by_row[l] != -1) {
             c = low_by_row[l];
-            
+
             /*
             For efficiency, we use a special version of add_column which knows
             that column c has been finalized and the pivot of column j has been
             popped.
             */
             matrix._add_to_popped(c, j);
-            
+
             U->add_row(j, c); //perform the opposite row operation on U
-            l=matrix._remove_max(j);
+            l = matrix._remove_max(j);
         }
-        
-        if (l != -1 ) //then column is still nonempty.
+
+        if (l != -1) //then column is still nonempty.
         {
             //Update lows
             low_by_col[j] = l;
             low_by_row[l] = j;
-            if (changing_column)
-            {
+            if (changing_column) {
                 //if we changed the column, put back the pivot we popped off last
                 //and finalize.
-                matrix._push_index(j,l);
+                matrix._push_index(j, l);
                 matrix._finalize(j);
             }
         }
@@ -582,7 +566,7 @@ void MapMatrix_Perm::swap_rows(unsigned i, bool update_lows)
 void MapMatrix_Perm::swap_columns(unsigned j, bool update_lows)
 {
     //swap columns
-    matrix._swap_columns(j,j+1);
+    matrix._swap_columns(j, j + 1);
 
     //update low arrays
     if (update_lows) {
@@ -605,14 +589,16 @@ void MapMatrix_Perm::swap_columns(unsigned j, bool update_lows)
 void MapMatrix_Perm::rebuild(MapMatrix_Perm* reference, const std::vector<unsigned>& col_order)
 {
     //clear the matrix
-    for (unsigned i = 0; i < matrix._get_num_cols(); i++) {matrix._clear(i);}
+    for (unsigned i = 0; i < matrix._get_num_cols(); i++) {
+        matrix._clear(i);
+    }
 
     //reset low arrays
     for (unsigned i = 0; i < matrix._get_num_rows(); i++)
         low_by_row[i] = -1;
     for (unsigned j = 0; j < matrix._get_num_cols(); j++)
         low_by_col[j] = -1;
-    
+
     //TODO: Why was this block of code here, anyway? This is for rebuilding the
     //lower matrix in an FIRep, and for that, the permutation of the rows is trivial.
     //TODO: Relatedly, it might be better design to actually take the lower
@@ -630,10 +616,9 @@ void MapMatrix_Perm::rebuild(MapMatrix_Perm* reference, const std::vector<unsign
     //build the new matrix
     for (unsigned j = 0; j < matrix._get_num_cols(); j++) {
         //copy column j from reference into column col_order[j] of this matrix
-        matrix._set_col(col_order[j],*(reference->matrix._get_col_iter(j)));
+        matrix._set_col(col_order[j], *(reference->matrix._get_col_iter(j)));
     }
 } //end rebuild()
-
 
 /*
 Clears the matrix, then rebuilds it from reference with columns permuted 
@@ -654,27 +639,28 @@ void MapMatrix_Perm::rebuild(MapMatrix_Perm* reference, const std::vector<unsign
     //    if (check[j] == false) {
     //        debug() << "ERROR: column permutation skipped" << j;
     //    }
-    
+
     //clear the matrix
-    for (unsigned i = 0; i < matrix._get_num_cols(); i++) {matrix._clear(i);}
-    
+    for (unsigned i = 0; i < matrix._get_num_cols(); i++) {
+        matrix._clear(i);
+    }
+
     //reset low arrays
     for (unsigned i = 0; i < matrix._get_num_rows(); i++)
         low_by_row[i] = -1;
     for (unsigned j = 0; j < matrix._get_num_cols(); j++)
         low_by_col[j] = -1;
-    
+
     //update implicit row order.
     //TODO: Could be more efficient; shouldn't have to completely copy the permutation over.
     matrix._set_perm(row_order);
-    
+
     //build the new matrix
     for (unsigned j = 0; j < matrix._get_num_cols(); j++) {
         //NOTE: We reorder rows implicitly now, so this is quite simple.
-        matrix._set_col(col_order[j],*(reference->matrix._get_col_iter(j)));
+        matrix._set_col(col_order[j], *(reference->matrix._get_col_iter(j)));
     }
 } //end rebuild()
-
 
 //function to print the matrix to standard output, for testing purposes
 void MapMatrix_Perm::print()
@@ -687,7 +673,8 @@ void MapMatrix_Perm::print()
 //Initializes this matrix to the identity matrix.
 MapMatrix_RowPriority_Perm::MapMatrix_RowPriority_Perm(unsigned size)
     : matrix(size)
-    {}
+{
+}
 
 //TODO: Is this necessary?
 MapMatrix_RowPriority_Perm::~MapMatrix_RowPriority_Perm() = default;
@@ -701,7 +688,7 @@ unsigned MapMatrix_RowPriority_Perm::height() const
 {
     return matrix._get_num_cols();
 }
- 
+
 bool MapMatrix_RowPriority_Perm::entry(unsigned i, unsigned j) const
 {
     return matrix._is_in_matrix(j, i);
@@ -716,7 +703,7 @@ void MapMatrix_RowPriority_Perm::add_row(unsigned j, unsigned k)
 //transposes rows i and i+1
 void MapMatrix_RowPriority_Perm::swap_rows(unsigned i)
 {
-    matrix._swap_columns(i,i+1);
+    matrix._swap_columns(i, i + 1);
 }
 
 //transposes columns j and j+1
@@ -724,5 +711,3 @@ void MapMatrix_RowPriority_Perm::swap_columns(unsigned j)
 {
     matrix._swap_rows(j);
 }
-
-

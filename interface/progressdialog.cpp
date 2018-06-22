@@ -57,17 +57,17 @@ void ProgressDialog::advanceToNextStage()
     prevLabel->setFont(font);
 
     current_stage++;
-    
+
     //TODO: Why is this here?  --Mike.
     //stage_maximum = 100;
 
     QLabel* nextLabel = getLabel(current_stage);
-    
+
     font.setBold(true);
     nextLabel->setFont(font);
     nextLabel->setEnabled(true);
-    
-    ui->progressBar->setValue(stage_progress[current_stage-1]);
+
+    ui->progressBar->setValue(stage_progress[current_stage - 1]);
 }
 
 void ProgressDialog::setStageMaximum(unsigned max)

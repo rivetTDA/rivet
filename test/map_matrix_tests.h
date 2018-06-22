@@ -52,7 +52,7 @@ TEST_CASE("MapMatrix.add_column works"
     REQUIRE(test == eye);
 }
  
-*/ 
+*/
 
 //not true, apparently:
 /* TEST_CASE( "MapMatrix.col_reduce reduces columns" "[MapMatrix]") { */

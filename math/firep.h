@@ -51,14 +51,13 @@ class IndexMatrix;
 #include "presentation.h"
 
 #include "bifiltration_data.h"
-#include "map_matrix.h"
-#include "index_matrix.h"
 #include "bigraded_matrix.h"
+#include "index_matrix.h"
+#include "map_matrix.h"
 
 #include <set>
 #include <string>
 #include <vector>
-
 
 //used to build the hash tables for simplices in hom_dim-1 and hom_dim
 struct VectorHash {
@@ -77,26 +76,27 @@ struct deref_equal_fn {
 };
 
 typedef std::unordered_map<Simplex* const, unsigned,
-                           VectorHash, deref_equal_fn> SimplexHashLow;
+    VectorHash, deref_equal_fn>
+    SimplexHashLow;
 typedef std::unordered_map<Simplex* const,
-                           std::vector<MidHighSimplexData>::iterator,
-                           VectorHash, deref_equal_fn> SimplexHashMid;
+    std::vector<MidHighSimplexData>::iterator,
+    VectorHash, deref_equal_fn>
+    SimplexHashMid;
 //no need for a hash table in the high dimension
 
 class FIRep {
 
 public:
-    
     /* low matrix and high matrix in the firep
     NOTE: grades are stored in discrete indexes, real ExactValues are
     stored in InputData.x_exact and y_exact */
     BigradedMatrix low_mx;
     BigradedMatrix high_mx;
-    
+
     //constructor; requires verbosity parameter
     //as a side effect, replaces the bif_data object with something trivial
     FIRep(BifiltrationData& bif_data, int verbosity);
-    
+
     /*
     constructor taking a presentation.  High matrix is set to a copy of the 
     presentation matrix; low matrix is set to zero.
@@ -109,20 +109,20 @@ public:
     perhaps also remove an associated constructor in the BigradedMatrix class.
      */
     FIRep(Presentation pres, int vbsty);
-    
+
     //This constructor is used when the FIRep is given directly as text input.
     //TODO: It seems a little hacky to be passing a BifiltrationData object to
     //this constructor.  Can we avoid this?
     FIRep(BifiltrationData& bif_data,
-          unsigned num_high_simplices,
-          unsigned num_mid_simplices,
-          unsigned num_low_simplices,
-          std::vector<std::vector<unsigned>>& boundary_mat_2,
-          std::vector<std::vector<unsigned>>& boundary_mat_1,
-          const std::vector<unsigned> x_values,
-          const std::vector<unsigned> y_values,
-          int vbsty);
-    
+        unsigned num_high_simplices,
+        unsigned num_mid_simplices,
+        unsigned num_low_simplices,
+        std::vector<std::vector<unsigned>>& boundary_mat_2,
+        std::vector<std::vector<unsigned>>& boundary_mat_1,
+        const std::vector<unsigned> x_values,
+        const std::vector<unsigned> y_values,
+        int vbsty);
+
     //returns number of unique x-coordinates (y-coordinates) of the multi-grades
     //NOTE: In the current design, this value is not intrinsic to the FIRep, but
     //is determined by the InputManager class from the input data.
@@ -139,40 +139,35 @@ private:
     //number of unique x-coordinates (y-coordinates) of the multi-grades
     unsigned x_grades;
     unsigned y_grades;
-    
+
     //A pair of iterators; first points to a simplex, second points to a grade
     //of appearance of that simplex.
     typedef std::pair<std::vector<MidHighSimplexData>::iterator, AppearanceGrades::iterator> MidHiGenIterPair;
-    
+
     //Techinical functions for constructing FIRep from bifiltration data.
-    
+
     //loop through simplices, writing columns to the matrix, and filling in the
     //low IndexMatrix
     void construct_low_mx(const std::vector<MidHiGenIterPair>& mid_gens,
-                          const BifiltrationData& bif_data,
-                          const SimplexHashLow& low_ht);
-    
+        const BifiltrationData& bif_data,
+        const SimplexHashLow& low_ht);
+
     //construct a column for each (high-simplex, grade-of-appearance) pair,
     //and also a column for each "neighboring bigrade" relation for the
     //mid-simplices.
     void construct_high_mx(const std::vector<MidHiGenIterPair>& mid_gens,
-                          const std::vector<MidHiGenIterPair>& high_gens,
-                          const BifiltrationData& bif_data,
-                          const SimplexHashMid& mid_ht
-                           );
-    
-    
+        const std::vector<MidHiGenIterPair>& high_gens,
+        const BifiltrationData& bif_data,
+        const SimplexHashMid& mid_ht);
+
     //Technical sorting function used to sort the MidHiGenIterPair objects that
     //index the high_matrix.
     static bool sort_high_gens(const MidHiGenIterPair& left, const MidHiGenIterPair& right);
-    
 
     //writes boundary, given boundary entries in column col of matrix mat
     void write_boundary_column(MapMatrix& mat,
-                               const std::vector<unsigned>& entries,
-                               const unsigned col);
+        const std::vector<unsigned>& entries,
+        const unsigned col);
 };
-     
-     
 
 #endif // __FIRep_H__

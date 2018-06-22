@@ -48,7 +48,6 @@
  tinkering with Bryn's serialization code, so requires some care.  -Mike
 */
 
-
 /**
  * \class	Presentation
  * \brief
@@ -62,8 +61,8 @@
 #include "index_matrix.h"
 #include "map_matrix.h"
 
-#include <string>
 #include <interface/progress.h>
+#include <string>
 
 #include <boost/multi_array.hpp>
 typedef boost::multi_array<unsigned, 2> unsigned_matrix;
@@ -75,15 +74,13 @@ class FIRep;
 class BigradedMatrix;
 class BigradedMatrixLex;
 
-
 class Presentation {
 
 public:
-    
     MapMatrix mat;
     IndexMatrix col_ind;
     IndexMatrix row_ind;
-    
+
     /* 
     Stores the hilbert function.
     It is admittedly an idiosyncratic design to have a presentation object
@@ -97,11 +94,11 @@ public:
 
     //Constructor: Builds an empty presentation.
     Presentation();
-    
+
     //Constructor: Builds a presentation from an FI-Rep.  Also computes Hilbert
     //function along the way.
     Presentation(FIRep& fir, Progress& progress, int verbosity);
-    
+
     /* 
     Throws an exception if !is_kernel_minimal.  Minimizes presentation using
     only column operations.  This requires looking at column entries which are
@@ -116,26 +113,25 @@ public:
     entire matrix.
     */
     void minimize(int verbosity);
-    
+
     void print() const;
     void print_sparse() const;
-    
+
 private:
-  
     /* 
     True iff this presentation has been minimized.
     Note that presentation might be minimal even if it hasn't been explicitly
     minimized 
     */
     bool is_minimized;
-    
+
     /*
     If is_minimized then kernel_minimal should always hold.
     NOTE: Our algorithm for constructing a presentation from an FIRep yields
     a kernel minimal presentation.
      */
     bool is_kernel_minimal;
-    
+
     /*
     min_gens_and_clearing_data(fir) replaces fir.high with a bigraded matrix 
     whose set of columns is a minimal set of generators for the image of the map 
@@ -144,36 +140,35 @@ private:
     the calculation of the homology_dimensions)
     TODO: Add clearing functionality
     */
-    
+
     BigradedMatrixLex min_gens_and_clearing_data(FIRep& fir);
 
     //Re-express each column of high_mat in kernel coordinates.
     //Result is stored in mat and col_ind.
     void kernel_coordinates(BigradedMatrixLex& high_mat,
-                            const BigradedMatrix& kernel);
-    
-    
+        const BigradedMatrix& kernel);
+
     /*---------------- Technical Functions --------------*/
-    
+
     //Used for min_gens_and_clear.
     void min_gens_and_clearing_data_one_bigrade(BigradedMatrix& old_high,
-                                                BigradedMatrixLex& new_high,
-                                                unsigned curr_x,
-                                                unsigned curr_y,
-                                                std::vector<int>& lows);
+        BigradedMatrixLex& new_high,
+        unsigned curr_x,
+        unsigned curr_y,
+        std::vector<int>& lows);
 
     //Reduce this column, putting the corresponding reduction coordinates
     void kernel_coordinates_one_bigrade(BigradedMatrixLex& high_mat,
-                                        const BigradedMatrix& kernel,
-                                        const unsigned& curr_x,
-                                        const unsigned& curr_y,
-                                        const std::vector<int>& ker_lows,
-                                        unsigned& num_cols_added);
-    
+        const BigradedMatrix& kernel,
+        const unsigned& curr_x,
+        const unsigned& curr_y,
+        const std::vector<int>& ker_lows,
+        unsigned& num_cols_added);
+
     //Technical function for constructing hom_dims at all indices from an FIRep.
     //Used by the Presentation constructor.
     void compute_hom_dims(const IndexMatrix& ind);
-    
+
     /*
     Technical utility function used by Presentation.minimize().  Same action as 
     IndexMatrix::fill_index_mx() on col_ind, but also decrements each entry of a
@@ -182,10 +177,9 @@ private:
     on the member col_ind, with row_ind_mx as the argument.
     */
     void update_col_and_row_inds(IndexMatrix& row_ind_new,
-                                 Grade& start_grade,
-                                 const Grade& end_grade,
-                                 const int& value);
-
+        Grade& start_grade,
+        const Grade& end_grade,
+        const int& value);
 
     /*
     Technical function used to compute a minimal presetation.  Takes as input a 
@@ -194,10 +188,9 @@ private:
     Replaces all indices in the matrix with the minimal column indices.
     */
     void reindex_min_pres(const std::vector<int>& new_row_indices);
-    
+
     //Technical function by Presentation::minimize()
     bool row_index_has_matching_bigrade(int curr_row_index, unsigned row, unsigned col);
-    
 };
 
 #endif // __Presentation_H__

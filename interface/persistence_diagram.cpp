@@ -37,8 +37,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <map>
 #include <set>
 #include <sstream>
-#include <utility> // for std::pair
 #include <unordered_set>
+#include <utility> // for std::pair
 PersistenceDiagram::PersistenceDiagram(ConfigParameters* params, QObject* parent)
     : QGraphicsScene(parent)
     , config_params(params)
@@ -67,8 +67,8 @@ void PersistenceDiagram::create_diagram()
     left_v_line = addLine(QLineF(), grayPen);
     top_left_hline = addLine(QLineF(), grayPen);
     top_left_vline = addLine(QLineF(), grayPen);
-    bottom_left_hline=addLine(QLineF(), grayPen);
-    bottom_left_vline=addLine(QLineF(), grayPen);
+    bottom_left_hline = addLine(QLineF(), grayPen);
+    bottom_left_vline = addLine(QLineF(), grayPen);
 
     //TODO: change the position of the text objects
     //create text objects
@@ -137,56 +137,52 @@ void PersistenceDiagram::resize_diagram()
     int view_height = view_list[0]->height();
 
     //the space occupied by the labels/counters on each side of the main window
-    int space_above=2 * lt_inf_text->boundingRect().height() + 4 * text_padding + scene_padding;
-    int space_below=gt_neg_inf_count_text->boundingRect().height()+2*text_padding+scene_padding;
-    int space_left=gt_neg_inf_text->boundingRect().width() +2*text_padding+scene_padding;
-    int space_right=number_space+scene_padding;
+    int space_above = 2 * lt_inf_text->boundingRect().height() + 4 * text_padding + scene_padding;
+    int space_below = gt_neg_inf_count_text->boundingRect().height() + 2 * text_padding + scene_padding;
+    int space_left = gt_neg_inf_text->boundingRect().width() + 2 * text_padding + scene_padding;
+    int space_right = number_space + scene_padding;
 
     //the (fixed) sizes of the labels in the directions which limit the min size of the diagram
     //these shouldn't ever be the limiting factors, due to the minimum size constraint imposed in the
     //visualizationwindow.ui file, but included just for safety
-    int min_width=lt_inf_text->boundingRect().width()+2*text_padding;
-    int min_height=gt_neg_inf_count_text->boundingRect().height()+2*text_padding;
-
+    int min_width = lt_inf_text->boundingRect().width() + 2 * text_padding;
+    int min_height = gt_neg_inf_count_text->boundingRect().height() + 2 * text_padding;
 
     //compute size of main diagram (not including bars/counters on left and top)
-    int available_width=std::max(view_width-(space_left+space_right), min_width+space_left+space_right);
-    int available_height=std::max(view_height-(space_above+space_below), min_height+space_left+space_right);
+    int available_width = std::max(view_width - (space_left + space_right), min_width + space_left + space_right);
+    int available_height = std::max(view_height - (space_above + space_below), min_height + space_left + space_right);
 
     diagram_size = std::min(available_height, available_width);
 
     //the bottom left point of the main diagram, chosen so that the entire diagram (including bars/counters) is centered (i.e., equal whitespace above/below and left/right)
-     diagram_origin=QPointF((space_right-space_left)/2, (space_below-space_above)/2);
+    diagram_origin = QPointF((space_right - space_left) / 2, (space_below - space_above) / 2);
 
     //resize frame
     bounding_rect->setRect(0, 0, diagram_size, diagram_size);
     diag_line->setLine(0, 0, diagram_size, diagram_size);
 
-    blue_line->setLine(0, 0, line_size ,line_size);
+    blue_line->setLine(0, 0, line_size, line_size);
 
     //draw lines delineating counters and labels
     int v_space = lt_inf_text->boundingRect().height() + 2 * text_padding;
     int h_space = -gt_neg_inf_text->boundingRect().width();
 
-    h_line->setLine(-space_left+scene_padding, diagram_size+v_space, diagram_size+space_right-scene_padding, diagram_size+v_space);
-    v_line->setLine(diagram_size, diagram_size+text_padding, diagram_size, diagram_size+space_above-scene_padding);
-    top_left_hline->setLine(-space_left+scene_padding, diagram_size, 0, diagram_size);
-    top_left_vline->setLine(0,diagram_size,0, diagram_size+space_above-scene_padding);
-    bottom_left_hline->setLine(-space_left+scene_padding,0,0,0);
-    bottom_left_vline->setLine(0,0,0,-space_below+scene_padding);
-
+    h_line->setLine(-space_left + scene_padding, diagram_size + v_space, diagram_size + space_right - scene_padding, diagram_size + v_space);
+    v_line->setLine(diagram_size, diagram_size + text_padding, diagram_size, diagram_size + space_above - scene_padding);
+    top_left_hline->setLine(-space_left + scene_padding, diagram_size, 0, diagram_size);
+    top_left_vline->setLine(0, diagram_size, 0, diagram_size + space_above - scene_padding);
+    bottom_left_hline->setLine(-space_left + scene_padding, 0, 0, 0);
+    bottom_left_vline->setLine(0, 0, 0, -space_below + scene_padding);
 
     //translate everything to origin
     bounding_rect->setPos(diagram_origin);
     diag_line->setPos(diagram_origin);
     blue_line->setPos(diagram_origin);
 
-    std::unordered_set<QGraphicsLineItem*> graphics={h_line,v_line,top_left_hline, top_left_vline, bottom_left_hline, bottom_left_vline};
-    for(auto g: graphics)
-    {
+    std::unordered_set<QGraphicsLineItem*> graphics = { h_line, v_line, top_left_hline, top_left_vline, bottom_left_hline, bottom_left_vline };
+    for (auto g : graphics) {
         g->setPos(diagram_origin);
     }
-
 
     //remove old dots
     selected = NULL; //remove any current selection
@@ -201,8 +197,7 @@ void PersistenceDiagram::resize_diagram()
     lt_inf_dot_vpos = diagram_size + v_space / 2;
     inf_dot_vpos = lt_inf_dot_vpos + v_space;
     gt_neg_inf_dot_hpos = h_space / 2;
-    if (barcode != NULL)
-    {
+    if (barcode != NULL) {
         draw_dots();
     }
 
@@ -227,18 +222,16 @@ void PersistenceDiagram::resize_diagram()
     big_essential_count_text->setPos(-gt_neg_inf_text->boundingRect().width() + text_padding, inf_text_vpos);
 
     //translate to origin
-    std::unordered_set<QGraphicsSimpleTextItem*> texts={inf_text, lt_inf_text, gt_neg_inf_text, inf_count_text, lt_inf_count_text,gt_neg_inf_count_text, big_nonessential_count_text, big_essential_count_text};
-    for(auto g: texts)
-    {
-        g->setPos(g->pos()+diagram_origin);
+    std::unordered_set<QGraphicsSimpleTextItem*> texts = { inf_text, lt_inf_text, gt_neg_inf_text, inf_count_text, lt_inf_count_text, gt_neg_inf_count_text, big_nonessential_count_text, big_essential_count_text };
+    for (auto g : texts) {
+        g->setPos(g->pos() + diagram_origin);
     }
 
-
     //set scene rectangle (necessary to prevent auto-scrolling)
-    int scene_rect_x=-space_left+scene_padding+diagram_origin.x();
-    int scene_rect_y=-space_below+scene_padding+diagram_origin.y();
-    int scene_rect_w=diagram_size+space_right+space_left-2*scene_padding;
-    int scene_rect_h=diagram_size+space_above+space_below-2*scene_padding;
+    int scene_rect_x = -space_left + scene_padding + diagram_origin.x();
+    int scene_rect_y = -space_below + scene_padding + diagram_origin.y();
+    int scene_rect_w = diagram_size + space_right + space_left - 2 * scene_padding;
+    int scene_rect_h = diagram_size + space_above + space_below - 2 * scene_padding;
     setSceneRect(scene_rect_x, scene_rect_y, scene_rect_w, scene_rect_h);
 
 } //end resize_diagram()
@@ -251,11 +244,8 @@ void PersistenceDiagram::set_barcode(const Barcode& bc)
 
 //creates and draws persistence dots at the correct locations, using current parameters
 
-
 void PersistenceDiagram::draw_dots()
 {
-
-
 
     //counters
     unsigned bc_index = 0;
@@ -277,12 +267,10 @@ void PersistenceDiagram::draw_dots()
     //map for long nonessential points; the key is the pair of coordinates
     std::map<std::pair<int, int>, PersistenceDot*> long_nonessential_dot_map; //includes nonessential cycles with invisible birth and death
 
-
     double radius_scale = diagram_size / 600.0; //used to change the radius in accordance with a change in size of application window
     //"magic number"-probably bad
 
-
-    double eps=pow(10.0,-3.0); //"wiggle room" to account for rounding errors
+    double eps = pow(10.0, -3.0); //"wiggle room" to account for rounding errors
     //dots will be shown on the persistence diagram if they lie in the epsilon-neighborhood of the diagram
     //otherwise they will appear on one of the counters
 
@@ -310,12 +298,12 @@ void PersistenceDiagram::draw_dots()
                 inf_dot_map.insert(std::pair<int, PersistenceDot*>(x_pixel, dot));
 
                 //position dot properly
-                if (birth - dist_to_origin > (diagram_size/scale)+eps) //it is an essential cycle born too late
+                if (birth - dist_to_origin > (diagram_size / scale) + eps) //it is an essential cycle born too late
                 {
                     num_big_cycles += it->multiplicity;
                     inf_dot_map.insert(std::pair<int, PersistenceDot*>(x_pixel, dot));
                     dot->setVisible(false);
-                } else if (birth < dist_to_origin-eps) //it is an essential cycle born too early
+                } else if (birth < dist_to_origin - eps) //it is an essential cycle born too early
                 {
                     num_long_essential_points += it->multiplicity;
                     gt_neg_inf_dot_map.insert(std::pair<int, PersistenceDot*>(x_pixel, dot));
@@ -324,7 +312,7 @@ void PersistenceDiagram::draw_dots()
 
                 else //the birth is visible
                 {
-                    dot->setPos((birth - dist_to_origin)  * scale, inf_dot_vpos);
+                    dot->setPos((birth - dist_to_origin) * scale, inf_dot_vpos);
                 }
             } else //then such dot exists, so add to its multiplicity
             {
@@ -335,10 +323,10 @@ void PersistenceDiagram::draw_dots()
                 dots_by_bc_index.push_back(dot); //necessary for dot lookup when persistence bars are highlighted
                 dot->add_index(bc_index);
 
-                if (birth - dist_to_origin > (diagram_size/scale)+eps) //it is an essential cycle born too late
+                if (birth - dist_to_origin > (diagram_size / scale) + eps) //it is an essential cycle born too late
                 {
                     num_big_cycles += it->multiplicity;
-                } else if (birth < dist_to_origin-eps) //it is an essential cycle born too early
+                } else if (birth < dist_to_origin - eps) //it is an essential cycle born too early
                 {
                     num_long_essential_points += it->multiplicity;
                 }
@@ -348,7 +336,7 @@ void PersistenceDiagram::draw_dots()
             double birth = it->birth;
             double death = it->death;
 
-            if (birth < dist_to_origin-eps && death - dist_to_origin < (diagram_size/scale)+eps) //dot is in the gt_neg_inf strip
+            if (birth < dist_to_origin - eps && death - dist_to_origin < (diagram_size / scale) + eps) //dot is in the gt_neg_inf strip
             { //born too early, but does not die too late (might die too early)
 
                 int y_pixel = std::round(death * scale);
@@ -363,7 +351,7 @@ void PersistenceDiagram::draw_dots()
                     dots_by_bc_index.push_back(dot);
                     gt_neg_inf_dot_map.insert(std::pair<int, PersistenceDot*>(y_pixel, dot));
 
-                    if (death < dist_to_origin-eps) //dies too early
+                    if (death < dist_to_origin - eps) //dies too early
                     {
                         num_short_cycles += it->multiplicity;
                         dot->setVisible(false);
@@ -381,7 +369,7 @@ void PersistenceDiagram::draw_dots()
                     dots_by_bc_index.push_back(dot); //necessary for dot lookup when persistence bars are highlighted
                     dot->add_index(bc_index);
 
-                    if (death < dist_to_origin-eps) //dies too early
+                    if (death < dist_to_origin - eps) //dies too early
                     {
                         num_short_cycles += it->multiplicity;
                     }
@@ -389,7 +377,7 @@ void PersistenceDiagram::draw_dots()
 
             }
 
-            else if (birth > dist_to_origin-eps && death - dist_to_origin > (diagram_size/scale)+eps) //dies too late and not born too early (might be born too late)
+            else if (birth > dist_to_origin - eps && death - dist_to_origin > (diagram_size / scale) + eps) //dies too late and not born too early (might be born too late)
             {
 
                 //check to see if a dot already exists in its position
@@ -406,13 +394,13 @@ void PersistenceDiagram::draw_dots()
                     dots_by_bc_index.push_back(dot);
                     lt_inf_dot_map.insert(std::pair<int, PersistenceDot*>(x_pixel, dot));
 
-                    if (birth - dist_to_origin > (diagram_size/scale)+eps) //born too late
+                    if (birth - dist_to_origin > (diagram_size / scale) + eps) //born too late
                     {
                         num_big_points += it->multiplicity;
                         dot->setVisible(false);
                     } else //then dot will be visible in the top <inf strip
                     {
-                        dot->setPos((birth - dist_to_origin)*scale , lt_inf_dot_vpos);
+                        dot->setPos((birth - dist_to_origin) * scale, lt_inf_dot_vpos);
                     }
 
                 } else //then such dot exists, so add to its multiplicity
@@ -424,12 +412,12 @@ void PersistenceDiagram::draw_dots()
                     dots_by_bc_index.push_back(dot); //necessary for dot lookup when persistence bars are highlighted
                     dot->add_index(bc_index);
 
-                    if (birth - dist_to_origin > (diagram_size/scale)+eps) //born too late
+                    if (birth - dist_to_origin > (diagram_size / scale) + eps) //born too late
                     {
                         num_big_points += it->multiplicity;
                     }
                 }
-            } else if (birth < dist_to_origin-eps && death - dist_to_origin > (diagram_size/scale)+eps) //born too early, dies too late
+            } else if (birth < dist_to_origin - eps && death - dist_to_origin > (diagram_size / scale) + eps) //born too early, dies too late
             { //dot is a long nonessential cycle, and contributes to the counter at the intersection of lt_inf and gt_neg_inf
 
                 int x_pixel = std::round(birth * scale);
@@ -470,7 +458,7 @@ void PersistenceDiagram::draw_dots()
                 dots_by_bc_index.push_back(dot);
 
                 //position dot properly
-                dot->setPos((birth - dist_to_origin)*scale , (death - dist_to_origin)*scale);
+                dot->setPos((birth - dist_to_origin) * scale, (death - dist_to_origin) * scale);
             }
         }
 
@@ -481,13 +469,10 @@ void PersistenceDiagram::draw_dots()
 
     //translate the dots so they are in the correct absolute position
     //TODO: would it be better to do this above, rather than make a separate steP?
-    for(auto dot: all_dots)
-    {
-        if(dot->isVisible())
-        {
-            dot->setPos(dot->pos()+diagram_origin);
+    for (auto dot : all_dots) {
+        if (dot->isVisible()) {
+            dot->setPos(dot->pos() + diagram_origin);
         }
-
     }
 
     //draw counts
@@ -531,7 +516,7 @@ void PersistenceDiagram::update_diagram(double slice_length, double diagram_scal
     scale = diagram_scale / sqrt(2); //similarly, divide by sqrt(2)
     barcode = &bc;
 
-    blue_line->setLine(0, 0, line_size,line_size);
+    blue_line->setLine(0, 0, line_size, line_size);
 
     //remove old dots
     selected = NULL; //remove any current selection
@@ -557,7 +542,7 @@ void PersistenceDiagram::update_diagram(double slice_length_pix, double diagram_
         //update parameters
         line_size = slice_length_pix / sqrt(2); //divide by sqrt(2) because the line is drawn at a 45-degree angle
         scale = diagram_scale / sqrt(2); //similarly, divide by sqrt(2)
-        blue_line->setLine(0, 0, line_size,line_size);
+        blue_line->setLine(0, 0, line_size, line_size);
 
     } else {
         dist_to_origin = slice_dist_dat;
@@ -666,4 +651,3 @@ void PersistenceDiagram::receive_parameter_change()
     //update diagram
     resize_diagram();
 }
-

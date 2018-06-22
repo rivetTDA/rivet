@@ -56,7 +56,7 @@ std::shared_ptr<Arrangement> ArrangementBuilder::build_arrangement(FIRep& fir,
     //this also finds anchors and stores them in the vector Arrangement::all_anchors -- JULY 2015 BUG FIX
     progress.progress(10);
     auto arrangement = std::make_shared<Arrangement>(x_exact, y_exact, verbosity);
-    PersistenceUpdater updater(*arrangement,fir, template_points, verbosity); //PersistenceUpdater object is able to do the calculations necessary for finding anchors and computing barcode templates
+    PersistenceUpdater updater(*arrangement, fir, template_points, verbosity); //PersistenceUpdater object is able to do the calculations necessary for finding anchors and computing barcode templates
     if (verbosity >= 2) {
         debug() << "Anchors found; this took " << timer.elapsed() << " milliseconds.";
     }
@@ -150,7 +150,7 @@ std::shared_ptr<Arrangement> ArrangementBuilder::build_arrangement(std::vector<e
 //preconditions:
 //   all Anchors are in a list, ordered by Anchor_LeftComparator
 //   boundary of the arrangement is created (as in the arrangement constructor)
-void ArrangementBuilder::build_interior(Arrangement &arrangement)
+void ArrangementBuilder::build_interior(Arrangement& arrangement)
 {
     if (verbosity >= 8) {
         debug() << "BUILDING ARRANGEMENT:  Anchors sorted for left edge of strip: ";
@@ -167,8 +167,9 @@ void ArrangementBuilder::build_interior(Arrangement &arrangement)
 
     //data structure for queue of future intersections
     std::priority_queue<Arrangement::Crossing*,
-            std::vector<Arrangement::Crossing*>,
-            PointerComparator<Arrangement::Crossing, Arrangement::CrossingComparator>> crossings;
+        std::vector<Arrangement::Crossing*>,
+        PointerComparator<Arrangement::Crossing, Arrangement::CrossingComparator>>
+        crossings;
 
     //data structure for all pairs of Anchors whose potential crossings have been considered
     typedef std::pair<Anchor*, Anchor*> Anchor_pair;
@@ -232,7 +233,7 @@ void ArrangementBuilder::build_interior(Arrangement &arrangement)
     int status_interval = 10000; //controls frequency of output
 
     //current position of sweep line
-    Arrangement::Crossing *sweep = nullptr;
+    Arrangement::Crossing* sweep = nullptr;
 
     while (!crossings.empty()) {
         //get the next intersection from the queue
@@ -246,7 +247,7 @@ void ArrangementBuilder::build_interior(Arrangement &arrangement)
 
         if (last_pos != first_pos + 1) {
             throw std::runtime_error("intersection between non-consecutive curves [1]: x = ["
-                + std::to_string(lower(sweep->x)) + ", " + std::to_string(upper(sweep->x)) 
+                + std::to_string(lower(sweep->x)) + ", " + std::to_string(upper(sweep->x))
                 + ", last_pos = " + std::to_string(last_pos)
                 + ", first_pos + 1 = " + std::to_string(first_pos + 1));
         }
@@ -264,8 +265,7 @@ void ArrangementBuilder::build_interior(Arrangement &arrangement)
         }
 
         //compute (approximate) coordinates of intersection
-        double intersect_x = ( arrangement.y_grades[sweep->a->get_y()] - arrangement.y_grades[sweep->b->get_y()] ) /
-                             ( arrangement.x_grades[sweep->a->get_x()] - arrangement.x_grades[sweep->b->get_x()] );
+        double intersect_x = (arrangement.y_grades[sweep->a->get_y()] - arrangement.y_grades[sweep->b->get_y()]) / (arrangement.x_grades[sweep->a->get_x()] - arrangement.x_grades[sweep->b->get_x()]);
         double intersect_y = arrangement.x_grades[sweep->a->get_x()] * intersect_x - arrangement.y_grades[sweep->a->get_y()];
 
         if (verbosity >= 10) {
@@ -469,7 +469,7 @@ void ArrangementBuilder::find_edge_weights(Arrangement& arrangement, Persistence
    inefficient in places.  It should eventually be cleaned up.  The main issues
    concern how boost graphs are used.  -Mike
 */
- 
+
 void ArrangementBuilder::find_path(Arrangement& arrangement, std::vector<Halfedge*>& pathvec)
 {
     // PART 1: BUILD THE DUAL GRAPH OF THE ARRANGEMENT
@@ -479,7 +479,7 @@ void ArrangementBuilder::find_path(Arrangement& arrangement, std::vector<Halfedg
         boost::no_property, EdgeWeightProperty>
         Graph; //TODO: probably listS is a better choice than vecS, but I don't know how to make the adjacency_list work with listS
     Graph dual_graph;
-    
+
     //loop over all arrangement.faces
     for (unsigned i = 0; i < arrangement.faces.size(); i++) {
         //consider all neighbors of this arrangement.faces
@@ -509,22 +509,22 @@ void ArrangementBuilder::find_path(Arrangement& arrangement, std::vector<Halfedg
         for (edge_iterator it = ei.first; it != ei.second; ++it)
             debug(true) << "  (" << boost::source(*it, dual_graph) << "\t, " << boost::target(*it, dual_graph) << "\t) \tweight = " << boost::get(boost::edge_weight_t(), dual_graph, *it);
     }
-    
+
     // PART 2: FIND A MINIMAL SPANNING TREE
 
     typedef boost::graph_traits<Graph>::edge_descriptor Edge;
     std::vector<Edge> spanning_tree_edges;
     boost::kruskal_minimum_spanning_tree(dual_graph, std::back_inserter(spanning_tree_edges));
-    
+
     //TESTING -- print the MST
     if (verbosity >= 10) {
         debug() << "num MST edges: " << spanning_tree_edges.size() << "\n";
         for (unsigned i = 0; i < spanning_tree_edges.size(); i++)
             debug(true) << "  (" << boost::source(spanning_tree_edges[i], dual_graph) << "\t, " << boost::target(spanning_tree_edges[i], dual_graph) << "\t) \tweight = " << boost::get(boost::edge_weight_t(), dual_graph, spanning_tree_edges[i]);
     }
-    
+
     // PART 3: CONVERT THE MINIMAL SPANNING TREE TO A PATH
-    
+
     //first, we put the MST in a different format so that we can call tree_to_directed_tree()
     /* TODO: Shouldn't boost be able to directly output the graph in a format
      we can use directly?  This code currently builds three representations of 
@@ -536,11 +536,11 @@ void ArrangementBuilder::find_path(Arrangement& arrangement, std::vector<Halfedg
         unsigned a = boost::source(spanning_tree_edges[i], dual_graph);
         unsigned b = boost::target(spanning_tree_edges[i], dual_graph);
         long weight = boost::get(boost::edge_weight_t(), dual_graph, spanning_tree_edges[i]);
-        
-        adj_list.at(a).push_back(std::pair<unsigned,long>(b,weight));
-        adj_list.at(b).push_back(std::pair<unsigned,long>(a,weight));
+
+        adj_list.at(a).push_back(std::pair<unsigned, long>(b, weight));
+        adj_list.at(b).push_back(std::pair<unsigned, long>(a, weight));
     }
-    
+
     //clear dual_graph
     /* TODO: I would prefer to clear the dual_graph as soon as the
      MST was built.  But I don't know the Boost graph syntax well enough to do
@@ -548,12 +548,12 @@ void ArrangementBuilder::find_path(Arrangement& arrangement, std::vector<Halfedg
      */
     // NOTE: I'm assuming this actually frees up memory, but I'm not actually sure.  -Mike
     dual_graph.clear();
-    
+
     //now that we have a new representation of the spanning tree,
     //clear the previous one
     spanning_tree_edges.clear();
     spanning_tree_edges.shrink_to_fit();
-    
+
     //make sure to start at the proper node (2-cell)
     auto initial_cell = arrangement.topleft->get_twin()->get_face();
     unsigned long start = initial_cell->id();
@@ -569,7 +569,7 @@ void ArrangementBuilder::find_path(Arrangement& arrangement, std::vector<Halfedg
     //clear the previous one
     adj_list.clear();
     adj_list.shrink_to_fit();
-    
+
     // now we can find the path
     find_subpath(arrangement, start, children, pathvec);
 
@@ -592,9 +592,9 @@ void ArrangementBuilder::find_path(Arrangement& arrangement, std::vector<Halfedg
 //   (branch weight is total weight of all edges below a given node, plus weight of edge to parent node)
 // Output: vector pathvec contains a Halfedge pointer for each step of the path
 void ArrangementBuilder::find_subpath(Arrangement& arrangement,
-                                      unsigned start_node,
-                                      std::vector<std::vector<unsigned>>& children,
-                                      std::vector<Halfedge*>& pathvec)
+    unsigned start_node,
+    std::vector<std::vector<unsigned>>& children,
+    std::vector<Halfedge*>& pathvec)
 {
     std::stack<unsigned> nodes; // stack for nodes as we do DFS
     nodes.push(start_node); // push node onto the node stack
@@ -641,29 +641,29 @@ void ArrangementBuilder::find_subpath(Arrangement& arrangement,
 
 void ArrangementBuilder::tree_to_directed_tree(std::vector<NodeAdjacencyList>& adj_list, unsigned start, std::vector<std::vector<unsigned>>& children)
 {
-    std::vector<bool> discovered(adj_list.size(),false);// c++ vector for keeping track of which nodes have been visited
-    std::vector<unsigned> branch_weight(adj_list.size(),0); // this will contain the weight of the edges "hanging" from the node represented by its index in branchWeight
+    std::vector<bool> discovered(adj_list.size(), false); // c++ vector for keeping track of which nodes have been visited
+    std::vector<unsigned> branch_weight(adj_list.size(), 0); // this will contain the weight of the edges "hanging" from the node represented by its index in branchWeight
     std::vector<NodeAdjacencyList::iterator> current_neighbor(adj_list.size()); // for each node, keeps track of an index in the corresponding NodeAdjacencyList.
-    
+
     //initialize the currentNeighbor iterators.
     for (unsigned i = 0; i < adj_list.size(); ++i) {
-        current_neighbor[i]=adj_list[i].begin();
+        current_neighbor[i] = adj_list[i].begin();
     }
-    
+
     std::stack<unsigned> nodes; // stack for nodes as we do DFS
     nodes.push(start); // push start node onto the node stack
     discovered[start] = true; // mark start node as discovered
     std::vector<std::pair<long, unsigned>> current_children; // vector of pairs to contain the children of a given node.  First elt in the pair is a weight, second elt is a node index.
-    
+
     while (!nodes.empty()) // while we have not traversed the whole tree
     {
-        
+
         unsigned node = nodes.top(); // the current node that we are considering
-        
+
         // find the next undiscovered child of node
         bool found_new_child = false;
         auto& cn = current_neighbor[node];
-        while(!found_new_child && cn != adj_list[node].end()) // look for an undiscovered node
+        while (!found_new_child && cn != adj_list[node].end()) // look for an undiscovered node
         {
             if (!discovered[cn->first]) // found a node
             {
@@ -673,34 +673,34 @@ void ArrangementBuilder::tree_to_directed_tree(std::vector<NodeAdjacencyList>& a
             }
             cn++; //increment the iterator;
         }
-        
+
         if (!found_new_child)
-            // we have found all of node's children, so we can sort them and compute branch weight for node
+        // we have found all of node's children, so we can sort them and compute branch weight for node
         {
             nodes.pop(); // pop node off of the node stack
-            
+
             long running_sum = 0; // reset runningSum
             current_children.clear(); // reset currentChildren
-            
+
             for (unsigned i = 0; i < adj_list[node].size(); i++) // loop over all children of node
             {
                 if (!nodes.empty() && nodes.top() == adj_list[node][i].first) // then this adjacency is the parent node
                     continue;
-                
+
                 //add this child to the currentChildren vector
                 unsigned child = adj_list[node][i].first;
                 long cur_branch_weight = branch_weight[child] + adj_list[node][i].second;
                 current_children.push_back(std::make_pair(cur_branch_weight, child));
-                
+
                 //add weight of this child's branch to runningSum
                 running_sum += cur_branch_weight;
             }
-            
+
             branch_weight[node] = running_sum; // assign running_sum to branchWeight at the current node
-            
+
             //sort the children of current node (sorts in increasing order by branch weight)
             std::sort(current_children.begin(), current_children.end());
-            
+
             // copy the children indexes to the children vector in reverse branch-weight order
             for (std::vector<std::pair<long, unsigned>>::reverse_iterator rit = current_children.rbegin();
                  rit != current_children.rend(); ++rit) {
@@ -709,6 +709,3 @@ void ArrangementBuilder::tree_to_directed_tree(std::vector<NodeAdjacencyList>& a
         }
     } // end while
 } // end treeToDirectedTree()
-
-
-

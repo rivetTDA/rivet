@@ -104,8 +104,8 @@ struct InputData {
     std::vector<exact> x_exact; //exact (e.g. rational) values of all x-grades, sorted
     std::vector<exact> y_exact; //exact (e.g. rational) values of all y-grades, sorted
 
-    bool x_reverse=false;//whether the simplices are to be added in order of decreasing x grades
-    bool y_reverse=false;
+    bool x_reverse = false; //whether the simplices are to be added in order of decreasing x grades
+    bool y_reverse = false;
 
     std::shared_ptr<BifiltrationData> bifiltration_data; //TODO: This is only needed to build the FIRep.  To save memory, I have fixed the code to set bifiltration_data to the null pointer once the FIRep is built.  But perhaps it would be better design to remove this member from the struct altogether. -Mike
 
@@ -128,10 +128,10 @@ struct FileContent {
     std::shared_ptr<ComputationResult> result;
 
     FileContent();
-    FileContent(InputData *data);
-    FileContent(ComputationResult *result);
-    FileContent& operator=(const FileContent &other);
-    FileContent(const FileContent &other);
+    FileContent(InputData* data);
+    FileContent(ComputationResult* result);
+    FileContent& operator=(const FileContent& other);
+    FileContent(const FileContent& other);
 };
 
 struct FileType {

@@ -27,12 +27,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "dcel/arrangement_message.h"
 #include <boost/optional.hpp>
 
-template<typename T>
+template <typename T>
 struct Ptr_Compare {
-    bool operator()(const T* left, const T* right) const {
+    bool operator()(const T* left, const T* right) const
+    {
         return &(*left) < &(*right);
     }
-    bool operator()(const std::shared_ptr<T> left, const std::shared_ptr<T> right) const {
+    bool operator()(const std::shared_ptr<T> left, const std::shared_ptr<T> right) const
+    {
         return &(*left) < &(*right);
     }
 };
@@ -40,8 +42,8 @@ struct Ptr_Compare {
 ArrangementMessage::ArrangementMessage(Arrangement const& arrangement)
     : x_grades(arrangement.x_grades)
     , y_grades(arrangement.y_grades)
-      , x_exact(arrangement.x_exact)
-      ,y_exact(arrangement.y_exact)
+    , x_exact(arrangement.x_exact)
+    , y_exact(arrangement.y_exact)
     , vertical_line_query_list()
     , half_edges()
     , vertices()
@@ -54,19 +56,19 @@ ArrangementMessage::ArrangementMessage(Arrangement const& arrangement)
     std::map<const Vertex*, long, Ptr_Compare<Vertex>> vertex_map;
     //Build maps
     long id_counter = 0;
-    for(auto face : arrangement.faces) {
+    for (auto face : arrangement.faces) {
         face_map.emplace(face, id_counter++);
     }
     id_counter = 0;
-    for(auto half : arrangement.halfedges) {
-       halfedge_map.emplace(half, id_counter++);
+    for (auto half : arrangement.halfedges) {
+        halfedge_map.emplace(half, id_counter++);
     }
     id_counter = 0;
-    for(auto anchor : arrangement.all_anchors) {
+    for (auto anchor : arrangement.all_anchors) {
         anchor_map.emplace(anchor, id_counter++);
     }
     id_counter = 0;
-    for(auto vertex: arrangement.vertices) {
+    for (auto vertex : arrangement.vertices) {
         vertex_map.emplace(vertex, id_counter++);
     }
 
@@ -88,7 +90,6 @@ ArrangementMessage::ArrangementMessage(Arrangement const& arrangement)
     auto FID = [&face_map](const Face* ptr) {
         return ptr == nullptr ? -1 : ptr->id();
     };
-
 
     //build data structures
 
@@ -404,7 +405,7 @@ bool operator==(ArrangementMessage const& left, ArrangementMessage const& right)
 
 Arrangement* ArrangementMessage::to_arrangement() const
 {
-//    std::cout << "constructing arrangement" << std::endl;
+    //    std::cout << "constructing arrangement" << std::endl;
     Arrangement* arrangement = new Arrangement();
     //First create all the objects
     for (auto vertex : vertices) {
@@ -424,7 +425,7 @@ Arrangement* ArrangementMessage::to_arrangement() const
         temp_anchors.push_back(ptr);
     }
 
-//    std::cout << "building anchors" << std::endl;
+    //    std::cout << "building anchors" << std::endl;
     arrangement->all_anchors.clear();
     arrangement->all_anchors = std::set<Anchor*, PointerComparator<::Anchor, Anchor_LeftComparator>>(temp_anchors.begin(), temp_anchors.end());
 
@@ -440,7 +441,7 @@ Arrangement* ArrangementMessage::to_arrangement() const
     }
 
     //Now populate all the pointers
-//    std::cout << "populating pointers" << std::endl;
+    //    std::cout << "populating pointers" << std::endl;
 
     for (size_t i = 0; i < vertices.size(); i++) {
         if (vertices[i].incident_edge != HalfedgeId::invalid()) {
@@ -492,7 +493,7 @@ Arrangement* ArrangementMessage::to_arrangement() const
         if (ref.dual_line != HalfedgeId::invalid()) {
             auto edge = arrangement->halfedges[static_cast<long>(ref.dual_line)];
             //TODO: why, oh why, should this reset be necessary?
-//            anchor.get_line().reset();
+            //            anchor.get_line().reset();
             anchor.set_line(edge);
         }
         if (ref.above_line != anchor.is_above()) {
@@ -525,11 +526,11 @@ Arrangement* ArrangementMessage::to_arrangement() const
         assert(anchors[i].position == (*it)->get_position());
         ++it;
     }
-//    std::cout << "returning arrangement" << std::endl;
+    //    std::cout << "returning arrangement" << std::endl;
     return arrangement;
 }
 
 bool ArrangementMessage::is_empty() const
 {
-    return ( x_exact.empty() && y_exact.empty() );
+    return (x_exact.empty() && y_exact.empty());
 }

@@ -79,19 +79,17 @@ MultiBetti::MultiBetti(const FIRep& fir)
 } //end constructor
 
 //Reads the 0th and 1st Betti numbers off of a minimal presentation.
-void MultiBetti::read_betti(const Presentation & pres)
+void MultiBetti::read_betti(const Presentation& pres)
 {
     unsigned prev_row_count = 0;
     unsigned prev_col_count = 0;
-    for (unsigned y = 0; y < num_y_grades; y++)
-    {
-        for (unsigned x = 0; x < num_x_grades; x++)
-        {
-            xi[x][y][0] = pres.row_ind.get(y,x)+1-prev_row_count;
-            prev_row_count = pres.row_ind.get(y,x)+1;
-        
-            xi[x][y][1] = pres.col_ind.get(y,x)+1-prev_col_count;
-            prev_col_count = pres.col_ind.get(y,x)+1;
+    for (unsigned y = 0; y < num_y_grades; y++) {
+        for (unsigned x = 0; x < num_x_grades; x++) {
+            xi[x][y][0] = pres.row_ind.get(y, x) + 1 - prev_row_count;
+            prev_row_count = pres.row_ind.get(y, x) + 1;
+
+            xi[x][y][1] = pres.col_ind.get(y, x) + 1 - prev_col_count;
+            prev_col_count = pres.col_ind.get(y, x) + 1;
         }
     }
 }
@@ -116,7 +114,7 @@ void MultiBetti::compute_koszul(FIRep& fir, unsigned_matrix& hom_dims, Progress&
     if (num_x_grades <= 0 || num_y_grades <= 0) {
         return;
     }
-    
+
     //input to the algorithm: two boundary matrices, with index data
     //TODO: a future version of this code will not copy these matrices, but operate on them directly.
     MapMatrix* bdry1 = new MapMatrix(fir.low_mx.mat);
@@ -405,31 +403,29 @@ void MultiBetti::reduce(MapMatrix* mm, int first_col, int last_col, Vector& lows
     int c;
     int l;
     bool changing_column = false;
-    
+
     for (int j = first_col; j <= last_col; j++) {
-        
+
         l = mm->remove_low(j);
-        
-        if (l != -1 && lows[l] != -1 && lows[l] < j)
-        {
+
+        if (l != -1 && lows[l] != -1 && lows[l] < j) {
             //if we get here then we are going to change the j^{th} column.
             changing_column = true;
         }
-        
+
         //while column j is nonempty and its low number is found in the low array, do column operations
-        while (l != -1  && lows[l] != -1 && lows[l] < j) {
+        while (l != -1 && lows[l] != -1 && lows[l] < j) {
             c = lows[l];
             mm->add_column_popped(c, j);
             l = mm->remove_low(j);
         }
 
         if (l != -1) { //column is still nonempty, so put back the pivot we popped off last and update lows
-            mm->push_index(j,l);
+            mm->push_index(j, l);
             lows[l] = j;
             nonzero_cols++;
         }
-        if (changing_column)
-        {
+        if (changing_column) {
             mm->finalize(j);
             changing_column = false;
         }
@@ -447,17 +443,16 @@ void MultiBetti::reduce_slave(MapMatrix* mm, MapMatrix* slave1, MapMatrix* slave
     int c;
     int l;
     bool changing_column = false;
-    
+
     for (int j = first_col; j <= last_col; j++) {
-        
+
         l = mm->remove_low(j);
-        
-        if (l != -1 && lows[l] != -1 && lows[l] < j)
-        {
+
+        if (l != -1 && lows[l] != -1 && lows[l] < j) {
             //if we get here then we are going to change the j^{th} column.
             changing_column = true;
         }
-        
+
         //while column j is nonempty and its low number is found in the low array, do column operations
         while (l != -1 && lows[l] != -1 && lows[l] < j) {
             c = lows[l];
@@ -466,21 +461,18 @@ void MultiBetti::reduce_slave(MapMatrix* mm, MapMatrix* slave1, MapMatrix* slave
             slave2->add_column(c, j);
             l = mm->remove_low(j);
         }
-        
+
         if (l != -1) //column is still nonempty, so update lows
         {
-            mm->push_index(j,l);
+            mm->push_index(j, l);
             lows[l] = j;
-        }
-        else
-        {
+        } else {
             //column is zero
             zero_cols++;
             zero_list.insert(j, y_grade);
         }
-        
-        if (changing_column)
-        {
+
+        if (changing_column) {
             mm->finalize(j);
             slave1->finalize(j);
             slave2->finalize(j);

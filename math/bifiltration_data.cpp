@@ -18,8 +18,7 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **********************************************************************/
 
- // Authors: Roy Zhao (March 2017), Michael Lesnick (modifications fall 2017).
-
+// Authors: Roy Zhao (March 2017), Michael Lesnick (modifications fall 2017).
 
 #include "bifiltration_data.h"
 
@@ -85,9 +84,9 @@ void BifiltrationData::add_simplex(Simplex const& vertices, const AppearanceGrad
 } //end add_faces()
 
 void BifiltrationData::build_VR_complex(const std::vector<unsigned>& times,
-                                        const std::vector<unsigned>& distances,
-                                        const unsigned num_x,
-                                        const unsigned num_y)
+    const std::vector<unsigned>& distances,
+    const unsigned num_x,
+    const unsigned num_y)
 {
     x_grades = num_x;
     y_grades = num_y;
@@ -104,10 +103,10 @@ void BifiltrationData::build_VR_complex(const std::vector<unsigned>& times,
 
 //function to add (recursively) a subcomplex of the bifiltration data
 void BifiltrationData::build_VR_subcomplex(const std::vector<unsigned>& times,
-                                           const std::vector<unsigned>& distances,
-                                           std::vector<int>& vertices,
-                                           const unsigned prev_time,
-                                           const unsigned prev_dist)
+    const std::vector<unsigned>& distances,
+    std::vector<int>& vertices,
+    const unsigned prev_time,
+    const unsigned prev_dist)
 {
     //Store the simplex info if it is of dimension (hom_dim - 1), hom_dim, or hom_dim+1. Dimension is vertices.size() - 1
     if (vertices.size() == hom_dim) //simplex of dimension hom_dim - 1
@@ -155,7 +154,6 @@ void BifiltrationData::build_VR_subcomplex(const std::vector<unsigned>& times,
 //TODO: will the degree vector have to be treated differently? I don't think so, because it is actually
 //the vector of degree *indexes*
 
-
 //builds BifiltrationData representing a bifiltered Vietoris-Rips complex from metric data
 void BifiltrationData::build_DR_complex(const unsigned num_vertices, const std::vector<unsigned>& distances, const std::vector<unsigned>& degrees, const unsigned num_x, const unsigned num_y)
 {
@@ -170,7 +168,7 @@ void BifiltrationData::build_DR_complex(const unsigned num_vertices, const std::
 
     std::vector<AppearanceGrades> vertex_multigrades;
     generate_vertex_multigrades(vertex_multigrades, num_vertices, distances, degrees);
-    
+
     std::vector<int> simplex_indices;
     for (unsigned i = 0; i < num_vertices; i++) {
         //Look at simplex with smallest vertex vertex i
@@ -219,7 +217,7 @@ void BifiltrationData::build_DR_subcomplex(const std::vector<unsigned>& distance
                 min_dist = distances[(*it) * (*it - 1) / 2 + *it2 + 1];
         AppearanceGrades new_grades;
         combine_multigrades(new_grades, parent_grades, vertex_multigrades[*it], min_dist);
-        
+
         //Determine subset of candidates which are still candidates after adding *it
         std::vector<int> new_candidates;
         for (std::vector<int>::const_iterator it2 = it + 1; it2 != candidates.end(); it2++) {
@@ -277,7 +275,7 @@ void BifiltrationData::combine_multigrades(AppearanceGrades& merged, const Appea
     AppearanceGrades::const_iterator it1 = grades1.begin();
     AppearanceGrades::const_iterator it2 = grades2.begin();
     int y1 = it1->y, y2 = it2->y, max_x;
-    int curr_y_max = std::max(std::max(y1, y2), (int) min_dist);
+    int curr_y_max = std::max(std::max(y1, y2), (int)min_dist);
     Grade last_grade;
     while (it1 != grades1.end() || it2 != grades2.end()) {
         max_x = std::numeric_limits<int>::min();
@@ -302,7 +300,7 @@ void BifiltrationData::combine_multigrades(AppearanceGrades& merged, const Appea
                 y1 = std::numeric_limits<int>::max();
             }
         }
-        int new_y_max = std::max(std::max(y1, y2), (int) min_dist);
+        int new_y_max = std::max(std::max(y1, y2), (int)min_dist);
         if (new_y_max > curr_y_max) {
             last_grade.x = max_x;
             last_grade.y = curr_y_max;

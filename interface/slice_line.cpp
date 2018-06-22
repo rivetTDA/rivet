@@ -80,19 +80,18 @@ void SliceLine::paint(QPainter* painter, const QStyleOptionGraphicsItem* /*unuse
 
     //since this also gives correct behavior for vertical lines not along the boundaries, all vertical lines
     //are handled in this case, to avoid floating point comparisons
-    if(vertical){
-        painter->drawLine(0, 0, 0,box_ymax);
+    if (vertical) {
+        painter->drawLine(0, 0, 0, box_ymax);
     }
 
     //handle horizontal lines similarly
-    else if(fabs(left_dot->pos().y()-right_dot->pos().y())<=.001)
-    {
-        painter->drawLine(0,0,box_xmax,0);
+    else if (fabs(left_dot->pos().y() - right_dot->pos().y()) <= .001) {
+        painter->drawLine(0, 0, box_xmax, 0);
     }
 
     //if neither horizontal nor vertical, draw the line connecting the two control dots
-    else{
-    painter->drawLine(0, 0, right_dot->pos().x()-left_dot->pos().x(),right_dot->pos().y()-left_dot->pos().y());
+    else {
+        painter->drawLine(0, 0, right_dot->pos().x() - left_dot->pos().x(), right_dot->pos().y() - left_dot->pos().y());
     }
 }
 
@@ -146,15 +145,13 @@ QVariant SliceLine::itemChange(GraphicsItemChange change, const QVariant& value)
             } else //then right endpoint of line is along right edge of box
             {
                 right_point.setX(box_xmax - newpos.x());
-                if (slope > 0)
-                {
+                if (slope > 0) {
                     right_point.setY(slope * (box_xmax - newpos.x()));
                 }
 
-                else
-                    {
+                else {
                     right_point.setY(0);
-                    }
+                }
             }
         }
 
@@ -164,12 +161,12 @@ QVariant SliceLine::itemChange(GraphicsItemChange change, const QVariant& value)
         //update control dots
         left_dot->set_position(newpos);
         right_dot->set_position(newpos + right_point);
-        update_lock=true;
+        update_lock = true;
         setPos(left_dot->x(), left_dot->y());
         //update ui control objects
 
         sdgm->update_window_controls(false);
-        update_lock=false;
+        update_lock = false;
         return newpos;
     }
     return QGraphicsItem::itemChange(change, value);
@@ -183,7 +180,7 @@ void SliceLine::update_lb_endpoint()
     update_lock = true;
 
     //reposition the right endpoint
-    right_point = right_dot->pos()-left_dot->pos();
+    right_point = right_dot->pos() - left_dot->pos();
 
     //notify the QGraphicsScene that the line is changing
     prepareGeometryChange();
@@ -201,7 +198,6 @@ void SliceLine::update_lb_endpoint()
         slope = right_point.y() / right_point.x();
     }
 
-
     //update ui control objects
     sdgm->update_window_controls(true);
 
@@ -215,7 +211,7 @@ void SliceLine::update_rt_endpoint()
     update_lock = true;
 
     //reposition the right endpoint where it should be
-    right_point = right_dot->pos()-left_dot->pos();
+    right_point = right_dot->pos() - left_dot->pos();
 
     //calculate new slope
     if (right_point.x() <= 0.001) //caution: floating-point comparison; if line is within 1/1000 pixel of vertical, then we consider it vertical

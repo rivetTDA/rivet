@@ -51,15 +51,15 @@ public:
 
 private:
     unsigned verbosity;
-    void build_interior(Arrangement &arrangement);
+    void build_interior(Arrangement& arrangement);
     //builds the interior of DCEL arrangement using a version of the Bentley-Ottmann algorithm
     //precondition: all achors have been stored via find_anchors()
     void find_edge_weights(Arrangement& arrangement, PersistenceUpdater& updater);
     void find_path(Arrangement& arrangement, std::vector<Halfedge*>& pathvec);
     void find_subpath(Arrangement& arrangement, unsigned cur_node, std::vector<std::vector<unsigned>>& adj, std::vector<Halfedge*>& pathvec);
 
-    typedef std::vector<std::pair<unsigned,long>> NodeAdjacencyList;
-    
+    typedef std::vector<std::pair<unsigned, long>> NodeAdjacencyList;
+
     /* technical function to convert an undirected tree into a directed representation
        a simplified version of a function formerly called sortAdjacencies
        though this name did not fully capture what the function did.)
@@ -79,7 +79,6 @@ private:
        -Mike Lesnick, April 18 2018.
     */
     void tree_to_directed_tree(std::vector<NodeAdjacencyList>& adj_list, unsigned start, std::vector<std::vector<unsigned>>& children);
-
 };
 
 #endif //RIVET_CONSOLE_ARRANGEMENT_BUILDER_H

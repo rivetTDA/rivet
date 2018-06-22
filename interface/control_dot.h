@@ -53,7 +53,6 @@ private:
     SliceLine* slice_line;
     ConfigParameters* config_params;
 
-
     bool pressed;
     bool left_bottom; //TRUE if this is a left-bottom control dot, FALSE if this is a right-top control dot
     bool update_lock; //TRUE when the dot is being moved as result of external input; to avoid update loops

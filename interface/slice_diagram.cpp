@@ -83,9 +83,8 @@ void SliceDiagram::create_diagram(const QString x_text, const QString y_text, do
 {
     //xmin is always less than xmax
     //x_reverse controls whetehr the values are shown with smallest on the left or the right
-    xrev_sign=-2*(x_reverse)+1;
-    yrev_sign=-2*(y_reverse)+1;
-    
+    xrev_sign = -2 * (x_reverse) + 1;
+    yrev_sign = -2 * (y_reverse) + 1;
 
     //set data-dependent parameters
     data_xmin = xmin;
@@ -99,8 +98,8 @@ void SliceDiagram::create_diagram(const QString x_text, const QString y_text, do
     original_ymin = ymin;
     original_ymax = ymax;
 
-    x_label_text=x_text;
-    y_label_text=y_text;
+    x_label_text = x_text;
+    y_label_text = y_text;
 
     //pens and brushes
     QPen blackPen(Qt::black);
@@ -151,14 +150,14 @@ void SliceDiagram::create_diagram(const QString x_text, const QString y_text, do
     y_label->setTransform(QTransform(0, 1, 1, 0, 0, 0));
     y_label->setFont(config_params->diagramFont);
 
-    rect1=addRect(0,0,0,0,Qt::NoPen, QBrush(QColor(255,255,255)));
-    rect2=addRect(0,0,0,0,Qt::NoPen, QBrush(QColor(255,255,255)));
-    rect3=addRect(0,0,0,0,Qt::NoPen, QBrush(QColor(255,255,255)));
-    rect4=addRect(0,0,0,0,Qt::NoPen, QBrush(QColor(255,255,255)));
-    rect5=addRect(0,0,0,0,Qt::NoPen, QBrush(QColor(255,255,255)));
-    rect6=addRect(0,0,0,0,Qt::NoPen, QBrush(QColor(255,255,255)));
+    rect1 = addRect(0, 0, 0, 0, Qt::NoPen, QBrush(QColor(255, 255, 255)));
+    rect2 = addRect(0, 0, 0, 0, Qt::NoPen, QBrush(QColor(255, 255, 255)));
+    rect3 = addRect(0, 0, 0, 0, Qt::NoPen, QBrush(QColor(255, 255, 255)));
+    rect4 = addRect(0, 0, 0, 0, Qt::NoPen, QBrush(QColor(255, 255, 255)));
+    rect5 = addRect(0, 0, 0, 0, Qt::NoPen, QBrush(QColor(255, 255, 255)));
+    rect6 = addRect(0, 0, 0, 0, Qt::NoPen, QBrush(QColor(255, 255, 255)));
 
-    int BigZValue=1000; //probably not the best way to do this...
+    int BigZValue = 1000; //probably not the best way to do this...
     rect1->setZValue(BigZValue);
     rect2->setZValue(BigZValue);
     rect3->setZValue(BigZValue);
@@ -166,15 +165,12 @@ void SliceDiagram::create_diagram(const QString x_text, const QString y_text, do
     rect5->setZValue(BigZValue);
     rect6->setZValue(BigZValue);
 
-    data_xmin_text->setZValue(BigZValue+1);
-    data_ymin_text->setZValue(BigZValue+1);
-    data_xmax_text->setZValue(BigZValue+1);
-    data_ymax_text->setZValue(BigZValue+1);
-    x_label->setZValue(BigZValue+1);
-    y_label->setZValue(BigZValue+1);
-
-
-
+    data_xmin_text->setZValue(BigZValue + 1);
+    data_ymin_text->setZValue(BigZValue + 1);
+    data_xmax_text->setZValue(BigZValue + 1);
+    data_ymax_text->setZValue(BigZValue + 1);
+    x_label->setZValue(BigZValue + 1);
+    y_label->setZValue(BigZValue + 1);
 
     //create rectangles for visualizing homology dimensions
     //first, find max dimension
@@ -271,7 +267,6 @@ void SliceDiagram::create_diagram(const QString x_text, const QString y_text, do
     line_slope = (data_ymax - data_ymin) / (data_xmax - data_xmin); //slope in data units
     line_pos = 0; //start the line at the lower left corner of the box
 
-
     slice_line = new SliceLine(this, config_params);
     addItem(slice_line);
     slice_line->hide();
@@ -284,8 +279,8 @@ void SliceDiagram::create_diagram(const QString x_text, const QString y_text, do
     addItem(dot_right);
     dot_right->hide();
 
-    dot_left->other=dot_right;
-    dot_right->other=dot_left;
+    dot_left->other = dot_right;
+    dot_right->other = dot_left;
 
     slice_line->setDots(dot_left, dot_right);
 
@@ -389,14 +384,11 @@ void SliceDiagram::resize_diagram()
     gray_line_vertical_left->setLine(diagram_width * gray_box_xmin, diagram_height * gray_box_ymin, diagram_width * gray_box_xmin, diagram_height * gray_box_ymax);
     gray_line_horizontal_bottom->setLine(diagram_width * gray_box_xmin, diagram_height * gray_box_ymin, diagram_width * gray_box_xmax, diagram_height * gray_box_ymin);
 
-
     //reposition dimension rectangles
     redraw_dim_rects();
 
     //reposition xi points
     redraw_dots();
-
-
 
     //reposition slice line
     slice_line->update_bounds(diagram_width, diagram_height, padding);
@@ -407,8 +399,6 @@ void SliceDiagram::resize_diagram()
         y = line_pos * diagram_height;
     slice_line->update_position(x, y, line_vert, line_slope * scale_y / scale_x);
 
-
-
     //reposition bars
 
     unsigned count = 1;
@@ -416,7 +406,7 @@ void SliceDiagram::resize_diagram()
         for (std::list<PersistenceBar*>::iterator it = bars[i].begin(); it != bars[i].end(); ++it) {
             double start = (*it)->get_start();
             double end = (*it)->get_end();
-            std::pair<double, double> p1 = compute_endpoint(start, count );
+            std::pair<double, double> p1 = compute_endpoint(start, count);
             std::pair<double, double> p2 = compute_endpoint(end, count);
             (*it)->set_line(p1.first, p1.second, p2.first, p2.second);
             count++;
@@ -457,15 +447,13 @@ void SliceDiagram::redraw_dim_rects()
             if (j + 1 < y_grades.size())
                 top = (y_grades[j + 1] - data_ymin) * scale_y + 1;
 
-
-
-            left=fmin(fmax(0,left),diagram_width+padding);
-            bottom=fmin(fmax(0,bottom),diagram_height+padding);
-            right=fmin(fmax(0,right),diagram_width+padding);
-            top=fmin(fmax(0,top),diagram_height+padding);
+            left = fmin(fmax(0, left), diagram_width + padding);
+            bottom = fmin(fmax(0, bottom), diagram_height + padding);
+            right = fmin(fmax(0, right), diagram_width + padding);
+            top = fmin(fmax(0, top), diagram_height + padding);
             //ensure the corners are never drawn outside of the window
 
-            hom_dim_rects[i][j]->setRect(left,bottom, right-left,top-bottom);
+            hom_dim_rects[i][j]->setRect(left, bottom, right - left, top - bottom);
         }
     }
 } //end redraw_dim_rects()
@@ -477,47 +465,38 @@ void SliceDiagram::redraw_dots()
     std::vector<QGraphicsEllipseItem*>::iterator it0 = xi0_dots.begin();
     std::vector<QGraphicsEllipseItem*>::iterator it1 = xi1_dots.begin();
     std::vector<QGraphicsEllipseItem*>::iterator it2 = xi2_dots.begin();
-    bool visible;//whether the center of the dot is visible in the window
+    bool visible; //whether the center of the dot is visible in the window
     for (unsigned i = 0; i < points.size(); i++) {
         if (points[i].zero > 0) //then draw a xi_0 dot
         {
             double radius = round(config_params->bettiDotRadius * sqrt(points[i].zero));
-            visible=(data_xmin<=points[i].x)&&(points[i].x<=data_xmax+padding/scale_x)&&(data_ymin<=points[i].y)&&(points[i].y<=data_ymax+padding/scale_y);
-            if(visible)
-            {
+            visible = (data_xmin <= points[i].x) && (points[i].x <= data_xmax + padding / scale_x) && (data_ymin <= points[i].y) && (points[i].y <= data_ymax + padding / scale_y);
+            if (visible) {
                 (*it0)->setRect((points[i].x - data_xmin) * scale_x - radius, (points[i].y - data_ymin) * scale_y - radius, 2 * radius, 2 * radius);
-            }
-            else
-            {
-                (*it0)->setRect(0,0,0,0);
+            } else {
+                (*it0)->setRect(0, 0, 0, 0);
             }
             ++it0;
         }
         if (points[i].one > 0) //then draw a xi_1 dot
         {
             double radius = round(config_params->bettiDotRadius * sqrt(points[i].one));
-            visible=(data_xmin<=points[i].x)&&(points[i].x<=data_xmax+padding/scale_x)&&(data_ymin<=points[i].y)&&(points[i].y<=data_ymax+padding/scale_y);
-            if(visible)
-            {
+            visible = (data_xmin <= points[i].x) && (points[i].x <= data_xmax + padding / scale_x) && (data_ymin <= points[i].y) && (points[i].y <= data_ymax + padding / scale_y);
+            if (visible) {
                 (*it1)->setRect((points[i].x - data_xmin) * scale_x - radius, (points[i].y - data_ymin) * scale_y - radius, 2 * radius, 2 * radius);
-            }
-            else
-            {
-                (*it1)->setRect(0,0,0,0);
+            } else {
+                (*it1)->setRect(0, 0, 0, 0);
             }
             ++it1;
         }
         if (points[i].two > 0) //then draw a xi_2 dot
         {
             double radius = round(config_params->bettiDotRadius * sqrt(points[i].two));
-            visible=(data_xmin<=points[i].x)&&(points[i].x<=data_xmax+padding/scale_x)&&(data_ymin<=points[i].y)&&(points[i].y<=data_ymax+padding/scale_y);
-            if(visible)
-            {
+            visible = (data_xmin <= points[i].x) && (points[i].x <= data_xmax + padding / scale_x) && (data_ymin <= points[i].y) && (points[i].y <= data_ymax + padding / scale_y);
+            if (visible) {
                 (*it2)->setRect((points[i].x - data_xmin) * scale_x - radius, (points[i].y - data_ymin) * scale_y - radius, 2 * radius, 2 * radius);
-            }
-            else
-            {
-                (*it2)->setRect(0,0,0,0);
+            } else {
+                (*it2)->setRect(0, 0, 0, 0);
             }
             ++it2;
         }
@@ -527,7 +506,6 @@ void SliceDiagram::redraw_dots()
 //zoom in or out in response to a user-defined change in window bounds
 void SliceDiagram::zoom_diagram(double angle, double offset, double distance_to_origin)
 {
-
 
     //int text_padding = 5; //pixels
 
@@ -539,18 +517,15 @@ void SliceDiagram::zoom_diagram(double angle, double offset, double distance_to_
     //reposition xi points
     redraw_dots();
 
-
     double gray_box_xmin = fmax(original_xmin - data_xmin, 0.0) / (data_xmax - data_xmin); //top left corner of gray box, relative units
     double gray_box_xmax = fmax(original_xmax - data_xmin, 0.0) / (data_xmax - data_xmin);
     double gray_box_ymin = fmax(original_ymin - data_ymin, 0.0) / (data_ymax - data_ymin);
     double gray_box_ymax = fmax(original_ymax - data_ymin, 0.0) / (data_ymax - data_ymin);
 
-
     gray_line_vertical->setLine(diagram_width * gray_box_xmax, diagram_height * gray_box_ymin, diagram_width * gray_box_xmax, diagram_height * gray_box_ymax);
     gray_line_horizontal->setLine(diagram_width * gray_box_xmin, diagram_height * gray_box_ymax, diagram_width * gray_box_xmax, diagram_height * gray_box_ymax);
     gray_line_vertical_left->setLine(diagram_width * gray_box_xmin, diagram_height * gray_box_ymin, diagram_width * gray_box_xmin, diagram_height * gray_box_ymax);
     gray_line_horizontal_bottom->setLine(diagram_width * gray_box_xmin, diagram_height * gray_box_ymin, diagram_width * gray_box_xmax, diagram_height * gray_box_ymin);
-
 
     double intrinsic_y_int = offset / cos(angle * PI / 180);
     double intrinsic_slope = tan(angle * PI / 180);
@@ -718,11 +693,9 @@ void SliceDiagram::update_line(double angle, double offset, double distance_to_o
 
         //update the SliceLine
 
-            int xpos = (-1 * offset - data_xmin) * scale_x; //pixel units
+        int xpos = (-1 * offset - data_xmin) * scale_x; //pixel units
 
-            slice_line->update_position(xpos, 0, true, 0);
-
-
+        slice_line->update_position(xpos, 0, true, 0);
 
     } else if (angle == 0) //handle horizontal line
     {
@@ -733,9 +706,8 @@ void SliceDiagram::update_line(double angle, double offset, double distance_to_o
         line_visible = (0 <= line_pos && line_pos <= 1);
 
         //update the SliceLine
-            int ypos = (offset - data_ymin) * scale_y; //pixel units
-            slice_line->update_position(0, ypos, false, 0);
-
+        int ypos = (offset - data_ymin) * scale_y; //pixel units
+        slice_line->update_position(0, ypos, false, 0);
 
     } else //handle non-vertical and non-horizontal line
     {
@@ -750,8 +722,7 @@ void SliceDiagram::update_line(double angle, double offset, double distance_to_o
         {
             line_pos = (y_coord - data_ymin) / (data_ymax - data_ymin); //relative units
             line_visible = (0 <= line_pos && line_pos < 1);
-                slice_line->update_position(0, (y_coord - data_ymin) * scale_y, false, line_slope * scale_y / scale_x);
-
+            slice_line->update_position(0, (y_coord - data_ymin) * scale_y, false, line_slope * scale_y / scale_x);
 
         } else //then slice line intersects bottom of box
         {
@@ -760,7 +731,6 @@ void SliceDiagram::update_line(double angle, double offset, double distance_to_o
             line_visible = (-1 < line_pos && line_pos <= 0);
 
             slice_line->update_position((x_coord - data_xmin) * scale_x, 0, false, line_slope * scale_y / scale_x);
-
         }
     }
     //slice_line->set_visibility(line_visible);
@@ -854,8 +824,8 @@ void SliceDiagram::draw_barcode(Barcode const& bc, bool show)
         double end = it->death;
 
         for (unsigned i = 0; i < it->multiplicity; i++) {
-            std::pair<double, double> p1 = compute_endpoint(start, num_bars );
-            std::pair<double, double> p2 = compute_endpoint(end, num_bars );
+            std::pair<double, double> p1 = compute_endpoint(start, num_bars);
+            std::pair<double, double> p2 = compute_endpoint(end, num_bars);
 
             PersistenceBar* bar = new PersistenceBar(this, config_params, start, end, index);
             bar->set_line(p1.first, p1.second, p2.first, p2.second);
@@ -895,8 +865,6 @@ std::pair<double, double> SliceDiagram::compute_endpoint(double coordinate, unsi
     //the commented code is for keeping the spacing constant in data units
     //as is, the spacing is constant in pixel units
 
-
-
     //difference in offset between consecutive bars (pixel units)
     //int old_step_size = config_params->persistenceBarWidth + config_params->persistenceBarSpace;
 
@@ -913,10 +881,7 @@ std::pair<double, double> SliceDiagram::compute_endpoint(double coordinate, unsi
 
     //int step_size = old_step_size * conversion;
 
-
-
-
-    int step_size=config_params->persistenceBarWidth + config_params->persistenceBarSpace;
+    int step_size = config_params->persistenceBarWidth + config_params->persistenceBarSpace;
     //compute x and y relative to slice line (pixel units)
     double x = 0;
     double y = 0;
@@ -935,7 +900,7 @@ std::pair<double, double> SliceDiagram::compute_endpoint(double coordinate, unsi
     } else {
         double angle = atan(line_slope); //angle (data)      NOTE: it would be slightly more efficient to only compute this once per barcode update
 
-        if (coordinate == std::numeric_limits<double>::infinity()|| coordinate*std::min(scale_x,scale_y)>pow(10.0,7.0)) {
+        if (coordinate == std::numeric_limits<double>::infinity() || coordinate * std::min(scale_x, scale_y) > pow(10.0, 7.0)) {
             //set coordinate so that it will be outside the viewable window
             //the finite cutoff seems to patch over the issue with phantom barcodes-not sure why
             coordinate = view_length / std::min(scale_x, scale_y);
@@ -1139,7 +1104,7 @@ double SliceDiagram::get_slice_length()
 {
     //handle edge case where the line is vertical but on the left or right edge
     //in this case, the control dots can move up or down, but the line is drawn over the entire edge
-    if(line_vert){
+    if (line_vert) {
         return slice_line->get_box_ymax();
     }
 
@@ -1170,7 +1135,6 @@ double SliceDiagram::get_pd_scale()
 void SliceDiagram::redraw_labels()
 {
 
-
     int text_padding = 15; //pixels
     data_xmin_text->setPos(data_xmin_text->boundingRect().width() / (-2), -1 * text_padding);
     data_xmax_text->setPos(diagram_width - data_xmax_text->boundingRect().width() / 2, -1 * text_padding);
@@ -1183,45 +1147,39 @@ void SliceDiagram::redraw_labels()
     std::ostringstream s_xmin;
     s_xmin.precision(4);
     // fix to sometimes showing "-0"
-    s_xmin << (data_xmin==0? 0 : data_xmin*xrev_sign);
+    s_xmin << (data_xmin == 0 ? 0 : data_xmin * xrev_sign);
     data_xmin_text->setText(QString(s_xmin.str().data()));
 
-    rect1->setRect(0,0,data_xmin_text->sceneBoundingRect().width(), data_xmin_text->sceneBoundingRect().height());
-    rect1->setPos(data_xmin_text->pos().x(), data_xmin_text->pos().y()-data_xmin_text->boundingRect().height());
+    rect1->setRect(0, 0, data_xmin_text->sceneBoundingRect().width(), data_xmin_text->sceneBoundingRect().height());
+    rect1->setPos(data_xmin_text->pos().x(), data_xmin_text->pos().y() - data_xmin_text->boundingRect().height());
 
     std::ostringstream s_ymin;
     s_ymin.precision(4);
-    s_ymin << (data_ymin==0? 0: data_ymin*yrev_sign);
+    s_ymin << (data_ymin == 0 ? 0 : data_ymin * yrev_sign);
     data_ymin_text->setText(QString(s_ymin.str().data()));
 
-    rect2->setRect(0,0,data_ymin_text->sceneBoundingRect().width(),data_ymin_text->sceneBoundingRect().height());
-    rect2->setPos(data_ymin_text->pos().x(), data_ymin_text->pos().y()-data_ymin_text->boundingRect().height());
+    rect2->setRect(0, 0, data_ymin_text->sceneBoundingRect().width(), data_ymin_text->sceneBoundingRect().height());
+    rect2->setPos(data_ymin_text->pos().x(), data_ymin_text->pos().y() - data_ymin_text->boundingRect().height());
 
     std::ostringstream s_xmax;
     s_xmax.precision(4);
-    s_xmax << (data_xmax==0? 0: data_xmax*xrev_sign);
+    s_xmax << (data_xmax == 0 ? 0 : data_xmax * xrev_sign);
     data_xmax_text->setText(QString(s_xmax.str().data()));
 
-    rect3->setRect(0,0,data_xmax_text->sceneBoundingRect().width(),data_xmax_text->sceneBoundingRect().height());
-    rect3->setPos(data_xmax_text->pos().x(), data_xmax_text->pos().y()-data_xmax_text->boundingRect().height());
-
-
+    rect3->setRect(0, 0, data_xmax_text->sceneBoundingRect().width(), data_xmax_text->sceneBoundingRect().height());
+    rect3->setPos(data_xmax_text->pos().x(), data_xmax_text->pos().y() - data_xmax_text->boundingRect().height());
 
     std::ostringstream s_ymax;
     s_ymax.precision(4);
-    s_ymax << (data_ymax==0? 0: data_ymax*yrev_sign);
+    s_ymax << (data_ymax == 0 ? 0 : data_ymax * yrev_sign);
     data_ymax_text->setText(QString(s_ymax.str().data()));
 
-    rect4->setRect(0,0,data_ymax_text->sceneBoundingRect().width(),data_ymax_text->sceneBoundingRect().height());
-    rect4->setPos(data_ymax_text->pos().x(), data_ymax_text->pos().y()-data_ymax_text->boundingRect().height());
+    rect4->setRect(0, 0, data_ymax_text->sceneBoundingRect().width(), data_ymax_text->sceneBoundingRect().height());
+    rect4->setPos(data_ymax_text->pos().x(), data_ymax_text->pos().y() - data_ymax_text->boundingRect().height());
 
+    rect5->setRect(0, 0, x_label->boundingRect().width(), x_label->boundingRect().height());
+    rect5->setPos(x_label->pos().x(), x_label->pos().y() - x_label->boundingRect().height());
 
-    rect5->setRect(0,0,x_label->boundingRect().width(), x_label->boundingRect().height());
-    rect5->setPos(x_label->pos().x(), x_label->pos().y()-x_label->boundingRect().height());
-
-    rect6->setRect(0,0,y_label->boundingRect().height(), y_label->boundingRect().width());
+    rect6->setRect(0, 0, y_label->boundingRect().height(), y_label->boundingRect().width());
     rect6->setPos(y_label->pos().x(), y_label->pos().y());
-
-
-
 }

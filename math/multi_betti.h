@@ -68,18 +68,18 @@ public:
     //modified version of the standard reduction.  Note that the Presentation is
     //not passed by reference, but is copied.  This is intentional.
     void compute_from_pres(Presentation pres, Progress& progress);
-    
+
     //computes xi_0 and xi_1, and also stores dimension of homology at each grade in the supplied matrix
     //This is the orginal RIVET algorithm, based on Koszul homology
     void compute_koszul(FIRep& fir, unsigned_matrix& hom_dims, Progress& progress);
 
     //Reads the 0th and 1st Betti numbers off of a minimal presentation into the multi_betti object.
-    void read_betti(const Presentation & pres);
-    
+    void read_betti(const Presentation& pres);
+
     //TODO: Implement this.
     //Compute the 0th and 1st Betti numbers from a not-necessarily-minimal presentation
     //void compute_non_min_pres(const Presentation & pres, Progress& progress);
-    
+
     //computes xi_2 from the values of xi_0, xi_1 and the dimensions
     void compute_xi2(unsigned_matrix& hom_dims);
 
@@ -93,14 +93,13 @@ public:
     void store_support_points(std::vector<TemplatePoint>& tpts);
 
 private:
-    
     unsigned num_x_grades; //number of grades in primary direction
     unsigned num_y_grades; //number of grades in secondary direction
     boost::multi_array<int, 3> xi; //matrix to hold xi values; indices: xi[x][y][subscript]
     const unsigned verbosity; //controls display of output, for debugging
 
-//************* methods used by Koszul Betti algorithm *************
-    
+    //************* methods used by Koszul Betti algorithm *************
+
     //simple column reduction algorithm
     //  pivot columns are first_col to last_col, inclusive
     //  increments nonzero_cols by the number of columns in [first_col, last_col] that remained nonzero

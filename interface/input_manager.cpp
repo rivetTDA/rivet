@@ -21,18 +21,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "input_manager.h"
 #include "../computation.h"
 #include "../math/bifiltration_data.h"
+#include "debug.h"
 #include "file_input_reader.h"
 #include "input_parameters.h"
-#include "debug.h"
 
 #include <algorithm>
+#include <api.h>
 #include <boost/algorithm/string.hpp>
+#include <dcel/arrangement_message.h>
+#include <memory>
 #include <set>
 #include <sstream>
 #include <vector>
-#include <memory>
-#include <dcel/arrangement_message.h>
-#include <api.h>
 
 #include <ctime>
 
@@ -103,30 +103,35 @@ private:
     unsigned line;
 };
 
-FileContent::FileContent() {
+FileContent::FileContent()
+{
     type = FileContentType::INVALID;
     input_data = nullptr;
     result = nullptr;
 }
 
-FileContent::FileContent(InputData *data) {
+FileContent::FileContent(InputData* data)
+{
     type = FileContentType::DATA;
     input_data = std::make_shared<InputData>(*data);
 }
 
-FileContent::FileContent(ComputationResult *result) {
+FileContent::FileContent(ComputationResult* result)
+{
     type = FileContentType::PRECOMPUTED;
     FileContent::result = std::make_shared<ComputationResult>(*result);
 }
 
-FileContent& FileContent::operator=(const FileContent &other) {
+FileContent& FileContent::operator=(const FileContent& other)
+{
     type = other.type;
     input_data = other.input_data;
     result = other.result;
     return *this;
 }
 
-FileContent::FileContent(const FileContent &other) {
+FileContent::FileContent(const FileContent& other)
+{
     type = other.type;
     input_data = other.input_data;
     result = other.result;
@@ -142,55 +147,45 @@ FileContent::FileContent(const FileContent &other) {
 std::pair<bool, std::string> detect_axis_reversed(std::vector<std::string> line)
 {
 
-    bool is_reversed=false;
+    bool is_reversed = false;
     std::string label;
 
-    std::string joined=join(line);
+    std::string joined = join(line);
 
-    if(boost::starts_with(line[0],"[")){
-        auto close_position=joined.find_first_of("]");
-        if(close_position==std::string::npos){
+    if (boost::starts_with(line[0], "[")) {
+        auto close_position = joined.find_first_of("]");
+        if (close_position == std::string::npos) {
             throw std::runtime_error("No closing bracket in axis label");
         }
         //get the nonwhitespace characters between the two brackets
-        std::string between=joined.substr(1, close_position-1);
+        std::string between = joined.substr(1, close_position - 1);
         boost::trim(between);
 
-        if(between=="-"){
-            is_reversed=true;
+        if (between == "-") {
+            is_reversed = true;
         }
         //if there is a +, or more than one whitespace character before the closing bracket, then don't do anything
         //if there is exactly one non "+" charachter before the closing bracket, throw an error
 
-        else if(between!="+" && between.length()==1){
+        else if (between != "+" && between.length() == 1) {
             throw std::runtime_error("An invalid character was received for the axis direction");
-
         }
         //if we are at this point, then line[0] begins with either [+] or [-]
         //the label is the rest of the string
         //the trim is there because there may or may not be whitespace between the bracket and the label
-        label=joined.substr(close_position+1);
+        label = joined.substr(close_position + 1);
         boost::trim(label);
 
     }
 
-    else{
+    else {
         //there is no direction flag, the xlabel is just the line
         //and x_reverse retains its default value of false
-        label= joined;
-        }
+        label = joined;
+    }
 
-
-    return std::make_pair(is_reversed,label);
-
-
+    return std::make_pair(is_reversed, label);
 }
-
-
-
-
-
-
 
 //==================== InputManager class ====================
 using namespace rivet::numeric;
@@ -210,7 +205,7 @@ InputManager::InputManager(InputParameters& params)
     register_file_type(FileType{ "firep", "free implicit representation data", true,
         std::bind(&InputManager::read_firep, this, std::placeholders::_1, std::placeholders::_2) });
     register_file_type(FileType{ "RIVET_msgpack", "pre-computed RIVET data", false,
-                                 std::bind(&InputManager::read_messagepack, this, std::placeholders::_1, std::placeholders::_2) });
+        std::bind(&InputManager::read_messagepack, this, std::placeholders::_1, std::placeholders::_2) });
     //    register_file_type(FileType {"RIVET_0", "pre-computed RIVET data", false,
     //                                 std::bind(&InputManager::read_RIVET_data, this, std::placeholders::_1, std::placeholders::_2) });
 }
@@ -219,8 +214,6 @@ void InputManager::register_file_type(FileType file_type)
 {
     supported_types.push_back(file_type);
 }
-
-
 
 FileType& InputManager::get_file_type(std::string fileName)
 {
@@ -266,7 +259,8 @@ InputError::InputError(unsigned line, std::string message)
 {
 }
 
-FileContent InputManager::read_messagepack(std::ifstream& stream, Progress& progress) {
+FileContent InputManager::read_messagepack(std::ifstream& stream, Progress& progress)
+{
 
     std::string type;
     std::getline(stream, type);
@@ -274,12 +268,12 @@ FileContent InputManager::read_messagepack(std::ifstream& stream, Progress& prog
     TemplatePointsMessage templatePointsMessage;
     ArrangementMessage arrangementMessage;
     std::string buffer((std::istreambuf_iterator<char>(stream)),
-                       std::istreambuf_iterator<char>());
+        std::istreambuf_iterator<char>());
 
     msgpack::unpacker pac;
-    pac.reserve_buffer( buffer.size() );
-    std::copy( buffer.begin(), buffer.end(), pac.buffer() );
-    pac.buffer_consumed( buffer.size() );
+    pac.reserve_buffer(buffer.size());
+    std::copy(buffer.begin(), buffer.end(), pac.buffer());
+    pac.buffer_consumed(buffer.size());
     progress.setProgressMaximum(100);
 
     msgpack::object_handle oh;
@@ -296,7 +290,7 @@ FileContent InputManager::read_messagepack(std::ifstream& stream, Progress& prog
     m3.convert(arrangementMessage);
     progress.progress(100);
     return FileContent(
-            from_messages(templatePointsMessage, arrangementMessage).release());
+        from_messages(templatePointsMessage, arrangementMessage).release());
 }
 
 //reads a point cloud
@@ -314,8 +308,8 @@ FileContent InputManager::read_point_cloud(std::ifstream& stream, Progress& prog
     exact max_dist;
     bool hasFunction;
 
-    bool x_reverse=false;
-    bool y_reverse=false;
+    bool x_reverse = false;
+    bool y_reverse = false;
 
     //read points
     std::vector<DataPoint> points;
@@ -374,14 +368,14 @@ FileContent InputManager::read_point_cloud(std::ifstream& stream, Progress& prog
                 debug() << "InputManager: Point cloud file does not have function values. Creating Degree-Rips complex.";
             }
 
-            x_reverse=true; //higher degrees will be shown on the left
+            x_reverse = true; //higher degrees will be shown on the left
 
         } else {
             hasFunction = true;
 
-            auto is_reversed_and_label=detect_axis_reversed(line_info.first);
-            x_reverse=is_reversed_and_label.first;
-            data->x_label=is_reversed_and_label.second;
+            auto is_reversed_and_label = detect_axis_reversed(line_info.first);
+            x_reverse = is_reversed_and_label.first;
+            data->x_label = is_reversed_and_label.second;
 
             expectedNumTokens = dimension + 1;
             if (verbosity >= 6) {
@@ -413,7 +407,7 @@ FileContent InputManager::read_point_cloud(std::ifstream& stream, Progress& prog
                 tokens.push_back("0");
             }
             DataPoint p(tokens);
-            if (x_reverse&& hasFunction) {
+            if (x_reverse && hasFunction) {
                 p.birth *= -1;
             }
 
@@ -527,7 +521,6 @@ FileContent InputManager::read_point_cloud(std::ifstream& stream, Progress& prog
         //e.g codeg=(0,1,2,...,10)
         //goes to (-(10-0), -(10-1), ...,-(10-10))=(-10,-9,...,0)
 
-
     }
     //X axis is given by function in Vietoris-Rips complex
     else {
@@ -569,8 +562,8 @@ FileContent InputManager::read_point_cloud(std::ifstream& stream, Progress& prog
 
         data->bifiltration_data->build_DR_complex(num_points, dist_indexes, degree_indexes, data->x_exact.size(), data->y_exact.size());
         //convert data->x_exact from codegree sequence to negative degree sequence
-        exact max_x_exact=*(data->x_exact.end()-1);//should it be max_degree instead?
-        std::transform(data->x_exact.begin(),data->x_exact.end(), data->x_exact.begin(),[max_x_exact](exact x){return x-max_x_exact;});
+        exact max_x_exact = *(data->x_exact.end() - 1); //should it be max_degree instead?
+        std::transform(data->x_exact.begin(), data->x_exact.end(), data->x_exact.begin(), [max_x_exact](exact x) { return x - max_x_exact; });
     }
 
     if (verbosity >= 8) {
@@ -585,18 +578,15 @@ FileContent InputManager::read_point_cloud(std::ifstream& stream, Progress& prog
 
     data->free_implicit_rep.reset(new FIRep(*(data->bifiltration_data), input_params.verbosity));
 
-    if(!hasFunction){
+    if (!hasFunction) {
         delete degree;
     }
 
     //remember the axis directions
-    data->x_reverse=x_reverse;
-    data->y_reverse=y_reverse;
+    data->x_reverse = x_reverse;
+    data->y_reverse = y_reverse;
 
     return FileContent(data);
-
-
-
 
 } //end read_point_cloud()
 
@@ -614,14 +604,12 @@ FileContent InputManager::read_discrete_metric_space(std::ifstream& stream, Prog
     ExactSet dist_set; //stores all unique values of the distance metric; must DELETE all elements later
     unsigned num_points;
 
-
     bool hasFunction;
     unsigned* degree; //stores the degree of each point; must FREE later if used
     std::pair<ExactSet::iterator, bool> ret; //for return value upon insert()
 
-    bool x_reverse=false;
-    bool y_reverse=false;
-
+    bool x_reverse = false;
+    bool y_reverse = false;
 
     // STEP 1: read data file and store exact (rational) values of the function for each point
 
@@ -641,7 +629,7 @@ FileContent InputManager::read_discrete_metric_space(std::ifstream& stream, Prog
             }
 
             //x_reverse is true in this case
-            x_reverse=true;
+            x_reverse = true;
 
             //TODO Probably should find new way to get number of points
             //now read the number of points
@@ -655,17 +643,15 @@ FileContent InputManager::read_discrete_metric_space(std::ifstream& stream, Prog
                 throw std::runtime_error("Number of points must be at least 1");
             }
             num_points = static_cast<unsigned>(dim);
-        }
-        else {
+        } else {
             hasFunction = true;
 
             //check for axis reversal
-            auto is_reversed_and_label=detect_axis_reversed(line_info.first);
-            x_reverse=is_reversed_and_label.first;
+            auto is_reversed_and_label = detect_axis_reversed(line_info.first);
+            x_reverse = is_reversed_and_label.first;
             data->x_label = is_reversed_and_label.second;
 
-            exact xrev_sign= x_reverse? -1 :1;
-
+            exact xrev_sign = x_reverse ? -1 : 1;
 
             if (verbosity >= 6) {
                 debug() << "InputManager: Discrete metric space file has function values. Creating Vietoris-Rips complex.";
@@ -676,13 +662,10 @@ FileContent InputManager::read_discrete_metric_space(std::ifstream& stream, Prog
             values.reserve(line.size());
 
             for (size_t i = 0; i < line.size(); i++) {
-                values.push_back(xrev_sign*str_to_exact(line.at(i)));
+                values.push_back(xrev_sign * str_to_exact(line.at(i)));
             }
             num_points = values.size();
         }
-
-
-
 
         // STEP 2: read data file and store exact (rational) values for all distances
 
@@ -735,7 +718,6 @@ FileContent InputManager::read_discrete_metric_space(std::ifstream& stream, Prog
 
                         exact cur_dist = str_to_exact(str);
 
-
                         if (cur_dist <= max_dist) //then this distance is allowed
                         {
                             //store distance value, if it doesn't exist already
@@ -782,7 +764,6 @@ FileContent InputManager::read_discrete_metric_space(std::ifstream& stream, Prog
             if (max_degree < degree[i])
                 max_degree = degree[i];
 
-
         //build vector of discrete degree indices from 0 to max_degree and bins those degree values
         //WARNING: assumes that the number of distinct degree grades will be equal to max_degree which may not hold
         for (unsigned i = 0; i <= max_degree; i++) {
@@ -828,8 +809,8 @@ FileContent InputManager::read_discrete_metric_space(std::ifstream& stream, Prog
         data->bifiltration_data->build_DR_complex(num_points, dist_indexes, degree_indexes, data->x_exact.size(), data->y_exact.size());
 
         //convert data->x_exact from codegree sequence to negative degree sequence
-        exact max_x_exact=*(data->x_exact.end()-1);//should it be max_degree instead?
-        std::transform(data->x_exact.begin(),data->x_exact.end(), data->x_exact.begin(), [max_x_exact](exact x){return x-max_x_exact;});
+        exact max_x_exact = *(data->x_exact.end() - 1); //should it be max_degree instead?
+        std::transform(data->x_exact.begin(), data->x_exact.end(), data->x_exact.begin(), [max_x_exact](exact x) { return x - max_x_exact; });
     }
 
     if (verbosity >= 8) {
@@ -843,8 +824,8 @@ FileContent InputManager::read_discrete_metric_space(std::ifstream& stream, Prog
     }
 
     data->free_implicit_rep.reset(new FIRep(*(data->bifiltration_data), input_params.verbosity));
-    data->x_reverse=x_reverse;
-    data->y_reverse=y_reverse;
+    data->x_reverse = x_reverse;
+    data->y_reverse = y_reverse;
 
     //clean up
     if (!hasFunction) {
@@ -863,22 +844,20 @@ FileContent InputManager::read_bifiltration(std::ifstream& stream, Progress& pro
         debug() << "InputManager: Found a bifiltration file.\n";
     }
 
-
     //Skip file type line
     reader.next_line();
 
     //read the label for x-axis
-    auto is_xreversed_and_label=detect_axis_reversed(reader.next_line().first);
-    bool x_reverse=is_xreversed_and_label.first;
+    auto is_xreversed_and_label = detect_axis_reversed(reader.next_line().first);
+    bool x_reverse = is_xreversed_and_label.first;
     data->x_label = is_xreversed_and_label.second;
-    exact xrev_sign=x_reverse? -1:1;
-
+    exact xrev_sign = x_reverse ? -1 : 1;
 
     //read the label for y-axis
-    auto is_yreversed_and_label=detect_axis_reversed(reader.next_line().first);
-    bool y_reverse=is_yreversed_and_label.first;
+    auto is_yreversed_and_label = detect_axis_reversed(reader.next_line().first);
+    bool y_reverse = is_yreversed_and_label.first;
     data->y_label = is_yreversed_and_label.second;
-    exact yrev_sign=y_reverse? -1:1;
+    exact yrev_sign = y_reverse ? -1 : 1;
 
     data->bifiltration_data.reset(new BifiltrationData(input_params.dim, input_params.verbosity));
 
@@ -912,9 +891,9 @@ FileContent InputManager::read_bifiltration(std::ifstream& stream, Progress& pro
             unsigned grades = (tokens.size() - pos) / 2; //remaining tokens are xy pairs
             for (unsigned i = 0; i < grades; i++) {
                 //read multigrade and remember that it corresponds to this grade
-                ret = x_set.insert(ExactValue(xrev_sign*str_to_exact(tokens.at(pos))));
+                ret = x_set.insert(ExactValue(xrev_sign * str_to_exact(tokens.at(pos))));
                 (ret.first)->indexes.push_back(num_grades);
-                ret = y_set.insert(ExactValue(yrev_sign*str_to_exact(tokens.at(pos + 1))));
+                ret = y_set.insert(ExactValue(yrev_sign * str_to_exact(tokens.at(pos + 1))));
                 (ret.first)->indexes.push_back(num_grades);
                 num_grades++;
                 pos += 2;
@@ -963,8 +942,8 @@ FileContent InputManager::read_bifiltration(std::ifstream& stream, Progress& pro
 
     data->free_implicit_rep.reset(new FIRep(*(data->bifiltration_data), input_params.verbosity));
 
-    data->x_reverse=x_reverse;
-    data->y_reverse=y_reverse;
+    data->x_reverse = x_reverse;
+    data->y_reverse = y_reverse;
 
     return FileContent(data);
 } //end read_bifiltration()
@@ -977,8 +956,8 @@ FileContent InputManager::read_firep(std::ifstream& stream, Progress& progress)
     if (verbosity >= 2) {
         debug() << "InputManager: Found a firep file.\n";
     }
-    bool x_reverse=false;
-    bool y_reverse=false;
+    bool x_reverse = false;
+    bool y_reverse = false;
 
     //Skip file type line
     reader.next_line();
@@ -1000,18 +979,17 @@ FileContent InputManager::read_firep(std::ifstream& stream, Progress& progress)
         auto line_info = reader.next_line();
         try {
             //read the label for x-axis
-            auto is_xreversed_and_label=detect_axis_reversed(line_info.first);
-            x_reverse=is_xreversed_and_label.first;
+            auto is_xreversed_and_label = detect_axis_reversed(line_info.first);
+            x_reverse = is_xreversed_and_label.first;
             data->x_label = is_xreversed_and_label.second;
-            exact xrev_sign=x_reverse? -1:1;
-
+            exact xrev_sign = x_reverse ? -1 : 1;
 
             line_info = reader.next_line();
             //read the label for y-axis
-            auto is_yreversed_and_label=detect_axis_reversed(line_info.first);
-            y_reverse=is_yreversed_and_label.first;
+            auto is_yreversed_and_label = detect_axis_reversed(line_info.first);
+            y_reverse = is_yreversed_and_label.first;
             data->y_label = is_yreversed_and_label.second;
-            exact yrev_sign=y_reverse? -1:1;
+            exact yrev_sign = y_reverse ? -1 : 1;
 
             //Read dimensions of matrices
             line_info = reader.next_line();
@@ -1034,8 +1012,8 @@ FileContent InputManager::read_firep(std::ifstream& stream, Progress& progress)
                 boundary_mat_2.push_back(std::vector<unsigned>());
                 line_info = reader.next_line();
                 tokens = line_info.first;
-                x_values.push_back(xrev_sign*str_to_exact(tokens.at(0)));
-                y_values.push_back(yrev_sign*str_to_exact(tokens.at(1)));
+                x_values.push_back(xrev_sign * str_to_exact(tokens.at(0)));
+                y_values.push_back(yrev_sign * str_to_exact(tokens.at(1)));
                 //store value, if it doesn't exist already
                 ret = x_set.insert(ExactValue(x_values[i]));
                 //remember that point i has this value
@@ -1064,8 +1042,8 @@ FileContent InputManager::read_firep(std::ifstream& stream, Progress& progress)
                 boundary_mat_1.push_back(std::vector<unsigned>());
                 line_info = reader.next_line();
                 tokens = line_info.first;
-                x_values.push_back(xrev_sign*str_to_exact(tokens.at(0)));
-                y_values.push_back(yrev_sign*str_to_exact(tokens.at(1)));
+                x_values.push_back(xrev_sign * str_to_exact(tokens.at(0)));
+                y_values.push_back(yrev_sign * str_to_exact(tokens.at(1)));
                 //store value, if it doesn't exist already
                 ret = x_set.insert(ExactValue(x_values[i + num_high_simplices]));
                 //remember that point i has this value
@@ -1111,8 +1089,8 @@ FileContent InputManager::read_firep(std::ifstream& stream, Progress& progress)
     data->bifiltration_data->set_xy_grades(data->x_exact.size(), data->y_exact.size());
     data->free_implicit_rep.reset(new FIRep(*(data->bifiltration_data), num_high_simplices, num_mid_simplices, num_low_simplices, boundary_mat_2, boundary_mat_1, x_indexes, y_indexes, input_params.verbosity));
 
-    data->x_reverse=x_reverse;
-    data->y_reverse=y_reverse;
+    data->x_reverse = x_reverse;
+    data->y_reverse = y_reverse;
 
     return FileContent(data);
 } //end read_firep()

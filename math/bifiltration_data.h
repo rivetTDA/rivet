@@ -61,8 +61,6 @@
 #include <unordered_map>
 #include <vector>
 
-
-
 //typedefs
 //TODO: It is probably bettter to specify a simplex using a combinatorial
 //number system, as in DIPHA or Ripser.
@@ -82,7 +80,7 @@ struct LowSimplexData {
 
 struct MidHighSimplexData {
     Simplex s;
-    
+
     //vector of grades of appearance of s
     AppearanceGrades grades_vec;
 
@@ -90,9 +88,9 @@ struct MidHighSimplexData {
     //Used to construct high boundary matrix.
     //Only used for simplcies of dimension hom_dim, not hom_dim_1.
     std::vector<unsigned> col_inds;
-    
+
     AppearanceGrades::iterator grades_it;
-    
+
     //TODO: Maybe slightly cleaner to use an iterator pointing to col_ind than an
     //iterator pointing to grades_vec?
     //std::vector<unsigned>::iterator ind_it;
@@ -122,10 +120,9 @@ class BifiltrationData {
     friend class FIRep;
 
 public:
-    
     //constructor
     BifiltrationData(unsigned dim, int verbosity);
-    
+
     /* 
     build_VR_complex() builds BifiltrationData representing a bifiltered
     Vietoris-Rips complex from metric data, via a straighforward recursive
@@ -142,10 +139,10 @@ public:
     the y-coordinate is "distance" between points.
     */
     void build_VR_complex(const std::vector<unsigned>& times,
-                          const std::vector<unsigned>& distances,
-                          const unsigned num_x,
-                          const unsigned num_y);
-    
+        const std::vector<unsigned>& distances,
+        const unsigned num_x,
+        const unsigned num_y);
+
     /* 
     build_DR_complex() builds BifiltrationData representing a degree-Rips 
      complex from metric data.  The algorithm for this uses a sweepline
@@ -164,10 +161,10 @@ public:
      and the y-coordinate is "degree parameter"
     */
     void build_DR_complex(const unsigned num_vertices,
-                          const std::vector<unsigned>& distances,
-                          const std::vector<unsigned>& degrees,
-                          const unsigned num_x,
-                          const unsigned num_y);
+        const std::vector<unsigned>& distances,
+        const std::vector<unsigned>& degrees,
+        const unsigned num_x,
+        const unsigned num_y);
 
     /*
     add_simplex() adds a simplex to BifiltrationData.
@@ -176,26 +173,26 @@ public:
           adds in faces.
     */
     void add_simplex(const std::vector<int>& vertices,
-                     const AppearanceGrades& grades);
-    
+        const AppearanceGrades& grades);
+
     //Sets x_grades and y_grades.
     //Used when reading in a bifiltration.
     void set_xy_grades(unsigned num_x, unsigned num_y);
 
     //returns the number of unique x-coordinates of the multi-grades
     unsigned num_x_grades();
-    
+
     //returns the number of unique y-coordinates of the multi-grades
     unsigned num_y_grades();
-    
+
     //returns the number of simplices of dimension (hom_dim-1), hom_dim,
     //or (hom_dim+1).  Assumes dim is non-negative.  Returns -1 if invalid dim.
     int get_size(unsigned dim);
-    
+
     //the dimension of homology to be computed.
     //hom_dim+1 is the max dimension of simplices in bifiltration_data
     const unsigned hom_dim;
-    
+
     //controls display of output, for debugging
     const int verbosity;
 
@@ -203,7 +200,6 @@ public:
     void print_bifiltration();
 
 private:
-    
     //number of distinct x-grades (y-grades) appearing this bifiltration
     unsigned x_grades;
     unsigned y_grades;
@@ -213,30 +209,30 @@ private:
 
     //recursive function used in build_VR_complex()
     void build_VR_subcomplex(const std::vector<unsigned>& times,
-                             const std::vector<unsigned>& distances,
-                             std::vector<int>& vertices,
-                             const unsigned prev_time,
-                             const unsigned prev_dist);
+        const std::vector<unsigned>& distances,
+        std::vector<int>& vertices,
+        const unsigned prev_time,
+        const unsigned prev_dist);
 
     //recursive function used in build_DR_complex()
     void build_DR_subcomplex(const std::vector<unsigned>& distances,
-                             std::vector<int>& parent_indexes,
-                             const std::vector<int>& candidates,
-                             const AppearanceGrades& parent_grades,
-                             const std::vector<AppearanceGrades>& vertex_multigrades);
+        std::vector<int>& parent_indexes,
+        const std::vector<int>& candidates,
+        const AppearanceGrades& parent_grades,
+        const std::vector<AppearanceGrades>& vertex_multigrades);
 
     //Generates required multigrades for build_DR_complex()
     void generate_vertex_multigrades(std::vector<AppearanceGrades>& multigrades,
-                                   const unsigned vertices,
-                                   const std::vector<unsigned>& distances,
-                                   const std::vector<unsigned>& degrees);
+        const unsigned vertices,
+        const std::vector<unsigned>& distances,
+        const std::vector<unsigned>& degrees);
 
     //Finds the grades of appearance of when both simplices exist.
     //subject to minimum scale parameter. Used in build_DR_complex()
     void combine_multigrades(AppearanceGrades& merged,
-                            const AppearanceGrades& grades1,
-                            const AppearanceGrades& grades2,
-                            unsigned mindist);
+        const AppearanceGrades& grades1,
+        const AppearanceGrades& grades2,
+        unsigned mindist);
 
     //Sorts the grades of appearance in reverse lexicographic order
     //and makes sure they are all incomparable

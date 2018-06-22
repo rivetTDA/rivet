@@ -43,7 +43,6 @@ struct InputParameters {
         ar& fileName& shortName& outputFile& dim& x_bins& y_bins& verbosity& x_label& y_label& outputFormat;
     }
     MSGPACK_DEFINE(fileName, shortName, outputFile, dim, x_bins, y_bins, verbosity, x_label, y_label, outputFormat);
-
 };
 
 #endif // INPUT_PARAMETERS_H

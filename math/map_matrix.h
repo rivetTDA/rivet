@@ -46,8 +46,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
    upper-triangular matrices of vineyard updates.
 */
 
-
-
 /*
  
  TODO [Mike]: Preliminary computational experiments indicate that using lazy 
@@ -95,25 +93,22 @@ column-priority or row-priority. Written here using column-priority terminology,
 but this class is meant to be inherited, not instantiated directly
 */
 
- 
 class MapMatrix_Base {
 protected:
-
     MapMatrix_Base(unsigned rows, unsigned cols); //constructor to create matrix of specified size (all entries zero)
     MapMatrix_Base(unsigned size); //constructor to create a (square) identity matrix
     virtual ~MapMatrix_Base(); //destructor
-    
+
     phat::vector_heap_mod matrix; //modified PHAT lazy heap matrix object
     unsigned num_rows; //number of rows in the matrix
 
     virtual unsigned width() const; //returns the number of columns in the matrix
     virtual unsigned height() const; //returns the number of rows in the matrix
-    
+
     //WARNING: Current Implementation assumes the entry has not already been added.
     virtual void set(unsigned i, unsigned j); //sets (to 1) the entry in row i, column j
-    
+
     virtual void add_to(unsigned j, unsigned k); //adds column j to column k; RESULT: column j is not changed, column k contains sum of columns j and k (with mod-2 arithmetic)
-    
 };
 
 //MapMatrix is a column-priority matrix designed for standard persistence calculations
@@ -122,108 +117,101 @@ class MapMatrix : public MapMatrix_Base {
     friend class FIRep;
     friend class MapMatrix_Perm;
 
-
 public:
-
     MapMatrix(unsigned rows, unsigned cols); //constructor to create matrix of specified size (all entries zero)
     MapMatrix(unsigned size); //constructor to create a (square) identity matrix
 
     MapMatrix(); // creates an empty MapMatrix
-    
+
     MapMatrix(std::initializer_list<std::initializer_list<int>>);
-    
+
     virtual unsigned width() const; //returns the number of columns in the matrix
     virtual unsigned height() const; //returns the number of rows in the matrix
-    
+
     //friend std::ostream& operator<<(std::ostream&, const MapMatrix&);
 
     //requests that the columns vector have enough capacity for num_cols columns
     void reserve_cols(unsigned num_cols);
-    
+
     //resize the matrix to the specified number of columns
     void resize(unsigned num_cols);
-    
+
     //resize the matrix to the specified number of columns
     void resize(unsigned n_rows, unsigned n_cols);
-    
+
     //WARNING: Current implementation assumes the entry has not already been added.
     virtual void set(unsigned i, unsigned j); //sets (to 1) the entry in row i, column j
-    
+
     //returns the "low" index in the specified column, or -1 if the column is empty
     virtual int low(unsigned j) const;
-    
+
     //same functionality as above, but only works correctly if column is finalized.
     int low_finalized(unsigned j) const;
-    
+
     //same as the above, but removes the low.
     //Used for efficient implementation of standard reduction w/ lazy heaps.
     int remove_low(unsigned j);
-    
+
     //Assuming column j is already heapified, adds l to the column and fixes heap.
     //Used for efficient implementation of standard reduction w/ lazy heaps.
     void push_index(unsigned j, unsigned l);
-    
+
     bool col_is_empty(unsigned j) const; //returns true iff column j is empty
 
     void add_column(unsigned j, unsigned k); //adds column j to column k; RESULT: column j is not changed, column k contains sum of columns j and k (with mod-2 arithmetic)
-    
+
     //TODO: Probably only used to compute Betti numbers, so perhaps should move with the other specialized functions for that
     //adds column j from MapMatrix other to column k of this matrix
     void add_column(const MapMatrix* other, unsigned j, unsigned k); //adds column j from MapMatrix* other to column k of this matrix
-    
-    
+
     //wraps the add_to_popped() function in vector_heap_mod. See that code for an explanation.
     void add_column_popped(unsigned j, unsigned k);
-    
+
     //same as above, but column j now comes from another matrix.
     void add_column_popped(const MapMatrix& other, unsigned j, unsigned k);
-    
-    
-    void prepare_col(unsigned j);
-    
-    void finalize(unsigned i);
-    
-    void print() const;
-    
-    void print_sparse() const;
-    
 
-/*** For use in the new code to compute presentations ***/
-    
-     //copies with index j from other to the back of this matrix
+    void prepare_col(unsigned j);
+
+    void finalize(unsigned i);
+
+    void print() const;
+
+    void print_sparse() const;
+
+    /*** For use in the new code to compute presentations ***/
+
+    //copies with index j from other to the back of this matrix
     void append_col(const MapMatrix& other, unsigned j);
-    
+
     //Move column with index source to index target, zeroing out this column source in the process.
     void move_col(unsigned source, unsigned target);
-    
+
     //Move the ith column of other to jth this matrix, zeroing out ith column of other in the process.
     void move_col(MapMatrix& other, unsigned i, unsigned j);
 
-    
-/********* Methods used to minimize a presentation *********/
-    
+    /********* Methods used to minimize a presentation *********/
+
     void sort_col(int i);
-   
+
     // reindex column col using the indices given in new_row_indices.
     void reindex_column(unsigned col, const std::vector<int>& new_row_indices);
-    
+
     /*** Next functions assume that column(s) in question are sorted ***/
-    
+
     //same as add_column above, but requires columns to be sorted vectors.
     void add_column_sorted(unsigned j, unsigned k);
-    
+
     //returns true if entry (i,j) is 1, false otherwise
     bool entry_sorted(unsigned i, unsigned j) const;
-    
+
     //returns entry with largest index, if the column is non empty.  Returns -1 otherwise.
     int low_sorted(unsigned i) const;
-    
-    
-/********* Tehcnical functions used in Matthew's old Betti code. *********/
+
+    /********* Tehcnical functions used in Matthew's old Betti code. *********/
     //TODO: These probably can be deleted if we phase out the old Betti algorithm
-    
+
     //TODO: Make the int arguments in the next two functions unsigned?
-    
+
     //copies NONZERO columns with indexes in [first, last] from other, appending them to this matrix to the right of all existing columns
     //  all row indexes in copied columns are increased by offset
     void copy_cols_from(const MapMatrix* other, int first, int last, unsigned offset);
@@ -234,27 +222,24 @@ public:
     //removes zero columns from this matrix
     //  ind_old gives grades of columns before zero columns are removed; new grade info stored in ind_new
     void remove_zero_cols(const IndexMatrix& ind_old, IndexMatrix& ind_new);
-    
 };
 
 //MapMatrix with row/column permutations and low array, designed for "vineyard updates."
 class MapMatrix_RowPriority_Perm; //forward declaration
 class MapMatrix_Perm {
 public:
-  
     //Constructors
-    
-    
+
     //Special constructor to create the initial low matrix used in the
     //computation of barcode templates.  Permutes and trims columns as described
     //in section 6 of the RIVET paper.
     MapMatrix_Perm(const MapMatrix& mat, const std::vector<int>& coface_order, unsigned num_cofaces);
-    
+
     //Special constructor to create the initial high matrix used in the
     //computation of barcode templates.  Permutes and trims rows and columns as
     //described in section 6 of the RIVET paper.
     MapMatrix_Perm(const MapMatrix& mat, const std::vector<int>& face_order, unsigned num_faces, const std::vector<int>& coface_order, const unsigned num_cofaces);
-    
+
     unsigned width() const; //returns the number of columns in the matrix
     unsigned height() const; //returns the number of rows in the matrix
 
@@ -263,18 +248,17 @@ public:
     //reduces this matrix, fills the low array, and returns the corresponding upper-triangular matrix for the RU-decomposition
     //  NOTE: only to be called before any rows are swapped!
     MapMatrix_RowPriority_Perm* decompose_RU();
-    
+
     int low(unsigned j) const; //returns the "low" index in the specified column, or -1 if the column is empty
     int find_low(unsigned l) const; //returns the index of the column with low l, or -1 if there is no such column
 
     bool col_is_empty(unsigned j) const; //returns true iff column j is empty
-    
+
     void add_column(unsigned j, unsigned k); //adds column j to column k; RESULT: column j is not changed, column k contains sum of columns j and k (with mod-2 arithmetic)
-    
+
     void swap_rows(unsigned i, bool update_lows); //transposes rows i and i+1, optionally updates low array
     void swap_columns(unsigned j, bool update_lows); //transposes columns j and j+1, optionally updates low array
-    
-    
+
     //clears the matrix, then rebuilds it from reference with columns permuted according to col_order
     //NOTE: This functoon and the next do not remove columns or rows.
     //TODO: Add lazy versions of these functions which don't redo the whole computation
@@ -283,14 +267,14 @@ public:
     //clears the matrix, then rebuilds it from reference with columns permuted
     //according to col_order and rows permuted according to row_order
     void rebuild(MapMatrix_Perm* reference, const std::vector<unsigned>& col_order, const std::vector<unsigned>& row_order);
-    
+
     //TODO: Add a finalize method here?
-    
+
     void print(); //prints the matrix to standard output (for testing)
 
 private:
     phat::vector_heap_perm matrix; // modified version of phat's vector_heap class which supports implicit ordering of rows.
-    
+
     std::vector<int> low_by_row; //stores index of column with each low number, or -1 if no such column exists -- NOTE: only accurate after decompose_RU() is called
     std::vector<int> low_by_col; //stores the low number for each column, or -1 if the column is empty -- NOTE: only accurate after decompose_RU() is called
 };

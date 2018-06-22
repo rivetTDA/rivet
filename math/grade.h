@@ -35,16 +35,15 @@
 #ifndef grade_h
 #define grade_h
 
-
 struct Grade {
     int x;
     int y;
-    
+
     bool operator==(const Grade& other) const
     {
         return x == other.x && y == other.y;
     }
-    
+
     bool operator<(const Grade& other) const
     {
         if (y != other.y)
@@ -52,15 +51,14 @@ struct Grade {
         else
             return x < other.x;
     }
-    
+
     Grade() {}
-    
+
     Grade(int set_x, int set_y)
-    : x(set_x)
-    , y(set_y)
+        : x(set_x)
+        , y(set_y)
     {
     }
 };
-
 
 #endif /* grade_h */

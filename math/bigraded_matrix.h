@@ -41,8 +41,8 @@
 #ifndef __Bigraded_Matrix_H__
 #define __Bigraded_Matrix_H__
 
-#include "map_matrix.h"
 #include "index_matrix.h"
+#include "map_matrix.h"
 
 //forward declarations
 class MapMatrix;
@@ -58,33 +58,28 @@ public:
     //bigrade info for each column of mat.  Columns are assumed to be in colex
     //order.
     IndexMatrix ind;
-    
+
     //Constructor.  Builds an zero matrix of the appropropriate dimensions
     BigradedMatrix(unsigned rows, unsigned cols, unsigned ind_rows, unsigned ind_cols);
-    
+
     //Constructor.  Copies the arguments.
-    BigradedMatrix(const MapMatrix& m,const IndexMatrix& i);
-    
+    BigradedMatrix(const MapMatrix& m, const IndexMatrix& i);
+
     /*
     Constructor taking a BigradedMatrixLex object.  Moves the cols of lex_mat
     into this matrix, and builds the corresponding index matrix.
     Also trivializes lex_mat in the process.
     */
     BigradedMatrix(BigradedMatrixLex& lex_mat);
-    
-    
-    
+
     //Compute the kernel of this bigraded matrix via a standard reduction:
     //NOTE: This destroys the matrix.
     BigradedMatrix kernel();
 
     void print();
-    
-    
-    
-private:
 
-     /*
+private:
+    /*
      Performs a step of the kernel computation at a single bigrade. This is a 
      variant on the standard bigraded reduction.  When a column in mat is zeroed
      out, the corresponding column of slave is appended to the back 
@@ -92,12 +87,11 @@ private:
      records the bigrades of the generators for the kernel by updating 
      working_ker.ind.
      */
-     void kernel_one_bigrade(MapMatrix& slave,
-                             BigradedMatrixLex& ker_lex,
-                             unsigned curr_x,
-                             unsigned curr_y,
-                             std::vector<int>& lows);
-
+    void kernel_one_bigrade(MapMatrix& slave,
+        BigradedMatrixLex& ker_lex,
+        unsigned curr_x,
+        unsigned curr_y,
+        std::vector<int>& lows);
 };
 
 //Similar to BigradedMatrix, but columns are assumed to be in lex order.
@@ -105,20 +99,18 @@ class BigradedMatrixLex {
 public:
     MapMatrix mat;
     IndexMatrixLex ind;
-    
+
     //constructor
     BigradedMatrixLex(unsigned rows,
-                      unsigned cols,
-                      unsigned ind_rows,
-                      unsigned ind_cols)
-        : mat(rows,cols),
-        ind(ind_rows,ind_cols)
-    {}
-    
+        unsigned cols,
+        unsigned ind_rows,
+        unsigned ind_cols)
+        : mat(rows, cols)
+        , ind(ind_rows, ind_cols)
+    {
+    }
+
     void print();
 };
 
-
-
 #endif // __Bigraded_Matrix_H__
-

@@ -34,8 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <sstream>
 
 ControlDot::ControlDot(SliceLine* line, bool left_bottom, ConfigParameters* params)
-    :
-    position_lock(false)
+    : position_lock(false)
     , slice_line(line)
     , config_params(params)
     , pressed(false)
@@ -82,7 +81,7 @@ QVariant ControlDot::itemChange(GraphicsItemChange change, const QVariant& value
                 if (mouse.y() < 2 * mouse.x()) //smooth transition in region around y=x
                     newpos.setY(2 * (mouse.y() - mouse.x()));
 
-                double max = std::min(slice_line->get_right_pt_y(),slice_line->get_box_ymax());//don't let left dot go above right endpoint of line or above visible window
+                double max = std::min(slice_line->get_right_pt_y(), slice_line->get_box_ymax()); //don't let left dot go above right endpoint of line or above visible window
                 if (newpos.y() > max)
                     newpos.setY(max);
             } else if (mouse.x() > 0) //then project dot onto bottom side of box (the x-axis)
@@ -93,8 +92,7 @@ QVariant ControlDot::itemChange(GraphicsItemChange change, const QVariant& value
                     newpos.setX(2 * (mouse.x() - mouse.y()));
 
                 double max = std::min(slice_line->get_right_pt_x(), slice_line->get_box_xmax()); //don't let bottom dot go right of the top endpoint of line or right of visible window
-                if (newpos.x() > max)
-                {
+                if (newpos.x() > max) {
                     newpos.setX(max);
                 }
             } else //then place dot at origin
@@ -133,10 +131,9 @@ QVariant ControlDot::itemChange(GraphicsItemChange change, const QVariant& value
         //update line position
 
         set_position(newpos);
-        if (left_bottom){
+        if (left_bottom) {
             slice_line->update_lb_endpoint();
-        }
-        else
+        } else
             slice_line->update_rt_endpoint();
 
         //return
@@ -150,8 +147,8 @@ void ControlDot::set_position(const QPointF& newpos)
 {
     update_lock = true;
 
-    if(!position_lock){
-    setPos(newpos);
+    if (!position_lock) {
+        setPos(newpos);
     }
     update_lock = false;
 }
@@ -159,8 +156,8 @@ void ControlDot::set_position(const QPointF& newpos)
 void ControlDot::mousePressEvent(QGraphicsSceneMouseEvent* event)
 {
     pressed = true;
-    position_lock=false;
-    other->position_lock=true;
+    position_lock = false;
+    other->position_lock = true;
     update();
     QGraphicsItem::mousePressEvent(event);
 }
@@ -168,7 +165,7 @@ void ControlDot::mousePressEvent(QGraphicsSceneMouseEvent* event)
 void ControlDot::mouseReleaseEvent(QGraphicsSceneMouseEvent* event)
 {
     pressed = false;
-    other->position_lock=false;
+    other->position_lock = false;
     update();
     QGraphicsItem::mouseReleaseEvent(event);
 }

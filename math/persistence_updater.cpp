@@ -74,7 +74,7 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
     if (verbosity >= 10) {
         debug() << "  Mapping low simplices:";
     }
-    
+
     //TODO:Probably could be cleaned up.  We don't need pointers here, do we?
     IndexMatrix* ind_low = &(fir.low_mx.ind); //can we improve this with something more efficient than IndexMatrix?
     store_multigrades(ind_low, true);
@@ -84,12 +84,12 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
     }
     IndexMatrix* ind_high = &(fir.high_mx.ind); //again, could be improved?
     store_multigrades(ind_high, false);
-    
+
     //get the proper simplex ordering
     std::vector<int> low_simplex_order; //this will be a map : dim_index --> order_index for dim-simplices; -1 indicates simplices not in the order
     unsigned num_low_simplices = build_simplex_order(ind_low, true, low_simplex_order);
     //delete ind_low;
-    
+
     std::vector<int> high_simplex_order; //this will be a map : dim_index --> order_index for (dim+1)-simplices; -1 indicates simplices not in the order
     unsigned num_high_simplices = build_simplex_order(ind_high, false, high_simplex_order);
     //delete ind_high;
@@ -97,9 +97,9 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
     //get intial boundary matrices R_low and R_high for RU-decomposition.  These are permuted and trimmed,
     //as described in Section 6 of the RIVET paper.
     R_low = new MapMatrix_Perm(fir.low_mx.mat, low_simplex_order, num_low_simplices); //NOTE: must be deleted
-    
-    R_high = new MapMatrix_Perm(fir.high_mx.mat,low_simplex_order, num_low_simplices, high_simplex_order, num_high_simplices); //NOTE: must be deleted
-    
+
+    R_high = new MapMatrix_Perm(fir.high_mx.mat, low_simplex_order, num_low_simplices, high_simplex_order, num_high_simplices); //NOTE: must be deleted
+
     //print runtime data
     if (verbosity >= 4) {
         debug() << "  --> computing initial order on simplices and building the boundary matrices took"
@@ -110,7 +110,7 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
     timer.restart();
     MapMatrix_Perm* R_low_initial = new MapMatrix_Perm(*R_low);
     MapMatrix_Perm* R_high_initial = new MapMatrix_Perm(*R_high);
-    
+
     if (verbosity >= 4) {
         debug() << "  --> copying the boundary matrices took"
                 << timer.elapsed() << " milliseconds";
@@ -121,7 +121,7 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
     inv_perm_low.resize(R_low->width());
     perm_high.resize(R_high->width());
     inv_perm_high.resize(R_high->width());
-    
+
     for (unsigned j = 0; j < perm_low.size(); j++) {
         perm_low[j] = j;
         inv_perm_low[j] = j;
@@ -130,17 +130,15 @@ void PersistenceUpdater::store_barcodes_with_reset(std::vector<Halfedge*>& path,
         perm_high[j] = j;
         inv_perm_high[j] = j;
     }
-    
-    
 
     // PART 2: INITIAL PERSISTENCE COMPUTATION (RU-decomposition)
 
     timer.restart();
-    
+
     //initial RU-decomposition
     U_low = R_low->decompose_RU();
     U_high = R_high->decompose_RU();
-    
+
     unsigned total_time_for_resets = timer.elapsed();
     if (verbosity >= 4) {
         debug() << "  --> computing the RU decomposition took" << total_time_for_resets << "milliseconds";
@@ -1259,7 +1257,7 @@ void PersistenceUpdater::update_order_and_reset_matrices(TemplatePointsMatrixEnt
     //STEP 4: compute the new RU-decomposition
 
     // TODO: In the future, we will only reset part of U, and we won't delete this matrix here.
-    
+
     delete U_low;
     U_low = R_low->decompose_RU();
     delete U_high;
