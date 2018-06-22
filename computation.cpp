@@ -26,9 +26,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "timer.h"
 #include <chrono>
 
-Computation::Computation(int vrbsty, Progress& progress)
+Computation::Computation(int verbosity, Progress& progress)
     : progress(progress)
-    , verbosity(vrbsty)
+    , verbosity(verbosity)
 {
 }
 

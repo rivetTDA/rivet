@@ -95,7 +95,7 @@ public:
     
     //constructor; requires verbosity parameter
     //as a side effect, replaces the bif_data object with something trivial
-    FIRep(BifiltrationData& bif_data, int vbsty);
+    FIRep(BifiltrationData& bif_data, int verbosity);
     
     /*
     constructor taking a presentation.  High matrix is set to a copy of the 
@@ -117,8 +117,8 @@ public:
           unsigned num_high_simplices,
           unsigned num_mid_simplices,
           unsigned num_low_simplices,
-          std::vector<std::vector<unsigned>>& d2,
-          std::vector<std::vector<unsigned>>& d1,
+          std::vector<std::vector<unsigned>>& boundary_mat_2,
+          std::vector<std::vector<unsigned>>& boundary_mat_1,
           const std::vector<unsigned> x_values,
           const std::vector<unsigned> y_values,
           int vbsty);

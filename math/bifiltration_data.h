@@ -223,7 +223,7 @@ private:
                              std::vector<int>& parent_indexes,
                              const std::vector<int>& candidates,
                              const AppearanceGrades& parent_grades,
-                             const std::vector<AppearanceGrades>& vertexMultigrades);
+                             const std::vector<AppearanceGrades>& vertex_multigrades);
 
     //Generates required multigrades for build_DR_complex()
     void generateVertexMultigrades(std::vector<AppearanceGrades>& multigrades,

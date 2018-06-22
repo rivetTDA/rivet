@@ -525,20 +525,20 @@ void ArrangementBuilder::find_path(Arrangement& arrangement, std::vector<Halfedg
     
     // PART 3: CONVERT THE MINIMAL SPANNING TREE TO A PATH
     
-    //first, we put the MST in a different format so that we can call treeToDirectedTree()
+    //first, we put the MST in a different format so that we can call tree_to_directed_tree()
     /* TODO: Shouldn't boost be able to directly output the graph in a format
      we can use directly?  This code currently builds three representations of 
      the MST before finding the path... By changing the output format of Krustal 
      we should be able to eliminate the first of these.
      */
-    std::vector<NodeAdjacencyList> adjList(arrangement.faces.size(), NodeAdjacencyList());
+    std::vector<NodeAdjacencyList> adj_list(arrangement.faces.size(), NodeAdjacencyList());
     for (unsigned i = 0; i < spanning_tree_edges.size(); i++) {
         unsigned a = boost::source(spanning_tree_edges[i], dual_graph);
         unsigned b = boost::target(spanning_tree_edges[i], dual_graph);
         long weight = boost::get(boost::edge_weight_t(), dual_graph, spanning_tree_edges[i]);
         
-        adjList.at(a).push_back(std::pair<unsigned,long>(b,weight));
-        adjList.at(b).push_back(std::pair<unsigned,long>(a,weight));
+        adj_list.at(a).push_back(std::pair<unsigned,long>(b,weight));
+        adj_list.at(b).push_back(std::pair<unsigned,long>(a,weight));
     }
     
     //clear dual_graph
@@ -563,12 +563,12 @@ void ArrangementBuilder::find_path(Arrangement& arrangement, std::vector<Halfedg
 
     // convert undirected tree representation to a directed representation, with the
     //node lists sorted in a way that keeps the path short.
-    treeToDirectedTree(adjList, start, children);
+    tree_to_directed_tree(adj_list, start, children);
 
     //again, now that we have a new representation of the spanning tree,
     //clear the previous one
-    adjList.clear();
-    adjList.shrink_to_fit();
+    adj_list.clear();
+    adj_list.shrink_to_fit();
     
     // now we can find the path
     find_subpath(arrangement, start, children, pathvec);
@@ -639,21 +639,21 @@ void ArrangementBuilder::find_subpath(Arrangement& arrangement,
 
 } //end find_subpath()
 
-void ArrangementBuilder::treeToDirectedTree(std::vector<NodeAdjacencyList>& adjList, unsigned start, std::vector<std::vector<unsigned>>& children)
+void ArrangementBuilder::tree_to_directed_tree(std::vector<NodeAdjacencyList>& adj_list, unsigned start, std::vector<std::vector<unsigned>>& children)
 {
-    std::vector<bool> discovered(adjList.size(),false);// c++ vector for keeping track of which nodes have been visited
-    std::vector<unsigned> branchWeight(adjList.size(),0); // this will contain the weight of the edges "hanging" from the node represented by its index in branchWeight
-    std::vector<NodeAdjacencyList::iterator> currentNeighbor(adjList.size()); // for each node, keeps track of an index in the corresponding NodeAdjacencyList.
+    std::vector<bool> discovered(adj_list.size(),false);// c++ vector for keeping track of which nodes have been visited
+    std::vector<unsigned> branch_weight(adj_list.size(),0); // this will contain the weight of the edges "hanging" from the node represented by its index in branchWeight
+    std::vector<NodeAdjacencyList::iterator> current_neighbor(adj_list.size()); // for each node, keeps track of an index in the corresponding NodeAdjacencyList.
     
     //initialize the currentNeighbor iterators.
-    for (unsigned i = 0; i < adjList.size(); ++i) {
-        currentNeighbor[i]=adjList[i].begin();
+    for (unsigned i = 0; i < adj_list.size(); ++i) {
+        current_neighbor[i]=adj_list[i].begin();
     }
     
     std::stack<unsigned> nodes; // stack for nodes as we do DFS
     nodes.push(start); // push start node onto the node stack
     discovered[start] = true; // mark start node as discovered
-    std::vector<std::pair<long, unsigned>> currentChildren; // vector of pairs to contain the children of a given node.  First elt in the pair is a weight, second elt is a node index.
+    std::vector<std::pair<long, unsigned>> current_children; // vector of pairs to contain the children of a given node.  First elt in the pair is a weight, second elt is a node index.
     
     while (!nodes.empty()) // while we have not traversed the whole tree
     {
@@ -662,8 +662,8 @@ void ArrangementBuilder::treeToDirectedTree(std::vector<NodeAdjacencyList>& adjL
         
         // find the next undiscovered child of node
         bool found_new_child = false;
-        auto& cn = currentNeighbor[node];
-        while(!found_new_child && cn != adjList[node].end()) // look for an undiscovered node
+        auto& cn = current_neighbor[node];
+        while(!found_new_child && cn != adj_list[node].end()) // look for an undiscovered node
         {
             if (!discovered[cn->first]) // found a node
             {
@@ -680,17 +680,17 @@ void ArrangementBuilder::treeToDirectedTree(std::vector<NodeAdjacencyList>& adjL
             nodes.pop(); // pop node off of the node stack
             
             long running_sum = 0; // reset runningSum
-            currentChildren.clear(); // reset currentChildren
+            current_children.clear(); // reset currentChildren
             
-            for (unsigned i = 0; i < adjList[node].size(); i++) // loop over all children of node
+            for (unsigned i = 0; i < adj_list[node].size(); i++) // loop over all children of node
             {
-                if (!nodes.empty() && nodes.top() == adjList[node][i].first) // then this adjacency is the parent node
+                if (!nodes.empty() && nodes.top() == adj_list[node][i].first) // then this adjacency is the parent node
                     continue;
                 
                 //add this child to the currentChildren vector
-                unsigned child = adjList[node][i].first;
-                long cur_branch_weight = branchWeight[child] + adjList[node][i].second;
-                currentChildren.push_back(std::make_pair(cur_branch_weight, child));
+                unsigned child = adj_list[node][i].first;
+                long cur_branch_weight = branch_weight[child] + adj_list[node][i].second;
+                current_children.push_back(std::make_pair(cur_branch_weight, child));
                 
                 //add weight of this child's branch to runningSum
                 running_sum += cur_branch_weight;
@@ -699,11 +699,11 @@ void ArrangementBuilder::treeToDirectedTree(std::vector<NodeAdjacencyList>& adjL
             branchWeight[node] = running_sum; // assign running_sum to branchWeight at the current node
             
             //sort the children of current node (sorts in increasing order by branch weight)
-            std::sort(currentChildren.begin(), currentChildren.end());
+            std::sort(current_children.begin(), current_children.end());
             
             // copy the children indexes to the children vector in reverse branch-weight order
-            for (std::vector<std::pair<long, unsigned>>::reverse_iterator rit = currentChildren.rbegin();
-                 rit != currentChildren.rend(); ++rit) {
+            for (std::vector<std::pair<long, unsigned>>::reverse_iterator rit = current_children.rbegin();
+                 rit != current_children.rend(); ++rit) {
                 children[node].push_back(rit->second);
             }
         }

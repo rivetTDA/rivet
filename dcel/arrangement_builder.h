@@ -78,7 +78,7 @@ private:
        negligible compared to that of computing a mimimal presentation.
        -Mike Lesnick, April 18 2018.
     */
-    void treeToDirectedTree(std::vector<NodeAdjacencyList>& adjList, unsigned start, std::vector<std::vector<unsigned>>& children);
+    void tree_to_directed_tree(std::vector<NodeAdjacencyList>& adj_list, unsigned start, std::vector<std::vector<unsigned>>& children);
 
 };
 

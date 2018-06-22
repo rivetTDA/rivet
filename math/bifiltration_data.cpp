@@ -34,9 +34,9 @@
 #include <stdexcept>
 
 //BifiltrationData constructor; requires dimension of homology to be computed and verbosity parameter
-BifiltrationData::BifiltrationData(unsigned dim, int v)
+BifiltrationData::BifiltrationData(unsigned dim, int verbosity)
     : hom_dim(dim)
-    , verbosity(v)
+    , verbosity(verbosity)
     , x_grades(0)
     , y_grades(0)
     , mid_count(0)
@@ -168,8 +168,8 @@ void BifiltrationData::build_DR_complex(const unsigned num_vertices, const std::
         debug() << "BUILDING DEGREE-RIPS COMPLEX";
     }
 
-    std::vector<AppearanceGrades> vertexMultigrades;
-    generateVertexMultigrades(vertexMultigrades, num_vertices, distances, degrees);
+    std::vector<AppearanceGrades> vertex_multigrades;
+    generate_vertex_multigrades(vertex_multigrades, num_vertices, distances, degrees);
     
     std::vector<int> simplex_indices;
     for (unsigned i = 0; i < num_vertices; i++) {
@@ -184,13 +184,13 @@ void BifiltrationData::build_DR_complex(const unsigned num_vertices, const std::
                 candidates.push_back(j);
         }
         //recursion
-        build_DR_subcomplex(distances, simplex_indices, candidates, vertexMultigrades[i], vertexMultigrades);
+        build_DR_subcomplex(distances, simplex_indices, candidates, vertex_multigrades[i], vertex_multigrades);
         simplex_indices.pop_back();
     }
 } //end build_DR_complex()
 
 //function to build (recursively) a subcomplex for the DRips complex
-void BifiltrationData::build_DR_subcomplex(const std::vector<unsigned>& distances, std::vector<int>& parent_vertices, const std::vector<int>& candidates, const AppearanceGrades& parent_grades, const std::vector<AppearanceGrades>& vertexMultigrades)
+void BifiltrationData::build_DR_subcomplex(const std::vector<unsigned>& distances, std::vector<int>& parent_vertices, const std::vector<int>& candidates, const AppearanceGrades& parent_grades, const std::vector<AppearanceGrades>& vertex_multigrades)
 {
     //Store the simplex info if it is of dimension (hom_dim - 1), hom_dim, or hom_dim+1. Dimension is parent_vertices.size() - 1
     if (parent_vertices.size() == hom_dim) //simplex of dimension hom_dim - 1
@@ -213,25 +213,25 @@ void BifiltrationData::build_DR_subcomplex(const std::vector<unsigned>& distance
     for (std::vector<int>::const_iterator it = candidates.begin(); it != candidates.end(); it++) {
         //Determine the grades of appearance of the clique with parent_vertices and *it
         //First determine the minimal scale parameter necessary for all the edges between the clique parent_vertices, and *it to appear
-        unsigned minDist = distances[0];
+        unsigned min_dist = distances[0];
         for (std::vector<int>::const_iterator it2 = parent_vertices.begin(); it2 != parent_vertices.end(); it2++)
             if (distances[(*it) * (*it - 1) / 2 + *it2 + 1] > minDist) //By construction, each of the parent indices are strictly less than *it
-                minDist = distances[(*it) * (*it - 1) / 2 + *it2 + 1];
-        AppearanceGrades newGrades;
-        combineMultigrades(newGrades, parent_grades, vertexMultigrades[*it], minDist);
+                min_dist = distances[(*it) * (*it - 1) / 2 + *it2 + 1];
+        AppearanceGrades new_grades;
+        combine_multigrades(new_grades, parent_grades, vertex_multigrades[*it], min_dist);
         
         //Determine subset of candidates which are still candidates after adding *it
-        std::vector<int> newCandidates;
+        std::vector<int> new_candidates;
         for (std::vector<int>::const_iterator it2 = it + 1; it2 != candidates.end(); it2++) {
             if (distances[(*it2) * (*it2 - 1) / 2 + *it + 1] < std::numeric_limits<unsigned>::max()) //We know that *it2 > *it
             {
-                newCandidates.push_back(*it2); //We knew there was connection between *it2 and all of parent_index, and now also to *it as well
+                new_candidates.push_back(*it2); //We knew there was connection between *it2 and all of parent_index, and now also to *it as well
             }
         }
 
         parent_vertices.push_back(*it);
         //recurse
-        build_DR_subcomplex(distances, parent_vertices, newCandidates, newGrades, vertexMultigrades);
+        build_DR_subcomplex(distances, parent_vertices, new_candidates, new_grades, vertex_multigrades);
         parent_vertices.pop_back(); //Finished looking at cliques adding *it as well
     }
 
@@ -241,52 +241,52 @@ void BifiltrationData::build_DR_subcomplex(const std::vector<unsigned>& distance
 //Degrees are stored in negative form to align with correct ordering on R
 //Stores result in the vector container "multigrades". Each vector of grades is sorted in reverse lexicographic order
 
-void BifiltrationData::generateVertexMultigrades(std::vector<AppearanceGrades>& multigrades, const unsigned vertices, const std::vector<unsigned>& distances, const std::vector<unsigned>& degrees)
+void BifiltrationData::generate_vertex_multigrades(std::vector<AppearanceGrades>& multigrades, const unsigned vertices, const std::vector<unsigned>& distances, const std::vector<unsigned>& degrees)
 {
     for (unsigned i = 0; i < vertices; i++) {
-        std::vector<unsigned> neighborDists; //Generate list of how far the neighbors are, vertex of the neighbor does not matter
+        std::vector<unsigned> neighbor_dists; //Generate list of how far the neighbors are, vertex of the neighbor does not matter
         for (unsigned j = 0; j < vertices; j++) //Dist of (i, j) with i < j stored in distances[j(j - 1)/2 + i]
         {
             if (j < i && distances[i * (i - 1) / 2 + j + 1] < std::numeric_limits<unsigned>::max()) //If i and j are neighbors
             {
-                neighborDists.push_back(distances[i * (i - 1) / 2 + j + 1]);
+                neighbor_dists.push_back(distances[i * (i - 1) / 2 + j + 1]);
             } else if (j > i && distances[j * (j - 1) / 2 + i + 1] < std::numeric_limits<unsigned>::max()) {
-                neighborDists.push_back(distances[j * (j - 1) / 2 + i + 1]);
+                neighbor_dists.push_back(distances[j * (j - 1) / 2 + i + 1]);
             }
         }
-        std::sort(neighborDists.begin(), neighborDists.end());
-        AppearanceGrades iGrades; //Stores grades of appearance for vertex i
-        unsigned minScale;
+        std::sort(neighbor_dists.begin(), neighborDists.end());
+        AppearanceGrades i_grades; //Stores grades of appearance for vertex i
+        unsigned min_scale;
         iGrades.push_back(Grade(degrees[0], distances[0])); //Every point has a grade of appearance at degree = 0, scale = 0
         for (unsigned j = 0; j < neighborDists.size();) {
-            minScale = neighborDists[j];
-            while (j < neighborDists.size() && neighborDists[j] == minScale)
+            min_scale = neighbor_dists[j];
+            while (j < neighbor_dists.size() && neighbor_dists[j] == min_scale)
                 j++; //Iterate until the next distance is > minScale
-            iGrades.push_back(Grade(degrees[j], minScale)); //If the scale parameter is >= minScale, then vertex i has at least neighborDists.size() - (j + 1) neighbors.
+            i_grades.push_back(Grade(degrees[j], min_scale)); //If the scale parameter is >= minScale, then vertex i has at least neighborDists.size() - (j + 1) neighbors.
         }
-        update_grades(iGrades); //Makes sure all of them are incomparable after the binning
-        multigrades.push_back(iGrades);
+        update_grades(i_grades); //Makes sure all of them are incomparable after the binning
+        multigrades.push_back(i_grades);
     }
 } //end generateVertexMultigrades()
 
 //Determines the grades of appearance of when both simplices exist subject to some minimal distance parameter mindist
 //Grade arrays are assumed to be sorted in reverse lexicographic order, output will be sorted in reverse lexicographic order
 //Takes the intersection of the grades of appearances and the half plane y >= minDist
-void BifiltrationData::combineMultigrades(AppearanceGrades& merged, const AppearanceGrades& grades1, const AppearanceGrades& grades2, const unsigned minDist)
+void BifiltrationData::combine_multigrades(AppearanceGrades& merged, const AppearanceGrades& grades1, const AppearanceGrades& grades2, const unsigned min_dist)
 {
     AppearanceGrades::const_iterator it1 = grades1.begin();
     AppearanceGrades::const_iterator it2 = grades2.begin();
-    int y1 = it1->y, y2 = it2->y, maxX;
-    int currYMax = std::max(std::max(y1, y2), (int) minDist);
-    Grade lastGrade;
+    int y1 = it1->y, y2 = it2->y, max_x;
+    int curr_y_max = std::max(std::max(y1, y2), (int) min_dist);
+    Grade last_grade;
     while (it1 != grades1.end() || it2 != grades2.end()) {
-        maxX = std::numeric_limits<int>::min();
+        max_x = std::numeric_limits<int>::min();
         //Consider the reverse lexicographically first point
         if (it1 != grades1.end()) {
-            maxX = it1->x;
+            max_x = it1->x;
         }
-        if (it2 != grades2.end() && maxX <= it2->x) {
-            maxX = it2->x;
+        if (it2 != grades2.end() && max_x <= it2->x) {
+            max_x = it2->x;
             it2++;
             if (it2 != grades2.end()) {
                 y2 = it2->y;
@@ -294,7 +294,7 @@ void BifiltrationData::combineMultigrades(AppearanceGrades& merged, const Appear
                 y2 = std::numeric_limits<int>::max();
             }
         }
-        if (it1 != grades1.end() && maxX == it1->x) {
+        if (it1 != grades1.end() && max_x == it1->x) {
             it1++;
             if (it1 != grades1.end()) {
                 y1 = it1->y;
@@ -302,12 +302,12 @@ void BifiltrationData::combineMultigrades(AppearanceGrades& merged, const Appear
                 y1 = std::numeric_limits<int>::max();
             }
         }
-        int newYMax = std::max(std::max(y1, y2), (int) minDist);
-        if (newYMax > currYMax) {
-            lastGrade.x = maxX;
-            lastGrade.y = currYMax;
-            merged.push_back(lastGrade);
-            currYMax = newYMax;
+        int new_y_max = std::max(std::max(y1, y2), (int) min_dist);
+        if (new_y_max > curr_y_max) {
+            last_grade.x = max_x;
+            last_grade.y = curr_y_max;
+            merged.push_back(last_grade);
+            curr_y_max = new_y_max;
         }
     }
 } //end combineMultigrades

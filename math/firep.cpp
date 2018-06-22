@@ -34,20 +34,20 @@
 #include <stdexcept>
 
 //constructor; requires verbosity parameter
-FIRep::FIRep(Presentation pres, int vbsty)
+FIRep::FIRep(Presentation pres, int verbosity)
     : low_mx(BigradedMatrix(MapMatrix(0,pres.mat.height()),pres.row_ind))
     , high_mx(BigradedMatrix(pres.mat,pres.col_ind))
-    , verbosity(vbsty)
+    , verbosity(verbosity)
     , x_grades(pres.row_ind.width())
     , y_grades(pres.row_ind.height())
 {}
 
 //FIRep constructor; requires BifiltrationData object (which in particular
 //specifies the homology dimension) and verbosity parameter
-FIRep::FIRep(BifiltrationData& bif_data, int vbsty)
+FIRep::FIRep(BifiltrationData& bif_data, int verbosity)
     : low_mx(0,0,bif_data.num_y_grades(),bif_data.num_x_grades())
     , high_mx(0,0,bif_data.num_y_grades(),bif_data.num_x_grades())
-    , verbosity(vbsty)
+    , verbosity(verbosity)
     , x_grades(bif_data.num_x_grades())
     , y_grades(bif_data.num_y_grades())
 {
@@ -428,7 +428,7 @@ index the high_matrix.
 Orders colexicographically according to bigrade.  Within a bigrade, orders high 
 simplices before relations.  Note that a MidHiGenIterPair can represent either a
 (high-simplex, generator) pair or a relation; this requires us to consider a
-few cases.  Note also that we represente the relations implicitly (see above), 
+few cases.  Note also that we represent the relations implicitly (see above),
 so the comparator has to compute the grade of a relation as part of the sorting.
  
 For high simplices of the same bigrade, sorting doesn't change the order.  Thus, 
@@ -492,11 +492,11 @@ FIRep::FIRep(BifiltrationData& bif_data,
              unsigned num_high_simplices,
              unsigned num_mid_simplices,
              unsigned num_low_simplices,
-             std::vector<std::vector<unsigned>>& d2,
-             std::vector<std::vector<unsigned>>& d1,
+             std::vector<std::vector<unsigned>>& boundary_mat_2,
+             std::vector<std::vector<unsigned>>& boundary_mat_1,
              const std::vector<unsigned> x_values,
              const std::vector<unsigned> y_values,
-             int vbsty)
+             int verbosity)
 
 : low_mx(num_low_simplices,
          num_mid_simplices,
@@ -508,7 +508,7 @@ FIRep::FIRep(BifiltrationData& bif_data,
           bif_data.num_y_grades(),
           bif_data.num_x_grades())
 
-, verbosity(vbsty)
+, verbosity(verbosity)
 , x_grades(bif_data.num_x_grades())
 , y_grades(bif_data.num_y_grades())
 
@@ -543,7 +543,7 @@ FIRep::FIRep(BifiltrationData& bif_data,
         prev_grade = mid_indexes[0].first;
     
     for (unsigned i = 0; i < num_mid_simplices; i++) {
-        write_boundary_column(low_mx.mat, d1[mid_indexes[i].second], i);
+        write_boundary_column(low_mx.mat, boundary_mat_1[mid_indexes[i].second], i);
         
         low_mx.ind.fill_index_mx(prev_grade, mid_indexes[i].first, i-1);
     }
@@ -571,7 +571,7 @@ FIRep::FIRep(BifiltrationData& bif_data,
         prev_grade = high_indexes[0].first;
     
     for (unsigned i = 0; i < num_high_simplices; i++) {
-        std::vector<unsigned> entries = d2[high_indexes[i].second];
+        std::vector<unsigned> entries = boundary_mat_2[high_indexes[i].second];
         for (unsigned j = 0; j < entries.size(); j++) {
             entries[j] = inverse_map[entries[j]];
         }

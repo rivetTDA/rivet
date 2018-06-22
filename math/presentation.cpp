@@ -521,29 +521,30 @@ void Presentation::reindex_min_pres(const std::vector<int>& new_row_indices)
 
 //Technical function by Presentation::minimize()
 //NOTE: Works correctly only in the setting in which the function is used.
-//In that setting j will have bigrade AT MOST (row, col) w.r.t the order on R^2.
-bool Presentation::row_index_has_matching_bigrade(int j, unsigned row, unsigned col)
+//In that setting curr_row_index will have bigrade AT MOST (row, col) w.r.t the
+//order on R^2.
+bool Presentation::row_index_has_matching_bigrade(int curr_row_index, unsigned row, unsigned col)
 {
-    if (j!= row_ind.last())
+    if (curr_row_index!= row_ind.last())
     {
-        return j >= row_ind.start_index(row,col);
+        return curr_row_index >= row_ind.start_index(row,col);
     }
     else
     {
-        //it could be that j is the only row_index appearing at bigrade (row,col).
+        //it could be that curr_row_index is the only row_index appearing at bigrade (row,col).
         if (col > 0)
         {
-            return j > row_ind.get(row,col-1);
+            return curr_row_index > row_ind.get(row,col-1);
         }
         else
         {
             if (row > 0)
             {
-                return j>row_ind.get(row-1,row_ind.width()-1);
+                return curr_row_index>row_ind.get(row-1,row_ind.width()-1);
             }
             else
             {
-                //If bigrade of j is at most (0,0), then it is exactly (0,0)
+                //If bigrade of curr_row_index is at most (0,0), then it is exactly (0,0)
                 return true;
             }
         }

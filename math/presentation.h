@@ -186,7 +186,7 @@ private:
                                  const Grade& end_grade,
                                  const int& value);
 
-    
+
     /*
     Technical function used to compute a minimal presetation.  Takes as input a 
     minimal presentation with the non-minimal column indices (which skip some 
@@ -196,7 +196,7 @@ private:
     void reindex_min_pres(const std::vector<int>& new_row_indices);
     
     //Technical function by Presentation::minimize()
-    bool row_index_has_matching_bigrade(int j, unsigned row, unsigned col);
+    bool row_index_has_matching_bigrade(int curr_row_index, unsigned row, unsigned col);
     
 };
 
