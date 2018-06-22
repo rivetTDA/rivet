@@ -15,7 +15,7 @@ Simon Segert
 Roy Zhao  
 
 ## Dependencies
-RIVET depends on the qt and boost libraries.  This version of RIVET uses some 
+RIVET depends on the qt, boost, and msgpack libraries.  In addition, RIVET now incorporates some 
 code from the PHAT repository for persistence computation by Ulrich Bauer, 
 Michael Kerber, Jan Reininghaus.
 
@@ -25,16 +25,14 @@ Before starting to build RIVET, you will need to have the following installed:
 * A C++ compiler (g++ or clang are what we use)
 * CMake
 * Qt 5
-* Boost (including boost serialization; version 1.60 or newer required)
+* Boost (version 1.58 or newer)
 
 Below we give step-by-step instructions for installing these required dependencies and building RIVET on Ubuntu and Mac OS X.  Building RIVET on Windows is not yet supported (we are working on this), but it is possible to build RIVET using the Bash shell on Windows 10.
 
 ## Building On Ubuntu
 
 ### Installing Dependencies
-To install dependencies on Ubuntu, we suggest that you first upgrade to Ubuntu 16.10; the Ubuntu 16.04 package manager only installs Boost 1.58, whereas RIVET requires Boost version 1.60 or higher.
-
-On Ubuntu 16.10, installation of dependencies should be relatively simple:
+On Ubuntu, installation of dependencies should be relatively simple:
 
     sudo apt-get install cmake qt5-default qt5-qmake qtbase5-dev-tools libboost-all-dev
 
