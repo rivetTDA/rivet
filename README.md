@@ -11,7 +11,8 @@ Madkour Abdel-Rahman
 Bryn Keller    
 Matthew Wright  
 Phil Nadolny  
-Simon Segert  
+Simon Segert
+Alex Yu
 Roy Zhao  
 
 ## Dependencies
