@@ -11,9 +11,9 @@ Madkour Abdel-Rahman
 Bryn Keller    
 Matthew Wright  
 Phil Nadolny  
-Simon Segert
-Alex Yu
-Roy Zhao  
+Simon Segert  
+Alex Yu  
+Roy Zhao 
 
 ## Dependencies
 RIVET depends on the qt, boost, and msgpack libraries.  In addition, RIVET now incorporates some 
