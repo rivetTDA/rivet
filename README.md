@@ -9,16 +9,13 @@ Matthew Wright
 ## Contributors
 Madkour Abdel-Rahman   
 Bryn Keller    
-Matthew Wright  
 Phil Nadolny  
 Simon Segert  
 Alex Yu  
 Roy Zhao 
 
 ## Dependencies
-RIVET depends on the qt, boost, and msgpack libraries.  In addition, RIVET now incorporates some 
-code from the PHAT repository for persistence computation by Ulrich Bauer, 
-Michael Kerber, Jan Reininghaus.
+RIVET depends on the <a href="https://www.qt.io/" target="_blank" rel="noopener">qt,</a> <a href="http://www.boost.org/" target="_blank" rel="noopener">Boost</a>, and <a href="https://msgpack.org/index.html" target="_blank">MessagePack</a> libraries.  In addition, RIVET now incorporates some code from <a href="https://bitbucket.org/phat-code/phat/src/master/" target="_blank">PHAT</a>.
 
 ## Requirements
 Before starting to build RIVET, you will need to have the following installed:
@@ -185,6 +182,10 @@ These environment variables will be reset when you close the Bash shell. To avoi
 
 You are now ready to build RIVET. Follow the instructions in the section of this readme under the heading [Building on Ubuntu: Building RIVET](https://github.com/rivetTDA/rivet/#building-rivet).
 
+## Using RIVET
+
+Information on how to use RIVET can be found on the <a href="http://rivet.online" target="_blank">RIVET website</a>.  
+TODO: Merge the documentation on the website and the content of this readme into a single document.
 
 ## Contributing
     
