@@ -75,6 +75,7 @@ VisualizationWindow::VisualizationWindow(InputParameters& params)
     //    ui->sliceView->setDragMode(QGraphicsView::ScrollHandDrag);
     ui->sliceView->scale(1, -1);
     ui->sliceView->setRenderHint(QPainter::Antialiasing);
+    ui->sliceView->setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
 
     //set up the persistence diagram scene
     ui->pdView->setScene(&p_diagram);
