@@ -3,7 +3,7 @@ Understanding the RIVET Visualization
 
 This page briefly explains the RIVET visualization. For more details, see `the RIVET paper <a href="https://arxiv.org/pdf/1512.00180v1.pdf>`_.
 
-For $a,b\in \mathbb{R}^2$, we write $a\leq b$ if $a_1\leq b_1$ and $a_2\leq b_2$. A *2-D persistence module* $M$ is a collection of vector spaces $\{M_a\}_{a\in \mathbb{R^2}}$, together with a collection of linear maps $\{M_{a,b}:M_a\to M_b\}_{a\leq b}$, such that $M_{a,a}=\mathrm{Id}_{M_a}$ for all $a$ and $M_{b,c}\circ M_{a,b}=M_{a,c}$ for all $a\leq b\leq c$.
+For \(a,b\in \mathbb{R}^2\), we write \(a\leq b\) if $a_1\leq b_1$ and $a_2\leq b_2$. A *2-D persistence module* $M$ is a collection of vector spaces $\{M_a\}_{a\in \mathbb{R^2}}$, together with a collection of linear maps $\{M_{a,b}:M_a\to M_b\}_{a\leq b}$, such that $M_{a,a}=\mathrm{Id}_{M_a}$ for all $a$ and $M_{b,c}\circ M_{a,b}=M_{a,c}$ for all $a\leq b\leq c$.
 
 RIVET visualizes three classes of invariants of a 2-D persistence module $M$:
 
