@@ -10,9 +10,9 @@ RIVET visualizes three classes of invariants of a 2-D persistence module \\(M\\)
 
 * The barcode \\(\\mathcal B(M^L)\\) of the restriction \\(M^L\\) of \\(M\\) along \\(L\\), for \\(L\\) any affine line with non-negative slope.
 * The dimension of each vector space \\(M_a\\).
-* The *bigraded Betti numbers* \\(\xi_i(M)\\). These are functions \\(\\mathbb{R}^2 \\to \\mathbb{N}\\) that, respectively, count the number of births, deaths, and "relations amongst deaths" at each bigrade. Formally, given \\(r \\in \\mathbb{R}^2\\) and a minimal free resolution $$0 \\to F^2\\to F^1\\to F^0$$ for \\(M\\), \\(\\xi_i(M)(r)\\) is the number of elements at bigrade \\(r\\) in a basis for \\(F^i\\).
+* The *bigraded Betti numbers* \\(\\xi_i(M)\\). These are functions \\(\\mathbb{R}^2 \\to \\mathbb{N}\\) that, respectively, count the number of births, deaths, and "relations amongst deaths" at each bigrade. Formally, given \\(r \\in \\mathbb{R}^2\\) and a minimal free resolution $$0 \\to F^2\\to F^1\\to F^0$$ for \\(M\\), \\(\\xi_i(M)(r)\\) is the number of elements at bigrade \\(r\\) in a basis for \\(F^i\\).
 
-One key feature of RIVET is the ability to interactively select the line $L$ via the mouse and have the barcode \\(\\mathcal B(M^L)\\) update in real time.
+One key feature of RIVET is the ability to interactively select the line \\(L\\) via the mouse and have the barcode \\(\\mathcal B(M^L)\\) update in real time.
 
 [Note that as of 2018, RIVET also computes minimal presentations of 2-parameter persistence modules, in addition to the above three invariants.  The rivet_console executable can print a minimal presentation, but the RIVET visualization does not provide any direct way to visualize or otherwise access the minimal presentation.]
 
@@ -58,18 +58,18 @@ The Persistence Diagram Window (at right in the screenshot above) displays a per
 
 The bounds for the square viewable region (surrounded by dashed lines) in this window are chosen statically, depending on \\(M\\) but not on \\(L\\). 
 Let the square \\([0,B]\\times[0,B]\\) be the viewable region. 
-It may be that the barcode contains some intervals \\([\\alpha, \\beta)\\) with \\(\\alpha \gt B\\) or \\(\\beta \gt B\\), and it is necessary to represent these on the screen. 
+It may be that the barcode contains some intervals \\([\\alpha, \\beta)\\) with \\(\\alpha \\gt B\\) or \\(\\beta \\gt B\\), and it is necessary to represent these on the screen. 
 For this reason, RIVET includes some information in horizontal strips at the top of the persistence diagram, which is not found in typical persistence diagrams, to represent these points.
 
 Above the square region of persistence diagram are two narrow horizontal strips, separated by a dashed horizontal line. 
-The upper strip is labeled *inf*, and the lower strip is labeled *&lt;inf*. 
+The upper strip is labeled *inf*, and the lower strip is labeled \\(\\lt\\)\ *inf*. 
 RIVET plots a point in the upper strip for each interval \\([\\alpha, \\infty)\\) in the barcode with \\(\\alpha 
-\le B\\). 
-RIVET plots a point in the lower strip for each interval \\([\\alpha, \\beta)\\) in the barcode with \\(\alpha \le B\\) and \\(B \lt \\beta \lt \\infty)\\).
+\\le B\\). 
+RIVET plots a point in the lower strip for each interval \\([\\alpha, \\beta)\\) in the barcode with \\(\\alpha \\le B\\) and \\(B \\lt \\beta \\lt \\infty)\\).
 
 Just to the right of each of the two horizontal strips is a number, separated from the strip by a dashed vertical line. 
-The upper number is the count of intervals \\([\\alpha, \\infty)\\) in the barcode with \\(B \lt \\alpha\\). 
-The lower number is the the count of intervals \\([\\alpha, \\infty)\\) in the barcode with \\(B \lt \\alpha, \\beta \lt \\infty\\).
+The upper number is the count of intervals \\([\\alpha, \\infty)\\) in the barcode with \\(B \\lt \\alpha\\). 
+The lower number is the the count of intervals \\([\\alpha, \\infty)\\) in the barcode with \\(B \\lt \\alpha, \\beta \\lt \\infty\\).
 
 As with the bigraded Betti numbers in the Line Selection Window, the multiplicity of a point in the persistence diagram is indicated by the area of the corresponding dot. 
 Additionally, hovering the mouse over a dot produces a popup that displays the multiplicity of the dot.
