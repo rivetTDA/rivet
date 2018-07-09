@@ -28,6 +28,14 @@ externalproject_add(
 
 find_package(Boost "1.58")
 
+# Look for OpenMP and enable it if found.
+find_package(OpenMP)
+if (OPENMP_FOUND)
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+endif()
+
 #note this must come before add_executable or it will be ignored
 link_directories(${CMAKE_CURRENT_BINARY_DIR}/docopt/src/docopt_project-build)
 
