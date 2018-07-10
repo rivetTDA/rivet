@@ -748,11 +748,6 @@
     <addaction name="actionSave_line_selection_window_as_image"/>
     <addaction name="actionSave_persistence_diagram_as_image"/>
     <addaction name="separator"/>
-    <addaction name="actionAutomatically_reset_line"/>
-    <addaction name="separator"/>
-    <addaction name="actionRestore_default_window"/>
-    <addaction name="actionBetti_number_window"/>
-    <addaction name="separator"/>
     <addaction name="actionExit"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
@@ -769,8 +764,18 @@
     </property>
     <addaction name="actionConfigure"/>
    </widget>
+   <widget class="QMenu" name="menuView">
+    <property name="title">
+     <string>View</string>
+    </property>
+    <addaction name="actionRestore_default_window"/>
+    <addaction name="actionBetti_number_window"/>
+    <addaction name="separator"/>
+    <addaction name="actionAutomatically_reset_line"/>
+   </widget>
    <addaction name="menuMain_Window"/>
    <addaction name="menuEdit"/>
+   <addaction name="menuView"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
@@ -845,8 +850,10 @@
    <property name="text">
     <string>Restore default window</string>
    </property>
-   <property name="toolTip">
-    <string>Restore default window</string>
+  </action>
+  <action name="actionBetti_number_window">
+   <property name="text">
+    <string>Betti number window</string>
    </property>
   </action>
   <action name="actionAutomatically_reset_line">
@@ -858,17 +865,6 @@
    </property>
    <property name="text">
     <string>Automatically reset line</string>
-   </property>
-   <property name="toolTip">
-    <string>Move line if if is not visible in the window</string>
-   </property>
-  </action>
-  <action name="actionBetti_number_window">
-   <property name="text">
-    <string>Betti number window</string>
-   </property>
-   <property name="toolTip">
-    <string>The smallest window containing all Betti numbers</string>
    </property>
   </action>
  </widget>
