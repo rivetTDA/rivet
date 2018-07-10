@@ -1,8 +1,9 @@
-.. _input_data:
+.. _inputData:
+
 Input Data
 ==========
 
-RIVET accepts as input a text file that describes a data set, called a *raw data* file in this documentation (see :ref:`running_RIVET`).
+RIVET accepts as input a text file that describes a data set, called a *raw data* file in this documentation (see :ref:`runningRIVET`).
 Here we specify the allowed formats for this file.
 
 When reading text files, RIVET ignores lines that begin with the symbol `#`; such lines may be used for human-readable comments within the input files.
@@ -33,7 +34,7 @@ Here is an example with three points in \\(\\mathbb R^2\\)::
 	1.1 2 0.5
 	-2 3 4
 
-Putting the characters `[-]` at the beginning of the line before the label tells RIVET to take the filtration direction on vertices to be descending rather than ascending, as in the following example::
+Putting the characters ``[-]`` at the beginning of the line before the label tells RIVET to take the filtration direction on vertices to be descending rather than ascending, as in the following example::
 
 	points
 	2
@@ -57,7 +58,7 @@ The file has the following format:
 #. The third line specifies \\(f\\). This line consists of a list of \\(n\\) decimal numbers, separated by white space.
 #. The fourth line gives the label for the "distance" axis.
 #. The fifth line specifies the maximum distance \\(d\\) of edges constructed in the Vietoris-Rips complex. This must be a positive number (integer or decimal).
-#. The remaining line(s) of the file specify the distances between pairs of points. These distances appear as \\(\\frac{n(n-1)}{2}\\) numbers (integer or decimal), separated by white space or line breaks. Let the points be denoted \\(p_1, p_2, \\ldots, p_n\\). The first \\(n-1\\) numbers are the distance from \\(p_1\\) to \\(p_2, \\ldots, p_n\\). The next \\(n-2\\) numbers give the distances from \\(p_2\\) to \\(p_3, \ldots, p_n\\), and so on. The last number gives the distance from \\(p_{n-1}\\) to \\(p_n\\).
+#. The remaining line(s) of the file specify the distances between pairs of points. These distances appear as \\(\\frac{n(n-1)}{2}\\) numbers (integer or decimal), separated by white space or line breaks. Let the points be denoted \\(p_1, p_2, \\ldots, p_n\\). The first \\(n-1\\) numbers are the distance from \\(p_1\\) to \\(p_2, \\ldots, p_n\\). The next \\(n-2\\) numbers give the distances from \\(p_2\\) to \\(p_3, \\ldots, p_n\\), and so on. The last number gives the distance from \\(p_{n-1}\\) to \\(p_n\\).
 
 Here is an example, for a metric space of cardinality 3::
 
@@ -67,9 +68,9 @@ Here is an example, for a metric space of cardinality 3::
 	geodesic distance
 	2.5
 	2 3.2
-	1.25<
+	1.25
 
-As above, we can reverse the filtration direction on vertices by placing `[-]` at the beginning of the appropriate label.
+As above, we can reverse the filtration direction on vertices by placing ``[-]`` at the beginning of the appropriate label.
 
 Point Cloud / Finite Metric Space without Function (Degree-Rips Construction)
 -----------------------------------------------------------------------------
@@ -90,7 +91,7 @@ We specify by example the input format for the Degree-Rips bifiltration on a poi
 
 Given the input specification for the 1-critical "points" format, this variant should be self-explanatory.  
 
-The input format for the Degree-Rips bifiltration on a finite metric space is shown in the following example:
+The input format for the Degree-Rips bifiltration on a finite metric space is shown in the following example::
 
 	metric
 	no function
@@ -116,7 +117,7 @@ Let \\(v_1, v_2, \\ldots, v_n\\) denote the vertices (0-simplices) of the bifilt
 Specifying the bifiltration requires specifying each simplex (given as a subset of \\(v_1, v_2, \\ldots, v_n\\)) and its birth indices. 
 Simplices are specified, one simplex per line, in the bifiltration input file.
 
-The user must ensure that the input file specifies a valid bifiltration, in the sense that if \\(\\alpha\\) is born at \\((x_\\alpha, y_\\alpha)\\) and \\(\\Delta\\) is born at \\((x_\\Delta, y_\\Delta)\\), then \\(x_\\alpha \\le x_\\Delta\\) and \\(y_\\alpha \\le y_\\Delta\\).
+The user must ensure that the input file specifies a valid bifiltration, in the sense that if simplex \\(\\alpha\\) is born at \\(( x_{\\alpha}, y_{\\alpha} )\\) and simplex \\(\\Delta \\supset \\alpha\\) is born at \\(( x_{\\Delta}, y_{\\Delta} )\\), then \\( x_{\\alpha} \\le x_{\\Delta} \\) and \\( y_{\\alpha} \\le y_{\\Delta} \\).
 
 A file in the bifiltration format must have the following format:
 
@@ -147,8 +148,8 @@ The minimal grades of appearance of a given simplex may be given in arbitrary or
  Moreover, the code can handle non-minimial bigrades of appearance; it simply removes them. 
  (However, in the current code, non-minimal bigrades of appearance may change the coarsening behavior, as the \\(x\\)- and \\(y\\)-grades of such bigrades are currently not ignored when performing coarsening.)
 
-One can also take the filtration direction for either of the axes to be decreasing, by placing `[-]` in front of an axis label. 
-For instance, the following variant of the last example replaces the y-coordinate of each bigrade with its negative, and takes the filtration direction for the \\(y\\)-coordinate to be descending:
+One can also take the filtration direction for either of the axes to be decreasing, by placing ``[-]`` in front of an axis label. 
+For instance, the following variant of the last example replaces the y-coordinate of each bigrade with its negative, and takes the filtration direction for the \\(y\\)-coordinate to be descending::
 
 	bifiltration
 	time of appearance
@@ -166,6 +167,7 @@ For instance, the following variant of the last example replaces the y-coordinat
 next
 
 .. _firep:
+
 Algebraic Input (FIRep)
 -----------------------
 

@@ -4,19 +4,19 @@ RIVET Developers
 Project Founders
 ----------------
 
-Michael Lesnick  
-`Matthew Wright <https://mlwright.org>`_
+* Michael Lesnick  
+* `Matthew Wright <https://mlwright.org>`_
 
 
 Contributors
 ------------
 
-Madkour Abdel-Rahman   
-Bryn Keller    
-Phil Nadolny  
-Simon Segert  
-Alex Yu  
-Roy Zhao 
+* Madkour Abdel-Rahman   
+* Bryn Keller    
+* Phil Nadolny  
+* Simon Segert  
+* Alex Yu  
+* Roy Zhao 
 
 
 Contributing

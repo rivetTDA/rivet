@@ -1,4 +1,5 @@
-.. _running_RIVET:
+.. _runningRIVET:
+
 Running RIVET
 =============
 
@@ -20,7 +21,7 @@ The RIVET GUI
 -------------
 
 When the user runs **RIVET**, a window opens which allows the user to select a file.
-This file can be either a *raw data* file in one of the input formats described in the :ref:`input_data` section of this documentation, or a *computed data* file. 
+This file can be either a *raw data* file in one of the input formats described in the :ref:`inputData` section of this documentation, or a *computed data* file. 
 
 If a *raw data* file is selected, then the user must choose the homology degree: RIVET currently handles one homology degree at a time.  
 After the user clicks the compute button, the visualization data is computed and the visualization is started.  
@@ -33,7 +34,7 @@ If a computed data file is selected in the file dialogue window, the RIVET visua
 rivet_console
 -------------
 
-** rivet_console ** allows the user to directly compute a *computed data* file from a *raw data* file, without opening the GUI.  
+The **rivet_console** executable allows the user to directly compute a *computed data* file from a *raw data* file, without opening the GUI.  
 Optionally, **rivet_console** can directly output a minimal presentation or the Betti numbers and dimensions to the console, without computing the augmented arrangement.
 
 Further, **rivet_console** can also take as input a *computed data* file and a second file specifying a list of lines.  
@@ -42,7 +43,7 @@ RIVET then returns the barcodes of the 1-D slices of each line, using the same f
  
 Note that **rivet_console** also has some technical functionality intended only for use by the GUI.
 
-For details on how to run **rivet_console**, see the help file, which can be accessed via the command::
+For details on how to run **rivet_console**, see the help information, which can be accessed via the command::
 
 	rivet_console (-h | --help)
 

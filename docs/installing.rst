@@ -24,7 +24,8 @@ Before starting to build RIVET, you will need to have the following installed:
 Below we give step-by-step instructions for installing these required dependencies and building RIVET on Ubuntu and Mac OS X.  Building RIVET on Windows is not yet supported (we are working on this), but it is possible to build RIVET using the Bash shell on Windows 10.
 
 
-.. _building_on_ubuntu:
+.. _buildingOnUbuntu:
+
 Building On Ubuntu
 ------------------
 
@@ -166,6 +167,6 @@ It is also necessary to set two environment variables, as follows::
 
 These environment variables will be reset when you close the Bash shell. To avoid having to run the two lines above when you reopen the shell, add these lines to the end of the file ``~/.bashrc``.
 
-You are now ready to build RIVET. Follow the instructions in the section :ref:`building_on_ubuntu`.
+You are now ready to build RIVET. Follow the instructions in the section :ref:`buildingOnUbuntu`.
 
 
