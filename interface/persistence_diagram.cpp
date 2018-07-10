@@ -536,20 +536,17 @@ void PersistenceDiagram::update_diagram(double slice_length_pix, double diagram_
 {
 
     barcode = &bc;
+    //update parameters
 
     if (is_visible) {
-        dist_to_origin = slice_dist_dat;
-        //update parameters
         line_size = slice_length_pix / sqrt(2); //divide by sqrt(2) because the line is drawn at a 45-degree angle
-        scale = diagram_scale / sqrt(2); //similarly, divide by sqrt(2)
-        blue_line->setLine(0, 0, line_size, line_size);
-
     } else {
-        dist_to_origin = slice_dist_dat;
-        line_size = 0;
-        scale = 0;
-        blue_line->setLine(0, 0, 0, 0);
+        line_size=0;
     }
+    dist_to_origin = slice_dist_dat;
+    scale = diagram_scale / sqrt(2); //similarly to line_size, divide by sqrt(2)
+    blue_line->setLine(0, 0, line_size, line_size);
+
     //remove old dots
     selected = NULL; //remove any current selection
     dots_by_bc_index.clear(); //clear index data
