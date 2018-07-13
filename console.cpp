@@ -44,8 +44,8 @@ static const char USAGE[] =
       rivet_console (-h | --help)
       rivet_console --version
       rivet_console <input_file> --identify
-      rivet_console <input_file> --minpres [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [--koszul]
-      rivet_console <input_file> [output_file] --betti [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [--koszul]
+      rivet_console <input_file> --minpres [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [--koszul] [--num_threads=<num_threads>]
+      rivet_console <input_file> [output_file] --betti [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [--koszul] [--num_threads=<num_threads>]
       rivet_console <precomputed_file> --bounds [-V <verbosity>]
       rivet_console <precomputed_file> --barcodes <line_file> [-V <verbosity>]
       rivet_console <input_file> <output_file> [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [-f <format>] [--binary] [--koszul] [--num_threads=<num_threads>]
