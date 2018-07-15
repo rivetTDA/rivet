@@ -23,7 +23,7 @@ The RIVET GUI
 When the user runs **RIVET**, a window opens which allows the user to select a file.
 This file can be either a *raw data* file in one of the input formats described in the :ref:`inputData` section of this documentation, or a *computed data* file. 
 
-If a *raw data* file is selected, then the user must choose the homology degree: RIVET currently handles one homology degree at a time.  
+If a *raw data* file is selected, then (unless the file is of type firep) the user must choose the homology degree: RIVET currently handles one homology degree at a time.  
 After the user clicks the compute button, the visualization data is computed and the visualization is started.  
 (Note that once the dimension vectors and Betti numbers are shown in the visualization, it may take a significant amount of additional time to prepare the interactive visualization of the barcodes of 1-D slices.)
 Using the file menu in the GUI, the user may save a *computed data* file.

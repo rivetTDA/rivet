@@ -9,14 +9,13 @@ RIVET Documentation
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-
+   about
+   overview		
    installing
    running
    inputdata
    understanding
    FAQ
-   issues
-   developers
 
 
 
