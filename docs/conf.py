@@ -165,5 +165,6 @@ texinfo_documents = [
      'Miscellaneous'),
 ]
 
-
-
+# -- Include custom JabaScript --------------------------------------------
+def setup(app):
+    app.add_javascript("custom.js")
