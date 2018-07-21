@@ -9,6 +9,7 @@ RIVET Documentation
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
+   
    about
    overview		
    installing

@@ -40,7 +40,7 @@ Here is a list of contributors, with a brief, incomplete summary of contribution
 * Madkour Abdel-Rahman (St. Olaf College): Error handling 	
 * |Keller_Link| (Intel Labs): Parallel-friendly code organization, command line interactivity, API, Python wrappers, software design leadership.
 * |Lesnick_Link| (Princeton): Design, performance optimizations, computation of minimal presentations
-* Phil Nadolny (St. Olaf College): Error Handling, code for constructing path through dual graph
+* Phil Nadolny (St. Olaf College): Error handling, code for constructing path through dual graph
 * |Wright_Link| (St. Olaf College): Design, primary developer
 * Simon Segert (Princeton) Major improvements to the GUI, extensions of RIVET 
 * David Turner (Princeton) Parallel minimization of a presentation
