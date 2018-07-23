@@ -11,11 +11,12 @@ RIVET Documentation
    :caption: Contents:
    
    about
+   installing    
    overview		
-   installing
    running
-   inputdata
    understanding
+   inputdata
+   output
    FAQ
 
 
