@@ -176,8 +176,8 @@ void print_betti(TemplatePointsMessage const& message, std::ostream& ostream)
 
 void process_bounds(const ComputationResult &computation_result) {
     auto bounds = compute_bounds(computation_result);
-    std::cout << "low: " << bounds.x_low << ", " << bounds.y_low << std::endl;
-    std::cout << "high: " << bounds.x_high << ", " << bounds.y_high << std::endl;
+    std::cout << std::setprecision(12) << "low: " << bounds.x_low << ", " << bounds.y_low << std::endl;
+    std::cout << std::setprecision(12) << "high: " << bounds.x_high << ", " << bounds.y_high << std::endl;
 }
 
 void process_barcode_queries(const std::string &query_file_name, const ComputationResult& computation_result)
