@@ -12,15 +12,12 @@ RIVET Documentation
    
    about
    installing    
-   overview		
+   preliminaries
+   structure		
+   visualization
    running
-   understanding
    inputdata
-   output
-   FAQ
-
-
-
+   console   
 
 
 Indices and tables

@@ -1,20 +1,7 @@
-Understanding the RIVET Visualization
-=====================================
+The RIVET Visualization
+=======================
 
 This page briefly explains the RIVET visualization. For more details, see `the RIVET paper <a href="https://arxiv.org/pdf/1512.00180v1.pdf>`_. 
-
-For \\(a,b \\in \\mathbb{R}^2\\), we write \\(a \\leq b\\) if \\(a_1 \\leq b_1\\) and \\(a_2 \\leq b_2\\).
-A *2-D persistence module* \\(M\\) is a collection of vector spaces \\(\\{M_a\\}_{a\\in \\mathbb{R^2}}\\), together with a collection of linear maps \\(\\{M_{a,b}:M_a\\to M_b\\}_{a\\leq b}\\), such that \\(M_{a,a}=\\mathrm{Id}_{M_a}\\) for all \\(a\\) and \\(M_{b,c}\\circ M_{a,b}=M_{a,c}\\) for all \\(a \\leq b\\leq c\\).
-
-RIVET visualizes three classes of invariants of a 2-D persistence module \\(M\\):
-
-* The barcode \\(\\mathcal B(M^L)\\) of the restriction \\(M^L\\) of \\(M\\) along \\(L\\), for \\(L\\) any affine line with non-negative slope.
-* The dimension of each vector space \\(M_a\\).
-* The *bigraded Betti numbers* \\(\\xi_i(M)\\). These are functions \\(\\mathbb{R}^2 \\to \\mathbb{N}\\) that, respectively, count the number of births, deaths, and "relations amongst deaths" at each bigrade. Formally, given \\(r \\in \\mathbb{R}^2\\) and a minimal free resolution $$0 \\to F^2\\to F^1\\to F^0$$ for \\(M\\), \\(\\xi_i(M)(r)\\) is the number of elements at bigrade \\(r\\) in a basis for \\(F^i\\).
-
-One key feature of RIVET is the ability to interactively select the line \\(L\\) via the mouse and have the barcode \\(\\mathcal B(M^L)\\) update in real time.
-
-[Note that as of 2018, RIVET also computes minimal presentations of 2-parameter persistence modules, in addition to the above three invariants.  The rivet_console executable can print a minimal presentation, but the RIVET visualization does not provide any direct way to visualize or otherwise access the minimal presentation.]
 
 The RIVET interface contains two main windows, the *Line Selection Window* and the *Persistence Diagram Window*, shown in the screenshot below.
 
@@ -37,6 +24,7 @@ Furthermore, hovering the mouse over a dot produces a popup box that gives the v
 The greyscale shading at a point \\(a\\) in this rectangle represents \\(\\dim M_a\\): \\(a\\) is unshaded when \\(\\dim M_a=0\\), and larger \\(\\dim M_a\\) corresponds to darker shading. 
 Hovering the mouse over \\(a\\) brings up a popup box which gives the precise value of \\(\\dim M_a\\).
 
+A key feature of the RIVET visualization is the ability to interactively select the line \\(L\\) via the mouse and have the barcode \\(\\mathcal B(M^L)\\) update in real time.
 The Line Selection Window contains a blue line \\(L\\) of non-negative slope, with endpoints on the boundary of the displayed region of \\(\\mathbb{R}^2\\). 
 RIVET displays a barcode for \\(M^L\\) in the line selection window, provided the "show barcode" box is checked below. 
 The intervals in the barcode for \\(M^L\\) are displayed in purple, perpendicularly offset from the line \\(L\\).
@@ -76,7 +64,5 @@ The lower number is the the count of intervals \\([\\alpha, \\infty)\\) in the b
 
 As with the bigraded Betti numbers in the Line Selection Window, the multiplicity of a point in the persistence diagram is indicated by the area of the corresponding dot. 
 Additionally, hovering the mouse over a dot produces a popup that displays the multiplicity of the dot.
-
-In the lower portion of the persistence diagram square, RIVET displays the dimension of homology being visualized and the name of the input file.
 
 

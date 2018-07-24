@@ -1,14 +1,7 @@
-Installing RIVET
+Installation
 ================
 
 RIVET is available at https://github.com/rivetTDA/rivet.
-
-
-Dependencies
-------------
-
-RIVET depends on the `Qt <https://www.qt.io/>`_, `Boost <http://www.boost.org/>`_, and `MessagePack <https://msgpack.org/index.html>`_ libraries.  
-In addition, RIVET now incorporates some code from `PHAT <https://bitbucket.org/phat-code/phat/src/master/>`_.
 
 
 Requirements
@@ -21,7 +14,7 @@ Before starting to build RIVET, you will need to have the following installed:
 * Qt 5
 * Boost (version 1.58 or newer)
 
-Below we give step-by-step instructions for installing these required dependencies and building RIVET on Ubuntu and Mac OS X.  Building RIVET on Windows is not yet supported (we are working on this), but it is possible to build RIVET using the Bash shell on Windows 10.
+Below we give step-by-step instructions for installing these required dependencies and building RIVET on Ubuntu and Mac OS X.  Building RIVET on Windows is not yet supported, but it is possible to build RIVET using the Bash shell on Windows 10.
 
 
 .. _buildingOnUbuntu:
