@@ -99,12 +99,13 @@ Acknowledgments
 
 The RIVET project is supported in part by the National Science Foundation under grant |NSF_Link|.  Any opinions, findings, and conclusions or recommendations expressed in this material are those of the author(s) and do not necessarily reflect the views of the National Science Foundation.
 
-Additional support has been been provided by the Institute for Mathematics and its Applications, Columbia University, Princeton University, St. Olaf College, and the NIH (grant U54-CA193313-01).
+Additional support has been been provided by the Institute for Mathematics and its Applications, Columbia University, Princeton Neuroscience Institute, St. Olaf College, and the NIH (grant U54-CA193313-01).
 
 .. |NSF_Link| raw:: html
 
    <a href="https://www.nsf.gov/awardsearch/showAward?AWD_ID=1606967" target="_blank” rel="noopener">DMS-1606967</a>
 
+Special thanks to Jon Cohen at Princeton for his support of the RIVET project.  Thanks also to Ulrich Bauer for many enlightening conversations about computation of 1-parameter persistent homology, which have influenced our thinking about 2-parameter persistence.  
 
 License
 -------
