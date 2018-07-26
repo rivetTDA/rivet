@@ -13,7 +13,7 @@
 \tikzstyle{plainBoxRedBorder} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm, text centered, draw=red,thick]
 
 \tikzstyle{dataBox} = [rectangle, rounded corners, minimum width=9.0cm, minimum height=4.9cm,text centered, draw=black,thick, fill=gray!10]
-\tikzstyle{invariantBox} = [rectangle, rounded corners, minimum width=5.5cm, minimum height=8cm,text centered, draw=black,thick, fill=blue!10]
+\tikzstyle{invariantBox} = [rectangle, rounded corners, minimum width=5.5cm, minimum height=6.9cm,text centered, draw=black,thick, fill=blue!10]
 
 \tikzstyle{arrow} = [thick,->,>=stealth]
 
@@ -38,15 +38,14 @@
 \node (magicAnchor) [below of= firep,yshift=-.8cm] {};
 \node (minpres) [yellowBox, left of=magicAnchor,xshift=-1.2cm] {Minimal Presentation};
 
-\node (invariant) [invariantBox,right of= magicAnchor,xshift=1.2cm,yshift=-3.1cm] {};
-\node (invariantLabel) [below of=invariant,yshift=-1.5cm] {\textbf{Invariants RIVET Visualizes}};
+\node (invariant) [invariantBox,right of= magicAnchor,xshift=1.2cm,yshift=-2.5cm] {};
+\node (invariantLabel) [below of=invariant,yshift=-1.1cm] {\textbf{Invariants RIVET Visualizes}};
 \node (hilbert)[yellowBoxRedBorder, right of= magicAnchor,xshift=1.2cm]{Hilbert Function};
 
 \node (bettiCombine) [coordinate,below of= hilbert,yshift=.8cm] {};
 \node (betti) [yellowBoxRedBorder, below of= bettiCombine,yshift=.8cm]{Bigraded Betti Numbers};
-\node (arrangementCombine)[coordinate, below of= minpres,yshift=-1.3cm] {};
-\node (arrangement)[plainBoxRedBorder, below of= arrangementCombine,yshift=.8cm] {Augmented Arrangement};
-\node (barcodes)[yellowBox, below of= hilbert, yshift=-3.5cm]  {Barcodes of 1-D slices};
+\node (arrangement)[plainBoxRedBorder, below of= minpres,yshift=-.31cm] {Augmented Arrangement};
+\node (barcodes)[yellowBox, below of= betti, yshift=-.4cm]  {Barcodes of 1-D slices};
 %\node (visualization)[plainBox, below of= barcodes,yshift=-1cm]  {Visualization};
 %\node (minpres) [box, below of=firep, yshift=-0.5cm] {Minimal Presentation};
 %\node (pro2a) [process, below of=minpres, yshift=-0.5cm] {};
@@ -66,9 +65,8 @@
 \draw [thick] (minpres) -- (bettiCombine);
 \draw [thick] (hilbert) -- (bettiCombine);
 \draw [arrow] (bettiCombine) -- (betti);
-\draw [thick] (betti) -- node[anchor=west,xshift=-1.7cm,yshift=.4cm]{line arrangement}(arrangementCombine);
-\draw [thick] (minpres) -- node[anchor=east]{barcode templates}(arrangementCombine);
-\draw [arrow] (arrangementCombine) -- (arrangement);
+%\draw [thick] (betti) -- node[anchor=west,xshift=-1.7cm,yshift=.4cm]{line arrangement}(arrangementCombine);
+\draw [arrow] (minpres) -- (arrangement);
 %\draw [arrow] (invariant) -- (visualization);
 %\draw [arrow] (minpres) -- node[anchor=east] {yes} (pro2a);
 %\draw [arrow] (minpres) -- node[anchor=south] {no} (pro2b);

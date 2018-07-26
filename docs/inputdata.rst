@@ -3,26 +3,30 @@
 Input Data
 ==========
 
-RIVET accepts as input a text file that describes a data set, called a *raw data* file in this documentation (see :ref:`runningRIVET`).
-Here we specify the allowed formats for this file.
+As explained in the section “:ref:`runningRIVET`” above, RIVET takes as input a *raw data* file.  This file can specify input of the following types:
 
-When reading text files, RIVET ignores lines that begin with the symbol `#`; such lines may be used for human-readable comments within the input files.
-RIVET also ignores blank lines.
+* Point Cloud or finite metric space, with or without a real-valued function. 
+* Bifiltration
+* FIRep (i.e., short chain complex of free modules).
+
+(These are exactly the objects in green boxes in the figure of the section “:ref:`structure`” in this documentation.)
+
+We now specify the formats of the *raw data* file for each of these types of input.
+
+**NOTE**: When reading text files, RIVET ignores lines that begin with the symbol `#`; such lines may be used for comments in *raw data* files.  RIVET also ignores blank lines.
 
 Point Cloud with a Function
 ---------------------------
 
-This format specifies a set of points \\(X\\) in Euclidean \\(n\\)-space, a function \\(f\\) on \\(X\\), and a maximum scale parameter \\(d\\). 
-RIVET then builds a bifiltered Vietoris-Rips complex \\(S\\) with vertices \\(X\\), with an edge between points \\(p\\) and \\(q\\) if and only if \\( \|p-q\| \\leq d \\). 
-The bifiltration assigns a bigrade to each simplex \\(\\Delta \\in S\\) as follows: if \\(\\Delta\\) is a 0-simplex, then its bigrade is \\((f(\\Delta), 0)\\); otherwise, the bigrade of \\(\\Delta\\) is \\((x,y)\\), where \\(x\\) is the maximum value of \\(f\\) over all vertices of \\(\\Delta\\) and \\(y\\) is the maximum length of all edges of \\(\\Delta\\).
+This format specifies a set of points \\(X\\) in Euclidean \\(n\\)-space, a function \\(\\gamma:X\\to \\mathbb R\\), and a maximum scale parameter \\(d\\).  Given this, RIVET builds the function-Rips bifltration \\(R(\\gamma)\\), including only simplices with diameter at most \\(d\\). 
 
-A file in the point cloud format must be written as follows:
+The file has the following format:
 
 #. The first (non-empty, uncommented) line contains the word "points" and no other characters.
 #. The second line specifies the dimension \\(n\\) of Euclidean space in which the point cloud is embedded.
-#. The third line specifies the maximum distance \\(d\\) of edges constructed in the Vietoris-Rips complex. This may be an integer or decimal number.
-#. The fourth line gives the label for the axis along which the values of \\(f\\) appear.
-#. The remaining lines of the file specify the points, one point per line. Each line must specify the coordinates of a point (\\(n \\) decimal numbers specified by white space), followed by the value of \\(f\\) on the point.
+#. The third line specifies the maximum distance \\(d\\) of edges constructed in the Vietoris-Rips complex. This must be a positive number (integer or decimal).
+#. The fourth line gives the label for the axis along which the values of \\(\\gamma\\) appear.
+#. The remaining lines of the file specify the points, one point per line. Each line must specify the coordinates of a point (\\(n \\) decimal numbers specified by white space), followed by the value of \\(\\gamma\\) on the point.
 
 Here is an example with three points in \\(\\mathbb R^2\\)::
 
@@ -44,18 +48,20 @@ Putting the characters ``[-]`` at the beginning of the line before the label tel
 	1.1 2 0.5
 	-2 3 4
 
+This is useful, e.g.,  when taking \\(\\gamma\\) to be a density function.
+
 Finite Metric Space with Function
 ---------------------------------
 
-This input format is similar to the one just described, except one specifies the entries of a symmetric distance matrix rather than the coordinates of points in \\(\\mathbb R^n\\).  
-As above, RIVET constructs a Vietoris-Rips bifiltration from the input.  
+This format is similar to the one just described, except one specifies the entries of a symmetric distance matrix rather than the coordinates of points in \\(\\mathbb R^n\\).  
+As above, RIVET constructs a function-Rips bifiltration from the input.  
 The given distances are not required to satisfy the triangle inequality.
 
 The file has the following format:
 
 #. The first (non-empty, uncommented) line contains the word the word "metric" and no other printed characters.
-#. The second line gives the label for the function \\(f\\).
-#. The third line specifies \\(f\\). This line consists of a list of \\(n\\) decimal numbers, separated by white space.
+#. The second line gives the label for the function \\(\\gamma\\).
+#. The third line specifies \\(\\gamma\\). This line consists of a list of \\(n\\) decimal numbers, separated by white space.
 #. The fourth line gives the label for the "distance" axis.
 #. The fifth line specifies the maximum distance \\(d\\) of edges constructed in the Vietoris-Rips complex. This must be a positive number (integer or decimal).
 #. The remaining line(s) of the file specify the distances between pairs of points. These distances appear as \\(\\frac{n(n-1)}{2}\\) numbers (integer or decimal), separated by white space or line breaks. Let the points be denoted \\(p_1, p_2, \\ldots, p_n\\). The first \\(n-1\\) numbers are the distance from \\(p_1\\) to \\(p_2, \\ldots, p_n\\). The next \\(n-2\\) numbers give the distances from \\(p_2\\) to \\(p_3, \\ldots, p_n\\), and so on. The last number gives the distance from \\(p_{n-1}\\) to \\(p_n\\).
@@ -72,14 +78,12 @@ Here is an example, for a metric space of cardinality 3::
 
 As above, we can reverse the filtration direction on vertices by placing ``[-]`` at the beginning of the appropriate label.
 
-Point Cloud / Finite Metric Space without Function (Degree-Rips Construction)
+Point Cloud / Finite Metric Space without Function
 -----------------------------------------------------------------------------
 
-Given either a point cloud in Euclidean space or a finite metric space, RIVET can construct a version of the Vietoris-Rips bifiltration without the additional data of a function on points as input.  
-We call this construction the *degree-Rips bifiltration*; it is denoted BRips in the `RIVET paper <https://arxiv.org/abs/1512.00180>`_.  
-Note that in general, degree-Rips bifiltrations are multi-critical, i.e., simplcies may have multiple incomparable bigrades of appearance.
+Given either a point cloud in Euclidean space or a finite metric space with no function on vertices specified, RIVET constructs the degree-Rips bifiltration.
 
-We specify by example the input format for the Degree-Rips bifiltration on a point cloud::
+A point cloud with no function is specified as in the following example::
 
 	points
 	2
@@ -89,9 +93,9 @@ We specify by example the input format for the Degree-Rips bifiltration on a poi
 	1.1 2 
 	-2 3
 
-Given the input specification for the 1-critical "points" format, this variant should be self-explanatory.  
+Given the input specification for a point cloud with a function, this variant should be self-explanatory.  
 
-The input format for the Degree-Rips bifiltration on a finite metric space is shown in the following example::
+A finite metric space with no function is specified as in the following example::
 
 	metric
 	no function
@@ -101,29 +105,26 @@ The input format for the Degree-Rips bifiltration on a finite metric space is sh
 	2 3.2
 	1.25
 
-As above, this format is mostly self-explanatory.  
-However, the 3 appearing on the third line requires explanation.  
-This is the number of points in the finite metric space.  
+As above, this format is mostly self-explanatory, given the input specification for a metric space with a function.    However, the 3 appearing on the third line requires explanation: This is the number of points in the finite metric space.  
 (This input convention is redundant: the number in the third line is always one greater than the number of entries on sixth line.  The reason for this choice of convention is that it made it simpler to write the code to parse this input, given what we already had.)
 
 
 Bifiltration
 ------------
+RIVET can accept as input any essentially finite bifiltration.  (Multicritical bifiltrations are allowed.)
 
-This format allows us to input an arbitrary bifiltration.  
-RIVET now supports multicritical bifiltrations, i.e., ones where each simplex has multiple incomparable bigrades of appearance in \\(\\mathbb{R}^2\\).
 
 Let \\(v_1, v_2, \\ldots, v_n\\) denote the vertices (0-simplices) of the bifiltration. 
 Specifying the bifiltration requires specifying each simplex (given as a subset of \\(v_1, v_2, \\ldots, v_n\\)) and its birth indices. 
 Simplices are specified, one simplex per line, in the bifiltration input file.
 
-The user must ensure that the input file specifies a valid bifiltration, in the sense that if simplex \\(\\alpha\\) is born at \\(( x_{\\alpha}, y_{\\alpha} )\\) and simplex \\(\\Delta \\supset \\alpha\\) is born at \\(( x_{\\Delta}, y_{\\Delta} )\\), then \\( x_{\\alpha} \\le x_{\\Delta} \\) and \\( y_{\\alpha} \\le y_{\\Delta} \\).
+The user must ensure that the input file specifies a valid bifiltration, in the sense that a simplex is never born before its faces; RIVET does not error-check this.
 
 A file in the bifiltration format must have the following format:
 
 #. The first (non-empty, uncommented) line contains the word "bifiltration" and no other printed characters.
 #. The second line gives a label for the first filtration parameter.
-#. The third line gives alabel for the second filtration parameter.
+#. The third line gives a label for the second filtration parameter.
 #. The remaining lines of the file each specify a simplex and its bigrades of appearance.  A line specifying a \\(j\\)-simplex with \\(n\\) grades of appearance must have \\(j+1\\) non-negative integers (separated by white space), followed by a semicolon, followed by \\(2n\\) numbers (which may be integers or decimals.  The semicolon must be surrounded by spaces.  The first \\(j+1\\) integers give the vertices of the simplex. The remaining numbers specify the bigrades at which the simplex appears.
 
 A sample multicritical bifiltration file appears below. This consists of: the boundary of a triangle born at \\((0,0)\\); the interior of the triangle born at both \\((1,0)\\) and \\((0,1)\\); two edges that complete the boundary of a second triangle adjacent to the first, born at \\((1,1)\\)::
@@ -145,7 +146,7 @@ The minimal grades of appearance of a given simplex may be given in arbitrary or
 
 	0 1 2 ; 1 0 0 1
 
- Moreover, the code can handle non-minimial bigrades of appearance; it simply removes them. 
+Moreover, the code can handle non-minimial bigrades of appearance; it simply removes them. 
  (However, in the current code, non-minimal bigrades of appearance may change the coarsening behavior, as the \\(x\\)- and \\(y\\)-grades of such bigrades are currently not ignored when performing coarsening.)
 
 One can also take the filtration direction for either of the axes to be decreasing, by placing ``[-]`` in front of an axis label. 
@@ -164,17 +165,14 @@ For instance, the following variant of the last example replaces the y-coordinat
 	1 3 ; 1 -1
 	2 3 ; 1 -1
 
-next
-
 .. _firep:
 
-Algebraic Input (FIRep)
+FIRep (Algebraic Input) 
 -----------------------
 
-As explained in the RIVET paper, RIVET works with modules represented implicitly as the homology of a short chain chain complex of free 2-D persistence modules \\[ C_2 \\xrightarrow{f} C_1 \\xrightarrow{g} C_0. \\]
-Taking \\(C_0 = 0\\), this includes the special case of a presentation.
-
-RIVET allows us to input such algebraic input directly into RIVET.    
+An FIRep 
+\\[ C_2 \\xrightarrow{f} C_1 \\xrightarrow{g} C_0. \\]
+is specified as follows:
 
 #. The first (non-empty, uncommented) line says "firep".
 #. The second line is the \\(x\\)-label.
@@ -183,7 +181,7 @@ RIVET allows us to input such algebraic input directly into RIVET.
 #. Each of the next ``t`` lines specifies the bigrade of appearance of a basis element for \\(C_2\\), together with the corresponding column of the matrix representing \\(f\\): the format for such a line is: ``x y ; b1 b2 b3``, where the ``bi`` are the row indices of nonzero column entries.  (Recall that we work with \\(\\mathbb{Z}/2\\mathbb{Z}\\) coefficients.) 
 #. Each of the next ``s`` lines specifies the bigrade of appearance of a basis element for \\(C_1\\), together with the corresponding column of the matrix representing \\(g\\).
    
-An example algebraic input, is shown below::
+An example FIRep input is shown below::
 
 	firep
 	parameter 1

@@ -62,7 +62,7 @@ Homology of a Bifiltration
 Applying \\(i^{\\mathrm{th}}\\) simplicial homology with coefficients in \\(K\\) to each simplicial complex and each inclusion map in a bifiltration \\(F\\) yields a 2-D persistence module \\(H_i(F)\\).  If \\(F\\) is essentially finite, then \\(H_i(F)\\) is finitely presented
 
 
-\\(H_i(F)\\) is in fact the \\(i^{\\mathrm{th}}\\) homology module of a chain complex \\C(F)\\) of 2-D persistence modules whose value at each point in \\(a\\in \\mathbb R^2\\) is the simplical chain complex of \\(F_a\\).  If \\(F\\) is one-critical, each module of \\(C(F)\\) is free.  In general, \\(C(F)\\) needn’t be free, but given the portion of \\(C(F)\\) at indexes \\(i-1,\\) \\(i\\), and \\(i+1\\), it is easy to construct an firep whose homology is H_i(F)$; this is an observation of Chacholski et al.
+\\(H_i(F)\\) is in fact the \\(i^{\\mathrm{th}}\\) homology module of a chain complex \\C(F)\\) of 2-D persistence modules whose value at each point in \\(a\\in \\mathbb R^2\\) is the simplical chain complex of \\(F_a\\).  If \\(F\\) is one-critical, each module of \\(C(F)\\) is free.  In general, \\(C(F)\\) needn’t be free, but given the portion of \\(C(F)\\) at indexes \\(i-1,\\) \\(i\\), and \\(i+1\\), it is easy to construct an firep whose homology is \\(H_i(F)\\); this is an observation of Chacholski et al.
 
 Invariants of a 2-D Persistence Module
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

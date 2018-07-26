@@ -1,7 +1,7 @@
 The RIVET Visualization
 =======================
 
-This page briefly explains the RIVET visualization. For more details, see `the RIVET paper <a href="https://arxiv.org/pdf/1512.00180v1.pdf>`_. 
+.. For more details, see `the RIVET paper <a href="https://arxiv.org/pdf/1512.00180v1.pdf>`_.
 
 The RIVET interface contains two main windows, the *Line Selection Window* and the *Persistence Diagram Window*, shown in the screenshot below.
 
@@ -14,7 +14,9 @@ The RIVET interface contains two main windows, the *Line Selection Window* and t
 Line Selection Window
 ---------------------
 
-The Line Selection Window plots a rectangle in \\(\\mathbb{R}^2\\) containing the union of the supports of bigraded Betti number functions \\(\\xi_i(M)\\), \\(i\\in \\{0,1,2\\}\\). 
+By default, the Line Selection Window plots a rectangle in \\(\\mathbb{R}^2\\) containing the union of the supports of bigraded Betti number functions \\(\\xi_i(M)\\), \\(i\\in \\{0,1,2\\}\\).
+(If the input to RIVET is an firep and the Betti numbers are not supported on a horizontal or vertical line, this will be the smallest such rectangle.  If the input is a point cloud, metric space, or bifiltration, and the birth indices of all simplices in the bifiltration do not lie on a single line, the rectangle will be the smallest one containing the birth indices of all simplices.) 
+ 
 Points in the supports of \\(\\xi_0(M)\\), \\(\\xi_1(M)\\), and \\(\\xi_2(M)\\) are marked with green, red, and yellow dots, respectively (though these colors are customizable via the Preferences tab). 
 The area of each dot is proportional to the corresponding function value. 
 The dots are translucent, so that, for example, overlaid red and green dots appear brown on their intersection. 
@@ -40,10 +42,13 @@ Clicking and dragging the interior of the line (away from its endpoints) moves t
 As the line moves, both the barcode in the Line Selection Window and its persistence diagram representation in the Persistence Diagram Window are updated in real time. 
 The "slope" and "offset" controls below the Line Selection Window can also be used to select the line.
 
+The bounds of the line selection window can be adjusted by the controls at the bottom of the screen.  The window can be reset to the default by clicking on “Restore Default Window,” under the “View” menu.  Clicking on “Betti number window” under the “View” menu sets the window to the smallest rectangle containing all Betti numbers.
+
+
 Persistence Diagram Window
 --------------------------
 
-[NOTE: RIVET now allows the user adjust the bounds of the viewable region.  As part of this change, we introduced some refinements to the persistence diagram window, and the text here has not yet been updated to reflect that.]
+[NOTE: RIVET now allows the user adjust the bounds of the viewable region.  As part of this change, we introduced some enhancements to the persistence diagram window, and the text here has not yet been updated to reflect that.  The description below fully describes the behavior of the persistence diagram window for the default bounds; the extension of this to other choices of bounds behaves as expected.]
 
 The Persistence Diagram Window (at right in the screenshot above) displays a persistence diagram representation of the barcode for \\(M^L\\).
 
@@ -65,4 +70,6 @@ The lower number is the the count of intervals \\([\\alpha, \\infty)\\) in the b
 As with the bigraded Betti numbers in the Line Selection Window, the multiplicity of a point in the persistence diagram is indicated by the area of the corresponding dot. 
 Additionally, hovering the mouse over a dot produces a popup that displays the multiplicity of the dot.
 
-
+Customizing the Visualization
+----------------------------------------------
+The look of the visualization can be customized by clicking on “Preferences” in the “RIVET” menu, and adjusting the settings there.  

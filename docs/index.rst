@@ -14,10 +14,9 @@ RIVET Documentation
    installing    
    preliminaries
    structure		
-   visualization
    running
-   inputdata
-   console   
+   inputdata   
+   visualization
 
 
 Indices and tables
