@@ -119,7 +119,7 @@ RIVET is made available under the under the terms of the GNU General Public Lice
 
 Documentation Todos
 -------------------
-This new version of the documentation is draft, and still needs a lot of polish:
+This new version of the documentation is a draft, and still needs a lot of polish:
 
 * The flow chart is not displaying properly on the ReadTheDocs site.
 * A lot of displayed math is not displaying properly on the .pdf provided by read the docs.
