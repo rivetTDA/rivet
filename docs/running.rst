@@ -3,51 +3,45 @@
 Running RIVET
 =============
 
-The RIVET software consists of two separate executables: the **RIVET** GUI application and a command-line application called **rivet_console**.
-All visualizations are done using **RIVET** and for most users trying our software for the first time, we recommend to start with this.  
-**RIVET** and **rivet_console** are dependent, in the following senses: **RIVET** calls  **rivet_console**, and **rivet_console** can precompute data files which  **RIVET** can then load and visualize.  
+The RIVET software consists of two separate but closely related executables: **rivet_console**, a command-line program, and **rivet_GUI**, a GUI application.  **rivet_console** is the computational engine of RIVET; it implements the computation pipeline described in the previous section.  **rivet_GUI** is responsible for RIVET’s visualizations.  
 
-As we explain below, **rivet_console** also has functionality which we have found useful for working with 2-D persistence modules, even apart from visualization.
+**rivet_console**
+--------------------------
 
-RIVET saves and loads the output of its main computations in a custom file format, which we call the *computed data* file type.
-This stores:
+**rivet_console** has three main functions: 
 
-* The augmented arrangement data structure for querying the fibered barcode
-* Betti numbers
-* Dimensions of all vector spaces.
+* Given an *input data file* in one of the formats described in the :ref:`inputData` section of this documentation, **rivet_console** can compute a file called the *module invariants (MI) file*.  The *MI file* stores the Hilbert function, bigraded Betti numbers, and augmented arrangment of a persistent homology module of the input data.  The *MI file* is used by the RIVET visualization, and also for the following:
 
+* Given an MIF of a 2-D persistence module \\(M\\) and a second file, the *line file*, specifying a list of lines, **rivet_console** prints the barcodes of the 1-D slices of each line to the console.  The computations are performed using fast queries of the augmented arrangment of \\(M\\).
 
-The RIVET GUI
--------------
+* Given a *raw data* file as input, **rivet_console** can print The Hilbert function and Bigraded Betti numbers of a persistent homology module of the input data.  It can also print a minimal presentation of the module.
 
-When the user runs **RIVET**, a window opens which allows the user to select a file.
-This file can be either a *raw data* file in one of the input formats described in the :ref:`inputData` section of this documentation, or a *computed data* file. 
-
-If a *raw data* file is selected, then the user must choose the homology degree: RIVET currently handles one homology degree at a time.  
-After the user clicks the compute button, the visualization data is computed and the visualization is started.  
-(Note that once the dimension vectors and Betti numbers are shown in the visualization, it may take a significant amount of additional time to prepare the interactive visualization of the barcodes of 1-D slices.)
-Using the file menu in the GUI, the user may save a *computed data* file.
-
-If a computed data file is selected in the file dialogue window, the RIVET visualization is started immediately.
-
-
-rivet_console
--------------
-
-The **rivet_console** executable allows the user to directly compute a *computed data* file from a *raw data* file, without opening the GUI.  
-Optionally, **rivet_console** can directly output a minimal presentation or the Betti numbers and dimensions to the console, without computing the augmented arrangement.
-
-Further, **rivet_console** can also take as input a *computed data* file and a second file specifying a list of lines.  
-RIVET then returns the barcodes of the 1-D slices of each line, using the same fast query framework used for the interactive visualization. 
-(This last feature may be useful for testing the statistical significance of features found by RIVET.)
- 
-Note that **rivet_console** also has some technical functionality intended only for use by the GUI.
-
-For details on how to run **rivet_console**, see the help information, which can be accessed via the command::
+In what follows we explain in more detail how to use **rivet_console**.  The syntax for running  **rivet_console** is also described in the executable's help information, which can be accessed via the command::
 
 	rivet_console (-h | --help)
+	
+The help file also describes some additional tehcnical functionality of  **rivet_console** that we will not discuss here. 
 
-When using **rivet_console** to return barcodes from a *computed data* file, lines are specified according to *angle* and *offset* parameters (the same parameters displayed near the bottom of the RIVET GUI).
+Computation of a Module Invariants File
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Here the basic syntax for computing a module invariants file::
+
+	 rivet_console <input> <output> [-H <dimension>] [-x <xbins>] [-y <ybins>]
+
+* <input> is an input data file;
+* <output> is the name of the output file to be computed.
+* [-H <dimension>] is the dimension of homology to compute [default: 0, ignored if the input file is of firep type]
+* [-x <xbins>] and [-y <ybins>] specifies the dimension of a grid used for coarsening.  The grid spacing is taken to be uniform in each dimension.  A value of 0 means no coarsening is done at all in that coordinate direction.  This is the default.  However, to control the size of the augmented arrangment, most computations of a MIF should use some coarsening of the module.
+
+Other (technical) command line options for computation of a *MI* file are given in the **rivet_console** help.
+
+Computing Barcodes of 1-D Slices
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Here is the basic syntax for computing the barcodes of 1-D slices of a 2-D persistence module, given an *MI* file as input::
+
+	 rivet_console <module_invariants_file> --barcodes <line_file>
+
+<line_file> is a file specifying a list of affine lines in \\(\\mathbb R^2\\) with non-negative slope.  Each line is specified by its *angle* and *offset* parameters.
 The following diagram shows these parameters for a particular line, with *angle* denoted \\(\\theta\\) and *offset* denoted \\(t\\).
 
 .. image:: images/line_diagram.png
@@ -56,8 +50,8 @@ The following diagram shows these parameters for a particular line, with *angle*
    :alt: Diagram illustrating angle and offset used in RIVET
    :align: center
 
-Note that \\(\\theta\\) gives the angle between the line and the horizontal axis, in degrees (0 to 90). 
-The offset parameter \\(t\\) gives the *signed* distance from the line to the origin, which is positive if the line passes above/left of the origin and negative otherwise. 
+As the diagram indicates, \\(\\theta\\) is the angle between the line and the horizontal axis in degrees (0 to 90). 
+The offset parameter \\(t\\) is the *signed* distance from the line to the origin, which is positive if the line passes above/left of the origin and negative otherwise. 
 This choice of parameters makes it possible to specify any line of nonnegative slope, including vertical lines. 
 
 The following gives a sample line file::
@@ -67,8 +61,8 @@ The following gives a sample line file::
 	67 1.88
 	10 0.92
 	#100 0.92   <-- will error if uncommented, 100 > 90
-
-For each line specified, **rivet_console** will print barcode information as a single line of text, beginning by repeating the query parameters. For example, output corresponding to the sample line file above might be::
+	
+For each line specified in <line_file>, **rivet_console** will print barcode information as a single line of text, beginning by repeating the query parameters. For example, output corresponding to the sample line file above might be::
 
 	23 -0.22: 88.1838 inf x1, 88.1838 91.2549 x5, 88.1838 89.7194 x12
 	67 0.88: 23.3613 inf x1
@@ -78,10 +72,50 @@ Note that barcodes are given with respect to a parameterization of the query lin
 Furthermore, barcodes are returned as multisets of intervals. 
 For example, in the sample output above, ``88.1838 inf x1`` indicates a single interval \\([88.1838, \\infty)\\).
 
-Working with a Coarsened Persistence Module
--------------------------------------------
+Printing a Minimal Presentation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The basic syntax for computing a minimal presentation of a 2-D persistence module is the following::
 
-When passing a *raw data* file to RIVET via either the GUI or the command line, the user has the option of choosing *x-bins* and *y-bins* parameters, which control how the persistence module is coarsened; if these parameters are not selected, no binning is done at all.
-The runtime of RIVET and memory footprint depends on the choice of these parameters. 
-If you are trying RIVET for the first time, we suggest you try small values of *x-bins*  and *y-bins* to start.  
-For example, to start you might set both parameters equal to 20, and then try the computation again with a larger value afterwards.
+	rivet_console <input_file> --minpres [-H <dimension>] [-x <xbins>] [-y <ybins>]
+
+* <input> is an input data file;
+* The options for choosing homology dimensions and coarsening parameters behave exactly as for the computation of the MIF.
+
+ TODO: Explain the output format for the  minimal presentation.
+  
+Printing Hilbert Function and Bigraded Betti Numbers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Here is the basic syntax for computing both the Hilbert function and bigraded Betii numbers of a 2-D persistence module::
+
+	rivet_console <input_file> --betti [-H <dimension>] [-x <xbins>] [-y <ybins>]
+
+As above,
+
+* <input> is an input data file;
+* The options for choosing homology dimensions and coarsening parameters behave exactly as for the computation of the MIF.
+
+**NOTE**: Currently, one cannot print the Hilbert function and bigraded Betti numbers of a module separately.  TODO: change thisis.
+
+ TODO: Explain the output format for the Hilbert Function and Bigraded Betti Numbers
+
+
+**rivet_gui**
+----------------------------
+  
+The visualizations performed by **rivet_GUI** require an *MI* file as input.  This can be computed by an explicit call to **rivet_console** and then opened in **rivet_GUI**.  Alternatively, **rivet_GUI** can call **rivet_console** directly to compute the MI file.
+
+When the user runs **rivet_GUI**, a window opens which allows the user to select a file.
+This file can be either a *input data* file in one of the input formats described in the :ref:`inputData` section of this documentation, or a MI file.
+
+.. image:: images/File_Input_Dialog.png
+   :width: 300px
+   :height: 200px
+   :alt: The file input diaogue of **rivet_gui** 
+   :align: center
+
+If an *input data* file is selected, then (unless the file is of type firep) the user must choose the homology degree: RIVET currently handles one homology degree at a time.  The x-bins and y-bins parameters for the call to **rivet_console** must also be seleced.  After the user clicks the compute button, the *MI* file is computed via a call to **rivet_console** and the visualization is started.  (Note that once the Hilbert Function and Betti numbers are shown in the visualization, it may take a significant amount of additional time to prepare the interactive visualization of the barcodes of 1-D slices.)
+Using the file menu in the GUI, the user may save an *MI* file.
+
+If an *MI* file is selected in the file dialogue window, the data in the file is loaded immediately into the RIVET visualization, and the visualization begins. 
+
+The RIVET visualization itself is explained in the section ":ref:`visualization`".

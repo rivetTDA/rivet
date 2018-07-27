@@ -9,17 +9,14 @@ RIVET Documentation
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-
-   installing
+   
+   about
+   installing    
+   preliminaries
+   structure		
    running
-   inputdata
-   understanding
-   FAQ
-   issues
-   developers
-
-
-
+   inputdata   
+   visualization
 
 
 Indices and tables

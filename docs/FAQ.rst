@@ -1,13 +1,6 @@
 Frequently Asked Questions
 ==========================
 
-
-Can RIVET handle arbitrary bifiltrations?
------------------------------------------
-
-Yes. The most flexible option for RIVET input is the :ref:`firep` input type.
-
-
 How large a bifiltration can RIVET handle?
 ------------------------------------------
 
