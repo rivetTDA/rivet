@@ -134,5 +134,6 @@ Minor Todos:
 * Is the name Hilbert Function used throughout?
 * The hyperlinks in about.rst don't yet take advantage of the simple syntax made possible by Matthew's Javascript solution.
 * It's a small thing, but the .png of the the file input dialog looks a little off center.
+* Some .rst files are no longer used in the documentation and can be removed (unless we decide to add them back in).
 
    
