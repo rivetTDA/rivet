@@ -74,4 +74,4 @@ As mentioned above, RIVET computes and visualizes three simple invariants of a 2
 
 Coarsening a Persistence Module
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-TODO:Add something here.  Or should it be coarsening a bifiltration?  Or both.
+Given a 2-D persistence module \\(M\\), we can *coarsen* \\(M\\) to obtain an algebraically simpler module carrying approximately the same “persistence information” as \\(M\\).  We can describe the coarsening operation succinctly in the language of category theory: Let \\(G\\subset\\mathbb R^2\\) be a finite grid.  First, we take the restriction of \\(M\\) along \\(G\\), and then take the left (or right) Kan extension of this along the inclusion of \\(G\\hookrightarrow \\mathbb R^2\\).  Currently, RIVET uses the right Kan extension.
