@@ -128,6 +128,7 @@ This new version of the documentation is draft, and still needs a lot of polish:
 * The documentation is missing a specification of the output formats of the minimal presentation, Hilbert Function, and bigraded Betti numbers
 * Is the name Hilbert Function used throughout?
 * We need to add some good examples.
+* The hyperlinks in about.rst don't yet take advantage of the simple syntax made possible by Matthew's Javascript solution.
 
 
    
