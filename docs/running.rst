@@ -81,7 +81,7 @@ The basic syntax for computing a minimal presentation of a 2-D persistence modul
 * <input> is an input data file;
 * The options for choosing homology dimensions and coarsening parameters behave exactly as for the computation of the MIF.
 
- TODO: Add syntax for computing minimal presenttion.
+ TODO: Explain the output format for the  minimal presentation.
   
 Printing Hilbert Function and Bigraded Betti Numbers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -95,6 +95,8 @@ As above,
 * The options for choosing homology dimensions and coarsening parameters behave exactly as for the computation of the MIF.
 
 **NOTE**: Currently, one cannot print the Hilbert function and bigraded Betti numbers of a module separately.  TODO: change thisis.
+
+ TODO: Explain the output format for the Hilbert Function and Bigraded Betti Numbers
 
 
 **rivet_gui**
