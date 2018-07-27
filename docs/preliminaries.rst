@@ -51,8 +51,8 @@ Presentations
 ^^^^^^^^^^^^^
 A *presentation* of a 2-D persistence module M a map \\(f:F\\to G\\) such that \\(M\\cong G/\\mathrm{im}\\ f\\).  We say \\(M\\) is finitely presented if \\(F\\) and \\(G\\\) can be chosen to be finitely generated.  If \\(M\\) is finitely presented then, up to isomorphism, there exists a presentation \\(f:F\\to G\\) such that both \\(F\\) and \\(G\\) are minimial, i.e., for any other presentation \\(f':F'\\to G'\\),  \\(F\\) is a summand of \\(F'\\) and \\(G\\) is a summand of  \\(G'\\).  We call such a presentation *minimal*.  Minimal presentations are unique up to isomorphism, but importantly, their matrix representations are non-unique.
 
-FIReps
-^^^^^^
+FIReps (Short Chain Complexes of Free Modules)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 We define a *FIRep* to be chain complex of free 2-D persistence modules of length 3.  Explicitly, then, an firep is a sequence of free 2-D persistence modules
 \\[ C_2 \\xrightarrow{f} C_1 \\xrightarrow{g} C_0. \\]
 such that \\(g\\circ f=0\\).  Associated to an firep is a unique homology module \\(\\ker g/\\mathrm{im}\\ f\\).  A presentation of a 2-parameter persistence module can be thought of as a special case of an FIRep, where the last module is trivial.
@@ -62,7 +62,11 @@ Homology of a Bifiltration
 Applying \\(i^{\\mathrm{th}}\\) simplicial homology with coefficients in \\(K\\) to each simplicial complex and each inclusion map in a bifiltration \\(F\\) yields a 2-D persistence module \\(H_i(F)\\).  If \\(F\\) is essentially finite, then \\(H_i(F)\\) is finitely presented
 
 
-\\(H_i(F)\\) is in fact the \\(i^{\\mathrm{th}}\\) homology module of a chain complex \\C(F)\\) of 2-D persistence modules whose value at each point in \\(a\\in \\mathbb R^2\\) is the simplical chain complex of \\(F_a\\).  If \\(F\\) is one-critical, each module of \\(C(F)\\) is free.  In general, \\(C(F)\\) needn’t be free, but given the portion of \\(C(F)\\) at indexes \\(i-1,\\) \\(i\\), and \\(i+1\\), it is easy to construct an firep whose homology is \\(H_i(F)\\); this is an observation of Chacholski et al.
+\\(H_i(F)\\) is in fact the \\(i^{\\mathrm{th}}\\) homology module of a chain complex 
+\\( C(F)\\) of 2-D persistence modules whose value at each point in \\(a\\in \\mathbb R^2\\) is the simplical chain complex of \\(F_a\\).  If \\(F\\) is one-critical, each module of \\(C(F)\\) is free.  In general, \\(C(F)\\) needn’t be free, but given the portion of \\(C(F)\\) at indexes \\(i-1,\\) \\(i\\), and \\(i+1\\), it is easy to construct an FIRep whose homology is \\(H_i(F)\\); this is `an observation of Chacholski et al. <https://arxiv.org/abs/1409.7936>`_
+
+
+
 
 Invariants of a 2-D Persistence Module
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -74,4 +78,6 @@ As mentioned above, RIVET computes and visualizes three simple invariants of a 2
 
 Coarsening a Persistence Module
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Given a 2-D persistence module \\(M\\), we can *coarsen* \\(M\\) to obtain an algebraically simpler module carrying approximately the same “persistence information” as \\(M\\).  We can describe the coarsening operation succinctly in the language of category theory: Let \\(G\\subset\\mathbb R^2\\) be a finite grid.  First, we take the restriction of \\(M\\) along \\(G\\), and then take the left (or right) Kan extension of this along the inclusion of \\(G\\hookrightarrow \\mathbb R^2\\).  Currently, RIVET uses the right Kan extension.
+Given a finitely presented 2-D persistence module \\(M\\), we can *coarsen* \\(M\\) to obtain an algebraically simpler module carrying approximately the same persistence information as \\(M\\).  As we will describe it here, the coarsening operation depends on a choice of finite grid \\(G\\subset\\mathbb R^2\\), such that \\(G\\) contains some element ordered ater all bigrades of generators and relations in a minimal presentation for \\(M\\).  The coarsened module, denoted \\(M^G\\), is defined by taking \\(M^G_a:= M_g\\), where \\(g\\in G\\) is the minimum grid element such that \\(a\\leq g\\).  The internal maps in \\(M^G\\) are induced by those in \\(M\\) in the obvious way.
+
+.. We can describe the coarsening operation succinctly in the language of category theory: Let \\(G\\subset\\mathbb R^2\\) be a finite grid.  First, we take the restriction of \\(M\\) along \\(G\\), and then take the left (or right) Kan extension of this along the inclusion of \\(G\\hookrightarrow \\mathbb R^2\\).  Currently, RIVET uses the right Kan extension.

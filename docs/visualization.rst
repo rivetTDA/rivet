@@ -1,3 +1,5 @@
+.. _visualization:
+
 The RIVET Visualization
 =======================
 
@@ -48,7 +50,7 @@ The bounds of the line selection window can be adjusted by the controls at the b
 Persistence Diagram Window
 --------------------------
 
-[NOTE: RIVET now allows the user adjust the bounds of the viewable region.  As part of this change, we introduced some enhancements to the persistence diagram window, and the text here has not yet been updated to reflect that.  The description below fully describes the behavior of the persistence diagram window for the default bounds; the extension of this to other choices of bounds behaves as expected.]
+[**NOTE**:  The description below fully describes the behavior of the persistence diagram window only for the default bounds on the Line Selection Window.  RIVET now allows the user adjust to adjust these bounds, and as part of this change, we introduced some enhancements to the Persistence Diagram Window.  The text here has not yet been updated to describe these enhancements.  However, these enhancements behave in the way one would expect, given the behavior of the persistence diagram window for the default bounds.
 
 The Persistence Diagram Window (at right in the screenshot above) displays a persistence diagram representation of the barcode for \\(M^L\\).
 

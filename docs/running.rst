@@ -10,7 +10,7 @@ The RIVET software consists of two separate but closely related executables: **r
 
 **rivet_console** has three main functions: 
 
-* Given an *input data file* in one of the formats described in the :ref:`inputData` section of this documentation, **rivet_console** can compute a file called the *module invariants file (MIF)*.  The MIF stores the Hilbert function, bigraded Betti numbers, and augmented arrangment of a persistent homology module of the input data.  The MIF is used by the RIVET visualization, and also for the following:
+* Given an *input data file* in one of the formats described in the :ref:`inputData` section of this documentation, **rivet_console** can compute a file called the *module invariants (MI) file*.  The *MI file* stores the Hilbert function, bigraded Betti numbers, and augmented arrangment of a persistent homology module of the input data.  The *MI file* is used by the RIVET visualization, and also for the following:
 
 * Given an MIF of a 2-D persistence module \\(M\\) and a second file, the *line file*, specifying a list of lines, **rivet_console** prints the barcodes of the 1-D slices of each line to the console.  The computations are performed using fast queries of the augmented arrangment of \\(M\\).
 
@@ -24,7 +24,7 @@ The help file also describes some additional tehcnical functionality of  **rivet
 
 Computation of a Module Invariants File
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Here the basic syntax for computing a module invariants file:
+Here the basic syntax for computing a module invariants file::
 
 	 rivet_console <input> <output> [-H <dimension>] [-x <xbins>] [-y <ybins>]
 
@@ -33,11 +33,11 @@ Here the basic syntax for computing a module invariants file:
 * [-H <dimension>] is the dimension of homology to compute [default: 0, ignored if the input file is of firep type]
 * [-x <xbins>] and [-y <ybins>] specifies the dimension of a grid used for coarsening.  The grid spacing is taken to be uniform in each dimension.  A value of 0 means no coarsening is done at all in that coordinate direction.  This is the default.  However, to control the size of the augmented arrangment, most computations of a MIF should use some coarsening of the module.
 
-Other (technical) command line options for computation of a MIF are given in the **rivet_console** help.
+Other (technical) command line options for computation of a *MI* file are given in the **rivet_console** help.
 
 Computing Barcodes of 1-D Slices
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Here is the basic syntax for computing the barcodes of 1-D slices of a 2-D persistence module, given a MIF as input:
+Here is the basic syntax for computing the barcodes of 1-D slices of a 2-D persistence module, given an *MI* file as input::
 
 	 rivet_console <module_invariants_file> --barcodes <line_file>
 
@@ -72,9 +72,9 @@ Note that barcodes are given with respect to a parameterization of the query lin
 Furthermore, barcodes are returned as multisets of intervals. 
 For example, in the sample output above, ``88.1838 inf x1`` indicates a single interval \\([88.1838, \\infty)\\).
 
-Computing a Minimal Presentation
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The basic syntax for computing a minimal presentation of a 2-D persistence module is the following:
+Printing a Minimal Presentation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The basic syntax for computing a minimal presentation of a 2-D persistence module is the following::
 
 	rivet_console <input_file> --minpres [-H <dimension>] [-x <xbins>] [-y <ybins>]
 
@@ -83,25 +83,37 @@ The basic syntax for computing a minimal presentation of a 2-D persistence modul
 
  TODO: Add syntax for computing minimal presenttion.
   
-Printing Hilbert Function and Bigraded Betti numbers to Console
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Currently, one cannot print 
+Printing Hilbert Function and Bigraded Betti Numbers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Here is the basic syntax for computing both the Hilbert function and bigraded Betii numbers of a 2-D persistence module::
+
+	rivet_console <input_file> --betti [-H <dimension>] [-x <xbins>] [-y <ybins>]
+
+As above,
+
+* <input> is an input data file;
+* The options for choosing homology dimensions and coarsening parameters behave exactly as for the computation of the MIF.
+
+**NOTE**: Currently, one cannot print the Hilbert function and bigraded Betti numbers of a module separately.  TODO: change thisis.
 
 
 **rivet_gui**
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------------------
   
-The visualizations performed by **rivet_GUI** require an *output binary* as input.  This can be computed by an explicit call to **rivet_console** and then opened in **rivet_GUI**.  Alternatively, **rivet_GUI** can call **rivet_console** directly to compute the output binary.
+The visualizations performed by **rivet_GUI** require an *MI* file as input.  This can be computed by an explicit call to **rivet_console** and then opened in **rivet_GUI**.  Alternatively, **rivet_GUI** can call **rivet_console** directly to compute the MI file.
 
 When the user runs **rivet_GUI**, a window opens which allows the user to select a file.
-This file can be either a *raw data* file in one of the input formats described in the :ref:`inputData` section of this documentation, or am *output binary* file.
+This file can be either a *input data* file in one of the input formats described in the :ref:`inputData` section of this documentation, or a MI file.
 
-[TODO: ADD FIGURE HERE?”]
+.. image:: images/File_Input_Dialog.png
+   :width: 300px
+   :height: 200px
+   :alt: The file input diaogue of **rivet_gui** 
+   :align: center
 
-If a *raw data* file is selected, then (unless the file is of type firep) the user must choose the homology degree: RIVET currently handles one homology degree at a time.  
-After the user clicks the compute button, the *output binary* is computed via a call to **rivet_console** and the visualization is started.  (Note that once the Hilbert Function and Betti numbers are shown in the visualization, it may take a significant amount of additional time to prepare the interactive visualization of the barcodes of 1-D slices.)
-Using the file menu in the GUI, the user may save an *output binary* file.
+If an *input data* file is selected, then (unless the file is of type firep) the user must choose the homology degree: RIVET currently handles one homology degree at a time.  The x-bins and y-bins parameters for the call to **rivet_console** must also be seleced.  After the user clicks the compute button, the *MI* file is computed via a call to **rivet_console** and the visualization is started.  (Note that once the Hilbert Function and Betti numbers are shown in the visualization, it may take a significant amount of additional time to prepare the interactive visualization of the barcodes of 1-D slices.)
+Using the file menu in the GUI, the user may save an *MI* file.
 
-If an *output binary* file is selected in the file dialogue window, the data in the file is loaded immediately into the RIVET visualization, and the visualization begins. 
+If an *MI* file is selected in the file dialogue window, the data in the file is loaded immediately into the RIVET visualization, and the visualization begins. 
 
-The next section explains the RIVET visualization.
+The RIVET visualization itself is explained in the section ":ref:`visualization`".
