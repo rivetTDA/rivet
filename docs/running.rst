@@ -110,7 +110,7 @@ This file can be either a *input data* file in one of the input formats describe
 .. image:: images/File_Input_Dialog.png
    :width: 300px
    :height: 200px
-   :alt: The file input diaogue of **rivet_gui** 
+   :alt: The file input dialogue of **rivet_gui** 
    :align: center
 
 If an *input data* file is selected, then (unless the file is of type firep) the user must choose the homology degree: RIVET currently handles one homology degree at a time.  The x-bins and y-bins parameters for the call to **rivet_console** must also be seleced.  After the user clicks the compute button, the *MI* file is computed via a call to **rivet_console** and the visualization is started.  (Note that once the Hilbert Function and Betti numbers are shown in the visualization, it may take a significant amount of additional time to prepare the interactive visualization of the barcodes of 1-D slices.)
