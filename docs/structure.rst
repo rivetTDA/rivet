@@ -1,7 +1,7 @@
 ..    include:: <isonum.txt>
 .. _structure:  
 
-RIVET’s Computation Pipeline
+Computation Pipeline
 ====================================
 The following figure illustrates RIVET’s pipeline for working with the 2-parameter persistent homology of data.
 
