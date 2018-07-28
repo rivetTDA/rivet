@@ -121,12 +121,14 @@ Documentation Todos
 -------------------
 This new version of the documentation is a draft, and still needs a lot of polish.
 
-Major Formatting todos:  
+Major Formatting todos:   
+
 * The flow chart is not displaying properly on the ReadTheDocs site.
 * A lot of displayed math is not displaying properly on the .pdf provided by read the docs.
 * The caption for the figure on the "Computation Pipeline" page does not display properly in the downloaded .html
 
-Content Todos:
+Content Todos:  
+
 * The documentation is missing a specification of the output formats of the minimal presentation, Hilbert Function, and bigraded Betti numbers.
 * The text is not updated to explain how the persistence diagram window works in Simon's improvements to the visualization.  (Right now there is a disclamier about this.)
 * some language in rivet_console --h needs to be edited to sync properly with the new changes to the documentation.
@@ -134,6 +136,7 @@ Content Todos:
 * We need to add some good examples.
 
 Minor Todos:  
+
 * The naming and italicization of the "Input data" and "Module Invariant" files needs to fixed in several places.
 * Is the name Hilbert Function used throughout?
 * The hyperlinks in about.rst don't yet take advantage of the simple syntax made possible by Matthew's Javascript solution.
