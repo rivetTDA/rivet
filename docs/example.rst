@@ -64,7 +64,7 @@ We will choose 40 bins in each direction.
    :alt: RIVET input data dialog box
    :align: center
 
-(Note that setting the bin selectors to zero will cause RIVET not to round the computed values, which would increase computation time and memory usage.)
+(Note that setting the bin selectors to *zero* will cause RIVET not to round the computed values, which would increase computation time and memory usage.)
 
 Click **Compute**, and RIVET will compute the augmented arrangement. 
 Note that this may take several minutes, depending on the computing power available.

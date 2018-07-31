@@ -21,7 +21,7 @@ Given a finite metric space \\(P\\) and any function \\(\\gamma:P\\to \\mathbb R
 Degree-Rips Bifiltration
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-For \\(d\\in \\mathbb R\\) Let \\(N(P)_{d,r}\\) be the subgraph of \\(N(P)_r\\) obtained by removing all vertices of degree less than \\(d\\).  We define the *degree-Rips bifiltration*  \\(DR(P)\\) by taking \\(DR(P)_{d,r}:=N(P)_{d,r}.\\)  (Note that this is in fact a bifiltration indexed by \\(\\mathbb R^{\\mathrm{op}}\\times \\mathbb R\\), where \\(\\mathbb R^{\\mathrm{op}}\\) denotes the opposite poset of \\(\\mathbb R\\); that is, \\(DR(P)_{a,b}\\subset DR(P)_{a',b'}\\) whenever \\(a\\geq a'\\) and \\(b\\leq b'\\).)   If \\(P\\) has more than one point, then \\(DR(P)\\) is multi-critical.
+For \\(d\\in \\mathbb R\\), let \\(N(P)_{d,r}\\) be the subgraph of \\(N(P)_r\\) obtained by removing all vertices of degree less than \\(d\\).  We define the *degree-Rips bifiltration*  \\(DR(P)\\) by taking \\(DR(P)_{d,r}:=N(P)_{d,r}.\\)  (Note that this is in fact a bifiltration indexed by \\(\\mathbb R^{\\mathrm{op}}\\times \\mathbb R\\), where \\(\\mathbb R^{\\mathrm{op}}\\) denotes the opposite poset of \\(\\mathbb R\\); that is, \\(DR(P)_{a,b}\\subset DR(P)_{a',b'}\\) whenever \\(a\\geq a'\\) and \\(b\\leq b'\\).)   If \\(P\\) has more than one point, then \\(DR(P)\\) is multi-critical.
 
 2-Parameter Persistence Modules 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

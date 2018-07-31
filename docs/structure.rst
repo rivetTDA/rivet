@@ -5,17 +5,24 @@ Computation Pipeline
 ====================================
 The following figure illustrates RIVET’s pipeline for working with the 2-parameter persistent homology of data.
 
-.. figure:: images/flowchart.pdf  
-    :width: 400px
-    :align: center
-    :height: 600px
-    :figclass: align-center
-   
-    The RIVET pipeline.  Green items can be input directly to RIVET via a file.  Yellow items can be printed to the console.  Items with red boundary can be saved in a *module invariants file*, which serves as input to RIVET’s visualization.
+.. only:: html
+
+    INCLUDE FLOWCHART HERE IN BROWSER-FRIENDLY FORMAT
+
+.. only:: not html
+
+    .. figure:: images/flowchart.pdf  
+        :width: 400px
+        :align: center
+        :height: 600px
+        :figclass: align-center
+       
+        The RIVET pipeline.  Green items can be input directly to RIVET via a file.  Yellow items can be printed to the console.      tems with red boundary can be saved in a *module invariants file*, which serves as input to RIVET’s visualization.
+
 
 We now explain this pipeline:
 
-RIVET can accept as input a data set, a  bifiltration, or an firep.  RIVET always works with a single homology degree at a time; when giving data or a bifiltration as input, specifies the degree of homology to consider.
+RIVET can accept as input a data set, a bifiltration, or an firep.  RIVET always works with a single homology degree at a time; when giving data or a bifiltration as input, specifies the degree of homology to consider.
 
 RIVET accepts data in the form of either a point cloud in \\(\\mathbb R^n\\), or a finite metric space (represented as distance matrix).  Optionally, a function on each point can also be given.  If a function is given, RIVET computes a function-Rips bifiltration.  If no function is given, it computes the degree-Rips bifiltration.
 
