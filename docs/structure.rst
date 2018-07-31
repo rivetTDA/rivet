@@ -11,7 +11,7 @@ The following figure illustrates RIVET’s pipeline for working with the 2-param
         :height: 600px
         :figclass: align-center
        
-        The RIVET pipeline.  Green items can be input directly to RIVET via a file.  Yellow items can be printed to the console.      tems with red boundary can be saved in a *module invariants file*, which serves as input to RIVET’s visualization.
+        The RIVET pipeline.  Green items can be input directly to RIVET via a file.  Yellow items can be printed to the console. Items with red boundary can be saved in a *module invariants file*, which serves as input to RIVET’s visualization.
 
 
 We now explain this pipeline:
