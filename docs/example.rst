@@ -59,8 +59,8 @@ These cause RIVET to round the computed values for density and distance to a spe
 We will choose 40 bins in each direction.
 
 .. image:: images/RIVET_input_dialog.png
-   :width: 540px
-   :height: 387px
+   :width: 480px
+   :height: 344px
    :alt: RIVET input data dialog box
    :align: center
 
