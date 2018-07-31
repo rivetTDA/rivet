@@ -17,6 +17,7 @@ RIVET Documentation
    running
    inputdata   
    visualization
+   example
 
 
 Indices and tables
