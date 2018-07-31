@@ -7,7 +7,13 @@ The following figure illustrates RIVET’s pipeline for working with the 2-param
 
 .. only:: html
 
-    INCLUDE FLOWCHART HERE IN BROWSER-FRIENDLY FORMAT
+    .. figure:: images/flowchart.svg  
+        :width: 400px
+        :align: center
+        :height: 600px
+        :figclass: align-center
+       
+        The RIVET pipeline.  Green items can be input directly to RIVET via a file.  Yellow items can be printed to the console.      tems with red boundary can be saved in a *module invariants file*, which serves as input to RIVET’s visualization.
 
 .. only:: not html
 
