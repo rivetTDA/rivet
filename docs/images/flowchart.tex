@@ -1,4 +1,13 @@
-\documentclass[crop,tikz,convert={outfile=\jobname.svg}]{standalone}
+%%
+%% TO BUILD A PDF FILE: uncomment the following line, comment the SVG line below, and run "pdflatex flowchart.tex"
+%%
+\documentclass[crop,tikz]{standalone}
+
+%%
+%% TO BUILD A SVG FILE: comment the PDF line above, uncomment the line following line, and run "pdflatex -shell-escape flowchart.tex"
+%%
+%\documentclass[crop,tikz,convert={outfile=\jobname.svg}]{standalone}
+
 \pagestyle{empty}
 \usepackage[utf8]{inputenc}
 \usepackage{tikz}
