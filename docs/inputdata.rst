@@ -146,8 +146,7 @@ The minimal grades of appearance of a given simplex may be given in arbitrary or
 
 	0 1 2 ; 1 0 0 1
 
-Moreover, the code can handle non-minimial bigrades of appearance; it simply removes them. 
- (However, in the current code, non-minimal bigrades of appearance may change the coarsening behavior, as the \\(x\\)- and \\(y\\)-grades of such bigrades are currently not ignored when performing coarsening.)
+Moreover, the code can handle non-minimial bigrades of appearance; it simply removes them.  (However, in the current code, non-minimal bigrades of appearance may change the coarsening behavior, as the \\(x\\)- and \\(y\\)-grades of such bigrades are currently not ignored when performing coarsening.)
 
 One can also take the filtration direction for either of the axes to be decreasing, by placing ``[-]`` in front of an axis label. 
 For instance, the following variant of the last example replaces the y-coordinate of each bigrade with its negative, and takes the filtration direction for the \\(y\\)-coordinate to be descending::

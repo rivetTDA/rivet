@@ -94,7 +94,7 @@ As above,
 * <input> is an input data file;
 * The options for choosing homology dimensions and coarsening parameters behave exactly as for the computation of the MIF.
 
-**NOTE**: Currently, one cannot print the Hilbert function and bigraded Betti numbers of a module separately.  TODO: change thisis.
+**NOTE**: Currently, one cannot print the Hilbert function and bigraded Betti numbers of a module separately.  TODO: change this.
 
  TODO: Explain the output format for the Hilbert Function and Bigraded Betti Numbers
 
