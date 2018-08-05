@@ -1,7 +1,7 @@
 About
 =====================================
 
-RIVET is a tool for topological data analysis, and more specifically, for the visualization and analysis of two-parameter persistent homology.  RIVET was initially designed with interactive visualization foremost in mind, and this continues to be a central focus.  But RIVET also provides functionality for two-parameter persistence computation that should be useful for other purposes as well.  
+RIVET is a tool for topological data analysis, and more specifically, for the visualization and analysis of two-parameter persistent homology.  RIVET was initially designed with interactive visualization foremost in mind, and this continues to be a central focus.  But RIVET also provides functionality for two-parameter persistence computation that should be useful for other purposes.  
 
 Many of the mathematical and algorithmic ideas behind RIVET are explained in detail in the paper `Interactive Visualization of 2-D Persistence Modules <https://arxiv.org/pdf/1512.00180v1.pdf>`_.  
 Additional papers describing other aspects of RIVET are in preparation.
@@ -13,11 +13,11 @@ In addition, RIVET now incorporates some modified code from `PHAT <https://bitbu
 Overview
 --------
 
-The basic idea of 2-parameter persistent homology is simple: Given a data set (for example, a point cloud in \\(\\mathbb R^n\\), one constructs a 2-parameter family of simplicial complexes called a *bifiltration* whose topological structure captures some geometric structure of interest about the data.  For example, the bifiltration may encode information about the presence of clusters, holes, or tendrils in the data.  Applying simplicial homology to the bifiltration gives a diagram of vector spaces called a *2-parameter persistence module*, which algebraically encodes information about the topological structure of the bifiltration.  In contrast to the 1-parameter case, 2-parameter persistence modules can have very delicate algebraic structure.  As result, there is (in a sense that can be made precise) no good definition of a barcode for 2-parameter persistence modules.
+The basic idea of 2-parameter persistent homology is simple: Given a data set (for example, a point cloud in \\(\\mathbb R^n\\)), one constructs a 2-parameter family of simplicial complexes called a *bifiltration* whose topological structure captures some geometric structure of interest about the data.  For example, the bifiltration may encode information about the presence of clusters, holes, or tendrils in the data.  Applying simplicial homology to the bifiltration gives a diagram of vector spaces called a *2-parameter persistence module*, which algebraically encodes information about the topological structure of the bifiltration.  In contrast to the 1-parameter case, 2-parameter persistence modules can have very delicate algebraic structure.  As result, there is (in a sense that can be made precise) no good definition of a barcode for 2-parameter persistence modules.
 
 Nevertheless, one can define invariants of 2-parameter persistence modules that capture aspects of their structure relevant for data analysis.  RIVET computes and visualizes three such kinds of invariants, the *Hilbert function*, the *bigraded Betti numbers*, and the *fibered barcode.*  
 
-The fibered barcode is a parameterized family of barcodes obtained by restricting a 2-parameter persistence module to various lines in parameter space.  A key feature of RIVET is that it computes a data structure called the *augmented arrangement* on which fast queries of these barcodes can be performed.  These queries are used by RIVET's GUI to provide an interactive visualization of the fibered barcode.
+The fibered barcode is a parameterized family of barcodes obtained by restricting a 2-parameter persistence module to various lines in parameter space.  A key feature of RIVET is that it computes a data structure called the *augmented arrangement*, on which fast queries of these barcodes can be performed.  These queries are used by RIVET's GUI to provide an interactive visualization of the fibered barcode.
 
 RIVET also computes *minimal presentations* of 2-parameter persistence modules.  These are specifications of the full algebraic structure of a persistence module which are as small as possible, in a certain sense.  Those who wish to study invariants of  2-parameter persistent homology not computed by RIVET may find it useful to take the minimal presentations output by RIVET as a starting point.  In practice, when working with real data, these presentations are often surprisingly small.
 
@@ -97,6 +97,7 @@ Major Formatting todos:
 
 Content Todos:  
 
+* The name of the executable RIVET needs to be changed to rivet_GUI.  
 * The documentation is missing a specification of the output formats of the minimal presentation, Hilbert Function, and bigraded Betti numbers.
 * The text is not updated to explain how the persistence diagram window works in Simon's improvements to the visualization.  (Right now there is a disclamier about this.)
 * some language in rivet_console --h needs to be edited to sync properly with the new changes to the documentation.
@@ -105,6 +106,7 @@ Content Todos:
 
 Minor Todos:  
 
+* There is a formatting problem in the “cases” environment used in the definition of a free module.
 * The naming and italicization of the "Input data" and "Module Invariant" files needs to fixed in several places.
 * Is the name Hilbert Function used throughout?
 * It's a small thing, but the .png of the the file input dialog looks a little off center.
