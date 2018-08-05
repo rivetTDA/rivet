@@ -24,8 +24,7 @@ Function-Rips Filtration
 A common type of input data for RIVET consists of a point cloud with a real-valued function.
 We begin by computing values of a density estimator on the point cloud pictured above.
 There are many density estimators available: for example, one might count the number of neighbors within some distance of each point, or the distance from each point to its kth nearest neighbor.
-We count the number of neighbors in a disc around each point.
-The following diagram illustrates these counts by colors.
+We count the number of neighbors in a disc around each point.  (TODO: Specify the value of k.)  The following diagram illustrates these counts by colors.
 
 .. image:: images/circle2.png
    :width: 460px
