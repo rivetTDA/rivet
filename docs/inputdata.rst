@@ -3,7 +3,7 @@
 Input Data
 ==========
 
-As explained in the section “:ref:`runningRIVET`” above, RIVET takes as input a *raw data* file.  This file can specify input of the following types:
+As explained in the section “:ref:`runningRIVET`” above, RIVET requires an *input data file*.  This file can specify input of the following types:
 
 * Point Cloud or finite metric space, with or without a real-valued function. 
 * Bifiltration
@@ -11,9 +11,9 @@ As explained in the section “:ref:`runningRIVET`” above, RIVET takes as inpu
 
 (These are exactly the objects in green boxes in the figure of the section “:ref:`structure`” in this documentation.)
 
-We now specify the formats of the *raw data* file for each of these types of input.
+We now specify the formats of the input data file for each of these types of input.
 
-**NOTE**: When reading text files, RIVET ignores lines that begin with the symbol `#`; such lines may be used for comments in *raw data* files.  RIVET also ignores blank lines.
+**NOTE**: RIVET ignores lines that begin with the symbol `#`; such lines may be used for comments.  Blank lines are also ignored.
 
 Point Cloud with a Function
 ---------------------------
