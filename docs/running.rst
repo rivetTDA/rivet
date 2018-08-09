@@ -81,7 +81,7 @@ The basic syntax for computing a minimal presentation of a 2-D persistence modul
 * <input> is an input data file;
 * The options for choosing homology dimensions and coarsening parameters behave exactly as for the computation of the MI file.
 
-The following example shows the output format of a minimal presentation computation::
+The following example shows the output format for the minimal presentation::
 
 	x-grades
 	3
@@ -104,11 +104,11 @@ The following example shows the output format of a minimal presentation computat
 	1 
 	0 
   
-The first few lines give a list of possible x- and y-grades of generators and relations in the presentation.  (NOTE: With the current code, these lists may not be minimal; we plan to change this soon.) 
+The first few lines give lists of possible x- and y-grades of generators and relations in the presentation.  (NOTE: With the current code, these lists may not be minimal; we plan to change this soon.) 
 
-The next lines specify the bigrades of the generators and relations, via indices to the lists of x- and y-grades.  The lists are indexed from 0.  Thus, in this example, the row bigrades specified are (7/2,0) and (3,1).
+The next lines specify the bigrades of the generators and relations, via indices for the lists of x- and y-grades.  Lists are indexed from 0.  Thus, in this example, the row bigrades specified are (7/2,0) and (3,1).
 
-The final three lines specify columns of the matrix in sparse format.  Row indexes are indexed starting from 0.  Hence, the matrix specified is::
+The final three lines specify columns of the matrix in sparse format.  Rows are indexed from 0.  Hence, the matrix specified is::
 
 	1 0 1 
 	1 1 0
@@ -125,9 +125,48 @@ As above,
 * <input> is an input data file;
 * The options for choosing homology dimensions and coarsening parameters behave exactly as for the computation of the MI File.
 
-**NOTE**: Currently, one cannot print the Hilbert function and bigraded Betti numbers of a module separately.  TODO: change this.
+**NOTE**: Currently, one cannot print the Hilbert function and bigraded Betti numbers of a module separately.  Nor can one print the minimal presentation, Betti numbers, and Hilbert Function together.  This will change soon.
 
- TODO: Explain the output format for the Hilbert Function and Bigraded Betti Numbers
+The following shows the output format for the Hilbert function and bigraded Betti numbers, for the minimal presentation in the example above::
+
+	x-grades
+	3
+	7/2
+	4
+
+	y-grades
+	0
+	1
+	2
+
+	Dimensions > 0:
+
+	(0, 1, 1)
+	(0, 2, 1)
+
+	(1, 0, 1)
+	(1, 1, 1)
+	(1, 1, 1)
+	
+	(2, 0, 1)
+
+
+	Betti numbers:
+	xi_0:
+	(1, 0, 1)
+	(0, 1, 1)
+	xi_1:
+	(1, 1, 1)
+	(1, 2, 1)
+	(2, 1, 1)
+	xi_2:
+	(2, 2, 1)
+
+The first few lines give lists of possible x- and y-grades of non-zero Betti numbers.  
+
+The next few lines specify the points where the Hilbert function is non-zero, together with the value, among points with the specified x- and y-grades.  (Note that this information determines the Hilbert function at all points in \\(\\mathbb R^2\\).). As above, the points are specified via indices for their x-and y-grades.  For each point, a triple (x-index,y-index,value) is printed.  
+
+The remaining lines specify the points where Betti numbers on non-zero, along withe the value of the Betti number at that point.  Again, for each such point, a triple (x-index,y-index,value) is printed.   
 
 
 **rivet_gui**
