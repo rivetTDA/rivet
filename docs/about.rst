@@ -91,9 +91,8 @@ This new version of the documentation is a draft, and still needs a lot of polis
 
 Major Formatting todos:   
 
-* The flow chart is not displaying properly on the ReadTheDocs site.
 * A lot of displayed math is not displaying properly on the .pdf provided by read the docs.
-* The caption for the figure on the "Computation Pipeline" page does not display properly in the downloaded .html
+* The caption for the figure on the "Computation Pipeline" page does not display properly in the downloaded .html. MW: It seems that the downloaded HTML is using a slightly different style sheet than the online version. However, nearly everyone will use the online version rather than downloading a zip archive containing all of the HTML and supporting files.
 
 Content Todos:  
 
