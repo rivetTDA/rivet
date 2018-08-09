@@ -116,7 +116,7 @@ The final three lines specify columns of the matrix in sparse format.  Rows are 
 
 Printing Hilbert Function and Bigraded Betti Numbers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Here is the basic syntax for computing both the Hilbert function and bigraded Betii numbers of a 2-D persistence module::
+Here is the basic syntax for computing both the Hilbert function and bigraded Betti numbers of a bipersistence module::
 
 	rivet_console <input_file> --betti [-H <dimension>] [-x <xbins>] [-y <ybins>]
 
@@ -162,11 +162,11 @@ The following shows the output format for the Hilbert function and bigraded Bett
 	xi_2:
 	(2, 2, 1)
 
-The first few lines give lists of possible x- and y-grades of non-zero Betti numbers.  
+The first few lines give lists of possible x- and y-grades of non-zero Betti numbers.  This defines a finite grid \\(G\\in \\mathbb R^2\\). 
 
-The next few lines specify the points where the Hilbert function is non-zero, together with the value, among points with the specified x- and y-grades.  (Note that this information determines the Hilbert function at all points in \\(\\mathbb R^2\\).). As above, the points are specified via indices for their x-and y-grades.  For each point, a triple (x-index,y-index,value) is printed.  
+The next few lines specify the points in \\(G\\) where the Hilbert function is non-zero, together with the value of the Hilbert function at the point.  For each such point, a triple (x-index,y-index,value) is printed.  (Note that this information in fact determines the Hilbert function at all points in \\(\\mathbb R^2\\).) 
 
-The remaining lines specify the points where Betti numbers on non-zero, along withe the value of the Betti number at that point.  Again, for each such point, a triple (x-index,y-index,value) is printed.   
+The remaining lines specify the points where the Betti numbers are non-zero, along with the value of the Betti number at that point.  (Of course, 0th, 1st, and 2nd Betti numbers are handled separately.)  Again, for each such point, a triple (x-index,y-index,value) is printed.   
 
 
 **rivet_gui**

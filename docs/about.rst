@@ -97,10 +97,10 @@ Major Formatting todos:
 Content Todos:  
 
 * The name of the executable RIVET needs to be changed to rivet_GUI.  
-* The documentation is missing a specification of the output formats of the Hilbert Function, and bigraded Betti numbers.
-* The text is not updated to explain how the persistence diagram window works in Simon's improvements to the visualization.  (Right now there is a disclaimier about this.)
 * some language in rivet_console --h needs to be edited to sync properly with the new changes to the documentation.
 * similarly, language of file dialogue box should be updated.
+* The text is not updated to explain how the persistence diagram window works in Simon's improvements to the visualization.  (Right now there is a disclaimier about this.)
+* I suggest to not print out xi_0, xi_1, and xi_2 when —Betti is called.
 * The example could use some polish. More examples are desirable.
 
 Minor Todos:  
