@@ -96,7 +96,6 @@ Major Formatting todos:
 
 Content Todos:  
 
-* The name of the executable RIVET needs to be changed to rivet_GUI.  
 * some language in rivet_console --h needs to be edited to sync properly with the new changes to the documentation.
 * similarly, language of file dialogue box should be updated.
 * The text is not updated to explain how the persistence diagram window works in Simon's improvements to the visualization.  (Right now there is a disclaimier about this.)

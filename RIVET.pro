@@ -14,7 +14,7 @@ CONFIG += c++11 debug
 QT       += core gui \
 		widgets
 
-TARGET = RIVET
+TARGET = rivet_GUI
 TEMPLATE = app
 
 QMAKE_LIBDIR += /usr/local/lib #TODO: figure out how to generalize

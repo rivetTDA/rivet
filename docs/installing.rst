@@ -46,7 +46,7 @@ After `cloning <https://help.github.com/articles/cloning-a-repository/>`_ to ``$
 You may see compiler warnings during either of the ``make`` executions.
 These can safely be ignored. 
 
-After this, you will have two executables built: the viewer (RIVET), and the computation engine (rivet_console).
+After this, you will have two executables built: the viewer (rivet_GUI), and the computation engine (rivet_console).
 
 It is then necessary to move or symlink the console into the same folder where the viewer was built. On Ubuntu and most other systems::
 
@@ -119,7 +119,7 @@ After `cloning <https://help.github.com/articles/cloning-a-repository/>`_ to ``$
 You may see compiler warnings during either of the ``make`` executions.
 These can safely be ignored. 
 
-After this, you will have two executables built: the viewer (RIVET.app), and the computation engine (rivet_console).
+After this, you will have two executables built: the viewer (rivet_GUI.app), and the computation engine (rivet_console).
    
 It is then necessary to move or symlink the console into the same folder where the viewer was built::
 

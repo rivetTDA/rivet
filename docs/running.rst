@@ -169,7 +169,7 @@ The next few lines specify the points in \\(G\\) where the Hilbert function is n
 The remaining lines specify the points where the Betti numbers are non-zero, along with the value of the Betti number at that point.  (0th, 1st, and 2nd Betti numbers are handled separately.)  Again, for each such point, a triple (x-index, y-index, value) is printed.   
 
 
-**rivet_gui**
+**rivet_GUI**
 ----------------------------
   
 The visualizations performed by **rivet_GUI** require an MI file as input.  This can be computed by an explicit call to **rivet_console** and then opened in **rivet_GUI**.  Alternatively, **rivet_GUI** can call **rivet_console** directly to compute the MI file.

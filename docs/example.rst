@@ -96,7 +96,7 @@ Rather than using the RIVET GUI, one may use the RIVET console application to co
 This is done using the command line, as described in :ref:`runningRIVET`.
 For example, the computation described above can be obtained from **rivet_console** using the following command, run from the root directory of the RIVET repository::
 
-	./RIVET data/Test_Point_Clouds/circle_300pts_density.txt circle_300_computed.mif -H 1 -X 40 -y 40
+	./rivet_GUI data/Test_Point_Clouds/circle_300pts_density.txt circle_300_computed.mif -H 1 -X 40 -y 40
 
 This will produce a module invariants file ``circle_300_computed.mif``, which may then be loaded into the RIVET GUI or queried for barcodes on a collection of user-chosen lines.
 Please see :ref:`runningRIVET` for more details.
@@ -109,11 +109,10 @@ Degree-Rips Filtration
 
 RIVET is able to compute a degree-Rips bifiltration from point cloud data.
 
-The procedure for doing this is similar to that described above, except that line ??? of the input file is edited to contain the text ``no function``.
+The procedure for doing this is similar to that described above, except that line 4 of the input file is edited to contain the text ``no function``.
 
 Using RIVET GUI, the user must still select the homology dimension and number of bins.
 RIVET then produces the following visualization:
-
 
 Alternately, one may use rivet_console to compute the augmented arrangement, obtaining a computed invariants file.
 This file may then be loaded into RIVET GUI for interactive barcode exploration, or barcodes may be queried using rivet_console.
