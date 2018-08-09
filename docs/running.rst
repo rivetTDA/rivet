@@ -164,9 +164,9 @@ The following shows the output format for the Hilbert function and bigraded Bett
 
 The first few lines give lists of possible x- and y-grades of non-zero Betti numbers.  This defines a finite grid \\(G\\in \\mathbb R^2\\). 
 
-The next few lines specify the points in \\(G\\) where the Hilbert function is non-zero, together with the value of the Hilbert function at each point.  For each such point, a triple (x-index,y-index,value) is printed.  (Note that this information in fact determines the Hilbert function at all points in \\(\\mathbb R^2\\).) 
+The next few lines specify the points in \\(G\\) where the Hilbert function is non-zero, together with the value of the Hilbert function at each point.  For each such point, a triple (x-index, y-index, value) is printed.  (Note that this information in fact determines the Hilbert function at all points in \\(\\mathbb R^2\\).) 
 
-The remaining lines specify the points where the Betti numbers are non-zero, along with the value of the Betti number at that point.  (0th, 1st, and 2nd Betti numbers are handled separately.)  Again, for each such point, a triple (x-index,y-index,value) is printed.   
+The remaining lines specify the points where the Betti numbers are non-zero, along with the value of the Betti number at that point.  (0th, 1st, and 2nd Betti numbers are handled separately.)  Again, for each such point, a triple (x-index, y-index, value) is printed.   
 
 
 **rivet_gui**
