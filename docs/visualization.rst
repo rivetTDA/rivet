@@ -16,10 +16,10 @@ The RIVET interface contains two main windows, the *Line Selection Window* and t
 Line Selection Window
 ---------------------
 
-By default, the Line Selection Window plots a rectangle in \\(\\mathbb{R}^2\\) containing the union of the supports of bigraded Betti number functions \\(\\xi_i(M)\\), \\(i\\in \\{0,1,2\\}\\).
+By default, the Line Selection Window plots a rectangle in \\(\\mathbb{R}^2\\) containing the union of the supports of bigraded Betti number functions \\(\\xi_i^M\\), \\(i\\in \\{0,1,2\\}\\).
 (If the input to RIVET is an firep and the Betti numbers are not supported on a horizontal or vertical line, this will be the smallest such rectangle.  If the input is a point cloud, metric space, or bifiltration, and the birth indices of all simplices in the bifiltration do not lie on a single line, the rectangle will be the smallest one containing the birth indices of all simplices.) 
  
-Points in the supports of \\(\\xi_0(M)\\), \\(\\xi_1(M)\\), and \\(\\xi_2(M)\\) are marked with green, red, and yellow dots, respectively (though these colors are customizable via the Preferences tab). 
+Points in the supports of \\(\\xi_0^M\\), \\(\\xi_1^M\\), and \\(\\xi_2^M\\) are marked with green, red, and yellow dots, respectively (though these colors are customizable via the Preferences tab). 
 The area of each dot is proportional to the corresponding function value. 
 The dots are translucent, so that, for example, overlaid red and green dots appear brown on their intersection. 
 This allows the user to read the values of the Betti numbers at points which are in the support of more than one of the functions. 

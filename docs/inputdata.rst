@@ -3,7 +3,7 @@
 Input Data
 ==========
 
-As explained in the section “:ref:`runningRIVET`” above, RIVET takes as input a *raw data* file.  This file can specify input of the following types:
+As explained in the section “:ref:`runningRIVET`” above, RIVET requires an *input data file*.  This file can specify input of the following types:
 
 * Point Cloud or finite metric space, with or without a real-valued function. 
 * Bifiltration
@@ -11,9 +11,9 @@ As explained in the section “:ref:`runningRIVET`” above, RIVET takes as inpu
 
 (These are exactly the objects in green boxes in the figure of the section “:ref:`structure`” in this documentation.)
 
-We now specify the formats of the *raw data* file for each of these types of input.
+We now specify the formats of the input data file for each of these types of input.
 
-**NOTE**: When reading text files, RIVET ignores lines that begin with the symbol `#`; such lines may be used for comments in *raw data* files.  RIVET also ignores blank lines.
+**NOTE**: RIVET ignores lines that begin with the symbol `#`; such lines may be used for comments.  Blank lines are also ignored.
 
 Point Cloud with a Function
 ---------------------------
@@ -146,8 +146,7 @@ The minimal grades of appearance of a given simplex may be given in arbitrary or
 
 	0 1 2 ; 1 0 0 1
 
-Moreover, the code can handle non-minimial bigrades of appearance; it simply removes them. 
- (However, in the current code, non-minimal bigrades of appearance may change the coarsening behavior, as the \\(x\\)- and \\(y\\)-grades of such bigrades are currently not ignored when performing coarsening.)
+Moreover, the code can handle non-minimial bigrades of appearance; it simply removes them.  (However, in the current code, non-minimal bigrades of appearance may change the coarsening behavior, as the \\(x\\)- and \\(y\\)-grades of such bigrades are currently not ignored when performing coarsening.)
 
 One can also take the filtration direction for either of the axes to be decreasing, by placing ``[-]`` in front of an axis label. 
 For instance, the following variant of the last example replaces the y-coordinate of each bigrade with its negative, and takes the filtration direction for the \\(y\\)-coordinate to be descending::
