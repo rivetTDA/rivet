@@ -9,11 +9,11 @@ This page demonstrates how to use RIVET to visualize the topological structure o
    :alt: Point cloud
    :align: center
 
-In the plot, it is apparent that the point cloud contains a dense circle of points, as if many of the points were sampled from an annulus. 
+Evidently, this point cloud contains a dense circle of points, as if many of the points were sampled from an annulus. 
 However, we also observe outliers, both inside and outside of the annulus.
 Note that one-parameter persistence (e.g., using a Rips filtration) cannot easily detect the dense cycle, due to the presence of outliers.
 
-We will associate to this data a function-Rips bifiltration, taking the function on vertices to be a density estimate; here, we use a simple ball density estimator, which for each point \\(p\\) simply counts the number of points within some fixed distance of \\(p\\).  The following diagram illustrates this density estimate by colors.
+We will associate to this data a function-Rips bifiltration, taking the function on the points to be a density estimate; here, we use a simple ball density estimator, which for each point \\(p\\) simply counts the number of points within some fixed distance of \\(p\\).  The following diagram colors the points by density.
 
 .. image:: images/circle2.png
    :width: 460px
