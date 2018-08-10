@@ -21,6 +21,7 @@ The fibered barcode is a parameterized family of barcodes obtained by restrictin
 
 RIVET also computes *minimal presentations* of bipersistence modules.  These are specifications of the full algebraic structure of a persistence module which are as small as possible, in a certain sense.  Those who wish to study invariants of  2-parameter persistent homology not computed by RIVET may find it useful to take the minimal presentations output by RIVET as a starting point.  In practice, when working with real data, these presentations are often surprisingly small.
 
+
 Contributors
 ------------
 
@@ -83,7 +84,21 @@ License
 
 RIVET is made available under the under the terms of the `GNU General Public License <https://www.gnu.org/licenses/gpl-3.0.en.html>`_. The software is provided "as is," without warranty of any kind, even the implied warranty of merchantability or fitness for a particular purpose. See the GNU General Public License for details.
 
-   
+
+Citation
+--------
+
+For convenient citation of RIVET in your own work, we provide the following BibTex entry:
+
+	@software{rivet
+		author = {{The RIVET Developers}},
+		title = {RIVET},
+		url = {http://rivet.online},
+		version = {1.0},
+		year = {2018}
+	}
+
+
 
 Documentation Todos
 -------------------
