@@ -13,7 +13,7 @@ RIVET Documentation
    about
    installing    
    preliminaries
-   structure		
+   pipeline		
    running
    inputdata   
    visualization
