@@ -790,7 +790,7 @@ void VisualizationWindow::on_actionSave_line_selection_window_as_image_triggered
 void VisualizationWindow::on_actionSave_triggered()
 {
 
-    QString fileName = QFileDialog::getSaveFileName(this, "Save computed data", suggestedName("rivet"));
+    QString fileName = QFileDialog::getSaveFileName(this, "Save module invariants file", suggestedName("mif"));
     if (!fileName.isNull()) {
         QSettings settings;
         settings.setValue(DEFAULT_SAVE_DIR_KEY, QFileInfo(fileName).absolutePath());

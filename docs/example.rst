@@ -13,7 +13,7 @@ Evidently, this point cloud contains a dense circle of points, as if many of the
 However, we also observe outliers, both inside and outside of the annulus.
 Note that one-parameter persistence (e.g., using a Rips filtration) cannot easily detect the dense cycle, due to the presence of outliers.
 
-We will associate to this data a function-Rips bifiltration, taking the function on the points to be a density estimate; here, we use a simple ball density estimator, which for each point \\(p\\) simply counts the number of points within some fixed distance of \\(p\\).  The following diagram colors the points by density.
+We will associate to this data a function-Rips bifiltration, taking the function on the points to be a density estimate; here, we use a simple ball density estimator, which for each point \\(p\\) simply counts the number of points within a unit distance of \\(p\\).  The following diagram colors the points by density.
 
 .. image:: images/circle2.png
    :width: 460px
@@ -25,7 +25,7 @@ Input File
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 We next prepare an input file for RIVET.  This is a text file written in the format described on the :ref:`inputData` page.
-The first lines of the text file appear below (the complete file is in the repository at data/Test_Point_Clouds/circle_300pts_density.txt)::
+The first lines of the text file appear below (`the complete file is in the RIVET repository <https://github.com/rivetTDA/rivet/blob/master/data/Test_Point_Clouds/circle_300pts_density.txt>`_)::
 
 	points
 	2

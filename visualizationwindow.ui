@@ -797,7 +797,7 @@
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Save computed data...</string>
+    <string>Save module invariants file...</string>
    </property>
   </action>
   <action name="actionExit">
