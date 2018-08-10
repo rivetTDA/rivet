@@ -12,7 +12,7 @@ The RIVET software consists of two separate but closely related executables: **r
 
 * Given an *input data file* in one of the formats described in the :ref:`inputData` section of this documentation, **rivet_console** can compute a file called the *module invariants (MI) file*.  The MI file stores the Hilbert function, bigraded Betti numbers, and augmented arrangment of a persistent homology module of the input data.  The MI file is used by the RIVET visualization, and also for the following:
 
-* Given an MI file of a 2-D persistence module \\(M\\) and a second file, the *line file*, specifying a list of lines, **rivet_console** prints the barcodes of the 1-D slices of each line to the console.  The computations are performed using fast queries of the augmented arrangment of \\(M\\).
+* Given an MI file of a bipersistence module \\(M\\) and a second file, the *line file*, specifying a list of lines, **rivet_console** prints the barcodes of the 1-D slices of each line to the console.  The computations are performed using fast queries of the augmented arrangment of \\(M\\).
 
 * Given a *raw data* file as input, **rivet_console** can print The Hilbert function and Bigraded Betti numbers of a persistent homology module of the input data.  It can also print a minimal presentation of the module.
 
@@ -37,7 +37,7 @@ Other (technical) command line options for computation of a MI file are given in
 
 Computing Barcodes of 1-D Slices
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Here is the basic syntax for computing the barcodes of 1-D slices of a 2-D persistence module, given an MI file as input::
+Here is the basic syntax for computing the barcodes of 1-D slices of a bipersistence module, given an MI file as input::
 
 	 rivet_console <module_invariants_file> --barcodes <line_file>
 
@@ -74,7 +74,7 @@ For example, in the sample output above, ``88.1838 inf x1`` indicates a single i
 
 Printing a Minimal Presentation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The basic syntax for computing a minimal presentation of a 2-D persistence module is the following::
+The basic syntax for computing a minimal presentation of a bipersistence module is the following::
 
 	rivet_console <input_file> --minpres [-H <dimension>] [-x <xbins>] [-y <ybins>]
 

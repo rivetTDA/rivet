@@ -70,7 +70,7 @@ Note that this may take several minutes, depending on the computing power availa
 
 When the Hilbert function and bigraded Betti numbers have been computed, visualizations of these appear in the *Line Selection Window* on the left side of the RIVET window (see the :ref:`visualization` page for more details).
 When the computation of the augmented arrangement is complete, a barcode appears in the *Line Selection Window* and a persistence diagram in the *Persistence Diagram* window in RIVET, as shown below.
-RIVET is now ready for interactive browsing of barcodes along linear slices through the two-parameter persistence module.
+RIVET is now ready for interactive browsing of barcodes along linear slices through the bipersistence module.
 
 .. image:: images/RIVET_screenshot_circle300.png
    :width: 600px
