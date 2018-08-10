@@ -65,7 +65,7 @@ Visualization
 
 When the Hilbert function and bigraded Betti numbers have been computed, visualizations of these appear in the *Line Selection Window* on the left side of the RIVET window (see the :ref:`visualization` page for more details).
 When the computation of the augmented arrangement is complete, a barcode appears in the *Line Selection Window* and a persistence diagram appears in the *Persistence Diagram* window in RIVET, as shown below.
-RIVET is now ready for interactive browsing of barcodes along linear slices through the two-parameter persistence module.
+RIVET is now ready for interactive browsing of barcodes along linear slices through the bipersistence persistence module.
 
 .. image:: images/RIVET_screenshot_circle300.png
    :width: 600px
@@ -78,7 +78,7 @@ For this data, note that the barcode contains a single long bar when the selecte
 Furthermore, note that selecting vertical lines effectively thresholds the points by density.
 That is, selecting a vertical line with density value \\(d\\) produces a barcode computed from a Rips filtration on only those points with density value greater than \\(d\\), as shown below.
 This effectively reduces the analysis to one-parameter persistence, using a density threshold.
-The RIVET GUI allows the user to slide the vertical line left and right, thereby displating the barcodes for different choices of the density threshold.
+The RIVET GUI allows the user to slide the vertical line left and right, thereby displaying the barcodes for different choices of the density threshold.
 
 .. image:: images/RIVET_screenshot_circle300v.png
    :width: 600px
