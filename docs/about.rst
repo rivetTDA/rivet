@@ -88,7 +88,7 @@ RIVET is made available under the under the terms of the `GNU General Public Lic
 Citation
 --------
 
-For convenient citation of RIVET in your own work, we provide the following BibTex entry:
+For convenient citation of RIVET in your own work, we provide the following BibTex entry::
 
 	@software{rivet
 		author = {{The RIVET Developers}},
