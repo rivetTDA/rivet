@@ -16,10 +16,10 @@ The RIVET interface contains two main windows, the *Line Selection Window* and t
 Line Selection Window
 ---------------------
 
-By default, the Line Selection Window plots a rectangle in \\(\\mathbb{R}^2\\) containing the union of the supports of bigraded Betti number functions \\(\\xi_i^M\\), \\(i\\in \\{0,1,2\\}\\).
+By default, the *Line Selection Window* plots a rectangle in \\(\\mathbb{R}^2\\) containing the union of the supports of bigraded Betti number functions \\(\\xi_i^M\\), \\(i\\in \\{0,1,2\\}\\).
 (If the input to RIVET is an firep and the Betti numbers are not supported on a horizontal or vertical line, this will be the smallest such rectangle.  If the input is a point cloud, metric space, or bifiltration, and the birth indices of all simplices in the bifiltration do not lie on a single line, the rectangle will be the smallest one containing the birth indices of all simplices.) 
  
-Points in the supports of \\(\\xi_0^M\\), \\(\\xi_1^M\\), and \\(\\xi_2^M\\) are marked with green, red, and yellow dots, respectively (though these colors are customizable via the Preferences tab). 
+Points in the supports of \\(\\xi_0^M\\), \\(\\xi_1^M\\), and \\(\\xi_2^M\\) are marked with green, red, and yellow dots, respectively (though these colors are customizable via the Edit menu on Linux or the Preferences menu on Mac). 
 The area of each dot is proportional to the corresponding function value. 
 The dots are translucent, so that, for example, overlaid red and green dots appear brown on their intersection. 
 This allows the user to read the values of the Betti numbers at points which are in the support of more than one of the functions. 
@@ -42,9 +42,10 @@ Clicking and dragging the interior of the line (away from its endpoints) moves t
 * Right-clicking changes the slope of the line, while keeping the bottom/left endpoint fixed.
 
 As the line moves, both the barcode in the Line Selection Window and its persistence diagram representation in the Persistence Diagram Window are updated in real time. 
-The "slope" and "offset" controls below the Line Selection Window can also be used to select the line.
+The *Angle* and *Offset* controls below the Line Selection Window can also be used to select the line.
 
-The bounds of the line selection window can be adjusted by the controls at the bottom of the screen.  The window can be reset to the default by clicking on “Restore Default Window,” under the “View” menu.  Clicking on “Betti number window” under the “View” menu sets the window to the smallest rectangle containing all Betti numbers.
+The coordinate bounds of the viewable rectangle may be adjusted using the *Top*, *Bottom*, *Left*, and *Right* control boxes at the bottom of the RIVET window.
+The window can be reset to the default by clicking on “Restore Default Window,” under the “View” menu.  Clicking on “Betti number window” under the “View” menu sets the window to the smallest rectangle containing all Betti numbers.
 
 
 Persistence Diagram Window
