@@ -90,7 +90,7 @@ Citation
 
 For convenient citation of RIVET in your own work, we provide the following BibTex entry::
 
-	@software{rivet
+	@software{rivet,
 		author = {{The RIVET Developers}},
 		title = {RIVET},
 		url = {http://rivet.online},
