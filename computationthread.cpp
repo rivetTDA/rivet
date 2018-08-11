@@ -67,7 +67,7 @@ void ComputationThread::run()
 
 bool ComputationThread::is_precomputed(const std::string &file_name)
 {
-    std::cerr << "Checking if precomputed" << std::endl;
+    std::cerr << "Checking for a module invariants file" << std::endl;
     std::ifstream file(file_name);
     if (!file.is_open()) {
         throw std::runtime_error("Couldn't open " + file_name + " for reading");
