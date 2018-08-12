@@ -102,7 +102,6 @@ For convenient citation of RIVET in your own work, we provide the following BibT
 
 Documentation Todos
 -------------------
-This new version of the documentation is a draft, and still needs a lot of polish.
 
 Formatting todos:   
 
