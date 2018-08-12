@@ -36,7 +36,7 @@ std::unique_ptr<ComputationResult> from_istream(std::istream &file) {
         m3.convert(arrangementMessage);
 
     } else {
-        throw std::runtime_error("Expected a precomputed RIVET file");
+        throw std::runtime_error("Expected a RIVET module invariants file");
     }
     return from_messages(templatePointsMessage, arrangementMessage);
 }

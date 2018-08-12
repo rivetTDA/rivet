@@ -536,9 +536,9 @@ void SliceDiagram::zoom_diagram(double angle, double offset, double distance_to_
     if (line_vert) {
         double relative_intercept_horz = (-offset - data_xmin) / (data_xmax - data_xmin); //vertical line has negative offset
         x = relative_intercept_horz * diagram_width;
-        line_visible = (0 <= relative_intercept_horz && relative_intercept_horz <= 1);
+        line_visible = (0 <= relative_intercept_horz && relative_intercept_horz <= 1+float(padding)/diagram_width);
         slice_line->update_position(x, y, line_vert, 0);
-        //slice_line->set_visibility(line_visible); //don't plot the line if it lies outisde of the viewing window
+        slice_line->set_visibility(line_visible); //don't plot the line if it lies outisde of the viewing window
         line_pos = -1 * relative_intercept_horz;
     }
 
@@ -550,33 +550,33 @@ void SliceDiagram::zoom_diagram(double angle, double offset, double distance_to_
             double relative_intercept_horz = -data_xmin + (data_ymin - intrinsic_y_int) / (intrinsic_slope);
             relative_intercept_horz /= data_xmax - data_xmin;
             x = relative_intercept_horz * diagram_width;
-            line_visible = (0 <= relative_intercept_horz && relative_intercept_horz < 1);
+            line_visible = (0 <= relative_intercept_horz && relative_intercept_horz < 1+float(padding)/diagram_width);
             line_pos = -1 * relative_intercept_horz;
         } else //then left-bottom endpoint is along left edge of box
         {
             y = relative_intercept_vert * diagram_height;
-            line_visible = (0 <= relative_intercept_vert && relative_intercept_vert < 1);
+            line_visible = (0 <= relative_intercept_vert && relative_intercept_vert < 1+float(padding)/diagram_height);
             line_pos = relative_intercept_vert;
         }
 
         slice_line->update_position(x, y, line_vert, intrinsic_slope * scale_y / scale_x);
-        //slice_line->set_visibility(line_visible);
+        slice_line->set_visibility(line_visible);
     }
 
-    if (line_visible) {
-        //reposition bars
-        unsigned count = 1;
-        for (unsigned i = 0; i < bars.size(); i++) {
-            for (std::list<PersistenceBar*>::iterator it = bars[i].begin(); it != bars[i].end(); ++it) {
-                double start = (*it)->get_start();
-                double end = (*it)->get_end();
-                std::pair<double, double> p1 = compute_endpoint(start, count);
-                std::pair<double, double> p2 = compute_endpoint(end, count);
-                (*it)->set_line(p1.first, p1.second, p2.first, p2.second);
-                count++;
-            }
+    //reposition bars
+    unsigned count = 1;
+    for (unsigned i = 0; i < bars.size(); i++) {
+        for (std::list<PersistenceBar*>::iterator it = bars[i].begin(); it != bars[i].end(); ++it) {
+            double start = (*it)->get_start();
+            double end = (*it)->get_end();
+            std::pair<double, double> p1 = compute_endpoint(start, count);
+            std::pair<double, double> p2 = compute_endpoint(end, count);
+            (*it)->set_line(p1.first, p1.second, p2.first, p2.second);
+
+            count++;
         }
     }
+
     //draw the labels
     redraw_labels();
 
@@ -689,7 +689,7 @@ void SliceDiagram::update_line(double angle, double offset, double distance_to_o
         line_vert = true;
         line_pos = offset / (data_xmax - data_xmin); //relative units
 
-        line_visible = (-1 <= line_pos && line_pos <= 0); //vertical line has negative offset
+        line_visible = (-1 <= line_pos && line_pos <= float(padding)/diagram_width); //vertical line has negative offset
 
         //update the SliceLine
 
@@ -703,7 +703,7 @@ void SliceDiagram::update_line(double angle, double offset, double distance_to_o
         line_vert = false;
         line_slope = 0;
         line_pos = offset / (data_ymax - data_ymin); //relative units
-        line_visible = (0 <= line_pos && line_pos <= 1);
+        line_visible = (0 <= line_pos && line_pos <= 1+float(padding)/diagram_height);
 
         //update the SliceLine
         int ypos = (offset - data_ymin) * scale_y; //pixel units
@@ -721,19 +721,19 @@ void SliceDiagram::update_line(double angle, double offset, double distance_to_o
         if (y_coord >= data_ymin) //then slice line intersects left edge of box
         {
             line_pos = (y_coord - data_ymin) / (data_ymax - data_ymin); //relative units
-            line_visible = (0 <= line_pos && line_pos < 1);
+            line_visible = (0 <= line_pos && line_pos < 1+float(padding)/diagram_height);
             slice_line->update_position(0, (y_coord - data_ymin) * scale_y, false, line_slope * scale_y / scale_x);
 
         } else //then slice line intersects bottom of box
         {
             double x_coord = (data_ymin - offset / cos(radians)) / line_slope; //x-coordinate of slice line at y=data_ymin; data units
             line_pos = -1 * (x_coord - data_xmin) / (data_xmax - data_xmin); //relative units
-            line_visible = (-1 < line_pos && line_pos <= 0);
+            line_visible = (-1 < line_pos && line_pos <= float(padding)/diagram_width);
 
             slice_line->update_position((x_coord - data_xmin) * scale_x, 0, false, line_slope * scale_y / scale_x);
         }
     }
-    //slice_line->set_visibility(line_visible);
+    slice_line->set_visibility(line_visible);
     highlight_line->hide(); //since the line has changed, the highlighting is no longer valid
 } //end update_line()
 

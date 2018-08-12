@@ -336,7 +336,7 @@ FileContent InputManager::read_point_cloud(std::ifstream& stream, Progress& prog
         }
         dimension = static_cast<unsigned>(dim);
 
-        //read maximum distance for edges in Degree-Rips complex
+        //read maximum distance for edges in Rips complex
         line_info = reader.next_line();
         std::vector<std::string> distance_line = line_info.first;
         if (distance_line.size() != 1) {
@@ -352,7 +352,7 @@ FileContent InputManager::read_point_cloud(std::ifstream& stream, Progress& prog
         if (verbosity >= 4) {
             std::ostringstream oss;
             oss << max_dist;
-            debug() << "  Maximum distance of edges in Degree-Rips complex:" << oss.str();
+            debug() << "  Maximum distance of edges in Rips complex:" << oss.str();
         }
 
         unsigned expectedNumTokens;

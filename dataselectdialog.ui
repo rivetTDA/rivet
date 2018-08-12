@@ -261,7 +261,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>You can start from a point cloud, a bifiltration, or a file of precomputed RIVET data.</string>
+     <string>You can start from a point cloud, finite metric space, bifiltration, FIRep, or a module invariants file.</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
