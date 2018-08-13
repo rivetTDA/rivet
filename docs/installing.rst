@@ -153,12 +153,11 @@ Open the Bash shell and install dependencies. Use the following command to insta
 
 In order to use the RIVET viewer, you must install an X server such as `Xming <https://sourceforge.net/projects/xming/>`_.
 
-It is also necessary to set two environment variables, as follows::
+It is probably also necessary to set an environment variable, as follows::
 
-    export LD_LIBRARY_PATH=/usr/local/boost_1_64_0/stage/lib/:$LD_LIBRARY_PATH
     export DISPLAY=:0
 
-These environment variables will be reset when you close the Bash shell. To avoid having to run the two lines above when you reopen the shell, add these lines to the end of the file ``~/.bashrc``.
+This environment variable will be reset when you close the Bash shell. To avoid having to run the line above when you reopen the shell, add this line to the end of the file ``~/.bashrc``.
 
 You are now ready to build RIVET. Follow the instructions in the section :ref:`buildingOnUbuntu`.
 
