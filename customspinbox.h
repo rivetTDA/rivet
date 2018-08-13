@@ -24,7 +24,7 @@ public:
 
         //add in the minus sign if the value is negative, or if the user was in the middle of typing
         //a negative value >-1 (e.g. -0.5)
-        if(val<0 ||(lineEdit()->text().size()>0&& lineEdit()->text().at(0)=="-")){
+        if(val<0 ||(lineEdit()->text().size()>0&& lineEdit()->text().at(0)=='-')){
             str="-"+str;
         }
 
