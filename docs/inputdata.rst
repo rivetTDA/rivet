@@ -135,6 +135,7 @@ A sample multicritical bifiltration file appears below. This consists of: the bo
 	0 ; 0 0
 	1 ; 0 0
 	2 ; 0 0
+	3 ; 0 0
 	0 1 ; 0 0
 	0 2 ; 0 0
 	1 2 ; 0 0
@@ -157,6 +158,7 @@ For instance, the following variant of the last example replaces the y-coordinat
 	0 ; 0 0
 	1 ; 0 0
 	2 ; 0 0
+	3 ; 0 0
 	0 1 ; 0 0
 	0 2 ; 0 0
 	1 2 ; 0 0
