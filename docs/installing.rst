@@ -123,7 +123,7 @@ After this, you will have two executables built: the viewer (rivet_GUI.app), and
    
 It is then necessary to move or symlink the console into the same folder where the viewer was built::
 
-    cd RIVET.app/Contents/MacOS
+    cd rivet_GUI.app/Contents/MacOS
     ln -s ../../../build/rivet_console   
 
 In the future, all these steps will be automated so that a single cmake build will create both executables, and put everything in the right place.
