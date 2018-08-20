@@ -1028,7 +1028,7 @@ void VisualizationWindow::update_origin()
             dot_pos_x=xmin_precise;
             dot_pos_y=y_int+slope*xmin_precise;
             dist_to_origin=sqrt(pow(dot_pos_x-origin_x,2.0)+pow(dot_pos_y-origin_y,2.0));
-            is_visible=(ymin_precise<=dot_pos_y)&&(dot_pos_y<=ymax_precise+top_padding);
+            is_visible=dot_pos_y<=ymax_precise+top_padding;
 
             
         }
@@ -1037,7 +1037,7 @@ void VisualizationWindow::update_origin()
             dot_pos_x=(ymin_precise-y_int)/slope;
             dot_pos_y=ymin_precise;
             dist_to_origin=sqrt(pow(dot_pos_x-origin_x,2.0)+pow(dot_pos_y-origin_y,2.0));
-            is_visible=(xmin_precise<=dot_pos_x)&&(dot_pos_x<=xmax_precise+right_padding);
+            is_visible=dot_pos_x<=xmax_precise+right_padding;
             
 
         }
