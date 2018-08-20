@@ -68,7 +68,7 @@ For each line specified in <line_file>, **rivet_console** will print barcode inf
 	67 0.88: 23.3613 inf x1
 	10 0.92: 11.9947 inf x1, 11.9947 19.9461 x2, 11.9947 16.4909 x1, 11.9947 13.0357 x4
 
-The barcodes are given with respect to a isometric parameterization of the query line that takes zero to be the intersection of the query line with the nonnegative portions of the coordinate axes; there is a unique such intersection point except if the query is the x-axis or y-axis, this case we take zero to be origin.
+The barcodes are given with respect to an isometric parameterization of the query line that takes zero to be the intersection of the query line with the nonnegative portions of the coordinate axes; there is a unique such intersection point except if the query line is one of the coordinate axes, in which case we take zero to be origin.
 
 
 Furthermore, barcodes are returned as multisets of intervals. 
