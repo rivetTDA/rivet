@@ -27,6 +27,7 @@ Installing Dependencies
 
 On Ubuntu, installation of dependencies should be relatively simple::
 
+    sudo apt-get update
     sudo apt-get install cmake qt5-default qt5-qmake qtbase5-dev-tools libboost-all-dev
 
 Building RIVET 
@@ -149,7 +150,8 @@ This will provide a Bash shell with Ubuntu 16.04 inside of Windows 10.
 
 Open the Bash shell and install dependencies. Use the following command to install cmake, a compiler, and Qt5::
 
-    sudo apt-get install cmake build-essential qt5-default qt5-qmake qtbase5-dev-tools 
+    sudo apt-get update
+    sudo apt-get install cmake build-essential qt5-default qt5-qmake qtbase5-dev-tools libboost-all-dev
 
 In order to use the RIVET viewer, you must install an X server such as `Xming <https://sourceforge.net/projects/xming/>`_.
 
