@@ -45,10 +45,10 @@ static const char USAGE[] =
       rivet_console --version
       rivet_console <input_file> --identify
       rivet_console <input_file> --minpres [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [--koszul]
-      rivet_console <input_file> [output_file] --betti [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [--koszul]
+      rivet_console <input_file> [module_invariants_file] --betti [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [--koszul]
       rivet_console <module_invariants_file> --bounds [-V <verbosity>]
       rivet_console <module_invariants_file> --barcodes <line_file> [-V <verbosity>]
-      rivet_console <input_file> <output_file> [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [-f <format>] [--binary] [--koszul]
+      rivet_console <input_file> <module_invariants_file> [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [-f <format>] [--binary] [--koszul]
 
     Options:
       <input_file>                             A text file with suitably formatted point cloud, bifiltration, or
@@ -259,7 +259,7 @@ int main(int argc, char* argv[])
     InputParameters params; //parameter values stored here
 
     std::map<std::string, docopt::value> args = docopt::docopt(USAGE, { argv + 1, argv + argc }, true,
-        "RIVET Console 0.4");
+        "RIVET Console 1.0.0");
 
     std::shared_ptr<ArrangementMessage> arrangement_message;
     std::shared_ptr<TemplatePointsMessage> points_message;
