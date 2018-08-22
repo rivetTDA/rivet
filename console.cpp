@@ -272,7 +272,7 @@ int main(int argc, char* argv[])
         //This should never happen if docopt is doing its job and the docstring is written correctly
         throw std::runtime_error("Either <input_file> or <module_invariants_file> must be supplied");
     }
-    docopt::value& out_file_name = args["<output_file>"];
+    docopt::value& out_file_name = args["<module_invariants_file>"];
     if (out_file_name.isString()) {
         params.outputFile = out_file_name.asString();
     }
