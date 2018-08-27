@@ -51,7 +51,7 @@ The window can be reset to the default by clicking on “Restore Default Window,
 Persistence Diagram Window
 --------------------------
 
-[**NOTE**:  The description below fully describes the behavior of the persistence diagram window only for the default bounds on the Line Selection Window.  RIVET now allows the user adjust to adjust these bounds, and as part of this change, we introduced some enhancements to the Persistence Diagram Window.  The text here has not yet been updated to describe these enhancements.  However, these enhancements behave in the way one would expect, given the behavior of the persistence diagram window for the default bounds.
+[**NOTE**:  The description below fully describes the behavior of the persistence diagram window only for the default bounds on the Line Selection Window.  RIVET now allows the user adjust to adjust these bounds, and as part of this change, we introduced some enhancements to the Persistence Diagram Window.  The text here has not yet been updated to describe these enhancements.  However, these enhancements behave in the way one would expect, given the behavior of the persistence diagram window for the default bounds.]
 
 The Persistence Diagram Window (at right in the screenshot above) displays a persistence diagram representation of the barcode for \\(M^L\\).
 
