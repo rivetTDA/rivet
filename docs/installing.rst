@@ -27,6 +27,7 @@ Installing Dependencies
 
 On Ubuntu, installation of dependencies should be relatively simple::
 
+    sudo apt-get update
     sudo apt-get install cmake qt5-default qt5-qmake qtbase5-dev-tools libboost-all-dev
 
 Building RIVET 
@@ -123,7 +124,7 @@ After this, you will have two executables built: the viewer (rivet_GUI.app), and
    
 It is then necessary to move or symlink the console into the same folder where the viewer was built::
 
-    cd RIVET.app/Contents/MacOS
+    cd rivet_GUI.app/Contents/MacOS
     ln -s ../../../build/rivet_console   
 
 In the future, all these steps will be automated so that a single cmake build will create both executables, and put everything in the right place.
@@ -149,16 +150,16 @@ This will provide a Bash shell with Ubuntu 16.04 inside of Windows 10.
 
 Open the Bash shell and install dependencies. Use the following command to install cmake, a compiler, and Qt5::
 
-    sudo apt-get install cmake build-essential qt5-default qt5-qmake qtbase5-dev-tools 
+    sudo apt-get update
+    sudo apt-get install cmake build-essential qt5-default qt5-qmake qtbase5-dev-tools libboost-all-dev
 
 In order to use the RIVET viewer, you must install an X server such as `Xming <https://sourceforge.net/projects/xming/>`_.
 
-It is also necessary to set two environment variables, as follows::
+It is probably also necessary to set an environment variable, as follows::
 
-    export LD_LIBRARY_PATH=/usr/local/boost_1_64_0/stage/lib/:$LD_LIBRARY_PATH
     export DISPLAY=:0
 
-These environment variables will be reset when you close the Bash shell. To avoid having to run the two lines above when you reopen the shell, add these lines to the end of the file ``~/.bashrc``.
+This environment variable will be reset when you close the Bash shell. To avoid having to run the line above when you reopen the shell, add this line to the end of the file ``~/.bashrc``.
 
 You are now ready to build RIVET. Follow the instructions in the section :ref:`buildingOnUbuntu`.
 

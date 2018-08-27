@@ -48,7 +48,8 @@ static const char USAGE[] =
       rivet_console <input_file> [output_file] --betti [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [--koszul] [--num_threads=<num_threads>]
       rivet_console <module_invariants_file> --bounds [-V <verbosity>]
       rivet_console <module_invariants_file> --barcodes <line_file> [-V <verbosity>]
-      rivet_console <input_file> <output_file> [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [-f <format>] [--binary] [--koszul] [--num_threads=<num_threads>]
+      rivet_console <input_file> <module_invariants_file> [-H <dimension>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [-f <format>] [--binary] [--koszul] [--num_threads=<num_threads>]
+
 
     Options:
       <input_file>                             A text file with suitably formatted point cloud, bifiltration, or
@@ -260,7 +261,7 @@ int main(int argc, char* argv[])
     InputParameters params; //parameter values stored here
 
     std::map<std::string, docopt::value> args = docopt::docopt(USAGE, { argv + 1, argv + argc }, true,
-        "RIVET Console 0.4");
+        "RIVET Console 1.0.0");
 
     std::shared_ptr<ArrangementMessage> arrangement_message;
     std::shared_ptr<TemplatePointsMessage> points_message;
@@ -273,7 +274,7 @@ int main(int argc, char* argv[])
         //This should never happen if docopt is doing its job and the docstring is written correctly
         throw std::runtime_error("Either <input_file> or <module_invariants_file> must be supplied");
     }
-    docopt::value& out_file_name = args["<output_file>"];
+    docopt::value& out_file_name = args["<module_invariants_file>"];
     if (out_file_name.isString()) {
         params.outputFile = out_file_name.asString();
     }
