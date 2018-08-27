@@ -28,12 +28,17 @@ externalproject_add(
 
 find_package(Boost "1.58")
 
-# Look for OpenMP and enable it if found.
-find_package(OpenMP)
-if (OPENMP_FOUND)
-    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+# So far, we haven’t been able to get OpenMP to work with OS X’s Clang, though this should be possible.
+# See https://github.com/rivetTDA/rivet/issues/136
+# For now, to avoid a distracting error message when running CMake in OS X, we use the following if statement.  
+if(NOT APPLE)
+	# Look for OpenMP and enable it if found.
+	find_package(OpenMP)
+	if (OPENMP_FOUND)
+    		set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    		set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    		set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+        endif()
 endif()
 
 #note this must come before add_executable or it will be ignored
