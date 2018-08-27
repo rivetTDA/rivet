@@ -373,6 +373,7 @@ void Presentation::minimize(int verbosity)
 
             //zero out the part of the row pivot_i to the right of i.
             //The part of the row to the left is already zero.
+            #pragma omp parallel for
             for (unsigned j = i + 1; j < mat.width(); j++) {
 
                 if (mat.entry_sorted(pivot_i, j)) {
