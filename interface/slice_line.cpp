@@ -67,7 +67,10 @@ void SliceLine::paint(QPainter* painter, const QStyleOptionGraphicsItem* /*unuse
     QPen pen(config_params->sliceLineColor);
     pen.setWidth(config_params->sliceLineWidth);
 
-    if (pressed) {
+    if(!inside_view){
+        pen.setColor(Qt::gray);
+    }
+    else if (pressed) {
         pen.setColor(config_params->sliceLineHighlightColor);
     }
 
@@ -98,6 +101,10 @@ void SliceLine::paint(QPainter* painter, const QStyleOptionGraphicsItem* /*unuse
 //left-click and drag to move line, maintaining the same slope
 QVariant SliceLine::itemChange(GraphicsItemChange change, const QVariant& value)
 {
+    if(!inside_view)
+    {//then don't allow the line to be moved
+        return QGraphicsItem::itemChange(change, value);
+    }
     if (change == QGraphicsItem::ItemPositionChange && !update_lock) {
         QPointF mouse = value.toPointF(); //un-adjusted position given by the mouse
         QPointF newpos(mouse); //adjusted position to make the line stay within bounds
@@ -301,6 +308,9 @@ void SliceLine::update_position(double xpos, double ypos, bool vert, double pixe
 
 void SliceLine::mousePressEvent(QGraphicsSceneMouseEvent* event)
 {
+    if(!inside_view){
+        return;
+    }
     if (event->button() == Qt::RightButton) {
         rotating = true;
     }
@@ -315,6 +325,9 @@ void SliceLine::mousePressEvent(QGraphicsSceneMouseEvent* event)
 
 void SliceLine::mouseReleaseEvent(QGraphicsSceneMouseEvent* event)
 {
+    if(!inside_view){
+        return;
+    }
     if (event->button() == Qt::RightButton) {
         rotating = false;
     }
@@ -330,6 +343,9 @@ void SliceLine::mouseReleaseEvent(QGraphicsSceneMouseEvent* event)
 //right-click and drag to change slope, left/bottom endpoint stays fixed
 void SliceLine::mouseMoveEvent(QGraphicsSceneMouseEvent* event)
 {
+    if(!inside_view){
+        return;
+    }
     if (rotating) {
         //compute new slope
         if (event->pos().x() <= 0) {
@@ -396,9 +412,14 @@ double SliceLine::get_box_ymax()
     return box_ymax;
 }
 
+bool SliceLine::is_inside_view()
+{
+    return inside_view;
+}
+
 void SliceLine::set_visibility(bool visible)
 {
-    left_dot->setVisible(visible);
-    right_dot->setVisible(visible);
-    setVisible(visible);
+    inside_view=visible;
+
+
 }

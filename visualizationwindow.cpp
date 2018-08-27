@@ -561,20 +561,23 @@ void VisualizationWindow::on_TopCornerYSpinBox_valueChanged(double y_top)
 }
 
 
-//TODO: update the value of dist_to_origin when these two boxes are changed
 void VisualizationWindow::on_angleDoubleSpinBox_valueChanged(double angle)
 {
 
 
     if (line_selection_ready && !slice_update_lock) {
+
         angle_precise = angle;
         update_origin();
+        if(!is_visible&& ui->actionAutomatically_reset_line->isChecked()){
+            reset_line(); //reset_line will call this function again with the updated angle value
+            return;
+        }
         slice_diagram.update_line(angle_precise, ui->offsetSpinBox->value(), dist_to_origin);
         update_persistence_diagram();//updates the barcode in the slice diagram
         //note that the x and y scales of the diagram do not need to be updated, so the values
         //passed to the pd in this function will be correct
         slice_diagram.zoom_diagram(angle_precise, offset_precise,dist_to_origin); //draws the diagram
-
     }
 
 
@@ -586,6 +589,10 @@ void VisualizationWindow::on_offsetSpinBox_valueChanged(double offset)
     if (line_selection_ready && !slice_update_lock) {
         offset_precise = offset;
         update_origin();
+        if(!is_visible&& ui->actionAutomatically_reset_line->isChecked()){
+            reset_line(); //reset_line will call this function again with the updated offset value
+            return;
+        }
         slice_diagram.update_line(ui->angleDoubleSpinBox->value(), offset_precise, dist_to_origin);
         update_persistence_diagram(); //updates the barcode in the slice diagram
         slice_diagram.zoom_diagram(angle_precise, offset_precise,dist_to_origin);//draws the diagram,with the updated barcode
@@ -790,7 +797,7 @@ void VisualizationWindow::on_actionSave_line_selection_window_as_image_triggered
 void VisualizationWindow::on_actionSave_triggered()
 {
 
-    QString fileName = QFileDialog::getSaveFileName(this, "Save computed data", suggestedName("rivet"));
+    QString fileName = QFileDialog::getSaveFileName(this, "Save module invariants file", suggestedName("mif"));
     if (!fileName.isNull()) {
         QSettings settings;
         settings.setValue(DEFAULT_SAVE_DIR_KEY, QFileInfo(fileName).absolutePath());
@@ -919,10 +926,21 @@ void VisualizationWindow::reset_line()
 
     angle_precise=new_angle;
     offset_precise=new_offset;
+
+    if(!is_visible){
+        //then angle and offset boxes will be frozen; restore them so the new values can be set
+        ui->angleDoubleSpinBox->setMinimum(0);
+        ui->angleDoubleSpinBox->setMaximum(90);
+        ui->offsetSpinBox->setMinimum(grades.min_offset());
+        ui->offsetSpinBox->setMaximum(grades.max_offset());
+
+    }
+    is_visible=true;
+
     ui->angleDoubleSpinBox->setValue(new_angle);
     ui->offsetSpinBox->setValue(new_offset);
-    is_visible=true;
     update_origin();
+
 
 }//end reset_line()
 
@@ -1010,7 +1028,7 @@ void VisualizationWindow::update_origin()
             dot_pos_x=xmin_precise;
             dot_pos_y=y_int+slope*xmin_precise;
             dist_to_origin=sqrt(pow(dot_pos_x-origin_x,2.0)+pow(dot_pos_y-origin_y,2.0));
-            is_visible=(ymin_precise<=dot_pos_y)&&(dot_pos_y<=ymax_precise+top_padding);
+            is_visible=dot_pos_y<=ymax_precise+top_padding;
 
             
         }
@@ -1019,7 +1037,7 @@ void VisualizationWindow::update_origin()
             dot_pos_x=(ymin_precise-y_int)/slope;
             dot_pos_y=ymin_precise;
             dist_to_origin=sqrt(pow(dot_pos_x-origin_x,2.0)+pow(dot_pos_y-origin_y,2.0));
-            is_visible=(xmin_precise<=dot_pos_x)&&(dot_pos_x<=xmax_precise+right_padding);
+            is_visible=dot_pos_x<=xmax_precise+right_padding;
             
 
         }
@@ -1046,4 +1064,24 @@ void VisualizationWindow::update_origin()
 
         slice_length=sqrt((top_corner_x-dot_pos_x)*(top_corner_x-dot_pos_x)+(top_corner_y-dot_pos_y)*(top_corner_y-dot_pos_y));
     }
+
+
+    if(!is_visible){
+        //then freeze the line position boxes
+        ui->angleDoubleSpinBox->setMinimum(angle_precise);
+        ui->angleDoubleSpinBox->setMaximum(angle_precise);
+        ui->offsetSpinBox->setMinimum(offset_precise);
+        ui->offsetSpinBox->setMaximum(offset_precise);
+    }
+    else{
+        //then restore the original values
+        ui->angleDoubleSpinBox->setMinimum(0);
+        ui->angleDoubleSpinBox->setMaximum(90);
+        ui->angleDoubleSpinBox->setSingleStep(1);
+        ui->offsetSpinBox->setMinimum(grades.min_offset());
+        ui->offsetSpinBox->setMaximum(grades.max_offset());
+        ui->offsetSpinBox->setSingleStep(.1);
+    }
+
+
 }

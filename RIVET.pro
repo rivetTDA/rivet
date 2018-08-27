@@ -6,7 +6,7 @@
 
 macx {
   QMAKE_CXXFLAGS+="-g -gdwarf-2 -ftemplate-depth=1024 "
-  QMAKE_POST_LINK='/usr/bin/dsymutil RIVET.app/Contents/MacOS/RIVET -o RIVET.app/Contents/MacOS/RIVET.dsym'
+  QMAKE_POST_LINK='/usr/bin/dsymutil rivet_GUI.app/Contents/MacOS/rivet_GUI -o rivet_GUI.app/Contents/MacOS/rivet_GUI.dsym'
 }
 
 CONFIG += c++11 debug
@@ -14,7 +14,7 @@ CONFIG += c++11 debug
 QT       += core gui \
 		widgets
 
-TARGET = RIVET
+TARGET = rivet_GUI
 TEMPLATE = app
 
 QMAKE_LIBDIR += /usr/local/lib #TODO: figure out how to generalize
