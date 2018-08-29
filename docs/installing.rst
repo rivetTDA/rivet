@@ -82,7 +82,14 @@ Now install cmake, qt5, and boost::
     
     brew install cmake qt5 boost
     
-Please note that, as of the time of writing, brew installs ``qmake`` in a version-specific folder under 
+
+
+Building RIVET
+^^^^^^^^^^^^^^
+
+Please note that part of the build requires the use of ``qmake``, and you might very well have a version of ``qmake`` in your ``PATH`` that is not for Qt 5, but for an older version. In the steps below, we assume ``$QT_BASE`` is the installation folder for Qt 5.
+
+As of the time of writing, ``brew`` installs ``qmake`` in a version-specific folder under 
 ``/usr/local/Cellar/qt5/[my_version_#]/bin``, and does not add it to your ``PATH``. You can find
 the folder where qt5 is installed using this command::
 
@@ -92,7 +99,7 @@ In fact, let's store that in a variable so we can use it below::
     
     export QT_BASE=`brew info qt5 | grep Cellar | cut -d' ' -f1`
 
-Finally, in order to ensure that qmake can find where boost is installed, add the following lines to the bottom of the file RIVET.pro, changing the paths in the last three lines, if necessary, to match the location and version of your copy of Boost.  ::
+In order to ensure that ``qmake`` can find where Boost is installed, add the following lines to the bottom of the file RIVET.pro, changing the paths in the last three lines, if necessary, to match the location and version of your copy of Boost.  ::
 
     CONFIG += c++11
     QMAKE_CFLAGS += -std=c++11 -stdlib=libc++ -mmacosx-version-min=10.9
@@ -102,9 +109,6 @@ Finally, in order to ensure that qmake can find where boost is installed, add th
     INCLUDEPATH += "/usr/local/Cellar/boost/1.63.0/include"
 
     LIBS += -L"/usr/local/Cellar/boost/1.63.0/lib" -lboost_random
-
-Building RIVET
-^^^^^^^^^^^^^^
 
 After `cloning <https://help.github.com/articles/cloning-a-repository/>`_ to ``$RIVET_DIR``::
 
@@ -127,7 +131,7 @@ It is then necessary to move or symlink the console into the same folder where t
     cd rivet_GUI.app/Contents/MacOS
     ln -s ../../../build/rivet_console   
 
-In the future, all these steps will be automated so that a single cmake build will create both executables, and put everything in the right place.
+In the future, all these steps will be automated so that a single ``cmake`` build will create both executables, and put everything in the right place.
 
 Troubleshooting
 ^^^^^^^^^^^^^^^
