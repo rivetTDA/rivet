@@ -71,7 +71,7 @@ Just to the right and to the left of each of the two upper horizontal strips is 
 * To the lower right is the the number of intervals \\([\\alpha, \\beta)\\) with \\(B \\lt \\alpha\\) and \\(\\beta \\lt \\infty\\).
 * To upper left is the number of intervals \\([\\alpha, \\infty)\\) with \\( \\alpha\\lt 0\\).  
 * To the lower left is the number of intervals \\([\\alpha, \\beta)\\) with \\( \\alpha< 0\\) and $B\\lt\\beta \\lt\\infty\)).    
-Finally there is a number in the bottom left corner of the persistence diagram window.  This is the number of intervals \\([\\alpha, \\beta)\\) with \\( \\alpha\\lt \\beta< 0\\). 
+Finally, there is a number in the bottom left corner of the persistence diagram window.  This is the number of intervals \\([\\alpha, \\beta)\\) with \\( \\alpha\\lt \\beta< 0\\). 
 
 As with the bigraded Betti numbers in the Line Selection Window, the multiplicity of a point in the persistence diagram is indicated by the area of the corresponding dot. 
 Additionally, hovering the mouse over a dot produces a popup that displays the multiplicity of the dot.
