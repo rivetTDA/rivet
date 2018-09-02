@@ -45,7 +45,7 @@ K &\\mathrm{if }\\ a\\geq c,\\\\ 0 & \\mathrm{otherwise.}
 Note that the support of  \\(\\mathcal I^a\\) is the closed upper quadrant in \\(\\mathbb R^2\\) with lower left corner at \\(a\\).
 
 A *free bipersistence module* is one isomorphic to \\[\\oplus_{c\\in \\mathcal B}\\ \\mathcal I^c\\] for some multiset \\(\\mathcal B\\) of points in \\(\\mathbb R^2\\).  
-There is a natural definition of basis for free modules, generalizing the definition of bases for vector spaces in linear algebra.  In close analogy with linear algebra, a morphism \\(f:M\\to N\\) of finitely generated free modules can be represented by a matrix, with respect to a choice of ordered bases for \\(M\\) and \\(N\\).
+There is a natural definition of basis for free modules, generalizing the definition of bases for vector spaces in linear algebra.  In close analogy with linear algebra, a morphism \\(f:M\\to N\\) of finitely generated free modules can be represented by a matrix, with respect to a choice of ordered bases for \\(M\\) and \\(N\\).  Thus, to encode the isomorphism type of \\(f\\), it enough to store a matrix, together with a bigrade label for each row and each column of the matrix; the labels specify \\(M\\) and \\(N\\) up to isomorphism.
 
 Presentations
 ^^^^^^^^^^^^^
