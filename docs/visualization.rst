@@ -61,11 +61,11 @@ Above the square region of persistence diagram are two narrow horizontal strips,
 The upper strip is labeled *inf*, and the lower strip is labeled \\(\\lt\\)\ *inf*. 
 RIVET plots a point in the upper strip for each interval \\([\\alpha, \\infty)\\) in the barcode with \\(0\\leq \\alpha 
 \\le B\\). 
-RIVET plots a point in the lower strip for each interval \\([\\alpha, \\beta)\\) in the barcode with \\(0\\leq \\alpha \\le B\\) and \\(B \\lt \\beta \\lt \\infty)\\).  
+RIVET plots a point in the lower strip for each interval \\([\\alpha, \\beta)\\) in the barcode with \\(0\\leq \\alpha \\le B\\lt \\beta \\lt \\infty)\\).  
 
-To the left of the square region of persistence diagram is a vertical strip labeled - *inf* \\(\\lt\\).  RIVET plots a point in this strip for each interval \\([\\alpha, \\beta)\\) in the barcode with \\(\\alpha \\lt 0\leq \\beta \\leq  B)\\).  
+To the left of the square region of persistence diagram is a vertical strip labeled - *inf* \\(\\lt\\).  RIVET plots a point in this strip for each interval \\([\\alpha, \\beta)\\) in the barcode with \\(\\alpha \\lt 0\\leq \\beta \\leq  B)\\).  
 
-Just to the right and to the left of each of the two upper horizontal strips is a number, separated from the strip by a dashed vertical line:
+Just to the right and to the left of each of the two upper horizontal strips is a number, separated from the strip by a dashed vertical line:  
 
 *To the upper right is the number of intervals \\([\\alpha, \\infty)\\) in the barcode with \\(B \\lt \\alpha\\). 
 *To the lower right is the the number of intervals \\([\\alpha, \\beta)\\) with \\(B \\lt \\alpha\\) and \\(\\beta \\lt \\infty\\).
