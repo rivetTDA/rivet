@@ -31,7 +31,7 @@ RIVET project was founded by `Michael Lesnick`_ and `Matthew Wright`_, who desig
 Here is a list of contributors, with a brief, incomplete summary of contributions:
 
 * Madkour Abdel-Rahman : Error handling 	
-* `Bryn Keller`_ : Parallel-friendly code organization, command line interactivity, API, Python wrappers, software design leadership.
+* `Bryn Keller`_ : Parallel-friendly code organization, command line interactivity, APIs, software design leadership.
 * `Michael Lesnick`_ : Design, performance optimizations, computation of minimal presentations
 * Phil Nadolny : Error handling, code for constructing path through dual graph
 * `Matthew Wright`_ : Design, primary developer
