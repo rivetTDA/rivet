@@ -903,7 +903,7 @@ std::pair<double, double> SliceDiagram::compute_endpoint(double coordinate, unsi
         if (coordinate == std::numeric_limits<double>::infinity() || coordinate * std::min(scale_x, scale_y) > pow(10.0, 7.0)) {
             //set coordinate so that it will be outside the viewable window
             //the finite cutoff seems to patch over the issue with phantom barcodes-not sure why
-            coordinate = view_length / std::min(scale_x, scale_y);
+            coordinate = dist_to_origin+view_length / std::min(scale_x, scale_y);
         }
 
         //find (x,y) along the line
