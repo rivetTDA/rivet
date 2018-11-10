@@ -89,3 +89,49 @@ extern "C" void free_barcodes_result(BarCodesResult* result)
     delete[] result->barcodes;
     delete result;
 }
+
+
+extern "C" StructurePoints * structure_from_computation(RivetComputation* rivet_computation)
+{
+    ComputationResult* computation = reinterpret_cast<ComputationResult*>(rivet_computation);
+    auto x_exact = new Ratio[computation->arrangement->x_exact.size()];
+    for (size_t i = 0; i < computation->arrangement->x_exact.size(); i++) {
+        auto x = computation->arrangement->x_exact[i];
+        x_exact[i].nom = numerator(x).convert_to<int64_t>();
+        x_exact[i].denom = denominator(x).convert_to<int64_t>();
+    }
+    auto y_exact = new Ratio[computation->arrangement->y_exact.size()];
+    for (size_t i = 0; i < computation->arrangement->y_exact.size(); i++) {
+        auto y = computation->arrangement->y_exact[i];
+        y_exact[i].nom = numerator(y).convert_to<int64_t>();
+        y_exact[i].denom = denominator(y).convert_to<int64_t>();
+    }
+    auto grades = new ExactGrades();
+    grades->x_grades = x_exact;
+    grades->y_grades = y_exact;
+    grades->x_length = computation->arrangement->x_exact.size();
+    grades->y_length = computation->arrangement->y_exact.size();
+
+    auto points = new StructurePoint[computation->template_points.size()];
+    for (size_t i = 0; i < computation->template_points.size(); i++) {
+        auto pt = computation->template_points[i];
+        points[i].x = pt.x;
+        points[i].y = pt.y;
+        points[i].betti_0 = pt.zero;
+        points[i].betti_1 = pt.one;
+        points[i].betti_2 = pt.two;
+    }
+    auto result = new StructurePoints();
+    result->grades = grades;
+    result->points = points;
+    result->length = computation->template_points.size();
+    return result;
+}
+
+void free_structure_points(StructurePoints *points) {
+    delete[] points->grades->x_grades;
+    delete[] points->grades->y_grades;
+    delete points->grades;
+    delete[] points->points;
+    delete points;
+}

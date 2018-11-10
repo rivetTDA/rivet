@@ -65,6 +65,37 @@ ArrangementBounds bounds_from_computation(RivetComputation* rivet_computation);
 void free_rivet_computation(RivetComputation* rivet_computation);
 
 void free_barcodes_result(BarCodesResult* result);
+
+typedef struct {
+    int64_t nom;
+    int64_t denom;
+} Ratio;
+
+typedef struct {
+    Ratio *x_grades;
+    size_t x_length;
+    Ratio *y_grades;
+    size_t y_length;
+} ExactGrades;
+
+typedef struct {
+    uint32_t x;
+    uint32_t y;
+    uint32_t betti_0;
+    uint32_t betti_1;
+    uint32_t betti_2;
+} StructurePoint;
+
+typedef struct {
+    ExactGrades *grades;
+    StructurePoint *points;
+    size_t length;
+} StructurePoints;
+
+StructurePoints * structure_from_computation(RivetComputation* rivet_computation);
+
+void free_structure_points(StructurePoints *points);
+
 }
 
 #endif //RIVET_CONSOLE_C_API_H
