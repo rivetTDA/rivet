@@ -79,11 +79,11 @@ typedef struct {
 } ExactGrades;
 
 typedef struct {
-    uint32_t x;
-    uint32_t y;
-    uint32_t betti_0;
-    uint32_t betti_1;
-    uint32_t betti_2;
+    unsigned x;
+    unsigned y;
+    unsigned betti_0;
+    unsigned betti_1;
+    unsigned betti_2;
 } StructurePoint;
 
 typedef struct {
