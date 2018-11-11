@@ -117,7 +117,6 @@ Content Todos:
 
 Minor Todos:  
 
-* There is a formatting problem in the “cases” environment used in the definition of a free module.
 * It's a small thing, but the .png of the the file input dialog looks a little off center.
 * The FAQ section has been removed from the documentation, but the .rst file is still in the repository in case we want to reintroduce this.
 
