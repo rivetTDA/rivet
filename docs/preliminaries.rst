@@ -34,12 +34,12 @@ Free Persistence Modules
 For \\(c \\in \\mathbb R^2\\), define the bipersistence module \\(\\mathcal I^c\\) by
 \\[\\mathcal I^c_a=
 \\begin{cases}
-K &\\mathrm{if }\\ a\\geq c,\\\ 0 & \\mathrm{otherwise.}
+K &\\mathrm{if }\\ a\\geq c,\\newline 0 & \\mathrm{otherwise.}
 \\end{cases}
 \\qquad
 \\mathcal I^c_{a,b}=
 \\begin{cases}
-\\mathrm{Id}_K &\\mathrm{if }\\ a\\geq c,\\\ 0 & \\mathrm{otherwise.}
+\\mathrm{Id}_K &\\mathrm{if }\\ a\\geq c,\\newline 0 & \\mathrm{otherwise.}
 \\end{cases}
 \\]
 Note that the support of  \\(\\mathcal I^a\\) is the closed upper quadrant in \\(\\mathbb R^2\\) with lower left corner at \\(a\\).
