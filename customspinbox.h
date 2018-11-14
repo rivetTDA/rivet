@@ -10,6 +10,15 @@ public:
 
     }
 
+    bool from_button=false; //whether the value change came from the up/down buttons (as opposed to typing the value)
+
+    //called whenever the up or down button is pushed
+    void stepBy(int steps){
+        from_button=true;
+        QDoubleSpinBox::stepBy(steps); //this will change the value and thereby call CustomSpinBox::textFromValue
+        from_button=false;
+    }
+
     //this function controls the appearance of the text
     QString textFromValue(double val) const {
 
@@ -24,7 +33,7 @@ public:
 
         //add in the minus sign if the value is negative, or if the user was in the middle of typing
         //a negative value >-1 (e.g. -0.5)
-        if(val<0 ||(lineEdit()->text().size()>0&& lineEdit()->text().at(0)=='-')){
+        if(val<0 ||(!from_button && (lineEdit()->text().size()>0&& lineEdit()->text().at(0)=='-'))){
             str="-"+str;
         }
 

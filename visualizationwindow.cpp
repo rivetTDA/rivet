@@ -846,11 +846,26 @@ void VisualizationWindow::on_actionRestore_default_window_triggered()
 
     double yrev_sign=y_reverse? -1 :1;
 
+
+    //this is necessary to correctly deal with the case where the current value is negative
+    //but the reset value is not
+    ui->BottomCornerXSpinBox->from_button=true;
+    ui->BottomCornerYSpinBox->from_button=true;
+    ui->TopCornerXSpinBox->from_button=true;
+    ui->TopCornerYSpinBox->from_button=true;
+
     //set the values displayed in the controls
     ui->BottomCornerXSpinBox->setValue(orig_xmin*xrev_sign);
     ui->BottomCornerYSpinBox->setValue(orig_ymin*yrev_sign);
     ui->TopCornerXSpinBox->setValue(orig_xmax*xrev_sign);
     ui->TopCornerYSpinBox->setValue(orig_ymax*yrev_sign);
+
+
+    ui->BottomCornerXSpinBox->from_button=false;
+    ui->BottomCornerYSpinBox->from_button=false;
+    ui->TopCornerXSpinBox->from_button=false;
+    ui->TopCornerYSpinBox->from_button=false;
+
 
     xmin_precise=orig_xmin; //overwrite the value set by the call to setValue to avoid rounding errors in reset_line()
     xmax_precise=orig_xmax;
@@ -886,10 +901,23 @@ void VisualizationWindow::on_actionBetti_number_window_triggered()
 
     double yrev_sign=y_reverse? -1 :1;
 
+    //this is necessary to correctly deal with the case where the current value is negative
+    //but the reset value is not
+    ui->BottomCornerXSpinBox->from_button=true;
+    ui->BottomCornerYSpinBox->from_button=true;
+    ui->TopCornerXSpinBox->from_button=true;
+    ui->TopCornerYSpinBox->from_button=true;
+
+
     ui->BottomCornerXSpinBox->setValue(xmin*xrev_sign);
     ui->BottomCornerYSpinBox->setValue(ymin*yrev_sign);
     ui->TopCornerXSpinBox->setValue(xmax*xrev_sign);
     ui->TopCornerYSpinBox->setValue(ymax*yrev_sign);
+
+    ui->BottomCornerXSpinBox->from_button=false;
+    ui->BottomCornerYSpinBox->from_button=false;
+    ui->TopCornerXSpinBox->from_button=false;
+    ui->TopCornerYSpinBox->from_button=false;
 
     xmin_precise=xmin; //overwrite the value set by the call to setValue to avoid rounding errors in reset_line()
     xmax_precise=xmax;
