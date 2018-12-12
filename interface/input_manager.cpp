@@ -278,17 +278,29 @@ FileContent InputManager::read_messagepack(std::ifstream& stream, Progress& prog
 
     msgpack::object_handle oh;
     pac.next(oh);
-    auto m1 = oh.get();
-    m1.convert(params);
-    progress.progress(20);
+    try {
+        auto m1 = oh.get();
+        m1.convert(params);
+        progress.progress(20);
+    } catch (const std::exception& e) {
+        throw std::runtime_error("Could not process input parameters section, bad encoding?");
+    }
     pac.next(oh);
-    auto m2 = oh.get();
-    m2.convert(templatePointsMessage);
-    progress.progress(50);
+    try {
+        auto m2 = oh.get();
+        m2.convert(templatePointsMessage);
+        progress.progress(50);
+    } catch (const std::exception& e) {
+        throw std::runtime_error("Could not process template points section, bad encoding?");
+    }
     pac.next(oh);
-    auto m3 = oh.get();
-    m3.convert(arrangementMessage);
-    progress.progress(100);
+    try {
+        auto m3 = oh.get();
+        m3.convert(arrangementMessage);
+        progress.progress(100);
+    } catch (const std::exception& e) {
+        throw std::runtime_error("Could not process arrangement section, bad encoding?");
+    }
     return FileContent(
         from_messages(templatePointsMessage, arrangementMessage).release());
 }

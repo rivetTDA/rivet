@@ -40,6 +40,8 @@ typedef struct {
 typedef struct {
     BarCode* barcodes;
     size_t length;
+    char * error;
+    size_t error_length;
 } BarCodesResult;
 
 typedef struct {
@@ -52,19 +54,25 @@ typedef struct {
 struct rivet_comp;
 typedef rivet_comp RivetComputation;
 
-RivetComputation* read_rivet_computation(const char* bytes, size_t length);
+typedef struct {
+    RivetComputation* computation;
+    char* error;
+    size_t error_length;
+} RivetComputationResult;
+
+RivetComputationResult read_rivet_computation(const char* bytes, size_t length);
 
 //Computed* compute_arrangement_from_point_cloud(PointCloud);
-BarCodesResult* barcodes_from_computation(RivetComputation* rivet_computation,
+BarCodesResult barcodes_from_computation(RivetComputation* rivet_computation,
     double* offsets,
     double* angles,
     size_t query_length);
 
 ArrangementBounds bounds_from_computation(RivetComputation* rivet_computation);
 
-void free_rivet_computation(RivetComputation* rivet_computation);
+void free_rivet_computation_result(RivetComputationResult rivet_computation);
 
-void free_barcodes_result(BarCodesResult* result);
+void free_barcodes_result(BarCodesResult result);
 
 typedef struct {
     int64_t nom;

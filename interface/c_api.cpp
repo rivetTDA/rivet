@@ -12,29 +12,40 @@
 #include <msgpack.hpp>
 #include <vector>
 
-extern "C" RivetComputation* read_rivet_computation(const char* bytes, size_t length)
+extern "C" RivetComputationResult read_rivet_computation(const char* bytes, size_t length)
 {
+    RivetComputationResult result;
     try {
         std::istringstream buf(std::string(bytes, length));
         auto computation = from_istream(buf);
-        return reinterpret_cast<RivetComputation*>(computation.release());
+        result.computation = reinterpret_cast<RivetComputation*>(computation.release());
+        result.error = nullptr;
+        result.error_length = 0;
     } catch (std::exception& e) {
-        std::cerr << "RIVET error: " << e.what() << std::endl;
-        return nullptr;
+        result.computation = nullptr;
+        size_t len = strlen(e.what());
+        result.error = new char[len];
+        result.error_length = len;
+        strncpy(result.error, e.what(), len);
+    }
+    return result;
+}
+
+extern "C" void free_rivet_computation_result(RivetComputationResult result)
+{
+    if (result.computation != nullptr) {
+        delete reinterpret_cast<ComputationResult *>(result.computation);
+    } else {
+        delete[] result.error;
     }
 }
 
-extern "C" void free_rivet_computation(RivetComputation* computation)
-{
-
-    delete reinterpret_cast<ComputationResult*>(computation);
-}
-
-extern "C" BarCodesResult* barcodes_from_computation(RivetComputation* rivet_computation,
+extern "C" BarCodesResult barcodes_from_computation(RivetComputation* rivet_computation,
     double* angles,
     double* offsets,
     size_t query_length)
 {
+    BarCodesResult result;
     try {
         ComputationResult* computation = reinterpret_cast<ComputationResult*>(rivet_computation);
 
@@ -56,16 +67,20 @@ extern "C" BarCodesResult* barcodes_from_computation(RivetComputation* rivet_com
             barcodes[i].angle = angles[i];
             barcodes[i].offset = offsets[i];
         }
-        Bounds bounds = compute_bounds(*computation);
-        auto result = new BarCodesResult{
-            barcodes,
-            query_results.size(),
-        };
-        return result;
+//        Bounds bounds = compute_bounds(*computation);
+        result.barcodes = barcodes;
+        result.length = query_results.size();
+        result.error = nullptr;
+        result.error_length = 0;
     } catch (std::exception& e) {
-        std::cerr << "RIVET error: " << e.what() << std::endl;
-        return nullptr;
+        size_t len = strlen(e.what());
+        result.barcodes = nullptr;
+        result.length = 0;
+        result.error = new char[len];
+        result.error_length = len;
+        strncpy(result.error, e.what(), len);
     }
+    return result;
 }
 
 extern "C" ArrangementBounds bounds_from_computation(RivetComputation* rivet_computation)
@@ -80,14 +95,17 @@ extern "C" ArrangementBounds bounds_from_computation(RivetComputation* rivet_com
     };
 }
 
-extern "C" void free_barcodes_result(BarCodesResult* result)
+extern "C" void free_barcodes_result(BarCodesResult result)
 {
-    for (size_t bc = 0; bc < result->length; bc++) {
-        auto bcp = result->barcodes[bc];
-        delete[] bcp.bars;
+    if (result.barcodes != nullptr) {
+        for (size_t bc = 0; bc < result.length; bc++) {
+            auto bcp = result.barcodes[bc];
+            delete[] bcp.bars;
+        }
+        delete[] result.barcodes;
+    } else {
+        delete[] result.error;
     }
-    delete[] result->barcodes;
-    delete result;
 }
 
 

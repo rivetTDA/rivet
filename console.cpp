@@ -416,12 +416,12 @@ int main(int argc, char* argv[])
 
     std::shared_ptr<Arrangement> arrangement;
 
-    try {
+//    try {
         content = inputManager.start(progress);
-    } catch (const std::exception& e) {
-        input_error(e.what());
-        return 1;
-    }
+//    } catch (const std::exception& e) {
+//        input_error(e.what());
+//        return 1;
+//    }
     if (params.verbosity >= 4) {
         debug() << "Input processed.";
     }
