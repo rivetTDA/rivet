@@ -3,7 +3,8 @@ About
 
 RIVET is a tool for topological data analysis, and more specifically, for the visualization and analysis of two-parameter persistent homology.  RIVET was initially designed with interactive visualization foremost in mind, and this continues to be a central focus.  But RIVET also provides functionality for two-parameter persistence computation that should be useful for other purposes.  
 
-Many of the mathematical and algorithmic ideas behind RIVET are explained in detail in the paper `Interactive Visualization of 2-D Persistence Modules <https://arxiv.org/pdf/1512.00180v1.pdf>`_.  
+Many of the mathematical and algorithmic ideas behind RIVET are explained in detail in the papers `Interactive Visualization of 2-D Persistence Modules <https://arxiv.org/pdf/1512.00180v1.pdf>`_ and `
+Computing Minimal Presentations and Betti Numbers of 2-Parameter Persistent Homology <https://arxiv.org/abs/1902.05708>`_.  
 Additional papers describing other aspects of RIVET are in preparation.
 
 RIVET is written in C++, and depends on the `Qt <https://www.qt.io/>`_, `Boost <http://www.boost.org/>`_, and `MessagePack <https://msgpack.org/index.html>`_ libraries.  
