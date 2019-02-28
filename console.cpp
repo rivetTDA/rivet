@@ -380,7 +380,7 @@ int main(int argc, char* argv[])
             print_betti(message, std::cout);
             
             //if an output file has been specified, then save the Betti numbers in an arrangement file (with no barcode templates)
-            if (!params.outputFile.empty()) {
+            if (!params.outputFile.empty() && !(params.outputFile == params.fileName)) {
                 std::ofstream file(params.outputFile);
                 if (file.is_open()) {
                     std::vector<exact> emptyvec;
@@ -454,7 +454,7 @@ int main(int argc, char* argv[])
 
     }
     //if an output file has been specified, then save the arrangement
-    if (!params.outputFile.empty()) {
+    if (!params.outputFile.empty() && !(params.fileName == params.outputFile)) {
         std::ofstream file(params.outputFile);
         if (file.is_open()) {
             if (arrangement == nullptr) {
