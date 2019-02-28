@@ -12,29 +12,40 @@
 #include <msgpack.hpp>
 #include <vector>
 
-extern "C" RivetComputation* read_rivet_computation(const char* bytes, size_t length)
+extern "C" RivetComputationResult read_rivet_computation(const char* bytes, size_t length)
 {
+    RivetComputationResult result;
     try {
         std::istringstream buf(std::string(bytes, length));
         auto computation = from_istream(buf);
-        return reinterpret_cast<RivetComputation*>(computation.release());
+        result.computation = reinterpret_cast<RivetComputation*>(computation.release());
+        result.error = nullptr;
+        result.error_length = 0;
     } catch (std::exception& e) {
-        std::cerr << "RIVET error: " << e.what() << std::endl;
-        return nullptr;
+        result.computation = nullptr;
+        size_t len = strlen(e.what());
+        result.error = new char[len];
+        result.error_length = len;
+        strncpy(result.error, e.what(), len);
+    }
+    return result;
+}
+
+extern "C" void free_rivet_computation_result(RivetComputationResult result)
+{
+    if (result.computation != nullptr) {
+        delete reinterpret_cast<ComputationResult *>(result.computation);
+    } else {
+        delete[] result.error;
     }
 }
 
-extern "C" void free_rivet_computation(RivetComputation* computation)
-{
-
-    delete reinterpret_cast<ComputationResult*>(computation);
-}
-
-extern "C" BarCodesResult* barcodes_from_computation(RivetComputation* rivet_computation,
+extern "C" BarCodesResult barcodes_from_computation(RivetComputation* rivet_computation,
     double* angles,
     double* offsets,
     size_t query_length)
 {
+    BarCodesResult result;
     try {
         ComputationResult* computation = reinterpret_cast<ComputationResult*>(rivet_computation);
 
@@ -56,16 +67,20 @@ extern "C" BarCodesResult* barcodes_from_computation(RivetComputation* rivet_com
             barcodes[i].angle = angles[i];
             barcodes[i].offset = offsets[i];
         }
-        Bounds bounds = compute_bounds(*computation);
-        auto result = new BarCodesResult{
-            barcodes,
-            query_results.size(),
-        };
-        return result;
+//        Bounds bounds = compute_bounds(*computation);
+        result.barcodes = barcodes;
+        result.length = query_results.size();
+        result.error = nullptr;
+        result.error_length = 0;
     } catch (std::exception& e) {
-        std::cerr << "RIVET error: " << e.what() << std::endl;
-        return nullptr;
+        size_t len = strlen(e.what());
+        result.barcodes = nullptr;
+        result.length = 0;
+        result.error = new char[len];
+        result.error_length = len;
+        strncpy(result.error, e.what(), len);
     }
+    return result;
 }
 
 extern "C" ArrangementBounds bounds_from_computation(RivetComputation* rivet_computation)
@@ -80,12 +95,61 @@ extern "C" ArrangementBounds bounds_from_computation(RivetComputation* rivet_com
     };
 }
 
-extern "C" void free_barcodes_result(BarCodesResult* result)
+extern "C" void free_barcodes_result(BarCodesResult result)
 {
-    for (size_t bc = 0; bc < result->length; bc++) {
-        auto bcp = result->barcodes[bc];
-        delete[] bcp.bars;
+    if (result.barcodes != nullptr) {
+        for (size_t bc = 0; bc < result.length; bc++) {
+            auto bcp = result.barcodes[bc];
+            delete[] bcp.bars;
+        }
+        delete[] result.barcodes;
+    } else {
+        delete[] result.error;
     }
-    delete[] result->barcodes;
-    delete result;
+}
+
+
+extern "C" StructurePoints * structure_from_computation(RivetComputation* rivet_computation)
+{
+    ComputationResult* computation = reinterpret_cast<ComputationResult*>(rivet_computation);
+    auto x_exact = new Ratio[computation->arrangement->x_exact.size()];
+    for (size_t i = 0; i < computation->arrangement->x_exact.size(); i++) {
+        auto x = computation->arrangement->x_exact[i];
+        x_exact[i].nom = numerator(x).convert_to<int64_t>();
+        x_exact[i].denom = denominator(x).convert_to<int64_t>();
+    }
+    auto y_exact = new Ratio[computation->arrangement->y_exact.size()];
+    for (size_t i = 0; i < computation->arrangement->y_exact.size(); i++) {
+        auto y = computation->arrangement->y_exact[i];
+        y_exact[i].nom = numerator(y).convert_to<int64_t>();
+        y_exact[i].denom = denominator(y).convert_to<int64_t>();
+    }
+    auto grades = new ExactGrades();
+    grades->x_grades = x_exact;
+    grades->y_grades = y_exact;
+    grades->x_length = computation->arrangement->x_exact.size();
+    grades->y_length = computation->arrangement->y_exact.size();
+
+    auto points = new StructurePoint[computation->template_points.size()];
+    for (size_t i = 0; i < computation->template_points.size(); i++) {
+        auto pt = computation->template_points[i];
+        points[i].x = pt.x;
+        points[i].y = pt.y;
+        points[i].betti_0 = pt.zero;
+        points[i].betti_1 = pt.one;
+        points[i].betti_2 = pt.two;
+    }
+    auto result = new StructurePoints();
+    result->grades = grades;
+    result->points = points;
+    result->length = computation->template_points.size();
+    return result;
+}
+
+void free_structure_points(StructurePoints *points) {
+    delete[] points->grades->x_grades;
+    delete[] points->grades->y_grades;
+    delete points->grades;
+    delete[] points->points;
+    delete points;
 }
