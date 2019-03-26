@@ -49,7 +49,7 @@ There is a natural definition of basis for free modules, generalizing the defini
 
 Presentations
 ^^^^^^^^^^^^^
-A *presentation* of a bipersistence module \\(M\\) is a map \\(f:F\\to G\\) such that \\(M\\cong G/\\mathrm{im}\\ f\\).  We say \\(M\\) is finitely presented if \\(F\\) and \\(G\\\) can be chosen to be finitely generated.  If \\(M\\) is finitely presented then, up to isomorphism, there exists a presentation \\(f:F\\to G\\) such that both \\(F\\) and \\(G\\) are minimial, i.e., for any other presentation \\(f':F'\\to G'\\),  \\(F\\) is a summand of \\(F'\\) and \\(G\\) is a summand of  \\(G'\\).  We call such a presentation *minimal*.  Minimal presentations are unique up to isomorphism, but importantly, their matrix representations are non-unique.
+A *presentation* of a bipersistence module \\(M\\) is a map \\(f:F\\to G\\) such that \\(M\\cong G/\\mathrm{im}\\ f\\).  We say \\(M\\) is finitely presented if \\(F\\) and \\(G\\\) can be chosen to be finitely generated.  If \\(M\\) is finitely presented then there exists a presentation \\(f:F\\to G\\) for \\(M\\) such that both \\(F\\) and \\(G\\) are minimial, i.e., for any other presentation \\(f':F'\\to G'\\),  \\(F\\) is a summand of \\(F'\\) and \\(G\\) is a summand of  \\(G'\\).  We call such a presentation *minimal*.  Minimal presentations are unique up to isomorphism, but importantly, their matrix representations are non-unique.
 
 FIReps (Short Chain Complexes of Free Modules)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
