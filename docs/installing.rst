@@ -99,6 +99,8 @@ In fact, let's store that in a variable so we can use it below::
     
     export QT_BASE=`brew info qt5 | grep Cellar | cut -d' ' -f1`
 
+If you haven't done so already, now `clone <https://help.github.com/articles/cloning-a-repository/>`_ `RIVET <http://repo.rivet.online>`_.
+
 In order to ensure that ``qmake`` can find where Boost is installed, add the following lines to the bottom of the file RIVET.pro, changing the paths in the last three lines, if necessary, to match the location and version of your copy of Boost.  ::
 
     CONFIG += c++11
@@ -110,7 +112,7 @@ In order to ensure that ``qmake`` can find where Boost is installed, add the fol
 
     LIBS += -L"/usr/local/Cellar/boost/1.63.0/lib" -lboost_random
 
-After `cloning <https://help.github.com/articles/cloning-a-repository/>`_ to ``$RIVET_DIR``::
+Assuming that the RIVET has been cloned to ``$RIVET_DIR``::
 
     cd $RIVET_DIR
     mkdir build
