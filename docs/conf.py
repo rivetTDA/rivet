@@ -47,7 +47,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'RIVET'
-copyright = '2018, The RIVET Developers'
+copyright = '2019, The RIVET Developers'
 author = 'The RIVET Developers'
 
 # The version info for the project you're documenting, acts as replacement for
