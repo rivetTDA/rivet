@@ -101,8 +101,7 @@ Homology of a Bifiltration
 Applying :math:`i^{\mathrm{th}}` simplicial homology with coefficients in :math:`K` to each simplicial complex and each inclusion map in a bifiltration :math:`F` yields a bipersistence module :math:`H_i(F)`.  If :math:`F` is essentially finite, then :math:`H_i(F)` is finitely presented.
 
 
-:math:`H_i(F)` is in fact the :math:`i^{\mathrm{th}}` homology module of a chain complex 
-:math:` C(F)` of bipersistence modules whose value at each point in :math:`a\in \mathbb R^2` is the simplical chain complex of :math:`F_a`.  If :math:`F` is one-critical, each module of :math:`C(F)` is free.  In general, :math:`C(F)` needn’t be free, but given the portion of :math:`C(F)` at indexes :math:`i-1,` :math:`i`, and :math:`i+1`, it is easy to construct an FIRep whose homology is :math:`H_i(F)`; this is `an observation of Chacholski et al. <https://arxiv.org/abs/1409.7936>`_
+:math:`H_i(F)` is in fact the :math:`i^{\mathrm{th}}` homology module of a chain complex :math:`C(F)` of bipersistence modules whose value at each point in :math:`a\in \mathbb R^2` is the simplical chain complex of :math:`F_a`.  If :math:`F` is one-critical, each module of :math:`C(F)` is free.  In general, :math:`C(F)` needn’t be free, but given the portion of :math:`C(F)` at indexes :math:`i-1,` :math:`i`, and :math:`i+1`, it is easy to construct an FIRep whose homology is :math:`H_i(F)`; this is `an observation of Chacholski et al. <https://arxiv.org/abs/1409.7936>`_
 
 
 
@@ -117,6 +116,7 @@ As mentioned above, RIVET computes and visualizes three simple invariants of a b
 
 .. math::
    :nowrap: 
+
    \[0 \to F^2\to F^1\to F^0\]
 
 for :math:`M`, :math:`\xi_i^M(r)` is the number of elements at bigrade :math:`r` in a basis for :math:`F^i`.
