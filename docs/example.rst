@@ -1,7 +1,7 @@
 Example
 =====================================
 
-This page demonstrates how to use RIVET to visualize the topological structure of a point cloud.  We consider the point cloud in \\(\\mathbb{R}^2\\) pictured below.  We emphasize, however, that RIVET can handle point clouds in any dimension, as well as other data types.
+This page demonstrates how to use RIVET to visualize the topological structure of a point cloud.  We consider the point cloud in :math:`\mathbb{R}^2` pictured below.  We emphasize, however, that RIVET can handle point clouds in any dimension, as well as other data types.
 
 .. image:: images/circle1.png
    :width: 400px
@@ -13,7 +13,7 @@ Evidently, this point cloud contains a dense circle of points, as if many of the
 However, we also observe outliers, both inside and outside of the annulus.
 Note that one-parameter persistence (e.g., using a Rips filtration) cannot easily detect the dense cycle, due to the presence of outliers.
 
-We will associate to this data a function-Rips bifiltration, taking the function on the points to be a density estimate; here, we use a simple ball density estimator, which for each point \\(p\\) simply counts the number of points within a unit distance of \\(p\\).  The following diagram colors the points by density.
+We will associate to this data a function-Rips bifiltration, taking the function on the points to be a density estimate; here, we use a simple ball density estimator, which for each point :math:`p` simply counts the number of points within a unit distance of :math:`p`.  The following diagram colors the points by density.
 
 .. image:: images/circle2.png
    :width: 460px
@@ -76,7 +76,7 @@ RIVET is now ready for interactive browsing of barcodes along linear slices thro
 For this data, note that the barcode contains a single long bar when the selected line goes roughly from the lower-left corner to the upper-right corner of the Line Selection Window.  This bar corresponds to the dense cycle of points in the point cloud.
 
 Furthermore, note that selecting vertical lines effectively thresholds the points by density.
-That is, selecting a vertical line with density value \\(d\\) produces a barcode computed from a Rips filtration on only those points with density value greater than \\(d\\), as shown below.
+That is, selecting a vertical line with density value :math:`d` produces a barcode computed from a Rips filtration on only those points with density value greater than :math:`d`, as shown below.
 This effectively reduces the analysis to one-parameter persistence, using a density threshold.
 The RIVET GUI allows the user to slide the vertical line left and right, thereby displaying the barcodes for different choices of the density threshold.
 

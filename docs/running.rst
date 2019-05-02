@@ -12,7 +12,7 @@ The RIVET software consists of two separate but closely related executables: **r
 
 * Given an *input data file* in one of the formats described in the :ref:`inputData` section of this documentation, **rivet_console** can compute a file called the *module invariants (MI) file*.  The MI file stores the Hilbert function, bigraded Betti numbers, and augmented arrangment of a persistent homology module of the input data.  The MI file is used by the RIVET visualization, and also for the following:
 
-* Given an MI file of a bipersistence module \\(M\\) and a second file, the *line file*, specifying a list of lines, **rivet_console** prints the barcodes of the 1-D slices of each line to the console.  The computations are performed using fast queries of the augmented arrangment of \\(M\\).
+* Given an MI file of a bipersistence module :math:`M` and a second file, the *line file*, specifying a list of lines, **rivet_console** prints the barcodes of the 1-D slices of each line to the console.  The computations are performed using fast queries of the augmented arrangment of :math:`M`.
 
 * Given a *raw data* file as input, **rivet_console** can print The Hilbert function and Bigraded Betti numbers of a persistent homology module of the input data.  It can also print a minimal presentation of the module.
 
@@ -41,8 +41,8 @@ Here is the basic syntax for computing the barcodes of 1-D slices of a bipersist
 
 	 rivet_console <module_invariants_file> --barcodes <line_file>
 
-<line_file> is a file specifying a list of affine lines in \\(\\mathbb R^2\\) with non-negative slope.  Each line is specified by its *angle* and *offset* parameters.
-The following diagram shows these parameters for a particular line, with *angle* denoted \\(\\theta\\) and *offset* denoted \\(t\\).
+<line_file> is a file specifying a list of affine lines in :math:`\mathbb R^2` with non-negative slope.  Each line is specified by its *angle* and *offset* parameters.
+The following diagram shows these parameters for a particular line, with *angle* denoted :math:`\theta` and *offset* denoted :math:`t`.
 
 .. image:: images/line_diagram.png
    :width: 237px
@@ -50,8 +50,8 @@ The following diagram shows these parameters for a particular line, with *angle*
    :alt: Diagram illustrating angle and offset used in RIVET
    :align: center
 
-As the diagram indicates, \\(\\theta\\) is the angle between the line and the horizontal axis in degrees (0 to 90). 
-The offset parameter \\(t\\) is the *signed* distance from the line to the origin, which is positive if the line passes above/left of the origin and negative otherwise. 
+As the diagram indicates, :math:`\theta` is the angle between the line and the horizontal axis in degrees (0 to 90). 
+The offset parameter :math:`t` is the *signed* distance from the line to the origin, which is positive if the line passes above/left of the origin and negative otherwise. 
 This choice of parameters makes it possible to specify any line of nonnegative slope, including vertical lines. 
 
 The following gives a sample line file::
@@ -72,7 +72,7 @@ The barcodes are given with respect to an isometric parameterization of the quer
 
 
 Furthermore, barcodes are returned as multisets of intervals. 
-For example, in the sample output above, ``88.1838 inf x1`` indicates a single interval \\([88.1838, \\infty)\\).
+For example, in the sample output above, ``88.1838 inf x1`` indicates a single interval :math:`[88.1838, \infty)`.
 
 Printing a Minimal Presentation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -164,9 +164,9 @@ The following shows the output format for the Hilbert function and bigraded Bett
 	xi_2:
 	(2, 2, 1)
 
-The first few lines give lists of possible x- and y-grades of non-zero Betti numbers.  This defines a finite grid \\(G\\in \\mathbb R^2\\). 
+The first few lines give lists of possible x- and y-grades of non-zero Betti numbers.  This defines a finite grid :math:`G\in \mathbb R^2`. 
 
-The next few lines specify the points in \\(G\\) where the Hilbert function is non-zero, together with the value of the Hilbert function at each point.  For each such point, a triple (x-index, y-index, value) is printed.  (Note that this information in fact determines the Hilbert function at all points in \\(\\mathbb R^2\\).) 
+The next few lines specify the points in :math:`G` where the Hilbert function is non-zero, together with the value of the Hilbert function at each point.  For each such point, a triple (x-index, y-index, value) is printed.  (Note that this information in fact determines the Hilbert function at all points in :math:`\mathbb R^2`.) 
 
 The remaining lines specify the points where the Betti numbers are non-zero, along with the value of the Betti number at that point.  (0th, 1st, and 2nd Betti numbers are handled separately.)  Again, for each such point, a triple (x-index, y-index, value) is printed.   
 
