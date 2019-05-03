@@ -100,19 +100,12 @@ For convenient citation of RIVET in your own work, we provide the following BibT
 	}
 
 
-
 Documentation Todos
 -------------------
-
-Formatting todos:   
-
-* A lot of displayed math is not displaying properly on the .pdf provided by read the docs.
-* The caption for the figure on the "Computation Pipeline" page does not display properly in the downloaded .html. MW: It seems that the downloaded HTML is using a slightly different style sheet than the online version. However, nearly everyone will use the online version rather than downloading a zip archive containing all of the HTML and supporting files.
 
 Content Todos:  
 
 * The descussion of the Persistence Diagram Window has now been updated to reflect the recent improvements to the visualization.  However, some details about how the persistence diagram is drawn appear in the appendix of the arXiv paper, but not in the documentation.  For example, the way we handle normalization when "fit to window" is selected is only discussed in the appendix.  I suggest that all details be given in the documentation and removed from the paper.
-* I suggest to not print out xi_0, xi_1, and xi_2 when —Betti is called.
 * The example could use some polish. More examples are desirable.
 
 Minor Todos:  
@@ -120,4 +113,4 @@ Minor Todos:
 * It's a small thing, but the .png of the the file input dialog looks a little off center.
 * The FAQ section has been removed from the documentation, but the .rst file is still in the repository in case we want to reintroduce this.
 
-   
+
