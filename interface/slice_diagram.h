@@ -105,7 +105,7 @@ public:
     int get_diagram_width() { return diagram_width; }; //the width of the above region corresponding to the displayed window bounds
     int get_diagram_height() { return diagram_height; };
 
-    void reset(ConfigParameters* params, std::vector<double>& x_grades, std::vector<double>& y_grades, QObject* parent);
+    void reset(); // clears up data structures and variable values
 
 public slots:
     void receive_bar_selection(std::vector<unsigned> indexes); //highlight the specified class of bars, which has been selected externally

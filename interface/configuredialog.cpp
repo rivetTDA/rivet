@@ -121,7 +121,7 @@ ConfigureDialog::~ConfigureDialog()
 
 void ConfigureDialog::closeEvent(QCloseEvent* event)
 {
-    emit window_closed();
+    emit window_closed(); // tells visualization window to check for changes and redraw
     QDialog::closeEvent(event);
 }
 

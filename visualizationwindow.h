@@ -163,8 +163,6 @@ private:
     //other items
     void save_arrangement(const QString& filename);
 
-    void reset_window();
-
     AboutMessageBox aboutBox; //which is better for these dialog boxes
     ConfigureDialog* configBox; // -- pointer or no pointer?
 };
