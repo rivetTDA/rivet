@@ -69,6 +69,9 @@ public slots:
     void augmented_arrangement_ready(std::shared_ptr<ArrangementMessage> arrangement);
     void set_line_parameters(double angle, double offset);
 
+    void redraw();
+    void init();
+
 private slots:
     void on_angleDoubleSpinBox_valueChanged(double angle);
     void on_offsetSpinBox_valueChanged(double arg1);
@@ -141,8 +144,8 @@ private:
     bool degenerate_x,degenerate_y; //these are true if there is exactly one x/y grade
 
     //computation items
-    ComputationThread cthread;
-    ProgressDialog prog_dialog;
+    ComputationThread* cthread;
+    ProgressDialog* prog_dialog;
 
     //items for slice diagram
     bool line_selection_ready; //initially false, but set to true when data is in place for line selection
@@ -159,7 +162,8 @@ private:
     void update_origin();//computes the origin of the line after a change in parameters; updates the value of dist_to_origin
     //other items
     void save_arrangement(const QString& filename);
-    void redraw();
+
+    void reset_window();
 
     AboutMessageBox aboutBox; //which is better for these dialog boxes
     ConfigureDialog* configBox; // -- pointer or no pointer?

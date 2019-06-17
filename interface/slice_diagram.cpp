@@ -58,6 +58,26 @@ SliceDiagram::~SliceDiagram()
     clear(); //removes and deletes all items from the QGraphicsScene
 }
 
+void SliceDiagram::reset(ConfigParameters* params, std::vector<double>& x_grades, std::vector<double>& y_grades, QObject* parent)
+{
+    clear();
+    xi0_dots.clear();
+    xi1_dots.clear();
+    xi2_dots.clear();
+    bars.clear();
+    primary_selected.clear();
+    secondary_selected.clear();
+    points.clear();
+    hom_dim_rects.resize(boost::extents[0][0]);
+    dot_left = nullptr;
+    dot_right = nullptr;
+    slice_line = nullptr;
+    max_xi_value = 0;
+    line_visible = true;
+    created = false;
+    control_dot_moved = false;
+}
+
 //receives an xi support point, which will be drawn when create_diagram() is called
 void SliceDiagram::add_point(double x_coord, double y_coord, int xi0m, int xi1m, int xi2m)
 {

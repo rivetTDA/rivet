@@ -52,6 +52,7 @@ public:
     void deselect_dot(); //remove selection and propagate to the slice diagram
 
     void receive_parameter_change(); //updates the diagram after a change in the configuration parameters
+    void reset(ConfigParameters* params, QObject* parent);
 
 public slots:
     void receive_dot_selection(unsigned index); //highlight the specified dot, which has been selected externally

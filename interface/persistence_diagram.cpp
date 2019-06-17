@@ -48,6 +48,17 @@ PersistenceDiagram::PersistenceDiagram(ConfigParameters* params, QObject* parent
     setItemIndexMethod(NoIndex); //not sure why, but this seems to fix the dot update issue (#7 in the issue tracker)
 }
 
+void PersistenceDiagram::reset(ConfigParameters* params, QObject* parent)
+{
+    clear();
+    all_dots.clear();
+    dots_by_bc_index.clear();
+    selected = NULL;
+    barcode = new Barcode();
+
+    // PersistenceDiagram(params, parent);
+}
+
 //simply creates all objects; resize_diagram() handles positioning of objects
 void PersistenceDiagram::create_diagram()
 {
