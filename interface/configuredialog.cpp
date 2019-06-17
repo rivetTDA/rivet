@@ -119,6 +119,12 @@ ConfigureDialog::~ConfigureDialog()
     delete ui;
 }
 
+void ConfigureDialog::closeEvent(QCloseEvent* event)
+{
+    emit window_closed();
+    QDialog::closeEvent(event);
+}
+
 void ConfigureDialog::on_cancelButton_clicked()
 {
     close();

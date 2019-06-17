@@ -114,7 +114,18 @@ VisualizationWindow::~VisualizationWindow()
     delete ui;
 }
 
+void VisualizationWindow::redraw()
+{
+    if (line_selection_ready) {
+        slice_diagram.receive_parameter_change();
 
+        if (persistence_diagram_drawn)
+            p_diagram.receive_parameter_change();
+    }
+    
+    QObject::disconnect(configBox, &ConfigureDialog::window_closed, this, &VisualizationWindow::redraw);
+    delete configBox;
+}
 
 //slot that starts the persistent homology computation in a new thread
 void VisualizationWindow::start_computation()
@@ -751,16 +762,9 @@ void VisualizationWindow::on_actionAbout_triggered()
 void VisualizationWindow::on_actionConfigure_triggered()
 {
     configBox = new ConfigureDialog(config_params, input_params, this);
-    configBox->exec();
+    configBox->show();
 
-    if (line_selection_ready) {
-        slice_diagram.receive_parameter_change();
-
-        if (persistence_diagram_drawn)
-            p_diagram.receive_parameter_change();
-    }
-
-    delete configBox;
+    QObject::connect(configBox, &ConfigureDialog::window_closed, this, &VisualizationWindow::redraw);
 }
 
 void VisualizationWindow::on_actionSave_persistence_diagram_as_image_triggered()

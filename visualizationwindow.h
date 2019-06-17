@@ -159,6 +159,7 @@ private:
     void update_origin();//computes the origin of the line after a change in parameters; updates the value of dist_to_origin
     //other items
     void save_arrangement(const QString& filename);
+    void redraw();
 
     AboutMessageBox aboutBox; //which is better for these dialog boxes
     ConfigureDialog* configBox; // -- pointer or no pointer?
