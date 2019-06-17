@@ -40,7 +40,7 @@ typedef struct {
 typedef struct {
     BarCode* barcodes;
     size_t length;
-    char * error;
+    char* error;
     size_t error_length;
 } BarCodesResult;
 
@@ -80,9 +80,9 @@ typedef struct {
 } Ratio;
 
 typedef struct {
-    Ratio *x_grades;
+    Ratio* x_grades;
     size_t x_length;
-    Ratio *y_grades;
+    Ratio* y_grades;
     size_t y_length;
 } ExactGrades;
 
@@ -95,15 +95,14 @@ typedef struct {
 } StructurePoint;
 
 typedef struct {
-    ExactGrades *grades;
-    StructurePoint *points;
+    ExactGrades* grades;
+    StructurePoint* points;
     size_t length;
 } StructurePoints;
 
-StructurePoints * structure_from_computation(RivetComputation* rivet_computation);
+StructurePoints* structure_from_computation(RivetComputation* rivet_computation);
 
-void free_structure_points(StructurePoints *points);
-
+void free_structure_points(StructurePoints* points);
 }
 
 #endif //RIVET_CONSOLE_C_API_H

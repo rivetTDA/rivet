@@ -34,7 +34,7 @@ extern "C" RivetComputationResult read_rivet_computation(const char* bytes, size
 extern "C" void free_rivet_computation_result(RivetComputationResult result)
 {
     if (result.computation != nullptr) {
-        delete reinterpret_cast<ComputationResult *>(result.computation);
+        delete reinterpret_cast<ComputationResult*>(result.computation);
     } else {
         delete[] result.error;
     }
@@ -67,7 +67,7 @@ extern "C" BarCodesResult barcodes_from_computation(RivetComputation* rivet_comp
             barcodes[i].angle = angles[i];
             barcodes[i].offset = offsets[i];
         }
-//        Bounds bounds = compute_bounds(*computation);
+        //        Bounds bounds = compute_bounds(*computation);
         result.barcodes = barcodes;
         result.length = query_results.size();
         result.error = nullptr;
@@ -108,8 +108,7 @@ extern "C" void free_barcodes_result(BarCodesResult result)
     }
 }
 
-
-extern "C" StructurePoints * structure_from_computation(RivetComputation* rivet_computation)
+extern "C" StructurePoints* structure_from_computation(RivetComputation* rivet_computation)
 {
     ComputationResult* computation = reinterpret_cast<ComputationResult*>(rivet_computation);
     auto x_exact = new Ratio[computation->arrangement->x_exact.size()];
@@ -146,7 +145,8 @@ extern "C" StructurePoints * structure_from_computation(RivetComputation* rivet_
     return result;
 }
 
-void free_structure_points(StructurePoints *points) {
+void free_structure_points(StructurePoints* points)
+{
     delete[] points->grades->x_grades;
     delete[] points->grades->y_grades;
     delete points->grades;

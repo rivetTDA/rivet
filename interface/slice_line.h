@@ -63,6 +63,7 @@ public:
 
     void set_visibility(bool visible);
     bool is_inside_view();
+
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent* event);
     void mouseReleaseEvent(QGraphicsSceneMouseEvent* event);
@@ -87,7 +88,7 @@ private:
     SliceDiagram* sdgm;
     ConfigParameters* config_params;
 
-    bool inside_view=true;
+    bool inside_view = true;
     void compute_right_point(); //sets correct position of right_point, given slope of line and position of left point
 };
 
