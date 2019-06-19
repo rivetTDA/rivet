@@ -58,6 +58,27 @@ SliceDiagram::~SliceDiagram()
     clear(); //removes and deletes all items from the QGraphicsScene
 }
 
+// resets data structures and variables to draw new diagram
+void SliceDiagram::reset()
+{
+    clear();
+    xi0_dots.clear();
+    xi1_dots.clear();
+    xi2_dots.clear();
+    bars.clear();
+    primary_selected.clear();
+    secondary_selected.clear();
+    points.clear();
+    hom_dim_rects.resize(boost::extents[0][0]);
+    dot_left = nullptr;
+    dot_right = nullptr;
+    slice_line = nullptr;
+    max_xi_value = 0;
+    line_visible = true;
+    created = false;
+    control_dot_moved = false;
+}
+
 //receives an xi support point, which will be drawn when create_diagram() is called
 void SliceDiagram::add_point(double x_coord, double y_coord, int xi0m, int xi1m, int xi2m)
 {
@@ -536,7 +557,7 @@ void SliceDiagram::zoom_diagram(double angle, double offset, double distance_to_
     if (line_vert) {
         double relative_intercept_horz = (-offset - data_xmin) / (data_xmax - data_xmin); //vertical line has negative offset
         x = relative_intercept_horz * diagram_width;
-        line_visible = (0 <= relative_intercept_horz && relative_intercept_horz <= 1+float(padding)/diagram_width);
+        line_visible = (0 <= relative_intercept_horz && relative_intercept_horz <= 1 + float(padding) / diagram_width);
         slice_line->update_position(x, y, line_vert, 0);
         slice_line->set_visibility(line_visible); //don't plot the line if it lies outisde of the viewing window
         line_pos = -1 * relative_intercept_horz;
@@ -550,12 +571,12 @@ void SliceDiagram::zoom_diagram(double angle, double offset, double distance_to_
             double relative_intercept_horz = -data_xmin + (data_ymin - intrinsic_y_int) / (intrinsic_slope);
             relative_intercept_horz /= data_xmax - data_xmin;
             x = relative_intercept_horz * diagram_width;
-            line_visible = relative_intercept_horz < 1+float(padding)/diagram_width;
+            line_visible = relative_intercept_horz < 1 + float(padding) / diagram_width;
             line_pos = -1 * relative_intercept_horz;
         } else //then left-bottom endpoint is along left edge of box
         {
             y = relative_intercept_vert * diagram_height;
-            line_visible = relative_intercept_vert < 1+float(padding)/diagram_height;
+            line_visible = relative_intercept_vert < 1 + float(padding) / diagram_height;
             line_pos = relative_intercept_vert;
         }
 
@@ -689,7 +710,7 @@ void SliceDiagram::update_line(double angle, double offset, double distance_to_o
         line_vert = true;
         line_pos = offset / (data_xmax - data_xmin); //relative units
 
-        line_visible = (-1 <= line_pos && line_pos <= float(padding)/diagram_width); //vertical line has negative offset
+        line_visible = (-1 <= line_pos && line_pos <= float(padding) / diagram_width); //vertical line has negative offset
 
         //update the SliceLine
 
@@ -703,7 +724,7 @@ void SliceDiagram::update_line(double angle, double offset, double distance_to_o
         line_vert = false;
         line_slope = 0;
         line_pos = offset / (data_ymax - data_ymin); //relative units
-        line_visible = (0 <= line_pos && line_pos <= 1+float(padding)/diagram_height);
+        line_visible = (0 <= line_pos && line_pos <= 1 + float(padding) / diagram_height);
 
         //update the SliceLine
         int ypos = (offset - data_ymin) * scale_y; //pixel units
@@ -721,14 +742,14 @@ void SliceDiagram::update_line(double angle, double offset, double distance_to_o
         if (y_coord >= data_ymin) //then slice line intersects left edge of box
         {
             line_pos = (y_coord - data_ymin) / (data_ymax - data_ymin); //relative units
-            line_visible = line_pos < 1+float(padding)/diagram_height;
+            line_visible = line_pos < 1 + float(padding) / diagram_height;
             slice_line->update_position(0, (y_coord - data_ymin) * scale_y, false, line_slope * scale_y / scale_x);
 
         } else //then slice line intersects bottom of box
         {
             double x_coord = (data_ymin - offset / cos(radians)) / line_slope; //x-coordinate of slice line at y=data_ymin; data units
             line_pos = -1 * (x_coord - data_xmin) / (data_xmax - data_xmin); //relative units
-            line_visible = -1 -float(padding)/diagram_width< line_pos;
+            line_visible = -1 - float(padding) / diagram_width < line_pos;
 
             slice_line->update_position((x_coord - data_xmin) * scale_x, 0, false, line_slope * scale_y / scale_x);
         }
@@ -903,7 +924,7 @@ std::pair<double, double> SliceDiagram::compute_endpoint(double coordinate, unsi
         if (coordinate == std::numeric_limits<double>::infinity() || coordinate * std::min(scale_x, scale_y) > pow(10.0, 7.0)) {
             //set coordinate so that it will be outside the viewable window
             //the finite cutoff seems to patch over the issue with phantom barcodes-not sure why
-            coordinate = dist_to_origin+view_length / std::min(scale_x, scale_y);
+            coordinate = dist_to_origin + view_length / std::min(scale_x, scale_y);
         }
 
         //find (x,y) along the line

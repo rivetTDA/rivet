@@ -66,8 +66,10 @@ void DataSelectDialog::closeEvent(QCloseEvent* event)
 {
     event->accept();
 
-    if (!data_selected)
+    if (!data_selected) {
         qobject_cast<QWidget*>(this->parent())->close();
+        exit(0);
+    }
 }
 
 void DataSelectDialog::on_computeButton_clicked()

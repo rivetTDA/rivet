@@ -41,6 +41,10 @@ class ConfigureDialog : public QDialog {
 public:
     explicit ConfigureDialog(ConfigParameters& c_params, InputParameters& i_params, QWidget* parent = 0);
     ~ConfigureDialog();
+    void closeEvent(QCloseEvent* event);
+
+signals:
+    void window_closed();
 
 private slots:
     void on_cancelButton_clicked();

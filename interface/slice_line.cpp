@@ -67,10 +67,9 @@ void SliceLine::paint(QPainter* painter, const QStyleOptionGraphicsItem* /*unuse
     QPen pen(config_params->sliceLineColor);
     pen.setWidth(config_params->sliceLineWidth);
 
-    if(!inside_view){
+    if (!inside_view) {
         pen.setColor(Qt::gray);
-    }
-    else if (pressed) {
+    } else if (pressed) {
         pen.setColor(config_params->sliceLineHighlightColor);
     }
 
@@ -101,8 +100,7 @@ void SliceLine::paint(QPainter* painter, const QStyleOptionGraphicsItem* /*unuse
 //left-click and drag to move line, maintaining the same slope
 QVariant SliceLine::itemChange(GraphicsItemChange change, const QVariant& value)
 {
-    if(!inside_view)
-    {//then don't allow the line to be moved
+    if (!inside_view) { //then don't allow the line to be moved
         return QGraphicsItem::itemChange(change, value);
     }
     if (change == QGraphicsItem::ItemPositionChange && !update_lock) {
@@ -308,7 +306,7 @@ void SliceLine::update_position(double xpos, double ypos, bool vert, double pixe
 
 void SliceLine::mousePressEvent(QGraphicsSceneMouseEvent* event)
 {
-    if(!inside_view){
+    if (!inside_view) {
         return;
     }
     if (event->button() == Qt::RightButton) {
@@ -325,7 +323,7 @@ void SliceLine::mousePressEvent(QGraphicsSceneMouseEvent* event)
 
 void SliceLine::mouseReleaseEvent(QGraphicsSceneMouseEvent* event)
 {
-    if(!inside_view){
+    if (!inside_view) {
         return;
     }
     if (event->button() == Qt::RightButton) {
@@ -343,7 +341,7 @@ void SliceLine::mouseReleaseEvent(QGraphicsSceneMouseEvent* event)
 //right-click and drag to change slope, left/bottom endpoint stays fixed
 void SliceLine::mouseMoveEvent(QGraphicsSceneMouseEvent* event)
 {
-    if(!inside_view){
+    if (!inside_view) {
         return;
     }
     if (rotating) {
@@ -419,7 +417,5 @@ bool SliceLine::is_inside_view()
 
 void SliceLine::set_visibility(bool visible)
 {
-    inside_view=visible;
-
-
+    inside_view = visible;
 }

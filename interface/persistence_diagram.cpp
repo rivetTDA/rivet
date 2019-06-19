@@ -48,6 +48,16 @@ PersistenceDiagram::PersistenceDiagram(ConfigParameters* params, QObject* parent
     setItemIndexMethod(NoIndex); //not sure why, but this seems to fix the dot update issue (#7 in the issue tracker)
 }
 
+// resets data structures and variables to draw new diagram
+void PersistenceDiagram::reset()
+{
+    clear();
+    all_dots.clear();
+    dots_by_bc_index.clear();
+    selected = NULL;
+    barcode = new Barcode();
+}
+
 //simply creates all objects; resize_diagram() handles positioning of objects
 void PersistenceDiagram::create_diagram()
 {
@@ -541,7 +551,7 @@ void PersistenceDiagram::update_diagram(double slice_length_pix, double diagram_
     if (is_visible) {
         line_size = slice_length_pix / sqrt(2); //divide by sqrt(2) because the line is drawn at a 45-degree angle
     } else {
-        line_size=0;
+        line_size = 0;
     }
     dist_to_origin = slice_dist_dat;
     scale = diagram_scale / sqrt(2); //similarly to line_size, divide by sqrt(2)

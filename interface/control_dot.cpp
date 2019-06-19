@@ -56,11 +56,9 @@ void ControlDot::paint(QPainter* painter, const QStyleOptionGraphicsItem* /*unus
     QRectF rect = boundingRect();
     QBrush brush(config_params->sliceLineColor);
 
-    if(!slice_line->is_inside_view())
-    {
+    if (!slice_line->is_inside_view()) {
         brush.setColor(Qt::gray);
-    }
-    else if (pressed) {
+    } else if (pressed) {
         brush.setColor(config_params->sliceLineHighlightColor);
     }
 
@@ -74,8 +72,7 @@ QVariant ControlDot::itemChange(GraphicsItemChange change, const QVariant& value
 {
     if (change == QGraphicsItem::ItemPositionChange && !update_lock) {
 
-
-        if(!slice_line->is_inside_view()){
+        if (!slice_line->is_inside_view()) {
             //then don't allow the user to drag the dot
             return pos();
         }
@@ -165,7 +162,7 @@ void ControlDot::set_position(const QPointF& newpos)
 
 void ControlDot::mousePressEvent(QGraphicsSceneMouseEvent* event)
 {
-    if(!slice_line->is_inside_view()){
+    if (!slice_line->is_inside_view()) {
         return;
     }
     pressed = true;
@@ -177,7 +174,7 @@ void ControlDot::mousePressEvent(QGraphicsSceneMouseEvent* event)
 
 void ControlDot::mouseReleaseEvent(QGraphicsSceneMouseEvent* event)
 {
-    if(!slice_line->is_inside_view()){
+    if (!slice_line->is_inside_view()) {
         return;
     }
     pressed = false;

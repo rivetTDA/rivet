@@ -59,8 +59,6 @@ VisualizationWindow::VisualizationWindow(InputParameters& params)
     , template_points()
     , degenerate_x(false)
     , degenerate_y(false)
-    , cthread(input_params)
-    , prog_dialog(this)
     , line_selection_ready(false)
     , slice_diagram(&config_params, grades.x, grades.y, this)
     , slice_update_lock(false)
@@ -68,6 +66,9 @@ VisualizationWindow::VisualizationWindow(InputParameters& params)
     , persistence_diagram_drawn(false)
     , slice_diagram_initialized(false)
 {
+    // create computation thread
+    cthread = new ComputationThread(input_params);
+
     ui->setupUi(this);
 
     //set up the slice diagram
@@ -85,16 +86,12 @@ VisualizationWindow::VisualizationWindow(InputParameters& params)
 
 
     //connect signal from DataSelectDialog to start the computation
-    QObject::connect(&ds_dialog, &DataSelectDialog::dataSelected, this, &VisualizationWindow::start_computation);
+    QObject::connect(&ds_dialog, &DataSelectDialog::dataSelected, this, &VisualizationWindow::init);
 
     //connect signals from ComputationThread to slots in VisualizationWindow
-    QObject::connect(&cthread, &ComputationThread::advanceProgressStage, &prog_dialog, &ProgressDialog::advanceToNextStage);
-    QObject::connect(&cthread, &ComputationThread::setProgressMaximum, &prog_dialog, &ProgressDialog::setStageMaximum);
-    QObject::connect(&cthread, &ComputationThread::setCurrentProgress, &prog_dialog, &ProgressDialog::updateProgress);
-    QObject::connect(&cthread, &ComputationThread::templatePointsReady, this, &VisualizationWindow::paint_template_points);
-    QObject::connect(&cthread, &ComputationThread::arrangementReady, this, &VisualizationWindow::augmented_arrangement_ready);
-    QObject::connect(&cthread, &ComputationThread::finished, &prog_dialog, &ProgressDialog::setComputationFinished);
-
+    QObject::connect(cthread, &ComputationThread::templatePointsReady, this, &VisualizationWindow::paint_template_points);
+    QObject::connect(cthread, &ComputationThread::arrangementReady, this, &VisualizationWindow::augmented_arrangement_ready);
+    
     //connect signals and slots for the diagrams
     QObject::connect(&slice_diagram, &SliceDiagram::set_line_control_elements, this, &VisualizationWindow::set_line_parameters);
     QObject::connect(&slice_diagram, &SliceDiagram::persistence_bar_selected, &p_diagram, &PersistenceDiagram::receive_dot_selection);
@@ -104,9 +101,6 @@ VisualizationWindow::VisualizationWindow(InputParameters& params)
     QObject::connect(&p_diagram, &PersistenceDiagram::persistence_dot_secondary_selection, &slice_diagram, &SliceDiagram::receive_bar_secondary_selection);
     QObject::connect(&p_diagram, &PersistenceDiagram::persistence_dot_deselected, &slice_diagram, &SliceDiagram::receive_bar_deselection);
 
-
-    //connect other signals and slots
-    QObject::connect(&prog_dialog, &ProgressDialog::stopComputation, &cthread, &ComputationThread::terminate); ///TODO: don't use QThread::terminate()! modify ComputationThread so that it can stop gracefully and clean up after itself
 }
 
 VisualizationWindow::~VisualizationWindow()
@@ -114,7 +108,79 @@ VisualizationWindow::~VisualizationWindow()
     delete ui;
 }
 
+void VisualizationWindow::redraw()
+{
+    // redraw slice diagram and persistence diagram
+    // if config parameters are changed
+    if (line_selection_ready) {
+        slice_diagram.receive_parameter_change();
 
+        if (persistence_diagram_drawn)
+            p_diagram.receive_parameter_change();
+    }
+    
+    // disconnect and delete configure dialog
+    QObject::disconnect(configBox, &ConfigureDialog::window_closed, this, &VisualizationWindow::redraw);
+    delete configBox;
+}
+
+// slot that resets data structures, variables and ui
+void VisualizationWindow::init()
+{
+    // disable visualization window parameters
+    // when computation is going on
+    ui->BettiLabel->setEnabled(false);
+    ui->xi0CheckBox->setEnabled(false);
+    ui->xi1CheckBox->setEnabled(false);
+    ui->xi2CheckBox->setEnabled(false);
+    ui->normCoordCheckBox->setEnabled(false);
+
+    ui->angleLabel->setEnabled(false);
+    ui->angleDoubleSpinBox->setEnabled(false);
+    ui->offsetLabel->setEnabled(false);
+    ui->offsetSpinBox->setEnabled(false);
+    ui->barcodeCheckBox->setEnabled(false);
+
+    // reset data structures associated with visualization window
+    if (template_points)
+        template_points = NULL;
+
+    if (arrangement)
+        arrangement = NULL;
+
+    if (barcode)
+        barcode.release();
+
+    template_points = std::shared_ptr<TemplatePointsMessage>();
+    arrangement = std::shared_ptr<ArrangementMessage>();
+    barcode = std::unique_ptr<Barcode>();
+    grades = Grades();
+    slice_diagram.reset();
+    p_diagram.reset();
+
+    // reset variables associated with visualization window
+    // Possible TODO: Remove intializers from constructor?
+    x_reverse = false;
+    y_reverse = false;
+    degenerate_x = false;
+    degenerate_y = false;
+    line_selection_ready = false;
+    persistence_diagram_drawn = false;
+    slice_diagram_initialized = false;
+
+    // create new progress dialog for computation
+    prog_dialog = new ProgressDialog(this);
+
+    //connect signals related to prog_dialog
+    QObject::connect(cthread, &ComputationThread::advanceProgressStage, prog_dialog, &ProgressDialog::advanceToNextStage);
+    QObject::connect(cthread, &ComputationThread::setProgressMaximum, prog_dialog, &ProgressDialog::setStageMaximum);
+    QObject::connect(cthread, &ComputationThread::setCurrentProgress, prog_dialog, &ProgressDialog::updateProgress);
+    
+    // to stop computation midway - TODO: make it stop more gracefully
+    QObject::connect(prog_dialog, &ProgressDialog::stopComputation, cthread, &ComputationThread::terminate);
+
+    start_computation();
+}
 
 //slot that starts the persistent homology computation in a new thread
 void VisualizationWindow::start_computation()
@@ -122,12 +188,12 @@ void VisualizationWindow::start_computation()
     data_selected = true;
 
     //show the progress box
-    prog_dialog.show();
-    prog_dialog.activateWindow();
-    prog_dialog.raise();
+    prog_dialog->show();
+    prog_dialog->activateWindow();
+    prog_dialog->raise();
 
     //start the computation in a new thread
-    cthread.compute();
+    cthread->compute();
 
     //update text items
     auto shortName = QString::fromStdString(input_params.shortName);
@@ -142,7 +208,6 @@ void VisualizationWindow::start_computation()
 void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMessage> points)
 {
     qDebug() << "VisualizationWindow: Received template points";
-
 
     x_reverse=points->x_reverse;
     y_reverse=points->y_reverse;
@@ -204,7 +269,6 @@ void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMe
             initial_xmax=grades.x.back();
             initial_ymax=grades.y.back();
         }
-
 
         //set absolute bounds on the maximum/minimum window scroll boxes, to prevent numerical issues
 
@@ -290,10 +354,6 @@ void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMe
 
 
 
-
-
-
-
     //update offset extents
     ///TODO: maybe these extents should be updated dynamically, based on the slope of the slice line
     ui->offsetSpinBox->setMinimum(grades.min_offset());
@@ -302,6 +362,7 @@ void VisualizationWindow::paint_template_points(std::shared_ptr<TemplatePointsMe
 
     //update status
     line_selection_ready = true;
+
   //  ui->statusBar->showMessage("bigraded Betti number visualization ready"); STATUS BAR CURRENTLY DISABLED
 }
 
@@ -376,6 +437,11 @@ void VisualizationWindow::augmented_arrangement_ready(std::shared_ptr<Arrangemen
         //Have to rely on console to either a) always save (to tmp file if needed), or b) tell us filetype in the output.
         //    else if(input_params.raw_data)
         //        unsaved_data = true;
+    }
+
+    if (prog_dialog) {
+        prog_dialog->setComputationFinished();
+        delete prog_dialog;
     }
 } //end augmented_arrangement_ready()
 
@@ -750,17 +816,12 @@ void VisualizationWindow::on_actionAbout_triggered()
 
 void VisualizationWindow::on_actionConfigure_triggered()
 {
+    // create new configure dialog
     configBox = new ConfigureDialog(config_params, input_params, this);
-    configBox->exec();
+    configBox->show();
 
-    if (line_selection_ready) {
-        slice_diagram.receive_parameter_change();
-
-        if (persistence_diagram_drawn)
-            p_diagram.receive_parameter_change();
-    }
-
-    delete configBox;
+    // connect to receive config parameter change
+    QObject::connect(configBox, &ConfigureDialog::window_closed, this, &VisualizationWindow::redraw);
 }
 
 void VisualizationWindow::on_actionSave_persistence_diagram_as_image_triggered()
@@ -819,13 +880,10 @@ void VisualizationWindow::save_arrangement(const QString& filename)
 
 void VisualizationWindow::on_actionOpen_triggered()
 {
-    ///TODO: get user confirmation and clear the existing data structures
+    ///TODO: get user confirmation
+    // open dataselect dialog to get new data
+    ds_dialog.exec();
 
-    QMessageBox msgBox;
-    msgBox.setText("This feature is not implemented yet.");
-    msgBox.exec();
-
-    ///TODO: open the data select dialog box and load new data
 } //end on_actionOpen_triggered()
 
 
