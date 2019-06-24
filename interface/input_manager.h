@@ -41,6 +41,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <set>
 #include <sstream>
 #include <vector>
+#include <map>
 using namespace rivet::numeric;
 
 //first, a struct to help sort multi-grade values
@@ -165,6 +166,8 @@ private:
 
     std::vector<FileType> supported_types;
 
+    std::map<std::string,std::string> key_values; // stores the key value pairs supplied in the input file
+
     std::pair<bool, FileType> get_supported_type(const std::string name)
     {
         auto it = std::find_if(supported_types.begin(), supported_types.end(), [name](FileType& t) { return name == t.identifier; });
@@ -175,6 +178,9 @@ private:
 
     //TODO: these methods could move to a separate file-per-filetype model rather
     //than living in InputManager.
+    FileContent read_point_cloud_csv(std::ifstream& stream, Progress& progress); // reads a point cloud data from csv and does what read_point_cloud does
+    int parse_key_values(); // goes through supplied key-value pairs in file and sets parameters and returns the line where data starts from
+
     FileContent read_point_cloud(std::ifstream& stream, Progress& progress); //reads a point cloud and constructs a simplex tree representing the bifiltered Vietoris-Rips complex
     FileContent read_discrete_metric_space(std::ifstream& stream, Progress& progress); //reads data representing a discrete metric space with a real-valued function and constructs a simplex tree
     FileContent read_bifiltration(std::ifstream& stream, Progress& progress); //reads a bifiltration and constructs a simplex tree

@@ -33,6 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <set>
 #include <sstream>
 #include <vector>
+#include <map>
 
 #include <ctime>
 
@@ -195,9 +196,11 @@ InputManager::InputManager(InputParameters& params)
     : input_params(params)
     , verbosity(params.verbosity)
 {
+    register_file_type(FileType{ "csv-points", "point-cloud data", true,
+        std::bind(&InputManager::read_point_cloud_csv, this, std::placeholders::_1, std::placeholders::_2) });
+    
     register_file_type(FileType{ "points", "point-cloud data", true,
         std::bind(&InputManager::read_point_cloud, this, std::placeholders::_1, std::placeholders::_2) });
-
     register_file_type(FileType{ "metric", "metric data", true,
         std::bind(&InputManager::read_discrete_metric_space, this, std::placeholders::_1, std::placeholders::_2) });
     register_file_type(FileType{ "bifiltration", "bifiltration data", true,
@@ -303,6 +306,390 @@ FileContent InputManager::read_messagepack(std::ifstream& stream, Progress& prog
     }
     return FileContent(
         from_messages(templatePointsMessage, arrangementMessage).release());
+}
+
+int InputManager::parse_key_values()
+{
+    // open as a separate file, not the reference
+    std::ifstream input_file(input_params.fileName);
+    FileInputReader reader(input_file);
+    // first line is file type
+    auto line_info = reader.next_line_csv();
+    int num_lines = 0;
+
+    try {
+        while (reader.has_next_line()) {
+            line_info = reader.next_line_csv();
+            // key value pairs separated by ':'
+            if (line_info.first[0].find(':') == std::string::npos)
+                break;
+            num_lines++;
+            // separate into keys and values
+            std::vector<std::string> line;
+            std::stringstream ss(line_info.first[0]);
+            std::string word;
+            while (std::getline(ss, word, ':')) {
+                boost::trim(word);
+                line.push_back(word);
+            }
+            // determine key and set appropriate value
+            // handle error checking here
+            if (line[0] == "DIMENSION") {
+                try {
+                    // dimension cannot be less than 1
+                    int dim = std::stoi(line[1]);
+                    if (dim < 1) throw std::runtime_error("Error");
+                } catch (std::exception& e) {
+                    throw std::runtime_error("Invalid option for DIMENSION");
+                }
+                key_values["DIMENSION"] = line[1];
+            } else if (line[0] == "MAX_DISTANCE") {
+                try {
+                    // max distance cannot be less than 0
+                    int dist = std::stoi(line[1]);
+                    if (dist <= 0) throw std::runtime_error("Error");
+                } catch (std::exception& e) {
+                    throw std::runtime_error("Invalid option for MAX_DISTANCE");
+                }
+                key_values["MAX_DISTANCE"] = line[1];
+            } else if (line[0] == "X_LABEL") {
+                key_values["X_LABEL"] = line[1];
+            } else if (line[0] == "Y_LABEL") {
+                key_values["Y_LABEL"] = line[1];
+            } else if (line[0] == "X_REVERSE") {
+                // Y,y,N,n are only valid options
+                if (line[1] == "Y" || line[1] == "y" || line[1] == "N" || line[1] == "n") {
+                    key_values["X_REVERSE"] = line[1];
+                } else {
+                    throw std::runtime_error("Invalid option for X_REVERSE");
+                }
+            } else if (line[0] == "FUNCTION") {
+                // Y,y,N,n are only valid options
+                if (line[1] == "Y" || line[1] == "y" || line[1] == "N" || line[1] == "n") {
+                    key_values["FUNCTION"] = line[1];
+                } else {
+                    throw std::runtime_error("Invalid option for FUNCTION");
+                }
+            } else {
+                throw std::runtime_error("Invalid input parameter");
+            }
+        }
+    } catch (std::exception& e) {
+        throw InputError(line_info.second, e.what());
+    }
+
+    if (key_values.count("DIMENSION") > 0)
+    {
+        // if dimension is set and function is not
+        // determine if there is an extra function value or not
+        int dimension = line_info.first.size();
+        if (dimension == std::stoi(key_values["DIMENSION"])+1 && key_values.count("FUNCTION") <= 0)
+            key_values["FUNCTION"] = "Y";
+    } else {
+        // if dimension is not set and function is set
+        // determine value of dimension
+        int dimension = line_info.first.size();
+        if (key_values.count("FUNCTION")) {
+            if (key_values["FUNCTION"] == "Y" || key_values["FUNCTION"] == "y")
+                dimension--;
+        }
+        key_values["DIMENSION"] = std::to_string(dimension);
+    }
+
+    // if function is not set, set value to "N"
+    if (key_values.count("FUNCTION") > 0)
+    {
+        ;
+    } else {
+        key_values["FUNCTION"] = "N";
+    }
+
+    input_file.close();
+    return num_lines;
+}
+
+FileContent InputManager::read_point_cloud_csv(std::ifstream& stream, Progress& progress)
+{
+    // same as read_point_cloud but adjusted for key-value inputs in the beginning
+    // handles csv data instead of space ssv
+    FileInputReader reader(stream);
+    auto data = new InputData();
+    if (verbosity >= 6) {
+        debug() << "InputManager: Found a point cloud file.";
+    }
+    unsigned dimension;
+    exact max_dist = -1;
+    bool hasFunction = false;
+
+    bool x_reverse = false;
+    bool y_reverse = false;
+
+    unsigned expectedNumTokens;
+
+    std::vector<DataPoint> points;
+
+    // parse key values
+    int to_skip = parse_key_values();
+    auto line_info = reader.next_line_csv();
+    for (int i = 0; i < to_skip; i++)
+        reader.next_line_csv();
+
+    // set values from received key value pairs
+    if (key_values.count("DIMENSION") > 0) {
+        dimension = std::stoi(key_values["DIMENSION"]);
+        expectedNumTokens = dimension;
+        if (verbosity >= 4) {
+            debug() << "  Point cloud lives in dimension:" << key_values["DIMENSION"];
+        }
+    }
+
+    if (key_values.count("MAX_DISTANCE") > 0) {
+        max_dist = std::stoi(key_values["MAX_DISTANCE"]);
+        if (verbosity >= 4) {
+            debug() << "  Maximum distance of edges in Rips complex:" << key_values["MAX_DISTANCE"];
+        }
+    }
+
+    if (key_values.count("FUNCTION") > 0) {
+        if (key_values["FUNCTION"] == "Y" || key_values["FUNCTION"] == "y") {
+            hasFunction = true;
+            expectedNumTokens++;
+            if (verbosity >= 6) {
+                debug() << "InputManager: Point cloud file has function values. Creating Vietoris-Rips complex.";
+            }
+        } else {
+            // degree-Rips if function values are not specified
+            x_reverse = true;
+            data->x_label = "degree";
+            if (verbosity >= 6) {
+                debug() << "InputManager: Point cloud file does not have function values. Creating Degree-Rips complex.";
+            }
+        }
+    }
+
+    if (key_values.count("X_REVERSE") > 0 && hasFunction) {
+        if (key_values["X_REVERSE"] == "Y" || key_values["X_REVERSE"] == "y")
+            x_reverse = true;
+    }
+
+    if (key_values.count("X_LABEL") > 0 && hasFunction) {
+        data->x_label = key_values["X_LABEL"];
+    }
+
+    if (key_values.count("Y_LABEL") > 0) {
+        data->y_label = key_values["Y_LABEL"];
+    } else {
+        data->y_label = "distance";
+    }
+
+    // STEP 1: read data file and store exact (rational) values
+
+    try {      
+
+        while (reader.has_next_line()) {
+            line_info = reader.next_line_csv();
+            std::vector<std::string> tokens = line_info.first;
+            if (tokens.size() != expectedNumTokens) {
+                std::stringstream ss;
+                ss << "invalid line (should be " << expectedNumTokens << " tokens but was " << tokens.size() << ")"
+                   << std::endl;
+                ss << "[";
+                for (auto t : tokens) {
+                    ss << t << " ";
+                }
+                ss << "]" << std::endl;
+
+                throw std::runtime_error(ss.str());
+            }
+
+            //Add artificial birth value of 0 if no function value provided
+            if (!hasFunction) {
+                tokens.push_back("0");
+            }
+            DataPoint p(tokens);
+            if (x_reverse && hasFunction) {
+                p.birth *= -1;
+            }
+
+            points.push_back(p);
+
+        }
+
+    } catch (std::exception& e) {
+        throw InputError(line_info.second, e.what());
+    }
+    if (verbosity >= 4) {
+        debug() << "  Finished reading" << points.size() << "points. Input finished.";
+    }
+
+    if (points.empty()) {
+        throw std::runtime_error("No points loaded.");
+    }
+
+    // STEP 2: compute distance matrix, and create ordered lists of all unique distance and time values
+
+    if (verbosity >= 4) {
+        debug() << "  Building lists of grade values.";
+    }
+    progress.advanceProgressStage();
+
+    unsigned num_points = points.size();
+
+    ExactSet dist_set; //stores all unique distance values
+    ExactSet time_set; //stores all unique time values
+    std::pair<ExactSet::iterator, bool> ret; //for return value upon insert()
+    unsigned* degree; //stores the degree of each point; must FREE later if used
+    if (!hasFunction) {
+        degree = new unsigned[num_points]();
+    }
+
+    ret = dist_set.insert(ExactValue(exact(0))); //distance from a point to itself is always zero
+    (ret.first)->indexes.push_back(0); //store distance 0 at 0th index
+    //consider all points
+    for (unsigned i = 0; i < num_points; i++) {
+        if (hasFunction) {
+            //store time value, if it doesn't exist already
+            ret = time_set.insert(ExactValue(points[i].birth));
+
+            //remember that point i has this birth time value
+            (ret.first)->indexes.push_back(i);
+        }
+
+        //compute (approximate) distances from this point to all following points
+        for (unsigned j = i + 1; j < num_points; j++) {
+            //compute (approximate) distance squared between points[i] and points[j]
+            double fp_dist_squared = 0;
+            for (unsigned k = 0; k < dimension; k++) {
+                double kth_dist = points[i].coords[k] - points[j].coords[k];
+                fp_dist_squared += (kth_dist * kth_dist);
+            }
+
+            //find an approximate square root of fp_dist_squared, and store it as an exact value
+            exact cur_dist(0);
+            if (fp_dist_squared > 0)
+                cur_dist = approx(sqrt(fp_dist_squared)); //OK for now...
+
+            if (max_dist == -1 || cur_dist <= max_dist) //then this distance is allowed
+            {
+                //store distance value, if it doesn't exist already
+                ret = dist_set.insert(ExactValue(cur_dist));
+
+                //remember that the pair of points (i,j) has this distance value, which will go in entry j(j-1)/2 + i + 1
+                (ret.first)->indexes.push_back((j * (j - 1)) / 2 + i + 1);
+
+                //need to keep track of degree for degree-Rips complex
+                if (!hasFunction) {
+                    //there is an edge between i and j so update degree
+                    degree[i]++;
+                    degree[j]++;
+                }
+            }
+        }
+    } //end for
+    if (verbosity >= 4) {
+        debug() << "  Finished reading data.";
+    }
+
+    // STEP 3: build vectors of discrete indexes for constructing the bifiltration
+
+    std::vector<unsigned> time_indexes, degree_indexes;
+    ExactSet degree_set;
+    unsigned max_unsigned = std::numeric_limits<unsigned>::max();
+
+    //X axis is degrees for degree-Rips complex
+    if (!hasFunction) {
+        //determine the max degree
+        unsigned max_degree = 0;
+        for (unsigned i = 0; i < num_points; i++)
+            if (max_degree < degree[i])
+                max_degree = degree[i];
+
+        //build vector of discrete degree indices from 0 to max_degree and bins those degree values
+        //WARNING: assumes that the number of distinct degree grades will be equal to max_degree which may not hold
+        for (unsigned i = 0; i <= max_degree; i++) {
+            ret = degree_set.insert(ExactValue(max_degree - i)); //store degree -i because degree is wrt opposite ordering on R
+            (ret.first)->indexes.push_back(i); //degree i is stored at index i
+        }
+        //make degrees
+        degree_indexes = std::vector<unsigned>(max_degree + 1, 0);
+
+        build_grade_vectors(*data, degree_set, degree_indexes, data->x_exact, input_params.x_bins);
+        //data->x_exact is now an increasing list of codegrees
+        //consider the sublevel set codeg<=k
+        //this is the same as deg>=maxDeg-k
+        //thus to convert from sublevelset to superlevel set, must replace the kth element of data->x_exact
+        //with -1*(codeg-(kth element)) (the negative 1 is to the values are still increasing)
+        //this is just the sequence of NEGATIVE degrees
+        //e.g codeg=(0,1,2,...,10)
+        //goes to (-(10-0), -(10-1), ...,-(10-10))=(-10,-9,...,0)
+
+    }
+    //X axis is given by function in Vietoris-Rips complex
+    else {
+        //vector of discrete time indexes for each point; max_unsigned shall represent undefined time (is this reasonable?)
+        time_indexes = std::vector<unsigned>(num_points, max_unsigned);
+        build_grade_vectors(*data, time_set, time_indexes, data->x_exact, input_params.x_bins);
+    }
+
+    //discrete distance matrix (triangle); max_unsigned shall represent undefined distance
+    std::vector<unsigned> dist_indexes((num_points * (num_points - 1)) / 2 + 1, max_unsigned);
+    build_grade_vectors(*data, dist_set, dist_indexes, data->y_exact, input_params.y_bins);
+
+    //update progress
+    progress.progress(30);
+
+    // STEP 4: build the bifiltration
+
+    //bifiltration_data stores only DISCRETE information!
+    //this only requires (suppose there are k points):
+    //  1. a list of k discrete times (if a function is included)
+    //  2. a list of k(k-1)/2 discrete distances
+    //  3. max dimension of simplices to construct, which is one more than the dimension of homology to be computed
+
+    if (verbosity >= 4) {
+        if (hasFunction) {
+            debug() << "  Building Vietoris-Rips bifiltration.";
+        } else {
+            debug() << "  Building Degree-Rips bifiltration.";
+        }
+        debug() << "     x-grades: " << data->x_exact.size();
+        debug() << "     y-grades: " << data->y_exact.size();
+    }
+
+    data->bifiltration_data.reset(new BifiltrationData(input_params.dim, input_params.verbosity));
+    if (hasFunction) {
+        data->bifiltration_data->build_VR_complex(time_indexes, dist_indexes, data->x_exact.size(), data->y_exact.size());
+
+    } else {
+
+        data->bifiltration_data->build_DR_complex(num_points, dist_indexes, degree_indexes, data->x_exact.size(), data->y_exact.size());
+        //convert data->x_exact from codegree sequence to negative degree sequence
+        exact max_x_exact = *(data->x_exact.end() - 1); //should it be max_degree instead?
+        std::transform(data->x_exact.begin(), data->x_exact.end(), data->x_exact.begin(), [max_x_exact](exact x) { return x - max_x_exact; });
+    }
+
+    if (verbosity >= 8) {
+        int size;
+        size = data->bifiltration_data->get_size(input_params.dim - 1);
+        debug() << "There are" << size << "simplices of dimension" << input_params.dim - 1;
+        size = data->bifiltration_data->get_size(input_params.dim);
+        debug() << "There are" << size << "simplices of dimension" << input_params.dim;
+        size = data->bifiltration_data->get_size(input_params.dim + 1);
+        debug() << "There are" << size << "simplices of dimension" << input_params.dim + 1;
+    }
+
+    data->free_implicit_rep.reset(new FIRep(*(data->bifiltration_data), input_params.verbosity));
+
+    if (!hasFunction) {
+        delete degree;
+    }
+
+    //remember the axis directions
+    data->x_reverse = x_reverse;
+    data->y_reverse = y_reverse;
+
+    return FileContent(data);
+
 }
 
 //reads a point cloud
