@@ -179,7 +179,7 @@ private:
     //TODO: these methods could move to a separate file-per-filetype model rather
     //than living in InputManager.
     FileContent read_point_cloud_csv(std::ifstream& stream, Progress& progress); // reads a point cloud data from csv and does what read_point_cloud does
-    int parse_key_values(); // goes through supplied key-value pairs in file and sets parameters and returns the line where data starts from
+    void parse_key_values(); // goes through supplied key-value pairs in file and sets parameters and returns the line where data starts from
 
     FileContent read_point_cloud(std::ifstream& stream, Progress& progress); //reads a point cloud and constructs a simplex tree representing the bifiltered Vietoris-Rips complex
     FileContent read_discrete_metric_space(std::ifstream& stream, Progress& progress); //reads data representing a discrete metric space with a real-valued function and constructs a simplex tree

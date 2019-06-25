@@ -228,7 +228,9 @@ FileType& InputManager::get_file_type(std::string fileName)
     if (!reader.has_next_line()) {
         throw std::runtime_error("Empty file: " + fileName);
     }
-    std::string filetype_name = reader.next_line().first[0];
+
+    parse_key_values();
+    std::string filetype_name = key_values["TYPE"];
 
     auto it = std::find_if(supported_types.begin(), supported_types.end(), [filetype_name](FileType t) { return t.identifier == filetype_name; });
 
@@ -308,18 +310,24 @@ FileContent InputManager::read_messagepack(std::ifstream& stream, Progress& prog
         from_messages(templatePointsMessage, arrangementMessage).release());
 }
 
-int InputManager::parse_key_values()
+void InputManager::parse_key_values()
 {
     // open as a separate file, not the reference
     std::ifstream input_file(input_params.fileName);
     FileInputReader reader(input_file);
-    // first line is file type
-    auto line_info = reader.next_line_csv();
-    int num_lines = 0;
+
+    std::pair<std::vector<std::string>, unsigned> line_info;
+    int num_lines = 0, flag = 1;
 
     try {
         while (reader.has_next_line()) {
             line_info = reader.next_line_csv();
+            // support for old file format
+            if (line_info.first[0] == "points" || line_info.first[0] == "metric" || line_info.first[0] == "bifiltration" || line_info.first[0] == "firep" || line_info.first[0] == "RIVET_msgpack") {
+                key_values["TYPE"] = line_info.first[0];;
+                flag = 0;
+                break;
+            }
             // key value pairs separated by ':'
             if (line_info.first[0].find(':') == std::string::npos)
                 break;
@@ -370,6 +378,11 @@ int InputManager::parse_key_values()
                 } else {
                     throw std::runtime_error("Invalid option for FUNCTION");
                 }
+            } else if (line[0] == "TYPE") {
+                // specifies file type, throw error if unknown
+                if (line[1] != "csv-points" && line[1] != "points" && line[1] != "metric" && line[1] != "bifiltration" && line[1] != "firep" && line[1] != "RIVET_msgpack")
+                    throw std::runtime_error("Unsupported file type");
+                key_values["TYPE"] = line[1];
             } else {
                 throw std::runtime_error("Invalid input parameter");
             }
@@ -378,34 +391,44 @@ int InputManager::parse_key_values()
         throw InputError(line_info.second, e.what());
     }
 
-    if (key_values.count("DIMENSION") > 0)
-    {
-        // if dimension is set and function is not
-        // determine if there is an extra function value or not
-        int dimension = line_info.first.size();
-        if (dimension == std::stoi(key_values["DIMENSION"])+1 && key_values.count("FUNCTION") <= 0)
-            key_values["FUNCTION"] = "Y";
-    } else {
-        // if dimension is not set and function is set
-        // determine value of dimension
-        int dimension = line_info.first.size();
-        if (key_values.count("FUNCTION")) {
-            if (key_values["FUNCTION"] == "Y" || key_values["FUNCTION"] == "y")
-                dimension--;
+    // do this only for files with key-values
+    if (flag) {
+        if (key_values.count("TYPE") <= 0)
+        {
+            // default file type is point cloud in csv format
+            key_values["TYPE"] = "csv-points";
         }
-        key_values["DIMENSION"] = std::to_string(dimension);
-    }
+        if (key_values.count("DIMENSION") > 0)
+        {
+            // if dimension is set and function is not
+            // determine if there is an extra function value or not
+            int dimension = line_info.first.size();
+            if (dimension == std::stoi(key_values["DIMENSION"])+1 && key_values.count("FUNCTION") <= 0)
+                key_values["FUNCTION"] = "Y";
+        } else {
+            // if dimension is not set and function is set
+            // determine value of dimension
+            int dimension = line_info.first.size();
+            if (key_values.count("FUNCTION")) {
+                if (key_values["FUNCTION"] == "Y" || key_values["FUNCTION"] == "y")
+                    dimension--;
+            }
+            key_values["DIMENSION"] = std::to_string(dimension);
+        }
 
-    // if function is not set, set value to "N"
-    if (key_values.count("FUNCTION") > 0)
-    {
-        ;
-    } else {
-        key_values["FUNCTION"] = "N";
-    }
+        // if function is not set, set value to "N"
+        if (key_values.count("FUNCTION") > 0)
+        {
+            ;
+        } else {
+            key_values["FUNCTION"] = "N";
+        }
 
-    input_file.close();
-    return num_lines;
+        // skip stores number of lines to skip
+        key_values["SKIP"] = std::to_string(num_lines);
+        input_file.close();
+    }
+    
 }
 
 FileContent InputManager::read_point_cloud_csv(std::ifstream& stream, Progress& progress)
@@ -428,9 +451,11 @@ FileContent InputManager::read_point_cloud_csv(std::ifstream& stream, Progress& 
 
     std::vector<DataPoint> points;
 
-    // parse key values
-    int to_skip = parse_key_values();
-    auto line_info = reader.next_line_csv();
+    // skip lines with key-values
+    int to_skip = std::stoi(key_values["SKIP"]);
+
+    std::pair<std::vector<std::string>, unsigned> line_info;
+
     for (int i = 0; i < to_skip; i++)
         reader.next_line_csv();
 

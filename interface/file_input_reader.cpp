@@ -27,7 +27,7 @@ FileInputReader::FileInputReader(std::ifstream& file)
     , line_number(0)
     , next_line_found(false)
 {
-    find_next_line();
+    find_next_line_csv();
 }
 
 //finds the next line in the file that is not empty and not a comment, if such line exists
