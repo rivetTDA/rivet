@@ -22,6 +22,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define INPUT_PARAMETERS_H
 
 #include <string>
+
+#include <boost/multiprecision/cpp_int.hpp>
+typedef boost::multiprecision::cpp_rational exact;
 //TODO: this class currently conflates 3 things: command line arguments, file load dialog arguments, and viewer configuration state
 
 //these parameters are set by the user via the console or the DataSelectDialog before computation can begin
@@ -36,6 +39,12 @@ struct InputParameters {
     std::string x_label; //used by configuration dialog
     std::string y_label; //used by configuration dialog
     std::string outputFormat; // Supported values: R0, R1
+    int num_threads; //number of openmp threads to be created
+    exact max_dist; //maximum distance to be considered while building Rips complex
+    int dimension; //dimension of the space where the points lie
+    bool function; //specifies if the data has a function value
+    bool x_reverse, y_reverse; //specifies if the axes need to be reversed or not
+    std::string type; //type of file being worked with
 
     template <typename Archive>
     void serialize(Archive& ar, const unsigned int /*version*/)

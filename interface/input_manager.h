@@ -156,7 +156,8 @@ class InputManager {
 public:
     InputManager(InputParameters& input_params);
 
-    FileContent start(Progress& progress); //function to run the input manager
+    void start(); //function that parses input file for key values
+    FileContent process(Progress& progress); //function that processes data in the file
 
     FileType identify();
 
@@ -167,6 +168,8 @@ private:
     std::vector<FileType> supported_types;
 
     std::map<std::string,std::string> key_values; // stores the key value pairs supplied in the input file
+
+    FileType file_type; // stores file type determined from input parameters
 
     std::pair<bool, FileType> get_supported_type(const std::string name)
     {
@@ -180,7 +183,8 @@ private:
     //than living in InputManager.
     FileContent read_point_cloud_csv(std::ifstream& stream, Progress& progress); // reads a point cloud data from csv and does what read_point_cloud does
     void parse_key_values(); // goes through supplied key-value pairs in file and sets parameters and returns the line where data starts from
-
+    bool is_flag(std::string str); // determines if a line in the input file is an input parameter
+    
     FileContent read_point_cloud(std::ifstream& stream, Progress& progress); //reads a point cloud and constructs a simplex tree representing the bifiltered Vietoris-Rips complex
     FileContent read_discrete_metric_space(std::ifstream& stream, Progress& progress); //reads data representing a discrete metric space with a real-valued function and constructs a simplex tree
     FileContent read_bifiltration(std::ifstream& stream, Progress& progress); //reads a bifiltration and constructs a simplex tree

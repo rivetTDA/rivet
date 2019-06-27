@@ -230,7 +230,7 @@ FileType& InputManager::get_file_type(std::string fileName)
     }
 
     parse_key_values();
-    std::string filetype_name = key_values["TYPE"];
+    std::string filetype_name = input_params.type;
 
     auto it = std::find_if(supported_types.begin(), supported_types.end(), [filetype_name](FileType t) { return t.identifier == filetype_name; });
 
@@ -242,22 +242,29 @@ FileType& InputManager::get_file_type(std::string fileName)
 }
 
 //function to run the input manager, requires a filename
-//  post condition: x_grades and x_exact have size x_bins, and they contain the grade values for the 2-D persistence module in double and exact form (respectively)
-//                  similarly for y_grades and y_exact
-FileContent InputManager::start(Progress& progress)
+//parses the file for input parameters
+void InputManager::start()
 {
     //read the file
     if (verbosity >= 2) {
         debug() << "READING FILE:" << input_params.fileName;
     }
-    auto file_type = get_file_type(input_params.fileName);
+    file_type = get_file_type(input_params.fileName);
+    
+} //end start()
+
+// function to process the data in the file
+//  post condition: x_grades and x_exact have size x_bins, and they contain the grade values for the 2-D persistence module in double and exact form (respectively)
+//                  similarly for y_grades and y_exact
+FileContent InputManager::process(Progress& progress)
+{
     std::ifstream infile(input_params.fileName); //input file
     if (!infile.is_open()) {
         throw std::runtime_error("Could not open input file.");
     }
     auto data = file_type.parser(infile, progress);
     return data;
-} //end start()
+}
 
 InputError::InputError(unsigned line, std::string message)
     : std::runtime_error("line " + std::to_string(line) + ": " + message)
@@ -310,6 +317,20 @@ FileContent InputManager::read_messagepack(std::ifstream& stream, Progress& prog
         from_messages(templatePointsMessage, arrangementMessage).release());
 }
 
+// if is starts with -- or -<non-digit> or <non-digit>, it is a flag
+bool InputManager::is_flag(std::string str)
+{
+    // use ASCII values to check if digit or not
+    int first = (char)str[0];
+    int second = (char)str[1];
+
+    if (first == 45 && second == 45) return true;
+    if (first == 45 && (second < 48 || second > 57)) return true;
+    if (first < 48 || first > 57) return true;
+
+    return false;
+}
+
 void InputManager::parse_key_values()
 {
     // open as a separate file, not the reference
@@ -317,195 +338,186 @@ void InputManager::parse_key_values()
     FileInputReader reader(input_file);
 
     std::pair<std::vector<std::string>, unsigned> line_info;
-    int num_lines = 0, flag = 1;
+    int num_lines = 0;
 
     try {
         while (reader.has_next_line()) {
             line_info = reader.next_line_csv();
             // support for old file format
             if (line_info.first[0] == "points" || line_info.first[0] == "metric" || line_info.first[0] == "bifiltration" || line_info.first[0] == "firep" || line_info.first[0] == "RIVET_msgpack") {
-                key_values["TYPE"] = line_info.first[0];;
-                flag = 0;
-                break;
+                input_params.type = line_info.first[0];
+                return;
             }
-            // key value pairs separated by ':'
-            if (line_info.first[0].find(':') == std::string::npos)
+            // check if line contains flags or data
+            if (!is_flag(line_info.first[0]))
                 break;
             num_lines++;
             // separate into keys and values
             std::vector<std::string> line;
-            std::stringstream ss(line_info.first[0]);
-            std::string word;
-            while (std::getline(ss, word, ':')) {
-                boost::trim(word);
-                line.push_back(word);
-            }
-            // determine key and set appropriate value
+            boost::split(line, line_info.first[0], boost::is_space(std::locale()), boost::token_compress_on);
+
+            // determine input parameter being set
             // handle error checking here
-            if (line[0] == "DIMENSION") {
-                try {
-                    // dimension cannot be less than 1
-                    int dim = std::stoi(line[1]);
-                    if (dim < 1) throw std::runtime_error("Error");
-                } catch (std::exception& e) {
-                    throw std::runtime_error("Invalid option for DIMENSION");
+            if (line[0] == "--dimension") {
+                if (input_params.dimension == 0) {
+                    try {
+                        // dimension cannot be less than 1
+                        int dim = std::stoi(line[1]);
+                        if (dim < 1) throw std::runtime_error("Error");
+                        input_params.dimension = dim;
+                    } catch (std::exception& e) {
+                        throw std::runtime_error("Invalid argument for --dimension");
+                    }
                 }
-                key_values["DIMENSION"] = line[1];
-            } else if (line[0] == "MAX_DISTANCE") {
-                try {
-                    // max distance cannot be less than 0
-                    int dist = std::stoi(line[1]);
-                    if (dist <= 0) throw std::runtime_error("Error");
-                } catch (std::exception& e) {
-                    throw std::runtime_error("Invalid option for MAX_DISTANCE");
+            } 
+            else if (line[0] == "--max-dist") {
+                if (input_params.max_dist == -1) {
+                    try {
+                        // max distance cannot be less than 0
+                        exact dist = str_to_exact(line[1]);
+                        if (dist <= 0) throw std::runtime_error("Error");
+                        input_params.max_dist = dist;
+                    } catch (std::exception& e) {
+                        throw std::runtime_error("Invalid argument for --max-dist");
+                    }
                 }
-                key_values["MAX_DISTANCE"] = line[1];
-            } else if (line[0] == "X_LABEL") {
-                key_values["X_LABEL"] = line[1];
-            } else if (line[0] == "Y_LABEL") {
-                key_values["Y_LABEL"] = line[1];
-            } else if (line[0] == "X_REVERSE") {
-                // Y,y,N,n are only valid options
-                if (line[1] == "Y" || line[1] == "y" || line[1] == "N" || line[1] == "n") {
-                    key_values["X_REVERSE"] = line[1];
-                } else {
-                    throw std::runtime_error("Invalid option for X_REVERSE");
-                }
-            } else if (line[0] == "FUNCTION") {
-                // Y,y,N,n are only valid options
-                if (line[1] == "Y" || line[1] == "y" || line[1] == "N" || line[1] == "n") {
-                    key_values["FUNCTION"] = line[1];
-                } else {
-                    throw std::runtime_error("Invalid option for FUNCTION");
-                }
-            } else if (line[0] == "TYPE") {
+            } 
+            else if (line[0] == "--x-label") {
+                key_values["x_label"] = line[1];
+            } 
+            else if (line[0] == "--y-label") {
+                key_values["y_label"] = line[1];
+            } 
+            else if (line[0] == "--x-reverse") {
+                if(!input_params.x_reverse)
+                    input_params.x_reverse = true;
+            } 
+            else if (line[0] == "--y-reverse") {
+                if(!input_params.y_reverse)
+                    input_params.y_reverse = true;
+            } 
+            else if (line[0] == "--function") {
+                if(!input_params.function)
+                    input_params.function = true;
+            } 
+            else if (line[0] == "--type") {
+                if (input_params.type == "") {
                 // specifies file type, throw error if unknown
-                if (line[1] != "csv-points" && line[1] != "points" && line[1] != "metric" && line[1] != "bifiltration" && line[1] != "firep" && line[1] != "RIVET_msgpack")
-                    throw std::runtime_error("Unsupported file type");
-                key_values["TYPE"] = line[1];
-            } else {
-                throw std::runtime_error("Invalid input parameter");
+                    if (line[1] != "csv-points" && line[1] != "points" && line[1] != "metric" && line[1] != "bifiltration" && line[1] != "firep" && line[1] != "RIVET_msgpack")
+                        throw std::runtime_error("Invalid argument for --type");
+                    input_params.type = line[1];
+                }
+            } 
+            else {
+                throw std::runtime_error("Invalid option" + line[0] + "at line " + std::to_string(line_info.second));
             }
         }
     } catch (std::exception& e) {
         throw InputError(line_info.second, e.what());
     }
 
-    // do this only for files with key-values
-    if (flag) {
-        if (key_values.count("TYPE") <= 0)
-        {
-            // default file type is point cloud in csv format
-            key_values["TYPE"] = "csv-points";
-        }
-        if (key_values.count("DIMENSION") > 0)
-        {
-            // if dimension is set and function is not
-            // determine if there is an extra function value or not
-            int dimension = line_info.first.size();
-            if (dimension == std::stoi(key_values["DIMENSION"])+1 && key_values.count("FUNCTION") <= 0)
-                key_values["FUNCTION"] = "Y";
-        } else {
-            // if dimension is not set and function is set
-            // determine value of dimension
-            int dimension = line_info.first.size();
-            if (key_values.count("FUNCTION")) {
-                if (key_values["FUNCTION"] == "Y" || key_values["FUNCTION"] == "y")
-                    dimension--;
-            }
-            key_values["DIMENSION"] = std::to_string(dimension);
-        }
+    if (input_params.type == "")
+    {
+        // default file type is point cloud in csv format
+        input_params.type = "csv-points";
+    }
+    if (input_params.dimension != 0 && !input_params.function)
+    {
+        // if dimension is set and function is not
+        // determine if there is an extra function value or not
+        int dimension = line_info.first.size();
+        if (dimension == (input_params.dimension+1))
+            input_params.function = true;
+    } else if (input_params.dimension == 0){
+        // if dimension is not set and function is set
+        // determine value of dimension
+        int dimension = line_info.first.size();
+        if (input_params.function)
+            input_params.dimension = dimension-1;
+        else
+            input_params.dimension = dimension;
+    }
 
-        // if function is not set, set value to "N"
-        if (key_values.count("FUNCTION") > 0)
-        {
-            ;
-        } else {
-            key_values["FUNCTION"] = "N";
-        }
+    // skip stores number of lines to skip
+    key_values["skip"] = std::to_string(num_lines);
+    input_file.close();
 
-        // skip stores number of lines to skip
-        key_values["SKIP"] = std::to_string(num_lines);
-        input_file.close();
+    // print out information based on verbosity level
+    if (key_values.count("dimension") > 0) {
+        if (verbosity >= 4) {
+            debug() << "  Point cloud lives in dimension:" << input_params.dimension;
+        }
+    }
+
+    if (input_params.max_dist != -1) {
+        if (verbosity >= 4) {
+            debug() << "  Maximum distance of edges in Rips complex:" << input_params.max_dist;
+        }
+    } else {
+        if (verbosity >= 4) {
+            debug() << "  No maximum distance specified. Using maximum value in distance matrix";
+        }
+    }
+
+    if (input_params.function) {
+        if (verbosity >= 6) {
+            debug() << "InputManager: Point cloud file has function values. Creating Vietoris-Rips complex.";
+        }
+    } else {
+        // degree-Rips if function values are not specified
+        if (verbosity >= 6) {
+            debug() << "InputManager: Point cloud file does not have function values. Creating Degree-Rips complex.";
+        }
+        input_params.x_reverse = true;
+        input_params.x_label = "degree";
+    }
+
+    if (key_values.count("x_label") > 0 && input_params.function) {
+        input_params.x_label = key_values["x_label"];
+    }
+
+    if (key_values.count("y_label") > 0) {
+        input_params.y_label = key_values["y_label"];
+    } else {
+        input_params.y_label = "distance";
     }
     
 }
 
 FileContent InputManager::read_point_cloud_csv(std::ifstream& stream, Progress& progress)
 {
-    // same as read_point_cloud but adjusted for key-value inputs in the beginning
-    // handles csv data instead of space ssv
+    // same as read_point_cloud but adjusted for new parsing method
+    // handles csv data instead of ssv
     FileInputReader reader(stream);
     auto data = new InputData();
     if (verbosity >= 6) {
         debug() << "InputManager: Found a point cloud file.";
     }
-    unsigned dimension;
-    exact max_dist = -1;
-    bool hasFunction = false;
 
-    bool x_reverse = false;
-    bool y_reverse = false;
+    // set all variables from input_params
+    unsigned dimension = input_params.dimension;
+    exact max_dist = input_params.max_dist;
+    bool hasFunction = input_params.function;
 
-    unsigned expectedNumTokens;
+    bool x_reverse = input_params.x_reverse;
+    bool y_reverse = input_params.y_reverse;
+
+    unsigned expectedNumTokens = dimension;
+    if (hasFunction)
+        expectedNumTokens++;
+
+    data->x_label = input_params.x_label;
+    data->y_label = input_params.y_label;
 
     std::vector<DataPoint> points;
 
-    // skip lines with key-values
-    int to_skip = std::stoi(key_values["SKIP"]);
+    // skip lines with flags
+    int to_skip = std::stoi(key_values["skip"]);
 
     std::pair<std::vector<std::string>, unsigned> line_info;
 
     for (int i = 0; i < to_skip; i++)
         reader.next_line_csv();
-
-    // set values from received key value pairs
-    if (key_values.count("DIMENSION") > 0) {
-        dimension = std::stoi(key_values["DIMENSION"]);
-        expectedNumTokens = dimension;
-        if (verbosity >= 4) {
-            debug() << "  Point cloud lives in dimension:" << key_values["DIMENSION"];
-        }
-    }
-
-    if (key_values.count("MAX_DISTANCE") > 0) {
-        max_dist = std::stoi(key_values["MAX_DISTANCE"]);
-        if (verbosity >= 4) {
-            debug() << "  Maximum distance of edges in Rips complex:" << key_values["MAX_DISTANCE"];
-        }
-    }
-
-    if (key_values.count("FUNCTION") > 0) {
-        if (key_values["FUNCTION"] == "Y" || key_values["FUNCTION"] == "y") {
-            hasFunction = true;
-            expectedNumTokens++;
-            if (verbosity >= 6) {
-                debug() << "InputManager: Point cloud file has function values. Creating Vietoris-Rips complex.";
-            }
-        } else {
-            // degree-Rips if function values are not specified
-            x_reverse = true;
-            data->x_label = "degree";
-            if (verbosity >= 6) {
-                debug() << "InputManager: Point cloud file does not have function values. Creating Degree-Rips complex.";
-            }
-        }
-    }
-
-    if (key_values.count("X_REVERSE") > 0 && hasFunction) {
-        if (key_values["X_REVERSE"] == "Y" || key_values["X_REVERSE"] == "y")
-            x_reverse = true;
-    }
-
-    if (key_values.count("X_LABEL") > 0 && hasFunction) {
-        data->x_label = key_values["X_LABEL"];
-    }
-
-    if (key_values.count("Y_LABEL") > 0) {
-        data->y_label = key_values["Y_LABEL"];
-    } else {
-        data->y_label = "distance";
-    }
 
     // STEP 1: read data file and store exact (rational) values
 
