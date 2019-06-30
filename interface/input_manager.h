@@ -167,6 +167,8 @@ private:
 
     std::vector<FileType> supported_types;
 
+    int to_skip; // stores the number of non-data lines in the input file
+
     std::map<std::string,std::string> key_values; // stores the key value pairs supplied in the input file
 
     FileType file_type; // stores file type determined from input parameters
@@ -181,9 +183,10 @@ private:
 
     //TODO: these methods could move to a separate file-per-filetype model rather
     //than living in InputManager.
-    FileContent read_point_cloud_csv(std::ifstream& stream, Progress& progress); // reads a point cloud data from csv and does what read_point_cloud does
+    FileContent read_point_cloud_new(std::ifstream& stream, Progress& progress); // reads a point cloud data from newly supported format and does what read_point_cloud does
     void parse_key_values(); // goes through supplied key-value pairs in file and sets parameters and returns the line where data starts from
     bool is_flag(std::string str); // determines if a line in the input file is an input parameter
+    void set_defaults(); // set default values for input parameters which are not supplied
     
     FileContent read_point_cloud(std::ifstream& stream, Progress& progress); //reads a point cloud and constructs a simplex tree representing the bifiltered Vietoris-Rips complex
     FileContent read_discrete_metric_space(std::ifstream& stream, Progress& progress); //reads data representing a discrete metric space with a real-valued function and constructs a simplex tree

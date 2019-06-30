@@ -196,8 +196,8 @@ InputManager::InputManager(InputParameters& params)
     : input_params(params)
     , verbosity(params.verbosity)
 {
-    register_file_type(FileType{ "csv-points", "point-cloud data", true,
-        std::bind(&InputManager::read_point_cloud_csv, this, std::placeholders::_1, std::placeholders::_2) });
+    register_file_type(FileType{ "new-points", "point-cloud data", true,
+        std::bind(&InputManager::read_point_cloud_new, this, std::placeholders::_1, std::placeholders::_2) });
     
     register_file_type(FileType{ "points", "point-cloud data", true,
         std::bind(&InputManager::read_point_cloud, this, std::placeholders::_1, std::placeholders::_2) });
@@ -342,19 +342,30 @@ void InputManager::parse_key_values()
 
     try {
         while (reader.has_next_line()) {
-            line_info = reader.next_line_csv();
+            line_info = reader.next_line();
             // support for old file format
             if (line_info.first[0] == "points" || line_info.first[0] == "metric" || line_info.first[0] == "bifiltration" || line_info.first[0] == "firep" || line_info.first[0] == "RIVET_msgpack") {
                 input_params.type = line_info.first[0];
+                if (input_params.hom_degree == -1)
+                    input_params.hom_degree = 0;
+                if (input_params.x_bins == -1)
+                    input_params.x_bins = 0;
+                if (input_params.y_bins == -1)
+                    input_params.y_bins = 0;
+                if (input_params.verbosity == -1)
+                    input_params.verbosity = 0;
+                if (input_params.outputFormat == "")
+                    input_params.outputFormat = "msgpack";
+                if (input_params.num_threads == -1)
+                    input_params.num_threads = 0;
                 return;
             }
             // check if line contains flags or data
             if (!is_flag(line_info.first[0]))
                 break;
             num_lines++;
-            // separate into keys and values
-            std::vector<std::string> line;
-            boost::split(line, line_info.first[0], boost::is_space(std::locale()), boost::token_compress_on);
+
+            std::vector<std::string> line = line_info.first;
 
             // determine input parameter being set
             // handle error checking here
@@ -382,6 +393,78 @@ void InputManager::parse_key_values()
                     }
                 }
             } 
+            else if (line[0] == "--homology" || line[0] == "-H") {
+                if (input_params.hom_degree == -1) {
+                    try {
+                        // homology degree cannot be less than 0
+                        int hom = std::stoi(line[1]);
+                        if (hom < 0) throw std::runtime_error("Error");
+                        input_params.hom_degree = hom;
+                    } catch (std::exception& e) {
+                        throw std::runtime_error("Invalid argument for --homology");
+                    }
+                }
+            }
+            else if (line[0] == "--xbins" || line[0] == "-x") {
+                if (input_params.x_bins == -1) {
+                    try {
+                        // x_bins degree cannot be less than 0
+                        int x = std::stoi(line[1]);
+                        if (x < 0) throw std::runtime_error("Error");
+                        input_params.x_bins = x;
+                    } catch (std::exception& e) {
+                        throw std::runtime_error("Invalid argument for --xbins");
+                    }
+                }
+            }
+            else if (line[0] == "--ybins" || line[0] == "-y") {
+                if (input_params.y_bins == -1) {
+                    try {
+                        // x_bins degree cannot be less than 0
+                        int y = std::stoi(line[1]);
+                        if (y < 0) throw std::runtime_error("Error");
+                        input_params.y_bins = y;
+                    } catch (std::exception& e) {
+                        throw std::runtime_error("Invalid argument for --ybins");
+                    }
+                }
+            }
+            else if (line[0] == "--verbosity" || line[0] == "-V") {
+                if (input_params.verbosity == -1) {
+                    try {
+                        // verbosity is between 0 and 10
+                        int v = std::stoi(line[1]);
+                        if (v < 0 || v > 10) throw std::runtime_error("Error");
+                        input_params.verbosity = v;
+                    } catch (std::exception& e) {
+                        throw std::runtime_error("Invalid argument for --verbosity");
+                    }
+                }
+            }
+            else if (line[0] == "--format" || line[0] == "-f") {
+                if (input_params.outputFormat == "") {
+                    try {
+                        // output format is either R0 or msgpack
+                        std::string o = line[1];
+                        if (o != "R0" && o != "msgpack") throw std::runtime_error("Error");
+                        input_params.outputFormat = o;
+                    } catch (std::exception& e) {
+                        throw std::runtime_error("Invalid argument for --format");
+                    }
+                }
+            }
+            else if (line[0] == "--num_threads") {
+                if (input_params.num_threads == -1) {
+                    try {
+                        // number of threads cannot be less than 0
+                        int nt = std::stoi(line[1]);
+                        if (nt < 0) throw std::runtime_error("Error");
+                        input_params.num_threads = nt;
+                    } catch (std::exception& e) {
+                        throw std::runtime_error("Invalid argument for --num_threads");
+                    }
+                }
+            }
             else if (line[0] == "--x-label") {
                 key_values["x_label"] = line[1];
             } 
@@ -400,10 +483,30 @@ void InputManager::parse_key_values()
                 if(!input_params.function)
                     input_params.function = true;
             } 
+            else if (line[0] == "--binary") {
+                if(!input_params.binary)
+                    input_params.binary = true;
+            }
+            else if (line[0] == "--minpres") {
+                if(!input_params.minpres)
+                    input_params.minpres = true;
+            }
+            else if (line[0] == "--betti" || line[0] == "-b") {
+                if(!input_params.betti)
+                    input_params.betti = true;
+            }
+            else if (line[0] == "--bounds") {
+                if(!input_params.bounds)
+                    input_params.bounds = true;
+            }
+            else if (line[0] == "--koszul" || line[0] == "-k") {
+                if(!input_params.koszul)
+                    input_params.koszul = true;
+            }
             else if (line[0] == "--type") {
                 if (input_params.type == "") {
                 // specifies file type, throw error if unknown
-                    if (line[1] != "csv-points" && line[1] != "points" && line[1] != "metric" && line[1] != "bifiltration" && line[1] != "firep" && line[1] != "RIVET_msgpack")
+                    if (line[1] != "new-points" && line[1] != "points" && line[1] != "metric" && line[1] != "bifiltration" && line[1] != "firep" && line[1] != "RIVET_msgpack")
                         throw std::runtime_error("Invalid argument for --type");
                     input_params.type = line[1];
                 }
@@ -416,11 +519,10 @@ void InputManager::parse_key_values()
         throw InputError(line_info.second, e.what());
     }
 
-    if (input_params.type == "")
-    {
-        // default file type is point cloud in csv format
-        input_params.type = "csv-points";
-    }
+    // skip stores number of lines to skip
+    to_skip = num_lines;
+    input_file.close();
+
     if (input_params.dimension != 0 && !input_params.function)
     {
         // if dimension is set and function is not
@@ -438,36 +540,49 @@ void InputManager::parse_key_values()
             input_params.dimension = dimension;
     }
 
-    // skip stores number of lines to skip
-    key_values["skip"] = std::to_string(num_lines);
-    input_file.close();
+    set_defaults();
+}
 
-    // print out information based on verbosity level
-    if (key_values.count("dimension") > 0) {
-        if (verbosity >= 4) {
-            debug() << "  Point cloud lives in dimension:" << input_params.dimension;
-        }
+void InputManager::set_defaults()
+{
+    // set defaults
+    if (input_params.type == "")
+    {
+        // default file type is new point cloud format
+        input_params.type = "new-points";
+    }
+    if (input_params.hom_degree == -1)
+    {
+        // default homology degree is 0
+        input_params.hom_degree = 0;
+    }
+    if (input_params.x_bins == -1)
+    {
+        // default xbins is 0
+        input_params.x_bins = 0;
+    }
+    if (input_params.y_bins == -1)
+    {
+        // default ybins is 0
+        input_params.y_bins = 0;
+    }
+    if (input_params.verbosity == -1)
+    {
+        // default verbosity is 0
+        input_params.verbosity = 0;
+    }
+    if (input_params.outputFormat == "")
+    {
+        // default format is msgpack
+        input_params.outputFormat = "msgpack";
     }
 
-    if (input_params.max_dist != -1) {
-        if (verbosity >= 4) {
-            debug() << "  Maximum distance of edges in Rips complex:" << input_params.max_dist;
-        }
-    } else {
-        if (verbosity >= 4) {
-            debug() << "  No maximum distance specified. Using maximum value in distance matrix";
-        }
+    if (input_params.num_threads == -1)
+    {
+        // default number of threads is 0
+        input_params.num_threads = 0;
     }
-
-    if (input_params.function) {
-        if (verbosity >= 6) {
-            debug() << "InputManager: Point cloud file has function values. Creating Vietoris-Rips complex.";
-        }
-    } else {
-        // degree-Rips if function values are not specified
-        if (verbosity >= 6) {
-            debug() << "InputManager: Point cloud file does not have function values. Creating Degree-Rips complex.";
-        }
+    if (!input_params.function) {
         input_params.x_reverse = true;
         input_params.x_label = "degree";
     }
@@ -484,10 +599,10 @@ void InputManager::parse_key_values()
     
 }
 
-FileContent InputManager::read_point_cloud_csv(std::ifstream& stream, Progress& progress)
+FileContent InputManager::read_point_cloud_new(std::ifstream& stream, Progress& progress)
 {
     // same as read_point_cloud but adjusted for new parsing method
-    // handles csv data instead of ssv
+    // handles new format data instead
     FileInputReader reader(stream);
     auto data = new InputData();
     if (verbosity >= 6) {
@@ -512,19 +627,17 @@ FileContent InputManager::read_point_cloud_csv(std::ifstream& stream, Progress& 
     std::vector<DataPoint> points;
 
     // skip lines with flags
-    int to_skip = std::stoi(key_values["skip"]);
-
     std::pair<std::vector<std::string>, unsigned> line_info;
 
     for (int i = 0; i < to_skip; i++)
-        reader.next_line_csv();
+        reader.next_line();
 
     // STEP 1: read data file and store exact (rational) values
 
     try {      
 
         while (reader.has_next_line()) {
-            line_info = reader.next_line_csv();
+            line_info = reader.next_line();
             std::vector<std::string> tokens = line_info.first;
             if (tokens.size() != expectedNumTokens) {
                 std::stringstream ss;
@@ -693,7 +806,7 @@ FileContent InputManager::read_point_cloud_csv(std::ifstream& stream, Progress& 
         debug() << "     y-grades: " << data->y_exact.size();
     }
 
-    data->bifiltration_data.reset(new BifiltrationData(input_params.dim, input_params.verbosity));
+    data->bifiltration_data.reset(new BifiltrationData(input_params.hom_degree, input_params.verbosity));
     if (hasFunction) {
         data->bifiltration_data->build_VR_complex(time_indexes, dist_indexes, data->x_exact.size(), data->y_exact.size());
 
@@ -707,12 +820,12 @@ FileContent InputManager::read_point_cloud_csv(std::ifstream& stream, Progress& 
 
     if (verbosity >= 8) {
         int size;
-        size = data->bifiltration_data->get_size(input_params.dim - 1);
-        debug() << "There are" << size << "simplices of dimension" << input_params.dim - 1;
-        size = data->bifiltration_data->get_size(input_params.dim);
-        debug() << "There are" << size << "simplices of dimension" << input_params.dim;
-        size = data->bifiltration_data->get_size(input_params.dim + 1);
-        debug() << "There are" << size << "simplices of dimension" << input_params.dim + 1;
+        size = data->bifiltration_data->get_size(input_params.hom_degree - 1);
+        debug() << "There are" << size << "simplices of dimension" << input_params.hom_degree - 1;
+        size = data->bifiltration_data->get_size(input_params.hom_degree);
+        debug() << "There are" << size << "simplices of dimension" << input_params.hom_degree;
+        size = data->bifiltration_data->get_size(input_params.hom_degree + 1);
+        debug() << "There are" << size << "simplices of dimension" << input_params.hom_degree + 1;
     }
 
     data->free_implicit_rep.reset(new FIRep(*(data->bifiltration_data), input_params.verbosity));
@@ -990,7 +1103,7 @@ FileContent InputManager::read_point_cloud(std::ifstream& stream, Progress& prog
         debug() << "     y-grades: " << data->y_exact.size();
     }
 
-    data->bifiltration_data.reset(new BifiltrationData(input_params.dim, input_params.verbosity));
+    data->bifiltration_data.reset(new BifiltrationData(input_params.hom_degree, input_params.verbosity));
     if (hasFunction) {
         data->bifiltration_data->build_VR_complex(time_indexes, dist_indexes, data->x_exact.size(), data->y_exact.size());
 
@@ -1004,12 +1117,12 @@ FileContent InputManager::read_point_cloud(std::ifstream& stream, Progress& prog
 
     if (verbosity >= 8) {
         int size;
-        size = data->bifiltration_data->get_size(input_params.dim - 1);
-        debug() << "There are" << size << "simplices of dimension" << input_params.dim - 1;
-        size = data->bifiltration_data->get_size(input_params.dim);
-        debug() << "There are" << size << "simplices of dimension" << input_params.dim;
-        size = data->bifiltration_data->get_size(input_params.dim + 1);
-        debug() << "There are" << size << "simplices of dimension" << input_params.dim + 1;
+        size = data->bifiltration_data->get_size(input_params.hom_degree - 1);
+        debug() << "There are" << size << "simplices of dimension" << input_params.hom_degree - 1;
+        size = data->bifiltration_data->get_size(input_params.hom_degree);
+        debug() << "There are" << size << "simplices of dimension" << input_params.hom_degree;
+        size = data->bifiltration_data->get_size(input_params.hom_degree + 1);
+        debug() << "There are" << size << "simplices of dimension" << input_params.hom_degree + 1;
     }
 
     data->free_implicit_rep.reset(new FIRep(*(data->bifiltration_data), input_params.verbosity));
@@ -1237,7 +1350,7 @@ FileContent InputManager::read_discrete_metric_space(std::ifstream& stream, Prog
     }
 
     //build the Vietoris-Rips bifiltration from the discrete index vectors
-    data->bifiltration_data.reset(new BifiltrationData(input_params.dim, input_params.verbosity));
+    data->bifiltration_data.reset(new BifiltrationData(input_params.hom_degree, input_params.verbosity));
     if (hasFunction) {
         data->bifiltration_data->build_VR_complex(value_indexes, dist_indexes, data->x_exact.size(), data->y_exact.size());
     } else {
@@ -1251,12 +1364,12 @@ FileContent InputManager::read_discrete_metric_space(std::ifstream& stream, Prog
 
     if (verbosity >= 8) {
         int size;
-        size = data->bifiltration_data->get_size(input_params.dim - 1);
-        debug() << "There are" << size << "simplices of dimension" << input_params.dim - 1;
-        size = data->bifiltration_data->get_size(input_params.dim);
-        debug() << "There are" << size << "simplices of dimension" << input_params.dim;
-        size = data->bifiltration_data->get_size(input_params.dim + 1);
-        debug() << "There are" << size << "simplices of dimension" << input_params.dim + 1;
+        size = data->bifiltration_data->get_size(input_params.hom_degree - 1);
+        debug() << "There are" << size << "simplices of dimension" << input_params.hom_degree - 1;
+        size = data->bifiltration_data->get_size(input_params.hom_degree);
+        debug() << "There are" << size << "simplices of dimension" << input_params.hom_degree;
+        size = data->bifiltration_data->get_size(input_params.hom_degree + 1);
+        debug() << "There are" << size << "simplices of dimension" << input_params.hom_degree + 1;
     }
 
     data->free_implicit_rep.reset(new FIRep(*(data->bifiltration_data), input_params.verbosity));
@@ -1295,7 +1408,7 @@ FileContent InputManager::read_bifiltration(std::ifstream& stream, Progress& pro
     data->y_label = is_yreversed_and_label.second;
     exact yrev_sign = y_reverse ? -1 : 1;
 
-    data->bifiltration_data.reset(new BifiltrationData(input_params.dim, input_params.verbosity));
+    data->bifiltration_data.reset(new BifiltrationData(input_params.hom_degree, input_params.verbosity));
 
     //temporary data structures to store grades
     ExactSet x_set; //stores all unique x-values; must DELETE all elements later!
@@ -1398,7 +1511,7 @@ FileContent InputManager::read_firep(std::ifstream& stream, Progress& progress)
     //Skip file type line
     reader.next_line();
 
-    data->bifiltration_data.reset(new BifiltrationData(input_params.dim, input_params.verbosity)); //Will be dummy bifiltration with no stored data
+    data->bifiltration_data.reset(new BifiltrationData(input_params.hom_degree, input_params.verbosity)); //Will be dummy bifiltration with no stored data
 
     //temporary data structures to store grades
     ExactSet x_set; //stores all unique x-values; must DELETE all elements later!
@@ -1543,7 +1656,7 @@ FileContent InputManager::read_RIVET_data(std::ifstream& stream, Progress& progr
     debug() << join(line);
     line_info = reader.next_line();
     try {
-        input_params.dim = std::stoi(line_info.first[0]);
+        input_params.hom_degree = std::stoi(line_info.first[0]);
         data->x_label = join(reader.next_line().first);
         data->y_label = join(reader.next_line().first);
 
