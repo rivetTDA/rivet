@@ -41,7 +41,6 @@ public:
     bool has_next_line();
     //returns the next line, as a vector of strings, plus the line number at which the line was found
     std::pair<std::vector<std::string>, unsigned> next_line();
-    std::pair<std::vector<std::string>, unsigned> next_line_csv();
 
 private:
     std::ifstream& in;
@@ -49,7 +48,6 @@ private:
     bool next_line_found;
     std::vector<std::string> next_line_tokens;
     void find_next_line();
-    void find_next_line_csv();
 };
 
 #endif // FILEINPUTREADER_H

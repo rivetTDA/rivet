@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **********************************************************************/
 
 #include "file_input_reader.h"
+#include <iostream>
 
 #include <boost/algorithm/string.hpp>
 
@@ -27,7 +28,7 @@ FileInputReader::FileInputReader(std::ifstream& file)
     , line_number(0)
     , next_line_found(false)
 {
-    find_next_line_csv();
+    find_next_line();
 }
 
 //finds the next line in the file that is not empty and not a comment, if such line exists
@@ -41,24 +42,12 @@ void FileInputReader::find_next_line()
         if (line.empty() || line[0] == '#')
             continue;
         next_line_tokens.clear();
-        boost::split(next_line_tokens, line, boost::is_space(std::locale()), boost::token_compress_on);
-        next_line_found = true;
-        break;
-    }
-}
-
-// same thing is find_next_line()
-// reads in the data by splitting it by ',' instead of ' '
-void FileInputReader::find_next_line_csv()
-{
-    std::string line;
-    while (std::getline(in, line)) {
-        line_number++;
-        boost::trim(line);
-        if (line.empty() || line[0] == '#')
-            continue;
-        next_line_tokens.clear();
-        boost::split(next_line_tokens, line, boost::is_any_of(","), boost::token_compress_on);
+        if (line.find(",") == std::string::npos) {
+            boost::split(next_line_tokens, line, boost::is_space(std::locale()), boost::token_compress_on);
+        }
+        else {
+            boost::split(next_line_tokens, line, boost::is_any_of(","), boost::token_compress_on);
+        }
         next_line_found = true;
         break;
     }
@@ -78,18 +67,6 @@ std::pair<std::vector<std::string>, unsigned> FileInputReader::next_line()
 
     next_line_found = false;
     find_next_line();
-
-    return std::make_pair(current, num);
-}
-
-// same thing is next_line() but for csv file parsing
-std::pair<std::vector<std::string>, unsigned> FileInputReader::next_line_csv()
-{
-    std::vector<std::string> current = next_line_tokens;
-    auto num = line_number;
-
-    next_line_found = false;
-    find_next_line_csv();
 
     return std::make_pair(current, num);
 }
