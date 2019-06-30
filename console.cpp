@@ -52,7 +52,7 @@ static const char USAGE[] =
       rivet_console <module_invariants_file> --barcodes <line_file> [-V <verbosity>]
       rivet_console <input_file> <module_invariants_file> [-H <hom_degree>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [-f <format>] [--binary] [--koszul] 
                                                           [--max-dist <distance>] [--dimension <dims>] [--num_threads <num_threads>] [--function] [--x-reverse] 
-                                                          [--y-reverse] [--type <type>]
+                                                          [--y-reverse] [--type <type>] [--x-label <label>] [--y-label <label>]
 
 
     Options:
@@ -82,6 +82,8 @@ static const char USAGE[] =
       --dimension <dims>                       Dimension in which data points are.
       --max-dist <distance>                    Maximum distance to be considered while building the Rips complex.
       --function                               Indicates that every data point has a function value associated with it.
+      --x-label <label>                        Name of the parameter displayed along the x-axis.
+      --y-label <label>                        Name of the parameter displayed along the y-axis.
       --barcodes <line_file>                   Print barcodes for the line queries in line_file, then exit.
                                                
 
@@ -315,6 +317,8 @@ int main(int argc, char* argv[])
     bool verb = args["--verbosity"].isString();
     bool out_form = args["--format"].isString();
     bool num_threads = args["--num_threads"].isString();
+    bool x_label = args["--x-label"].isString();
+    bool y_label = args["--y-label"].isString();
 
     std::string slices;
     if (barcodes) {
@@ -405,6 +409,22 @@ int main(int argc, char* argv[])
         params.num_threads = nt;
     } else {
         params.num_threads = -1;
+    }
+
+    if (x_label) {
+        params.x_label = args["--x-label"].asString();
+        if (params.x_label == "")
+            throw std::runtime_error("Invalid argument for --x-label");
+    } else {
+        params.x_label = "";
+    }
+
+    if (y_label) {
+        params.y_label = args["--y-label"].asString();
+        if (params.y_label == "")
+            throw std::runtime_error("Invalid argument for --y-label");
+    } else {
+        params.y_label = "";
     }
 
     InputManager inputManager(params);

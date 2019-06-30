@@ -466,10 +466,16 @@ void InputManager::parse_key_values()
                 }
             }
             else if (line[0] == "--x-label") {
-                key_values["x_label"] = line[1];
+                if (input_params.x_label == "") {
+                    for (int i = 1; i < line.size(); i++)
+                        input_params.x_label += line[i] + " ";
+                }
             } 
             else if (line[0] == "--y-label") {
-                key_values["y_label"] = line[1];
+                if (input_params.y_label == "") {
+                    for (int i = 1; i < line.size(); i++)
+                        input_params.y_label += line[i] + " ";
+                }
             } 
             else if (line[0] == "--x-reverse") {
                 if(!input_params.x_reverse)
@@ -582,18 +588,16 @@ void InputManager::set_defaults()
         // default number of threads is 0
         input_params.num_threads = 0;
     }
-    if (!input_params.function) {
+    if (!input_params.function)
+    {
+        // degree rips
         input_params.x_reverse = true;
         input_params.x_label = "degree";
     }
 
-    if (key_values.count("x_label") > 0 && input_params.function) {
-        input_params.x_label = key_values["x_label"];
-    }
-
-    if (key_values.count("y_label") > 0) {
-        input_params.y_label = key_values["y_label"];
-    } else {
+    if (input_params.y_label == "")
+    {
+        // default ylabel is distance
         input_params.y_label = "distance";
     }
     

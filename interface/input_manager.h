@@ -169,8 +169,6 @@ private:
 
     int to_skip; // stores the number of non-data lines in the input file
 
-    std::map<std::string,std::string> key_values; // stores the key value pairs supplied in the input file
-
     FileType file_type; // stores file type determined from input parameters
 
     std::pair<bool, FileType> get_supported_type(const std::string name)
