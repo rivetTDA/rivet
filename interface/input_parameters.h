@@ -32,14 +32,19 @@ struct InputParameters {
     std::string fileName; //name of data file
     std::string shortName; //name of data file, without path
     std::string outputFile; //name of the file where the augmented arrangement should be saved
-    int dim; //dimension of homology to compute
-    unsigned x_bins; //number of bins for x-coordinate (if 0, then bins are not used for x)
-    unsigned y_bins; //number of bins for y-coordinate (if 0, then bins are not used for y)
+    int hom_degree; //degree of homology to compute
+    int x_bins; //number of bins for x-coordinate (if 0, then bins are not used for x)
+    int y_bins; //number of bins for y-coordinate (if 0, then bins are not used for y)
     int verbosity; //controls the amount of console output printed
     std::string x_label; //used by configuration dialog
     std::string y_label; //used by configuration dialog
     std::string outputFormat; // Supported values: R0, R1
     int num_threads; //number of openmp threads to be created
+    bool binary; //include binary data in MI file
+    bool minpres; //print minimal presentation and exit
+    bool betti; //print betti number information
+    bool bounds; //print lower and upper bounds of module in MI file
+    bool koszul; //use koszul homology based algorithm
     exact max_dist; //maximum distance to be considered while building Rips complex
     int dimension; //dimension of the space where the points lie
     bool function; //specifies if the data has a function value
@@ -49,9 +54,9 @@ struct InputParameters {
     template <typename Archive>
     void serialize(Archive& ar, const unsigned int /*version*/)
     {
-        ar& fileName& shortName& outputFile& dim& x_bins& y_bins& verbosity& x_label& y_label& outputFormat;
+        ar& fileName& shortName& outputFile& hom_degree& x_bins& y_bins& verbosity& x_label& y_label& outputFormat;
     }
-    MSGPACK_DEFINE(fileName, shortName, outputFile, dim, x_bins, y_bins, verbosity, x_label, y_label, outputFormat);
+    MSGPACK_DEFINE(fileName, shortName, outputFile, hom_degree, x_bins, y_bins, verbosity, x_label, y_label, outputFormat);
 };
 
 #endif // INPUT_PARAMETERS_H
