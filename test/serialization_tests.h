@@ -28,7 +28,7 @@ TEST_CASE("InputParameters can be roundtripped with msgpack", "[serialization - 
 {
 
     InputParameters params;
-    params.dim = 0;
+    params.hom_degree = 0;
     params.outputFile = "bogus";
     params.fileName = "inbogus";
     params.outputFormat = "flergh";
@@ -39,7 +39,7 @@ TEST_CASE("InputParameters can be roundtripped with msgpack", "[serialization - 
 
     InputParameters result = round_trip_msgpack(params);
 
-    REQUIRE(params.dim == result.dim);
+    REQUIRE(params.hom_degree == result.hom_degree);
     REQUIRE(params.fileName == result.fileName);
     REQUIRE(params.outputFile == result.outputFile);
     REQUIRE(params.outputFormat == result.outputFormat);
