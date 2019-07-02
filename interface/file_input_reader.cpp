@@ -28,12 +28,26 @@ FileInputReader::FileInputReader(std::ifstream& file)
     , line_number(0)
     , next_line_found(false)
 {
-    find_next_line();
+    find_next_line(0);
+}
+
+// if it starts with -- or -<non-digit> or <non-digit>, it is a flag
+bool FileInputReader::is_flag(std::string str)
+{
+    // use ASCII values to check if digit or not
+    int first = (char)str[0];
+    int second = (char)str[1];
+
+    if (first == 45 && second == 45) return true;
+    if (first == 45 && (second < 48 || second > 57)) return true;
+    if (first < 48 || first > 57) return true;
+
+    return false;
 }
 
 //finds the next line in the file that is not empty and not a comment, if such line exists
 //this is the only function that should call in.readLine()
-void FileInputReader::find_next_line()
+void FileInputReader::find_next_line(int old)
 {
     std::string line;
     while (std::getline(in, line)) {
@@ -42,7 +56,7 @@ void FileInputReader::find_next_line()
         if (line.empty() || line[0] == '#')
             continue;
         next_line_tokens.clear();
-        if (line.find(",") == std::string::npos) {
+        if (old || line.find(",") == std::string::npos || is_flag(line)) {
             boost::split(next_line_tokens, line, boost::is_space(std::locale()), boost::token_compress_on);
         }
         else {
@@ -60,13 +74,13 @@ bool FileInputReader::has_next_line()
 }
 
 //returns the next line as a std::vector<std::string> of tokens
-std::pair<std::vector<std::string>, unsigned> FileInputReader::next_line()
+std::pair<std::vector<std::string>, unsigned> FileInputReader::next_line(int old)
 {
     std::vector<std::string> current = next_line_tokens;
     auto num = line_number;
 
     next_line_found = false;
-    find_next_line();
+    find_next_line(old);
 
     return std::make_pair(current, num);
 }

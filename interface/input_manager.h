@@ -182,10 +182,11 @@ private:
     //TODO: these methods could move to a separate file-per-filetype model rather
     //than living in InputManager.
     FileContent read_point_cloud_new(std::ifstream& stream, Progress& progress); // reads a point cloud data from newly supported format and does what read_point_cloud does
-    void parse_key_values(); // goes through supplied key-value pairs in file and sets parameters and returns the line where data starts from
+    void parse_args(); // goes through supplied arguments and sets parameters
+    void parse_points_old();
     bool is_flag(std::string str); // determines if a line in the input file is an input parameter
     void set_defaults(); // set default values for input parameters which are not supplied
-    
+
     FileContent read_point_cloud(std::ifstream& stream, Progress& progress); //reads a point cloud and constructs a simplex tree representing the bifiltered Vietoris-Rips complex
     FileContent read_discrete_metric_space(std::ifstream& stream, Progress& progress); //reads data representing a discrete metric space with a real-valued function and constructs a simplex tree
     FileContent read_bifiltration(std::ifstream& stream, Progress& progress); //reads a bifiltration and constructs a simplex tree
