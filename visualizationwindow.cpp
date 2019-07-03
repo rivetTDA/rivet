@@ -199,7 +199,7 @@ void VisualizationWindow::start_computation()
     auto shortName = QString::fromStdString(input_params.shortName);
     this->setWindowTitle("RIVET - " + shortName);
     ui->filenameLabel->setText( QStringLiteral("Input file: ").append(shortName) );
-    ui->homdimLabel->setText( QStringLiteral("Homology dimension: %1").arg(input_params.dim) );
+    ui->homdimLabel->setText( QStringLiteral("Homology dimension: %1").arg(input_params.hom_degree) );
 
 
 } //end start_computation()
@@ -1035,7 +1035,7 @@ QString VisualizationWindow::suggestedName(QString extension)
 {
     QSettings settings;
     auto name = QString::fromStdString(input_params.fileName + ".H"
-                    + std::to_string(input_params.dim)
+                    + std::to_string(input_params.hom_degree)
                     + "_" + std::to_string(input_params.x_bins)
                     + "_" + std::to_string(input_params.y_bins)
                     + ".")

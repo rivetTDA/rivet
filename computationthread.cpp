@@ -151,7 +151,7 @@ void ComputationThread::compute_from_file()
 
     args << QString::fromStdString(params.fileName)
          << QDir(QCoreApplication::applicationDirPath()).filePath("rivet_arrangement_temp")
-         << "-H" << QString::number(params.dim)
+         << "-H" << QString::number(params.hom_degree)
          << "-x" << QString::number(params.x_bins)
          << "-y" << QString::number(params.y_bins)
          << "-V" << QString::number(params.verbosity)

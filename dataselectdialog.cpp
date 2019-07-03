@@ -45,7 +45,7 @@ DataSelectDialog::DataSelectDialog(InputParameters& params, QWidget* parent)
     //set initial values
     if (!params.fileName.empty()) {
         detect_file_type();
-        ui->homDimSpinBox->setValue(params.dim);
+        ui->homDimSpinBox->setValue(params.hom_degree);
         ui->xbinSpinBox->setValue(params.x_bins);
         ui->ybinSpinBox->setValue(params.y_bins);
     } else {
@@ -74,7 +74,7 @@ void DataSelectDialog::closeEvent(QCloseEvent* event)
 
 void DataSelectDialog::on_computeButton_clicked()
 {
-    params.dim = ui->homDimSpinBox->value();
+    params.hom_degree = ui->homDimSpinBox->value();
     params.x_bins = ui->xbinSpinBox->value();
     params.y_bins = ui->ybinSpinBox->value();
 
@@ -128,11 +128,10 @@ void DataSelectDialog::detect_file_type()
     args.append("--identify");
     auto console = RivetConsoleApp::start(args);
 
-    if (!console->waitForStarted()) {
+    if (!console->waitForStarted()) {       
         invalid_file(RivetConsoleApp::errorMessage(console->error()));
         return;
     }
-
         bool raw = false;
         QString partial("");
         auto error_header_len = QString("INPUT ERROR: ").length();
