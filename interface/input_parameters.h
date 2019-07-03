@@ -51,6 +51,29 @@ struct InputParameters {
     bool x_reverse, y_reverse; //specifies if the axes need to be reversed or not
     std::string type; //type of file being worked with
 
+    InputParameters() {
+        // default values for all input parameters - should include first 3?
+        type = "points";
+        hom_degree = 0;
+        x_bins = 0;
+        y_bins = 0;
+        verbosity = 0;
+        outputFormat = "msgpack";
+        num_threads = 0;
+        function = false;
+        max_dist = -1;
+        dimension = 0;
+        x_reverse = false;
+        y_reverse = false;
+        x_label = "";
+        y_label = "distance";
+        binary = false;
+        minpres = false;
+        betti = false;
+        bounds = false;
+        koszul = false;  
+    }
+
     template <typename Archive>
     void serialize(Archive& ar, const unsigned int /*version*/)
     {

@@ -65,11 +65,11 @@ static const char USAGE[] =
       --version                                Show the version.
       --identify                               Parse the file and print filetype information
       --binary                                 Include binary data (used by RIVET viewer only)
-      -H <hom_degree> --homology <hom_degree>  Degree of homology to compute.
-      -x <xbins> --xbins <xbins>               Number of bins in the x direction.
-      -y <ybins> --ybins <ybins>               Number of bins in the y direction.
-      -V <verbosity> --verbosity <verbosity>   Verbosity level: 0 (no console output) to 10 (lots of output)
-      -f <format> --format <format>            Output format for file.
+      -H <hom_degree> --homology <hom_degree>  Degree of homology to compute. (Default: 0)
+      -x <xbins> --xbins <xbins>               Number of bins in the x direction. (Default: 0)
+      -y <ybins> --ybins <ybins>               Number of bins in the y direction. (Default: 0)
+      -V <verbosity> --verbosity <verbosity>   Verbosity level: 0 (no console output) to 10 (lots of output) (Default: 0)
+      -f <format> --format <format>            Output format for file. (Default: msgpack)
       --minpres                                Print the minimal presentation, then exit.
       -b --betti                               Print dimension and Betti number information.  Optionally, also save this info
                                                to a file in a binary format for later viewing in the visualizer.  Then exit.
@@ -78,12 +78,12 @@ static const char USAGE[] =
                                                an approach based on computing presentations.
       --x-reverse                              Reverse the direction of the values in the x-axis.
       --y-reverse                              Reverse the direction of the values in the y-axis.
-      --type <type>                            Type of the input file.
-      --dimension <dims>                       Dimension in which data points are.
-      --max-dist <distance>                    Maximum distance to be considered while building the Rips complex.
+      --type <type>                            Type of the input file. (Default: points)
+      --dimension <dims>                       Dimension in which data points are. (Default: Calculated from file)
+      --max-dist <distance>                    Maximum distance to be considered while building the Rips complex. (Default: Infinity)
       --function                               Indicates that every data point has a function value associated with it.
-      --x-label <label>                        Name of the parameter displayed along the x-axis.
-      --y-label <label>                        Name of the parameter displayed along the y-axis.
+      --x-label <label>                        Name of the parameter displayed along the x-axis. (Default: degree (if no function specified))
+      --y-label <label>                        Name of the parameter displayed along the y-axis. (Default: distance)
       --barcodes <line_file>                   Print barcodes for the line queries in line_file, then exit.
                                                
 
@@ -298,18 +298,23 @@ int main(int argc, char* argv[])
         params.outputFile = out_file_name.asString();
     }
 
+    InputManager inputManager(params);
+    inputManager.start();
+
     bool identify = args["--identify"].isBool() && args["--identify"].asBool();
     bool barcodes = args["--barcodes"].isString();
-    params.minpres = args["--minpres"].isBool() && args["--minpres"].asBool();
-    params.betti = args["--betti"].isBool() && args["--betti"].asBool();
-    params.binary = args["--binary"].isBool() && args["--binary"].asBool();
-    params.bounds = args["--bounds"].isBool() && args["--bounds"].asBool();
-    params.koszul = args["--koszul"].isBool() && args["--koszul"].asBool();
+
+    params.minpres = (args["--minpres"].isBool() && args["--minpres"].asBool()) || params.minpres;
+    params.betti = (args["--betti"].isBool() && args["--betti"].asBool()) || params.betti;
+    params.binary = (args["--binary"].isBool() && args["--binary"].asBool()) || params.binary;
+    params.bounds = (args["--bounds"].isBool() && args["--bounds"].asBool()) || params.bounds;
+    params.koszul = (args["--koszul"].isBool() && args["--koszul"].asBool()) || params.koszul;
+    params.function = (args["--function"].isBool() && args["--function"].asBool()) || params.function;
+    params.x_reverse = (args["--x-reverse"].isBool() && args["--x-reverse"].asBool()) || params.x_reverse;
+    params.y_reverse = (args["--y-reverse"].isBool() && args["--y-reverse"].asBool()) || params.y_reverse;
+
     bool dimension = args["--dimension"].isString();
     bool max_dist = args["--max-dist"].isString();
-    params.function = args["--function"].isBool() && args["--function"].asBool();
-    params.x_reverse = args["--x-reverse"].isBool() && args["--x-reverse"].asBool();
-    params.y_reverse = args["--y-reverse"].isBool() && args["--y-reverse"].asBool();
     bool type = args["--type"].isString();
     bool homology = args["--homology"].isString();
     bool xbins = args["--xbins"].isString();
@@ -333,8 +338,6 @@ int main(int argc, char* argv[])
         if (params.dimension <= 0) {
             throw std::runtime_error("Invalid argument for --dimension");
         }
-    } else {
-        params.dimension = 0;
     }
 
     if (max_dist) {
@@ -344,17 +347,13 @@ int main(int argc, char* argv[])
         } catch (std::exception& e) {
             throw std::runtime_error("Invalid argument for --max-dist");
         }
-    } else {
-        params.max_dist = -1;
     }
 
     if (type) {
         std::string str = args["--type"].asString();
-        if (str != "new-points" && str != "points" && str != "metric" && str != "bifiltration" && str != "firep" && str != "RIVET_msgpack")
+        if (str != "points" && str != "metric" && str != "bifiltration" && str != "firep" && str != "RIVET_msgpack")
             throw std::runtime_error("Invalid argument for --type");
         params.type = str;
-    } else {
-        params.type = "";
     }
 
     if (homology) {
@@ -362,8 +361,6 @@ int main(int argc, char* argv[])
         if (hom_degree < 0)
             throw std::runtime_error("Invalid argument for --homology");
         params.hom_degree = hom_degree;
-    } else {
-        params.hom_degree = -1;
     }
 
     if (xbins) {
@@ -371,8 +368,6 @@ int main(int argc, char* argv[])
         if (x_bins < 0)
             throw std::runtime_error("Invalid argument for --xbins");
         params.x_bins = x_bins;
-    } else {
-        params.x_bins = -1;
     }
 
     if (ybins) {
@@ -380,8 +375,6 @@ int main(int argc, char* argv[])
         if (y_bins < 0)
             throw std::runtime_error("Invalid argument for --ybins");
         params.y_bins = y_bins;
-    } else {
-        params.y_bins = -1;
     }
 
     if (verb) {
@@ -389,8 +382,6 @@ int main(int argc, char* argv[])
         if (verbosity < 0 || verbosity > 10)
             throw std::runtime_error("Invalid argument for --verbosity");
         params.verbosity = verbosity;
-    } else {
-        params.verbosity = -1;
     }
 
     if (out_form) {
@@ -398,8 +389,6 @@ int main(int argc, char* argv[])
         if (out != "R0" && out != "msgpack")
             throw std::runtime_error("Invalid argument for --format");
         params.outputFormat = out;
-    } else {
-        params.outputFormat = "";
     }
 
     if (num_threads) {
@@ -407,28 +396,19 @@ int main(int argc, char* argv[])
         if (nt < 0)
             throw std::runtime_error("Invalid argument for --num_threads");
         params.num_threads = nt;
-    } else {
-        params.num_threads = -1;
     }
 
     if (x_label) {
         params.x_label = args["--x-label"].asString();
         if (params.x_label == "")
             throw std::runtime_error("Invalid argument for --x-label");
-    } else {
-        params.x_label = "";
     }
 
     if (y_label) {
         params.y_label = args["--y-label"].asString();
         if (params.y_label == "")
             throw std::runtime_error("Invalid argument for --y-label");
-    } else {
-        params.y_label = "";
     }
-
-    InputManager inputManager(params);
-    inputManager.start();
 
     // Setup the requested number of threads to use for computations via OpenMP
     // This is will just fix the upper limit. Dynamic scheduling may decide to

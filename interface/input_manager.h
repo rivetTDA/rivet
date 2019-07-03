@@ -163,11 +163,12 @@ public:
 
 private:
     InputParameters& input_params; //parameters supplied by the user
-    const int verbosity; //controls display of output, for debugging
+    int verbosity; //controls display of output, for debugging
 
     std::vector<FileType> supported_types;
 
     int to_skip; // stores the number of non-data lines in the input file
+    int tokens;
 
     FileType file_type; // stores file type determined from input parameters
 
@@ -185,8 +186,7 @@ private:
     void parse_args(); // goes through supplied arguments and sets parameters
     void parse_points_old();
     bool is_flag(std::string str); // determines if a line in the input file is an input parameter
-    void set_defaults(); // set default values for input parameters which are not supplied
-
+    
     FileContent read_point_cloud(std::ifstream& stream, Progress& progress); //reads a point cloud and constructs a simplex tree representing the bifiltered Vietoris-Rips complex
     FileContent read_discrete_metric_space(std::ifstream& stream, Progress& progress); //reads data representing a discrete metric space with a real-valued function and constructs a simplex tree
     FileContent read_bifiltration(std::ifstream& stream, Progress& progress); //reads a bifiltration and constructs a simplex tree

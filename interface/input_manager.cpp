@@ -194,7 +194,6 @@ using namespace rivet::numeric;
 //constructor
 InputManager::InputManager(InputParameters& params)
     : input_params(params)
-    , verbosity(params.verbosity)
 {
     register_file_type(FileType{ "points", "point-cloud data", true,
         std::bind(&InputManager::read_point_cloud, this, std::placeholders::_1, std::placeholders::_2) });
@@ -242,10 +241,6 @@ FileType& InputManager::get_file_type(std::string fileName)
 //parses the file for input parameters
 void InputManager::start()
 {
-    //read the file
-    if (verbosity >= 2) {
-        debug() << "READING FILE:" << input_params.fileName;
-    }
     file_type = get_file_type(input_params.fileName);
     
 } //end start()
@@ -255,6 +250,10 @@ void InputManager::start()
 //                  similarly for y_grades and y_exact
 FileContent InputManager::process(Progress& progress)
 {
+    verbosity = input_params.verbosity;
+    if (verbosity >= 2) {
+        debug() << "READING FILE:" << input_params.fileName;
+    }
     std::ifstream infile(input_params.fileName); //input file
     if (!infile.is_open()) {
         throw std::runtime_error("Could not open input file.");
@@ -343,18 +342,6 @@ void InputManager::parse_args()
             // support for old file format
             if (line_info.first[0] == "points" || line_info.first[0] == "metric" || line_info.first[0] == "bifiltration" || line_info.first[0] == "firep" || line_info.first[0] == "RIVET_msgpack") {
                 input_params.type = line_info.first[0];
-                if (input_params.hom_degree == -1)
-                    input_params.hom_degree = 0;
-                if (input_params.x_bins == -1)
-                    input_params.x_bins = 0;
-                if (input_params.y_bins == -1)
-                    input_params.y_bins = 0;
-                if (input_params.verbosity == -1)
-                    input_params.verbosity = 0;
-                if (input_params.outputFormat == "")
-                    input_params.outputFormat = "msgpack";
-                if (input_params.num_threads == -1)
-                    input_params.num_threads = 0;
                 input_file.close();
                 if (input_params.type == "points")
                     parse_points_old();
@@ -370,152 +357,122 @@ void InputManager::parse_args()
             // determine input parameter being set
             // handle error checking here
             if (line[0] == "--dimension") {
-                if (input_params.dimension == 0) {
-                    try {
-                        // dimension cannot be less than 1
-                        int dim = std::stoi(line[1]);
-                        if (dim < 1) throw std::runtime_error("Error");
-                        input_params.dimension = dim;
-                    } catch (std::exception& e) {
-                        throw std::runtime_error("Invalid argument for --dimension");
-                    }
+                try {
+                    // dimension cannot be less than 1
+                    int dim = std::stoi(line[1]);
+                    if (dim < 1) throw std::runtime_error("Error");
+                    input_params.dimension = dim;
+                } catch (std::exception& e) {
+                    throw std::runtime_error("Invalid argument for --dimension");
                 }
             } 
             else if (line[0] == "--max-dist") {
-                if (input_params.max_dist == -1) {
-                    try {
-                        // max distance cannot be less than 0
-                        exact dist = str_to_exact(line[1]);
-                        if (dist <= 0) throw std::runtime_error("Error");
-                        input_params.max_dist = dist;
-                    } catch (std::exception& e) {
-                        throw std::runtime_error("Invalid argument for --max-dist");
-                    }
+                try {
+                    // max distance cannot be less than 0
+                    exact dist = str_to_exact(line[1]);
+                    if (dist <= 0) throw std::runtime_error("Error");
+                    input_params.max_dist = dist;
+                } catch (std::exception& e) {
+                    throw std::runtime_error("Invalid argument for --max-dist");
                 }
             } 
             else if (line[0] == "--homology" || line[0] == "-H") {
-                if (input_params.hom_degree == -1) {
-                    try {
-                        // homology degree cannot be less than 0
-                        int hom = std::stoi(line[1]);
-                        if (hom < 0) throw std::runtime_error("Error");
-                        input_params.hom_degree = hom;
-                    } catch (std::exception& e) {
-                        throw std::runtime_error("Invalid argument for --homology");
-                    }
+                try {
+                    // homology degree cannot be less than 0
+                    int hom = std::stoi(line[1]);
+                    if (hom < 0) throw std::runtime_error("Error");
+                    input_params.hom_degree = hom;
+                } catch (std::exception& e) {
+                    throw std::runtime_error("Invalid argument for --homology");
                 }
             }
             else if (line[0] == "--xbins" || line[0] == "-x") {
-                if (input_params.x_bins == -1) {
-                    try {
-                        // x_bins degree cannot be less than 0
-                        int x = std::stoi(line[1]);
-                        if (x < 0) throw std::runtime_error("Error");
-                        input_params.x_bins = x;
-                    } catch (std::exception& e) {
-                        throw std::runtime_error("Invalid argument for --xbins");
-                    }
+                try {
+                    // x_bins degree cannot be less than 0
+                    int x = std::stoi(line[1]);
+                    if (x < 0) throw std::runtime_error("Error");
+                    input_params.x_bins = x;
+                } catch (std::exception& e) {
+                    throw std::runtime_error("Invalid argument for --xbins");
                 }
             }
             else if (line[0] == "--ybins" || line[0] == "-y") {
-                if (input_params.y_bins == -1) {
-                    try {
-                        // x_bins degree cannot be less than 0
-                        int y = std::stoi(line[1]);
-                        if (y < 0) throw std::runtime_error("Error");
-                        input_params.y_bins = y;
-                    } catch (std::exception& e) {
-                        throw std::runtime_error("Invalid argument for --ybins");
-                    }
+                try {
+                    // x_bins degree cannot be less than 0
+                    int y = std::stoi(line[1]);
+                    if (y < 0) throw std::runtime_error("Error");
+                    input_params.y_bins = y;
+                } catch (std::exception& e) {
+                    throw std::runtime_error("Invalid argument for --ybins");
                 }
             }
             else if (line[0] == "--verbosity" || line[0] == "-V") {
-                if (input_params.verbosity == -1) {
-                    try {
-                        // verbosity is between 0 and 10
-                        int v = std::stoi(line[1]);
-                        if (v < 0 || v > 10) throw std::runtime_error("Error");
-                        input_params.verbosity = v;
-                    } catch (std::exception& e) {
-                        throw std::runtime_error("Invalid argument for --verbosity");
-                    }
+                try {
+                    // verbosity is between 0 and 10
+                    int v = std::stoi(line[1]);
+                    if (v < 0 || v > 10) throw std::runtime_error("Error");
+                    input_params.verbosity = v;
+                } catch (std::exception& e) {
+                    throw std::runtime_error("Invalid argument for --verbosity");
                 }
             }
             else if (line[0] == "--format" || line[0] == "-f") {
-                if (input_params.outputFormat == "") {
-                    try {
-                        // output format is either R0 or msgpack
-                        std::string o = line[1];
-                        if (o != "R0" && o != "msgpack") throw std::runtime_error("Error");
-                        input_params.outputFormat = o;
-                    } catch (std::exception& e) {
-                        throw std::runtime_error("Invalid argument for --format");
-                    }
+                try {
+                    // output format is either R0 or msgpack
+                    std::string o = line[1];
+                    if (o != "R0" && o != "msgpack") throw std::runtime_error("Error");
+                    input_params.outputFormat = o;
+                } catch (std::exception& e) {
+                    throw std::runtime_error("Invalid argument for --format");
                 }
             }
             else if (line[0] == "--num_threads") {
-                if (input_params.num_threads == -1) {
-                    try {
-                        // number of threads cannot be less than 0
-                        int nt = std::stoi(line[1]);
-                        if (nt < 0) throw std::runtime_error("Error");
-                        input_params.num_threads = nt;
-                    } catch (std::exception& e) {
-                        throw std::runtime_error("Invalid argument for --num_threads");
-                    }
+                try {
+                    // number of threads cannot be less than 0
+                    int nt = std::stoi(line[1]);
+                    if (nt < 0) throw std::runtime_error("Error");
+                    input_params.num_threads = nt;
+                } catch (std::exception& e) {
+                    throw std::runtime_error("Invalid argument for --num_threads");
                 }
             }
             else if (line[0] == "--x-label") {
-                if (input_params.x_label == "") {
-                    for (int i = 1; i < line.size(); i++)
-                        input_params.x_label += line[i] + " ";
-                }
+                for (int i = 1; i < line.size(); i++)
+                    input_params.x_label += line[i] + " ";
             } 
             else if (line[0] == "--y-label") {
-                if (input_params.y_label == "") {
-                    for (int i = 1; i < line.size(); i++)
-                        input_params.y_label += line[i] + " ";
-                }
+                for (int i = 1; i < line.size(); i++)
+                    input_params.y_label += line[i] + " ";
             } 
             else if (line[0] == "--x-reverse") {
-                if(!input_params.x_reverse)
-                    input_params.x_reverse = true;
+                input_params.x_reverse = true;
             } 
             else if (line[0] == "--y-reverse") {
-                if(!input_params.y_reverse)
-                    input_params.y_reverse = true;
+                input_params.y_reverse = true;
             } 
             else if (line[0] == "--function") {
-                if(!input_params.function)
-                    input_params.function = true;
+                input_params.function = true;
             } 
             else if (line[0] == "--binary") {
-                if(!input_params.binary)
-                    input_params.binary = true;
+                input_params.binary = true;
             }
             else if (line[0] == "--minpres") {
-                if(!input_params.minpres)
-                    input_params.minpres = true;
+                input_params.minpres = true;
             }
             else if (line[0] == "--betti" || line[0] == "-b") {
-                if(!input_params.betti)
-                    input_params.betti = true;
+                input_params.betti = true;
             }
             else if (line[0] == "--bounds") {
-                if(!input_params.bounds)
-                    input_params.bounds = true;
+                input_params.bounds = true;
             }
             else if (line[0] == "--koszul" || line[0] == "-k") {
-                if(!input_params.koszul)
-                    input_params.koszul = true;
+                input_params.koszul = true;
             }
             else if (line[0] == "--type") {
-                if (input_params.type == "") {
                 // specifies file type, throw error if unknown
-                    if (line[1] != "points" && line[1] != "metric" && line[1] != "bifiltration" && line[1] != "firep" && line[1] != "RIVET_msgpack")
-                        throw std::runtime_error("Invalid argument for --type");
-                    input_params.type = line[1];
-                }
+                if (line[1] != "points" && line[1] != "metric" && line[1] != "bifiltration" && line[1] != "firep" && line[1] != "RIVET_msgpack")
+                    throw std::runtime_error("Invalid argument for --type");
+                input_params.type = line[1];
             } 
             else {
                 throw std::runtime_error("Invalid option" + line[0] + "at line " + std::to_string(line_info.second));
@@ -527,80 +484,8 @@ void InputManager::parse_args()
 
     // skip stores number of lines to skip
     to_skip = num_lines;
+    tokens = line_info.first.size();
     input_file.close();
-
-    if (input_params.dimension != 0 && !input_params.function)
-    {
-        // if dimension is set and function is not
-        // determine if there is an extra function value or not
-        int dimension = line_info.first.size();
-        if (dimension == (input_params.dimension+1))
-            input_params.function = true;
-    } else if (input_params.dimension == 0){
-        // if dimension is not set and function is set
-        // determine value of dimension
-        int dimension = line_info.first.size();
-        if (input_params.function)
-            input_params.dimension = dimension-1;
-        else
-            input_params.dimension = dimension;
-    }
-
-    set_defaults();
-}
-
-void InputManager::set_defaults()
-{
-    // set defaults
-    if (input_params.type == "")
-    {
-        // default file type is new point cloud format
-        input_params.type = "points";
-    }
-    if (input_params.hom_degree == -1)
-    {
-        // default homology degree is 0
-        input_params.hom_degree = 0;
-    }
-    if (input_params.x_bins == -1)
-    {
-        // default xbins is 0
-        input_params.x_bins = 0;
-    }
-    if (input_params.y_bins == -1)
-    {
-        // default ybins is 0
-        input_params.y_bins = 0;
-    }
-    if (input_params.verbosity == -1)
-    {
-        // default verbosity is 0
-        input_params.verbosity = 0;
-    }
-    if (input_params.outputFormat == "")
-    {
-        // default format is msgpack
-        input_params.outputFormat = "msgpack";
-    }
-
-    if (input_params.num_threads == -1)
-    {
-        // default number of threads is 0
-        input_params.num_threads = 0;
-    }
-    if (!input_params.function)
-    {
-        // degree rips
-        input_params.x_reverse = true;
-        input_params.x_label = "degree";
-    }
-
-    if (input_params.y_label == "")
-    {
-        // default ylabel is distance
-        input_params.y_label = "distance";
-    }
-    
 }
 
 void InputManager::parse_points_old()
@@ -676,6 +561,27 @@ FileContent InputManager::read_point_cloud(std::ifstream& stream, Progress& prog
     auto data = new InputData();
     if (verbosity >= 6) {
         debug() << "InputManager: Found a point cloud file.";
+    }
+
+    if (input_params.dimension == 0){
+        // if dimension is not set and function is set
+        // determine value of dimension
+        if (input_params.function)
+            input_params.dimension = tokens-1;
+        else
+            input_params.dimension = tokens;
+    } 
+    else if (!input_params.function)
+    {
+        // if dimension is set and function is not
+        // determine if there is an extra function value or not
+        if (tokens == (input_params.dimension+1))
+            input_params.function = true;
+    }
+
+    if (!input_params.function) {
+        input_params.x_label = "degree";
+        input_params.x_reverse = true;
     }
 
     // set all variables from input_params
