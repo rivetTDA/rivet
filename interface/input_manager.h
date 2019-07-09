@@ -168,7 +168,6 @@ private:
     std::vector<FileType> supported_types;
 
     int to_skip; // stores the number of non-data lines in the input file
-    int tokens;
 
     FileType file_type; // stores file type determined from input parameters
 
@@ -180,15 +179,19 @@ private:
 
     void register_file_type(FileType file_type);
 
-    //TODO: these methods could move to a separate file-per-filetype model rather
-    //than living in InputManager.
+    
     void parse_args(); // goes through supplied arguments and sets parameters
+
+    // methods to support parsing the old file formats
     void parse_points_old();
     void parse_metric_old();
     void parse_bifiltration_old();
     void parse_firep_old();
+
     bool is_flag(std::string str); // determines if a line in the input file is an input parameter
     
+    //TODO: these methods could move to a separate file-per-filetype model rather
+    //than living in InputManager.
     FileContent read_point_cloud(std::ifstream& stream, Progress& progress); //reads a point cloud and constructs a simplex tree representing the bifiltered Vietoris-Rips complex
     FileContent read_discrete_metric_space(std::ifstream& stream, Progress& progress); //reads data representing a discrete metric space with a real-valued function and constructs a simplex tree
     FileContent read_bifiltration(std::ifstream& stream, Progress& progress); //reads a bifiltration and constructs a simplex tree

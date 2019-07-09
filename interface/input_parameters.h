@@ -47,9 +47,9 @@ struct InputParameters {
     bool koszul; //use koszul homology based algorithm
     exact max_dist; //maximum distance to be considered while building Rips complex
     int dimension; //dimension of the space where the points lie
-    bool old_function; //specifies if the data has a function value
-    bool new_function;
-    int function_line;
+    bool old_function; //specifies if the data has a function value like the old format
+    bool new_function; //specifies if the data has a --function flag followed by values
+    int function_line; //specifies which line has the function values
     bool x_reverse, y_reverse; //specifies if the axes need to be reversed or not
     std::string type; //type of file being worked with
 

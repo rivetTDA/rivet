@@ -56,9 +56,11 @@ void FileInputReader::find_next_line(int old)
         if (line.empty() || line[0] == '#')
             continue;
         next_line_tokens.clear();
+        // old = 1 means old file format, so split by space
         if (old || line.find(",") == std::string::npos || is_flag(line)) {
             boost::split(next_line_tokens, line, boost::is_space(std::locale()), boost::token_compress_on);
         }
+        // if a "," is there in the line, split by ","
         else {
             boost::split(next_line_tokens, line, boost::is_any_of(","), boost::token_compress_on);
         }

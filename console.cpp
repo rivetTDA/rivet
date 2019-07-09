@@ -276,7 +276,7 @@ void clean_temp_files() {
 
 int main(int argc, char* argv[])
 {
-    InputParameters params; //parameter values stored here
+    InputParameters params; //parameter values stored here, defaults set
 
     std::map<std::string, docopt::value> args = docopt::docopt(USAGE, { argv + 1, argv + argc }, true,
         "RIVET Console 1.0.0");
@@ -298,11 +298,13 @@ int main(int argc, char* argv[])
     }
 
     InputManager inputManager(params);
+    // read in arguments supplied in the input file
     inputManager.start();
 
     bool identify = args["--identify"].isBool() && args["--identify"].asBool();
     bool barcodes = args["--barcodes"].isString();
 
+    // check if set in file and override if also set in command line
     params.minpres = (args["--minpres"].isBool() && args["--minpres"].asBool()) || params.minpres;
     params.betti = (args["--betti"].isBool() && args["--betti"].asBool()) || params.betti;
     params.binary = (args["--binary"].isBool() && args["--binary"].asBool()) || params.binary;
@@ -311,6 +313,7 @@ int main(int argc, char* argv[])
     params.x_reverse = (args["--x-reverse"].isBool() && args["--x-reverse"].asBool()) || params.x_reverse;
     params.y_reverse = (args["--y-reverse"].isBool() && args["--y-reverse"].asBool()) || params.y_reverse;
 
+    // these flags have arguments
     bool dimension = args["--dimension"].isString();
     bool max_dist = args["--max-dist"].isString();
     bool type = args["--type"].isString();
@@ -323,6 +326,7 @@ int main(int argc, char* argv[])
     bool x_label = args["--x-label"].isString();
     bool y_label = args["--y-label"].isString();
 
+    // override whichever flag has been set in the command line
     std::string slices;
     if (barcodes) {
         slices = args["--barcodes"].asString();
@@ -408,11 +412,14 @@ int main(int argc, char* argv[])
             throw std::runtime_error("Invalid argument for --y-label");
     }
 
+    // all input parameters should be set by this point
+
     // Setup the requested number of threads to use for computations via OpenMP
     // This is will just fix the upper limit. Dynamic scheduling may decide to
     // run less threads.
     omp_set_num_threads(params.num_threads);
 
+    // variables used in rest of console.cpp
     int verbosity = params.verbosity;
     bool binary = params.binary;
     bool minpres_only = params.minpres;
@@ -522,6 +529,7 @@ int main(int argc, char* argv[])
     std::shared_ptr<Arrangement> arrangement;
 
     FileContent content;
+    // process the data
     content = inputManager.process(progress);
 
     // try {

@@ -241,6 +241,8 @@ FileType& InputManager::get_file_type(std::string fileName)
 //parses the file for input parameters
 void InputManager::start()
 {
+    // parses everything before data
+    // sets up input_params
     file_type = get_file_type(input_params.fileName);
     
 } //end start()
@@ -258,6 +260,7 @@ FileContent InputManager::process(Progress& progress)
     if (!infile.is_open()) {
         throw std::runtime_error("Could not open input file.");
     }
+    // register_file_type() determines what function the parser is 
     auto data = file_type.parser(infile, progress);
     return data;
 }
@@ -327,6 +330,9 @@ bool InputManager::is_flag(std::string str)
     return false;
 }
 
+
+// function to parse all flags supplied in input file
+// sets up input_params
 void InputManager::parse_args()
 {
     // open as a separate file, not the reference
@@ -404,7 +410,7 @@ void InputManager::parse_args()
             }
             else if (line[0] == "--ybins" || line[0] == "-y") {
                 try {
-                    // x_bins degree cannot be less than 0
+                    // y_bins degree cannot be less than 0
                     int y = std::stoi(line[1]);
                     if (y < 0) throw std::runtime_error("Error");
                     input_params.y_bins = y;
@@ -443,10 +449,12 @@ void InputManager::parse_args()
                 }
             }
             else if (line[0] == "--x-label") {
+                // everything coming after --x-label is the label
                 for (int i = 1; i < line.size(); i++)
                     input_params.x_label += line[i] + " ";
             } 
             else if (line[0] == "--y-label") {
+                // everything coming after --y-label is the label
                 for (int i = 1; i < line.size(); i++)
                     input_params.y_label += line[i] + " ";
             } 
@@ -460,6 +468,7 @@ void InputManager::parse_args()
                 input_params.new_function = true;
                 input_params.function_line = ++num_lines;
                 line_info = reader.next_line(0);
+                // the line after the flag should be a list of values
                 if (is_flag(line_info.first[0]))
                     throw std::runtime_error("Function values not specified");
             } 
@@ -494,14 +503,16 @@ void InputManager::parse_args()
 
     // skip stores number of lines to skip
     to_skip = num_lines;
+    // set dimension in which points live if not set earlier
     if (input_params.dimension == 0) {
         input_params.dimension = line_info.first.size();
         if (input_params.type == "metric")
-            input_params.dimension++;
+            input_params.dimension++;   // this is the number of points for metric space
     }
     input_file.close();
 }
 
+// parse old point cloud input parameters
 void InputManager::parse_points_old()
 {
     std::ifstream input_file(input_params.fileName);
@@ -569,8 +580,6 @@ void InputManager::parse_points_old()
 //  stores the bifiltered Bifiltration/Vietoris-Rips complex in BifiltrationData
 FileContent InputManager::read_point_cloud(std::ifstream& stream, Progress& progress)
 {
-    // same as read_point_cloud but adjusted for new parsing method
-    // handles new format data instead
     FileInputReader reader(stream);
     auto data = new InputData();
     if (verbosity >= 6) {
@@ -599,9 +608,9 @@ FileContent InputManager::read_point_cloud(std::ifstream& stream, Progress& prog
 
     std::vector<DataPoint> points;
 
-    // skip lines with flags
-    std::pair<std::vector<std::string>, unsigned> line_info;
+        std::pair<std::vector<std::string>, unsigned> line_info;
 
+    // if a --function was specified, read in the function values
     std::vector<std::string> values;
     if (input_params.new_function) {
         for (int i = 0; i < input_params.function_line; i++)
@@ -612,6 +621,7 @@ FileContent InputManager::read_point_cloud(std::ifstream& stream, Progress& prog
         }
     }
 
+    // skip lines with flags
     for (int i = 0; i < to_skip-input_params.function_line; i++)
         reader.next_line(0);
 
@@ -635,6 +645,7 @@ FileContent InputManager::read_point_cloud(std::ifstream& stream, Progress& prog
                 throw std::runtime_error(ss.str());
             }
 
+            // Add function values if supplied
             if (input_params.new_function) {
                 tokens.push_back(values[k]);
                 k++;
@@ -830,13 +841,12 @@ FileContent InputManager::read_point_cloud(std::ifstream& stream, Progress& prog
 
 } //end read_point_cloud()
 
+// parse old metric space input parameters
 void InputManager::parse_metric_old()
 {
     
     std::ifstream input_file(input_params.fileName);
     FileInputReader reader(input_file);
-
-    // STEP 1: read data file and store exact (rational) values of the function for each point
 
     //skip 'metric'
     auto line_info = reader.next_line();
@@ -864,6 +874,7 @@ void InputManager::parse_metric_old()
             }
             input_params.dimension = static_cast<unsigned>(dim);
         } else {
+            // if function values are there
             input_params.old_function = true;
             input_params.function_line = 3;
 
@@ -874,10 +885,9 @@ void InputManager::parse_metric_old()
 
             line_info = reader.next_line();
 
+            // number of function values is number of points
             input_params.dimension = line_info.first.size();
         }
-
-        // STEP 2: read data file and store exact (rational) values for all distances
 
         //first read the label for y-axis
         line_info = reader.next_line();
@@ -915,6 +925,7 @@ FileContent InputManager::read_discrete_metric_space(std::ifstream& stream, Prog
     unsigned* degree; //stores the degree of each point; must FREE later if used
     std::pair<ExactSet::iterator, bool> ret; //for return value upon insert()
 
+    // set all variables from input parameters
     bool x_reverse = input_params.x_reverse;
     bool y_reverse = input_params.y_reverse;
 
@@ -925,6 +936,7 @@ FileContent InputManager::read_discrete_metric_space(std::ifstream& stream, Prog
 
     std::pair<std::vector<std::string>, unsigned> line_info;
 
+    // store function values if supplied
     std::vector<std::string> val;
     if (hasFunction) {
         for (int i = 0; i < input_params.function_line; i++)
@@ -935,12 +947,9 @@ FileContent InputManager::read_discrete_metric_space(std::ifstream& stream, Prog
         }
     }
 
+    // skip lines with flags
     for (int i = 0; i < to_skip-input_params.function_line; i++)
         reader.next_line(0);
-
-    // STEP 1: read data file and store exact (rational) values of the function for each point
-
-    //skip 'metric'
 
     try {
         std::vector<exact> values;
@@ -1127,6 +1136,7 @@ FileContent InputManager::read_discrete_metric_space(std::ifstream& stream, Prog
     return FileContent(data);
 } //end read_discrete_metric_space()
 
+// parse old bifiltration input parameters
 void InputManager::parse_bifiltration_old()
 {
     std::ifstream input_file(input_params.fileName);
@@ -1157,16 +1167,16 @@ FileContent InputManager::read_bifiltration(std::ifstream& stream, Progress& pro
         debug() << "InputManager: Found a bifiltration file.\n";
     }
 
-    //read the label for x-axis
+    // set variables from input parameters
     bool x_reverse = input_params.x_reverse;
     data->x_label = input_params.x_label;
-    exact xrev_sign = x_reverse ? -1 : 1;
-
-    //read the label for y-axis
     bool y_reverse = input_params.y_reverse;
     data->y_label = input_params.y_label;
+
+    exact xrev_sign = x_reverse ? -1 : 1;
     exact yrev_sign = y_reverse ? -1 : 1;
 
+    // skip lines with flags
     for (int i = 0; i < to_skip; i++)
         reader.next_line(0);
 
@@ -1259,6 +1269,7 @@ FileContent InputManager::read_bifiltration(std::ifstream& stream, Progress& pro
     return FileContent(data);
 } //end read_bifiltration()
 
+// parse old firep input parameters
 void InputManager::parse_firep_old()
 {
     std::ifstream input_file(input_params.fileName);
@@ -1288,12 +1299,15 @@ FileContent InputManager::read_firep(std::ifstream& stream, Progress& progress)
     if (verbosity >= 2) {
         debug() << "InputManager: Found a firep file.\n";
     }
+
+    // set up variables from input parameters
     bool x_reverse = input_params.x_reverse;
     bool y_reverse = input_params.y_reverse;
 
     data->x_label = input_params.x_label;
     data->y_label = input_params.y_label;
 
+    // skip lines with flags
     for (int i = 0; i < to_skip; i++)
         reader.next_line(0);
 
