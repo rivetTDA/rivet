@@ -172,7 +172,12 @@ FIRep (Algebraic Input)
 -----------------------
 
 An FIRep 
-\[ C_2 \xrightarrow{f} C_1 \xrightarrow{g} C_0. \]
+
+.. math::
+   :nowrap:
+
+   \[ C_2 \xrightarrow{f} C_1 \xrightarrow{g} C_0. \]
+
 is specified as follows:
 
 #. The first (non-empty, uncommented) line says "firep".
