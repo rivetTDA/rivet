@@ -347,6 +347,10 @@ void InputManager::parse_args()
                     parse_points_old();
                 if (input_params.type == "metric")
                     parse_metric_old();
+                if (input_params.type == "bifiltration")
+                    parse_bifiltration_old();
+                if (input_params.type == "firep")
+                    parse_firep_old();
                 return;
             }
             // check if line contains flags or data
@@ -938,28 +942,9 @@ FileContent InputManager::read_discrete_metric_space(std::ifstream& stream, Prog
 
     //skip 'metric'
 
-    //line_info = reader.next_line();
-    //first read the label for x-axis
     try {
         std::vector<exact> values;
 
-        // if (input_params.old_function) {
-
-        //     exact xrev_sign = x_reverse ? -1 : 1;
-
-        //     if (verbosity >= 6) {
-        //         debug() << "InputManager: Discrete metric space file has function values. Creating Vietoris-Rips complex.";
-        //     }
-        //     //now read the values
-        //     line_info = reader.next_line();
-        //     std::vector<std::string> line = line_info.first;
-        //     values.reserve(line.size());
-
-        //     for (size_t i = 0; i < line.size(); i++) {
-        //         values.push_back(xrev_sign * str_to_exact(line.at(i)));
-        //     }
-
-        // } else 
         if (hasFunction) {
 
             exact xrev_sign = x_reverse ? -1 : 1;
@@ -980,12 +965,7 @@ FileContent InputManager::read_discrete_metric_space(std::ifstream& stream, Prog
             if (verbosity >= 4) {
                 debug() << "  Number of points:" << num_points;
             }
-            // line_info = reader.next_line();
         }
-
-        // for (int i = 0; i < to_skip-3; i++) {
-        //     reader.next_line();
-        // }
 
         // STEP 2: read data file and store exact (rational) values for all distances
 
@@ -1147,6 +1127,27 @@ FileContent InputManager::read_discrete_metric_space(std::ifstream& stream, Prog
     return FileContent(data);
 } //end read_discrete_metric_space()
 
+void InputManager::parse_bifiltration_old()
+{
+    std::ifstream input_file(input_params.fileName);
+    FileInputReader reader(input_file);
+
+    //Skip file type line
+    reader.next_line();
+
+    //read the label for x-axis
+    auto is_xreversed_and_label = detect_axis_reversed(reader.next_line().first);
+    input_params.x_reverse = is_xreversed_and_label.first;
+    input_params.x_label = is_xreversed_and_label.second;
+
+    //read the label for y-axis
+    auto is_yreversed_and_label = detect_axis_reversed(reader.next_line().first);
+    input_params.y_reverse = is_yreversed_and_label.first;
+    input_params.y_label = is_yreversed_and_label.second;
+
+    to_skip = 3;
+}
+
 //reads a bifiltration and stores in BifiltrationData
 FileContent InputManager::read_bifiltration(std::ifstream& stream, Progress& progress)
 {
@@ -1156,26 +1157,24 @@ FileContent InputManager::read_bifiltration(std::ifstream& stream, Progress& pro
         debug() << "InputManager: Found a bifiltration file.\n";
     }
 
-    //Skip file type line
-    reader.next_line();
-
     //read the label for x-axis
-    auto is_xreversed_and_label = detect_axis_reversed(reader.next_line().first);
-    bool x_reverse = is_xreversed_and_label.first;
-    data->x_label = is_xreversed_and_label.second;
+    bool x_reverse = input_params.x_reverse;
+    data->x_label = input_params.x_label;
     exact xrev_sign = x_reverse ? -1 : 1;
 
     //read the label for y-axis
-    auto is_yreversed_and_label = detect_axis_reversed(reader.next_line().first);
-    bool y_reverse = is_yreversed_and_label.first;
-    data->y_label = is_yreversed_and_label.second;
+    bool y_reverse = input_params.y_reverse;
+    data->y_label = input_params.y_label;
     exact yrev_sign = y_reverse ? -1 : 1;
+
+    for (int i = 0; i < to_skip; i++)
+        reader.next_line(0);
 
     data->bifiltration_data.reset(new BifiltrationData(input_params.hom_degree, input_params.verbosity));
 
     //temporary data structures to store grades
     ExactSet x_set; //stores all unique x-values; must DELETE all elements later!
-    ExactSet y_set; //stores all unique x-values; must DELETE all elements later!
+    ExactSet y_set; //stores all unique y-values; must DELETE all elements later!
     std::pair<ExactSet::iterator, bool> ret; //for return value upon insert()
 
     //read simplices
@@ -1260,6 +1259,27 @@ FileContent InputManager::read_bifiltration(std::ifstream& stream, Progress& pro
     return FileContent(data);
 } //end read_bifiltration()
 
+void InputManager::parse_firep_old()
+{
+    std::ifstream input_file(input_params.fileName);
+    FileInputReader reader(input_file);
+
+    //Skip file type line
+    reader.next_line();
+
+    //read the label for x-axis
+    auto is_xreversed_and_label = detect_axis_reversed(reader.next_line().first);
+    input_params.x_reverse = is_xreversed_and_label.first;
+    input_params.x_label = is_xreversed_and_label.second;
+
+    //read the label for y-axis
+    auto is_yreversed_and_label = detect_axis_reversed(reader.next_line().first);
+    input_params.y_reverse = is_yreversed_and_label.first;
+    input_params.y_label = is_yreversed_and_label.second;
+
+    to_skip = 3;
+}
+
 //reads a firep and stores in FIRep, does not create BifiltrationData
 FileContent InputManager::read_firep(std::ifstream& stream, Progress& progress)
 {
@@ -1268,11 +1288,14 @@ FileContent InputManager::read_firep(std::ifstream& stream, Progress& progress)
     if (verbosity >= 2) {
         debug() << "InputManager: Found a firep file.\n";
     }
-    bool x_reverse = false;
-    bool y_reverse = false;
+    bool x_reverse = input_params.x_reverse;
+    bool y_reverse = input_params.y_reverse;
 
-    //Skip file type line
-    reader.next_line();
+    data->x_label = input_params.x_label;
+    data->y_label = input_params.y_label;
+
+    for (int i = 0; i < to_skip; i++)
+        reader.next_line(0);
 
     data->bifiltration_data.reset(new BifiltrationData(input_params.hom_degree, input_params.verbosity)); //Will be dummy bifiltration with no stored data
 
@@ -1291,20 +1314,12 @@ FileContent InputManager::read_firep(std::ifstream& stream, Progress& progress)
         auto line_info = reader.next_line();
         try {
             //read the label for x-axis
-            auto is_xreversed_and_label = detect_axis_reversed(line_info.first);
-            x_reverse = is_xreversed_and_label.first;
-            data->x_label = is_xreversed_and_label.second;
             exact xrev_sign = x_reverse ? -1 : 1;
 
-            line_info = reader.next_line();
             //read the label for y-axis
-            auto is_yreversed_and_label = detect_axis_reversed(line_info.first);
-            y_reverse = is_yreversed_and_label.first;
-            data->y_label = is_yreversed_and_label.second;
             exact yrev_sign = y_reverse ? -1 : 1;
 
             //Read dimensions of matrices
-            line_info = reader.next_line();
             std::vector<std::string> tokens = line_info.first;
 
             if (tokens.size() != 3) {
