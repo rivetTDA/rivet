@@ -1,0 +1,9 @@
+--type metric
+
+--y-label distance
+--max-dist 3
+
+0.2 2.5 3.4 0.5 
+0.4 2 2.8 
+0.6 4 
+1

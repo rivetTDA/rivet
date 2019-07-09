@@ -1,0 +1,8 @@
+--type firep
+--x-label x-label
+--y-label y-label
+2 2 0
+3 2 ; 0
+2 3 ; 0 1
+1 1 ; 
+2 2 ;
