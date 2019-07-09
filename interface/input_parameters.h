@@ -47,7 +47,9 @@ struct InputParameters {
     bool koszul; //use koszul homology based algorithm
     exact max_dist; //maximum distance to be considered while building Rips complex
     int dimension; //dimension of the space where the points lie
-    bool function; //specifies if the data has a function value
+    bool old_function; //specifies if the data has a function value
+    bool new_function;
+    int function_line;
     bool x_reverse, y_reverse; //specifies if the axes need to be reversed or not
     std::string type; //type of file being worked with
 
@@ -60,7 +62,8 @@ struct InputParameters {
         verbosity = 0;
         outputFormat = "msgpack";
         num_threads = 0;
-        function = false;
+        old_function = false;
+        new_function = false;
         max_dist = -1;
         dimension = 0;
         x_reverse = false;
@@ -71,7 +74,8 @@ struct InputParameters {
         minpres = false;
         betti = false;
         bounds = false;
-        koszul = false;  
+        koszul = false;
+        function_line = 0;
     }
 
     template <typename Archive>

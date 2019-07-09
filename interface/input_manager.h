@@ -185,6 +185,7 @@ private:
     FileContent read_point_cloud_new(std::ifstream& stream, Progress& progress); // reads a point cloud data from newly supported format and does what read_point_cloud does
     void parse_args(); // goes through supplied arguments and sets parameters
     void parse_points_old();
+    void parse_metric_old();
     bool is_flag(std::string str); // determines if a line in the input file is an input parameter
     
     FileContent read_point_cloud(std::ifstream& stream, Progress& progress); //reads a point cloud and constructs a simplex tree representing the bifiltered Vietoris-Rips complex

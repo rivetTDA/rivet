@@ -78,7 +78,6 @@ std::pair<std::vector<std::string>, unsigned> FileInputReader::next_line(int old
 {
     std::vector<std::string> current = next_line_tokens;
     auto num = line_number;
-
     next_line_found = false;
     find_next_line(old);
 

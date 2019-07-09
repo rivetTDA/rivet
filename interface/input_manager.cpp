@@ -345,6 +345,8 @@ void InputManager::parse_args()
                 input_file.close();
                 if (input_params.type == "points")
                     parse_points_old();
+                if (input_params.type == "metric")
+                    parse_metric_old();
                 return;
             }
             // check if line contains flags or data
@@ -451,7 +453,11 @@ void InputManager::parse_args()
                 input_params.y_reverse = true;
             } 
             else if (line[0] == "--function") {
-                input_params.function = true;
+                input_params.new_function = true;
+                input_params.function_line = ++num_lines;
+                line_info = reader.next_line(0);
+                if (is_flag(line_info.first[0]))
+                    throw std::runtime_error("Function values not specified");
             } 
             else if (line[0] == "--binary") {
                 input_params.binary = true;
@@ -484,7 +490,11 @@ void InputManager::parse_args()
 
     // skip stores number of lines to skip
     to_skip = num_lines;
-    tokens = line_info.first.size();
+    if (input_params.dimension == 0) {
+        input_params.dimension = line_info.first.size();
+        if (input_params.type == "metric")
+            input_params.dimension++;
+    }
     input_file.close();
 }
 
@@ -527,13 +537,13 @@ void InputManager::parse_points_old()
         //read label for x-axis
         line_info = reader.next_line();
         if (join(line_info.first).compare("no function") == 0) {
-            input_params.function = false;
+            input_params.old_function = false;
             //set label for x-axis to "degree"
             input_params.x_label = "degree";
             input_params.x_reverse = true; //higher degrees will be shown on the left
 
         } else {
-            input_params.function = true;
+            input_params.old_function = true;
             auto is_reversed_and_label = detect_axis_reversed(line_info.first);
             input_params.x_reverse = is_reversed_and_label.first;
             input_params.x_label = is_reversed_and_label.second;
@@ -563,23 +573,7 @@ FileContent InputManager::read_point_cloud(std::ifstream& stream, Progress& prog
         debug() << "InputManager: Found a point cloud file.";
     }
 
-    if (input_params.dimension == 0){
-        // if dimension is not set and function is set
-        // determine value of dimension
-        if (input_params.function)
-            input_params.dimension = tokens-1;
-        else
-            input_params.dimension = tokens;
-    } 
-    else if (!input_params.function)
-    {
-        // if dimension is set and function is not
-        // determine if there is an extra function value or not
-        if (tokens == (input_params.dimension+1))
-            input_params.function = true;
-    }
-
-    if (!input_params.function) {
+    if (!input_params.old_function && !input_params.new_function) {
         input_params.x_label = "degree";
         input_params.x_reverse = true;
     }
@@ -587,13 +581,13 @@ FileContent InputManager::read_point_cloud(std::ifstream& stream, Progress& prog
     // set all variables from input_params
     unsigned dimension = input_params.dimension;
     exact max_dist = input_params.max_dist;
-    bool hasFunction = input_params.function;
+    bool hasFunction = input_params.old_function || input_params.new_function;
 
     bool x_reverse = input_params.x_reverse;
     bool y_reverse = input_params.y_reverse;
 
     unsigned expectedNumTokens = dimension;
-    if (hasFunction)
+    if (input_params.old_function)
         expectedNumTokens++;
 
     data->x_label = input_params.x_label;
@@ -604,13 +598,23 @@ FileContent InputManager::read_point_cloud(std::ifstream& stream, Progress& prog
     // skip lines with flags
     std::pair<std::vector<std::string>, unsigned> line_info;
 
-    for (int i = 0; i < to_skip; i++)
+    std::vector<std::string> values;
+    if (input_params.new_function) {
+        for (int i = 0; i < input_params.function_line; i++)
+            line_info = reader.next_line(0);
+
+        for (int i = 0; i < line_info.first.size(); i++) {
+            values.push_back(line_info.first[i]);
+        }
+    }
+
+    for (int i = 0; i < to_skip-input_params.function_line; i++)
         reader.next_line(0);
 
     // STEP 1: read data file and store exact (rational) values
 
     try {      
-
+        int k = 0;
         while (reader.has_next_line()) {
             line_info = reader.next_line(0);
             std::vector<std::string> tokens = line_info.first;
@@ -625,6 +629,11 @@ FileContent InputManager::read_point_cloud(std::ifstream& stream, Progress& prog
                 ss << "]" << std::endl;
 
                 throw std::runtime_error(ss.str());
+            }
+
+            if (input_params.new_function) {
+                tokens.push_back(values[k]);
+                k++;
             }
 
             //Add artificial birth value of 0 if no function value provided
@@ -817,6 +826,72 @@ FileContent InputManager::read_point_cloud(std::ifstream& stream, Progress& prog
 
 } //end read_point_cloud()
 
+void InputManager::parse_metric_old()
+{
+    
+    std::ifstream input_file(input_params.fileName);
+    FileInputReader reader(input_file);
+
+    // STEP 1: read data file and store exact (rational) values of the function for each point
+
+    //skip 'metric'
+    auto line_info = reader.next_line();
+    line_info = reader.next_line();
+    //first read the label for x-axis
+    try {
+
+        if (join(line_info.first).compare("no function") == 0) {
+            input_params.old_function = false;
+            //set label for x-axis to "degree"
+            input_params.x_label = "degree";
+
+
+            //x_reverse is true in this case
+            input_params.x_reverse = true;
+
+            //TODO Probably should find new way to get number of points
+            //now read the number of points
+            line_info = reader.next_line();
+
+
+            int dim = std::stoi(line_info.first[0]);
+            if (dim < 1) {
+                throw std::runtime_error("Number of points must be at least 1");
+            }
+            input_params.dimension = static_cast<unsigned>(dim);
+        } else {
+            input_params.old_function = true;
+            input_params.function_line = 3;
+
+            //check for axis reversal
+            auto is_reversed_and_label = detect_axis_reversed(line_info.first);
+            input_params.x_reverse = is_reversed_and_label.first;
+            input_params.x_label = is_reversed_and_label.second;
+
+            line_info = reader.next_line();
+
+            input_params.dimension = line_info.first.size();
+        }
+
+        // STEP 2: read data file and store exact (rational) values for all distances
+
+        //first read the label for y-axis
+        line_info = reader.next_line();
+        input_params.y_label = join(line_info.first);
+
+        //read the maximum length of edges to construct
+        line_info = reader.next_line();
+        input_params.max_dist = str_to_exact(line_info.first[0]);
+
+    } catch (InputError& e) {
+        throw;
+    } catch (std::exception& e) {
+        throw InputError(line_info.second, e.what());
+    }
+
+    to_skip = 5;
+    input_file.close();
+}
 
 //reads data representing a discrete metric space with a real-valued function and stores in a BifiltrationData
 FileContent InputManager::read_discrete_metric_space(std::ifstream& stream, Progress& progress)
@@ -830,81 +905,90 @@ FileContent InputManager::read_discrete_metric_space(std::ifstream& stream, Prog
     //prepare data structures
     ExactSet value_set; //stores all unique values of the function; must DELETE all elements later
     ExactSet dist_set; //stores all unique values of the distance metric; must DELETE all elements later
-    unsigned num_points;
+    unsigned num_points = input_params.dimension;
 
-    bool hasFunction;
+    bool hasFunction = input_params.old_function || input_params.new_function;
     unsigned* degree; //stores the degree of each point; must FREE later if used
     std::pair<ExactSet::iterator, bool> ret; //for return value upon insert()
 
-    bool x_reverse = false;
-    bool y_reverse = false;
+    bool x_reverse = input_params.x_reverse;
+    bool y_reverse = input_params.y_reverse;
+
+    data->x_label = input_params.x_label;
+    data->y_label = input_params.y_label;
+
+    exact max_dist = input_params.max_dist;
+
+    std::pair<std::vector<std::string>, unsigned> line_info;
+
+    std::vector<std::string> val;
+    if (hasFunction) {
+        for (int i = 0; i < input_params.function_line; i++)
+            line_info = reader.next_line(0);
+
+        for (int i = 0; i < line_info.first.size(); i++) {
+            val.push_back(line_info.first[i]);
+        }
+    }
+
+    for (int i = 0; i < to_skip-input_params.function_line; i++)
+        reader.next_line(0);
 
     // STEP 1: read data file and store exact (rational) values of the function for each point
 
     //skip 'metric'
-    auto line_info = reader.next_line();
-    line_info = reader.next_line();
+
+    //line_info = reader.next_line();
     //first read the label for x-axis
     try {
         std::vector<exact> values;
 
-        if (join(line_info.first).compare("no function") == 0) {
-            hasFunction = false;
-            //set label for x-axis to "degree"
-            data->x_label = "degree";
-            if (verbosity >= 6) {
-                debug() << "InputManager: Discrete metric space file does not have function values. Creating Degree-Rips complex.";
-            }
+        // if (input_params.old_function) {
 
-            //x_reverse is true in this case
-            x_reverse = true;
+        //     exact xrev_sign = x_reverse ? -1 : 1;
 
-            //TODO Probably should find new way to get number of points
-            //now read the number of points
-            line_info = reader.next_line();
-            if (verbosity >= 4) {
-                debug() << "  Number of points:" << line_info.first[0];
-            }
+        //     if (verbosity >= 6) {
+        //         debug() << "InputManager: Discrete metric space file has function values. Creating Vietoris-Rips complex.";
+        //     }
+        //     //now read the values
+        //     line_info = reader.next_line();
+        //     std::vector<std::string> line = line_info.first;
+        //     values.reserve(line.size());
 
-            int dim = std::stoi(line_info.first[0]);
-            if (dim < 1) {
-                throw std::runtime_error("Number of points must be at least 1");
-            }
-            num_points = static_cast<unsigned>(dim);
-        } else {
-            hasFunction = true;
+        //     for (size_t i = 0; i < line.size(); i++) {
+        //         values.push_back(xrev_sign * str_to_exact(line.at(i)));
+        //     }
 
-            //check for axis reversal
-            auto is_reversed_and_label = detect_axis_reversed(line_info.first);
-            x_reverse = is_reversed_and_label.first;
-            data->x_label = is_reversed_and_label.second;
+        // } else 
+        if (hasFunction) {
 
             exact xrev_sign = x_reverse ? -1 : 1;
 
             if (verbosity >= 6) {
                 debug() << "InputManager: Discrete metric space file has function values. Creating Vietoris-Rips complex.";
             }
-            //now read the values
-            line_info = reader.next_line();
-            std::vector<std::string> line = line_info.first;
-            values.reserve(line.size());
+            values.reserve(val.size());
 
-            for (size_t i = 0; i < line.size(); i++) {
-                values.push_back(xrev_sign * str_to_exact(line.at(i)));
+            for (size_t i = 0; i < val.size(); i++) {
+                values.push_back(xrev_sign * str_to_exact(val.at(i)));
             }
-            num_points = values.size();
+
+        } else {
+            if (verbosity >= 6) {
+                debug() << "InputManager: Discrete metric space file does not have function values. Creating Degree-Rips complex.";
+            }
+            if (verbosity >= 4) {
+                debug() << "  Number of points:" << num_points;
+            }
+            // line_info = reader.next_line();
         }
+
+        // for (int i = 0; i < to_skip-3; i++) {
+        //     reader.next_line();
+        // }
 
         // STEP 2: read data file and store exact (rational) values for all distances
 
-        //first read the label for y-axis
-        line_info = reader.next_line();
-        data->y_label = join(line_info.first);
-
-        //read the maximum length of edges to construct
-        line_info = reader.next_line();
-        exact max_dist;
-        max_dist = str_to_exact(line_info.first[0]);
         if (verbosity >= 4) {
             std::ostringstream oss;
             oss << max_dist;
@@ -946,7 +1030,7 @@ FileContent InputManager::read_discrete_metric_space(std::ifstream& stream, Prog
 
                         exact cur_dist = str_to_exact(str);
 
-                        if (cur_dist <= max_dist) //then this distance is allowed
+                        if (max_dist == -1 || cur_dist <= max_dist) //then this distance is allowed
                         {
                             //store distance value, if it doesn't exist already
                             ret = dist_set.insert(ExactValue(cur_dist));

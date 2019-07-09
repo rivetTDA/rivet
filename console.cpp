@@ -51,8 +51,8 @@ static const char USAGE[] =
       rivet_console <module_invariants_file> --bounds [-V <verbosity>]
       rivet_console <module_invariants_file> --barcodes <line_file> [-V <verbosity>]
       rivet_console <input_file> <module_invariants_file> [-H <hom_degree>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [-f <format>] [--binary] [--koszul] 
-                                                          [--max-dist <distance>] [--dimension <dims>] [--num_threads <num_threads>] [--function] [--x-reverse] 
-                                                          [--y-reverse] [--type <type>] [--x-label <label>] [--y-label <label>]
+                                                          [--max-dist <distance>] [--dimension <dims>] [--num_threads <num_threads>] [--x-reverse] [--y-reverse] 
+                                                          [--type <type>] [--x-label <label>] [--y-label <label>]
 
 
     Options:
@@ -81,7 +81,6 @@ static const char USAGE[] =
       --type <type>                            Type of the input file. (Default: points)
       --dimension <dims>                       Dimension in which data points are. (Default: Calculated from file)
       --max-dist <distance>                    Maximum distance to be considered while building the Rips complex. (Default: Infinity)
-      --function                               Indicates that every data point has a function value associated with it.
       --x-label <label>                        Name of the parameter displayed along the x-axis. (Default: degree (if no function specified))
       --y-label <label>                        Name of the parameter displayed along the y-axis. (Default: distance)
       --barcodes <line_file>                   Print barcodes for the line queries in line_file, then exit.
@@ -309,7 +308,6 @@ int main(int argc, char* argv[])
     params.binary = (args["--binary"].isBool() && args["--binary"].asBool()) || params.binary;
     params.bounds = (args["--bounds"].isBool() && args["--bounds"].asBool()) || params.bounds;
     params.koszul = (args["--koszul"].isBool() && args["--koszul"].asBool()) || params.koszul;
-    params.function = (args["--function"].isBool() && args["--function"].asBool()) || params.function;
     params.x_reverse = (args["--x-reverse"].isBool() && args["--x-reverse"].asBool()) || params.x_reverse;
     params.y_reverse = (args["--y-reverse"].isBool() && args["--y-reverse"].asBool()) || params.y_reverse;
 
