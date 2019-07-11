@@ -73,7 +73,7 @@ public:
             return true;
         }
         if (reader.has_next_line()) {
-            auto info = reader.next_line();
+            auto info = reader.next_line(0);
             tokens = info.first;
             line = info.second;
             it = tokens.begin();
@@ -95,6 +95,11 @@ public:
     unsigned line_number() const
     {
         return line;
+    }
+
+    int get_num_tokens()
+    {
+        return tokens.size();
     }
 
 private:
@@ -450,12 +455,12 @@ void InputManager::parse_args()
             }
             else if (line[0] == "--x-label") {
                 // everything coming after --x-label is the label
-                for (int i = 1; i < line.size(); i++)
+                for (unsigned i = 1; i < line.size(); i++)
                     input_params.x_label += line[i] + " ";
             } 
             else if (line[0] == "--y-label") {
                 // everything coming after --y-label is the label
-                for (int i = 1; i < line.size(); i++)
+                for (unsigned i = 1; i < line.size(); i++)
                     input_params.y_label += line[i] + " ";
             } 
             else if (line[0] == "--x-reverse") {
@@ -616,7 +621,7 @@ FileContent InputManager::read_point_cloud(std::ifstream& stream, Progress& prog
         for (int i = 0; i < input_params.function_line; i++)
             line_info = reader.next_line(0);
 
-        for (int i = 0; i < line_info.first.size(); i++) {
+        for (unsigned i = 0; i < line_info.first.size(); i++) {
             values.push_back(line_info.first[i]);
         }
     }
@@ -942,7 +947,7 @@ FileContent InputManager::read_discrete_metric_space(std::ifstream& stream, Prog
         for (int i = 0; i < input_params.function_line; i++)
             line_info = reader.next_line(0);
 
-        for (int i = 0; i < line_info.first.size(); i++) {
+        for (unsigned i = 0; i < line_info.first.size(); i++) {
             val.push_back(line_info.first[i]);
         }
     }
@@ -1004,6 +1009,8 @@ FileContent InputManager::read_discrete_metric_space(std::ifstream& stream, Prog
                 (ret.first)->indexes.push_back(i);
             }
 
+            // TODO: Add error more error handling?
+
             //read distances from this point to all following points
             if (i < num_points - 1) //then there is at least one point after point i, and there should be another line to read
             {
@@ -1016,6 +1023,13 @@ FileContent InputManager::read_discrete_metric_space(std::ifstream& stream, Prog
                                 + " and " + std::to_string(j));
 
                         std::string str = tokens.next_token();
+
+                        // skip lower triangle if full distance matrix is supplied
+                        if (tokens.get_num_tokens() == num_points)
+                        {
+                            for (unsigned k = 0; k < i+1; k++)
+                                tokens.next_token();
+                        }
 
                         exact cur_dist = str_to_exact(str);
 

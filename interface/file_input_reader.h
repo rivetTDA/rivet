@@ -40,7 +40,7 @@ public:
     //true iff the file has another line of printable, non-commented characters
     bool has_next_line();
     //returns the next line, as a vector of strings, plus the line number at which the line was found
-    std::pair<std::vector<std::string>, unsigned> next_line(int = 0);
+    std::pair<std::vector<std::string>, unsigned> next_line(int = 1);
 
 private:
     std::ifstream& in;
