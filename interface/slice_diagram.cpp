@@ -1,19 +1,15 @@
 /**********************************************************************
 Copyright 2014-2016 The RIVET Developers. See the COPYRIGHT file at
 the top-level directory of this distribution.
-
 This file is part of RIVET.
-
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
-
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **********************************************************************/
@@ -122,6 +118,26 @@ void SliceDiagram::create_diagram(const QString x_text, const QString y_text, do
     x_label_text = x_text;
     y_label_text = y_text;
 
+    //xgrades text and line items
+    for (unsigned int i = 1; i < x_grades.size() - 1; i++) {
+        QGraphicsSimpleTextItem* text = new QGraphicsSimpleTextItem;
+        textlistx.push_back(text);
+        QGraphicsLineItem* line = new QGraphicsLineItem;
+        linelistx.push_back(line);
+
+        datalistx.push_back(x_grades[i]);
+    }
+
+    //ygrades text and line items
+    for (unsigned int i = 1; i < y_grades.size() - 1; i++) {
+        QGraphicsSimpleTextItem* text = new QGraphicsSimpleTextItem;
+        textlisty.push_back(text);
+        QGraphicsLineItem* line = new QGraphicsLineItem;
+        linelisty.push_back(line);
+
+        datalisty.push_back(y_grades[i]);
+    }
+
     //pens and brushes
     QPen blackPen(Qt::black);
     blackPen.setWidth(2);
@@ -193,6 +209,29 @@ void SliceDiagram::create_diagram(const QString x_text, const QString y_text, do
     x_label->setZValue(BigZValue + 1);
     y_label->setZValue(BigZValue + 1);
 
+    //Draw labels for the labels in between min and max
+    std::ostringstream stream;
+
+    for (unsigned int i = 0; i < x_grades.size() - 2; i++) { // for x_grade labels
+        stream.precision(4);
+
+        stream << datalistx[i];
+        textlistx[i] = addSimpleText(QString(stream.str().data()));
+        textlistx[i]->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+        textlistx[i]->setFont(config_params->diagramFont);
+        textlistx[i]->setZValue(BigZValue);
+    }
+
+    for (unsigned int i = 0; i < y_grades.size() - 2; i++) { // for y_grade labels
+        stream.precision(4);
+
+        stream << datalisty[i];
+        textlisty[i] = addSimpleText(QString(stream.str().data()));
+        textlisty[i]->setFlag(QGraphicsItem::ItemIgnoresTransformations);
+        textlisty[i]->setFont(config_params->diagramFont);
+        textlisty[i]->setZValue(BigZValue);
+    }
+
     //create rectangles for visualizing homology dimensions
     //first, find max dimension
     unsigned max_hom_dim = 0;
@@ -217,6 +256,21 @@ void SliceDiagram::create_diagram(const QString x_text, const QString y_text, do
             item->setToolTip(QString("dimension = ") + QString::number(hom_dims[i][j]));
             hom_dim_rects[i][j] = item;
         }
+    }
+
+    //draw tick marks
+    // first define tick marks for the maxes and mins
+    xmintick = addLine(QLineF(), blackPen);
+    xmaxtick = addLine(QLineF(), blackPen);
+    ymintick = addLine(QLineF(), blackPen);
+    ymaxtick = addLine(QLineF(), blackPen);
+
+    // define tick marks for the rest of the axis labels
+    for (unsigned int i = 1; i < x_grades.size() - 1; i++) {
+        linelistx[i - 1] = addLine(QLineF(), blackPen);
+    }
+    for (unsigned int i = 1; i < y_grades.size() - 1; i++) {
+        linelisty[i - 1] = addLine(QLineF(), blackPen);
     }
 
     //draw bounds
@@ -436,6 +490,14 @@ void SliceDiagram::resize_diagram()
     //redraw labels
     redraw_labels();
 
+    //reposition tick marks
+    xmintick->setLine((data_xmin_text->pos().x()) + (data_xmin_text->boundingRect().width() / 2), 0, (data_xmin_text->pos().x()) + (data_xmin_text->boundingRect().width() / 2), (-1 * padding + 13));
+    xmaxtick->setLine((data_xmax_text->pos().x()) + (data_xmax_text->boundingRect().width() / 2), 0, (data_xmax_text->pos().x()) + (data_xmax_text->boundingRect().width() / 2), (-1 * padding + 13));
+    ymintick->setLine(0, (data_ymin_text->pos().y()) - (data_ymin_text->boundingRect().height() / 2), (-1 * padding + 13), (data_ymin_text->pos().y()) - (data_ymin_text->boundingRect().height() / 2));
+    ymaxtick->setLine(0, (data_ymax_text->pos().y()) - (data_ymin_text->boundingRect().height() / 2), (-1 * padding + 13), (data_ymax_text->pos().y()) - (data_ymin_text->boundingRect().height() / 2));
+
+    redraw_tickmarks();
+
     //clear selection (because resizing window might combine or split dots in the upper strip of the persistence diagram)
     clear_selection();
     highlight_line->hide();
@@ -601,6 +663,14 @@ void SliceDiagram::zoom_diagram(double angle, double offset, double distance_to_
     //draw the labels
     redraw_labels();
 
+    //reposition tick marks
+    xmintick->setLine((data_xmin_text->pos().x()) + (data_xmin_text->boundingRect().width() / 2), 0, (data_xmin_text->pos().x()) + (data_xmin_text->boundingRect().width() / 2), (-1 * padding + 13));
+    xmaxtick->setLine((data_xmax_text->pos().x()) + (data_xmax_text->boundingRect().width() / 2), 0, (data_xmax_text->pos().x()) + (data_xmax_text->boundingRect().width() / 2), (-1 * padding + 13));
+    ymintick->setLine(0, (data_ymin_text->pos().y()) - (data_ymin_text->boundingRect().height() / 2), (-1 * padding + 13), (data_ymin_text->pos().y()) - (data_ymin_text->boundingRect().height() / 2));
+    ymaxtick->setLine(0, (data_ymax_text->pos().y()) - (data_ymin_text->boundingRect().height() / 2), (-1 * padding + 13), (data_ymax_text->pos().y()) - (data_ymin_text->boundingRect().height() / 2));
+
+    redraw_tickmarks();
+
     //clear selection (because resizing window might combine or split dots in the upper strip of the persistence diagram)
     clear_selection();
     highlight_line->hide();
@@ -692,6 +762,14 @@ void SliceDiagram::receive_parameter_change()
     data_ymax_text->setFont(config_params->diagramFont);
     x_label->setFont(config_params->diagramFont);
     y_label->setFont(config_params->diagramFont);
+
+    //update fonts for axis labels between max and min
+    for (unsigned int i = 1; i < x_grades.size() - 1; i++) {
+        textlistx[i - 1]->setFont(config_params->diagramFont);
+    }
+    for (unsigned int i = 1; i < y_grades.size() - 1; i++) {
+        textlisty[i - 1]->setFont(config_params->diagramFont);
+    }
 
     //update diagram
     resize_diagram();
@@ -1152,6 +1230,32 @@ double SliceDiagram::get_pd_scale()
     return scale_x * scale_y / denominator;
 }
 
+//redraws the tick marks on the axis diagram
+void SliceDiagram::redraw_tickmarks()
+{
+
+    //reposition tick marks
+    for (unsigned int i = 1; i < x_grades.size() - 1; i++) {
+        double left = (x_grades[i] - data_xmin) * scale_x;
+        left = fmin(fmax(0, left), diagram_width + padding);
+        if (textlistx[i - 1]->text() == " ") {
+            linelistx[i - 1]->setLine(0, 0, 0, 0);
+        } else {
+            linelistx[i - 1]->setLine((left), 0, (left), (-1 * padding + 13));
+        }
+    }
+
+    for (unsigned int i = 1; i < y_grades.size() - 1; i++) {
+        double bottom = (y_grades[i] - data_ymin) * scale_y;
+        bottom = fmin(fmax(0, bottom), diagram_height + padding);
+        if (textlisty[i - 1]->text() == " ") {
+            linelisty[i - 1]->setLine(0, 0, 0, 0);
+        } else {
+            linelisty[i - 1]->setLine(0, bottom, -1 * padding + 13, bottom);
+        }
+    }
+}
+
 //draws labels on top of white rectangles, so they don't get obscured by other graphics
 void SliceDiagram::redraw_labels()
 {
@@ -1162,8 +1266,61 @@ void SliceDiagram::redraw_labels()
     data_ymin_text->setPos(-1 * text_padding - data_ymin_text->boundingRect().width(), data_ymin_text->boundingRect().height() / 2);
     data_ymax_text->setPos(-1 * text_padding - data_ymax_text->boundingRect().width(), diagram_height + data_ymax_text->boundingRect().height() / 2);
 
-    x_label->setPos((diagram_width - x_label->boundingRect().width()) / 2, -1 * text_padding);
-    y_label->setPos(-1 * text_padding - y_label->boundingRect().height(), (diagram_height - y_label->boundingRect().width()) / 2);
+    x_label->setPos((diagram_width - x_label->boundingRect().width()) / 2, -1 * text_padding - (data_xmin_text->boundingRect().height()));
+    y_label->setPos(-1 * text_padding - (data_ymax_text->boundingRect().width()) - y_label->boundingRect().height(), (diagram_height - y_label->boundingRect().width()) / 2);
+
+    //setting position for x_grades axis label
+    for (unsigned i = 1; i < x_grades.size() - 1; i++) {
+        double left = (x_grades[i] - data_xmin) * scale_x;
+
+        left = fmin(fmax(0, left), diagram_width + padding);
+
+        textlistx[i - 1]->setPos((left - (textlistx[i - 1]->boundingRect().width() / 2)), -1 * text_padding);
+
+        std::ostringstream stream1;
+        stream1.clear();
+        stream1.precision(4);
+        stream1 << (datalistx[i - 1] == 0 ? 0 : datalistx[i - 1] * xrev_sign);
+        textlistx[i - 1]->setText(QString(stream1.str().data()));
+    }
+
+    //setting position for y_grades axis labels
+    for (unsigned i = 1; i < y_grades.size() - 1; i++) {
+        double bottom = (y_grades[i] - data_ymin) * scale_y;
+
+        bottom = fmin(fmax(0, bottom), diagram_height + padding);
+
+        textlisty[i - 1]->setPos(-1 * text_padding - textlisty[i - 1]->boundingRect().width(), (bottom + (textlisty[i - 1]->boundingRect().height() / 2)));
+
+        std::ostringstream stream2;
+        stream2.clear();
+        stream2.precision(4);
+        stream2 << (datalisty[i - 1] == 0 ? 0 : datalisty[i - 1] * yrev_sign);
+        textlisty[i - 1]->setText(QString(stream2.str().data()));
+    }
+
+    double currentdistx = (data_xmin_text->pos().x() + data_xmin_text->boundingRect().width());
+    double currentdisty = data_ymin_text->pos().y();
+
+    //checking for space on the axis for the labels to fit
+    for (unsigned int i = 1; i < x_grades.size() - 1; i++) {
+        if (textlistx[i - 1]->pos().x() > currentdistx && (textlistx[i - 1]->pos().x() + textlistx[i - 1]->boundingRect().width()) < data_xmax_text->pos().x()) {
+
+            currentdistx = textlistx[i - 1]->pos().x() + textlistx[i - 1]->boundingRect().width();
+        } else {
+            textlistx[i - 1]->setText(" ");
+        }
+    }
+
+    for (unsigned int i = 1; i < y_grades.size() - 1; i++) {
+        if ((textlisty[i - 1]->pos().y() - textlisty[i - 1]->boundingRect().height()) > currentdisty && textlisty[i - 1]->pos().y() < (data_ymax_text->pos().y() - data_ymax_text->boundingRect().height())) {
+
+            currentdisty = textlisty[i - 1]->pos().y();
+
+        } else {
+            textlisty[i - 1]->setText(" ");
+        }
+    }
 
     std::ostringstream s_xmin;
     s_xmin.precision(4);

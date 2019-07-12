@@ -1,19 +1,15 @@
 /**********************************************************************
 Copyright 2014-2016 The RIVET Developers. See the COPYRIGHT file at
 the top-level directory of this distribution.
-
 This file is part of RIVET.
-
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
-
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **********************************************************************/
@@ -57,6 +53,7 @@ public:
     void redraw_dim_rects(); //redraws the rectangles for the homology dimension visualization
     void redraw_dots(); //redraws the support points of the multigraded Betti numbers
     void redraw_labels(); //redraws axis labels in same position on top of rectangles
+    void redraw_tickmarks(); //redraws tick marks on the axis labels
 
     void zoom_diagram(double angle, double offset, double distance_to_origin); //redraws diagram in response to a change in bounds
 
@@ -121,6 +118,14 @@ private:
     //parameters
     ConfigParameters* config_params;
 
+    std::vector<double> datalistx; // contains the data from x_grades
+    std::vector<double> datalisty; // contains the data from y_grades
+
+    std::vector<QGraphicsSimpleTextItem*> textlistx; // text items for x_grades labels
+    std::vector<QGraphicsSimpleTextItem*> textlisty; // text items for y_grades labels
+    std::vector<QGraphicsLineItem*> linelistx; //tick marks for x_grade labels
+    std::vector<QGraphicsLineItem*> linelisty; //tick marks for y_grade labels
+
     //graphics items
     QGraphicsSimpleTextItem* data_xmin_text;
     QGraphicsSimpleTextItem* data_xmax_text;
@@ -134,6 +139,12 @@ private:
     QGraphicsLineItem* gray_line_horizontal; //horizontal gray line at the top of the grading rectangle
     QGraphicsLineItem* gray_line_vertical_left; //vertical gray line at the left of the grading rectangle
     QGraphicsLineItem* gray_line_horizontal_bottom; //horizontal gray line at the bottom of the grading rectangle
+
+    //max and min tick marks
+    QGraphicsLineItem* xmintick;
+    QGraphicsLineItem* xmaxtick;
+    QGraphicsLineItem* ymintick;
+    QGraphicsLineItem* ymaxtick;
 
     QGraphicsRectItem* rect1;
     QGraphicsRectItem* rect2;
