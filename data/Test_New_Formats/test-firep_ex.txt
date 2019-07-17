@@ -1,6 +1,6 @@
 --type firep
---x-label x-label
---y-label y-label
+--xlabel x-label
+--ylabel y-label
 2 2 0
 3 2 ; 0
 2 3 ; 0 1

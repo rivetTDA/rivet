@@ -1,7 +1,7 @@
 --type metric
 
---y-label distance
---max-dist 3
+--ylabel distance
+--maxdist 3
 
 0.2 2.5 3.4 0.5 
 0.4 2 2.8 

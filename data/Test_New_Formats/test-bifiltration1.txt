@@ -1,6 +1,6 @@
 --type bifiltration
---x-label x-label
---y-label y-label
+--xlabel x-label
+--ylabel y-label
 0 ; 0 0
 1 ; 0 0 
 2 ; 0 0

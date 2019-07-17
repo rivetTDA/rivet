@@ -51,8 +51,8 @@ static const char USAGE[] =
       rivet_console <module_invariants_file> --bounds [-V <verbosity>]
       rivet_console <module_invariants_file> --barcodes <line_file> [-V <verbosity>]
       rivet_console <input_file> <module_invariants_file> [-H <hom_degree>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [-f <format>] [--binary] [--koszul] 
-                                                          [--max-dist <distance>] [--dimension <dims>] [--num_threads <num_threads>] [--x-reverse] [--y-reverse] 
-                                                          [--type <type>] [--x-label <label>] [--y-label <label>]
+                                                          [--maxdist <distance>] [--dimension <dims>] [--numthreads <num_threads>] [--xreverse] [--yreverse] 
+                                                          [--type <type>] [--xlabel <label>] [--ylabel <label>]
 
 
     Options:
@@ -76,13 +76,13 @@ static const char USAGE[] =
       --bounds                                 Print lower and upper bounds for the module in <module_invariants_file> and exit
       -k --koszul                              Use koszul homology-based algorithm to compute Betti numbers, instead of
                                                an approach based on computing presentations.
-      --x-reverse                              Reverse the direction of the values in the x-axis.
-      --y-reverse                              Reverse the direction of the values in the y-axis.
+      --xreverse                               Reverse the direction of the values in the x-axis.
+      --yreverse                               Reverse the direction of the values in the y-axis.
       --type <type>                            Type of the input file. (Default: points)
       --dimension <dims>                       Dimension in which data points are. (Default: Calculated from file)
-      --max-dist <distance>                    Maximum distance to be considered while building the Rips complex. (Default: Infinity)
-      --x-label <label>                        Name of the parameter displayed along the x-axis. (Default: degree (if no function specified))
-      --y-label <label>                        Name of the parameter displayed along the y-axis. (Default: distance)
+      --maxdist <distance>                     Maximum distance to be considered while building the Rips complex. (Default: Infinity)
+      --xlabel <label>                         Name of the parameter displayed along the x-axis. (Default: degree (if no function specified))
+      --ylabel <label>                         Name of the parameter displayed along the y-axis. (Default: distance)
       --barcodes <line_file>                   Print barcodes for the line queries in line_file, then exit.
                                                
 
@@ -310,21 +310,21 @@ int main(int argc, char* argv[])
     params.binary = (args["--binary"].isBool() && args["--binary"].asBool()) || params.binary;
     params.bounds = (args["--bounds"].isBool() && args["--bounds"].asBool()) || params.bounds;
     params.koszul = (args["--koszul"].isBool() && args["--koszul"].asBool()) || params.koszul;
-    params.x_reverse = (args["--x-reverse"].isBool() && args["--x-reverse"].asBool()) || params.x_reverse;
-    params.y_reverse = (args["--y-reverse"].isBool() && args["--y-reverse"].asBool()) || params.y_reverse;
+    params.x_reverse = (args["--xreverse"].isBool() && args["--xreverse"].asBool()) || params.x_reverse;
+    params.y_reverse = (args["--yreverse"].isBool() && args["--yreverse"].asBool()) || params.y_reverse;
 
     // these flags have arguments
     bool dimension = args["--dimension"].isString();
-    bool max_dist = args["--max-dist"].isString();
+    bool max_dist = args["--maxdist"].isString();
     bool type = args["--type"].isString();
     bool homology = args["--homology"].isString();
     bool xbins = args["--xbins"].isString();
     bool ybins = args["--ybins"].isString();
     bool verb = args["--verbosity"].isString();
     bool out_form = args["--format"].isString();
-    bool num_threads = args["--num_threads"].isString();
-    bool x_label = args["--x-label"].isString();
-    bool y_label = args["--y-label"].isString();
+    bool num_threads = args["--numthreads"].isString();
+    bool x_label = args["--xlabel"].isString();
+    bool y_label = args["--ylabel"].isString();
 
     // override whichever flag has been set in the command line
     std::string slices;
@@ -344,10 +344,10 @@ int main(int argc, char* argv[])
 
     if (max_dist) {
         try {
-            params.max_dist = str_to_exact(args["--max-dist"].asString());
+            params.max_dist = str_to_exact(args["--maxdist"].asString());
             if (params.max_dist <= 0) throw std::runtime_error("Error");
         } catch (std::exception& e) {
-            throw std::runtime_error("Invalid argument for --max-dist");
+            throw std::runtime_error("Invalid argument for --maxdist");
         }
     }
 
@@ -394,22 +394,22 @@ int main(int argc, char* argv[])
     }
 
     if (num_threads) {
-        int nt = get_uint_or_die(args, "--num_threads");
+        int nt = get_uint_or_die(args, "--numthreads");
         if (nt < 0)
-            throw std::runtime_error("Invalid argument for --num_threads");
+            throw std::runtime_error("Invalid argument for --numthreads");
         params.num_threads = nt;
     }
 
     if (x_label) {
-        params.x_label = args["--x-label"].asString();
+        params.x_label = args["--xlabel"].asString();
         if (params.x_label == "")
-            throw std::runtime_error("Invalid argument for --x-label");
+            throw std::runtime_error("Invalid argument for --xlabel");
     }
 
     if (y_label) {
-        params.y_label = args["--y-label"].asString();
+        params.y_label = args["--ylabel"].asString();
         if (params.y_label == "")
-            throw std::runtime_error("Invalid argument for --y-label");
+            throw std::runtime_error("Invalid argument for --ylabel");
     }
 
     // all input parameters should be set by this point

@@ -383,14 +383,14 @@ void InputManager::parse_args()
                     throw std::runtime_error("Invalid argument for --dimension");
                 }
             } 
-            else if (line[0] == "--max-dist") {
+            else if (line[0] == "--maxdist") {
                 try {
                     // max distance cannot be less than 0
                     exact dist = str_to_exact(line[1]);
                     if (dist <= 0) throw std::runtime_error("Error");
                     input_params.max_dist = dist;
                 } catch (std::exception& e) {
-                    throw std::runtime_error("Invalid argument for --max-dist");
+                    throw std::runtime_error("Invalid argument for --maxdist");
                 }
             } 
             else if (line[0] == "--homology" || line[0] == "-H") {
@@ -443,30 +443,30 @@ void InputManager::parse_args()
                     throw std::runtime_error("Invalid argument for --format");
                 }
             }
-            else if (line[0] == "--num_threads") {
+            else if (line[0] == "--numthreads") {
                 try {
                     // number of threads cannot be less than 0
                     int nt = std::stoi(line[1]);
                     if (nt < 0) throw std::runtime_error("Error");
                     input_params.num_threads = nt;
                 } catch (std::exception& e) {
-                    throw std::runtime_error("Invalid argument for --num_threads");
+                    throw std::runtime_error("Invalid argument for --numthreads");
                 }
             }
-            else if (line[0] == "--x-label") {
+            else if (line[0] == "--xlabel") {
                 // everything coming after --x-label is the label
                 for (unsigned i = 1; i < line.size(); i++)
                     input_params.x_label += line[i] + " ";
             } 
-            else if (line[0] == "--y-label") {
+            else if (line[0] == "--ylabel") {
                 // everything coming after --y-label is the label
                 for (unsigned i = 1; i < line.size(); i++)
                     input_params.y_label += line[i] + " ";
             } 
-            else if (line[0] == "--x-reverse") {
+            else if (line[0] == "--xreverse") {
                 input_params.x_reverse = true;
             } 
-            else if (line[0] == "--y-reverse") {
+            else if (line[0] == "--yreverse") {
                 input_params.y_reverse = true;
             } 
             else if (line[0] == "--function") {

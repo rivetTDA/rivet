@@ -1,10 +1,10 @@
 --type metric
---x-label function values
+--xlabel function values
 
 --function
 0 1 0.5 1 0.7
 
---y-label distance
+--ylabel distance
 --max-dist 3
 
 0.2 2.5 3.4 0.5 

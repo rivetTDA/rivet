@@ -1,6 +1,6 @@
 #--type points
 #--dimension 3
-#--max-dist 3.1
+#--maxdist 3.1
 --xbins 10
 --ybins 10
 --function
