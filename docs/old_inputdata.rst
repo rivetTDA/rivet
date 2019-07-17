@@ -3,17 +3,23 @@
 Old Input Data
 ===============
 
-As explained in the section “:ref:`runningRIVET`” above, RIVET requires an *input data file*.  This file can specify input of the following types:
+This page contains specifications for the input files used by version 1.0 of RIVET.
+RIVET 1.1 introduced more user-friendly input file formats, that allow the specification of input parameters using syntax that matches the command-line flags uzed by ``rivet_console``.
+Detailed specifications for the new input formats are found in ":ref:`inputData`".
+
+The old input formats from RIVET 1.0, as described below, are still supported in RIVET 1.1. 
+However, their use is discouraged, and support for these file formats might be dropped in future versions of RIVET.
+
+Text input files for RIVET 1.0 may encode any of the following types of data:
 
 * Point Cloud or finite metric space, with or without a real-valued function. 
 * Bifiltration
 * FIRep (i.e., short chain complex of free modules).
 
-(These are exactly the objects in green boxes in the figure of the section “:ref:`structure`” in this documentation.)
-
-We now specify the formats of the input data file for each of these types of input. Please note that although these formats are supported, RIVET now has a more user-friendly input file format and you can read about it in ":ref:`inputData`".
+We now specify the formats of the input data file for each of these types of input.
 
 **NOTE**: RIVET ignores lines that begin with the symbol `#`; such lines may be used for comments.  Blank lines are also ignored.
+
 
 Point Cloud with a Function
 ---------------------------
