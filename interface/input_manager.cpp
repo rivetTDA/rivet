@@ -330,7 +330,7 @@ bool InputManager::is_flag(std::string str)
 
     if (first == 45 && second == 45) return true;
     if (first == 45 && (second < 48 || second > 57)) return true;
-    if (first < 48 || first > 57) return true;
+    if (first != 45 && (first < 48 || first > 57)) return true;
 
     return false;
 }

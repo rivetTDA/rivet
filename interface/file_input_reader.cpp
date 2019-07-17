@@ -31,7 +31,7 @@ FileInputReader::FileInputReader(std::ifstream& file)
     find_next_line(0);
 }
 
-// if it starts with -- or -<non-digit> or <non-digit>, it is a flag
+// if it starts with -- or -<non-digit> or <non-digit & non-dash>, it is a flag
 bool FileInputReader::is_flag(std::string str)
 {
     // use ASCII values to check if digit or not
@@ -40,7 +40,7 @@ bool FileInputReader::is_flag(std::string str)
 
     if (first == 45 && second == 45) return true;
     if (first == 45 && (second < 48 || second > 57)) return true;
-    if (first < 48 || first > 57) return true;
+    if (first != 45 && (first < 48 || first > 57)) return true;
 
     return false;
 }
@@ -62,7 +62,7 @@ void FileInputReader::find_next_line(int old)
         }
         // if a "," is there in the line, split by ","
         else {
-            boost::split(next_line_tokens, line, boost::is_any_of(","), boost::token_compress_on);
+            boost::split(next_line_tokens, line, boost::is_any_of(", "), boost::token_compress_on);
         }
         next_line_found = true;
         break;
