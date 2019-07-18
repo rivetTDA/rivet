@@ -1,5 +1,7 @@
-bifiltration
-x-label
-y-label
+--type bifiltration
+--xlabel x-label
+--ylabel y-label
+
+# data starts here
 #single vertex bifiltration
 0 ; 0 0

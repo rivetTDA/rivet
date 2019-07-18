@@ -1,15 +1,19 @@
-metric
+--type metric
 #x-axis label
-function values
+--xlabel function values
 
 #function values for five points
+--function
 0 1 0.5 1 0.7
 
+
 #y-axis label
-distance
+--ylabel distance
 
 #max distance to be a 1-simplex
-3
+--maxdist 3
+
+# data starts here
 
 #distances
 0.2 2.5 3.4 0.5 
