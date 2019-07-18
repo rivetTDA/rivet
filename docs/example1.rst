@@ -8,7 +8,7 @@ Visualizing Persistence
 ------------------------------------------
 We have already noted that the long bar in the RIVET visualization corresponds to the dense cycle of points in the point cloud. We will now examine simplicial complexes corresponding to parameter pairs near either end of the long bar, indicated by labels Ⓐ and Ⓑ in the diagram below.
 
-.. image:: images/example_1/viewing persistance.png
+.. image:: images/example_1/'viewing persistance.png'
    :width: 400px
    :height: 340px
    :alt: Rivet visualization with points A and B labeled
@@ -37,7 +37,7 @@ Large Hilbert function value
 
 In the following RIVET visualization, point Ⓒ is located in a region where RIVET reports the homology dimension of 8. (In RIVET, hover the mouse over a grey rectangle to see the reported dimension.) 
 
-.. image:: images/example_1/large hilbert value.png
+.. image:: images/example_1/'large hilbert value.png'
    :width: 400px
    :height: 340px
    :alt: Rivet visualization with point C labeled
@@ -57,7 +57,7 @@ Investigating four more points
 
 The following RIVET visualization indicates four points, labeled Ⓓ, Ⓔ, Ⓕ, and Ⓖ.
 
-.. image:: images/example_1/4 other points.png
+.. image:: images/example_1/'4 other points.png'
    :width: 400px
    :height: 340px
    :alt: Rivet Visualization with points D, E, F, and G labeled
