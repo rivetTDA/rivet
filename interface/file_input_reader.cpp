@@ -62,7 +62,7 @@ void FileInputReader::find_next_line(int old)
         }
         // if a "," is there in the line, split by ","
         else {
-            boost::split(next_line_tokens, line, boost::is_any_of(", "), boost::token_compress_on);
+            boost::split(next_line_tokens, line, boost::is_any_of(", \t"), boost::token_compress_on);
         }
         next_line_found = true;
         break;
