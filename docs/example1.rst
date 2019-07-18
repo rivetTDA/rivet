@@ -9,8 +9,8 @@ Visualizing Persistence
 We have already noted that the long bar in the RIVET visualization corresponds to the dense cycle of points in the point cloud. We will now examine simplicial complexes corresponding to parameter pairs near either end of the long bar, indicated by labels Ⓐ and Ⓑ in the diagram below.
 
 .. image:: images/example_1/viewing_persistance.png
-   :width: 300px
-   :height: 240px
+   :width: 400px
+   :height: 340px
    :alt: Rivet visualization with points A and B labeled
    :align: center
 
