@@ -185,20 +185,7 @@ void SliceDiagram::create_diagram(const QString x_text, const QString y_text, do
     y_label->setTransform(QTransform(0, 1, 1, 0, 0, 0));
     y_label->setFont(config_params->diagramFont);
 
-    rect1 = addRect(0, 0, 0, 0, Qt::NoPen, QBrush(QColor(255, 255, 255)));
-    rect2 = addRect(0, 0, 0, 0, Qt::NoPen, QBrush(QColor(255, 255, 255)));
-    rect3 = addRect(0, 0, 0, 0, Qt::NoPen, QBrush(QColor(255, 255, 255)));
-    rect4 = addRect(0, 0, 0, 0, Qt::NoPen, QBrush(QColor(255, 255, 255)));
-    rect5 = addRect(0, 0, 0, 0, Qt::NoPen, QBrush(QColor(255, 255, 255)));
-    rect6 = addRect(0, 0, 0, 0, Qt::NoPen, QBrush(QColor(255, 255, 255)));
-
     int BigZValue = 1000; //probably not the best way to do this...
-    rect1->setZValue(BigZValue);
-    rect2->setZValue(BigZValue);
-    rect3->setZValue(BigZValue);
-    rect4->setZValue(BigZValue);
-    rect5->setZValue(BigZValue);
-    rect6->setZValue(BigZValue);
 
     data_xmin_text->setZValue(BigZValue + 1);
     data_ymin_text->setZValue(BigZValue + 1);
@@ -1235,8 +1222,6 @@ void SliceDiagram::redraw_tickmarks()
     tickmarksize = 8;
 
     //reposition tick marks
-    qDebug() << "data_xmax_text->pos().x(): " << data_xmax_text->pos().x();
-    qDebug() << "data_xmax_text->boundingRect().width(): " << data_xmax_text->boundingRect().width(); 
     for (unsigned int i = 0; i < x_grades.size(); i++) {
         double left = (x_grades[i] - data_xmin) * scale_x;
         left = fmin(fmax(0, left), diagram_width + padding);
@@ -1253,7 +1238,6 @@ void SliceDiagram::redraw_tickmarks()
             linelistx[i]->setLine(0, 0, 0, -tickmarksize);
             linelistx[i]->show();
         }
-        qDebug() << textlistx[i]->text()<< " " << linelistx[i]->pos().x();
     }
     
     for (unsigned int i = 0; i < y_grades.size(); i++) {
@@ -1263,7 +1247,6 @@ void SliceDiagram::redraw_tickmarks()
             if(linelisty[i]->pos().y() < data_ymax_text->pos().y() - data_ymax_text->boundingRect().height() - padding){
                 linelisty[i]->setPos(0, bottom);
                 linelisty[i]->setLine(0, 0, -tickmarksize/2, 0);
-                //linelisty[i]->setLine(0, 0, -tickmarksize/2, bottom);
                 
             }
             else{
@@ -1272,7 +1255,6 @@ void SliceDiagram::redraw_tickmarks()
         } else {
             linelisty[i]->setPos(0, bottom);
             linelisty[i]->setLine(0, 0, -tickmarksize, 0);
-            //linelisty[i]->setLine(0, 0, -tickmarksize, bottom);
             linelisty[i]->show();
         }
     }
@@ -1354,36 +1336,19 @@ void SliceDiagram::redraw_labels()
     s_xmin << (data_xmin == 0 ? 0 : data_xmin * xrev_sign);
     data_xmin_text->setText(QString(s_xmin.str().data()));
 
-    rect1->setRect(0, 0, data_xmin_text->sceneBoundingRect().width(), data_xmin_text->sceneBoundingRect().height());
-    rect1->setPos(data_xmin_text->pos().x(), data_xmin_text->pos().y() - data_xmin_text->boundingRect().height());
-
     std::ostringstream s_ymin;
     s_ymin.precision(4);
     s_ymin << (data_ymin == 0 ? 0 : data_ymin * yrev_sign);
     data_ymin_text->setText(QString(s_ymin.str().data()));
-
-    rect2->setRect(0, 0, data_ymin_text->sceneBoundingRect().width(), data_ymin_text->sceneBoundingRect().height());
-    rect2->setPos(data_ymin_text->pos().x(), data_ymin_text->pos().y() - data_ymin_text->boundingRect().height());
 
     std::ostringstream s_xmax;
     s_xmax.precision(4);
     s_xmax << (data_xmax == 0 ? 0 : data_xmax * xrev_sign);
     data_xmax_text->setText(QString(s_xmax.str().data()));
 
-    rect3->setRect(0, 0, data_xmax_text->sceneBoundingRect().width(), data_xmax_text->sceneBoundingRect().height());
-    rect3->setPos(data_xmax_text->pos().x(), data_xmax_text->pos().y() - data_xmax_text->boundingRect().height());
-
     std::ostringstream s_ymax;
     s_ymax.precision(4);
     s_ymax << (data_ymax == 0 ? 0 : data_ymax * yrev_sign);
     data_ymax_text->setText(QString(s_ymax.str().data()));
 
-    rect4->setRect(0, 0, data_ymax_text->sceneBoundingRect().width(), data_ymax_text->sceneBoundingRect().height());
-    rect4->setPos(data_ymax_text->pos().x(), data_ymax_text->pos().y() - data_ymax_text->boundingRect().height());
-
-    rect5->setRect(0, 0, x_label->boundingRect().width(), x_label->boundingRect().height());
-    rect5->setPos(x_label->pos().x(), x_label->pos().y() - x_label->boundingRect().height());
-
-    rect6->setRect(0, 0, y_label->boundingRect().height(), y_label->boundingRect().width());
-    rect6->setPos(y_label->pos().x(), y_label->pos().y());
 }
