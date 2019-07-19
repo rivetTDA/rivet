@@ -66,6 +66,7 @@ Finite Metric Space
 This format is similar to the one just described, except that one specifies the entries of a distance matrix rather than the coordinates of points in :math:`\mathbb R^n`.
 If the points are denoted :math:`p_1, \ldots, p_n`, then the entry in row :math:`i`, column :math:`j` of the matrix gives the distance between :math:`p_i` to :math:`p_j`.
 Thus, the matrix is symmetric, with zeros on the diagonal.
+Since it is symmetric, one may also specify the upper triangular matrix without the zeros instead of the whole matrix.
 The given distances are not required to satisfy the triangle inequality.
 
 As with point cloud data, if function values are provided using the :code:`--function` flag, then RIVET constructs a function-Rips bifiltration from the input. Otherwise, RIVET constructs a degree-Rips bifiltration.
@@ -76,7 +77,7 @@ The file has the following format:
 * Flags may be specified at the top of the file. Note that the :code:`--type` flag must be given with the argument :code:`metric`. For a full list of possible flags, run :code:`rivet_console (-h | --help)`. 
 * In order to build a function-Rips bifiltration, the :code:`--function` flag must be present. If supplied, the line immediately following the :code:`--function` flag must contain the function values on the given points, in the same order that the points appear later in the file. Numbers may be separated by white space or commas.
 * To provide a label for the function axis, use the :code:`--xlabel` flag.
-* After all flags have been specified (including :code:`--function` and its values), the distance matrix must be given. Each row of the matrix should be provided in one line of the file, specified as :math:`n` decimal numbers separated by white space or commas.
+* After all flags have been specified (including :code:`--function` and its values), the distance matrix (or an upper triangular matrix without zeros) must be given. Each row of the matrix should be provided in one line of the file, specified as :math:`n` decimal numbers separated by white space or commas.
 
 Here is an example, for a metric space of cardinality 3::
 
@@ -91,6 +92,12 @@ Here is an example, for a metric space of cardinality 3::
 	0,2,3.2
 	2,0,1.25
 	3.2,1.25,0
+
+The same data can be written as the following upper triangular matrix::
+
+	# upper triangular distance matrix
+	2,3.2
+	1.25
 
 
 Bifiltration

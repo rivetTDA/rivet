@@ -511,8 +511,13 @@ void InputManager::parse_args()
     // set dimension in which points live if not set earlier
     if (input_params.dimension == 0) {
         input_params.dimension = line_info.first.size();
-        if (input_params.type == "metric")
-            input_params.dimension++;   // this is the number of points for metric space
+        if (input_params.type == "metric") {
+            line_info = reader.next_line(0);
+            if (input_params.dimension == line_info.first.size())
+                ;
+            else if (input_params.dimension == line_info.first.size()+1)
+                input_params.dimension++;   // this is the number of points for metric space
+        }
     }
     input_file.close();
 }
@@ -925,6 +930,7 @@ FileContent InputManager::read_discrete_metric_space(std::ifstream& stream, Prog
     ExactSet value_set; //stores all unique values of the function; must DELETE all elements later
     ExactSet dist_set; //stores all unique values of the distance metric; must DELETE all elements later
     unsigned num_points = input_params.dimension;
+    unsigned expectedNumTokens = num_points;
 
     bool hasFunction = input_params.old_function || input_params.new_function;
     unsigned* degree; //stores the degree of each point; must FREE later if used
@@ -947,14 +953,15 @@ FileContent InputManager::read_discrete_metric_space(std::ifstream& stream, Prog
         for (int i = 0; i < input_params.function_line; i++)
             line_info = reader.next_line(0);
 
-        for (unsigned i = 0; i < line_info.first.size(); i++) {
+        num_points = line_info.first.size();
+        for (unsigned i = 0; i < num_points; i++) {
             val.push_back(line_info.first[i]);
         }
     }
 
     // skip lines with flags
     for (int i = 0; i < to_skip-input_params.function_line; i++)
-        reader.next_line(0);
+        line_info = reader.next_line(0);
 
     try {
         std::vector<exact> values;
@@ -997,8 +1004,6 @@ FileContent InputManager::read_discrete_metric_space(std::ifstream& stream, Prog
         //store distance 0 at index 0
         (ret.first)->indexes.push_back(0);
 
-        TokenReader tokens(reader);
-
         //consider all points
         for (unsigned i = 0; i < num_points; i++) {
             if (hasFunction) {
@@ -1014,22 +1019,31 @@ FileContent InputManager::read_discrete_metric_space(std::ifstream& stream, Prog
             //read distances from this point to all following points
             if (i < num_points - 1) //then there is at least one point after point i, and there should be another line to read
             {
+                if (reader.has_next_line())
+                    line_info = reader.next_line(0);
+
+                std::vector<std::string> tokens;
+
+                // skip lower triangle if full distance matrix is supplied
+                if (line_info.first.size() == num_points && num_points == expectedNumTokens)
+                {
+                    for (unsigned k = i+1; k < num_points; k++)
+                        tokens.push_back(line_info.first[k]);
+                }
+                else if (line_info.first.size() == expectedNumTokens-1)
+                {
+                    for (unsigned k = 0; k < expectedNumTokens-1; k++)
+                        tokens.push_back(line_info.first[k]);
+                    expectedNumTokens--;
+                }
+                else {
+                    throw std::runtime_error("Expected " + std::to_string(expectedNumTokens-1) + " numbers, got " + std::to_string(line_info.first.size()) + " at line " + std::to_string(line_info.second));
+                }
+
                 try {
                     for (unsigned j = i + 1; j < num_points; j++) {
 
-                        //read distance between points i and j
-                        if (!tokens.has_next_token())
-                            throw std::runtime_error("no distance between points " + std::to_string(i)
-                                + " and " + std::to_string(j));
-
-                        std::string str = tokens.next_token();
-
-                        // skip lower triangle if full distance matrix is supplied
-                        if (tokens.get_num_tokens() == num_points)
-                        {
-                            for (unsigned k = 0; k < i+1; k++)
-                                tokens.next_token();
-                        }
+                        std::string str = tokens[j-i-1];                        
 
                         exact cur_dist = str_to_exact(str);
 
@@ -1050,7 +1064,7 @@ FileContent InputManager::read_discrete_metric_space(std::ifstream& stream, Prog
                         }
                     }
                 } catch (std::exception& e) {
-                    throw InputError(tokens.line_number(), e.what());
+                    throw InputError(line_info.second, e.what());
                 }
             }
         } //end for
