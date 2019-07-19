@@ -1226,13 +1226,8 @@ void SliceDiagram::redraw_tickmarks()
         double left = (x_grades[i] - data_xmin) * scale_x;
         left = fmin(fmax(0, left), diagram_width + padding);
         if (textlistx[i]->isVisible() == false) {
-            if(linelistx[i]->pos().x() < data_xmax_text->pos().x()){
-                linelistx[i]->setPos(left, 0);
-                linelistx[i]->setLine(0, 0, 0, -tickmarksize/2);
-            }
-            else{
-                linelistx[i]->hide();
-            }
+            linelistx[i]->setPos(left, 0);
+            linelistx[i]->setLine(0, 0, 0, -tickmarksize/2);
         } else {
             linelistx[i]->setPos(left, 0);
             linelistx[i]->setLine(0, 0, 0, -tickmarksize);
@@ -1244,14 +1239,8 @@ void SliceDiagram::redraw_tickmarks()
         double bottom = (y_grades[i] - data_ymin) * scale_y;
         bottom = fmin(fmax(0, bottom), diagram_height + padding);
         if (textlisty[i]->isVisible() == false) {
-            if(linelisty[i]->pos().y() < data_ymax_text->pos().y() - data_ymax_text->boundingRect().height() - padding){
-                linelisty[i]->setPos(0, bottom);
-                linelisty[i]->setLine(0, 0, -tickmarksize/2, 0);
-                
-            }
-            else{
-                linelisty[i]->hide();
-            }
+            linelisty[i]->setPos(0, bottom);
+            linelisty[i]->setLine(0, 0, -tickmarksize/2, 0);
         } else {
             linelisty[i]->setPos(0, bottom);
             linelisty[i]->setLine(0, 0, -tickmarksize, 0);
