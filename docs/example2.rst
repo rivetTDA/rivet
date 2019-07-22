@@ -59,7 +59,11 @@ Once again, to understand the RIVET visualization, we will examine the simplicia
 
 We will now examine the simplicial complexes corresponding to parameter pairs near either end of the 2 long bars, indicated by labels Ⓐ and Ⓑ in the diagram below. From the 2 bars that persist through the 2 points in the diagram, we can expect to see two holes in each of the simplicial complex that are produced at each of the parameter points, and that the two holes are the same hole.
 
-(Image of the RIVET diagram and points A and B labeled)
+.. image:: images/example_2/2_hole_persistence.png
+   :width: 400px
+   :height: 340px
+   :alt: RIVET Diagram with points A and B
+   :align: center
 
 Point Ⓐ has the density value of 19 and the distance value of 1.48. Thus, we construct a Rips complex at distance scale 1.48, from of only the points with density value 19 or greater, shown in the following diagram. As expected, the simplicial complex shows two holes.
 
@@ -82,7 +86,11 @@ Likewise, point Ⓑ has the density value of 12 and the distance value of 1.9. T
 
 The following RIVET visualization diagram indicates three more points labeled Ⓒ, and Ⓓ.
 
-(Image of RIVET visualization)
+.. image:: images/example_2/3_other_points.png
+   :width: 400px
+   :height: 340px
+   :alt: RIVET Diagram with points C, D and E
+   :align: center
 
 
 Point Ⓒ has the density value of 4 and the distance value of 1.64. Thus, a Rips complex at distance scale 1.64, from of only the points with density value of 4 or greater is constructed in the illustration. From the information one can get through hovering the mouse pointer over the gray region that point Ⓒ is located, we can know that the point lies in the gray region with dimension value of 3 - conveying the fact that we should expect (and there are) 3 holes to be shown in the simplicial complex diagram below.
