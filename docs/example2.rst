@@ -63,7 +63,7 @@ We will now examine the simplicial complexes corresponding to parameter pairs ne
 
 Point Ⓐ has the density value of 19 and the distance value of 1.48. Thus, we construct a Rips complex at distance scale 1.48, from of only the points with density value 19 or greater, shown in the following diagram. As expected, the simplicial complex shows two holes.
 
-.. image:: images/example_2/19_1.48_2_holes.png
+.. image:: images/example_2/1.48_19_2_holes.png
    :width: 400px
    :height: 340px
    :alt: simplicial complex corresponding to point A
@@ -71,7 +71,7 @@ Point Ⓐ has the density value of 19 and the distance value of 1.48. Thus, we c
    
 Likewise, point Ⓑ has the density value of 12 and the distance value of 1.9. Thus, we construct a Rips complex at distance scale 1.9, from of only the points with density value 12 or greater, shown in the following diagram. As expected, the simplicial complex shows two holes, and they are the same ones shown in the simplicial complex illustration from point A.
 
-.. image:: images/example_2/12_1.9_2_holes.png
+.. image:: images/example_2/1.9_12_2_holes.png
    :width: 400px
    :height: 340px
    :alt: simplicial complex corresponding to point B
@@ -87,7 +87,7 @@ The following RIVET visualization diagram indicates three more points labeled �
 
 Point Ⓒ has the density value of 4 and the distance value of 1.64. Thus, a Rips complex at distance scale 1.64, from of only the points with density value of 4 or greater is constructed in the illustration. From the information one can get through hovering the mouse pointer over the gray region that point Ⓒ is located, we can know that the point lies in the gray region with dimension value of 3 - conveying the fact that we should expect (and there are) 3 holes to be shown in the simplicial complex diagram below.
 
-.. image:: images/example_2/4_1.64_3_holes.png
+.. image:: images/example_2/1.64_4_3_holes.png
    :width: 400px
    :height: 340px
    :alt: simplicial complex corresponding to point C
@@ -99,7 +99,7 @@ Jason_:: I didn't know how I would finish this paragraph - like what would we co
 
 Point Ⓓ has the density value of 2, the distance value of 2.85 and lies on the gray region with dimension value of 5. As expected, we see 5 holes in the image below.
 
-.. image:: images/example_2/2_2.85_5_holes.png
+.. image:: images/example_2/2.85_2_5_holes.png
    :width: 400px
    :height: 340px
    :alt: simplicial complex corresponding to point D
@@ -113,7 +113,7 @@ Possible Point E?
 Lastly, point Ⓔ has the density value of 4 and the distance value of 3.8 - almost the maximum values for both the density and distance value. The point lies on the gray region with dimension value of 1. As expected, we can see a single hole in the simplicial complex image below.
 
 
-.. image:: images/example_2/4_3.8_1_holes.png
+.. image:: images/example_2/3.8_4_1_holes.png
    :width: 400px
    :height: 340px
    :alt: simplicial complex corresponding to point E
