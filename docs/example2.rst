@@ -113,7 +113,7 @@ Possible Point E?
 Lastly, point Ⓔ has the density value of 4 and the distance value of 3.8 - almost the maximum values for both the density and distance value. The point lies on the gray region with dimension value of 1. As expected, we can see a single hole in the simplicial complex image below.
 
 
-.. image:: images/example_2/3.8_4_1_holes.png
+.. image:: images/example_2/3.8_4_1_hole.png
    :width: 400px
    :height: 340px
    :alt: simplicial complex corresponding to point E
