@@ -3,7 +3,7 @@ Another 2D point cloud example (Infinity Ring)
 
 We consider another point cloud in R2 pictured below.
 
-.. image:: images/example_2/0_0 base picture.png
+.. image:: images/example_2/0_0_base_picture.png
    :width: 400px
    :height: 340px
    :alt: Rivet visualization of infinity ring
