@@ -69,15 +69,15 @@ Point Ⓐ has the density value of 19 and the distance value of 1.48. Thus, we c
 
 .. image:: images/example_2/1.48_19_2_holes.png
    :width: 400px
-   :height: 340px
+   :height: 200px
    :alt: simplicial complex corresponding to point A
    :align: center
    
 Likewise, point Ⓑ has the density value of 12 and the distance value of 1.9. Thus, we construct a Rips complex at distance scale 1.9, from of only the points with density value 12 or greater, shown in the following diagram. As expected, the simplicial complex shows two holes, and they are the same ones shown in the simplicial complex illustration from point A.
 
 .. image:: images/example_2/1.9_12_2_holes.png
-   :width: 400px
-   :height: 340px
+   :width: 500px
+   :height: 500px
    :alt: simplicial complex corresponding to point B
    :align: center
 
@@ -96,8 +96,8 @@ The following RIVET visualization diagram indicates four more points labeled Ⓒ
 Point Ⓒ has the density value of 4 and the distance value of 1.64. Thus, a Rips complex at distance scale 1.64, from of only the points with density value of 4 or greater is constructed in the illustration. From the information one can get through hovering the mouse pointer over the gray region that point Ⓒ is located, we can know that the point lies in the gray region with dimension value of 4 - conveying the fact that we should expect (and there are) 4 holes to be shown in the simplicial complex diagram below.
 
 .. image:: images/example_2/1.64_4_4_holes.png
-   :width: 400px
-   :height: 340px
+   :width: 500px
+   :height: 500px
    :alt: simplicial complex corresponding to point C
    :align: center
    
@@ -105,7 +105,7 @@ Point Ⓓ has the density value of 8 and the distance value of 1.64 and lies on 
 
 .. image:: images/example_2/1.64_8_3_holes.png
    :width: 400px
-   :height: 340px
+   :height: 400px
    :alt: simplicial complex corresponding to point D
    :align: center
 
@@ -115,8 +115,8 @@ Note that one might naturally assume that the three dense cycles of point clouds
 Point Ⓔ has the density value of 2, the distance value of 2.85 and lies on the gray region with dimension value of 5. As expected, we see 5 holes in the image below.
 
 .. image:: images/example_2/2.85_2_5_holes.png
-   :width: 400px
-   :height: 340px
+   :width: 500px
+   :height: 500px
    :alt: simplicial complex corresponding to point E
    :align: center
 
@@ -129,7 +129,7 @@ Lastly, point Ⓕ has the density value of 4 and the distance value of 3.8 - alm
 
 
 .. image:: images/example_2/3.8_4_1_hole.png
-   :width: 400px
-   :height: 340px
+   :width: 500px
+   :height: 500px
    :alt: simplicial complex corresponding to point F
    :align: center
