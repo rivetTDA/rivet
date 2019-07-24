@@ -103,7 +103,7 @@ Point Ⓒ has the density value of 4 and the distance value of 1.64. Thus, a Rip
    
 Point Ⓓ has the density value of 8 and the distance value of 1.64 and lies on the gray region with dimension value of 3. As expected, we see 3 holes in the visualization below.
 
-.. image:: images/example_2/8_1.64_3_holes.png
+.. image:: images/example_2/1.64_8_3_holes.png
    :width: 400px
    :height: 340px
    :alt: simplicial complex corresponding to point D
@@ -114,7 +114,7 @@ Note that one might naturally assume that the three dense cycles of point clouds
 
 Point Ⓔ has the density value of 2, the distance value of 2.85 and lies on the gray region with dimension value of 5. As expected, we see 5 holes in the image below.
 
-.. image:: images/example_2/2_2.85_5_holes.png
+.. image:: images/example_2/2.85_2_5_holes.png
    :width: 400px
    :height: 340px
    :alt: simplicial complex corresponding to point E
@@ -128,7 +128,7 @@ Possible Point F?
 Lastly, point Ⓕ has the density value of 4 and the distance value of 3.8 - almost the maximum values for both the density and distance value. The point lies on the gray region with dimension value of 1. As expected, we can see a single hole in the simplicial complex image below.
 
 
-.. image:: images/example_2/4_3.8_1_holes.png
+.. image:: images/example_2/3.8_4_1_holes.png
    :width: 400px
    :height: 340px
    :alt: simplicial complex corresponding to point F
