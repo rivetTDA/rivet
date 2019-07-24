@@ -81,48 +81,55 @@ Likewise, point Ⓑ has the density value of 12 and the distance value of 1.9. T
    :alt: simplicial complex corresponding to point B
    :align: center
 
-2 More Investigations
+4 More Investigations
 ------------------------------------------
 
-The following RIVET visualization diagram indicates three more points labeled Ⓒ, and Ⓓ.
+The following RIVET visualization diagram indicates four more points labeled Ⓒ, Ⓓ, Ⓔ and Ⓕ.
 
-.. image:: images/example_2/3_other_points.png
+.. image:: images/example_2/4_other_points.png
    :width: 400px
    :height: 340px
-   :alt: RIVET Diagram with points C, D and E
+   :alt: RIVET Diagram with points C, D, E and F
    :align: center
 
 
-Point Ⓒ has the density value of 4 and the distance value of 1.64. Thus, a Rips complex at distance scale 1.64, from of only the points with density value of 4 or greater is constructed in the illustration. From the information one can get through hovering the mouse pointer over the gray region that point Ⓒ is located, we can know that the point lies in the gray region with dimension value of 3 - conveying the fact that we should expect (and there are) 3 holes to be shown in the simplicial complex diagram below.
+Point Ⓒ has the density value of 4 and the distance value of 1.64. Thus, a Rips complex at distance scale 1.64, from of only the points with density value of 4 or greater is constructed in the illustration. From the information one can get through hovering the mouse pointer over the gray region that point Ⓒ is located, we can know that the point lies in the gray region with dimension value of 4 - conveying the fact that we should expect (and there are) 4 holes to be shown in the simplicial complex diagram below.
 
-.. image:: images/example_2/1.64_4_3_holes.png
+.. image:: images/example_2/1.64_4_4_holes.png
    :width: 400px
    :height: 340px
    :alt: simplicial complex corresponding to point C
    :align: center
    
-Note that one might naturally assume that the three dense cycles of point clouds would be the two circles making up the 'infinity sign' and the large circle encompassing the two adjacent circles. However we can see from the diagram above that rather the large circle encompassing the two smaller cycles is not completed but instead the third cycle is the smaller circle situated on the top left side of the diagram. 
+Point Ⓓ has the density value of 8 and the distance value of 1.64 and lies on the gray region with dimension value of 3. As expected, we see 3 holes in the visualization below.
 
-Jason_:: I didn't know how I would finish this paragraph - like what would we conclude from this fact?
-
-Point Ⓓ has the density value of 2, the distance value of 2.85 and lies on the gray region with dimension value of 5. As expected, we see 5 holes in the image below.
-
-.. image:: images/example_2/2.85_2_5_holes.png
+.. image:: images/example_2/8_1.64_3_holes.png
    :width: 400px
    :height: 340px
    :alt: simplicial complex corresponding to point D
    :align: center
 
-
-Jason_:: I'm not sure what other example to include - all the diagrams do seem to be a repeated example.
-
-Possible Point E?
-
-Lastly, point Ⓔ has the density value of 4 and the distance value of 3.8 - almost the maximum values for both the density and distance value. The point lies on the gray region with dimension value of 1. As expected, we can see a single hole in the simplicial complex image below.
+Note that one might naturally assume that the three dense cycles of point clouds would be the two circles making up the 'infinity sign' and the large circle encompassing the two adjacent circles. However we can see from the diagram above that rather the large circle encompassing the two smaller cycles is not completed but instead the third cycle is the smaller circle situated on the top left side of the diagram. 
 
 
-.. image:: images/example_2/3.8_4_1_hole.png
+Point Ⓔ has the density value of 2, the distance value of 2.85 and lies on the gray region with dimension value of 5. As expected, we see 5 holes in the image below.
+
+.. image:: images/example_2/2_2.85_5_holes.png
    :width: 400px
    :height: 340px
    :alt: simplicial complex corresponding to point E
+   :align: center
+
+
+Jason_:: I'm not sure what other example to include - all the diagrams do seem to be a repeated example.
+
+Possible Point F?
+
+Lastly, point Ⓕ has the density value of 4 and the distance value of 3.8 - almost the maximum values for both the density and distance value. The point lies on the gray region with dimension value of 1. As expected, we can see a single hole in the simplicial complex image below.
+
+
+.. image:: images/example_2/4_3.8_1_holes.png
+   :width: 400px
+   :height: 340px
+   :alt: simplicial complex corresponding to point F
    :align: center
