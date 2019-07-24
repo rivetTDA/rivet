@@ -68,7 +68,7 @@ We will now examine the simplicial complexes corresponding to parameter pairs ne
 Point Ⓐ has the density value of 19 and the distance value of 1.48. Thus, we construct a Rips complex at distance scale 1.48, from of only the points with density value 19 or greater, shown in the following diagram. As expected, the simplicial complex shows two holes.
 
 .. image:: images/example_2/1.48_19_2_holes.png
-   :width: 400px
+   :width: 600px
    :height: 200px
    :alt: simplicial complex corresponding to point A
    :align: center
@@ -104,8 +104,8 @@ Point Ⓒ has the density value of 4 and the distance value of 1.64. Thus, a Rip
 Point Ⓓ has the density value of 8 and the distance value of 1.64 and lies on the gray region with dimension value of 3. As expected, we see 3 holes in the visualization below.
 
 .. image:: images/example_2/1.64_8_3_holes.png
-   :width: 400px
-   :height: 400px
+   :width: 500px
+   :height: 500px
    :alt: simplicial complex corresponding to point D
    :align: center
 
