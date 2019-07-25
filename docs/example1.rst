@@ -15,7 +15,7 @@ We have already noted that the long bar in the RIVET visualization corresponds t
    :align: center
 
 
-Point Ⓐ has the density value of 15 and the distance value of 1.5. Thus, we construct a Rips complex at distance scale 1.5, from of only the points with density value 15 or greater, shown in the following diagram. As expected, the simplicial complex shows a single hole.
+Point :math:`A` has the density value of 15 and the distance value of 1.5. Thus, we construct a Rips complex at distance scale 1.5, from of only the points with density value 15 or greater, shown in the following diagram. As expected, the simplicial complex shows a single hole.
 
 .. image:: images/example_1/15_1.5_1_hole.png
    :width: 500px
