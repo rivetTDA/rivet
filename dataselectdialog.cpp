@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "interface/console_interaction.h"
 #include "interface/file_input_reader.h"
 #include "interface/input_parameters.h"
+#include "interface/input_manager.h"
 
 #include <QDebug>
 #include <QFileDialog>
@@ -32,6 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QProcess>
 #include <QSettings>
 #include <QStringList>
+#include <boost/algorithm/string.hpp>
 #include <fstream>
 
 
@@ -72,12 +74,43 @@ void DataSelectDialog::closeEvent(QCloseEvent* event)
     }
 }
 
+void DataSelectDialog::showEvent(QShowEvent* event)
+{
+    event->accept();
+
+    // reset the parameter frame when a new dialog is created
+
+    ui->xAxisLabel->setText("");
+    ui->yAxisLabel->setText("");
+    ui->xRevCheckBox->setChecked(false);
+    ui->yRevCheckBox->setChecked(false);
+    ui->maxDistSpinBox->setSpecialValueText("");
+    ui->maxDistSpinBox->setEnabled(true);
+    ui->maxDistSpinBox->setValue(0);
+    ui->dataTypeComboBox->setCurrentIndex(0);
+    ui->dataTypeComboBox->setEnabled(true);
+    ui->xbinSpinBox->setValue(10);
+    ui->ybinSpinBox->setValue(10);
+    ui->homDimSpinBox->setSpecialValueText("");
+    ui->homDimSpinBox->setEnabled(true);
+    ui->homDimSpinBox->setValue(0);
+    ui->parameterFrame->setEnabled(false);
+    ui->computeButton->setEnabled(false);    
+}
+
 void DataSelectDialog::on_computeButton_clicked()
 {
+    // read in the input parameters from the dialog
+
     params.hom_degree = ui->homDimSpinBox->value();
     params.x_bins = ui->xbinSpinBox->value();
     params.y_bins = ui->ybinSpinBox->value();
-
+    params.x_label = ui->xAxisLabel->text().toStdString();
+    params.y_label = ui->yAxisLabel->text().toStdString();
+    params.max_dist = ui->maxDistSpinBox->value();
+    params.x_reverse = ui->xRevCheckBox->checkState();
+    params.y_reverse = ui->yRevCheckBox->checkState();
+    params.type = ui->dataTypeComboBox->currentText().toStdString();
 
     data_selected = true;
 
@@ -103,13 +136,37 @@ void DataSelectDialog::on_openFileButton_clicked()
         settings.setValue(DEFAULT_DIR_KEY, current_dir.absoluteFilePath(selected_file));
         detect_file_type();
 
-
-
     }
 } //end on_openFileButton_clicked()
 
 void DataSelectDialog::detect_file_type()
 {
+    // set this once filtration functions have been implemented
+    ui->filterComboBox->setEnabled(false);
+
+    ui->homDimSpinBox->setSpecialValueText("");
+    //this turns off the special value text (i.e. zero is displayed like normal)
+
+    ui->homDimSpinBox->setEnabled(true);
+    ui->homDimSpinBox->setValue(0);
+
+    // reset the values and states of everything when a new file is selected
+    params.x_label = "";
+    params.y_label = "distance";
+
+    params.x_reverse = false;
+    params.y_reverse = false;
+
+    ui->maxDistSpinBox->setSpecialValueText("");
+    ui->maxDistSpinBox->setEnabled(true);
+    ui->maxDistSpinBox->setValue(0);
+
+    ui->dataTypeComboBox->setCurrentIndex(0);
+    ui->dataTypeComboBox->setEnabled(true);
+
+    ui->xbinSpinBox->setValue(10);
+    ui->ybinSpinBox->setValue(10);
+
     std::ifstream infile(params.fileName);
 
     if (!infile.is_open()) {
@@ -123,94 +180,93 @@ void DataSelectDialog::detect_file_type()
         return;
     }
 
-    QStringList args;
-    args.append(QString::fromStdString(params.fileName));
-    args.append("--identify");
-    auto console = RivetConsoleApp::start(args);
+    // determine parameters specified in the input file
+    InputManager inputManager(params);
+    inputManager.start();
 
-    if (!console->waitForStarted()) {       
-        invalid_file(RivetConsoleApp::errorMessage(console->error()));
-        return;
+    // modify values in the parameter frame and dataselect dialog
+    // by reading values in from the input file
+    // depending on file type, some options in the parameter frame are unavailable
+
+    QString type_string("This file appears to contain ");
+    bool raw = true;
+    
+    ui->homDimSpinBox->setValue(params.hom_degree);
+
+    if (params.type == "points") {
+        type_string += "point-cloud data.";
+        ui->dataTypeComboBox->setCurrentIndex(0);
+        if (params.max_dist > 0)
+            ui->maxDistSpinBox->setValue((double)params.max_dist);
     }
-        bool raw = false;
-        QString partial("");
-        auto error_header_len = QString("INPUT ERROR: ").length();
-        auto error_footer_len = QString(" :END").length();
-        qDebug() << "Reading from console";
-        while (console->canReadLine() || console->waitForReadyRead()) {
-            QString line = console->readLine();
-            line = line.trimmed();
-            if (line.length() == 0)
-                continue;
-            qDebug() << line;
-            if (line.startsWith("RAW DATA: ")) {
-                raw = line.contains("1");
-            } else if (line.startsWith("INPUT ERROR: ")) {
-                if (line.endsWith(":END")) {
-                    line = line.mid(error_header_len, line.length() - (error_footer_len + error_header_len));
-                    invalid_file(line);
-                    break;
-                } else {
-                    qDebug() << "Partial:" << line;
-                    partial = line;
-                }
-            } else if (line.startsWith("FILE TYPE DESCRIPTION: ")) {
+    else if (params.type == "metric") {
+        type_string += "metric data.";
+        ui->dataTypeComboBox->setCurrentIndex(1);
+        if (params.max_dist > 0)
+            ui->maxDistSpinBox->setValue((double)params.max_dist);
+    }
+    else if (params.type == "bifiltration") {
+        ui->dataTypeComboBox->setCurrentIndex(2);
+        ui->dataTypeComboBox->setEnabled(false);
+        type_string += "bifiltration data.";
+        ui->maxDistSpinBox->setSpecialValueText("N/A");
+        ui->maxDistSpinBox->setValue(0);
+        ui->maxDistSpinBox->setEnabled(false);
+    }
+    else if (params.type == "firep") {
+        ui->dataTypeComboBox->setCurrentIndex(3);
+        ui->dataTypeComboBox->setEnabled(false);
+        type_string += "free implicit representation data.";
 
-            ui->fileTypeLabel->setText("This file appears to contain " + line.mid(QString("FILE TYPE DESCRIPTION: ").length()).trimmed() + ".");
-            QFileInfo fileInfo(QString::fromStdString(params.fileName));
-            ui->fileLabel->setText("Selected file: " + fileInfo.fileName());
+        ui->homDimSpinBox->setSpecialValueText("N/A");
+        //the spinbox will show the special value text when the value is the minimum value (i.e. zero)
+        ui->homDimSpinBox->setValue(0);
+        ui->homDimSpinBox->setEnabled(false);
 
-                //TODO: this updating of the params will need to happen in console also, need to refactor
-                QString file_des=line.mid(QString("FILE TYPE DESCRIPTION: ").length()).trimmed();
+        ui->maxDistSpinBox->setSpecialValueText("N/A");
+        ui->maxDistSpinBox->setValue(0);
+        ui->maxDistSpinBox->setEnabled(false);
+    }
+    else if (params.type == "RIVET_msgpack") {
+        ui->dataTypeComboBox->setCurrentIndex(4);
+        ui->dataTypeComboBox->setEnabled(false);
+        type_string += "pre-computed RIVET data.";
+        raw = false;
+    }
 
-                //TODO: this updating of the params will need to happen in console also, need to refactor
+    ui->xAxisLabel->setText(QString::fromStdString(params.x_label));
+    ui->yAxisLabel->setText(QString::fromStdString(params.y_label));
 
+    if (params.x_reverse)
+        ui->xRevCheckBox->setChecked(true);
 
+    if (params.y_reverse)
+        ui->yRevCheckBox->setChecked(true);
 
-                params.shortName = fileInfo.fileName().toUtf8().constData();
+    if (params.x_bins > 0)
+        ui->xbinSpinBox->setValue(params.x_bins);
 
-                //firep data does not have a homology dimension
-                if(file_des=="free implicit representation data"){
+    if (params.y_bins > 0)
+        ui->xbinSpinBox->setValue(params.y_bins);
 
-                    ui->homDimSpinBox->setSpecialValueText("N/A");
-                    //the spinbox will show the special value text when the value is the minimum value (i.e. zero)
+    ui->fileTypeLabel->setText(type_string);
+    QFileInfo fileInfo(QString::fromStdString(params.fileName));
+    ui->fileLabel->setText("Selected file: " + fileInfo.fileName());
 
-                    ui->homDimSpinBox->setValue(0);
-                    ui->homDimSpinBox->setEnabled(false);
-                }
-                else if(!ui->homDimSpinBox->isEnabled()){
-                    //if an firep file was previously selected, and the new file is not an firep
+    // need this for filename in visualization window
+    params.shortName = fileInfo.fileName().toUtf8().constData();
 
-                    ui->homDimSpinBox->setSpecialValueText("");
-                    //this turns off the special value text (i.e. zero is displayed like normal)
-
-                    ui->homDimSpinBox->setEnabled(true);
-                    ui->homDimSpinBox->setValue(0);
-                }
-
-            }
-
-
-            else if (partial.length() != 0) {
-                if (line.endsWith(":END")) {
-                    line = partial + line;
-                    line = line.mid(error_header_len, line.length() - (error_footer_len + error_header_len));
-                    invalid_file(line);
-                    break;
-                } else {
-                    partial += line;
-                }
-            }
-        }
-        ui->parameterFrame->setEnabled(raw);
+    ui->parameterFrame->setEnabled(raw);
 
     ui->computeButton->setEnabled(true);
     //force black text because on Mac Qt autodefault buttons have white text when enabled,
     //so they still look like they're disabled or weird in some way.
     ui->computeButton->setStyleSheet("QPushButton { color: black; }");
 
+
 } //end detect_file_type()
 
+// TODO: Use this function to make a pop up error for invalid files
 void DataSelectDialog::invalid_file(const QString& message)
 {
     ui->fileLabel->setText("Please select a file.");
