@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "file_writer.h"
 
 #include "../dcel/barcode_template.h"
+#include "data_reader.h"
 #include "input_manager.h"
 
 #include <chrono>

@@ -55,6 +55,7 @@ add_library(rivet
         interface/file_writer.cpp
         interface/file_input_reader.cpp
         interface/input_manager.cpp
+        interface/data_reader.cpp
         dcel/barcode.cpp
         dcel/arrangement.cpp
         dcel/arrangement_builder.cpp
@@ -97,6 +98,7 @@ add_executable (rivet_console
         interface/file_writer.cpp
         interface/file_input_reader.cpp
         interface/input_manager.cpp
+        interface/data_reader.cpp
 	interface/progress.cpp
         numerics.cpp
         timer.cpp
@@ -140,6 +142,7 @@ add_executable(unit_tests
         interface/file_writer.cpp
         interface/file_input_reader.cpp
         interface/input_manager.cpp
+        interface/data_reader.cpp
 	interface/progress.cpp
         numerics.cpp
         timer.cpp

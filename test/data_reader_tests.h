@@ -2,13 +2,13 @@
 // Created by Bryn Keller on 6/21/16.
 //
 
-#ifndef RIVET_CONSOLE_INPUT_MANAGER_TESTS_H
-#define RIVET_CONSOLE_INPUT_MANAGER_TESTS_H
+#ifndef RIVET_CONSOLE_DATA_READER_TESTS_H
+#define RIVET_CONSOLE_DATA_READER_TESTS_H
 
 #endif //RIVET_CONSOLE_INPUT_MANAGER_TESTS_H
 
 #include "catch.hpp"
-#include "interface/input_manager.h"
+#include "interface/data_reader.h"
 #include "numerics.h"
 #include <iostream>
 #include <vector>

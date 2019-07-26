@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef FILEWRITER_H
 #define FILEWRITER_H
 
+#include "data_reader.h"
 #include "dcel/arrangement.h"
 #include "input_manager.h"
 #include "input_parameters.h"

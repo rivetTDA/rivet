@@ -27,6 +27,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 typedef boost::multiprecision::cpp_rational exact;
 //TODO: this class currently conflates 3 things: command line arguments, file load dialog arguments, and viewer configuration state
 
+// Error that is raised when the input file does not match format correctly
+class InputError : public std::runtime_error {
+public:
+    InputError(unsigned line, std::string message)
+        : std::runtime_error("line " + std::to_string(line) + ": " + message)
+    {
+    }
+};
+
 //these parameters are set by the user via the console or the DataSelectDialog before computation can begin
 struct InputParameters {
     std::string fileName; //name of data file
@@ -46,14 +55,16 @@ struct InputParameters {
     bool bounds; //print lower and upper bounds of module in MI file
     bool koszul; //use koszul homology based algorithm
     exact max_dist; //maximum distance to be considered while building Rips complex
-    int dimension; //dimension of the space where the points lie
+    unsigned dimension; //dimension of the space where the points lie
     bool old_function; //specifies if the data has a function value like the old format
     bool new_function; //specifies if the data has a --function flag followed by values
     int function_line; //specifies which line has the function values
     bool x_reverse, y_reverse; //specifies if the axes need to be reversed or not
     std::string type; //type of file being worked with
+    int to_skip; //number of lines after which the actual data begins
 
-    InputParameters() {
+    InputParameters()
+    {
         // default values for all input parameters - should include first 3?
         type = "points";
         hom_degree = 0;

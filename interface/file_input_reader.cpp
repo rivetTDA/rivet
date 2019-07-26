@@ -38,9 +38,12 @@ bool FileInputReader::is_flag(std::string str)
     int first = (char)str[0];
     int second = (char)str[1];
 
-    if (first == 45 && second == 45) return true;
-    if (first == 45 && (second < 48 || second > 57)) return true;
-    if (first != 45 && (first < 48 || first > 57)) return true;
+    if (first == 45 && second == 45)
+        return true;
+    if (first == 45 && (second < 48 || second > 57))
+        return true;
+    if (first != 45 && (first < 48 || first > 57))
+        return true;
 
     return false;
 }
