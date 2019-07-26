@@ -1,7 +1,6 @@
 # 200 points chosen from a noisy circle, with 100 points chosen from a uniform distribution
 # parameters: mean radius 3, std. dev. radius 0.3, radius for codensity function 1
 --type points
---dimension 2
 --maxdist 4
 --xreverse
 --xlabel density

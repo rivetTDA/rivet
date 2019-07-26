@@ -27,9 +27,8 @@ def points(old_file):
 	new_file_content.append("--type points\n")
 	# print("--type points")
 
-	dim = next(old_file).strip()
-	new_file_content.append("--dimension " + dim + "\n")
-	# print("--dimension " + dim)
+	next(old_file)
+	# skip dimension
 
 	max_dist = next(old_file).strip()
 	new_file_content.append("--maxdist " + max_dist + "\n")

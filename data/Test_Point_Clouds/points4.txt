@@ -1,5 +1,4 @@
 --type points
---dimension 2
 --maxdist 4.5
 --xlabel birth time
 --function

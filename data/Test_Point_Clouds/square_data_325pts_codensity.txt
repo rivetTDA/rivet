@@ -1,5 +1,4 @@
 --type points
---dimension 2
 --maxdist 20
 --xreverse
 --xlabel codensity

@@ -1,5 +1,4 @@
 --type points
---dimension 2
 --maxdist 100
 --xlabel time
 --function

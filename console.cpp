@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "docopt.h"
 #include "interface/input_manager.h"
 #include "interface/input_parameters.h"
+#include "interface/data_reader.h"
 #include <boost/multi_array.hpp> // for print_betti
 #include <interface/file_writer.h>
 
@@ -45,13 +46,12 @@ static const char USAGE[] =
     Usage:
       rivet_console (-h | --help)
       rivet_console --version
-      rivet_console <input_file> --identify
       rivet_console <input_file> --minpres [-H <hom_degree>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [--koszul] [--num_threads <num_threads>]
       rivet_console <input_file> [output_file] --betti [-H <hom_degree>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [--koszul] [--num_threads <num_threads>]
       rivet_console <module_invariants_file> --bounds [-V <verbosity>]
       rivet_console <module_invariants_file> --barcodes <line_file> [-V <verbosity>]
       rivet_console <input_file> <module_invariants_file> [-H <hom_degree>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [-f <format>] [--binary] [--koszul] 
-                                                          [--maxdist <distance>] [--dimension <dims>] [--num_threads <num_threads>] [--xreverse] [--yreverse] 
+                                                          [--maxdist <distance>] [--num_threads <num_threads>] [--xreverse] [--yreverse] 
                                                           [--type <type>] [--xlabel <label>] [--ylabel <label>]
 
 
@@ -63,7 +63,6 @@ static const char USAGE[] =
       -h --help                                Show this screen.
       --num_threads <num_threads>               Max number of threads to use for parallel computations. 0 lets OpenMP decide.                             
       --version                                Show the version.
-      --identify                               Parse the file and print filetype information
       --binary                                 Include binary data (used by RIVET viewer only)
       -H <hom_degree> --homology <hom_degree>  Degree of homology to compute. (Default: 0)
       -x <xbins> --xbins <xbins>               Number of bins in the x direction. (Default: 0)
@@ -79,7 +78,6 @@ static const char USAGE[] =
       --xreverse                               Reverse the direction of the values in the x-axis.
       --yreverse                               Reverse the direction of the values in the y-axis.
       --type <type>                            Type of the input file. (Default: points)
-      --dimension <dims>                       Dimension in which data points are. (Default: Calculated from file)
       --maxdist <distance>                     Maximum distance to be considered while building the Rips complex. (Default: Infinity)
       --xlabel <label>                         Name of the parameter displayed along the x-axis. (Default: degree (if no function specified))
       --ylabel <label>                         Name of the parameter displayed along the y-axis. (Default: distance)
@@ -301,7 +299,6 @@ int main(int argc, char* argv[])
     // read in arguments supplied in the input file
     inputManager.start();
 
-    bool identify = args["--identify"].isBool() && args["--identify"].asBool();
     bool barcodes = args["--barcodes"].isString();
 
     // check if set in file and override if also set in command line
@@ -314,7 +311,6 @@ int main(int argc, char* argv[])
     params.y_reverse = (args["--yreverse"].isBool() && args["--yreverse"].asBool()) || params.y_reverse;
 
     // these flags have arguments
-    bool dimension = args["--dimension"].isString();
     bool max_dist = args["--maxdist"].isString();
     bool type = args["--type"].isString();
     bool homology = args["--homology"].isString();
@@ -330,16 +326,6 @@ int main(int argc, char* argv[])
     std::string slices;
     if (barcodes) {
         slices = args["--barcodes"].asString();
-    }
-    if (identify) {
-        params.verbosity = 0;
-    }
-
-    if (dimension) {
-        params.dimension = get_uint_or_die(args, "--dimension");
-        if (params.dimension <= 0) {
-            throw std::runtime_error("Invalid argument for --dimension");
-        }
     }
 
     if (max_dist) {
@@ -517,20 +503,12 @@ int main(int argc, char* argv[])
         }
     });
 
-    if (identify) {
-        auto file_type = inputManager.identify();
-        std::cout << "FILE TYPE: " << file_type.identifier << std::endl;
-        std::cout << "FILE TYPE DESCRIPTION: " << file_type.description << std::endl;
-        std::cout << "RAW DATA: " << file_type.is_data << std::endl;
-        std::cout.flush();
-        return 0;
-    }
-
     std::shared_ptr<Arrangement> arrangement;
 
     FileContent content;
     // process the data
-    content = inputManager.process(progress);
+    DataReader dataReader(params);
+    content = dataReader.process(progress);
 
     // try {
     //    content = inputManager.start(progress);

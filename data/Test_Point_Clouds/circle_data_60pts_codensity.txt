@@ -1,5 +1,4 @@
 --type points
---dimension 2
 --maxdist 1000
 --xlabel [+] codensity
 --function
