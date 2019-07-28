@@ -148,11 +148,18 @@ void InputManager::parse_args()
             // handle error checking here
             if (line[0] == "--maxdist") {
                 try {
-                    // max distance cannot be less than 0
-                    exact dist = str_to_exact(line[1]);
-                    if (dist <= 0)
-                        throw std::runtime_error("Error");
-                    input_params.max_dist = dist;
+                    if (line[1] == "inf") {
+                        input_params.max_dist = -1;
+                        input_params.md_string = "inf";
+                    }
+                    else {
+                        // max distance cannot be less than 0
+                        exact dist = str_to_exact(line[1]);
+                        if (dist <= 0)
+                            throw std::runtime_error("Error");
+                        input_params.max_dist = dist;
+                        input_params.md_string = line[1];
+                    }
                 } catch (std::exception& e) {
                     throw std::runtime_error("Invalid argument for --maxdist");
                 }

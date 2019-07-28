@@ -158,6 +158,7 @@ void ComputationThread::compute_from_file()
          << "-y" << QString::number(params.y_bins)
          << "-V" << QString::number(params.verbosity)
          << "--type" << QString::fromStdString(params.type)
+         << "--maxdist" << QString::fromStdString(params.md_string)
          << "-f"
          << "msgpack"
          << "--binary";
@@ -174,13 +175,6 @@ void ComputationThread::compute_from_file()
     if (params.y_reverse)
         args << "--yreverse";
 
-    if (params.max_dist > 0) {
-        std::stringstream ss;
-        ss.precision(10);
-        double dist = numerator(params.max_dist).convert_to<double>() / denominator(params.max_dist).convert_to<double>();
-        ss << dist;
-        args << "--maxdist" << QString::fromStdString(ss.str());
-    }
 
     auto console = RivetConsoleApp::start(args);
 

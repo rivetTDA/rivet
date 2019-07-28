@@ -84,9 +84,9 @@ void DataSelectDialog::showEvent(QShowEvent* event)
     ui->yAxisLabel->setText("");
     ui->xRevCheckBox->setChecked(false);
     ui->yRevCheckBox->setChecked(false);
-    ui->maxDistSpinBox->setSpecialValueText("");
-    ui->maxDistSpinBox->setEnabled(true);
-    ui->maxDistSpinBox->setValue(0);
+    ui->maxDistBox->setEnabled(true);
+    ui->maxDistBox->setText("");
+    ui->maxDistBox->setToolTip("");
     ui->dataTypeComboBox->setCurrentIndex(0);
     ui->dataTypeComboBox->setEnabled(true);
     ui->xbinSpinBox->setValue(10);
@@ -107,7 +107,7 @@ void DataSelectDialog::on_computeButton_clicked()
     params.y_bins = ui->ybinSpinBox->value();
     params.x_label = ui->xAxisLabel->text().toStdString();
     params.y_label = ui->yAxisLabel->text().toStdString();
-    params.max_dist = ui->maxDistSpinBox->value();
+    params.md_string = ui->maxDistBox->text().toStdString();
     params.x_reverse = ui->xRevCheckBox->checkState();
     params.y_reverse = ui->yRevCheckBox->checkState();
     params.type = ui->dataTypeComboBox->currentText().toStdString();
@@ -157,9 +157,17 @@ void DataSelectDialog::detect_file_type()
     params.x_reverse = false;
     params.y_reverse = false;
 
-    ui->maxDistSpinBox->setSpecialValueText("");
-    ui->maxDistSpinBox->setEnabled(true);
-    ui->maxDistSpinBox->setValue(0);
+    params.x_bins = 10;
+    params.y_bins = 10;
+
+    params.type = "points";
+    params.max_dist = -1;
+    params.md_string = "inf";
+    params.hom_degree = 0;
+
+    ui->maxDistBox->setEnabled(true);
+    ui->maxDistBox->setText("");
+    ui->maxDistBox->setToolTip("");
 
     ui->dataTypeComboBox->setCurrentIndex(0);
     ui->dataTypeComboBox->setEnabled(true);
@@ -192,26 +200,22 @@ void DataSelectDialog::detect_file_type()
     bool raw = true;
     
     ui->homDimSpinBox->setValue(params.hom_degree);
+    ui->maxDistBox->setText(QString::fromStdString(params.md_string));
 
     if (params.type == "points") {
         type_string += "point-cloud data.";
         ui->dataTypeComboBox->setCurrentIndex(0);
-        if (params.max_dist > 0)
-            ui->maxDistSpinBox->setValue((double)params.max_dist);
     }
     else if (params.type == "metric") {
         type_string += "metric data.";
         ui->dataTypeComboBox->setCurrentIndex(1);
-        if (params.max_dist > 0)
-            ui->maxDistSpinBox->setValue((double)params.max_dist);
     }
     else if (params.type == "bifiltration") {
         ui->dataTypeComboBox->setCurrentIndex(2);
         ui->dataTypeComboBox->setEnabled(false);
         type_string += "bifiltration data.";
-        ui->maxDistSpinBox->setSpecialValueText("N/A");
-        ui->maxDistSpinBox->setValue(0);
-        ui->maxDistSpinBox->setEnabled(false);
+        ui->maxDistBox->setText("N/A");
+        ui->maxDistBox->setEnabled(false);
     }
     else if (params.type == "firep") {
         ui->dataTypeComboBox->setCurrentIndex(3);
@@ -223,9 +227,8 @@ void DataSelectDialog::detect_file_type()
         ui->homDimSpinBox->setValue(0);
         ui->homDimSpinBox->setEnabled(false);
 
-        ui->maxDistSpinBox->setSpecialValueText("N/A");
-        ui->maxDistSpinBox->setValue(0);
-        ui->maxDistSpinBox->setEnabled(false);
+        ui->maxDistBox->setText("N/A");
+        ui->maxDistBox->setEnabled(false);
     }
     else if (params.type == "RIVET_msgpack") {
         ui->dataTypeComboBox->setCurrentIndex(4);
@@ -257,6 +260,9 @@ void DataSelectDialog::detect_file_type()
     params.shortName = fileInfo.fileName().toUtf8().constData();
 
     ui->parameterFrame->setEnabled(raw);
+
+    if (ui->maxDistBox->isEnabled())
+        ui->maxDistBox->setToolTip("Enter \"inf\" for infinity");
 
     ui->computeButton->setEnabled(true);
     //force black text because on Mac Qt autodefault buttons have white text when enabled,

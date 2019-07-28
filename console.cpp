@@ -330,8 +330,15 @@ int main(int argc, char* argv[])
 
     if (max_dist) {
         try {
-            params.max_dist = str_to_exact(args["--maxdist"].asString());
-            if (params.max_dist <= 0) throw std::runtime_error("Error");
+            if (args["--maxdist"].asString() == "inf") {
+                params.max_dist = -1;
+                params.md_string = "inf";
+            }
+            else {
+                params.max_dist = str_to_exact(args["--maxdist"].asString());
+                if (params.max_dist <= 0) throw std::runtime_error("Error");
+                params.md_string = args["--maxdist"].asString();
+            }
         } catch (std::exception& e) {
             throw std::runtime_error("Invalid argument for --maxdist");
         }

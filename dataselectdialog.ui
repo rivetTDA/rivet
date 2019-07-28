@@ -295,25 +295,6 @@
      <string>Type:</string>
     </property>
    </widget>
-   <widget class="QDoubleSpinBox" name="maxDistSpinBox">
-    <property name="geometry">
-     <rect>
-      <x>450</x>
-      <y>66</y>
-      <width>71</width>
-      <height>26</height>
-     </rect>
-    </property>
-    <property name="decimals">
-     <number>4</number>
-    </property>
-    <property name="minimum">
-     <double>0.000000000000000</double>
-    </property>
-    <property name="maximum">
-     <double>1000000.000000000000000</double>
-    </property>
-   </widget>
    <widget class="QComboBox" name="dataTypeComboBox">
     <property name="geometry">
      <rect>
@@ -376,6 +357,19 @@
       <width>131</width>
       <height>25</height>
      </rect>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="maxDistBox">
+    <property name="geometry">
+     <rect>
+      <x>440</x>
+      <y>67</y>
+      <width>81</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="maxLength">
+     <number>8</number>
     </property>
    </widget>
   </widget>

@@ -55,6 +55,7 @@ struct InputParameters {
     bool bounds; //print lower and upper bounds of module in MI file
     bool koszul; //use koszul homology based algorithm
     exact max_dist; //maximum distance to be considered while building Rips complex
+    std::string md_string; //holds max distance in string format
     unsigned dimension; //dimension of the space where the points lie
     bool old_function; //specifies if the data has a function value like the old format
     bool new_function; //specifies if the data has a --function flag followed by values
