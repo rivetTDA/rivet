@@ -86,7 +86,8 @@ void DataSelectDialog::showEvent(QShowEvent* event)
     ui->yRevCheckBox->setChecked(false);
     ui->maxDistBox->setEnabled(true);
     ui->maxDistBox->setText("");
-    ui->maxDistBox->setToolTip("");
+    ui->maxDistHelp->setToolTip("");
+    ui->maxDistHelp->setStyleSheet("QLabel { color: #808080; }");
     ui->dataTypeComboBox->setCurrentIndex(0);
     ui->dataTypeComboBox->setEnabled(true);
     ui->xbinSpinBox->setValue(10);
@@ -167,7 +168,8 @@ void DataSelectDialog::detect_file_type()
 
     ui->maxDistBox->setEnabled(true);
     ui->maxDistBox->setText("");
-    ui->maxDistBox->setToolTip("");
+    ui->maxDistHelp->setToolTip("");
+    ui->maxDistHelp->setStyleSheet("QLabel { color: #808080; }");
 
     ui->dataTypeComboBox->setCurrentIndex(0);
     ui->dataTypeComboBox->setEnabled(true);
@@ -261,8 +263,10 @@ void DataSelectDialog::detect_file_type()
 
     ui->parameterFrame->setEnabled(raw);
 
-    if (ui->maxDistBox->isEnabled())
-        ui->maxDistBox->setToolTip("Enter \"inf\" for infinity");
+    if (ui->maxDistBox->isEnabled()) {
+        ui->maxDistHelp->setToolTip("Enter \"inf\" for infinity");
+        ui->maxDistHelp->setStyleSheet("QLabel { color: blue; }");
+    }
 
     ui->computeButton->setEnabled(true);
     //force black text because on Mac Qt autodefault buttons have white text when enabled,

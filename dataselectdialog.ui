@@ -372,6 +372,29 @@
      <number>8</number>
     </property>
    </widget>
+   <widget class="QLabel" name="maxDistHelp">
+    <property name="geometry">
+     <rect>
+      <x>520</x>
+      <y>69</y>
+      <width>21</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>15</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>?</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
   </widget>
   <widget class="QFrame" name="frame">
    <property name="geometry">
