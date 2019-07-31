@@ -39,6 +39,21 @@ DistanceMatrix::DistanceMatrix(InputParameters& params, int np)
     max_unsigned = std::numeric_limits<unsigned>::max();
 }
 
+DistanceMatrix::~DistanceMatrix()
+{
+	std::vector<unsigned>().swap(dist_indexes);
+	std::vector<unsigned>().swap(function_indexes);
+	std::vector<unsigned>().swap(degree_indexes);
+	
+	std::set<ExactValue, ExactValueComparator>().swap(dist_set);
+	std::set<ExactValue, ExactValueComparator>().swap(function_set);
+	std::set<ExactValue, ExactValueComparator>().swap(degree_set);
+
+	if (!function)
+		delete degree;
+
+}
+
 void DistanceMatrix::build_distance_matrix(std::vector<DataPoint>& points)
 {
 	ret = dist_set.insert(ExactValue(exact(0))); //distance from a point to itself is always zero

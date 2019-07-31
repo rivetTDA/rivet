@@ -434,9 +434,9 @@ FileContent DataReader::read_point_cloud(std::ifstream& stream, Progress& progre
 
     data->free_implicit_rep.reset(new FIRep(*(data->bifiltration_data), input_params.verbosity));
 
-    if (!hasFunction) {
-        delete dist_mat.degree;
-    }
+    // if (!hasFunction) {
+    //     delete dist_mat.degree;
+    // }
 
     //remember the axis directions
     data->x_reverse = x_reverse;
@@ -691,9 +691,9 @@ FileContent DataReader::read_discrete_metric_space(std::ifstream& stream, Progre
     data->y_reverse = y_reverse;
 
     //clean up
-    if (!hasFunction) {
-        delete dist_mat.degree;
-    }
+    // if (!hasFunction) {
+    //     delete dist_mat.degree;
+    // }
 
     return FileContent(data);
 } //end read_discrete_metric_space()

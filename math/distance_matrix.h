@@ -32,6 +32,7 @@ class DistanceMatrix {
 public:
 
 	DistanceMatrix(InputParameters& params, int np);
+	~DistanceMatrix();
 
 	void build_distance_matrix(std::vector<DataPoint>& points);
 
