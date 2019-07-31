@@ -64,6 +64,7 @@ add_library(rivet
         dcel/dcel.cpp
         dcel/arrangement_message.cpp
 	math/bifiltration_data.cpp
+    math/distance_matrix.cpp
 	math/bigraded_matrix.cpp
 	math/firep.cpp
         math/map_matrix.cpp
@@ -114,6 +115,7 @@ add_executable (rivet_console
 	math/bool_array.cpp
 	math/bool_array.h
 	math/bifiltration_data.cpp
+    math/distance_matrix.cpp
 	math/bigraded_matrix.cpp
 	math/firep.cpp
      	math/index_matrix.cpp
@@ -158,6 +160,7 @@ add_executable(unit_tests
 	math/bool_array.cpp
 	math/bool_array.h
 	math/bifiltration_data.cpp
+    math/distance_matrix.cpp
 	math/bigraded_matrix.cpp
 	math/firep.cpp
      	math/index_matrix.cpp

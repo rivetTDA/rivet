@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../computation.h"
 #include "../debug.h"
 #include "../math/bifiltration_data.h"
+#include "../math/distance_matrix.h"
 #include "file_input_reader.h"
 #include "input_parameters.h"
 
@@ -280,6 +281,11 @@ FileContent DataReader::read_point_cloud(std::ifstream& stream, Progress& progre
 
     unsigned num_points = points.size();
 
+    DistanceMatrix dist_mat(input_params, num_points);
+    dist_mat.build_distance_matrix(points);
+    dist_mat.build_all_vectors(data);
+
+    /*
     ExactSet dist_set; //stores all unique distance values
     ExactSet time_set; //stores all unique time values
     std::pair<ExactSet::iterator, bool> ret; //for return value upon insert()
@@ -331,12 +337,14 @@ FileContent DataReader::read_point_cloud(std::ifstream& stream, Progress& progre
             }
         }
     } //end for
+    */
     if (verbosity >= 4) {
         debug() << "  Finished reading data.";
     }
 
     // STEP 3: build vectors of discrete indexes for constructing the bifiltration
 
+    /*
     std::vector<unsigned> time_indexes, degree_indexes;
     ExactSet degree_set;
     unsigned max_unsigned = std::numeric_limits<unsigned>::max();
@@ -379,6 +387,7 @@ FileContent DataReader::read_point_cloud(std::ifstream& stream, Progress& progre
     //discrete distance matrix (triangle); max_unsigned shall represent undefined distance
     std::vector<unsigned> dist_indexes((num_points * (num_points - 1)) / 2 + 1, max_unsigned);
     build_grade_vectors(*data, dist_set, dist_indexes, data->y_exact, input_params.y_bins);
+    */
 
     //update progress
     progress.progress(30);
@@ -403,11 +412,11 @@ FileContent DataReader::read_point_cloud(std::ifstream& stream, Progress& progre
 
     data->bifiltration_data.reset(new BifiltrationData(input_params.hom_degree, input_params.verbosity));
     if (hasFunction) {
-        data->bifiltration_data->build_VR_complex(time_indexes, dist_indexes, data->x_exact.size(), data->y_exact.size());
+        data->bifiltration_data->build_VR_complex(dist_mat.function_indexes, dist_mat.dist_indexes, data->x_exact.size(), data->y_exact.size());
 
     } else {
 
-        data->bifiltration_data->build_DR_complex(num_points, dist_indexes, degree_indexes, data->x_exact.size(), data->y_exact.size());
+        data->bifiltration_data->build_DR_complex(num_points, dist_mat.dist_indexes, dist_mat.degree_indexes, data->x_exact.size(), data->y_exact.size());
         //convert data->x_exact from codegree sequence to negative degree sequence
         exact max_x_exact = *(data->x_exact.end() - 1); //should it be max_degree instead?
         std::transform(data->x_exact.begin(), data->x_exact.end(), data->x_exact.begin(), [max_x_exact](exact x) { return x - max_x_exact; });
@@ -426,7 +435,7 @@ FileContent DataReader::read_point_cloud(std::ifstream& stream, Progress& progre
     data->free_implicit_rep.reset(new FIRep(*(data->bifiltration_data), input_params.verbosity));
 
     if (!hasFunction) {
-        delete degree;
+        delete dist_mat.degree;
     }
 
     //remember the axis directions
@@ -480,8 +489,10 @@ FileContent DataReader::read_discrete_metric_space(std::ifstream& stream, Progre
     }
 
     // skip lines with flags
-    for (int i = 0; i < input_params.to_skip - input_params.function_line; i++)
+    for (int i = 0; i < input_params.to_skip - input_params.function_line - 1; i++)
         line_info = reader.next_line(0);
+
+    DistanceMatrix dist_mat(input_params, num_points);
 
     try {
         std::vector<exact> values;
@@ -520,6 +531,10 @@ FileContent DataReader::read_discrete_metric_space(std::ifstream& stream, Progre
             degree = new unsigned[num_points]();
         }
 
+        dist_mat.read_distance_matrix(stream, values);
+        dist_mat.build_all_vectors(data);
+
+        /*
         ret = dist_set.insert(ExactValue(exact(0))); //distance from a point to itself is always zero
         //store distance 0 at index 0
         (ret.first)->indexes.push_back(0);
@@ -584,6 +599,7 @@ FileContent DataReader::read_discrete_metric_space(std::ifstream& stream, Progre
                 }
             }
         } //end for
+        */
 
     } catch (InputError& e) {
         throw;
@@ -597,6 +613,7 @@ FileContent DataReader::read_discrete_metric_space(std::ifstream& stream, Progre
     progress.advanceProgressStage(); //advance progress box to stage 2: building bifiltration
     // STEP 3: build vectors of discrete indexes for constructing the bifiltration
 
+    /*
     std::vector<unsigned> value_indexes, degree_indexes;
     ExactSet degree_set;
     unsigned max_unsigned = std::numeric_limits<unsigned>::max();
@@ -629,6 +646,7 @@ FileContent DataReader::read_discrete_metric_space(std::ifstream& stream, Progre
     //second, distances
     std::vector<unsigned> dist_indexes((num_points * (num_points - 1)) / 2 + 1, max_unsigned); //discrete distance matrix (triangle); max_unsigned shall represent undefined distance
     build_grade_vectors(*data, dist_set, dist_indexes, data->y_exact, input_params.y_bins);
+    */
 
     //update progress
     progress.progress(30);
@@ -648,10 +666,10 @@ FileContent DataReader::read_discrete_metric_space(std::ifstream& stream, Progre
     //build the Vietoris-Rips bifiltration from the discrete index vectors
     data->bifiltration_data.reset(new BifiltrationData(input_params.hom_degree, input_params.verbosity));
     if (hasFunction) {
-        data->bifiltration_data->build_VR_complex(value_indexes, dist_indexes, data->x_exact.size(), data->y_exact.size());
+        data->bifiltration_data->build_VR_complex(dist_mat.function_indexes, dist_mat.dist_indexes, data->x_exact.size(), data->y_exact.size());
     } else {
 
-        data->bifiltration_data->build_DR_complex(num_points, dist_indexes, degree_indexes, data->x_exact.size(), data->y_exact.size());
+        data->bifiltration_data->build_DR_complex(num_points, dist_mat.dist_indexes, dist_mat.degree_indexes, data->x_exact.size(), data->y_exact.size());
 
         //convert data->x_exact from codegree sequence to negative degree sequence
         exact max_x_exact = *(data->x_exact.end() - 1); //should it be max_degree instead?
@@ -674,7 +692,7 @@ FileContent DataReader::read_discrete_metric_space(std::ifstream& stream, Progre
 
     //clean up
     if (!hasFunction) {
-        delete degree;
+        delete dist_mat.degree;
     }
 
     return FileContent(data);
