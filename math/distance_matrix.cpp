@@ -30,9 +30,11 @@ DistanceMatrix::DistanceMatrix(InputParameters& params, int np)
 	, max_dist(input_params.max_dist)
 	, num_points(np)
 	, dimension(input_params.dimension)
+	, filtration(input_params.filtration)
 {
 	function = input_params.old_function || input_params.new_function;
-	if (!function) {
+
+	if (!function && filtration == "degree") {
         degree = new unsigned[num_points]();
     }
 
@@ -49,9 +51,58 @@ DistanceMatrix::~DistanceMatrix()
 	std::set<ExactValue, ExactValueComparator>().swap(function_set);
 	std::set<ExactValue, ExactValueComparator>().swap(degree_set);
 
-	if (!function)
+	if (!function && filtration == "degree")
 		delete degree;
 
+}
+
+void DistanceMatrix::ball_density_estimator(double radius)
+{
+	// fill up function_set with values
+	// consider values from dist_set
+
+	unsigned size = (num_points * (num_points - 1)) / 2 + 1;
+	double* distance_matrix = new double[size];
+
+	ExactSet::iterator it;
+
+	for (it = dist_set.begin(); it != dist_set.end(); it++) {
+		ExactValue curr_dist = *it;
+		double val = curr_dist.double_value;
+		for (unsigned j = 0; j < curr_dist.indexes.size(); j++) {
+			unsigned index = curr_dist.indexes[j];
+			distance_matrix[index] = val;
+		}
+	}
+
+	if (radius == 0) {
+		std::vector<double> sorted;
+		for (unsigned i = 0; i < size; i++)
+			sorted.push_back(distance_matrix[i]);
+		std::sort(sorted.begin(), sorted.end());
+		int twenty_percentile = (int)(sorted.size()*0.2);
+		radius = sorted[twenty_percentile];
+		std::vector<double>().swap(sorted);
+	}
+
+	int count = 0;
+	for (unsigned i = 0; i < num_points; i++) {
+		exact value = 0;
+		count++;
+		for (unsigned j = 0; j < num_points; j++) {
+			if ((i == j)
+				|| (j > i && (distance_matrix[(j * (j - 1)) / 2 + i + 1] <= radius))
+				|| (i > j && (distance_matrix[(i * (i - 1)) / 2 + j + 1] <= radius))
+			    ) 
+			{
+				value = value + 1;
+			}
+		}
+		ret = function_set.insert(ExactValue(value));
+		(ret.first)->indexes.push_back(i);
+	}
+
+	delete[] distance_matrix;
 }
 
 void DistanceMatrix::build_distance_matrix(std::vector<DataPoint>& points)
@@ -60,7 +111,7 @@ void DistanceMatrix::build_distance_matrix(std::vector<DataPoint>& points)
     (ret.first)->indexes.push_back(0); //store distance 0 at 0th index
     //consider all points
     for (unsigned i = 0; i < num_points; i++) {
-        if (function) {
+        if (function && filtration == "none") {
             //store time value, if it doesn't exist already
             ret = function_set.insert(ExactValue(points[i].birth));
 
@@ -91,7 +142,7 @@ void DistanceMatrix::build_distance_matrix(std::vector<DataPoint>& points)
                 (ret.first)->indexes.push_back((j * (j - 1)) / 2 + i + 1);
 
                 //need to keep track of degree for degree-Rips complex
-                if (!function) {
+                if (!function && filtration == "degree") {
                     //there is an edge between i and j so update degree
                     degree[i]++;
                     degree[j]++;
@@ -103,7 +154,10 @@ void DistanceMatrix::build_distance_matrix(std::vector<DataPoint>& points)
 
 void DistanceMatrix::build_all_vectors(InputData* data)
 {
-	if (!function) {
+	if (filtration == "density")
+    	ball_density_estimator(input_params.filter_param);
+
+	if (!function && filtration == "degree") {
         //determine the max degree
         max_degree = 0;
         for (unsigned i = 0; i < num_points; i++) {
@@ -146,7 +200,7 @@ void DistanceMatrix::read_distance_matrix(std::ifstream& stream, std::vector<exa
 
     //consider all points
     for (unsigned i = 0; i < num_points; i++) {
-        if (function) {
+        if (function && filtration == "none") {
             //store value, if it doesn't exist already
             ret = function_set.insert(ExactValue(values[i]));
 
@@ -192,7 +246,7 @@ void DistanceMatrix::read_distance_matrix(std::ifstream& stream, std::vector<exa
                         (ret.first)->indexes.push_back((j * (j - 1)) / 2 + i + 1);
 
                         //need to keep track of degree for degree-Rips complex
-                        if (!function) {
+                        if (!function && filtration == "degree") {
                             //there is an edge between i and j so update degree
                             degree[i]++;
                             degree[j]++;
@@ -213,9 +267,9 @@ void DistanceMatrix::build_grade_vectors(InputData& data,
     std::vector<exact>& grades_exact,
     unsigned num_bins)
 {
+
     if (num_bins == 0 || num_bins >= value_set.size()) //then don't use bins
     {
-
         grades_exact.reserve(value_set.size());
 
         unsigned c = 0; //counter for indexes

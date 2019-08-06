@@ -63,6 +63,8 @@ struct InputParameters {
     bool x_reverse, y_reverse; //specifies if the axes need to be reversed or not
     std::string type; //type of file being worked with
     int to_skip; //number of lines after which the actual data begins
+    std::string filtration; //type of filtration to perform on data without function
+    double filter_param; //parameter value for performing the filtration
 
     InputParameters()
     {
@@ -88,6 +90,8 @@ struct InputParameters {
         bounds = false;
         koszul = false;
         function_line = 0;
+        filtration = "none";
+        filter_param = 0;
     }
 
     template <typename Archive>

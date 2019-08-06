@@ -40,6 +40,8 @@ public:
 
 	void read_distance_matrix(std::ifstream& stream, std::vector<exact>& values);
 
+	void ball_density_estimator(double radius);
+
 	std::vector<unsigned> dist_indexes;
 	std::vector<unsigned> function_indexes;
 	std::vector<unsigned> degree_indexes;
@@ -55,6 +57,7 @@ private:
 	exact max_dist;
 	unsigned max_degree;
 	unsigned dimension;
+	std::string filtration;
 
 	unsigned max_unsigned;
 

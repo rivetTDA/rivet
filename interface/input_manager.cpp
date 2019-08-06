@@ -233,6 +233,15 @@ void InputManager::parse_args()
                 // everything coming after --y-label is the label
                 for (unsigned i = 1; i < line.size(); i++)
                     input_params.y_label += line[i] + " ";
+            } else if (line[0] == "--filter") {
+                if (line[1] != "degree" && line[1] != "density" && line[1] != "eccentricity" && line[1] != "knn")
+                    throw std::runtime_error("Invalid argument for --filter");
+                input_params.type = line[1];
+            } else if (line[0] == "--param") {
+                double val = atof(line[1].c_str());
+                if (val <= 0)
+                    throw std::runtime_error("Invalid argument for --param");
+                input_params.filter_param = val;
             } else if (line[0] == "--xreverse") {
                 input_params.x_reverse = true;
             } else if (line[0] == "--yreverse") {
@@ -278,6 +287,12 @@ void InputManager::parse_args()
         else if (input_params.dimension == line_info.first.size() + 1)
             input_params.dimension++; // this is the number of points for metric space
     }
+    if (input_params.filtration != "none" && input_params.new_function)
+        throw std::runtime_error("Cannot specify both --function and --filtration in input file");
+
+    if (input_params.filtration == "none" && input_params.filter_param != 0)
+        throw std::runtime_error("--param cannot be supplied without supplying --filter");
+
     input_file.close();
 }
 

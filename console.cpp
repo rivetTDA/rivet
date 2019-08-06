@@ -51,8 +51,8 @@ static const char USAGE[] =
       rivet_console <module_invariants_file> --bounds [-V <verbosity>]
       rivet_console <module_invariants_file> --barcodes <line_file> [-V <verbosity>]
       rivet_console <input_file> <module_invariants_file> [-H <hom_degree>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [-f <format>] [--binary] [--koszul] 
-                                                          [--maxdist <distance>] [--num_threads <num_threads>] [--xreverse] [--yreverse] 
-                                                          [--type <type>] [--xlabel <label>] [--ylabel <label>]
+                                                          [--maxdist <distance>] [--num_threads <num_threads>] [--xreverse] [--yreverse] [--type <type>] 
+                                                          [--xlabel <label>] [--ylabel <label>] [--filter <filtration>] [--param <parameter>]
 
 
     Options:
@@ -81,6 +81,8 @@ static const char USAGE[] =
       --maxdist <distance>                     Maximum distance to be considered while building the Rips complex. (Default: Infinity)
       --xlabel <label>                         Name of the parameter displayed along the x-axis. (Default: degree (if no function specified))
       --ylabel <label>                         Name of the parameter displayed along the y-axis. (Default: distance)
+      --filter <filtration>                    The type of function values RIVET will calculate for the data. (Default: degree)
+      --param <parameter>                      Parameter value for the filtration to perform.
       --barcodes <line_file>                   Print barcodes for the line queries in line_file, then exit.
                                                
 
@@ -321,6 +323,8 @@ int main(int argc, char* argv[])
     bool num_threads = args["--num_threads"].isString();
     bool x_label = args["--xlabel"].isString();
     bool y_label = args["--ylabel"].isString();
+    bool fil = args["--filter"].isString();
+    bool par = args["--param"].isString();
 
     // override whichever flag has been set in the command line
     std::string slices;
@@ -404,6 +408,23 @@ int main(int argc, char* argv[])
         if (params.y_label == "")
             throw std::runtime_error("Invalid argument for --ylabel");
     }
+
+    if (fil) {
+        std::string str = args["--filter"].asString();
+        if (str != "degree" && str != "density" && str != "eccentricity" && str != "knn")
+            throw std::runtime_error("Invalid argument for --filter");
+        params.filtration = str;
+    }
+
+    if (par) {
+        double val = atof(args["--param"].asString().c_str());
+        if (val <= 0)
+            throw std::runtime_error("Invalid argument for --param");
+        params.filter_param = val;
+    }
+
+    if (par && !fil)
+        throw std::runtime_error("--param cannot be supplied without supplying --filter");
 
     // all input parameters should be set by this point
 
