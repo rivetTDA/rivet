@@ -151,8 +151,7 @@ void InputManager::parse_args()
                     if (line[1] == "inf") {
                         input_params.max_dist = -1;
                         input_params.md_string = "inf";
-                    }
-                    else {
+                    } else {
                         // max distance cannot be less than 0
                         exact dist = str_to_exact(line[1]);
                         if (dist <= 0)
@@ -287,6 +286,8 @@ void InputManager::parse_args()
         else if (input_params.dimension == line_info.first.size() + 1)
             input_params.dimension++; // this is the number of points for metric space
     }
+
+    // raise errors when filtration, filtration parameter and function are supplied incorrectly
     if (input_params.filtration != "none" && input_params.new_function)
         throw std::runtime_error("Cannot specify both --function and --filtration in input file");
 

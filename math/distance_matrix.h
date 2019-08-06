@@ -22,60 +22,55 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define _DISTANCE_MATRIX_H
 
 #include "../interface/data_reader.h"
-#include "../interface/input_parameters.h"
 #include "../interface/file_input_reader.h"
+#include "../interface/input_parameters.h"
 
-#include <vector>
 #include <fstream>
+#include <vector>
 
 class DistanceMatrix {
 public:
+    DistanceMatrix(InputParameters& params, int np);
+    ~DistanceMatrix(); // cleanup all data structures used in distance matrix
 
-	DistanceMatrix(InputParameters& params, int np);
-	~DistanceMatrix();
+    void build_distance_matrix(std::vector<DataPoint>& points); // builds a distance matrix from a set of points
 
-	void build_distance_matrix(std::vector<DataPoint>& points);
+    void build_all_vectors(InputData* data); // builds discrete index vectors and grade vectors
 
-	void build_all_vectors(InputData* data);
+    void read_distance_matrix(std::ifstream& stream, std::vector<exact>& values); // reads a matrix from an input file and stores it
 
-	void read_distance_matrix(std::ifstream& stream, std::vector<exact>& values);
+    void ball_density_estimator(double radius); // function to add a density estimator to provided data
 
-	void ball_density_estimator(double radius);
+    // these are required by bifiltration data and hence made public
+    std::vector<unsigned> dist_indexes;
+    std::vector<unsigned> function_indexes;
+    std::vector<unsigned> degree_indexes;
 
-	std::vector<unsigned> dist_indexes;
-	std::vector<unsigned> function_indexes;
-	std::vector<unsigned> degree_indexes;
-
-	unsigned* degree;
+    unsigned* degree;
 
 private:
+    InputParameters& input_params;
 
-	InputParameters& input_params;
+    // some commonly used variables in the class
+    // they are set from the input parameters
+    bool function;
+    unsigned num_points;
+    exact max_dist;
+    unsigned max_degree;
+    unsigned dimension;
+    std::string filtration;
 
-	bool function;
-	unsigned num_points;
-	exact max_dist;
-	unsigned max_degree;
-	unsigned dimension;
-	std::string filtration;
+    unsigned max_unsigned; // infinity
 
-	unsigned max_unsigned;
+    // sets storing unique values
+    ExactSet dist_set;
+    ExactSet degree_set;
+    ExactSet function_set;
 
-	ExactSet dist_set;
-	
+    std::pair<ExactSet::iterator, bool> ret; // for return value upon inserting to a set
 
-	ExactSet function_set;
-	
-
-	std::pair<ExactSet::iterator, bool> ret;
-	
-	
-	ExactSet degree_set;
-	
-
-	exact approx(double x);
-	void build_grade_vectors(InputData& data, ExactSet& value_set, std::vector<unsigned>& indexes, std::vector<exact>& grades_exact, unsigned num_bins); //converts an ExactSets of values to the vectors of discrete values that BifiltrationData uses to build the bifiltration, and also builds the grade vectors (floating-point and exact)
+    exact approx(double x);
+    void build_grade_vectors(InputData& data, ExactSet& value_set, std::vector<unsigned>& indexes, std::vector<exact>& grades_exact, unsigned num_bins); //converts an ExactSets of values to the vectors of discrete values that BifiltrationData uses to build the bifiltration, and also builds the grade vectors (floating-point and exact)
 };
-
 
 #endif

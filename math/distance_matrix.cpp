@@ -19,22 +19,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **********************************************************************/
 
 #include "distance_matrix.h"
-#include "../numerics.h"
 #include "../debug.h"
+#include "../numerics.h"
 
 #include <math.h>
 #include <string>
 
 DistanceMatrix::DistanceMatrix(InputParameters& params, int np)
-	: input_params(params)
-	, max_dist(input_params.max_dist)
-	, num_points(np)
-	, dimension(input_params.dimension)
-	, filtration(input_params.filtration)
+    : input_params(params)
+    , max_dist(input_params.max_dist)
+    , num_points(np)
+    , dimension(input_params.dimension)
+    , filtration(input_params.filtration)
 {
-	function = input_params.old_function || input_params.new_function;
+    function = input_params.old_function || input_params.new_function;
 
-	if (!function && filtration == "degree") {
+    // we make the degree filtration only when
+    // neither function values, not filtration is supplied
+    if (!function && filtration == "degree") {
         degree = new unsigned[num_points]();
     }
 
@@ -43,71 +45,76 @@ DistanceMatrix::DistanceMatrix(InputParameters& params, int np)
 
 DistanceMatrix::~DistanceMatrix()
 {
-	std::vector<unsigned>().swap(dist_indexes);
-	std::vector<unsigned>().swap(function_indexes);
-	std::vector<unsigned>().swap(degree_indexes);
-	
-	std::set<ExactValue, ExactValueComparator>().swap(dist_set);
-	std::set<ExactValue, ExactValueComparator>().swap(function_set);
-	std::set<ExactValue, ExactValueComparator>().swap(degree_set);
+    // guaranteed way to clear memory allocated to vectors
+    std::vector<unsigned>().swap(dist_indexes);
+    std::vector<unsigned>().swap(function_indexes);
+    std::vector<unsigned>().swap(degree_indexes);
 
-	if (!function && filtration == "degree")
-		delete degree;
+    std::set<ExactValue, ExactValueComparator>().swap(dist_set);
+    std::set<ExactValue, ExactValueComparator>().swap(function_set);
+    std::set<ExactValue, ExactValueComparator>().swap(degree_set);
 
+    if (!function && filtration == "degree")
+        delete degree;
 }
 
 void DistanceMatrix::ball_density_estimator(double radius)
 {
-	// fill up function_set with values
-	// consider values from dist_set
+    // fill up function_set with values
+    // consider values from dist_set
 
-	unsigned size = (num_points * (num_points - 1)) / 2 + 1;
-	double* distance_matrix = new double[size];
+    // first we reconstruct the actual distance matrix from the distance set
+    // it is a diagonal matrix
+    unsigned size = (num_points * (num_points - 1)) / 2 + 1;
+    double* distance_matrix = new double[size];
 
-	ExactSet::iterator it;
+    ExactSet::iterator it;
 
-	for (it = dist_set.begin(); it != dist_set.end(); it++) {
-		ExactValue curr_dist = *it;
-		double val = curr_dist.double_value;
-		for (unsigned j = 0; j < curr_dist.indexes.size(); j++) {
-			unsigned index = curr_dist.indexes[j];
-			distance_matrix[index] = val;
-		}
-	}
+    // look at ExactValue struct to understand better
+    for (it = dist_set.begin(); it != dist_set.end(); it++) {
+        ExactValue curr_dist = *it;
+        double val = curr_dist.double_value;
+        for (unsigned j = 0; j < curr_dist.indexes.size(); j++) {
+            unsigned index = curr_dist.indexes[j];
+            distance_matrix[index] = val;
+        }
+    }
 
-	if (radius == 0) {
-		std::vector<double> sorted;
-		for (unsigned i = 0; i < size; i++)
-			sorted.push_back(distance_matrix[i]);
-		std::sort(sorted.begin(), sorted.end());
-		int twenty_percentile = (int)(sorted.size()*0.2);
-		radius = sorted[twenty_percentile];
-		std::vector<double>().swap(sorted);
-	}
+    // set a default radius if no radius parameter is supplied
+    if (radius == 0) {
+        std::vector<double> sorted; // sorted will hold sorted values of distance matrix
+        for (unsigned i = 0; i < size; i++)
+            sorted.push_back(distance_matrix[i]);
+        std::sort(sorted.begin(), sorted.end());
+        int twenty_percentile = (int)(sorted.size() * 0.2); // we select the 20th percentile
+        radius = sorted[twenty_percentile];
+        std::vector<double>().swap(sorted); // free up the memory
+    }
 
-	int count = 0;
-	for (unsigned i = 0; i < num_points; i++) {
-		exact value = 0;
-		count++;
-		for (unsigned j = 0; j < num_points; j++) {
-			if ((i == j)
-				|| (j > i && (distance_matrix[(j * (j - 1)) / 2 + i + 1] <= radius))
-				|| (i > j && (distance_matrix[(i * (i - 1)) / 2 + j + 1] <= radius))
-			    ) 
-			{
-				value = value + 1;
-			}
-		}
-		ret = function_set.insert(ExactValue(value));
-		(ret.first)->indexes.push_back(i);
-	}
+    // check if distance less than supplied radius
+    // if yes, increase density value by 1
+    int count = 0;
+    for (unsigned i = 0; i < num_points; i++) {
+        exact value = 0;
+        count++;
+        for (unsigned j = 0; j < num_points; j++) {
+            if ((i == j)
+                || (j > i && (distance_matrix[(j * (j - 1)) / 2 + i + 1] <= radius))
+                || (i > j && (distance_matrix[(i * (i - 1)) / 2 + j + 1] <= radius))) {
+                value = value + 1;
+            }
+        }
+        // store value in function_set
+        ret = function_set.insert(ExactValue(value));
+        (ret.first)->indexes.push_back(i);
+    }
 
-	delete[] distance_matrix;
+    delete[] distance_matrix; // free up the memory
 }
 
 void DistanceMatrix::build_distance_matrix(std::vector<DataPoint>& points)
 {
-	ret = dist_set.insert(ExactValue(exact(0))); //distance from a point to itself is always zero
+    ret = dist_set.insert(ExactValue(exact(0))); //distance from a point to itself is always zero
     (ret.first)->indexes.push_back(0); //store distance 0 at 0th index
     //consider all points
     for (unsigned i = 0; i < num_points; i++) {
@@ -154,10 +161,11 @@ void DistanceMatrix::build_distance_matrix(std::vector<DataPoint>& points)
 
 void DistanceMatrix::build_all_vectors(InputData* data)
 {
-	if (filtration == "density")
-    	ball_density_estimator(input_params.filter_param);
+    // if a filtration was supplied, calculate function values
+    if (filtration == "density")
+        ball_density_estimator(input_params.filter_param);
 
-	if (!function && filtration == "degree") {
+    if (!function && filtration == "degree") {
         //determine the max degree
         max_degree = 0;
         for (unsigned i = 0; i < num_points; i++) {
@@ -189,12 +197,12 @@ void DistanceMatrix::build_all_vectors(InputData* data)
 
 void DistanceMatrix::read_distance_matrix(std::ifstream& stream, std::vector<exact>& values)
 {
-	FileInputReader reader(stream);
+    FileInputReader reader(stream);
 
-	std::pair<std::vector<std::string>, unsigned> line_info;
-	unsigned expectedNumTokens = num_points;
+    std::pair<std::vector<std::string>, unsigned> line_info;
+    unsigned expectedNumTokens = num_points;
 
-	ret = dist_set.insert(ExactValue(exact(0))); //distance from a point to itself is always zero
+    ret = dist_set.insert(ExactValue(exact(0))); //distance from a point to itself is always zero
     //store distance 0 at index 0
     (ret.first)->indexes.push_back(0);
 
@@ -258,7 +266,6 @@ void DistanceMatrix::read_distance_matrix(std::ifstream& stream, std::vector<exa
             }
         }
     } //end for
-
 }
 
 void DistanceMatrix::build_grade_vectors(InputData& data,
@@ -311,7 +318,7 @@ void DistanceMatrix::build_grade_vectors(InputData& data,
 
 exact DistanceMatrix::approx(double x)
 {
-	int d = 7; //desired number of significant digits
+    int d = 7; //desired number of significant digits
     int log = (int)floor(log10(x)) + 1;
 
     if (log >= d)

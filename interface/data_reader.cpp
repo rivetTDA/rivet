@@ -288,13 +288,11 @@ FileContent DataReader::read_point_cloud(std::ifstream& stream, Progress& progre
     dist_mat.build_distance_matrix(points);
     dist_mat.build_all_vectors(data);
 
-    
     if (verbosity >= 4) {
         debug() << "  Finished reading data.";
     }
 
     // STEP 3: build vectors of discrete indexes for constructing the bifiltration
-
 
     //update progress
     progress.progress(30);
@@ -323,7 +321,7 @@ FileContent DataReader::read_point_cloud(std::ifstream& stream, Progress& progre
         //convert data->x_exact from codegree sequence to negative degree sequence
         exact max_x_exact = *(data->x_exact.end() - 1); //should it be max_degree instead?
         std::transform(data->x_exact.begin(), data->x_exact.end(), data->x_exact.begin(), [max_x_exact](exact x) { return x - max_x_exact; });
-       
+
     } else {
         data->bifiltration_data->build_VR_complex(dist_mat.function_indexes, dist_mat.dist_indexes, data->x_exact.size(), data->y_exact.size());
     }
@@ -443,8 +441,6 @@ FileContent DataReader::read_discrete_metric_space(std::ifstream& stream, Progre
         dist_mat.read_distance_matrix(stream, values);
         dist_mat.build_all_vectors(data);
 
-        
-
     } catch (InputError& e) {
         throw;
     } catch (std::exception& e) {
@@ -456,8 +452,6 @@ FileContent DataReader::read_discrete_metric_space(std::ifstream& stream, Progre
 
     progress.advanceProgressStage(); //advance progress box to stage 2: building bifiltration
     // STEP 3: build vectors of discrete indexes for constructing the bifiltration
-
-    
 
     //update progress
     progress.progress(30);
@@ -483,7 +477,7 @@ FileContent DataReader::read_discrete_metric_space(std::ifstream& stream, Progre
         exact max_x_exact = *(data->x_exact.end() - 1); //should it be max_degree instead?
         std::transform(data->x_exact.begin(), data->x_exact.end(), data->x_exact.begin(), [max_x_exact](exact x) { return x - max_x_exact; });
     } else {
-        data->bifiltration_data->build_VR_complex(dist_mat.function_indexes, dist_mat.dist_indexes, data->x_exact.size(), data->y_exact.size());        
+        data->bifiltration_data->build_VR_complex(dist_mat.function_indexes, dist_mat.dist_indexes, data->x_exact.size(), data->y_exact.size());
     }
 
     if (verbosity >= 8) {
