@@ -121,6 +121,8 @@ As mentioned above, RIVET computes and visualizes three simple invariants of a b
 
 for :math:`M`, :math:`\xi_i^M(r)` is the number of elements at bigrade :math:`r` in a basis for :math:`F^i`.
 
+.. _coarsening:
+
 Coarsening a Persistence Module
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Given a finitely presented bipersistence module :math:`M`, we can *coarsen* :math:`M` to obtain an algebraically simpler module carrying approximately the same persistence information as :math:`M`.  As we will describe it here, the coarsening operation depends on a choice of finite grid :math:`G\subset\mathbb R^2`, such that :math:`G` contains some element ordered after all points in the support of the Betti numbers of :math:`M`.  The coarsened module, denoted :math:`M^G`, is defined by taking :math:`M^G_a:= M_g`, where :math:`g\in G` is the minimum grid element such that :math:`a\leq g`.  The internal maps of :math:`M^G` are induced by those of :math:`M` in the obvious way.
