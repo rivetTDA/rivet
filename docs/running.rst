@@ -14,9 +14,11 @@ The RIVET software consists of two separate but closely related executables: **r
 
 * Given an MI file of a bipersistence module :math:`M` and a second file, the *line file*, specifying a list of lines, **rivet_console** prints the barcodes of the 1-D slices of each line to the console.  The computations are performed using fast queries of the augmented arrangment of :math:`M`.
 
-* Given a *raw data* file as input, **rivet_console** can print The Hilbert function and Bigraded Betti numbers of a persistent homology module of the input data.  It can also print a minimal presentation of the module.
+* Given an *input data file* file as input, **rivet_console** can print a minimal presentation of a persistent homology module of the input data.  It can also print the Hilbert function and Bigraded Betti numbers.
 
-In what follows we explain in more detail how to use **rivet_console**.  The syntax for running  **rivet_console** is also described in the executable's help information, which can be accessed via the command::
+In what follows, we explain in more detail how to use **rivet_console**.  
+
+The syntax for running  **rivet_console** is also described in the executable's help information, which can be accessed via the command::
 
 	rivet_console (-h | --help)
 	
@@ -26,14 +28,34 @@ Computation of a Module Invariants File
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Here the basic syntax for computing a module invariants file::
 
-	 rivet_console <input> <output> [-H <dimension>] [-x <xbins>] [-y <ybins>]
+	 rivet_console <input> <output> [options]
 
 * <input> is an input data file;
 * <output> is the name of the module invariants file to be computed.
-* [-H <dimension>] is the dimension of homology to compute [default: 0, ignored if the input file is of firep type]
-* [-x <xbins>] and [-y <ybins>] specifies the dimension of a grid used for coarsening.  The grid spacing is taken to be uniform in each dimension.  A value of 0 means no coarsening is done at all in that coordinate direction.  This is the default.  However, to control the size of the augmented arrangment, most computations of a MIF should use some coarsening of the module.
+* [options] are command-line flags control the computation, as specified below.
 
-Other (technical) command line options for computation of a MI file are given in the **rivet_console** help.
+
+Note that some or all of the command-line flags can instead be given directly in the input data file.  
+In the input file, flags must be provided in the top lines of the file, before the data appears.
+If the same flag is given in both the input data file and the command line, then rivet_console ignores the copy of the flag in the input file and uses the flag given on the command line.
+
+The most important flags are the following:
+
+* :code:`-x <xbins>` and :code:`-y <ybins>` specify the dimensions of the grid used for coarsening. The grid spacing is taken to be uniform in each dimension. (For details, see the section :ref:`coarsening` in this documentation.) If unspecified, each flag takes a default value of 0, which means that no coarsening is done at all in that coordinate direction. However, to control the size of the augmented arrangment, most computations of a MIF should use some coarsening of the module. These flags can also be specified in the longer forms :code:`--xbins <xbins>`: and :code:`--ybins <ybins>`:
+* :code:`-H <hom_degree>` or :code:`--homology <hom_degree>`: This flag tells RIVET the degree of homology to compute. If unspecified, the default value is zero.
+
+The following flags are also available:
+
+* :code:`--xreverse` This flag reverses the direction of the :math:`x`-axis.
+* :code:`--yreverse` This flag reverses the direction of the :math:`y`-axis.
+* :code:`--type <type>` This flag specifies the type of data contained in the input file. For details on file types, see the :ref:`inputData` section of this documentation. Importantly, this flag allows RIVET to interpret CSV files as point clouds or distance matrices.
+* :code:`--maxdist <distance>` This flag specifies the maximum distance to be considered when building the Rips complex. Any edges whose length is greater than this distance will not be included in the complex, reducing the amount of memory required for the computation. If unspecified, this flag takes the default value of infinity.
+* :code:`--xlabel <label>` This flag allows the user to provide a label for the :math:`x`-axis in the visualization window.
+* :code:`--ylabel <label>` This flag allows the user to provide a label for the :math:`y`-axis in the visualization window.
+* :code:`--num_threads <num_threads>` This flag specifies the maximum number of threads to use for parallel computation. The default value is 0, which lets OpenMP decide how many threads to use.
+* :code:`-V <verbosity>` or :code:`--verbosity <verbosity>` This flag controls the amount of text that rivet_console prints to the terminal window. The verbosity may be specified as an integer between 0 and 10: greater values produce more output. A value of 0 results in minimal output, a value of 10 produces extensive output.
+* :code:`-k` or :code:`--koszul` This flag causes RIVET to use a koszul homology-based algorithm to compute the Betti numbers, instead of an approach based on computing presentations.
+
 
 Computing Barcodes of 1-D Slices
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -76,12 +98,12 @@ For example, in the sample output above, ``88.1838 inf x1`` indicates a single i
 
 Printing a Minimal Presentation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The basic syntax for computing a minimal presentation of a bipersistence module is the following::
+The basic syntax for computing and printing minimal presentation of a bipersistence module is the following::
 
-	rivet_console <input_file> --minpres [-H <dimension>] [-x <xbins>] [-y <ybins>]
+	rivet_console <input_file> --minpres [command-line flags]
 
 * <input> is an input data file;
-* The options for choosing homology dimensions and coarsening parameters behave exactly as for the computation of the MI file.
+* [command-line flags] work exactly as for the computation of the MI file.
 
 The following example shows the output format for the minimal presentation::
 
@@ -120,12 +142,12 @@ Printing Hilbert Function and Bigraded Betti Numbers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Here is the basic syntax for computing both the Hilbert function and bigraded Betti numbers of a bipersistence module::
 
-	rivet_console <input_file> --betti [-H <dimension>] [-x <xbins>] [-y <ybins>]
+	rivet_console <input_file> --betti [command-line flags]
 
 As above,
 
 * <input> is an input data file;
-* The options for choosing homology dimensions and coarsening parameters behave exactly as for the computation of the MI File.
+* [command-line flags] work exactly as for the computation of the MI file.
 
 **NOTE**: Currently, one cannot print the Hilbert function and bigraded Betti numbers of a module separately.  Nor can one print the minimal presentation, Betti numbers, and Hilbert Function together.  This will change soon.
 
