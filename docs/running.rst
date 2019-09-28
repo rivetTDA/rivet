@@ -56,7 +56,7 @@ The most important flags are the following:
 
 * :code:`--filtration <type>` specifies the type of filtration to be built.  Selecting a filtration type only makes sense for certain input data types, and hence this flag can only be used for data.  In cases where the flag can be used, the available filtration types are 'function-Rips' and 'degree-Rips.'  The default depends on the choice of input data type.  [DOES THIS FLAG ALWAYS COME AFTER INPUT DATA TYPE?]  For details, see the :ref:`inputData` section of this documentation.  For details, see :ref:`inputData`.
 
-* :code:`-x <xbins>` and :code:`-y <ybins>` specify the dimensions of the grid used for coarsening. The grid spacing is taken to be uniform in each dimension. (For details on grids and coarsening, see :ref:`coarsening'.) If unspecified, each flag takes a default value of 0, which means that no coarsening is done at all in that coordinate direction. However, to control the size of the augmented arrangement, most computations of a MI file should use some coarsening of the module. These flags can also be specified in the longer forms :code:`--xbins <xbins>`. and :code:`--ybins <ybins>`.
+* :code:`-x <xbins>` and :code:`-y <ybins>` specify the dimensions of the grid used for coarsening. The grid spacing is taken to be uniform in each dimension. (For details on grids and coarsening, see :ref:`coarsening`.) If unspecified, each flag takes a default value of 0, which means that no coarsening is done at all in that coordinate direction. However, to control the size of the augmented arrangement, most computations of a MI file should use some coarsening of the module. These flags can also be specified in the longer forms :code:`--xbins <xbins>`. and :code:`--ybins <ybins>`.
 
 * :code:`-H <hom_degree>` or :code:`--homology <hon_degree>` specifies degree of homology to compute. If unspecified, the default value is zero.  (RIVET handles only one homology degree at a time.)
 
@@ -232,4 +232,4 @@ Using the file menu in the GUI, the user may save the MI file; the file is not s
 
 If an MI file is selected in the file dialogue window, the data in the file is loaded immediately into the RIVET visualization, and the visualization begins. 
 
-The RIVET visualization itself is explained in the section ":ref:`visualization`".
+The RIVET visualization itself is explained in the section :ref:`visualization`.
