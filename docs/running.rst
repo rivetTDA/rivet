@@ -12,16 +12,20 @@ The RIVET software consists of two separate but closely related executables: **r
 
 * Given an *input data file* in one of the formats described in the :ref:`inputData` section of this documentation, **rivet_console** can compute a file called the *module invariants (MI) file*.  The MI file stores the Hilbert function, bigraded Betti numbers, and augmented arrangement of a persistent homology module of the input data.  The MI file is used by the RIVET visualization, and also for the following:
 
-* Given an MI file of a bipersistence module :math:`M` and a second file, the *line file*, specifying a list of lines, **rivet_console** prints the barcodes of the 1-D slices of each line to the console.  The computations are performed using fast queries of the augmented arrangment of :math:`M`.
+* Given an MI file of a bipersistence module :math:`M` and a second file, the *line file*, specifying a list of lines, **rivet_console** prints the barcodes of the 1-D slices of each line to the console.  The computations are performed using fast queries of the augmented arrangement of :math:`M`.
 
 * Given an *input data file* file as input, **rivet_console** can print a minimal presentation of a persistent homology module of the input data.  It can also print the Hilbert function and Bigraded Betti numbers.
 
+In version 1.1 of RIVET (to be released in fall 2019), both the syntax for running **rivet_console** and the format requirements for input files have been redesigned to be more flexible and user-friendly.  However,  **rivet_console** is backwards-compatible with older input files.
 
 In what follows, we explain in more detail how to use **rivet_console**.  The syntax for running  **rivet_console** is also described in the executable's help information, which can be accessed via the command::
 
 	rivet_console (-h | --help)
 	
 The help file also describes some additional technical functionality of  **rivet_console** that we will not discuss here. 
+
+RIVET allows the specification of input parameters at the top of input files using a syntax that matches the command-line flags of :code:`rivet_console`.
+For example, an input file may contain flags specifying type of input, the number of bins, axis labels, and more. For a full list of flags, run :code:`rivet_console (-h | --help)`.
 
 Computation of a Module Invariants File
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -46,15 +50,18 @@ For example, a typical call to rivet_console to compute an MI file *MI_output.ri
 
 Command-Line Flags for Use with Input Data Files
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-We now explain in detail **rivet_console**'s use of command-line flags to control computations taking an *input data file* as input.
+We now explain in detail **rivet_console**'s use of command-line flags to control computations taking an *input data file* as input.  
 
-Some or all of the command-line flags can be placed in the input data file itself, rather than given on the command line.  Flags in the input data file must be provided in the top lines of the file, before the data is given.  If the same flag is given in both the input data file and the command line, then rivet_console ignores the copy of the flag in the input file and uses the flag given on the command line.
+
+Some or all of the command-line flags can be placed in the input data file itself, rather than given on the command line. Flags in the input data file must be provided in the top lines of the file, before the data is given.  If the same flag is given in both the input data file and the command line, then rivet_console ignores the copy of the flag in the input file and uses the flag given on the command line.
+
+Whether on the command line or in an input file, flags can appear in any order.
 
 The most important flags are the following:
 
-* :code:`--datatype <type>` specifies the type of data contained in the input file. The default is :code:`points`.  For details, see :ref:`inputData`.  
+* :code:`--datatype <type>` specifies the type of data contained in the input file. The default is :code:`points`.  For details, see :ref:`inputData`.
 
-* :code:`--bifil <type>` specifies the type of bifiltration to be built.  Specifying a bifiltration type only makes sense for certain input data types, and hence this flag can only be used for data.  In cases where the flag can be used, the available bifiltration types are :code:`function-Rips` and :code:`degree-Rips`.  The default depends on the choice of input data type.  [DOES THIS FLAG ALWAYS COME AFTER INPUT DATA TYPE?]  For details, see the :ref:`inputData` section of this documentation.  For details, see :ref:`inputData`.
+* :code:`--bifil <type>` specifies the type of bifiltration to be built.  Specifying a bifiltration type only makes sense for certain input data types, and hence this flag can only be used for data.  In cases where the flag can be used, the available bifiltration types are :code:`function-Rips` and :code:`degree-Rips`.  The default depends on the choice of input data type.  For details, see the :ref:`inputData` section of this documentation.  For details, see :ref:`inputData`.
 
 * :code:`-x <xbins>` and :code:`-y <ybins>` specify the dimensions of the grid used for coarsening. The grid spacing is taken to be uniform in each dimension. (For details on grids and coarsening, see :ref:`coarsening`.) If unspecified, each flag takes a default value of 0, which means that no coarsening is done at all in that coordinate direction. However, to control the size of the augmented arrangement, most computations of a MI file should use some coarsening of the module. These flags can also be specified in the longer forms :code:`--xbins <xbins>`. and :code:`--ybins <ybins>`.
 
@@ -63,9 +70,9 @@ The most important flags are the following:
 
 The following flags are also available, and are useful in many cases:
 
-* :code:`--maxdist <distance>` specifies the maximum distance to be considered when building the Rips complex. Any edges whose length is greater than this distance will not be included in the complex.  If unspecified, this flag takes the default value of infinity.   Choosing a small value for <distance> reduces the amount of memory required for the computation, relative to the default.
+* :code:`--maxdist <distance>` specifies the maximum distance to be considered when building a vietoris-Rips bifiltration. Any edges whose length is greater than this distance will not be included in the complex.  If unspecified, this flag takes the default value of infinity.   Choosing a small value for <distance> reduces the amount of memory required for the computation, relative to the default.
 
-* :code:`--xlabel <label>` and :code:`--xlabel <label>` respectively specify labels for the :math:`x`-axis and :math:`y`-axis in the visualization window.  This is stored as metadata in the MI file
+* When computing an MI file, :code:`--xlabel <label>` and :code:`--xlabel <label>` respectively specify labels for the :math:`x`-axis and :math:`y`-axis in the **RIVET_GUI** visualization window.  The labels are stored as metadata in the MI file.
 
 * :code:`--xreverse` and :code:`--yreverse` reverse the direction of the :math:`x`-axis and :math:`y`-axis, respectively.  Reversing an axis direction only makes sense for certain bifiltration constructions, and hence these flags can only be used in certain circumstances.  For example, for a function-Rips filtration, the :math:`x`-axis indexes the function threshold parameter in RIVET's visualization, while the `y`-axis indexes the scale parameter.  In general, it makes equal sense to construct a function-Rips bilftration with respect to increasing or decreasing function values; the flag :code:`--xreverse` tells RIVET to use decreasing values.  But we don't have a good way of building a function-Rips bifiltration using a decreasing scale parameter, so :code:`--yreverse` is not available for the construction of function-Rips bifiltration.  See :ref:`inputData` for the specifics of when and how `--xreverse` and `--yreverse` can be used.
 
