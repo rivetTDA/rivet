@@ -3,7 +3,7 @@
 Running RIVET
 =============
 
-The RIVET software consists of two separate but closely related executables: **rivet_console**, a command-line program, and **rivet_GUI**, a GUI application.  **rivet_console** is the computational engine of RIVET; it implements the computation pipeline described in the previous section. 
+The RIVET software consists of two separate but closely related executables: **rivet_console**, a command-line program, and **rivet_GUI**, a GUI application.  **rivet_console** is the computational engine of RIVET; it implements the computation pipeline described in the previous section.   **rivet_GUI** is responsible for RIVET’s visualizations. 
 
 **rivet_console**
 --------------------------
@@ -35,9 +35,9 @@ Here the basic syntax for computing a module invariants file::
 
 For example, a typical call to rivet_console to compute an MI file *MI_output.rivet* from an input file *my_data.txt* might look as follows::
 
-	 rivet_console my_data.txt MI_output.rivet --metric --homology 1 --bifil degree_rips --xbins 100 --ybins 100
+	 rivet_console my_data.txt MI_output.rivet --datatype metric --homology 1 --bifil degree_rips --xbins 100 --ybins 100
 
-* :code:`--metric` tells RIVET that input_data.txt contains a distance matrix (specifying a finite metric space).
+* :code:`--datatype metric` tells RIVET that input_data.txt contains a distance matrix (specifying a finite metric space).
 * :code:`--bifil degree_rips` tells RIVET to compute the degree-Rips bifiltration of this metric space
 * :code:`--homology 1` tells RIVET to consider persistent homology in degree 1.
 * :code:`--xbins 100` and :code:`--ybins 100` tell RIVET to compute a coarsened version of the homology module such that the support of the 0th and 1st Betti numbers lies on a 100x100 grid in :math:`\mathbb R^2`.  (This is done to make the computation faster and limit the size of the resulting MI file.)  
@@ -52,9 +52,9 @@ Some or all of the command-line flags can be placed in the input data file itsel
 
 The most important flags are the following:
 
-* :code:`--datatype <type>` specifies the type of data contained in the input file. The default is "points".  For details, see :ref:`inputData`.  
+* :code:`--datatype <type>` specifies the type of data contained in the input file. The default is :code:`points`.  For details, see :ref:`inputData`.  
 
-* :code:`--filtration <type>` specifies the type of filtration to be built.  Selecting a filtration type only makes sense for certain input data types, and hence this flag can only be used for data.  In cases where the flag can be used, the available filtration types are 'function-Rips' and 'degree-Rips.'  The default depends on the choice of input data type.  [DOES THIS FLAG ALWAYS COME AFTER INPUT DATA TYPE?]  For details, see the :ref:`inputData` section of this documentation.  For details, see :ref:`inputData`.
+* :code:`--bifil <type>` specifies the type of bifiltration to be built.  Specifying a bifiltration type only makes sense for certain input data types, and hence this flag can only be used for data.  In cases where the flag can be used, the available bifiltration types are :code:`function-Rips` and :code:`degree-Rips`.  The default depends on the choice of input data type.  [DOES THIS FLAG ALWAYS COME AFTER INPUT DATA TYPE?]  For details, see the :ref:`inputData` section of this documentation.  For details, see :ref:`inputData`.
 
 * :code:`-x <xbins>` and :code:`-y <ybins>` specify the dimensions of the grid used for coarsening. The grid spacing is taken to be uniform in each dimension. (For details on grids and coarsening, see :ref:`coarsening`.) If unspecified, each flag takes a default value of 0, which means that no coarsening is done at all in that coordinate direction. However, to control the size of the augmented arrangement, most computations of a MI file should use some coarsening of the module. These flags can also be specified in the longer forms :code:`--xbins <xbins>`. and :code:`--ybins <ybins>`.
 
@@ -67,14 +67,14 @@ The following flags are also available, and are useful in many cases:
 
 * :code:`--xlabel <label>` and :code:`--xlabel <label>` respectively specify labels for the :math:`x`-axis and :math:`y`-axis in the visualization window.  This is stored as metadata in the MI file
 
-* :code:`--xreverse` and :code:`--yreverse` reverse the direction of the :math:`x`-axis and :math:`y`-axis, respectively.  Reversing an axis direction only makes sense for certain bifiltration constructions, and hence these flag can only be used in certain circumstances.  For example, for a function-Rips filtration, the :math:`x`-axis indexes the function threshold parameter in RIVET's visualization, while the `y`-axis indexes the scale parameter.  In general, it makes equal sense to construct a function-Rips bilftration with respect to increasing or decreasing function values; the flag :code:`--xreverse` tells RIVET to use decreasing values.  But we don't have a good way of building a function-Rips bifiltration using a decreasing scale parameter, so :code:`--yreverse` is not available for the construction of function-Rips bifiltration.  See :ref:`inputData` for the specifics of when and how `--xreverse` and `--yreverse` can be used.
+* :code:`--xreverse` and :code:`--yreverse` reverse the direction of the :math:`x`-axis and :math:`y`-axis, respectively.  Reversing an axis direction only makes sense for certain bifiltration constructions, and hence these flags can only be used in certain circumstances.  For example, for a function-Rips filtration, the :math:`x`-axis indexes the function threshold parameter in RIVET's visualization, while the `y`-axis indexes the scale parameter.  In general, it makes equal sense to construct a function-Rips bilftration with respect to increasing or decreasing function values; the flag :code:`--xreverse` tells RIVET to use decreasing values.  But we don't have a good way of building a function-Rips bifiltration using a decreasing scale parameter, so :code:`--yreverse` is not available for the construction of function-Rips bifiltration.  See :ref:`inputData` for the specifics of when and how `--xreverse` and `--yreverse` can be used.
 
 
 Some additional flags which concern the internals of RIVET's computations are also available, but can be disregarded by most users:
 
 * :code:`--num_threads <num_threads>` This flag specifies the maximum number of threads to use for parallel computation. The default value is 0, which lets OpenMP decide how many threads to use.
 * :code:`-V <verbosity>` or :code:`--verbosity <verbosity>` This flag controls the amount of text that rivet_console prints to the terminal window. The verbosity may be specified as an integer between 0 and 10: greater values produce more output. A value of 0 results in minimal output, a value of 10 produces extensive output.
-* :code:`-k` or :code:`--koszul` This flag causes RIVET to use a koszul homology-based algorithm to compute the Betti numbers, instead of an approach based on computing presentations.
+* :code:`-k` or :code:`--koszul` This flag causes RIVET to use a koszul homology-based algorithm to compute the Betti numbers, instead of the default approach based on computing a minimal presentation.
 
 
 Computing Barcodes of 1-D Slices
