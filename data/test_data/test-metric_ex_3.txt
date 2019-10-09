@@ -1,4 +1,4 @@
---datatype metric
+--datatype metric_fn
 --xlabel function values
 
 --ylabel distance
