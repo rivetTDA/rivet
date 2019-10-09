@@ -1,7 +1,8 @@
---type points
+--datatype points_fn
 --maxdist 100
 --xlabel time
---function
+
+# function values
 1 6 3.2 2 5 7 4 3 
 
 # data starts here

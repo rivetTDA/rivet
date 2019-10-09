@@ -1,5 +1,5 @@
 --datatype points_fn
---maxdist 3
+--maxdist 3.1
 --xreverse
 --xlabel codensity
 

@@ -88,7 +88,11 @@ DataReader::DataReader(InputParameters& params)
 {
     register_file_type(FileType{ "points", "point-cloud data", true,
         std::bind(&DataReader::read_point_cloud, this, std::placeholders::_1, std::placeholders::_2) });
+    register_file_type(FileType{ "points_fn", "point-cloud data with function", true,
+        std::bind(&DataReader::read_point_cloud, this, std::placeholders::_1, std::placeholders::_2) });
     register_file_type(FileType{ "metric", "metric data", true,
+        std::bind(&DataReader::read_discrete_metric_space, this, std::placeholders::_1, std::placeholders::_2) });
+    register_file_type(FileType{ "metric_fn", "metric data with function", true,
         std::bind(&DataReader::read_discrete_metric_space, this, std::placeholders::_1, std::placeholders::_2) });
     register_file_type(FileType{ "bifiltration", "bifiltration data", true,
         std::bind(&DataReader::read_bifiltration, this, std::placeholders::_1, std::placeholders::_2) });
@@ -207,20 +211,19 @@ FileContent DataReader::read_point_cloud(std::ifstream& stream, Progress& progre
 
     std::pair<std::vector<std::string>, unsigned> line_info;
 
-    // if a --function was specified, read in the function values
+    // if a function values exist, read in the function values
     std::vector<std::string> values;
     if (input_params.new_function) {
-        for (int i = 0; i < input_params.function_line; i++)
+        for (int i = 0; i < input_params.to_skip; i++)
             line_info = reader.next_line(0);
 
         for (unsigned i = 0; i < line_info.first.size(); i++) {
             values.push_back(line_info.first[i]);
         }
+    } else {
+    	for (int i = 0; i < input_params.to_skip; i++)
+    		reader.next_line(0);
     }
-
-    // skip lines with flags
-    for (int i = 0; i < input_params.to_skip - input_params.function_line; i++)
-        reader.next_line(0);
 
     // STEP 1: read data file and store exact (rational) values
 
@@ -450,7 +453,6 @@ FileContent DataReader::read_discrete_metric_space(std::ifstream& stream, Progre
     ExactSet value_set; //stores all unique values of the function; must DELETE all elements later
     ExactSet dist_set; //stores all unique values of the distance metric; must DELETE all elements later
     unsigned num_points = input_params.dimension;
-    unsigned expectedNumTokens = num_points;
 
     bool hasFunction = input_params.old_function || input_params.new_function;
     unsigned* degree; //stores the degree of each point; must FREE later if used
@@ -469,19 +471,33 @@ FileContent DataReader::read_discrete_metric_space(std::ifstream& stream, Progre
 
     // store function values if supplied
     std::vector<std::string> val;
-    if (hasFunction) {
-        for (int i = 0; i < input_params.function_line; i++)
+    if (input_params.old_function) {
+        for (int i = 0; i < 3; i++)
             line_info = reader.next_line(0);
 
         num_points = line_info.first.size();
         for (unsigned i = 0; i < num_points; i++) {
             val.push_back(line_info.first[i]);
         }
+        for (int i = 0; i < input_params.to_skip-3; i++)
+        	line_info = reader.next_line(0);
+    } else if (input_params.new_function) {
+    	for (int i = 0; i < input_params.to_skip; i++)
+            line_info = reader.next_line(0);
+
+        num_points = line_info.first.size();
+        for (unsigned i = 0; i < num_points; i++) {
+            val.push_back(line_info.first[i]);
+        }
+    } else {
+    	for (int i = 0; i < input_params.to_skip; i++)
+        	line_info = reader.next_line(0);
     }
 
-    // skip lines with flags
-    for (int i = 0; i < input_params.to_skip - input_params.function_line; i++)
-        line_info = reader.next_line(0);
+    unsigned expectedNumTokens = num_points;
+
+    // for (int i = 0; i < val.size(); i++)
+    // 	debug() << val[i];
 
     try {
         std::vector<exact> values;

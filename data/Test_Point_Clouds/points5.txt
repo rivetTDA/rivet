@@ -1,7 +1,8 @@
---type points
+--datatype points_fn
 --maxdist 4.5
 --xlabel birth time
---function
+
+# function values
 1 1 1 1 2 
 
 # data starts here

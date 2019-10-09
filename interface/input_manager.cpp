@@ -237,13 +237,6 @@ void InputManager::parse_args()
                 input_params.x_reverse = true;
             } else if (line[0] == "--yreverse") {
                 input_params.y_reverse = true;
-            } else if (line[0] == "--function") {
-                input_params.new_function = true;
-                input_params.function_line = ++num_lines;
-                line_info = reader.next_line(0);
-                // the line after the flag should be a list of values
-                if (is_flag(line_info.first[0]))
-                    throw std::runtime_error("Function values not specified");
             } else if (line[0] == "--binary") {
                 input_params.binary = true;
             } else if (line[0] == "--minpres") {
@@ -254,11 +247,17 @@ void InputManager::parse_args()
                 input_params.bounds = true;
             } else if (line[0] == "--koszul" || line[0] == "-k") {
                 input_params.koszul = true;
-            } else if (line[0] == "--type") {
+            } else if (line[0] == "--datatype") {
                 // specifies file type, throw error if unknown
-                if (line[1] != "points" && line[1] != "metric" && line[1] != "bifiltration" && line[1] != "firep" && line[1] != "RIVET_msgpack")
+                if (line[1] != "points" && line[1] != "points_fn" && 
+                    line[1] != "metric" && line[1] != "metric_fn" && 
+                    line[1] != "bifiltration" && line[1] != "firep" && line[1] != "RIVET_msgpack")
                     throw std::runtime_error("Invalid argument for --type");
                 input_params.type = line[1];
+                if (line[1] == "points_fn" || line[1] == "metric_fn") {
+                    input_params.new_function = true;
+                    num_lines++;
+                }
             } else {
                 throw std::runtime_error("Invalid option" + line[0] + "at line " + std::to_string(line_info.second));
             }
@@ -270,8 +269,10 @@ void InputManager::parse_args()
     // skip stores number of lines to skip
     input_params.to_skip = num_lines;
     // determine dimension in which points live
+    if (input_params.new_function)
+        line_info = reader.next_line(0);
     input_params.dimension = line_info.first.size();
-    if (input_params.type == "metric") {
+    if (input_params.type == "metric" || input_params.type == "metric_fn") {
         line_info = reader.next_line(0);
         if (input_params.dimension == line_info.first.size())
             ;
@@ -376,7 +377,6 @@ void InputManager::parse_metric_old()
         } else {
             // if function values are there
             input_params.old_function = true;
-            input_params.function_line = 3;
 
             //check for axis reversal
             auto is_reversed_and_label = detect_axis_reversed(line_info.first);
