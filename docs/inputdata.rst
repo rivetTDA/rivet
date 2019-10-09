@@ -1,63 +1,91 @@
 .. _inputData:
 
-Input Data
+Input Data Files
 ==========
+As explained in :ref:`runningRIVET`, RIVET requires an *input data file*.  
 
-As explained in the section “:ref:`runningRIVET`” above, RIVET requires an *input data file*.  This file can specify input of the following types:
+Starting with version 1.1 (released in 2019), the format specification for input data files has been redesigned; this page describes the new format.  [RIVET still supports the older, less-flexible input file formats required by RIVET 1.0.  Details about these file formats can be found in ":ref:`oldInputData`".  However, the use of these input formats is discouraged, and support may be discontinued in future versions of RIVET.]
 
-* Point cloud (with or without a real-valued function)
-* Finite metric space (with or without a real-valued function)
-* Bifiltration
-* FIRep (i.e., a short chain complex of free modules).
+RIVET accepts six types of such files; the flag :code:`--datatype` specifies the type of the input file.  The six file types are listed below, together with the associated value of the flag :code:`--datatype` in parentheses:
+
+* Point cloud (:code:`--datatype points`)
+* Point cloud with function (:code:`--datatype points_fn`)
+* Metric space (:code:`--datatype metric`)
+* Metric space with function (:code:`--datatype metric_fn`)
+* Bifiltration (:code:`--datatype bilfiltration`)
+* FIRep, i.e., a short chain complex of free modules (:code:`--datatype firep`)
 
 (Observe that these are exactly the objects in green boxes in the figure in the “:ref:`structure`” section of this documentation.)
 
-Starting with version 1.1 (released July 2019), RIVET allows the specification of input parameters at the top of input files using a syntax that matches the command-line flags of :code:`rivet_console`.
-For example, an input file may contain flags specifying type of input, the number of bins, axis labels, and more. For a full list of flags, run :code:`rivet_console (-h | --help)`.
+The default value of the flag :code:`--datatype` is :code:`points`.  As noted in :ref:`runningRIVET`, any of the command-line flags described in :ref:`_flags` can be placed either in an input data file or given directly on the command line, and this is true in particular for the flag :code:`--datatype`.  Flags provided to **rivet_console** override those given in the input file.  [MUST EACH FLAG APPEAR ON ITS OWN LINE?].  
 
-Note that flags provided to :code:`rivet_console` override those given in the input file.
-If no flags are provided, then RIVET assumes the input file contains point-cloud data.
+RIVET ignores lines in an input data file that begin with the symbol `#`; such lines may be used for comments.  Blank lines are also ignored.
 
-RIVET still supports the older, less-flexible input file formats that were required by RIVET 1.0.
-Details about these file formats can be found in ":ref:`oldInputData`".
-However, the use of these input formats is discouraged, and support may be discontinued in future versions of RIVET.
-
-Finally, note that RIVET ignores lines that begin with the symbol `#`; such lines may be used for comments.  Blank lines are also ignored.
-
-We now specify the formats of the input data file for each of these types of input.
-
+We now specify the formats of the input data file for each input type, and provide type-specific details about the use of flags.
 
 Point Cloud (Default)
 ---------------------------
-
-This format specifies a set of points :math:`X` in Euclidean :math:`n`-space.
-Optionally, a function :math:`\gamma:X\to \mathbb R` can be specified, to construct a function-Rips bifiltration.
-If no function is specified, RIVET constructs the degree-Rips bifilitration.
-A optional maximum scale parameter :math:`d` may be specified, causing RIVET to only include simplices with diameter at most :math:`d`. If :math:`d` is not specified, then all possible simplices are considered.
+This format specifies a set of points in Euclidean :math:`n`-space.  By default, when given input of this type, RIVET constructs the degree-Rips bifiltration.
 
 The file has the following format:
 
-* Optional flags may be specified at the top of the file. For a full list of supported flags, run :code:`rivet_console (-h | --help)`. Note that this file type does not require any flags.
-* In order to build a function-Rips bifiltration, the :code:`--function` flag should be present. If supplied, the line immediately following the :code:`--function` flag must contain the function values on the given points, in the same order that the points appear later in the file. Numbers may be separated by white space or commas.
-* To provide a label for the function axis, use the :code:`--xlabel` flag.
-* To indicate that the function filtration direction should be descending, simply add the :code:`--xreverse` flag. (This is useful, e.g.,  when taking :math:`\gamma` to be a density function.)
-* After all flags have been specified (including :code:`--function` and its values), the coordinates of each point should be given. Each line should contain the coordinates of exactly one point, specified as :math:`n` decimal numbers separated by white space or commas.
+* Flags may be specified at the top of the file. 
+* Following the flags, each line contains the coordinates of exactly one point, specified as :math:`n` decimal numbers separated by white space or commas.
 
-Here is an example with three points in :math:`\mathbb R^2` with function values::
+Flag Usage:
 
-	--type points
-	--max-dist 3.2
-	--function
-	3,0.5,4
-	--xlabel birth time
-	--xreverse
+* :code:`maxdist <distance>` sets the maximum scale parameter.
+* [TO BE IMPLEMENTED] :code:`--function <fn>` tells RIVET to construct a function-Rips bifiltrations from Point Cloud input, using the function <fn>.  
+
+Here is an example specifying three points in :math:`\mathbb R^2`::
+	
+	#the following flag is optional, because "points" is the default value of data type
+	--datatype points
+
+        #optional flags
+	--maxdist 0.5
 
 	#data
 	0,0
 	1.1,2
 	-2,3
 
-In the example above, note that :code:`#data` is a comment. This line is ignored by RIVET, but improves the human-readability of the file.
+
+Point Cloud with Function
+---------------------------
+
+This format specifies a set of points :math:`X` in Euclidean :math:`n`-space, together with a function :math:`\gamma:X\to \mathbb R`.  By default, when given input of this type, RIVET constructs the a function-Rips bifiltration using the specified function.  
+
+The file has the following format:
+
+* Flags may be specified at the top of the file.
+* The first line following any flags lists the function values on the points, in the same order that the points appear later in the file.  The function values are specified by decimal numbers separated by white space or commas.
+* Each subsequent line contains the coordinates of exactly one point, specified as :math:`n` decimal numbers separated by white space or commas.
+
+Flag Usage:
+
+* :code:`maxdist <distance>` sets the maximum scale parameter.
+* :code:`--bifil degreeRips` tells RIVET to constructs a degree-Rips bifiltration rather than a function-Rips bifiltration, thereby ignoring the function values given in the file.  
+* [TO BE IMPLEMENTED] :code:`--function <fn>` tells RIVET to use a built-in function to construct the function-Rips bifiltration, thereby ignoring the function values given in the file.    
+* :code:`--xreverse` indicates that the function filtration direction should be descending. (This is useful, e.g.,  when taking :math:`\gamma` to be a density function.)
+* When computing an MI-file, :code:`--xlabel <label>` provides a label for the function axis, for use by **rivet_GUI**.
+
+Here is an example specifying three points in :math:`\mathbb R^2`, together with a function on these points::
+
+	#required flag (can be given instead on the command line)
+	--datatype points_fn
+
+        #optional flags
+	--xlabel birth time
+	--xreverse 
+
+        #function
+        3,0.5,4
+
+	#data
+	0,0
+	1.1,2
+	-2,3
 
 
 Finite Metric Space
@@ -82,12 +110,14 @@ The file has the following format:
 
 Here is an example, for a metric space of cardinality 3::
 
+	#required flag:
 	--type metric
+
+        #optional flags:
 	--xlabel birth time
 	--function
 	1,1.1,-2
 	--ylabel geodesic distance
-	--max-dist 2.5
 
 	# distance matrix (symmetric matrix, with zeros on the diagonal)
 	0,2,3.2
