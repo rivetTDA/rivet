@@ -52,6 +52,7 @@ protected:
 private slots:
     void on_computeButton_clicked();
     void on_openFileButton_clicked();
+    void on_maxDistHelp_clicked();
 
 private:
     Ui::DataSelectDialog* ui;

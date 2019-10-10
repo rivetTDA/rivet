@@ -157,11 +157,13 @@ void ComputationThread::compute_from_file()
          << "-x" << QString::number(params.x_bins)
          << "-y" << QString::number(params.y_bins)
          << "-V" << QString::number(params.verbosity)
-         << "--type" << QString::fromStdString(params.type)
-         << "--maxdist" << QString::fromStdString(params.md_string)
+         << "--datatype" << QString::fromStdString(params.type)
          << "-f"
          << "msgpack"
          << "--binary";
+
+    if (params.md_string != "N/A")
+        args << "--maxdist" << QString::fromStdString(params.md_string);
 
     if (params.y_label != "")
         args << "--ylabel" << QString::fromStdString(params.y_label);

@@ -55,8 +55,8 @@ DataSelectDialog::DataSelectDialog(InputParameters& params, QWidget* parent)
         ui->xbinSpinBox->setValue(10);
         ui->ybinSpinBox->setValue(10);
     }
-
-
+    ui->maxDistHelp->setText(QChar(0x221E));
+    ui->maxDistHelp->setStyleSheet("QPushButton { font : 30px; qproperty-alignment: AlignTop; }");
 }
 
 DataSelectDialog::~DataSelectDialog()
@@ -87,7 +87,7 @@ void DataSelectDialog::showEvent(QShowEvent* event)
     ui->maxDistBox->setEnabled(true);
     ui->maxDistBox->setText("");
     ui->maxDistHelp->setToolTip("");
-    ui->maxDistHelp->setStyleSheet("QLabel { color: #808080; }");
+    ui->maxDistHelp->setEnabled(false);
     ui->dataTypeComboBox->setCurrentIndex(0);
     ui->dataTypeComboBox->setEnabled(true);
     ui->xbinSpinBox->setValue(10);
@@ -140,6 +140,11 @@ void DataSelectDialog::on_openFileButton_clicked()
     }
 } //end on_openFileButton_clicked()
 
+void DataSelectDialog::on_maxDistHelp_clicked()
+{
+    ui->maxDistBox->setText("inf");
+}
+
 void DataSelectDialog::detect_file_type()
 {
     // set this once filtration functions have been implemented
@@ -169,7 +174,7 @@ void DataSelectDialog::detect_file_type()
     ui->maxDistBox->setEnabled(true);
     ui->maxDistBox->setText("");
     ui->maxDistHelp->setToolTip("");
-    ui->maxDistHelp->setStyleSheet("QLabel { color: #808080; }");
+    ui->maxDistHelp->setEnabled(false);
 
     ui->dataTypeComboBox->setCurrentIndex(0);
     ui->dataTypeComboBox->setEnabled(true);
@@ -208,19 +213,27 @@ void DataSelectDialog::detect_file_type()
         type_string += "point-cloud data.";
         ui->dataTypeComboBox->setCurrentIndex(0);
     }
-    else if (params.type == "metric") {
-        type_string += "metric data.";
+    else if (params.type == "points_fn") {
+        type_string += "point-cloud data with function values.";
         ui->dataTypeComboBox->setCurrentIndex(1);
     }
-    else if (params.type == "bifiltration") {
+    else if (params.type == "metric") {
+        type_string += "metric data.";
         ui->dataTypeComboBox->setCurrentIndex(2);
+    }
+    else if (params.type == "metric_fn") {
+        type_string += "metric data with function values.";
+        ui->dataTypeComboBox->setCurrentIndex(3);
+    }
+    else if (params.type == "bifiltration") {
+        ui->dataTypeComboBox->setCurrentIndex(4);
         ui->dataTypeComboBox->setEnabled(false);
         type_string += "bifiltration data.";
         ui->maxDistBox->setText("N/A");
         ui->maxDistBox->setEnabled(false);
     }
     else if (params.type == "firep") {
-        ui->dataTypeComboBox->setCurrentIndex(3);
+        ui->dataTypeComboBox->setCurrentIndex(5);
         ui->dataTypeComboBox->setEnabled(false);
         type_string += "free implicit representation data.";
 
@@ -233,7 +246,7 @@ void DataSelectDialog::detect_file_type()
         ui->maxDistBox->setEnabled(false);
     }
     else if (params.type == "RIVET_msgpack") {
-        ui->dataTypeComboBox->setCurrentIndex(4);
+        ui->dataTypeComboBox->setCurrentIndex(6);
         ui->dataTypeComboBox->setEnabled(false);
         type_string += "pre-computed RIVET data.";
         raw = false;
@@ -264,8 +277,8 @@ void DataSelectDialog::detect_file_type()
     ui->parameterFrame->setEnabled(raw);
 
     if (ui->maxDistBox->isEnabled()) {
-        ui->maxDistHelp->setToolTip("Enter \"inf\" for infinity");
-        ui->maxDistHelp->setStyleSheet("QLabel { color: blue; }");
+        ui->maxDistHelp->setToolTip("Set distance to infinity");
+        ui->maxDistHelp->setEnabled(true);
     }
 
     ui->computeButton->setEnabled(true);

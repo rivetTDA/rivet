@@ -352,7 +352,9 @@ int main(int argc, char* argv[])
             throw std::runtime_error("Invalid argument for --type");
         params.type = str;
         if (str == "points_fn" || str == "metric_fn")
-            params.new_function = true; 
+            params.new_function = true;
+        else
+            params.new_function = false;
     }
 
     if (homology) {
