@@ -96,7 +96,9 @@ void DataSelectDialog::showEvent(QShowEvent* event)
     ui->homDimSpinBox->setEnabled(true);
     ui->homDimSpinBox->setValue(0);
     ui->parameterFrame->setEnabled(false);
-    ui->computeButton->setEnabled(false);    
+    ui->computeButton->setEnabled(false);
+    ui->filterComboBox->setEnabled(true);
+    ui->filterComboBox->setCurrentIndex(0);
 }
 
 void DataSelectDialog::on_computeButton_clicked()
@@ -112,6 +114,8 @@ void DataSelectDialog::on_computeButton_clicked()
     params.x_reverse = ui->xRevCheckBox->checkState();
     params.y_reverse = ui->yRevCheckBox->checkState();
     params.type = ui->dataTypeComboBox->currentText().toStdString();
+    if (params.type != "bifiltration" && params.type != "firep" && params.type != "RIVET_msgpack")
+        params.bifil = ui->filterComboBox->currentText().toStdString();
 
     data_selected = true;
 
@@ -147,8 +151,6 @@ void DataSelectDialog::on_maxDistHelp_clicked()
 
 void DataSelectDialog::detect_file_type()
 {
-    // set this once filtration functions have been implemented
-    ui->filterComboBox->setEnabled(false);
 
     ui->homDimSpinBox->setSpecialValueText("");
     //this turns off the special value text (i.e. zero is displayed like normal)
@@ -178,6 +180,9 @@ void DataSelectDialog::detect_file_type()
 
     ui->dataTypeComboBox->setCurrentIndex(0);
     ui->dataTypeComboBox->setEnabled(true);
+
+    ui->filterComboBox->setCurrentIndex(0);
+    ui->filterComboBox->setEnabled(true);
 
     ui->xbinSpinBox->setValue(10);
     ui->ybinSpinBox->setValue(10);
@@ -231,6 +236,7 @@ void DataSelectDialog::detect_file_type()
         type_string += "bifiltration data.";
         ui->maxDistBox->setText("N/A");
         ui->maxDistBox->setEnabled(false);
+        ui->filterComboBox->setEnabled(false);
     }
     else if (params.type == "firep") {
         ui->dataTypeComboBox->setCurrentIndex(5);
@@ -244,6 +250,7 @@ void DataSelectDialog::detect_file_type()
 
         ui->maxDistBox->setText("N/A");
         ui->maxDistBox->setEnabled(false);
+        ui->filterComboBox->setEnabled(false);
     }
     else if (params.type == "RIVET_msgpack") {
         ui->dataTypeComboBox->setCurrentIndex(6);
@@ -254,6 +261,11 @@ void DataSelectDialog::detect_file_type()
 
     ui->xAxisLabel->setText(QString::fromStdString(params.x_label));
     ui->yAxisLabel->setText(QString::fromStdString(params.y_label));
+
+    if (params.bifil == "degree")
+        ui->filterComboBox->setCurrentIndex(0);
+    else if (params.bifil == "function")
+        ui->filterComboBox->setCurrentIndex(1);
 
     if (params.x_reverse)
         ui->xRevCheckBox->setChecked(true);

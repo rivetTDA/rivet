@@ -187,7 +187,7 @@ FileContent DataReader::read_point_cloud(std::ifstream& stream, Progress& progre
         debug() << "DataReader: Found a point cloud file.";
     }
 
-    if (!input_params.old_function && !input_params.new_function) {
+    if (input_params.bifil == "degree") {
         input_params.x_label = "degree";
         input_params.x_reverse = true;
     }
@@ -195,7 +195,11 @@ FileContent DataReader::read_point_cloud(std::ifstream& stream, Progress& progre
     // set all variables from input_params
     unsigned dimension = input_params.dimension;
     exact max_dist = input_params.max_dist;
-    bool hasFunction = input_params.old_function || input_params.new_function;
+    bool hasFunction;
+    if (input_params.bifil == "function")
+    	hasFunction = true;
+    else
+    	hasFunction = false;
 
     bool x_reverse = input_params.x_reverse;
     bool y_reverse = input_params.y_reverse;
@@ -246,7 +250,7 @@ FileContent DataReader::read_point_cloud(std::ifstream& stream, Progress& progre
             }
 
             // Add function values if supplied
-            if (input_params.new_function) {
+            if (input_params.new_function && input_params.bifil == "function") {
                 tokens.push_back(values[k]);
                 k++;
             }
@@ -454,7 +458,11 @@ FileContent DataReader::read_discrete_metric_space(std::ifstream& stream, Progre
     ExactSet dist_set; //stores all unique values of the distance metric; must DELETE all elements later
     unsigned num_points = input_params.dimension;
 
-    bool hasFunction = input_params.old_function || input_params.new_function;
+    bool hasFunction;
+    if (input_params.bifil == "function")
+    	hasFunction = true;
+    else
+    	hasFunction = false;
     unsigned* degree; //stores the degree of each point; must FREE later if used
     std::pair<ExactSet::iterator, bool> ret; //for return value upon insert()
 

@@ -177,6 +177,9 @@ void ComputationThread::compute_from_file()
     if (params.y_reverse)
         args << "--yreverse";
 
+    if (params.bifil != "")
+        args << "--bifil" << QString::fromStdString(params.bifil);
+
 
     auto console = RivetConsoleApp::start(args);
 

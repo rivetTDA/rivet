@@ -258,6 +258,10 @@ void InputManager::parse_args()
                     input_params.new_function = true;
                     num_lines++;
                 }
+            } else if (line[0] == "--bifil") {
+                if (line[1] != "degree" && line[1] != "function")
+                    throw std::runtime_error("Invalid argument for --bifil");
+                input_params.bifil = line[1];
             } else {
                 throw std::runtime_error("Invalid option" + line[0] + "at line " + std::to_string(line_info.second));
             }
@@ -266,6 +270,8 @@ void InputManager::parse_args()
         throw InputError(line_info.second, e.what());
     }
 
+    if ((input_params.type == "points" || input_params.type == "metric") && input_params.bifil == "function")
+        throw std::runtime_error("Cannot create function rips without function values. If you have provided function values, please specify the correct data type.");
     // skip stores number of lines to skip
     input_params.to_skip = num_lines;
     // determine dimension in which points live
@@ -278,6 +284,12 @@ void InputManager::parse_args()
             ;
         else if (input_params.dimension == line_info.first.size() + 1)
             input_params.dimension++; // this is the number of points for metric space
+    }
+    if (input_params.bifil == "") {
+        if (input_params.new_function)
+            input_params.bifil = "function";
+        else
+            input_params.bifil = "degree";
     }
     input_file.close();
 }
@@ -323,12 +335,14 @@ void InputManager::parse_points_old()
         line_info = reader.next_line();
         if (InputManager::join(line_info.first).compare("no function") == 0) {
             input_params.old_function = false;
+            input_params.bifil = "degree";
             //set label for x-axis to "degree"
             input_params.x_label = "degree";
             input_params.x_reverse = true; //higher degrees will be shown on the left
 
         } else {
             input_params.old_function = true;
+            input_params.bifil = "function";
             auto is_reversed_and_label = detect_axis_reversed(line_info.first);
             input_params.x_reverse = is_reversed_and_label.first;
             input_params.x_label = is_reversed_and_label.second;
@@ -360,6 +374,7 @@ void InputManager::parse_metric_old()
 
         if (InputManager::join(line_info.first).compare("no function") == 0) {
             input_params.old_function = false;
+            input_params.bifil = "degree";
             //set label for x-axis to "degree"
             input_params.x_label = "degree";
 
@@ -377,6 +392,7 @@ void InputManager::parse_metric_old()
         } else {
             // if function values are there
             input_params.old_function = true;
+            input_params.bifil = "function";
 
             //check for axis reversal
             auto is_reversed_and_label = detect_axis_reversed(line_info.first);

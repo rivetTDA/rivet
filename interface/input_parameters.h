@@ -61,12 +61,14 @@ struct InputParameters {
     bool new_function; //specifies if the data has a --function flag followed by values
     bool x_reverse, y_reverse; //specifies if the axes need to be reversed or not
     std::string type; //type of file being worked with
+    std::string bifil; //type of bifiltration to build
     int to_skip; //number of lines after which the actual data begins
 
     InputParameters()
     {
         // default values for all input parameters - should include first 3?
         type = "points";
+        bifil = "";
         hom_degree = 0;
         x_bins = 0;
         y_bins = 0;

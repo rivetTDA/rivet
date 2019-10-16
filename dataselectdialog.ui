@@ -368,6 +368,16 @@
       <height>25</height>
      </rect>
     </property>
+    <item>
+     <property name="text">
+      <string>degree</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>function</string>
+     </property>
+    </item>
    </widget>
    <widget class="QLineEdit" name="maxDistBox">
     <property name="geometry">
