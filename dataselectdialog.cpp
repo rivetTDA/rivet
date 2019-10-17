@@ -99,18 +99,29 @@ void DataSelectDialog::showEvent(QShowEvent* event)
     ui->computeButton->setEnabled(false);
     ui->filterComboBox->setEnabled(true);
     ui->filterComboBox->setCurrentIndex(0);
+    ui->maxDistBox->setPalette(this->style()->standardPalette());
+    ui->maxDistBox->setToolTip("");
 }
 
 void DataSelectDialog::on_computeButton_clicked()
 {
     // read in the input parameters from the dialog
-
+    params.md_string = ui->maxDistBox->text().toStdString();
+    if (params.md_string != "N/A" && params.md_string != "inf") {
+        double md = atof(params.md_string.c_str());
+        if (md <= 0) {
+            ui->maxDistBox->setPalette(QPalette(QColor("red")));
+            ui->maxDistBox->setToolTip("Distance must be a number greater than 0");
+            return;
+        }
+    }
+    
+    
     params.hom_degree = ui->homDimSpinBox->value();
     params.x_bins = ui->xbinSpinBox->value();
     params.y_bins = ui->ybinSpinBox->value();
     params.x_label = ui->xAxisLabel->text().toStdString();
     params.y_label = ui->yAxisLabel->text().toStdString();
-    params.md_string = ui->maxDistBox->text().toStdString();
     params.x_reverse = ui->xRevCheckBox->checkState();
     params.y_reverse = ui->yRevCheckBox->checkState();
     params.type = ui->dataTypeComboBox->currentText().toStdString();
@@ -186,6 +197,9 @@ void DataSelectDialog::detect_file_type()
 
     ui->xbinSpinBox->setValue(10);
     ui->ybinSpinBox->setValue(10);
+
+    ui->maxDistBox->setPalette(this->style()->standardPalette());
+    ui->maxDistBox->setToolTip("");
 
     std::ifstream infile(params.fileName);
 
