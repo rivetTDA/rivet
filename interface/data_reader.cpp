@@ -218,6 +218,7 @@ FileContent DataReader::read_point_cloud(std::ifstream& stream, Progress& progre
     // if a function values exist, read in the function values
     std::vector<std::string> values;
     if (input_params.new_function) {
+    	input_params.to_skip++;
         for (int i = 0; i < input_params.to_skip; i++)
             line_info = reader.next_line(0);
 
@@ -235,6 +236,11 @@ FileContent DataReader::read_point_cloud(std::ifstream& stream, Progress& progre
         int k = 0;
         while (reader.has_next_line()) {
             line_info = reader.next_line(0);
+            if (input_params.new_function && k == 0)
+            {
+            	dimension = line_info.first.size();
+            	expectedNumTokens = dimension;
+            }
             std::vector<std::string> tokens = line_info.first;
             if (tokens.size() != expectedNumTokens) {
                 std::stringstream ss;
@@ -252,13 +258,13 @@ FileContent DataReader::read_point_cloud(std::ifstream& stream, Progress& progre
             // Add function values if supplied
             if (input_params.new_function && input_params.bifil == "function") {
                 tokens.push_back(values[k]);
-                k++;
             }
 
             //Add artificial birth value of 0 if no function value provided
             if (!hasFunction) {
                 tokens.push_back("0");
             }
+            k++;
             DataPoint p(tokens);
             if (x_reverse && hasFunction) {
                 p.birth *= -1;
@@ -490,6 +496,7 @@ FileContent DataReader::read_discrete_metric_space(std::ifstream& stream, Progre
         for (int i = 0; i < input_params.to_skip-3; i++)
         	line_info = reader.next_line(0);
     } else if (input_params.new_function) {
+    	input_params.to_skip++;
     	for (int i = 0; i < input_params.to_skip; i++)
             line_info = reader.next_line(0);
 

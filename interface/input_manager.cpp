@@ -119,6 +119,7 @@ void InputManager::parse_args()
 
     std::pair<std::vector<std::string>, unsigned> line_info;
     int num_lines = 0;
+    type_set = false;
 
     try {
         while (reader.has_next_line()) {
@@ -127,6 +128,7 @@ void InputManager::parse_args()
             if (line_info.first[0] == "points" || line_info.first[0] == "metric" || line_info.first[0] == "bifiltration" || line_info.first[0] == "firep" || line_info.first[0] == "RIVET_msgpack") {
                 input_params.type = line_info.first[0];
                 input_file.close();
+                type_set = true;
                 if (input_params.type == "points")
                     parse_points_old();
                 if (input_params.type == "metric")
@@ -254,9 +256,9 @@ void InputManager::parse_args()
                     line[1] != "bifiltration" && line[1] != "firep" && line[1] != "RIVET_msgpack")
                     throw std::runtime_error("Invalid argument for --type");
                 input_params.type = line[1];
+                type_set = true;
                 if (line[1] == "points_fn" || line[1] == "metric_fn") {
                     input_params.new_function = true;
-                    num_lines++;
                 }
             } else if (line[0] == "--bifil") {
                 if (line[1] != "degree" && line[1] != "function")

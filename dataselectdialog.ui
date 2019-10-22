@@ -337,11 +337,6 @@
       <string>firep</string>
      </property>
     </item>
-    <item>
-     <property name="text">
-      <string>RIVET_msgpack</string>
-     </property>
-    </item>
    </widget>
    <widget class="QLabel" name="filterLabel">
     <property name="geometry">

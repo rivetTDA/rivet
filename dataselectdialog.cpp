@@ -88,6 +88,8 @@ void DataSelectDialog::showEvent(QShowEvent* event)
     ui->maxDistBox->setText("");
     ui->maxDistHelp->setToolTip("");
     ui->maxDistHelp->setEnabled(false);
+    if (ui->dataTypeComboBox->findText("N/A") != -1)
+        ui->dataTypeComboBox->removeItem(ui->dataTypeComboBox->findText("N/A"));
     ui->dataTypeComboBox->setCurrentIndex(0);
     ui->dataTypeComboBox->setEnabled(true);
     ui->xbinSpinBox->setValue(10);
@@ -97,17 +99,20 @@ void DataSelectDialog::showEvent(QShowEvent* event)
     ui->homDimSpinBox->setValue(0);
     ui->parameterFrame->setEnabled(false);
     ui->computeButton->setEnabled(false);
+    if (ui->filterComboBox->findText("N/A") != -1)
+        ui->filterComboBox->removeItem(ui->filterComboBox->findText("N/A"));
     ui->filterComboBox->setEnabled(true);
     ui->filterComboBox->setCurrentIndex(0);
     ui->maxDistBox->setPalette(this->style()->standardPalette());
     ui->maxDistBox->setToolTip("");
+
 }
 
 void DataSelectDialog::on_computeButton_clicked()
 {
     // read in the input parameters from the dialog
     params.md_string = ui->maxDistBox->text().toStdString();
-    if (params.md_string != "N/A" && params.md_string != "inf") {
+    if (params.md_string != "N/A" && (params.md_string.length() != 3 || params.md_string != "inf")) {
         double md = atof(params.md_string.c_str());
         if (md <= 0) {
             ui->maxDistBox->setPalette(QPalette(QColor("red")));
@@ -115,7 +120,6 @@ void DataSelectDialog::on_computeButton_clicked()
             return;
         }
     }
-    
     
     params.hom_degree = ui->homDimSpinBox->value();
     params.x_bins = ui->xbinSpinBox->value();
@@ -189,9 +193,13 @@ void DataSelectDialog::detect_file_type()
     ui->maxDistHelp->setToolTip("");
     ui->maxDistHelp->setEnabled(false);
 
+    if (ui->dataTypeComboBox->findText("N/A") != -1)
+        ui->dataTypeComboBox->removeItem(ui->dataTypeComboBox->findText("N/A"));
     ui->dataTypeComboBox->setCurrentIndex(0);
     ui->dataTypeComboBox->setEnabled(true);
 
+    if (ui->filterComboBox->findText("N/A") != -1)
+        ui->filterComboBox->removeItem(ui->filterComboBox->findText("N/A"));
     ui->filterComboBox->setCurrentIndex(0);
     ui->filterComboBox->setEnabled(true);
 
@@ -228,6 +236,9 @@ void DataSelectDialog::detect_file_type()
     ui->homDimSpinBox->setValue(params.hom_degree);
     ui->maxDistBox->setText(QString::fromStdString(params.md_string));
 
+    if (inputManager.type_set)
+        ui->dataTypeComboBox->setEnabled(false);
+
     if (params.type == "points") {
         type_string += "point-cloud data.";
         ui->dataTypeComboBox->setCurrentIndex(0);
@@ -250,6 +261,8 @@ void DataSelectDialog::detect_file_type()
         type_string += "bifiltration data.";
         ui->maxDistBox->setText("N/A");
         ui->maxDistBox->setEnabled(false);
+        ui->filterComboBox->addItem("N/A");
+        ui->filterComboBox->setCurrentIndex(ui->filterComboBox->count()-1);
         ui->filterComboBox->setEnabled(false);
     }
     else if (params.type == "firep") {
@@ -264,10 +277,15 @@ void DataSelectDialog::detect_file_type()
 
         ui->maxDistBox->setText("N/A");
         ui->maxDistBox->setEnabled(false);
+        ui->filterComboBox->addItem("N/A");
+        ui->filterComboBox->setCurrentIndex(ui->filterComboBox->count()-1);
         ui->filterComboBox->setEnabled(false);
     }
     else if (params.type == "RIVET_msgpack") {
-        ui->dataTypeComboBox->setCurrentIndex(6);
+        ui->dataTypeComboBox->addItem("RIVET_msgpack");
+        ui->dataTypeComboBox->setCurrentIndex(ui->dataTypeComboBox->count()-1);
+        ui->filterComboBox->addItem("N/A");
+        ui->filterComboBox->setCurrentIndex(ui->filterComboBox->count()-1);
         ui->dataTypeComboBox->setEnabled(false);
         type_string += "pre-computed RIVET data.";
         raw = false;
@@ -276,10 +294,12 @@ void DataSelectDialog::detect_file_type()
     ui->xAxisLabel->setText(QString::fromStdString(params.x_label));
     ui->yAxisLabel->setText(QString::fromStdString(params.y_label));
 
-    if (params.bifil == "degree")
-        ui->filterComboBox->setCurrentIndex(0);
-    else if (params.bifil == "function")
-        ui->filterComboBox->setCurrentIndex(1);
+    if (params.type != "firep" && params.type != "bifiltration" && params.type != "RIVET_msgpack") {
+        if (params.bifil == "degree")
+            ui->filterComboBox->setCurrentIndex(0);
+        else if (params.bifil == "function")
+            ui->filterComboBox->setCurrentIndex(1);
+    }
 
     if (params.x_reverse)
         ui->xRevCheckBox->setChecked(true);

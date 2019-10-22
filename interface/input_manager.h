@@ -62,6 +62,8 @@ public:
         return strings;
     }
 
+    bool type_set; // specifies if datatype was set in file
+
 private:
     InputParameters& input_params; //parameters supplied by the user
     int verbosity; //controls display of output, for debugging
