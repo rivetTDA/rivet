@@ -84,6 +84,8 @@ void DataSelectDialog::showEvent(QShowEvent* event)
     ui->yAxisLabel->setText("");
     ui->xRevCheckBox->setChecked(false);
     ui->yRevCheckBox->setChecked(false);
+    ui->xRevCheckBox->setEnabled(true);
+    ui->yRevCheckBox->setEnabled(true);
     ui->maxDistBox->setEnabled(true);
     ui->maxDistBox->setText("");
     ui->maxDistHelp->setToolTip("");
@@ -114,7 +116,7 @@ void DataSelectDialog::on_computeButton_clicked()
     params.md_string = ui->maxDistBox->text().toStdString();
     if (params.md_string != "N/A" && (params.md_string.length() != 3 || params.md_string != "inf")) {
         double md = atof(params.md_string.c_str());
-        if (md <= 0) {
+        if (md <= 0 || md == std::numeric_limits<double>::infinity()) {
             ui->maxDistBox->setPalette(QPalette(QColor("red")));
             ui->maxDistBox->setToolTip("Distance must be a number greater than 0");
             return;
@@ -183,6 +185,9 @@ void DataSelectDialog::detect_file_type()
     params.x_bins = 10;
     params.y_bins = 10;
 
+    params.bifil = "";
+    params.new_function = false;
+
     params.type = "points";
     params.max_dist = -1;
     params.md_string = "inf";
@@ -242,18 +247,24 @@ void DataSelectDialog::detect_file_type()
     if (params.type == "points") {
         type_string += "point-cloud data.";
         ui->dataTypeComboBox->setCurrentIndex(0);
+        ui->xRevCheckBox->setEnabled(false);
+        ui->yRevCheckBox->setEnabled(false);
     }
     else if (params.type == "points_fn") {
         type_string += "point-cloud data with function values.";
         ui->dataTypeComboBox->setCurrentIndex(1);
+        ui->yRevCheckBox->setEnabled(false);
     }
     else if (params.type == "metric") {
         type_string += "metric data.";
         ui->dataTypeComboBox->setCurrentIndex(2);
+        ui->xRevCheckBox->setEnabled(false);
+        ui->yRevCheckBox->setEnabled(false);
     }
     else if (params.type == "metric_fn") {
         type_string += "metric data with function values.";
         ui->dataTypeComboBox->setCurrentIndex(3);
+        ui->yRevCheckBox->setEnabled(false);
     }
     else if (params.type == "bifiltration") {
         ui->dataTypeComboBox->setCurrentIndex(4);
@@ -274,6 +285,9 @@ void DataSelectDialog::detect_file_type()
         //the spinbox will show the special value text when the value is the minimum value (i.e. zero)
         ui->homDimSpinBox->setValue(0);
         ui->homDimSpinBox->setEnabled(false);
+
+        ui->xRevCheckBox->setEnabled(false);
+        ui->yRevCheckBox->setEnabled(false);
 
         ui->maxDistBox->setText("N/A");
         ui->maxDistBox->setEnabled(false);
@@ -327,6 +341,15 @@ void DataSelectDialog::detect_file_type()
         ui->maxDistHelp->setEnabled(true);
     }
 
+    if (params.bifil == "degree") {
+        ui->xAxisLabel->setText("degree");
+        ui->xAxisLabel->setEnabled(false);
+    }
+    else {
+        ui->xAxisLabel->setText(QString::fromStdString(params.x_label));
+        ui->xAxisLabel->setEnabled(true);
+    }
+
     ui->computeButton->setEnabled(true);
     //force black text because on Mac Qt autodefault buttons have white text when enabled,
     //so they still look like they're disabled or weird in some way.
@@ -344,4 +367,16 @@ void DataSelectDialog::invalid_file(const QString& message)
     ui->fileTypeLabel->setText(nullptr);
     QMessageBox errorBox(QMessageBox::Warning, "Error", message);
     errorBox.exec();
+}
+
+void DataSelectDialog::on_filterComboBox_currentIndexChanged(int index)
+{
+    if (index == 0) {
+        ui->xAxisLabel->setText("degree");
+        ui->xAxisLabel->setEnabled(false);
+    }
+    else {
+        ui->xAxisLabel->setText(QString::fromStdString(params.x_label));
+        ui->xAxisLabel->setEnabled(true);
+    }
 }

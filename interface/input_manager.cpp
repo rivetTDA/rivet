@@ -293,6 +293,18 @@ void InputManager::parse_args()
         else
             input_params.bifil = "degree";
     }
+    if (input_params.type == "metric" || input_params.type == "points") {
+        input_params.x_reverse = true;
+        input_params.y_reverse = false;
+    }
+    if (input_params.type == "metric_fn" || input_params.type == "points_fn") {
+        input_params.y_reverse = false;
+    }
+    if (input_params.type == "firep") {
+        input_params.x_reverse = false;
+        input_params.y_reverse = false;
+    }
+
     input_file.close();
 }
 
