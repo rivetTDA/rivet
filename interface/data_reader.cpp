@@ -212,9 +212,6 @@ FileContent DataReader::read_point_cloud(std::ifstream& stream, Progress& progre
     data->x_label = input_params.x_label;
     data->y_label = input_params.y_label;
 
-    if (!hasFunction && input_params.filtration == "none")
-        input_params.filtration = "degree";
-
     std::vector<DataPoint> points;
 
     std::pair<std::vector<std::string>, unsigned> line_info;
@@ -319,7 +316,7 @@ FileContent DataReader::read_point_cloud(std::ifstream& stream, Progress& progre
     //  3. max dimension of simplices to construct, which is one more than the dimension of homology to be computed
 
     if (verbosity >= 4) {
-        if (!hasFunction && input_params.filtration == "degree") {
+        if (input_params.bifil == "degree") {
             debug() << "  Building Degree-Rips bifiltration.";
         } else {
             debug() << "  Building Vietoris-Rips bifiltration.";
@@ -329,7 +326,7 @@ FileContent DataReader::read_point_cloud(std::ifstream& stream, Progress& progre
     }
 
     data->bifiltration_data.reset(new BifiltrationData(input_params.hom_degree, input_params.verbosity));
-    if (!hasFunction && input_params.filtration == "degree") {
+    if (input_params.bifil == "degree") {
         data->bifiltration_data->build_DR_complex(num_points, dist_mat.dist_indexes, dist_mat.degree_indexes, data->x_exact.size(), data->y_exact.size());
         //convert data->x_exact from codegree sequence to negative degree sequence
         exact max_x_exact = *(data->x_exact.end() - 1); //should it be max_degree instead?
@@ -393,9 +390,6 @@ FileContent DataReader::read_discrete_metric_space(std::ifstream& stream, Progre
     data->y_label = input_params.y_label;
 
     exact max_dist = input_params.max_dist;
-
-    if (!hasFunction && input_params.filtration == "none")
-        input_params.filtration = "degree";
 
     std::pair<std::vector<std::string>, unsigned> line_info;
 
@@ -489,7 +483,7 @@ FileContent DataReader::read_discrete_metric_space(std::ifstream& stream, Progre
     // STEP 4: build the bifiltration
 
     if (verbosity >= 4) {
-        if (!hasFunction && input_params.filtration == "degree") {
+        if (input_params.bifil == "degree") {
             debug() << "  Building Degree-Rips bifiltration.";
         } else {
             debug() << "  Building Vietoris-Rips bifiltration.";
@@ -500,7 +494,7 @@ FileContent DataReader::read_discrete_metric_space(std::ifstream& stream, Progre
 
     //build the Vietoris-Rips bifiltration from the discrete index vectors
     data->bifiltration_data.reset(new BifiltrationData(input_params.hom_degree, input_params.verbosity));
-    if (!hasFunction && input_params.filtration == "degree") {
+    if (input_params.bifil == "degree") {
         data->bifiltration_data->build_DR_complex(num_points, dist_mat.dist_indexes, dist_mat.degree_indexes, data->x_exact.size(), data->y_exact.size());
 
         //convert data->x_exact from codegree sequence to negative degree sequence
