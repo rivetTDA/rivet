@@ -59,6 +59,7 @@ private:
     unsigned max_degree;
     unsigned dimension;
     std::string filtration;
+    std::string func_type;
 
     unsigned max_unsigned; // infinity
 

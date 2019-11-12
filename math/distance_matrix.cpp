@@ -30,13 +30,13 @@ DistanceMatrix::DistanceMatrix(InputParameters& params, int np)
     , max_dist(input_params.max_dist)
     , num_points(np)
     , dimension(input_params.dimension)
-    , filtration(input_params.filtration)
+    , filtration(input_params.bifil)
+    , func_type(input_params.function_type)
 {
-    function = input_params.old_function || input_params.new_function;
 
     // we make the degree filtration only when
     // neither function values, not filtration is supplied
-    if (!function && filtration == "degree") {
+    if (filtration == "degree") {
         degree = new unsigned[num_points]();
     }
 
@@ -54,7 +54,7 @@ DistanceMatrix::~DistanceMatrix()
     std::set<ExactValue, ExactValueComparator>().swap(function_set);
     std::set<ExactValue, ExactValueComparator>().swap(degree_set);
 
-    if (!function && filtration == "degree")
+    if (filtration == "degree")
         delete degree;
 }
 
@@ -118,7 +118,7 @@ void DistanceMatrix::build_distance_matrix(std::vector<DataPoint>& points)
     (ret.first)->indexes.push_back(0); //store distance 0 at 0th index
     //consider all points
     for (unsigned i = 0; i < num_points; i++) {
-        if (function && filtration == "none") {
+        if (func_type == "user" && filtration == "function") {
             //store time value, if it doesn't exist already
             ret = function_set.insert(ExactValue(points[i].birth));
 
@@ -149,7 +149,7 @@ void DistanceMatrix::build_distance_matrix(std::vector<DataPoint>& points)
                 (ret.first)->indexes.push_back((j * (j - 1)) / 2 + i + 1);
 
                 //need to keep track of degree for degree-Rips complex
-                if (!function && filtration == "degree") {
+                if (filtration == "degree") {
                     //there is an edge between i and j so update degree
                     degree[i]++;
                     degree[j]++;
@@ -162,10 +162,10 @@ void DistanceMatrix::build_distance_matrix(std::vector<DataPoint>& points)
 void DistanceMatrix::build_all_vectors(InputData* data)
 {
     // if a filtration was supplied, calculate function values
-    if (filtration == "density")
+    if (filtration == "function" && func_type == "density")
         ball_density_estimator(input_params.filter_param);
 
-    if (!function && filtration == "degree") {
+    if (filtration == "degree") {
         //determine the max degree
         max_degree = 0;
         for (unsigned i = 0; i < num_points; i++) {
@@ -208,7 +208,7 @@ void DistanceMatrix::read_distance_matrix(std::ifstream& stream, std::vector<exa
 
     //consider all points
     for (unsigned i = 0; i < num_points; i++) {
-        if (function && filtration == "none") {
+        if (func_type == "user" && filtration == "function") {
             //store value, if it doesn't exist already
             ret = function_set.insert(ExactValue(values[i]));
 
@@ -254,7 +254,7 @@ void DistanceMatrix::read_distance_matrix(std::ifstream& stream, std::vector<exa
                         (ret.first)->indexes.push_back((j * (j - 1)) / 2 + i + 1);
 
                         //need to keep track of degree for degree-Rips complex
-                        if (!function && filtration == "degree") {
+                        if (filtration == "degree") {
                             //there is an edge between i and j so update degree
                             degree[i]++;
                             degree[j]++;
