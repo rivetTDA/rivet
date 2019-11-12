@@ -314,7 +314,17 @@
     </item>
     <item>
      <property name="text">
+      <string>points_fn</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
       <string>metric</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>metric_fn</string>
      </property>
     </item>
     <item>
@@ -325,11 +335,6 @@
     <item>
      <property name="text">
       <string>firep</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>RIVET_msgpack</string>
      </property>
     </item>
    </widget>
@@ -358,6 +363,16 @@
       <height>25</height>
      </rect>
     </property>
+    <item>
+     <property name="text">
+      <string>degree</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>function</string>
+     </property>
+    </item>
    </widget>
    <widget class="QLineEdit" name="maxDistBox">
     <property name="geometry">
@@ -372,27 +387,28 @@
      <number>8</number>
     </property>
    </widget>
-   <widget class="QLabel" name="maxDistHelp">
+   <widget class="QPushButton" name="maxDistHelp">
     <property name="geometry">
      <rect>
-      <x>520</x>
-      <y>69</y>
-      <width>21</width>
+      <x>530</x>
+      <y>70</y>
+      <width>31</width>
       <height>21</height>
      </rect>
     </property>
     <property name="font">
      <font>
-      <pointsize>15</pointsize>
-      <weight>75</weight>
-      <bold>true</bold>
+      <pointsize>20</pointsize>
      </font>
     </property>
-    <property name="text">
-     <string>?</string>
+    <property name="toolTipDuration">
+     <number>-1</number>
     </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
+    <property name="iconSize">
+     <size>
+      <width>16</width>
+      <height>16</height>
+     </size>
     </property>
    </widget>
   </widget>

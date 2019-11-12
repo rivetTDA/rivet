@@ -59,9 +59,9 @@ struct InputParameters {
     unsigned dimension; //dimension of the space where the points lie
     bool old_function; //specifies if the data has a function value like the old format
     bool new_function; //specifies if the data has a --function flag followed by values
-    int function_line; //specifies which line has the function values
     bool x_reverse, y_reverse; //specifies if the axes need to be reversed or not
     std::string type; //type of file being worked with
+    std::string bifil; //type of bifiltration to build
     int to_skip; //number of lines after which the actual data begins
     std::string filtration; //type of filtration to perform on data without function
     double filter_param; //parameter value for performing the filtration
@@ -70,6 +70,7 @@ struct InputParameters {
     {
         // default values for all input parameters - should include first 3?
         type = "points";
+        bifil = "";
         hom_degree = 0;
         x_bins = 0;
         y_bins = 0;
@@ -89,9 +90,6 @@ struct InputParameters {
         betti = false;
         bounds = false;
         koszul = false;
-        function_line = 0;
-        filtration = "none";
-        filter_param = 0;
     }
 
     template <typename Archive>

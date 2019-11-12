@@ -1,4 +1,4 @@
---type metric
+--datatype metric
 --ylabel Rips Scale
 --maxdist 0.68902
 
