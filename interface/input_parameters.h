@@ -63,7 +63,7 @@ struct InputParameters {
     std::string type; //type of file being worked with
     std::string bifil; //type of bifiltration to build
     int to_skip; //number of lines after which the actual data begins
-    std::string filtration; //type of filtration to perform on data without function
+    std::string function_type; //type of filtration to perform on data without function
     double filter_param; //parameter value for performing the filtration
 
     InputParameters()
@@ -90,6 +90,8 @@ struct InputParameters {
         betti = false;
         bounds = false;
         koszul = false;
+        filter_param = 0;
+        function_type = "none";
     }
 
     template <typename Archive>

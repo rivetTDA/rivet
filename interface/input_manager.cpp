@@ -234,15 +234,10 @@ void InputManager::parse_args()
                 // everything coming after --y-label is the label
                 for (unsigned i = 1; i < line.size(); i++)
                     input_params.y_label += line[i] + " ";
-            } else if (line[0] == "--filter") {
-                if (line[1] != "degree" && line[1] != "density" && line[1] != "eccentricity" && line[1] != "knn")
-                    throw std::runtime_error("Invalid argument for --filter");
-                input_params.type = line[1];
-            } else if (line[0] == "--param") {
-                double val = atof(line[1].c_str());
-                if (val <= 0)
-                    throw std::runtime_error("Invalid argument for --param");
-                input_params.filter_param = val;
+            } else if (line[0] == "--function") {
+                if (line[1] != "density" && line[1] != "eccentricity" && line[1] != "knn" && line[1] != "user")
+                    throw std::runtime_error("Invalid argument for --function");
+                input_params.function_type = line[1];
             } else if (line[0] == "--xreverse") {
                 input_params.x_reverse = true;
             } else if (line[0] == "--yreverse") {
@@ -282,6 +277,7 @@ void InputManager::parse_args()
 
     if ((input_params.type == "points" || input_params.type == "metric") && input_params.bifil == "function")
         throw std::runtime_error("Cannot create function rips without function values. If you have provided function values, please specify the correct data type.");
+
     // skip stores number of lines to skip
     input_params.to_skip = num_lines;
     // determine dimension in which points live
@@ -312,6 +308,10 @@ void InputManager::parse_args()
     if (input_params.type == "firep") {
         input_params.x_reverse = false;
         input_params.y_reverse = false;
+    }
+
+    if (input_params.bifil == "function" && input_params.function_type == "none") {
+        input_params.function_type = "user";
     }
 
     input_file.close();

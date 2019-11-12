@@ -53,6 +53,7 @@ static const char USAGE[] =
       rivet_console <input_file> <module_invariants_file> [-H <hom_degree>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [-f <format>] [--binary] [--koszul] 
                                                           [--maxdist <distance>] [--num_threads <num_threads>] [--xreverse] [--yreverse] 
                                                           [--datatype <datatype>] [--xlabel <label>] [--ylabel <label>] [--bifil <filtration>]
+                                                          [--function <function>]
 
 
     Options:
@@ -82,6 +83,7 @@ static const char USAGE[] =
       --xlabel <label>                         Name of the parameter displayed along the x-axis. (Default: degree (if no function values specified))
       --ylabel <label>                         Name of the parameter displayed along the y-axis. (Default: distance)
       --bifil <filtration>                     Specify the type of bifiltration to build. (Default: degree (if no function values specified) or function (if function values specified))
+      --function <function>                    Specify the type of function values to be calculated from the dataset. (Not enabled when input file does not have function values)
       --barcodes <line_file>                   Print barcodes for the line queries in line_file, then exit.
                                                
 
@@ -323,8 +325,7 @@ int main(int argc, char* argv[])
     bool num_threads = args["--num_threads"].isString();
     bool x_label = args["--xlabel"].isString();
     bool y_label = args["--ylabel"].isString();
-    bool fil = args["--filter"].isString();
-    bool par = args["--param"].isString();
+    bool fil = args["--function"].isString();
 
     // override whichever flag has been set in the command line
     std::string slices;
@@ -422,6 +423,13 @@ int main(int argc, char* argv[])
             throw std::runtime_error("Invalid argument for --ylabel");
     }
 
+    if (fil) {
+        std::string str = args["--function"].asString();
+        if (str != "density" && str != "eccentricity" && str != "knn" && str != "user")
+            throw std::runtime_error("Invalid argument for --function");
+        params.function_type = str;
+    }
+
     if ((params.type == "points" || params.type == "metric") && params.bifil == "function")
         throw std::runtime_error("Cannot create function rips without function values. If you have provided function values, please specify the correct data type.");
 
@@ -436,6 +444,9 @@ int main(int argc, char* argv[])
     }
     if (params.bifil == "degree") {
         params.x_label = "degree";
+    }
+    if (params.bifil == "function" && params.function_type == "none") {
+        params.function_type = "user";
     }
 
     // all input parameters should be set by this point
