@@ -384,20 +384,31 @@ FileContent DataReader::read_discrete_metric_space(std::ifstream& stream, Progre
     std::pair<std::vector<std::string>, unsigned> line_info;
 
     // store function values if supplied
+
     std::vector<std::string> val;
-    if (hasFunction) {
-        for (int i = 0; i < input_params.function_line; i++)
+    if (input_params.old_function) {
+        for (int i = 0; i < 3; i++)
             line_info = reader.next_line(0);
 
         num_points = line_info.first.size();
         for (unsigned i = 0; i < num_points; i++) {
             val.push_back(line_info.first[i]);
         }
-    }
+        for (int i = 0; i < input_params.to_skip-3; i++)
+        	line_info = reader.next_line(0);
+    } else if (input_params.new_function) {
+    	input_params.to_skip++;
+    	for (int i = 0; i < input_params.to_skip; i++)
+            line_info = reader.next_line(0);
 
-    // skip lines with flags
-    for (int i = 0; i < input_params.to_skip - input_params.function_line - 1; i++)
-        line_info = reader.next_line(0);
+        num_points = line_info.first.size();
+        for (unsigned i = 0; i < num_points; i++) {
+            val.push_back(line_info.first[i]);
+        }
+    } else {
+    	for (int i = 0; i < input_params.to_skip; i++)
+        	line_info = reader.next_line(0);
+    }
 
     DistanceMatrix dist_mat(input_params, num_points);
 
