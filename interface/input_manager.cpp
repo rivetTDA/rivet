@@ -280,6 +280,13 @@ void InputManager::parse_args()
 
     // skip stores number of lines to skip
     input_params.to_skip = num_lines;
+
+    if (input_params.bifil == "") {
+        if (input_params.new_function)
+            input_params.bifil = "function";
+        else
+            input_params.bifil = "degree";
+    }
     // determine dimension in which points live
     if (input_params.new_function)
         line_info = reader.next_line(0);
@@ -292,12 +299,6 @@ void InputManager::parse_args()
             input_params.dimension++; // this is the number of points for metric space
     }
 
-    if (input_params.bifil == "") {
-        if (input_params.new_function)
-            input_params.bifil = "function";
-        else
-            input_params.bifil = "degree";
-    }
     if (input_params.type == "metric" || input_params.type == "points") {
         input_params.x_reverse = true;
         input_params.y_reverse = false;

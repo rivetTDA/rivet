@@ -195,9 +195,13 @@ void DistanceMatrix::build_all_vectors(InputData* data)
     build_grade_vectors(*data, dist_set, dist_indexes, data->y_exact, input_params.y_bins);
 }
 
-void DistanceMatrix::read_distance_matrix(std::ifstream& stream, std::vector<exact>& values)
+void DistanceMatrix::read_distance_matrix(std::vector<exact>& values)
 {
-    FileInputReader reader(stream);
+    std::ifstream input_file(input_params.fileName);
+    FileInputReader reader(input_file);
+
+    for (int i = 0; i < input_params.to_skip; i++)
+        reader.next_line(0);
 
     std::pair<std::vector<std::string>, unsigned> line_info;
     unsigned expectedNumTokens = num_points;

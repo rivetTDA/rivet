@@ -37,7 +37,7 @@ public:
 
     void build_all_vectors(InputData* data); // builds discrete index vectors and grade vectors
 
-    void read_distance_matrix(std::ifstream& stream, std::vector<exact>& values); // reads a matrix from an input file and stores it
+    void read_distance_matrix(std::vector<exact>& values); // reads a matrix from an input file and stores it
 
     void ball_density_estimator(double radius); // function to add a density estimator to provided data
 

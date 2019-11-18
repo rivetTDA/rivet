@@ -407,7 +407,7 @@ FileContent DataReader::read_discrete_metric_space(std::ifstream& stream, Progre
         for (int i = 0; i < input_params.to_skip-3; i++)
         	line_info = reader.next_line(0);
     } else if (input_params.new_function) {
-    	input_params.to_skip++;
+        input_params.to_skip++;
     	for (int i = 0; i < input_params.to_skip; i++)
             line_info = reader.next_line(0);
 
@@ -458,11 +458,7 @@ FileContent DataReader::read_discrete_metric_space(std::ifstream& stream, Progre
             debug() << "  Maximum distance of edges in Rips complex:" << oss.str().c_str();
         }
 
-        if (!hasFunction) {
-            degree = new unsigned[num_points]();
-        }
-
-        dist_mat.read_distance_matrix(stream, values);
+        dist_mat.read_distance_matrix(values);
         dist_mat.build_all_vectors(data);
 
     } catch (InputError& e) {
