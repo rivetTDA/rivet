@@ -354,7 +354,7 @@ int main(int argc, char* argv[])
         if (str != "points" && str != "points_fn" && 
             str != "metric" && str != "metric_fn" && 
             str != "bifiltration" && str != "firep" && str != "RIVET_msgpack")
-            throw std::runtime_error("Invalid argument for --type");
+            throw std::runtime_error("Invalid argument for --datatype");
         params.type = str;
         if (str == "points_fn" || str == "metric_fn")
             params.new_function = true;
@@ -425,12 +425,45 @@ int main(int argc, char* argv[])
 
     if (fil) {
         std::string str = args["--function"].asString();
-        if (str != "density" && str != "eccentricity" && str != "knn" && str != "user")
+        std::string f = "";
+        int b = -1;
+        for (int i = 0; i < str.length(); i++) {
+            if (str[i] != '[' && str[i] != ' ') {
+                f += str[i];
+            }
+            else {
+                b = i;
+                break;
+            }
+        }
+        if (f != "balldensity" && f != "eccentricity" && f != "knndensity" && f != "user")
             throw std::runtime_error("Invalid argument for --function");
-        params.function_type = str;
+        if (b == -1 && f != "user")
+            throw std::runtime_error("No parameter specified for function");
+        params.function_type = f;
+        f = "";
+        if (params.function_type != "user") {
+            for (int i = b+1; i < str.length(); i++) {
+                if (str[i] != ']') {
+                    f += str[i];
+                }
+                else
+                    break;
+            }
+        }
+        if (f == "inf")
+            throw std::runtime_error("Parameter cannot be infinity");
+        if (f == "")
+            params.filter_param = 0;
+        else {
+            double p = atof(f.c_str());
+            if (p <= 0)
+                throw std::runtime_error("Invalid parameter for function");
+            params.filter_param = p;
+        }
     }
 
-    if ((params.type == "points" || params.type == "metric") && params.bifil == "function")
+    if ((params.type == "points" || params.type == "metric") && params.bifil == "function" && params.function_type == "none")
         throw std::runtime_error("Cannot create function rips without function values. If you have provided function values, please specify the correct data type.");
 
     if (params.type != "bifiltration") {

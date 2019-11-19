@@ -112,6 +112,16 @@ void DistanceMatrix::ball_density_estimator(double radius)
     delete[] distance_matrix; // free up the memory
 }
 
+void DistanceMatrix::knn_density_estimator(double k)
+{
+    ;
+}
+
+void DistanceMatrix::eccentricity_estimator(double e)
+{
+    ;
+}
+
 void DistanceMatrix::build_distance_matrix(std::vector<DataPoint>& points)
 {
     ret = dist_set.insert(ExactValue(exact(0))); //distance from a point to itself is always zero
@@ -162,8 +172,14 @@ void DistanceMatrix::build_distance_matrix(std::vector<DataPoint>& points)
 void DistanceMatrix::build_all_vectors(InputData* data)
 {
     // if a filtration was supplied, calculate function values
-    if (filtration == "function" && func_type == "density")
+    if (filtration == "function" && func_type == "balldensity")
         ball_density_estimator(input_params.filter_param);
+
+    if (filtration == "function" && func_type == "knndensity")
+        knn_density_estimator(input_params.filter_param);
+
+    if (filtration == "function" && func_type == "eccentricity")
+        eccentricity_estimator(input_params.filter_param);
 
     if (filtration == "degree") {
         //determine the max degree
@@ -270,6 +286,8 @@ void DistanceMatrix::read_distance_matrix(std::vector<exact>& values)
             }
         }
     } //end for
+
+    input_file.close();
 }
 
 void DistanceMatrix::build_grade_vectors(InputData& data,

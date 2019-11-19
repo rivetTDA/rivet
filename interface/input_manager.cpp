@@ -235,9 +235,43 @@ void InputManager::parse_args()
                 for (unsigned i = 1; i < line.size(); i++)
                     input_params.y_label += line[i] + " ";
             } else if (line[0] == "--function") {
-                if (line[1] != "density" && line[1] != "eccentricity" && line[1] != "knn" && line[1] != "user")
+                std::string str = line[1];
+                std::string f = "";
+                int b = -1;
+                for (int i = 0; i < str.length(); i++) {
+                    if (line[1][i] != '[') {
+                        f += std::to_string(str[i]);
+                    }
+                    else {
+                        b = i;
+                        break;
+                    }
+                }
+                if (f != "balldensity" && f != "eccentricity" && f != "knndensity" && f != "user")
                     throw std::runtime_error("Invalid argument for --function");
-                input_params.function_type = line[1];
+                if (b == -1 && f != "user")
+                    throw std::runtime_error("No parameter specified for function");
+                input_params.function_type = f;
+                f = "";
+                if (input_params.function_type != "user") {
+                    for (int i = b+1; i < str.length(); i++) {
+                        if (str[i] != ']') {
+                            f += str[i];
+                        }
+                        else
+                            break;
+                    }
+                }
+                if (f == "inf")
+                    throw std::runtime_error("Parameter cannot be infinity");
+                if (f == "")
+                    input_params.filter_param = 0;
+                else {
+                    double p = atof(f.c_str());
+                    if (p <= 0)
+                        throw std::runtime_error("Invalid parameter for function");
+                    input_params.filter_param = p;
+                }
             } else if (line[0] == "--xreverse") {
                 input_params.x_reverse = true;
             } else if (line[0] == "--yreverse") {
@@ -257,7 +291,7 @@ void InputManager::parse_args()
                 if (line[1] != "points" && line[1] != "points_fn" && 
                     line[1] != "metric" && line[1] != "metric_fn" && 
                     line[1] != "bifiltration" && line[1] != "firep" && line[1] != "RIVET_msgpack")
-                    throw std::runtime_error("Invalid argument for --type");
+                    throw std::runtime_error("Invalid argument for --datatype");
                 input_params.type = line[1];
                 type_set = true;
                 if (line[1] == "points_fn" || line[1] == "metric_fn") {
