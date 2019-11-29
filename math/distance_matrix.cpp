@@ -129,9 +129,6 @@ void DistanceMatrix::knn_density_estimator(double k)
         }
     }
 
-    for (unsigned i = 0; i < size; i++)
-        debug() << distance_matrix[i];
-
     if (k == 0)
         k = 1;  // set default
     if (k > num_points-1)
@@ -141,8 +138,6 @@ void DistanceMatrix::knn_density_estimator(double k)
         exact value;
         std::vector<double> d;
         for (unsigned j = 0; j < num_points; j++) {
-            if (i == j)
-                continue;
             if (i > j)
                 d.push_back(distance_matrix[(i * (i - 1)) / 2 + j + 1]);
             if (j > i)
@@ -150,10 +145,6 @@ void DistanceMatrix::knn_density_estimator(double k)
         }
         std::sort(d.begin(), d.end());
         value = d[k-1];
-
-        // debug() << "Point" << i << ":";
-        // for (unsigned a = 0; a < d.size(); a++)
-        //     debug() << d[a] << " ";
 
         ret = function_set.insert(ExactValue(value));
         (ret.first)->indexes.push_back(i);
@@ -164,9 +155,47 @@ void DistanceMatrix::knn_density_estimator(double k)
     delete[] distance_matrix; // free up the memory
 }
 
-void DistanceMatrix::eccentricity_estimator(double e)
+void DistanceMatrix::eccentricity_estimator(double p)
 {
-    ;
+    // first we reconstruct the actual distance matrix from the distance set
+    // it is a diagonal matrix
+    unsigned size = (num_points * (num_points - 1)) / 2 + 1;
+    double* distance_matrix = new double[size];
+
+    ExactSet::iterator it;
+
+    // look at ExactValue struct to understand better
+    for (it = dist_set.begin(); it != dist_set.end(); it++) {
+        ExactValue curr_dist = *it;
+        double val = curr_dist.double_value;
+        for (unsigned j = 0; j < curr_dist.indexes.size(); j++) {
+            unsigned index = curr_dist.indexes[j];
+            distance_matrix[index] = val;
+        }
+    }
+
+    if (p == 0)
+        p = 1;  // set default
+
+    for (unsigned i = 0; i < num_points; i++) {
+        exact value;
+        double d = 0;
+        for (unsigned j = 0; j < num_points; j++) {
+            if (i > j)
+                d += pow(distance_matrix[(i * (i - 1)) / 2 + j + 1], p);
+            if (j > i)
+                d += pow(distance_matrix[(j * (j - 1)) / 2 + i + 1], p);
+        }
+        d = d/num_points;
+        d = pow(d, 1.0/p);
+        value = d;
+
+        ret = function_set.insert(ExactValue(value));
+        (ret.first)->indexes.push_back(i);        
+    }
+
+    delete[] distance_matrix; // free up the memory
+
 }
 
 void DistanceMatrix::build_distance_matrix(std::vector<DataPoint>& points)
