@@ -93,10 +93,8 @@ void DistanceMatrix::ball_density_estimator(double radius)
 
     // check if distance less than supplied radius
     // if yes, increase density value by 1
-    int count = 0;
     for (unsigned i = 0; i < num_points; i++) {
         exact value = 0;
-        count++;
         for (unsigned j = 0; j < num_points; j++) {
             if ((i == j)
                 || (j > i && (distance_matrix[(j * (j - 1)) / 2 + i + 1] <= radius))
@@ -114,7 +112,56 @@ void DistanceMatrix::ball_density_estimator(double radius)
 
 void DistanceMatrix::knn_density_estimator(double k)
 {
-    ;
+    // first we reconstruct the actual distance matrix from the distance set
+    // it is a diagonal matrix
+    unsigned size = (num_points * (num_points - 1)) / 2 + 1;
+    double* distance_matrix = new double[size];
+
+    ExactSet::iterator it;
+
+    // look at ExactValue struct to understand better
+    for (it = dist_set.begin(); it != dist_set.end(); it++) {
+        ExactValue curr_dist = *it;
+        double val = curr_dist.double_value;
+        for (unsigned j = 0; j < curr_dist.indexes.size(); j++) {
+            unsigned index = curr_dist.indexes[j];
+            distance_matrix[index] = val;
+        }
+    }
+
+    for (unsigned i = 0; i < size; i++)
+        debug() << distance_matrix[i];
+
+    if (k == 0)
+        k = 1;  // set default
+    if (k > num_points-1)
+        k = num_points-1;
+
+    for (unsigned i = 0; i < num_points; i++) {
+        exact value;
+        std::vector<double> d;
+        for (unsigned j = 0; j < num_points; j++) {
+            if (i == j)
+                continue;
+            if (i > j)
+                d.push_back(distance_matrix[(i * (i - 1)) / 2 + j + 1]);
+            if (j > i)
+                d.push_back(distance_matrix[(j * (j - 1)) / 2 + i + 1]);
+        }
+        std::sort(d.begin(), d.end());
+        value = d[k-1];
+
+        // debug() << "Point" << i << ":";
+        // for (unsigned a = 0; a < d.size(); a++)
+        //     debug() << d[a] << " ";
+
+        ret = function_set.insert(ExactValue(value));
+        (ret.first)->indexes.push_back(i);
+
+        std::vector<double>().swap(d);
+    }
+
+    delete[] distance_matrix; // free up the memory
 }
 
 void DistanceMatrix::eccentricity_estimator(double e)
@@ -150,21 +197,21 @@ void DistanceMatrix::build_distance_matrix(std::vector<DataPoint>& points)
             if (fp_dist_squared > 0)
                 cur_dist = approx(sqrt(fp_dist_squared)); //OK for now...
 
-            if (max_dist == -1 || cur_dist <= max_dist) //then this distance is allowed
-            {
+            // if (max_dist == -1 || cur_dist <= max_dist) //then this distance is allowed
+            // {
                 //store distance value, if it doesn't exist already
-                ret = dist_set.insert(ExactValue(cur_dist));
+            ret = dist_set.insert(ExactValue(cur_dist));
 
-                //remember that the pair of points (i,j) has this distance value, which will go in entry j(j-1)/2 + i + 1
-                (ret.first)->indexes.push_back((j * (j - 1)) / 2 + i + 1);
+            //remember that the pair of points (i,j) has this distance value, which will go in entry j(j-1)/2 + i + 1
+            (ret.first)->indexes.push_back((j * (j - 1)) / 2 + i + 1);
 
-                //need to keep track of degree for degree-Rips complex
-                if (filtration == "degree") {
-                    //there is an edge between i and j so update degree
-                    degree[i]++;
-                    degree[j]++;
-                }
+            //need to keep track of degree for degree-Rips complex
+            if ((max_dist == -1 || cur_dist <= max_dist) && filtration == "degree") {
+                //there is an edge between i and j so update degree
+                degree[i]++;
+                degree[j]++;
             }
+            // }
         }
     } //end for
 }
@@ -180,6 +227,16 @@ void DistanceMatrix::build_all_vectors(InputData* data)
 
     if (filtration == "function" && func_type == "eccentricity")
         eccentricity_estimator(input_params.filter_param);
+
+    if (max_dist != -1) {
+        ExactSet::iterator it;
+        for (it = dist_set.begin(); it != dist_set.end(); it++) {
+            if (it->double_value > max_dist) {
+                break;
+            }
+        }
+        dist_set.erase(it, dist_set.end());
+    }
 
     if (filtration == "degree") {
         //determine the max degree
@@ -265,21 +322,21 @@ void DistanceMatrix::read_distance_matrix(std::vector<exact>& values)
 
                     exact cur_dist = str_to_exact(str);
 
-                    if (max_dist == -1 || cur_dist <= max_dist) //then this distance is allowed
-                    {
+                    // if (max_dist == -1 || cur_dist <= max_dist) //then this distance is allowed
+                    // {
                         //store distance value, if it doesn't exist already
-                        ret = dist_set.insert(ExactValue(cur_dist));
+                    ret = dist_set.insert(ExactValue(cur_dist));
 
-                        //remember that the pair of points (i,j) has this distance value, which will go in entry j(j-1)/2 + i + 1
-                        (ret.first)->indexes.push_back((j * (j - 1)) / 2 + i + 1);
+                    //remember that the pair of points (i,j) has this distance value, which will go in entry j(j-1)/2 + i + 1
+                    (ret.first)->indexes.push_back((j * (j - 1)) / 2 + i + 1);
 
-                        //need to keep track of degree for degree-Rips complex
-                        if (filtration == "degree") {
-                            //there is an edge between i and j so update degree
-                            degree[i]++;
-                            degree[j]++;
-                        }
+                    //need to keep track of degree for degree-Rips complex
+                    if ((max_dist == -1 || cur_dist <= max_dist) && filtration == "degree") {
+                        //there is an edge between i and j so update degree
+                        degree[i]++;
+                        degree[j]++;
                     }
+                    // }
                 }
             } catch (std::exception& e) {
                 throw InputError(line_info.second, e.what());
