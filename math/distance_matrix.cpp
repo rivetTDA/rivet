@@ -110,7 +110,7 @@ void DistanceMatrix::ball_density_estimator(double radius)
     delete[] distance_matrix; // free up the memory
 }
 
-void DistanceMatrix::knn_density_estimator(double k)
+void DistanceMatrix::knn_density_estimator(int k)
 {
     // first we reconstruct the actual distance matrix from the distance set
     // it is a diagonal matrix
@@ -155,7 +155,7 @@ void DistanceMatrix::knn_density_estimator(double k)
     delete[] distance_matrix; // free up the memory
 }
 
-void DistanceMatrix::eccentricity_estimator(double p)
+void DistanceMatrix::eccentricity_estimator(int p)
 {
     // first we reconstruct the actual distance matrix from the distance set
     // it is a diagonal matrix

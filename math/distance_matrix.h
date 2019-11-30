@@ -40,8 +40,8 @@ public:
     void read_distance_matrix(std::vector<exact>& values); // reads a matrix from an input file and stores it
 
     void ball_density_estimator(double radius); // function to add a density estimator to provided data
-    void knn_density_estimator(double k);
-    void eccentricity_estimator(double e);
+    void knn_density_estimator(int k);
+    void eccentricity_estimator(int e);
 
     // these are required by bifiltration data and hence made public
     std::vector<unsigned> dist_indexes;

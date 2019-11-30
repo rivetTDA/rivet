@@ -180,6 +180,15 @@ void ComputationThread::compute_from_file()
     if (params.bifil != "")
         args << "--bifil" << QString::fromStdString(params.bifil);
 
+    if (params.bifil == "function" && params.function_type != "none" && params.function_type != "user") {
+        std::string p = "";
+        if (params.filter_param != 0)
+            p = boost::lexical_cast<std::string>(params.filter_param);
+        args << "--function" << QString::fromStdString(params.function_type+"["+p+"]");
+    }
+
+
+
 
     auto console = RivetConsoleApp::start(args);
 

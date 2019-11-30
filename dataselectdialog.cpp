@@ -78,7 +78,10 @@ void DataSelectDialog::showEvent(QShowEvent* event)
 {
     event->accept();
 
-    // reset the parameter frame when a new dialog is created
+    // reset the parameter frame when a new dialog is 
+
+    ui->fileLabel->setText("First, select a file.");
+    ui->fileTypeLabel->setText("You can start from a point cloud, finite metric space, bifiltration, FIRep, or a module invariants file.");
 
     ui->xAxisLabel->setText("");
     ui->yAxisLabel->setText("");
@@ -107,6 +110,11 @@ void DataSelectDialog::showEvent(QShowEvent* event)
     ui->filterComboBox->setCurrentIndex(0);
     ui->maxDistBox->setPalette(this->style()->standardPalette());
     ui->maxDistBox->setToolTip("");
+    ui->functionComboBox->setEnabled(true);
+    ui->functionComboBox->setCurrentIndex(0);
+    ui->parameterSpinBox->setEnabled(true);
+    ui->parameterSpinBox->setValue(0.00);
+    ui->parameterSpinBox->setSpecialValueText("");
 
 }
 
@@ -133,6 +141,10 @@ void DataSelectDialog::on_computeButton_clicked()
     params.type = ui->dataTypeComboBox->currentText().toStdString();
     if (params.type != "bifiltration" && params.type != "firep" && params.type != "RIVET_msgpack")
         params.bifil = ui->filterComboBox->currentText().toStdString();
+    if (params.bifil == "function") {
+        params.function_type = ui->functionComboBox->currentText().toStdString();
+        params.filter_param = ui->parameterSpinBox->value();
+    }
 
     data_selected = true;
 
@@ -168,6 +180,8 @@ void DataSelectDialog::on_maxDistHelp_clicked()
 
 void DataSelectDialog::detect_file_type()
 {
+    ui->fileLabel->setText("First, select a file.");
+    ui->fileTypeLabel->setText("You can start from a point cloud, finite metric space, bifiltration, FIRep, or a module invariants file.");
 
     ui->homDimSpinBox->setSpecialValueText("");
     //this turns off the special value text (i.e. zero is displayed like normal)
@@ -213,6 +227,12 @@ void DataSelectDialog::detect_file_type()
 
     ui->maxDistBox->setPalette(this->style()->standardPalette());
     ui->maxDistBox->setToolTip("");
+
+    ui->functionComboBox->setEnabled(true);
+    ui->functionComboBox->setCurrentIndex(0);
+    ui->parameterSpinBox->setEnabled(true);
+    ui->parameterSpinBox->setValue(0.00);
+    ui->parameterSpinBox->setSpecialValueText("");
 
     std::ifstream infile(params.fileName);
 
@@ -344,10 +364,20 @@ void DataSelectDialog::detect_file_type()
     if (params.bifil == "degree") {
         ui->xAxisLabel->setText("degree");
         ui->xAxisLabel->setEnabled(false);
+        ui->functionComboBox->setEnabled(false);
+        ui->functionComboBox->setCurrentIndex(0);
+        ui->parameterSpinBox->setEnabled(false);
+        ui->parameterSpinBox->setSpecialValueText("N/A");
+        ui->parameterSpinBox->setValue(0.00);
     }
     else {
         ui->xAxisLabel->setText(QString::fromStdString(params.x_label));
         ui->xAxisLabel->setEnabled(true);
+        ui->functionComboBox->setEnabled(true);
+        ui->functionComboBox->setCurrentIndex(1);
+        ui->parameterSpinBox->setEnabled(true);
+        ui->parameterSpinBox->setSpecialValueText("");
+        ui->parameterSpinBox->setValue(0.00);
     }
 
     ui->computeButton->setEnabled(true);
@@ -374,9 +404,19 @@ void DataSelectDialog::on_filterComboBox_currentIndexChanged(int index)
     if (index == 0) {
         ui->xAxisLabel->setText("degree");
         ui->xAxisLabel->setEnabled(false);
+        ui->functionComboBox->setEnabled(false);
+        ui->functionComboBox->setCurrentIndex(0);
+        ui->parameterSpinBox->setEnabled(false);
+        ui->parameterSpinBox->setSpecialValueText("N/A");
+        ui->parameterSpinBox->setValue(0.00);
     }
     else {
         ui->xAxisLabel->setText(QString::fromStdString(params.x_label));
         ui->xAxisLabel->setEnabled(true);
+        ui->functionComboBox->setEnabled(true);
+        ui->functionComboBox->setCurrentIndex(1);
+        ui->parameterSpinBox->setEnabled(true);
+        ui->parameterSpinBox->setSpecialValueText("");
+        ui->parameterSpinBox->setValue(0.00);
     }
 }
