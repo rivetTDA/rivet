@@ -55,6 +55,7 @@ DataSelectDialog::DataSelectDialog(InputParameters& params, QWidget* parent)
         ui->xbinSpinBox->setValue(10);
         ui->ybinSpinBox->setValue(10);
     }
+    // infinity button
     ui->maxDistHelp->setText(QChar(0x221E));
     ui->maxDistHelp->setStyleSheet("QPushButton { font : 30px; qproperty-alignment: AlignTop; }");
 }
@@ -78,7 +79,8 @@ void DataSelectDialog::showEvent(QShowEvent* event)
 {
     event->accept();
 
-    // reset the parameter frame when a new dialog is 
+    // reset the parameter frame when a new dialog is created
+    // every object should be set to default
 
     ui->fileLabel->setText("First, select a file.");
     ui->fileTypeLabel->setText("You can start from a point cloud, finite metric space, bifiltration, FIRep, or a module invariants file.");
@@ -120,7 +122,8 @@ void DataSelectDialog::showEvent(QShowEvent* event)
 
 void DataSelectDialog::on_computeButton_clicked()
 {
-    // read in the input parameters from the dialog
+    // check if max_dist value is invalid
+    // turns box red if it is and does not proceed
     params.md_string = ui->maxDistBox->text().toStdString();
     if (params.md_string != "N/A" && (params.md_string.length() != 3 || params.md_string != "inf")) {
         double md = atof(params.md_string.c_str());
@@ -131,6 +134,7 @@ void DataSelectDialog::on_computeButton_clicked()
         }
     }
     
+    // read in the input parameters from the dialog
     params.hom_degree = ui->homDimSpinBox->value();
     params.x_bins = ui->xbinSpinBox->value();
     params.y_bins = ui->ybinSpinBox->value();
@@ -180,6 +184,9 @@ void DataSelectDialog::on_maxDistHelp_clicked()
 
 void DataSelectDialog::detect_file_type()
 {
+    // set everything to default here
+    // this is necessary for the load new data feature
+
     ui->fileLabel->setText("First, select a file.");
     ui->fileTypeLabel->setText("You can start from a point cloud, finite metric space, bifiltration, FIRep, or a module invariants file.");
 
@@ -188,24 +195,6 @@ void DataSelectDialog::detect_file_type()
 
     ui->homDimSpinBox->setEnabled(true);
     ui->homDimSpinBox->setValue(0);
-
-    // reset the values and states of everything when a new file is selected
-    params.x_label = "";
-    params.y_label = "distance";
-
-    params.x_reverse = false;
-    params.y_reverse = false;
-
-    params.x_bins = 10;
-    params.y_bins = 10;
-
-    params.bifil = "";
-    params.new_function = false;
-
-    params.type = "points";
-    params.max_dist = -1;
-    params.md_string = "inf";
-    params.hom_degree = 0;
 
     ui->maxDistBox->setEnabled(true);
     ui->maxDistBox->setText("");
@@ -233,6 +222,24 @@ void DataSelectDialog::detect_file_type()
     ui->parameterSpinBox->setEnabled(true);
     ui->parameterSpinBox->setValue(0.00);
     ui->parameterSpinBox->setSpecialValueText("");
+
+    // also remember to reset input parameter values
+    params.x_label = "";
+    params.y_label = "distance";
+
+    params.x_reverse = false;
+    params.y_reverse = false;
+
+    params.x_bins = 10;
+    params.y_bins = 10;
+
+    params.bifil = "";
+    params.new_function = false;
+
+    params.type = "points";
+    params.max_dist = -1;
+    params.md_string = "inf";
+    params.hom_degree = 0;
 
     std::ifstream infile(params.fileName);
 
@@ -302,7 +309,6 @@ void DataSelectDialog::detect_file_type()
         type_string += "free implicit representation data.";
 
         ui->homDimSpinBox->setSpecialValueText("N/A");
-        //the spinbox will show the special value text when the value is the minimum value (i.e. zero)
         ui->homDimSpinBox->setValue(0);
         ui->homDimSpinBox->setEnabled(false);
 
@@ -401,6 +407,8 @@ void DataSelectDialog::invalid_file(const QString& message)
 
 void DataSelectDialog::on_filterComboBox_currentIndexChanged(int index)
 {
+    // make certain options available or unavailable
+    // depends on what is selected for bifiltration
     if (index == 0) {
         ui->xAxisLabel->setText("degree");
         ui->xAxisLabel->setEnabled(false);

@@ -305,6 +305,7 @@ int main(int argc, char* argv[])
     bool barcodes = args["--barcodes"].isString();
 
     // check if set in file and override if also set in command line
+    // only booleans
     params.minpres = (args["--minpres"].isBool() && args["--minpres"].asBool()) || params.minpres;
     params.betti = (args["--betti"].isBool() && args["--betti"].asBool()) || params.betti;
     params.binary = (args["--binary"].isBool() && args["--binary"].asBool()) || params.binary;
@@ -327,7 +328,10 @@ int main(int argc, char* argv[])
     bool y_label = args["--ylabel"].isString();
     bool fil = args["--function"].isString();
 
+    // go through each flag that was set
+    // error check
     // override whichever flag has been set in the command line
+    // similar to InputManager::parse_args()
     std::string slices;
     if (barcodes) {
         slices = args["--barcodes"].asString();
@@ -594,12 +598,6 @@ int main(int argc, char* argv[])
     DataReader dataReader(params);
     content = dataReader.process(progress);
 
-    // try {
-    //    content = inputManager.start(progress);
-    // } catch (const std::exception& e) {
-    //     input_error(e.what());
-    //     return 1;
-    // }
     if (params.verbosity >= 4) {
         debug() << "Input processed.";
     }

@@ -238,32 +238,36 @@ void InputManager::parse_args()
                 std::string str = line[1];
                 std::string f = "";
                 int b = -1;
+                // determine argument before the first '['
+                // the parameter is supplied in '[]' after specifying the function type
                 for (int i = 0; i < str.length(); i++) {
                     if (line[1][i] != '[') {
                         f += std::to_string(str[i]);
-                    }
-                    else {
+                    } else {
                         b = i;
                         break;
                     }
                 }
                 if (f != "balldensity" && f != "eccentricity" && f != "knndensity" && f != "user")
                     throw std::runtime_error("Invalid argument for --function");
+                // must specify '[]' without anything inside brackets to denote default
+                // only "user" does not need '[]'
                 if (b == -1 && f != "user")
                     throw std::runtime_error("No parameter specified for function");
                 input_params.function_type = f;
                 f = "";
+                // parse parameter value
                 if (input_params.function_type != "user") {
-                    for (int i = b+1; i < str.length(); i++) {
+                    for (int i = b + 1; i < str.length(); i++) {
                         if (str[i] != ']') {
                             f += str[i];
-                        }
-                        else
+                        } else
                             break;
                     }
                 }
                 if (f == "inf")
                     throw std::runtime_error("Parameter cannot be infinity");
+                // default is 0, actual default set in distance matrix class
                 if (f == "")
                     input_params.filter_param = 0;
                 else {
@@ -288,12 +292,10 @@ void InputManager::parse_args()
                 input_params.koszul = true;
             } else if (line[0] == "--datatype") {
                 // specifies file type, throw error if unknown
-                if (line[1] != "points" && line[1] != "points_fn" && 
-                    line[1] != "metric" && line[1] != "metric_fn" && 
-                    line[1] != "bifiltration" && line[1] != "firep" && line[1] != "RIVET_msgpack")
+                if (line[1] != "points" && line[1] != "points_fn" && line[1] != "metric" && line[1] != "metric_fn" && line[1] != "bifiltration" && line[1] != "firep" && line[1] != "RIVET_msgpack")
                     throw std::runtime_error("Invalid argument for --datatype");
                 input_params.type = line[1];
-                type_set = true;
+                type_set = true; // this is used to enable/disable options in GUI
                 if (line[1] == "points_fn" || line[1] == "metric_fn") {
                     input_params.new_function = true;
                 }
@@ -315,6 +317,7 @@ void InputManager::parse_args()
     // skip stores number of lines to skip
     input_params.to_skip = num_lines;
 
+    // determine parameter values from available information
     if (input_params.bifil == "") {
         if (input_params.new_function)
             input_params.bifil = "function";
@@ -333,6 +336,7 @@ void InputManager::parse_args()
             input_params.dimension++; // this is the number of points for metric space
     }
 
+    // set parameters here based on parsed input file
     if (input_params.type == "metric" || input_params.type == "points") {
         input_params.x_reverse = true;
         input_params.y_reverse = false;

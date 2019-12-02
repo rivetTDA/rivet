@@ -188,6 +188,7 @@ FileContent DataReader::read_point_cloud(std::ifstream& stream, Progress& progre
         debug() << "DataReader: Found a point cloud file.";
     }
 
+    // force set parameters here
     if (input_params.bifil == "degree") {
         input_params.x_label = "degree";
         input_params.x_reverse = true;
@@ -198,9 +199,9 @@ FileContent DataReader::read_point_cloud(std::ifstream& stream, Progress& progre
     exact max_dist = input_params.max_dist;
     bool hasFunction;
     if (input_params.bifil == "function")
-    	hasFunction = true;
+        hasFunction = true;
     else
-    	hasFunction = false;
+        hasFunction = false;
 
     bool x_reverse = input_params.x_reverse;
     bool y_reverse = input_params.y_reverse;
@@ -219,7 +220,7 @@ FileContent DataReader::read_point_cloud(std::ifstream& stream, Progress& progre
     // if a function values exist, read in the function values
     std::vector<std::string> values;
     if (input_params.new_function) {
-    	input_params.to_skip++;
+        input_params.to_skip++;
         for (int i = 0; i < input_params.to_skip; i++)
             line_info = reader.next_line(0);
 
@@ -227,8 +228,8 @@ FileContent DataReader::read_point_cloud(std::ifstream& stream, Progress& progre
             values.push_back(line_info.first[i]);
         }
     } else {
-    	for (int i = 0; i < input_params.to_skip; i++)
-    		reader.next_line(0);
+        for (int i = 0; i < input_params.to_skip; i++)
+            reader.next_line(0);
     }
 
     // STEP 1: read data file and store exact (rational) values
@@ -237,10 +238,9 @@ FileContent DataReader::read_point_cloud(std::ifstream& stream, Progress& progre
         int k = 0;
         while (reader.has_next_line()) {
             line_info = reader.next_line(0);
-            if (input_params.new_function && k == 0)
-            {
-            	dimension = line_info.first.size();
-            	expectedNumTokens = dimension;
+            if (input_params.new_function && k == 0) {
+                dimension = line_info.first.size();
+                expectedNumTokens = dimension;
             }
             std::vector<std::string> tokens = line_info.first;
             if (tokens.size() != expectedNumTokens) {
@@ -285,7 +285,7 @@ FileContent DataReader::read_point_cloud(std::ifstream& stream, Progress& progre
         throw std::runtime_error("No points loaded.");
     }
 
-    // STEP 2: compute distance matrix, and create ordered lists of all unique distance and time values
+    // STEP 2: compute distance matrix, and create ordered lists of all unique distance and time values and build grade vectors
 
     if (verbosity >= 4) {
         debug() << "  Building lists of grade values.";
@@ -293,6 +293,10 @@ FileContent DataReader::read_point_cloud(std::ifstream& stream, Progress& progre
     progress.advanceProgressStage();
 
     unsigned num_points = points.size();
+
+    // DistanceMatrix builds or reads in the DistanceMatrix
+    // If functions are supplied, it computes function values
+    // After that, it builds all vectors necessary for building the bifiltration
 
     DistanceMatrix dist_mat(input_params, num_points);
     dist_mat.build_distance_matrix(points);
@@ -302,12 +306,10 @@ FileContent DataReader::read_point_cloud(std::ifstream& stream, Progress& progre
         debug() << "  Finished reading data.";
     }
 
-    // STEP 3: build vectors of discrete indexes for constructing the bifiltration
-
     //update progress
     progress.progress(30);
 
-    // STEP 4: build the bifiltration
+    // STEP 3: build the bifiltration
 
     //bifiltration_data stores only DISCRETE information!
     //this only requires (suppose there are k points):
@@ -348,10 +350,6 @@ FileContent DataReader::read_point_cloud(std::ifstream& stream, Progress& progre
 
     data->free_implicit_rep.reset(new FIRep(*(data->bifiltration_data), input_params.verbosity));
 
-    // if (!hasFunction) {
-    //     delete dist_mat.degree;
-    // }
-
     //remember the axis directions
     data->x_reverse = x_reverse;
     data->y_reverse = y_reverse;
@@ -372,17 +370,16 @@ FileContent DataReader::read_discrete_metric_space(std::ifstream& stream, Progre
     //prepare data structures
     ExactSet value_set; //stores all unique values of the function; must DELETE all elements later
     ExactSet dist_set; //stores all unique values of the distance metric; must DELETE all elements later
+
+    // set variables from input parameters
     unsigned num_points = input_params.dimension;
 
     bool hasFunction;
     if (input_params.bifil == "function")
-    	hasFunction = true;
+        hasFunction = true;
     else
-    	hasFunction = false;
-    unsigned* degree; //stores the degree of each point; must FREE later if used
-    std::pair<ExactSet::iterator, bool> ret; //for return value upon insert()
+        hasFunction = false;
 
-    // set all variables from input parameters
     bool x_reverse = input_params.x_reverse;
     bool y_reverse = input_params.y_reverse;
 
@@ -404,11 +401,11 @@ FileContent DataReader::read_discrete_metric_space(std::ifstream& stream, Progre
         for (unsigned i = 0; i < num_points; i++) {
             val.push_back(line_info.first[i]);
         }
-        for (int i = 0; i < input_params.to_skip-3; i++)
-        	line_info = reader.next_line(0);
+        for (int i = 0; i < input_params.to_skip - 3; i++)
+            line_info = reader.next_line(0);
     } else if (input_params.new_function) {
         input_params.to_skip++;
-    	for (int i = 0; i < input_params.to_skip; i++)
+        for (int i = 0; i < input_params.to_skip; i++)
             line_info = reader.next_line(0);
 
         num_points = line_info.first.size();
@@ -416,16 +413,18 @@ FileContent DataReader::read_discrete_metric_space(std::ifstream& stream, Progre
             val.push_back(line_info.first[i]);
         }
     } else {
-    	for (int i = 0; i < input_params.to_skip; i++)
-        	line_info = reader.next_line(0);
+        for (int i = 0; i < input_params.to_skip; i++)
+            line_info = reader.next_line(0);
     }
+
+    // DistanceMatrix builds or reads in the DistanceMatrix
+    // If functions are supplied, it computes function values
+    // After that, it builds all vectors necessary for building the bifiltration
 
     DistanceMatrix dist_mat(input_params, num_points);
 
-    // for (int i = 0; i < val.size(); i++)
-    // 	debug() << val[i];
-
     try {
+        // axis reversal
         std::vector<exact> values;
 
         if (hasFunction) {
@@ -450,8 +449,6 @@ FileContent DataReader::read_discrete_metric_space(std::ifstream& stream, Progre
             }
         }
 
-        // STEP 2: read data file and store exact (rational) values for all distances
-
         if (verbosity >= 4) {
             std::ostringstream oss;
             oss << max_dist;
@@ -471,12 +468,11 @@ FileContent DataReader::read_discrete_metric_space(std::ifstream& stream, Progre
     }
 
     progress.advanceProgressStage(); //advance progress box to stage 2: building bifiltration
-    // STEP 3: build vectors of discrete indexes for constructing the bifiltration
 
     //update progress
     progress.progress(30);
 
-    // STEP 4: build the bifiltration
+    // build the bifiltration
 
     if (verbosity >= 4) {
         if (input_params.bifil == "degree") {
@@ -513,11 +509,6 @@ FileContent DataReader::read_discrete_metric_space(std::ifstream& stream, Progre
     data->free_implicit_rep.reset(new FIRep(*(data->bifiltration_data), input_params.verbosity));
     data->x_reverse = x_reverse;
     data->y_reverse = y_reverse;
-
-    //clean up
-    // if (!hasFunction) {
-    //     delete dist_mat.degree;
-    // }
 
     return FileContent(data);
 } //end read_discrete_metric_space()

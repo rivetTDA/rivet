@@ -35,7 +35,7 @@ DistanceMatrix::DistanceMatrix(InputParameters& params, int np)
 {
 
     // we make the degree filtration only when
-    // neither function values, not filtration is supplied
+    // we are building a degree-Rips
     if (filtration == "degree") {
         degree = new unsigned[num_points]();
     }
@@ -60,9 +60,6 @@ DistanceMatrix::~DistanceMatrix()
 
 void DistanceMatrix::ball_density_estimator(double radius)
 {
-    // fill up function_set with values
-    // consider values from dist_set
-
     // first we reconstruct the actual distance matrix from the distance set
     // it is a diagonal matrix
     unsigned size = (num_points * (num_points - 1)) / 2 + 1;
@@ -130,10 +127,13 @@ void DistanceMatrix::knn_density_estimator(int k)
     }
 
     if (k == 0)
-        k = 1;  // set default
-    if (k > num_points-1)
-        k = num_points-1;
+        k = 1; // set default
+    if (k > num_points - 1)
+        k = num_points - 1; // return farthest neighbor if out of bounds
 
+    // store all distance values of a point in a vector
+    // sort it
+    // select kth value
     for (unsigned i = 0; i < num_points; i++) {
         exact value;
         std::vector<double> d;
@@ -144,12 +144,12 @@ void DistanceMatrix::knn_density_estimator(int k)
                 d.push_back(distance_matrix[(j * (j - 1)) / 2 + i + 1]);
         }
         std::sort(d.begin(), d.end());
-        value = d[k-1];
+        value = d[k - 1];
 
         ret = function_set.insert(ExactValue(value));
         (ret.first)->indexes.push_back(i);
 
-        std::vector<double>().swap(d);
+        std::vector<double>().swap(d); // free up space used by vector
     }
 
     delete[] distance_matrix; // free up the memory
@@ -175,8 +175,11 @@ void DistanceMatrix::eccentricity_estimator(int p)
     }
 
     if (p == 0)
-        p = 1;  // set default
+        p = 1; // set default
 
+    // take a distance for a point
+    // raise it to pth power and keep adding
+    // divide by num_points and take 1/p power
     for (unsigned i = 0; i < num_points; i++) {
         exact value;
         double d = 0;
@@ -186,16 +189,15 @@ void DistanceMatrix::eccentricity_estimator(int p)
             if (j > i)
                 d += pow(distance_matrix[(j * (j - 1)) / 2 + i + 1], p);
         }
-        d = d/num_points;
-        d = pow(d, 1.0/p);
+        d = d / num_points;
+        d = pow(d, 1.0 / p);
         value = d;
 
         ret = function_set.insert(ExactValue(value));
-        (ret.first)->indexes.push_back(i);        
+        (ret.first)->indexes.push_back(i);
     }
 
     delete[] distance_matrix; // free up the memory
-
 }
 
 void DistanceMatrix::build_distance_matrix(std::vector<DataPoint>& points)
@@ -226,9 +228,7 @@ void DistanceMatrix::build_distance_matrix(std::vector<DataPoint>& points)
             if (fp_dist_squared > 0)
                 cur_dist = approx(sqrt(fp_dist_squared)); //OK for now...
 
-            // if (max_dist == -1 || cur_dist <= max_dist) //then this distance is allowed
-            // {
-                //store distance value, if it doesn't exist already
+            //store distance value, if it doesn't exist already
             ret = dist_set.insert(ExactValue(cur_dist));
 
             //remember that the pair of points (i,j) has this distance value, which will go in entry j(j-1)/2 + i + 1
@@ -240,23 +240,24 @@ void DistanceMatrix::build_distance_matrix(std::vector<DataPoint>& points)
                 degree[i]++;
                 degree[j]++;
             }
-            // }
         }
     } //end for
 }
 
 void DistanceMatrix::build_all_vectors(InputData* data)
 {
-    // if a filtration was supplied, calculate function values
-    if (filtration == "function" && func_type == "balldensity")
-        ball_density_estimator(input_params.filter_param);
+    // if a function has to be calculated
+    if (filtration == "function") {
+        if (func_type == "balldensity")
+            ball_density_estimator(input_params.filter_param);
+        if (func_type == "knndensity")
+            knn_density_estimator(input_params.filter_param);
+        if (func_type == "eccentricity")
+            eccentricity_estimator(input_params.filter_param);
+    }
 
-    if (filtration == "function" && func_type == "knndensity")
-        knn_density_estimator(input_params.filter_param);
-
-    if (filtration == "function" && func_type == "eccentricity")
-        eccentricity_estimator(input_params.filter_param);
-
+    // remove all values from distance set that are greater than max_dist
+    // dist_set has values in ascending order
     if (max_dist != -1) {
         ExactSet::iterator it;
         for (it = dist_set.begin(); it != dist_set.end(); it++) {
@@ -351,9 +352,7 @@ void DistanceMatrix::read_distance_matrix(std::vector<exact>& values)
 
                     exact cur_dist = str_to_exact(str);
 
-                    // if (max_dist == -1 || cur_dist <= max_dist) //then this distance is allowed
-                    // {
-                        //store distance value, if it doesn't exist already
+                    //store distance value, if it doesn't exist already
                     ret = dist_set.insert(ExactValue(cur_dist));
 
                     //remember that the pair of points (i,j) has this distance value, which will go in entry j(j-1)/2 + i + 1
@@ -365,7 +364,6 @@ void DistanceMatrix::read_distance_matrix(std::vector<exact>& values)
                         degree[i]++;
                         degree[j]++;
                     }
-                    // }
                 }
             } catch (std::exception& e) {
                 throw InputError(line_info.second, e.what());

@@ -58,13 +58,13 @@ struct InputParameters {
     std::string md_string; //holds max distance in string format
     unsigned dimension; //dimension of the space where the points lie
     bool old_function; //specifies if the data has a function value like the old format
-    bool new_function; //specifies if the data has a --function flag followed by values
+    bool new_function; //specifies if the data has function values in the new format
     bool x_reverse, y_reverse; //specifies if the axes need to be reversed or not
     std::string type; //type of file being worked with
     std::string bifil; //type of bifiltration to build
     int to_skip; //number of lines after which the actual data begins
-    std::string function_type; //type of filtration to perform on data without function
-    double filter_param; //parameter value for performing the filtration
+    std::string function_type; //type of function values to calculate
+    double filter_param; //parameter value for calculating function values
 
     InputParameters()
     {
