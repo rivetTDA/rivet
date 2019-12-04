@@ -155,7 +155,7 @@
     <property name="geometry">
      <rect>
       <x>160</x>
-      <y>66</y>
+      <y>67</y>
       <width>48</width>
       <height>27</height>
      </rect>
@@ -342,7 +342,7 @@
     <property name="geometry">
      <rect>
       <x>220</x>
-      <y>35</y>
+      <y>36</y>
       <width>71</width>
       <height>17</height>
      </rect>
@@ -357,8 +357,8 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>290</x>
-      <y>30</y>
+      <x>294</x>
+      <y>33</y>
       <width>91</width>
       <height>25</height>
      </rect>
@@ -377,8 +377,8 @@
    <widget class="QLineEdit" name="maxDistBox">
     <property name="geometry">
      <rect>
-      <x>360</x>
-      <y>67</y>
+      <x>366</x>
+      <y>68</y>
       <width>81</width>
       <height>25</height>
      </rect>
@@ -390,7 +390,7 @@
    <widget class="QPushButton" name="maxDistHelp">
     <property name="geometry">
      <rect>
-      <x>470</x>
+      <x>455</x>
       <y>70</y>
       <width>31</width>
       <height>21</height>
@@ -418,7 +418,7 @@
     <property name="geometry">
      <rect>
       <x>390</x>
-      <y>30</y>
+      <y>33</y>
       <width>121</width>
       <height>25</height>
      </rect>
@@ -452,8 +452,8 @@
    <widget class="QDoubleSpinBox" name="parameterSpinBox">
     <property name="geometry">
      <rect>
-      <x>520</x>
-      <y>30</y>
+      <x>516</x>
+      <y>33</y>
       <width>51</width>
       <height>26</height>
      </rect>
