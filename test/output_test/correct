@@ -1,0 +1,473 @@
+Test 0 (old points)
+----------------
+
+STAGE
+PROGRESS 30
+STAGE
+PROGRESS 40
+PROGRESS 55
+PROGRESS 32
+PROGRESS 33
+PROGRESS 34
+ARRANGEMENT: ./rivet-test
+XI: ./rivet-test.rivet-tmp
+
+
+Test 1 (new points)
+----------------
+
+STAGE
+PROGRESS 30
+STAGE
+PROGRESS 40
+PROGRESS 55
+PROGRESS 226
+PROGRESS 227
+PROGRESS 228
+ARRANGEMENT: ./rivet-test
+XI: ./rivet-test.rivet-tmp
+
+
+Test 2 (--bifil abcd)
+----------------
+
+
+
+Test 3 (--bifil degree)
+----------------
+
+STAGE
+PROGRESS 30
+STAGE
+PROGRESS 40
+PROGRESS 55
+PROGRESS 17
+PROGRESS 18
+PROGRESS 19
+ARRANGEMENT: ./rivet-test
+XI: ./rivet-test.rivet-tmp
+
+
+Test 4 (--bifil function)
+----------------
+
+
+
+Test 5 (--maxdist 3.5)
+----------------
+
+STAGE
+PROGRESS 30
+STAGE
+PROGRESS 40
+PROGRESS 55
+PROGRESS 271
+PROGRESS 272
+PROGRESS 273
+ARRANGEMENT: ./rivet-test
+XI: ./rivet-test.rivet-tmp
+
+
+Test 6 (--maxdist -5)
+----------------
+
+
+
+Test 7 (--maxdist a)
+----------------
+
+
+
+Test 8 (--maxdist)
+----------------
+
+
+RIVET: Rank Invariant Visualization and Exploration Tool
+
+     The RIVET console application computes an augmented arrangement for
+     2D persistent homology, which can be visualized with the RIVET GUI app.
+      --barcodes <line_file>                   Print barcodes for the line queries in line_file, then exit.
+                                               
+
+                                               
+
+
+
+Test 9 (points without function)
+----------------
+
+STAGE
+PROGRESS 30
+STAGE
+PROGRESS 40
+PROGRESS 55
+PROGRESS 75
+STAGE
+STEPS_IN_STAGE 0
+ARRANGEMENT: ./rivet-test
+XI: ./rivet-test.rivet-tmp
+
+
+Test 10 (--yreverse)
+----------------
+
+STAGE
+PROGRESS 30
+STAGE
+PROGRESS 40
+PROGRESS 55
+PROGRESS 226
+PROGRESS 227
+PROGRESS 228
+ARRANGEMENT: ./rivet-test
+XI: ./rivet-test.rivet-tmp
+
+
+Test 11 (--xreverse)
+----------------
+
+STAGE
+PROGRESS 30
+STAGE
+PROGRESS 40
+PROGRESS 55
+PROGRESS 102
+PROGRESS 103
+PROGRESS 104
+ARRANGEMENT: ./rivet-test
+XI: ./rivet-test.rivet-tmp
+
+
+Test 12 (--datatype points)
+----------------
+
+STAGE
+PROGRESS 30
+STAGE
+PROGRESS 40
+PROGRESS 55
+PROGRESS 226
+PROGRESS 227
+PROGRESS 228
+ARRANGEMENT: ./rivet-test
+XI: ./rivet-test.rivet-tmp
+
+
+Test 13 (--datatype abcd)
+----------------
+
+
+
+Test 14 (--datatype 1234)
+----------------
+
+
+
+Test 15 (points)
+----------------
+
+READING FILE: ./test_data/test-points2.txt 
+  Finished reading 7 points. Input finished. 
+  Building lists of grade values. 
+STAGE
+  Finished reading data. 
+
+Computation complete; augmented arrangement ready. 
+The arrangement contains:  0  anchors,  4  vertices,  8  halfedges, and  1  faces 
+Writing file: ./rivet-test 
+CONSOLE RIVET: Goodbye! 
+
+
+Test 16 (--xbins 5 --ybins 5 -H 1)
+----------------
+
+STAGE
+PROGRESS 30
+STAGE
+PROGRESS 40
+PROGRESS 55
+PROGRESS 75
+STAGE
+STEPS_IN_STAGE 0
+ARRANGEMENT: ./rivet-test
+XI: ./rivet-test.rivet-tmp
+
+
+Test 17 (-H -2)
+----------------
+
+
+
+Test 18 (old metric)
+----------------
+
+STAGE
+PROGRESS 30
+STAGE
+PROGRESS 40
+PROGRESS 55
+PROGRESS 32
+PROGRESS 33
+PROGRESS 34
+ARRANGEMENT: ./rivet-test
+XI: ./rivet-test.rivet-tmp
+
+
+Test 19 (new metric)
+----------------
+
+STAGE
+PROGRESS 30
+STAGE
+PROGRESS 40
+PROGRESS 55
+PROGRESS 32
+PROGRESS 33
+PROGRESS 34
+ARRANGEMENT: ./rivet-test
+XI: ./rivet-test.rivet-tmp
+
+
+Test 20 (metric without function)
+----------------
+
+STAGE
+PROGRESS 30
+STAGE
+PROGRESS 40
+PROGRESS 55
+PROGRESS 23
+PROGRESS 24
+PROGRESS 25
+ARRANGEMENT: ./rivet-test
+XI: ./rivet-test.rivet-tmp
+
+
+Test 21 (old bifiltration)
+----------------
+
+STAGE
+STAGE
+PROGRESS 40
+PROGRESS 55
+PROGRESS 70
+STAGE
+STEPS_IN_STAGE 1
+PROGRESS 0
+ARRANGEMENT: ./rivet-test
+XI: ./rivet-test.rivet-tmp
+
+
+Test 22 (new bifiltration)
+----------------
+
+STAGE
+STAGE
+PROGRESS 40
+PROGRESS 55
+PROGRESS 70
+STAGE
+STEPS_IN_STAGE 1
+PROGRESS 0
+ARRANGEMENT: ./rivet-test
+XI: ./rivet-test.rivet-tmp
+
+
+Test 23 (old firep)
+----------------
+
+STAGE
+STAGE
+PROGRESS 40
+PROGRESS 55
+PROGRESS 70
+PROGRESS 0
+PROGRESS 1
+PROGRESS 2
+ARRANGEMENT: ./rivet-test
+XI: ./rivet-test.rivet-tmp
+
+
+Test 24 (new firep)
+----------------
+
+STAGE
+STAGE
+PROGRESS 40
+PROGRESS 55
+PROGRESS 70
+PROGRESS 0
+PROGRESS 1
+PROGRESS 2
+ARRANGEMENT: ./rivet-test
+XI: ./rivet-test.rivet-tmp
+
+
+Test 25 (--function abcd)
+----------------
+
+
+
+Test 26 (--function user)
+----------------
+
+STAGE
+PROGRESS 30
+STAGE
+PROGRESS 40
+PROGRESS 55
+PROGRESS 75
+STAGE
+STEPS_IN_STAGE 0
+ARRANGEMENT: ./rivet-test
+XI: ./rivet-test.rivet-tmp
+
+
+Test 27 (--function balldensity[])
+----------------
+
+STAGE
+PROGRESS 30
+STAGE
+PROGRESS 40
+PROGRESS 55
+PROGRESS 75
+STAGE
+STEPS_IN_STAGE 0
+ARRANGEMENT: ./rivet-test
+XI: ./rivet-test.rivet-tmp
+
+
+Test 28 (--function balldensity)
+----------------
+
+
+
+Test 29 (--function balldensity[1])
+----------------
+
+STAGE
+PROGRESS 30
+STAGE
+PROGRESS 40
+PROGRESS 55
+PROGRESS 1
+PROGRESS 2
+PROGRESS 3
+ARRANGEMENT: ./rivet-test
+XI: ./rivet-test.rivet-tmp
+
+
+Test 30 (--bifil function --function balldensity[1])
+----------------
+
+STAGE
+PROGRESS 30
+STAGE
+PROGRESS 40
+PROGRESS 55
+PROGRESS 1
+PROGRESS 2
+PROGRESS 3
+ARRANGEMENT: ./rivet-test
+XI: ./rivet-test.rivet-tmp
+
+
+Test 31 (--function knndensity[])
+----------------
+
+STAGE
+PROGRESS 30
+STAGE
+PROGRESS 40
+PROGRESS 55
+PROGRESS 75
+STAGE
+STEPS_IN_STAGE 0
+ARRANGEMENT: ./rivet-test
+XI: ./rivet-test.rivet-tmp
+
+
+Test 32 (--function knndensity)
+----------------
+
+
+
+Test 33 (--function knndensity[2])
+----------------
+
+STAGE
+PROGRESS 30
+STAGE
+PROGRESS 40
+PROGRESS 55
+PROGRESS 41
+PROGRESS 42
+PROGRESS 43
+ARRANGEMENT: ./rivet-test
+XI: ./rivet-test.rivet-tmp
+
+
+Test 34 (--bifil function --function knndensity[2])
+----------------
+
+STAGE
+PROGRESS 30
+STAGE
+PROGRESS 40
+PROGRESS 55
+PROGRESS 41
+PROGRESS 42
+PROGRESS 43
+ARRANGEMENT: ./rivet-test
+XI: ./rivet-test.rivet-tmp
+
+
+Test 35 (--function eccentricity[])
+----------------
+
+STAGE
+PROGRESS 30
+STAGE
+PROGRESS 40
+PROGRESS 55
+PROGRESS 75
+STAGE
+STEPS_IN_STAGE 0
+ARRANGEMENT: ./rivet-test
+XI: ./rivet-test.rivet-tmp
+
+
+Test 36 (--function eccentricity)
+----------------
+
+
+
+Test 37 (--function eccentricity[2])
+----------------
+
+STAGE
+PROGRESS 30
+STAGE
+PROGRESS 40
+PROGRESS 55
+PROGRESS 87
+PROGRESS 88
+PROGRESS 89
+ARRANGEMENT: ./rivet-test
+XI: ./rivet-test.rivet-tmp
+
+
+Test 38 (--bifil function --function eccentricity[2])
+----------------
+
+STAGE
+PROGRESS 30
+STAGE
+PROGRESS 40
+PROGRESS 55
+PROGRESS 87
+PROGRESS 88
+PROGRESS 89
+ARRANGEMENT: ./rivet-test
+XI: ./rivet-test.rivet-tmp
