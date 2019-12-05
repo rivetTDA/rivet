@@ -112,8 +112,9 @@ void DataSelectDialog::showEvent(QShowEvent* event)
     ui->filterComboBox->setCurrentIndex(0);
     ui->maxDistBox->setPalette(this->style()->standardPalette());
     ui->maxDistBox->setToolTip("");
+    ui->functionComboBox->setEditable(true);
+    ui->functionComboBox->setCurrentText("none");
     ui->functionComboBox->setEnabled(true);
-    ui->functionComboBox->setCurrentIndex(0);
     ui->parameterSpinBox->setEnabled(true);
     ui->parameterSpinBox->setValue(0.00);
     ui->parameterSpinBox->setSpecialValueText("");
@@ -217,8 +218,9 @@ void DataSelectDialog::detect_file_type()
     ui->maxDistBox->setPalette(this->style()->standardPalette());
     ui->maxDistBox->setToolTip("");
 
+    ui->functionComboBox->setEditable(true);
+    ui->functionComboBox->setCurrentText("none");
     ui->functionComboBox->setEnabled(true);
-    ui->functionComboBox->setCurrentIndex(0);
     ui->parameterSpinBox->setEnabled(true);
     ui->parameterSpinBox->setValue(0.00);
     ui->parameterSpinBox->setSpecialValueText("");
@@ -240,6 +242,9 @@ void DataSelectDialog::detect_file_type()
     params.max_dist = -1;
     params.md_string = "inf";
     params.hom_degree = 0;
+
+    params.function_type = "none";
+    params.filter_param = 0;
 
     std::ifstream infile(params.fileName);
 
@@ -370,8 +375,9 @@ void DataSelectDialog::detect_file_type()
     if (params.bifil == "degree") {
         ui->xAxisLabel->setText("degree");
         ui->xAxisLabel->setEnabled(false);
+        ui->functionComboBox->setEditable(true);
+        ui->functionComboBox->setCurrentText("none");
         ui->functionComboBox->setEnabled(false);
-        ui->functionComboBox->setCurrentIndex(0);
         ui->parameterSpinBox->setEnabled(false);
         ui->parameterSpinBox->setSpecialValueText("N/A");
         ui->parameterSpinBox->setValue(0.00);
@@ -380,10 +386,18 @@ void DataSelectDialog::detect_file_type()
         ui->xAxisLabel->setText(QString::fromStdString(params.x_label));
         ui->xAxisLabel->setEnabled(true);
         ui->functionComboBox->setEnabled(true);
-        ui->functionComboBox->setCurrentIndex(1);
-        ui->parameterSpinBox->setEnabled(true);
-        ui->parameterSpinBox->setSpecialValueText("");
-        ui->parameterSpinBox->setValue(0.00);
+        ui->functionComboBox->setEditable(false);
+        ui->functionComboBox->setCurrentText(QString::fromStdString(params.function_type));
+        if (params.function_type == "user") {
+            ui->parameterSpinBox->setEnabled(false);
+            ui->parameterSpinBox->setSpecialValueText("N/A");
+            ui->parameterSpinBox->setValue(0.00);
+        }
+        else {
+            ui->parameterSpinBox->setEnabled(true);
+            ui->parameterSpinBox->setSpecialValueText("");
+            ui->parameterSpinBox->setValue(params.filter_param);
+        }
     }
 
     ui->computeButton->setEnabled(true);
@@ -412,8 +426,9 @@ void DataSelectDialog::on_filterComboBox_currentIndexChanged(int index)
     if (index == 0) {
         ui->xAxisLabel->setText("degree");
         ui->xAxisLabel->setEnabled(false);
+        ui->functionComboBox->setEditable(true);
+        ui->functionComboBox->setCurrentText("none");
         ui->functionComboBox->setEnabled(false);
-        ui->functionComboBox->setCurrentIndex(0);
         ui->parameterSpinBox->setEnabled(false);
         ui->parameterSpinBox->setSpecialValueText("N/A");
         ui->parameterSpinBox->setValue(0.00);
@@ -422,9 +437,31 @@ void DataSelectDialog::on_filterComboBox_currentIndexChanged(int index)
         ui->xAxisLabel->setText(QString::fromStdString(params.x_label));
         ui->xAxisLabel->setEnabled(true);
         ui->functionComboBox->setEnabled(true);
-        ui->functionComboBox->setCurrentIndex(1);
+        ui->functionComboBox->setEditable(false);
+        ui->functionComboBox->setCurrentText(QString::fromStdString(params.function_type));
+        if (params.function_type == "user") {
+            ui->parameterSpinBox->setEnabled(false);
+            ui->parameterSpinBox->setSpecialValueText("N/A");
+            ui->parameterSpinBox->setValue(0.00);
+        }
+        else {
+            ui->parameterSpinBox->setEnabled(true);
+            ui->parameterSpinBox->setSpecialValueText("");
+            ui->parameterSpinBox->setValue(params.filter_param);
+        }
+    }
+}
+
+void DataSelectDialog::on_functionComboBox_currentIndexChanged(int index)
+{
+    if (index == 0) {
+        ui->parameterSpinBox->setEnabled(false);
+        ui->parameterSpinBox->setSpecialValueText("N/A");
+        ui->parameterSpinBox->setValue(0.00);
+    }
+    else {
         ui->parameterSpinBox->setEnabled(true);
         ui->parameterSpinBox->setSpecialValueText("");
-        ui->parameterSpinBox->setValue(0.00);
+        ui->parameterSpinBox->setValue(params.filter_param);
     }
 }

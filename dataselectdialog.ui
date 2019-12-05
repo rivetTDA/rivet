@@ -425,11 +425,6 @@
     </property>
     <item>
      <property name="text">
-      <string>none</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
       <string>user</string>
      </property>
     </item>

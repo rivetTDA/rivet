@@ -240,9 +240,9 @@ void InputManager::parse_args()
                 int b = -1;
                 // determine argument before the first '['
                 // the parameter is supplied in '[]' after specifying the function type
-                for (int i = 0; i < str.length(); i++) {
-                    if (line[1][i] != '[') {
-                        f += std::to_string(str[i]);
+                for (unsigned i = 0; i < str.length(); i++) {
+                    if (str[i] != '[' && str[i] != ' ') {
+                        f += str[i];
                     } else {
                         b = i;
                         break;
@@ -258,8 +258,8 @@ void InputManager::parse_args()
                 f = "";
                 // parse parameter value
                 if (input_params.function_type != "user") {
-                    for (int i = b + 1; i < str.length(); i++) {
-                        if (str[i] != ']') {
+                    for (unsigned i = b + 1; i < str.length(); i++) {
+                        if (str[i] != ']' && str[i] != ' ') {
                             f += str[i];
                         } else
                             break;
@@ -365,7 +365,7 @@ void InputManager::parse_points_old()
     //skip first line
     reader.next_line();
 
-    auto line_info = reader.next_line();
+    auto line_info = reader.next_line(); 
     try {
         //read dimension of the points from the first line of the file
         std::vector<std::string> dimension_line = line_info.first;

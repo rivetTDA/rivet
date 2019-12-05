@@ -431,7 +431,7 @@ int main(int argc, char* argv[])
         std::string str = args["--function"].asString();
         std::string f = "";
         int b = -1;
-        for (int i = 0; i < str.length(); i++) {
+        for (unsigned i = 0; i < str.length(); i++) {
             if (str[i] != '[' && str[i] != ' ') {
                 f += str[i];
             }
@@ -447,8 +447,8 @@ int main(int argc, char* argv[])
         params.function_type = f;
         f = "";
         if (params.function_type != "user") {
-            for (int i = b+1; i < str.length(); i++) {
-                if (str[i] != ']') {
+            for (unsigned i = b+1; i < str.length(); i++) {
+                if (str[i] != ']' && str[i] != ' ') {
                     f += str[i];
                 }
                 else
@@ -498,7 +498,7 @@ int main(int argc, char* argv[])
     bool binary = params.binary;
     bool minpres_only = params.minpres;
     bool betti_only = params.betti;
-    bool bounds = params.bounds;
+    bool bounds = params.bounds; 
     bool koszul = params.koszul;
 
     std::atexit(clean_temp_files);
