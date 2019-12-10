@@ -218,7 +218,7 @@ else:
 	sys.exit(1)
 
 # new file name = new_<old file name>
-if !output_file:
+if output_file == "":
 	output_file = "new_" + file_name
 
 new_file = open(output_file, 'w')
