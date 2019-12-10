@@ -1,0 +1,13 @@
+--datatype metric_fn
+--xlabel function values
+
+--ylabel distance
+--maxdist 3
+
+# function values
+0 1 0.5 1 0.7
+
+0.2 2.5 3.4 0.5 
+0.4 2 2.8 
+0.6 4 
+1

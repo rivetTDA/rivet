@@ -60,7 +60,7 @@ def points(old_file):
 			new_file_content.append("--xlabel " + function + "\n")
 
 		# change --datatype since function values are there
-		new_file_content[type_index] = "--datatype points_fn"
+		new_file_content[type_index] = "--datatype points_fn\n"
 
 		values = ""
 
@@ -107,7 +107,7 @@ def metric(old_file):
 			new_file_content.append("--xlabel " + function + "\n")
 
 		# change --datatype since function values are there
-		new_file_content[type_index] = "--datatype metric_fn"
+		new_file_content[type_index] = "--datatype metric_fn\n"
 
 		values = next(old_file)
 
@@ -176,17 +176,27 @@ def firep(old_file):
 			sys.exit(1)
 		new_file_content.append(data_line)
 
+def help():
+	print("Usage: python3 convert.py <input_file> [output_file]")
+	print("\nConverts the data file input_file with old formatting to the new input format.")
+	print("If output_file is not specified, the newly created file is named new_input_file.")
+	print("The new file is created in the directory where the script is run from.")
+	sys.exit(0)
+
 # main
 
 # usage: python3 convert.py input_file
-# usage: python3 convert.py input_file output_path
+# usage: python3 convert.py input_file output_file
+
+if len(sys.argv) == 1:
+	help()
 
 file_path = sys.argv[1]
 if len(sys.argv) > 2:
-	output_path = sys.argv[2]
-# if output_path is not specified, use current directory
+	output_file = sys.argv[2]
+# if output_file is not specified, use current directory
 else:
-	output_path = ""
+	output_file = ""
 
 file_name = file_path.split("/")[-1]
 
@@ -205,9 +215,12 @@ elif file_type == "firep":
 	firep(lines)
 else:
 	print(file_name + ": Unrecognized file.")
-	sys.exit(0)
+	sys.exit(1)
 
-# new file name = (N)<old file name>
-new_file = open(output_path + "(N)" + file_name, 'w')
+# new file name = new_<old file name>
+if !output_file:
+	output_file = "new_" + file_name
+
+new_file = open(output_file, 'w')
 new_file.writelines("%s" % line for line in new_file_content)
 new_file.close()
