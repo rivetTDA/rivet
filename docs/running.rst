@@ -3,37 +3,91 @@
 Running RIVET
 =============
 
-The RIVET software consists of two separate but closely related executables: **rivet_console**, a command-line program, and **rivet_GUI**, a GUI application.  **rivet_console** is the computational engine of RIVET; it implements the computation pipeline described in the previous section.  **rivet_GUI** is responsible for RIVET’s visualizations.  
+The RIVET software consists of two separate but closely related executables: **rivet_console**, a command-line program, and **rivet_GUI**, a GUI application.  **rivet_console** is the computational engine of RIVET; it implements the computation pipeline described in the previous section.   
+
+**rivet_GUI** is responsible for RIVET’s visualizations,  **rivet_GUI** also provides a convenient graphical front-end to  functionality of **rivet_console** needed for RIVET's visualizations.  Thanks to this, RIVET's visualizations can be carried out entirely from within **rivet_GUI**.  
+
+For new users looking to acquaint themselves with RIVET, we recommend starting by using **rivet_GUI** to explore RIVET's visualization capabilities.  In the following section, we provide a "quick start" guide to running RIVET via **rivet_GUI**.  Later sections of the documentation provide more detail on how to use **rivet_console** and **rivet_GUI**.  Users who wish to use RIVET for purposes other than visualization (e.g. machine learning or statistics applications) will want to familiarize themselves with the command-line syntax of **rivet_console**, but we recommend the quick start guide for all users.
+
 
 **rivet_console**
 --------------------------
 
 **rivet_console** has three main functions: 
 
-* Given an *input data file* in one of the formats described in the :ref:`inputData` section of this documentation, **rivet_console** can compute a file called the *module invariants (MI) file*.  The MI file stores the Hilbert function, bigraded Betti numbers, and augmented arrangment of a persistent homology module of the input data.  The MI file is used by the RIVET visualization, and also for the following:
+* Given an *input data file* in one of the formats described in the :ref:`inputData` section of this documentation, **rivet_console** can compute a file called the *module invariants (MI) file*.  The MI file stores the Hilbert function, bigraded Betti numbers, and augmented arrangement of a persistent homology module of the input data.  The MI file is used by the RIVET visualization, and also for the following:
 
-* Given an MI file of a bipersistence module :math:`M` and a second file, the *line file*, specifying a list of lines, **rivet_console** prints the barcodes of the 1-D slices of each line to the console.  The computations are performed using fast queries of the augmented arrangment of :math:`M`.
+* Given an MI file of a bipersistence module :math:`M` and a second file, the *line file*, specifying a list of lines, **rivet_console** prints the barcodes of the 1-D slices of each line to the console.  The computations are performed using fast queries of the augmented arrangement of :math:`M`.
 
-* Given a *raw data* file as input, **rivet_console** can print The Hilbert function and Bigraded Betti numbers of a persistent homology module of the input data.  It can also print a minimal presentation of the module.
+* Given an *input data file* file as input, **rivet_console** can print a minimal presentation of a persistent homology module of the input data.  It can also print the Hilbert function and Bigraded Betti numbers.
 
-In what follows we explain in more detail how to use **rivet_console**.  The syntax for running  **rivet_console** is also described in the executable's help information, which can be accessed via the command::
+.. **rivet_GUI** provides an intuitive graphical front-end for computing MI files from an input data file, described at the bottom of this page.    
+
+In version 1.1 of RIVET (to be released in fall 2019), the syntax for running **rivet_console** and the format requirements for input files have been redesigned to be more flexible and user-friendly.  **rivet_GUI**'s interface for computing MI files has also been updated accordingly.  However,  **rivet_console** is backwards-compatible with older input files.
+
+In what follows, we explain in more detail how to use **rivet_console** directly from the command line.  The syntax for running  **rivet_console** is also described in the executable's help information, which can be accessed via the command::
 
 	rivet_console (-h | --help)
 	
 The help file also describes some additional technical functionality of  **rivet_console** that we will not discuss here. 
 
-Computation of a Module Invariants File
+Computing a Module Invariants File
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Here the basic syntax for computing a module invariants file::
 
-	 rivet_console <input> <output> [-H <dimension>] [-x <xbins>] [-y <ybins>]
+	 rivet_console <input> <output> [options]
 
 * <input> is an input data file;
 * <output> is the name of the module invariants file to be computed.
-* [-H <dimension>] is the dimension of homology to compute [default: 0, ignored if the input file is of firep type]
-* [-x <xbins>] and [-y <ybins>] specifies the dimension of a grid used for coarsening.  The grid spacing is taken to be uniform in each dimension.  A value of 0 means no coarsening is done at all in that coordinate direction.  This is the default.  However, to control the size of the augmented arrangment, most computations of a MIF should use some coarsening of the module.
+* [options] are command-line flags control the computation, as specified below.
 
-Other (technical) command line options for computation of a MI file are given in the **rivet_console** help.
+For example, a typical call to rivet_console to compute an MI file *MI_output.rivet* from an input file *my_data.txt* might look as follows::
+
+	 rivet_console input.txt output.rivet --datatype metric --homology 1 --xbins 100 --ybins 100
+
+* :code:`--datatype metric` tells RIVET that input_data.txt contains a distance matrix (specifying a finite metric space).
+* :code:`--homology 1` tells RIVET to consider persistent homology in degree 1.
+* :code:`--xbins 100` and :code:`--ybins 100` tell RIVET to compute a coarsened version of the homology module such that the support of the 0th and 1st Betti numbers lies on a 100x100 grid in :math:`\mathbb R^2`.  (This is done to make the computation faster and limit the size of the resulting MI file.)  
+
+When called in this way, **rivet_console** constructs the degree-Rips bifiltration of this metric space.
+
+.. _flags:
+
+Command-Line Flags for Use with Input Data Files
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+We now explain in detail **rivet_console**'s use of command-line flags to control computations taking an *input data file* as input.  
+
+
+Some or all of the command-line flags can be placed in the input data file itself, rather than given on the command line.  If the same flag is given in both the input data file and the command line, then rivet_console ignores the copy of the flag in the input file and uses the flag given on the command line.  
+
+Whether on the command line or in an input file, flags can appear in any order.
+
+The most important flags are the following:
+
+* :code:`--datatype <type>` specifies the type of data contained in the input file. The default is :code:`points`.  For details, see :ref:`inputData`.
+
+* :code:`--bifil <type>` specifies the type of bifiltration to be built.  Specifying a bifiltration type only makes sense for certain input data types, and hence this flag can only be used for data.  In cases where the flag can be used, the available bifiltration types are :code:`function-Rips` and :code:`degree-Rips`.  The default depends on the choice of input data type.  For details, see the :ref:`inputData` section of this documentation.  For details, see :ref:`inputData`.
+
+* :code:`-x <xbins>` and :code:`-y <ybins>` specify the dimensions of the grid used for coarsening. The grid spacing is taken to be uniform in each dimension. (For details on grids and coarsening, see :ref:`coarsening`.) If unspecified, each flag takes a default value of 0, which means that no coarsening is done at all in that coordinate direction. However, to control the size of the augmented arrangement, most computations of a MI file should use some coarsening of the module. These flags can also be specified in the longer forms :code:`--xbins <xbins>`. and :code:`--ybins <ybins>`.
+
+* :code:`-H <hom_degree>` or :code:`--homology <hon_degree>` specifies degree of homology to compute. If unspecified, the default value is zero.  (RIVET handles only one homology degree at a time.)
+
+
+The following flags are also available, and are useful in many cases:
+
+* :code:`--maxdist <distance>` specifies the maximum distance to be considered when building a vietoris-Rips bifiltration. Any edges whose length is greater than this distance will not be included in the complex.  If unspecified, this flag takes the default value of infinity.   Choosing a small value for <distance> reduces the amount of memory required for the computation, relative to the default.
+
+* When computing an MI file, :code:`--xlabel <label>` and :code:`--ylabel <label>` respectively specify labels for the :math:`x`-axis and :math:`y`-axis in the **rivet_GUI** visualization window.  The labels are stored as metadata in the MI file.  If either of these flags are not given, RIVET provides default labels, which depend on the input data type and (where applicable), the type of bifiltration being constructed.  For example, when constructing a degree-Rips filtration, the default labels for the :math:`x`-axis and :math:`y`-axis are **degree** and **distance**, respectively.
+
+* :code:`--xreverse` and :code:`--yreverse` reverse the direction of the :math:`x`-axis and :math:`y`-axis, respectively.  Reversing an axis direction only makes sense for certain bifiltration constructions, and hence these flags can only be used in certain circumstances.  For example, for a function-Rips filtration, the :math:`x`-axis indexes the function threshold parameter in RIVET's visualization, while the `y`-axis indexes the scale parameter.  In general, it makes equal sense to construct a function-Rips bilftration with respect to increasing or decreasing function values; the flag :code:`--xreverse` tells RIVET to use decreasing values.  But we don't have a good way of building a function-Rips bifiltration using a decreasing scale parameter, so :code:`--yreverse` is not available for the construction of a function-Rips bifiltration;  including this flag has no effect.  See :ref:`inputData` for the specifics of when and how `--xreverse` and `--yreverse` can be used.
+
+
+The following additional flags concern the internals of RIVET's computations, and can be disregarded by most users:
+
+* :code:`--num_threads <num_threads>` This flag specifies the maximum number of threads to use for parallel computation. The default value is 0, which lets OpenMP decide how many threads to use.
+* :code:`-V <verbosity>` or :code:`--verbosity <verbosity>` This flag controls the amount of text that rivet_console prints to the terminal window. The verbosity may be specified as an integer between 0 and 10: greater values produce more output. A value of 0 results in minimal output, a value of 10 produces extensive output.
+* :code:`-k` or :code:`--koszul` This flag causes RIVET to use a koszul homology-based algorithm to compute the Betti numbers, instead of the default approach based on computing a minimal presentation.
+
 
 Computing Barcodes of 1-D Slices
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -76,12 +130,12 @@ For example, in the sample output above, ``88.1838 inf x1`` indicates a single i
 
 Printing a Minimal Presentation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The basic syntax for computing a minimal presentation of a bipersistence module is the following::
+The basic syntax for computing and printing minimal presentation of a bipersistence module is the following::
 
-	rivet_console <input_file> --minpres [-H <dimension>] [-x <xbins>] [-y <ybins>]
+	rivet_console <input_file> --minpres [command-line flags]
 
 * <input> is an input data file;
-* The options for choosing homology dimensions and coarsening parameters behave exactly as for the computation of the MI file.
+* [command-line flags] work as specified in :ref:`flags`.
 
 The following example shows the output format for the minimal presentation::
 
@@ -120,12 +174,12 @@ Printing Hilbert Function and Bigraded Betti Numbers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Here is the basic syntax for computing both the Hilbert function and bigraded Betti numbers of a bipersistence module::
 
-	rivet_console <input_file> --betti [-H <dimension>] [-x <xbins>] [-y <ybins>]
+	rivet_console <input_file> --betti [command-line flags]
 
 As above,
 
 * <input> is an input data file;
-* The options for choosing homology dimensions and coarsening parameters behave exactly as for the computation of the MI File.
+* [command-line flags] work as specified in :ref:`flags`.
 
 **NOTE**: Currently, one cannot print the Hilbert function and bigraded Betti numbers of a module separately.  Nor can one print the minimal presentation, Betti numbers, and Hilbert Function together.  This will change soon.
 
@@ -177,7 +231,7 @@ The remaining lines specify the points where the Betti numbers are non-zero, alo
 The visualizations performed by **rivet_GUI** require an MI file as input.  This can be computed by an explicit call to **rivet_console** and then opened in **rivet_GUI**.  Alternatively, **rivet_GUI** can call **rivet_console** directly to compute the MI file.
 
 When the user runs **rivet_GUI**, a window opens which allows the user to select a file.
-This file can be either an input data file in one of the input formats described in the :ref:`inputData` section of this documentation, or a MI file.
+This file can be either an input data file in one of the input formats described in :ref:`inputData`, or a MI file.
 
 .. image:: images/File_Input_Dialog.png
    :width: 300px
@@ -185,9 +239,9 @@ This file can be either an input data file in one of the input formats described
    :alt: The file input dialogue of **rivet_gui** 
    :align: center
 
-If an input data file is selected, then (unless the file is of type firep) the user must choose the homology degree: RIVET currently handles one homology degree at a time.  The x-bins and y-bins parameters for the call to **rivet_console** must also be seleced.  After the user clicks the compute button, the MI file is computed via a call to **rivet_console** and the visualization is started.  (Note that once the Hilbert Function and Betti numbers are shown in the visualization, it may take a significant amount of additional time to prepare the interactive visualization of the barcodes of 1-D slices.)
-Using the file menu in the GUI, the user may save an MI file.
+If an input data file is chosen, the GUI allows the user to graphically select options for  computation of a MI file.  Any option that can be selected via a command line flag as described above can also be selected in the GUI.  After the user clicks the compute button, the MI file is computed via a call to **rivet_console** and the visualization is started.  (Note that once the Hilbert Function and Betti numbers are shown in the visualization, it may take a significant amount of additional time to prepare the interactive visualization of the barcodes of 1-D slices.)
+Using the file menu in the GUI, the user may save the MI file; the file is not saved automatically.
 
 If an MI file is selected in the file dialogue window, the data in the file is loaded immediately into the RIVET visualization, and the visualization begins. 
 
-The RIVET visualization itself is explained in the section ":ref:`visualization`".
+The RIVET visualization itself is explained in the section :ref:`visualization`.

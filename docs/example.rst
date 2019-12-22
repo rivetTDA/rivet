@@ -80,22 +80,7 @@ That is, selecting a vertical line with density value :math:`d` produces a barco
 This effectively reduces the analysis to one-parameter persistence, using a density threshold.
 The RIVET GUI allows the user to slide the vertical line left and right, thereby displaying the barcodes for different choices of the density threshold.
 
-.. image:: images/RIVET_screenshot_circle300v.png
-   :width: 600px
-   :height: 450px
-   :alt: RIVET visualization window
-   :align: center
-
-Computation from the Console
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Rather than using the RIVET GUI, one may use the RIVET console application to compute the augmented arrangement and even obtain barcodes.
-This is done using the command line, as described in :ref:`runningRIVET`.
-For example, the computation described above can be obtained from **rivet_console** using the following command, run from the root directory of the RIVET repository::
-
-	./rivet_GUI/data/Test_Point_Clouds/circle_300pts_density.txt circle_300_computed.mif -H 1 -X 40 -y 40
-
-This will produce a module invariants file ``circle_300_computed.mif``, which may then be loaded into the RIVET GUI or queried for barcodes on a collection of user-chosen lines.
+.. loaded into the RIVET GUI or queried for barcodes on a collection of user-chosen lines.
 Please see :ref:`runningRIVET` for more details.
 
 
