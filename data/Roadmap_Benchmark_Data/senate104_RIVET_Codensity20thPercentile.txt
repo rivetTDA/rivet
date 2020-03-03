@@ -1,4 +1,4 @@
---datatype metric
+--datatype metric_fn
 --xreverse
 --xlabel Density
 --ylabel Rips Scale
