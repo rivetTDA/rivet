@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>600</width>
-    <height>400</height>
+    <height>436</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -28,7 +28,7 @@
   <property name="maximumSize">
    <size>
     <width>600</width>
-    <height>400</height>
+    <height>500</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -44,7 +44,7 @@
    <property name="geometry">
     <rect>
      <x>200</x>
-     <y>350</y>
+     <y>385</y>
      <width>200</width>
      <height>40</height>
     </rect>
@@ -62,7 +62,7 @@
      <x>7</x>
      <y>135</y>
      <width>586</width>
-     <height>201</height>
+     <height>241</height>
     </rect>
    </property>
    <property name="frameShape">
@@ -74,8 +74,8 @@
    <widget class="QLabel" name="xLabel">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>130</y>
+      <x>20</x>
+      <y>176</y>
       <width>21</width>
       <height>17</height>
      </rect>
@@ -87,8 +87,8 @@
    <widget class="QLabel" name="yLabel">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>160</y>
+      <x>20</x>
+      <y>206</y>
       <width>21</width>
       <height>17</height>
      </rect>
@@ -100,8 +100,8 @@
    <widget class="QSpinBox" name="xbinSpinBox">
     <property name="geometry">
      <rect>
-      <x>40</x>
-      <y>124</y>
+      <x>50</x>
+      <y>170</y>
       <width>81</width>
       <height>27</height>
      </rect>
@@ -122,8 +122,8 @@
    <widget class="QSpinBox" name="ybinSpinBox">
     <property name="geometry">
      <rect>
-      <x>40</x>
-      <y>157</y>
+      <x>50</x>
+      <y>203</y>
       <width>81</width>
       <height>27</height>
      </rect>
@@ -154,9 +154,9 @@
    <widget class="QSpinBox" name="homDimSpinBox">
     <property name="geometry">
      <rect>
-      <x>160</x>
+      <x>157</x>
       <y>67</y>
-      <width>48</width>
+      <width>51</width>
       <height>27</height>
      </rect>
     </property>
@@ -164,7 +164,7 @@
      <number>99</number>
     </property>
    </widget>
-   <widget class="QLabel" name="parameterLabel">
+   <widget class="QLabel" name="parametersLabel">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -187,8 +187,8 @@
    <widget class="QLabel" name="xbinLabel_2">
     <property name="geometry">
      <rect>
-      <x>60</x>
-      <y>100</y>
+      <x>70</x>
+      <y>146</y>
       <width>44</width>
       <height>17</height>
      </rect>
@@ -201,7 +201,7 @@
     <property name="geometry">
      <rect>
       <x>266</x>
-      <y>100</y>
+      <y>146</y>
       <width>44</width>
       <height>17</height>
      </rect>
@@ -214,7 +214,7 @@
     <property name="geometry">
      <rect>
       <x>450</x>
-      <y>100</y>
+      <y>146</y>
       <width>61</width>
       <height>17</height>
      </rect>
@@ -227,7 +227,7 @@
     <property name="geometry">
      <rect>
       <x>470</x>
-      <y>127</y>
+      <y>173</y>
       <width>31</width>
       <height>23</height>
      </rect>
@@ -240,7 +240,7 @@
     <property name="geometry">
      <rect>
       <x>470</x>
-      <y>154</y>
+      <y>200</y>
       <width>31</width>
       <height>23</height>
      </rect>
@@ -253,7 +253,7 @@
     <property name="geometry">
      <rect>
       <x>210</x>
-      <y>125</y>
+      <y>171</y>
       <width>161</width>
       <height>25</height>
      </rect>
@@ -263,7 +263,7 @@
     <property name="geometry">
      <rect>
       <x>210</x>
-      <y>160</y>
+      <y>206</y>
       <width>161</width>
       <height>25</height>
      </rect>
@@ -272,14 +272,14 @@
    <widget class="QLabel" name="maxDistLabel">
     <property name="geometry">
      <rect>
-      <x>220</x>
-      <y>70</y>
-      <width>141</width>
+      <x>10</x>
+      <y>105</y>
+      <width>111</width>
       <height>17</height>
      </rect>
     </property>
     <property name="text">
-     <string>Maximum Distance:</string>
+     <string>Max Distance:</string>
     </property>
    </widget>
    <widget class="QLabel" name="typeLabel">
@@ -298,9 +298,9 @@
    <widget class="QComboBox" name="dataTypeComboBox">
     <property name="geometry">
      <rect>
-      <x>80</x>
+      <x>60</x>
       <y>33</y>
-      <width>131</width>
+      <width>151</width>
       <height>25</height>
      </rect>
     </property>
@@ -341,8 +341,8 @@
    <widget class="QLabel" name="filterLabel">
     <property name="geometry">
      <rect>
-      <x>220</x>
-      <y>36</y>
+      <x>300</x>
+      <y>35</y>
       <width>71</width>
       <height>17</height>
      </rect>
@@ -357,9 +357,9 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>294</x>
+      <x>380</x>
       <y>33</y>
-      <width>91</width>
+      <width>140</width>
       <height>25</height>
      </rect>
     </property>
@@ -377,9 +377,9 @@
    <widget class="QLineEdit" name="maxDistBox">
     <property name="geometry">
      <rect>
-      <x>366</x>
-      <y>68</y>
-      <width>81</width>
+      <x>120</x>
+      <y>102</y>
+      <width>61</width>
       <height>25</height>
      </rect>
     </property>
@@ -390,15 +390,15 @@
    <widget class="QPushButton" name="maxDistHelp">
     <property name="geometry">
      <rect>
-      <x>455</x>
-      <y>70</y>
-      <width>31</width>
-      <height>21</height>
+      <x>190</x>
+      <y>102</y>
+      <width>40</width>
+      <height>25</height>
      </rect>
     </property>
     <property name="font">
      <font>
-      <pointsize>20</pointsize>
+      <pointsize>16</pointsize>
      </font>
     </property>
     <property name="toolTipDuration">
@@ -417,9 +417,9 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>390</x>
-      <y>33</y>
-      <width>121</width>
+      <x>380</x>
+      <y>67</y>
+      <width>140</width>
       <height>25</height>
      </rect>
     </property>
@@ -447,11 +447,37 @@
    <widget class="QDoubleSpinBox" name="parameterSpinBox">
     <property name="geometry">
      <rect>
-      <x>516</x>
-      <y>33</y>
-      <width>51</width>
+      <x>420</x>
+      <y>102</y>
+      <width>100</width>
       <height>26</height>
      </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="functionLabel">
+    <property name="geometry">
+     <rect>
+      <x>300</x>
+      <y>70</y>
+      <width>71</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Function:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="parameterLabel">
+    <property name="geometry">
+     <rect>
+      <x>300</x>
+      <y>105</y>
+      <width>91</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Parameter:</string>
     </property>
    </widget>
   </widget>
