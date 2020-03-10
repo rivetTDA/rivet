@@ -57,7 +57,7 @@ DataSelectDialog::DataSelectDialog(InputParameters& params, QWidget* parent)
     }
     // infinity button
     ui->maxDistHelp->setText(QChar(0x221E));
-    ui->maxDistHelp->setStyleSheet("QPushButton { font : 20px; padding-top: -6px; qproperty-alignment: AlignTop;}");
+    ui->maxDistHelp->setStyleSheet("QPushButton { font : 20px; padding-top: -4px; qproperty-alignment: AlignTop;}");
 }
 
 DataSelectDialog::~DataSelectDialog()
