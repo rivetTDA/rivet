@@ -1,4 +1,4 @@
---datatype metric
+--datatype metric_fn
 --xlabel Codensity
 --ylabel Rips Scale
 --maxdist 0.72344

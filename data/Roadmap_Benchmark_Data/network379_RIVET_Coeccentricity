@@ -1,4 +1,4 @@
---datatype metric
+--datatype metric_fn
 --xlabel Coeccentricity
 --ylabel Rips Scale
 --maxdist 38.38700
