@@ -150,6 +150,9 @@
     <property name="text">
      <string>Homology Degree:</string>
     </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
    </widget>
    <widget class="QSpinBox" name="homDimSpinBox">
     <property name="geometry">
@@ -398,7 +401,7 @@
     </property>
     <property name="font">
      <font>
-      <pointsize>16</pointsize>
+      <pointsize>11</pointsize>
      </font>
     </property>
     <property name="toolTipDuration">
