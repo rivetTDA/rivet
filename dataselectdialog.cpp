@@ -388,7 +388,7 @@ void DataSelectDialog::detect_file_type()
         ui->functionComboBox->setEnabled(true);
         ui->functionComboBox->setEditable(false);
         ui->functionComboBox->setCurrentText(QString::fromStdString(params.function_type));
-        if (params.function_type == "user") {
+        if (params.function_type == "user" || params.function_type == "none") {
             ui->parameterSpinBox->setEnabled(false);
             ui->parameterSpinBox->setSpecialValueText("N/A");
             ui->parameterSpinBox->setValue(0.00);
@@ -439,7 +439,7 @@ void DataSelectDialog::on_filterComboBox_currentIndexChanged(int index)
         ui->functionComboBox->setEnabled(true);
         ui->functionComboBox->setEditable(false);
         ui->functionComboBox->setCurrentText(QString::fromStdString(params.function_type));
-        if (params.function_type == "user") {
+        if (params.function_type == "user" || params.function_type == "none") {
             ui->parameterSpinBox->setEnabled(false);
             ui->parameterSpinBox->setSpecialValueText("N/A");
             ui->parameterSpinBox->setValue(0.00);

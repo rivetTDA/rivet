@@ -388,6 +388,7 @@ void InputManager::parse_points_old()
         }
 
         input_params.max_dist = str_to_exact(distance_line[0]);
+        input_params.md_string = distance_line[0];
 
         if (input_params.max_dist <= 0) {
             throw std::runtime_error("An invalid input was received for the max distance.");
@@ -408,6 +409,8 @@ void InputManager::parse_points_old()
             auto is_reversed_and_label = detect_axis_reversed(line_info.first);
             input_params.x_reverse = is_reversed_and_label.first;
             input_params.x_label = is_reversed_and_label.second;
+            input_params.function_type = "user";
+            input_params.type = "points_fn";
         }
 
         //set label for y-axis to "distance"
@@ -455,6 +458,8 @@ void InputManager::parse_metric_old()
             // if function values are there
             input_params.old_function = true;
             input_params.bifil = "function";
+            input_params.function_type = "user";
+            input_params.type = "metric_fn";
 
             //check for axis reversal
             auto is_reversed_and_label = detect_axis_reversed(line_info.first);
@@ -474,6 +479,7 @@ void InputManager::parse_metric_old()
         //read the maximum length of edges to construct
         line_info = reader.next_line();
         input_params.max_dist = str_to_exact(line_info.first[0]);
+        input_params.md_string = line_info.first[0];
 
     } catch (InputError& e) {
         throw;
