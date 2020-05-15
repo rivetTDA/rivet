@@ -206,6 +206,9 @@ void DataSelectDialog::detect_file_type()
         ui->dataTypeComboBox->removeItem(ui->dataTypeComboBox->findText("N/A"));
     ui->dataTypeComboBox->setCurrentIndex(0);
     ui->dataTypeComboBox->setEnabled(true);
+    // disable bifiltration and FIRep types -- maybe unnecessary
+    qobject_cast<QStandardItemModel*>(ui->dataTypeComboBox->model())->item(4)->setEnabled(true);
+    qobject_cast<QStandardItemModel*>(ui->dataTypeComboBox->model())->item(5)->setEnabled(true);
 
     if (ui->filterComboBox->findText("N/A") != -1)
         ui->filterComboBox->removeItem(ui->filterComboBox->findText("N/A"));
@@ -279,6 +282,11 @@ void DataSelectDialog::detect_file_type()
     if (params.type == "points") {
         type_string += "point-cloud data.";
         ui->dataTypeComboBox->setCurrentIndex(0);
+
+        // disable bifiltration and FIRep types
+        qobject_cast<QStandardItemModel*>(ui->dataTypeComboBox->model())->item(4)->setEnabled(false);
+        qobject_cast<QStandardItemModel*>(ui->dataTypeComboBox->model())->item(5)->setEnabled(false);
+
         ui->xRevCheckBox->setEnabled(false);
         ui->yRevCheckBox->setEnabled(false);
     }
