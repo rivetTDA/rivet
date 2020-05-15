@@ -57,7 +57,7 @@ DataSelectDialog::DataSelectDialog(InputParameters& params, QWidget* parent)
     }
     // infinity button
     ui->maxDistHelp->setText(QChar(0x221E));
-    ui->maxDistHelp->setStyleSheet("QPushButton { font : 20px; padding-top: -4px; qproperty-alignment: AlignTop;}");
+    ui->maxDistHelp->setStyleSheet("QPushButton { font : 20px; padding-top: -4px;}"); // doesn't work:  qproperty-alignment: AlignTop;
 }
 
 DataSelectDialog::~DataSelectDialog()
@@ -218,6 +218,9 @@ void DataSelectDialog::detect_file_type()
     ui->xbinSpinBox->setValue(10);
     ui->ybinSpinBox->setValue(10);
 
+    ui->xRevCheckBox->setChecked(false);
+    ui->yRevCheckBox->setChecked(false);
+
     ui->maxDistBox->setPalette(this->style()->standardPalette());
     ui->maxDistBox->setToolTip("");
 
@@ -315,6 +318,13 @@ void DataSelectDialog::detect_file_type()
         ui->filterComboBox->addItem("N/A");
         ui->filterComboBox->setCurrentIndex(ui->filterComboBox->count()-1);
         ui->filterComboBox->setEnabled(false);
+        ui->functionComboBox->setEnabled(false);
+        ui->xAxisLabel->setEnabled(true);
+        ui->yAxisLabel->setEnabled(true);
+        ui->xRevCheckBox->setEnabled(true);
+        ui->xRevCheckBox->setChecked(false);
+        ui->yRevCheckBox->setEnabled(true);
+        ui->xRevCheckBox->setChecked(false);
     }
     else if (params.type == "firep") {
         ui->dataTypeComboBox->setCurrentIndex(5);
@@ -325,14 +335,17 @@ void DataSelectDialog::detect_file_type()
         ui->homDimSpinBox->setValue(0);
         ui->homDimSpinBox->setEnabled(false);
 
-        ui->xRevCheckBox->setEnabled(false);
-        ui->yRevCheckBox->setEnabled(false);
-
         ui->maxDistBox->setText("N/A");
         ui->maxDistBox->setEnabled(false);
         ui->filterComboBox->addItem("N/A");
         ui->filterComboBox->setCurrentIndex(ui->filterComboBox->count()-1);
         ui->filterComboBox->setEnabled(false);
+        ui->functionComboBox->setEnabled(false);
+
+        ui->xRevCheckBox->setEnabled(false);
+        ui->xRevCheckBox->setChecked(false);
+        ui->yRevCheckBox->setEnabled(false);
+        ui->yRevCheckBox->setChecked(false);
     }
     else if (params.type == "RIVET_msgpack") {
         ui->dataTypeComboBox->addItem("RIVET_msgpack");
@@ -348,10 +361,40 @@ void DataSelectDialog::detect_file_type()
     ui->yAxisLabel->setText(QString::fromStdString(params.y_label));
 
     if (params.type != "firep" && params.type != "bifiltration" && params.type != "RIVET_msgpack") {
-        if (params.bifil == "degree")
+        if (params.bifil == "degree") {
             ui->filterComboBox->setCurrentIndex(0);
-        else if (params.bifil == "function")
-            ui->filterComboBox->setCurrentIndex(1);
+            ui->xAxisLabel->setText("degree");
+            ui->xAxisLabel->setEnabled(false);
+            ui->xRevCheckBox->setChecked(true);
+            ui->xRevCheckBox->setEnabled(false);
+            ui->functionComboBox->setEditable(true);
+            ui->functionComboBox->setCurrentText("none");
+            ui->functionComboBox->setEnabled(false);
+            ui->parameterSpinBox->setEnabled(false);
+            ui->parameterSpinBox->setSpecialValueText("N/A");
+            ui->parameterSpinBox->setValue(0.00);
+        }
+        else {
+            if (params.bifil == "function")
+                ui->filterComboBox->setCurrentIndex(1);
+            ui->xAxisLabel->setText(QString::fromStdString(params.x_label));
+            ui->xAxisLabel->setEnabled(true);
+            ui->xRevCheckBox->setChecked(false);
+            ui->xRevCheckBox->setEnabled(true);
+            ui->functionComboBox->setEnabled(true);
+            ui->functionComboBox->setEditable(false);
+            ui->functionComboBox->setCurrentText(QString::fromStdString(params.function_type));
+            if (params.function_type == "user" || params.function_type == "none") {
+                ui->parameterSpinBox->setEnabled(false);
+                ui->parameterSpinBox->setSpecialValueText("N/A");
+                ui->parameterSpinBox->setValue(0.00);
+            }
+            else {
+                ui->parameterSpinBox->setEnabled(true);
+                ui->parameterSpinBox->setSpecialValueText("");
+                ui->parameterSpinBox->setValue(params.filter_param);
+            } 
+        }
     }
 
     if (params.x_reverse)
@@ -380,34 +423,6 @@ void DataSelectDialog::detect_file_type()
         ui->maxDistHelp->setEnabled(true);
     }
 
-    if (params.bifil == "degree") {
-        ui->xAxisLabel->setText("degree");
-        ui->xAxisLabel->setEnabled(false);
-        ui->functionComboBox->setEditable(true);
-        ui->functionComboBox->setCurrentText("none");
-        ui->functionComboBox->setEnabled(false);
-        ui->parameterSpinBox->setEnabled(false);
-        ui->parameterSpinBox->setSpecialValueText("N/A");
-        ui->parameterSpinBox->setValue(0.00);
-    }
-    else {
-        ui->xAxisLabel->setText(QString::fromStdString(params.x_label));
-        ui->xAxisLabel->setEnabled(true);
-        ui->functionComboBox->setEnabled(true);
-        ui->functionComboBox->setEditable(false);
-        ui->functionComboBox->setCurrentText(QString::fromStdString(params.function_type));
-        if (params.function_type == "user" || params.function_type == "none") {
-            ui->parameterSpinBox->setEnabled(false);
-            ui->parameterSpinBox->setSpecialValueText("N/A");
-            ui->parameterSpinBox->setValue(0.00);
-        }
-        else {
-            ui->parameterSpinBox->setEnabled(true);
-            ui->parameterSpinBox->setSpecialValueText("");
-            ui->parameterSpinBox->setValue(params.filter_param);
-        }
-    }
-
     ui->computeButton->setEnabled(true);
     //force black text because on Mac Qt autodefault buttons have white text when enabled,
     //so they still look like they're disabled or weird in some way.
@@ -434,6 +449,8 @@ void DataSelectDialog::on_filterComboBox_currentIndexChanged(int index)
     if (index == 0) {
         ui->xAxisLabel->setText("degree");
         ui->xAxisLabel->setEnabled(false);
+        ui->xRevCheckBox->setChecked(true);
+        ui->xRevCheckBox->setEnabled(false);
         ui->functionComboBox->setEditable(true);
         ui->functionComboBox->setCurrentText("none");
         ui->functionComboBox->setEnabled(false);
@@ -444,6 +461,8 @@ void DataSelectDialog::on_filterComboBox_currentIndexChanged(int index)
     else {
         ui->xAxisLabel->setText(QString::fromStdString(params.x_label));
         ui->xAxisLabel->setEnabled(true);
+        ui->xRevCheckBox->setChecked(false);
+        ui->xRevCheckBox->setEnabled(true);
         ui->functionComboBox->setEnabled(true);
         ui->functionComboBox->setEditable(false);
         ui->functionComboBox->setCurrentText(QString::fromStdString(params.function_type));
