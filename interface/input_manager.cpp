@@ -276,6 +276,8 @@ void InputManager::parse_args()
                         throw std::runtime_error("Invalid parameter for function");
                     input_params.filter_param = p;
                 }
+                if (input_params.function_type == "balldensity" || input_params.function_type == "eccentricity")
+                    input_params.x_reverse = true;
             } else if (line[0] == "--xreverse") {
                 input_params.x_reverse = true;
             } else if (line[0] == "--yreverse") {
@@ -319,13 +321,13 @@ void InputManager::parse_args()
 
     // determine parameter values from available information
     if (input_params.bifil == "") {
-        if (input_params.new_function)
+        if (!input_params.old_function)
             input_params.bifil = "function";
         else
             input_params.bifil = "degree";
     }
     // determine dimension in which points live
-    if (input_params.new_function)
+    if (!input_params.old_function)
         line_info = reader.next_line(0);
     input_params.dimension = line_info.first.size();
     if (input_params.type == "metric" || input_params.type == "metric_fn") {

@@ -487,6 +487,10 @@ void DataSelectDialog::on_functionComboBox_currentIndexChanged(int index)
         ui->parameterSpinBox->setValue(0.00);
     }
     else {
+        if (index == 1 || index == 3)
+            ui->xRevCheckBox->setChecked(true);
+        else
+            ui->xRevCheckBox->setChecked(false);
         ui->parameterSpinBox->setEnabled(true);
         ui->parameterSpinBox->setSpecialValueText("");
         ui->parameterSpinBox->setValue(params.filter_param);
