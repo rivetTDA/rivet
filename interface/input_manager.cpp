@@ -321,13 +321,13 @@ void InputManager::parse_args()
 
     // determine parameter values from available information
     if (input_params.bifil == "") {
-        if (!input_params.old_function)
+        if (input_params.new_function)
             input_params.bifil = "function";
         else
             input_params.bifil = "degree";
     }
     // determine dimension in which points live
-    if (!input_params.old_function)
+    if (!input_params.old_function && input_params.type != "metric")
         line_info = reader.next_line(0);
     input_params.dimension = line_info.first.size();
     if (input_params.type == "metric" || input_params.type == "metric_fn") {
