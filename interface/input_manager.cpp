@@ -327,7 +327,7 @@ void InputManager::parse_args()
             input_params.bifil = "degree";
     }
     // determine dimension in which points live
-    if (!input_params.old_function && input_params.type != "metric")
+    if (input_params.type == "points" || input_params.type == "points_fn")
         line_info = reader.next_line(0);
     input_params.dimension = line_info.first.size();
     if (input_params.type == "metric" || input_params.type == "metric_fn") {
