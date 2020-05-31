@@ -35,14 +35,14 @@ Here the basic syntax for computing a module invariants file::
 
 * <input> is an input data file;
 * <output> is the name of the module invariants file to be computed.
-* [options] are command-line flags control the computation, as specified below.
+* [options] are command-line flags that control the computation, as specified below.
 
 For example, a typical call to rivet_console to compute an MI file *MI_output.rivet* from an input file *my_data.txt* might look as follows::
 
-	 rivet_console my_data.txt MI_output.rivet --datatype metric --homology 1 --bifil degree_rips --xbins 100 --ybins 100
+	 rivet_console my_data.txt MI_output.rivet --datatype metric --homology 1 --bifil degree --xbins 100 --ybins 100
 
 * :code:`--datatype metric` tells RIVET that input_data.txt contains a distance matrix (specifying a finite metric space).
-* :code:`--bifil degree_rips` tells RIVET to compute the degree-Rips bifiltration of this metric space
+* :code:`--bifil degree` tells RIVET to compute the degree-Rips bifiltration of this metric space
 * :code:`--homology 1` tells RIVET to consider persistent homology in degree 1.
 * :code:`--xbins 100` and :code:`--ybins 100` tell RIVET to compute a coarsened version of the homology module such that the support of the 0th and 1st Betti numbers lies on a 100x100 grid in :math:`\mathbb R^2`.  (This is done to make the computation faster and limit the size of the resulting MI file.)  
 
@@ -61,11 +61,11 @@ The most important flags are the following:
 
 * :code:`--datatype <type>` specifies the type of data contained in the input file. The default is :code:`points`.  For details, see :ref:`inputData`.
 
-* :code:`--bifil <type>` specifies the type of bifiltration to be built.  Specifying a bifiltration type only makes sense for certain input data types, and hence this flag can only be used for data.  In cases where the flag can be used, the available bifiltration types are :code:`function-Rips` and :code:`degree-Rips`.  The default depends on the choice of input data type.  For details, see the :ref:`inputData` section of this documentation.  For details, see :ref:`inputData`.
+* :code:`--bifil <type>` specifies the type of bifiltration to be built.  Specifying a bifiltration type only makes sense for certain input data types, and hence this flag can only be used for data.  In cases where the flag can be used, the available bifiltration types are :code:`function` and :code:`degree`.  The default depends on the choice of input data type.  For details, see the :ref:`inputData` section of this documentation.  For details, see :ref:`inputData`.
 
 * :code:`-x <xbins>` and :code:`-y <ybins>` specify the dimensions of the grid used for coarsening. The grid spacing is taken to be uniform in each dimension. (For details on grids and coarsening, see :ref:`coarsening`.) If unspecified, each flag takes a default value of 0, which means that no coarsening is done at all in that coordinate direction. However, to control the size of the augmented arrangement, most computations of a MI file should use some coarsening of the module. These flags can also be specified in the longer forms :code:`--xbins <xbins>`. and :code:`--ybins <ybins>`.
 
-* :code:`-H <hom_degree>` or :code:`--homology <hon_degree>` specifies degree of homology to compute. If unspecified, the default value is zero.  (RIVET handles only one homology degree at a time.)
+* :code:`-H <hom_degree>` or :code:`--homology <hom_degree>` specifies degree of homology to compute. If unspecified, the default value is zero.  (RIVET handles only one homology degree at a time.)
 
 
 The following flags are also available, and are useful in many cases:
