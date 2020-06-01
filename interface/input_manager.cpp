@@ -352,7 +352,10 @@ void InputManager::parse_args()
     }
 
     if (input_params.bifil == "function" && input_params.function_type == "none") {
-        input_params.function_type = "user";
+        if (input_params.new_function)
+            input_params.function_type = "user";
+        else
+            input_params.function_type = "balldensity";
     }
 
     input_file.close();

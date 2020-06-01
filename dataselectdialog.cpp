@@ -465,6 +465,8 @@ void DataSelectDialog::on_filterComboBox_currentIndexChanged(int index)
         ui->xRevCheckBox->setEnabled(true);
         ui->functionComboBox->setEnabled(true);
         ui->functionComboBox->setEditable(false);
+        if (!params.old_function && !params.new_function && params.function_type == "none")
+            params.function_type = "balldensity";
         ui->functionComboBox->setCurrentText(QString::fromStdString(params.function_type));
         if (params.function_type == "user" || params.function_type == "none") {
             ui->parameterSpinBox->setEnabled(false);
