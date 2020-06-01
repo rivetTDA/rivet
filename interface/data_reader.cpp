@@ -260,7 +260,7 @@ FileContent DataReader::read_point_cloud(std::ifstream& stream, Progress& progre
             if (input_params.new_function && input_params.bifil == "function") {
                 tokens.push_back(values[k]);
             }
-            else {
+            else if (!input_params.old_function) {
                 //Add artificial birth value of 0 if no function value provided
                 tokens.push_back("0");
             }
