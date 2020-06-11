@@ -360,7 +360,7 @@ int main(int argc, char* argv[])
             str != "bifiltration" && str != "firep" && str != "RIVET_msgpack")
             throw std::runtime_error("Invalid argument for --datatype");
         params.type = str;
-        if (str == "points_fn" || str == "metric_fn")
+        if ((str == "points_fn" || str == "metric_fn") && !params.old_function)
             params.new_function = true;
         else
             params.new_function = false;
