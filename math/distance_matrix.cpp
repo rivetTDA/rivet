@@ -99,6 +99,9 @@ void DistanceMatrix::ball_density_estimator(double radius)
                 value = value + 1;
             }
         }
+
+        if (input_params.x_reverse)
+            value = -1*value;
         // store value in function_set
         ret = function_set.insert(ExactValue(value));
         (ret.first)->indexes.push_back(i);
@@ -146,6 +149,9 @@ void DistanceMatrix::knn_density_estimator(int k)
         std::sort(d.begin(), d.end());
         value = d[k - 1];
 
+
+        if (input_params.x_reverse)
+            value = -1*value;
         ret = function_set.insert(ExactValue(value));
         (ret.first)->indexes.push_back(i);
 
@@ -193,6 +199,8 @@ void DistanceMatrix::eccentricity_estimator(int p)
         d = pow(d, 1.0 / p);
         value = d;
 
+        if (input_params.x_reverse)
+            value = -1*value;
         ret = function_set.insert(ExactValue(value));
         (ret.first)->indexes.push_back(i);
     }

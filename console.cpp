@@ -476,7 +476,7 @@ int main(int argc, char* argv[])
     if (params.type == "firep") {
         params.x_reverse = false;
     }
-    if (params.type == "points" || params.type == "metric") {
+    if (params.bifil == "degree") {
         params.x_reverse = true;
     }
     if (params.bifil == "degree") {

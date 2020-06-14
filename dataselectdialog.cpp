@@ -324,7 +324,7 @@ void DataSelectDialog::detect_file_type()
         ui->xRevCheckBox->setEnabled(true);
         ui->xRevCheckBox->setChecked(false);
         ui->yRevCheckBox->setEnabled(true);
-        ui->xRevCheckBox->setChecked(false);
+        ui->yRevCheckBox->setChecked(false);
     }
     else if (params.type == "firep") {
         ui->dataTypeComboBox->setCurrentIndex(5);
