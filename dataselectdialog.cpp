@@ -118,6 +118,7 @@ void DataSelectDialog::showEvent(QShowEvent* event)
     ui->parameterSpinBox->setEnabled(true);
     ui->parameterSpinBox->setValue(0.00);
     ui->parameterSpinBox->setSpecialValueText("");
+    ui->parameterLabel->setText("Parameter:");
 
 }
 
@@ -230,6 +231,7 @@ void DataSelectDialog::detect_file_type()
     ui->parameterSpinBox->setEnabled(true);
     ui->parameterSpinBox->setValue(0.00);
     ui->parameterSpinBox->setSpecialValueText("");
+    ui->parameterLabel->setText("Parameter:");
 
     // also remember to reset input parameter values
     params.x_label = "";
@@ -290,6 +292,9 @@ void DataSelectDialog::detect_file_type()
         qobject_cast<QStandardItemModel*>(ui->dataTypeComboBox->model())->item(4)->setEnabled(false);
         qobject_cast<QStandardItemModel*>(ui->dataTypeComboBox->model())->item(5)->setEnabled(false);
 
+        // disable user function values
+        qobject_cast<QStandardItemModel*>(ui->functionComboBox->model())->item(0)->setEnabled(false);
+
         ui->xRevCheckBox->setEnabled(false);
         ui->yRevCheckBox->setEnabled(false);
     }
@@ -303,6 +308,9 @@ void DataSelectDialog::detect_file_type()
         ui->dataTypeComboBox->setCurrentIndex(2);
         ui->xRevCheckBox->setEnabled(false);
         ui->yRevCheckBox->setEnabled(false);
+
+        // disable user function values
+        qobject_cast<QStandardItemModel*>(ui->functionComboBox->model())->item(0)->setEnabled(false);
     }
     else if (params.type == "metric_fn") {
         type_string += "metric data with function values.";
@@ -390,9 +398,18 @@ void DataSelectDialog::detect_file_type()
                 ui->parameterSpinBox->setValue(0.00);
             }
             else {
+                if (params.function_type == "balldensity")
+                    ui->parameterLabel->setText("Radius:");
+                else if (params.function_type == "knndensity")
+                    ui->parameterLabel->setText("K:");
+                else if (params.function_type == "eccentricity")
+                    ui->parameterLabel->setText("P Norm:");
                 ui->parameterSpinBox->setEnabled(true);
                 ui->parameterSpinBox->setSpecialValueText("");
-                ui->parameterSpinBox->setValue(params.filter_param);
+                if ((params.function_type == "knndensity" || params.function_type == "eccentricity") && params.filter_param == 0)
+                    ui->parameterSpinBox->setValue(1.0);
+                else
+                    ui->parameterSpinBox->setValue(params.filter_param);
             } 
         }
     }
@@ -474,9 +491,18 @@ void DataSelectDialog::on_filterComboBox_currentIndexChanged(int index)
             ui->parameterSpinBox->setValue(0.00);
         }
         else {
+            if (params.function_type == "balldensity")
+                ui->parameterLabel->setText("Radius:");
+            else if (params.function_type == "knndensity")
+                ui->parameterLabel->setText("K:");
+            else if (params.function_type == "eccentricity")
+                ui->parameterLabel->setText("P Norm:");
             ui->parameterSpinBox->setEnabled(true);
             ui->parameterSpinBox->setSpecialValueText("");
-            ui->parameterSpinBox->setValue(params.filter_param);
+            if ((params.function_type == "knndensity" || params.function_type == "eccentricity") && params.filter_param == 0)
+                ui->parameterSpinBox->setValue(1.0);
+            else
+                ui->parameterSpinBox->setValue(params.filter_param);
         }
     }
 }
@@ -484,17 +510,27 @@ void DataSelectDialog::on_filterComboBox_currentIndexChanged(int index)
 void DataSelectDialog::on_functionComboBox_currentIndexChanged(int index)
 {
     if (index == 0) {
+        ui->parameterLabel->setText("Parameter:");
         ui->parameterSpinBox->setEnabled(false);
         ui->parameterSpinBox->setSpecialValueText("N/A");
         ui->parameterSpinBox->setValue(0.00);
     }
     else {
+        if (index == 1)
+            ui->parameterLabel->setText("Radius:");
+        else if (index == 2)
+            ui->parameterLabel->setText("K:");
+        else if (index == 3)
+            ui->parameterLabel->setText("P Norm:");
         if (index == 1 || index == 3)
             ui->xRevCheckBox->setChecked(true);
         else
             ui->xRevCheckBox->setChecked(false);
         ui->parameterSpinBox->setEnabled(true);
         ui->parameterSpinBox->setSpecialValueText("");
-        ui->parameterSpinBox->setValue(params.filter_param);
+        if ((index == 2 || index == 3) && params.filter_param == 0)
+            ui->parameterSpinBox->setValue(1.0);    
+        else
+            ui->parameterSpinBox->setValue(params.filter_param);
     }
 }

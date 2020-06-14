@@ -391,7 +391,7 @@
      <rect>
       <x>122</x>
       <y>100</y>
-      <width>61</width>
+      <width>71</width>
       <height>25</height>
      </rect>
     </property>
@@ -402,7 +402,7 @@
    <widget class="QPushButton" name="maxDistHelp">
     <property name="geometry">
      <rect>
-      <x>190</x>
+      <x>200</x>
       <y>100</y>
       <width>40</width>
       <height>25</height>
