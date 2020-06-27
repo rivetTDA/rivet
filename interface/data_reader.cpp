@@ -89,7 +89,11 @@ DataReader::DataReader(InputParameters& params)
 {
     register_file_type(FileType{ "points", "point-cloud data", true,
         std::bind(&DataReader::read_point_cloud, this, std::placeholders::_1, std::placeholders::_2) });
+    register_file_type(FileType{ "points_fn", "point-cloud data with function", true,
+        std::bind(&DataReader::read_point_cloud, this, std::placeholders::_1, std::placeholders::_2) });
     register_file_type(FileType{ "metric", "metric data", true,
+        std::bind(&DataReader::read_discrete_metric_space, this, std::placeholders::_1, std::placeholders::_2) });
+    register_file_type(FileType{ "metric_fn", "metric data with function", true,
         std::bind(&DataReader::read_discrete_metric_space, this, std::placeholders::_1, std::placeholders::_2) });
     register_file_type(FileType{ "bifiltration", "bifiltration data", true,
         std::bind(&DataReader::read_bifiltration, this, std::placeholders::_1, std::placeholders::_2) });
@@ -184,7 +188,8 @@ FileContent DataReader::read_point_cloud(std::ifstream& stream, Progress& progre
         debug() << "DataReader: Found a point cloud file.";
     }
 
-    if (!input_params.old_function && !input_params.new_function) {
+    // force set parameters here
+    if (input_params.bifil == "degree") {
         input_params.x_label = "degree";
         input_params.x_reverse = true;
     }
@@ -192,7 +197,11 @@ FileContent DataReader::read_point_cloud(std::ifstream& stream, Progress& progre
     // set all variables from input_params
     unsigned dimension = input_params.dimension;
     exact max_dist = input_params.max_dist;
-    bool hasFunction = input_params.old_function || input_params.new_function;
+    bool hasFunction;
+    if (input_params.bifil == "function")
+        hasFunction = true;
+    else
+        hasFunction = false;
 
     bool x_reverse = input_params.x_reverse;
     bool y_reverse = input_params.y_reverse;
@@ -208,20 +217,20 @@ FileContent DataReader::read_point_cloud(std::ifstream& stream, Progress& progre
 
     std::pair<std::vector<std::string>, unsigned> line_info;
 
-    // if a --function was specified, read in the function values
+    // if a function values exist, read in the function values
     std::vector<std::string> values;
     if (input_params.new_function) {
-        for (int i = 0; i < input_params.function_line; i++)
+        input_params.to_skip++;
+        for (int i = 0; i < input_params.to_skip; i++)
             line_info = reader.next_line(0);
 
         for (unsigned i = 0; i < line_info.first.size(); i++) {
             values.push_back(line_info.first[i]);
         }
+    } else {
+        for (int i = 0; i < input_params.to_skip; i++)
+            reader.next_line(0);
     }
-
-    // skip lines with flags
-    for (int i = 0; i < input_params.to_skip - input_params.function_line; i++)
-        reader.next_line(0);
 
     // STEP 1: read data file and store exact (rational) values
 
@@ -229,6 +238,10 @@ FileContent DataReader::read_point_cloud(std::ifstream& stream, Progress& progre
         int k = 0;
         while (reader.has_next_line()) {
             line_info = reader.next_line(0);
+            if (input_params.new_function && k == 0) {
+                dimension = line_info.first.size();
+                expectedNumTokens = dimension;
+            }
             std::vector<std::string> tokens = line_info.first;
             if (tokens.size() != expectedNumTokens) {
                 std::stringstream ss;
@@ -244,15 +257,14 @@ FileContent DataReader::read_point_cloud(std::ifstream& stream, Progress& progre
             }
 
             // Add function values if supplied
-            if (input_params.new_function) {
+            if (input_params.new_function && input_params.bifil == "function") {
                 tokens.push_back(values[k]);
-                k++;
             }
-
-            //Add artificial birth value of 0 if no function value provided
-            if (!hasFunction) {
+            else if (!input_params.old_function) {
+                //Add artificial birth value of 0 if no function value provided
                 tokens.push_back("0");
             }
+            k++;
             DataPoint p(tokens);
             if (x_reverse && hasFunction) {
                 p.birth *= -1;
@@ -272,7 +284,7 @@ FileContent DataReader::read_point_cloud(std::ifstream& stream, Progress& progre
         throw std::runtime_error("No points loaded.");
     }
 
-    // STEP 2: compute distance matrix, and create ordered lists of all unique distance and time values
+    // STEP 2: compute distance matrix, and create ordered lists of all unique distance and time values and build grade vectors
 
     if (verbosity >= 4) {
         debug() << "  Building lists of grade values.";
@@ -281,118 +293,22 @@ FileContent DataReader::read_point_cloud(std::ifstream& stream, Progress& progre
 
     unsigned num_points = points.size();
 
+    // DistanceMatrix builds or reads in the DistanceMatrix
+    // If functions are supplied, it computes function values
+    // After that, it builds all vectors necessary for building the bifiltration
+
     DistanceMatrix dist_mat(input_params, num_points);
     dist_mat.build_distance_matrix(points);
     dist_mat.build_all_vectors(data);
 
-    /*
-    ExactSet dist_set; //stores all unique distance values
-    ExactSet time_set; //stores all unique time values
-    std::pair<ExactSet::iterator, bool> ret; //for return value upon insert()
-    unsigned* degree; //stores the degree of each point; must FREE later if used
-    if (!hasFunction) {
-        degree = new unsigned[num_points]();
-    }
-
-    ret = dist_set.insert(ExactValue(exact(0))); //distance from a point to itself is always zero
-    (ret.first)->indexes.push_back(0); //store distance 0 at 0th index
-    //consider all points
-    for (unsigned i = 0; i < num_points; i++) {
-        if (hasFunction) {
-            //store time value, if it doesn't exist already
-            ret = time_set.insert(ExactValue(points[i].birth));
-
-            //remember that point i has this birth time value
-            (ret.first)->indexes.push_back(i);
-        }
-
-        //compute (approximate) distances from this point to all following points
-        for (unsigned j = i + 1; j < num_points; j++) {
-            //compute (approximate) distance squared between points[i] and points[j]
-            double fp_dist_squared = 0;
-            for (unsigned k = 0; k < dimension; k++) {
-                double kth_dist = points[i].coords[k] - points[j].coords[k];
-                fp_dist_squared += (kth_dist * kth_dist);
-            }
-
-            //find an approximate square root of fp_dist_squared, and store it as an exact value
-            exact cur_dist(0);
-            if (fp_dist_squared > 0)
-                cur_dist = approx(sqrt(fp_dist_squared)); //OK for now...
-
-            if (max_dist == -1 || cur_dist <= max_dist) //then this distance is allowed
-            {
-                //store distance value, if it doesn't exist already
-                ret = dist_set.insert(ExactValue(cur_dist));
-
-                //remember that the pair of points (i,j) has this distance value, which will go in entry j(j-1)/2 + i + 1
-                (ret.first)->indexes.push_back((j * (j - 1)) / 2 + i + 1);
-
-                //need to keep track of degree for degree-Rips complex
-                if (!hasFunction) {
-                    //there is an edge between i and j so update degree
-                    degree[i]++;
-                    degree[j]++;
-                }
-            }
-        }
-    } //end for
-    */
     if (verbosity >= 4) {
         debug() << "  Finished reading data.";
     }
 
-    // STEP 3: build vectors of discrete indexes for constructing the bifiltration
-
-    /*
-    std::vector<unsigned> time_indexes, degree_indexes;
-    ExactSet degree_set;
-    unsigned max_unsigned = std::numeric_limits<unsigned>::max();
-
-    //X axis is degrees for degree-Rips complex
-    if (!hasFunction) {
-        //determine the max degree
-        unsigned max_degree = 0;
-        for (unsigned i = 0; i < num_points; i++)
-            if (max_degree < degree[i])
-                max_degree = degree[i];
-
-        //build vector of discrete degree indices from 0 to max_degree and bins those degree values
-        //WARNING: assumes that the number of distinct degree grades will be equal to max_degree which may not hold
-        for (unsigned i = 0; i <= max_degree; i++) {
-            ret = degree_set.insert(ExactValue(max_degree - i)); //store degree -i because degree is wrt opposite ordering on R
-            (ret.first)->indexes.push_back(i); //degree i is stored at index i
-        }
-        //make degrees
-        degree_indexes = std::vector<unsigned>(max_degree + 1, 0);
-
-        build_grade_vectors(*data, degree_set, degree_indexes, data->x_exact, input_params.x_bins);
-        //data->x_exact is now an increasing list of codegrees
-        //consider the sublevel set codeg<=k
-        //this is the same as deg>=maxDeg-k
-        //thus to convert from sublevelset to superlevel set, must replace the kth element of data->x_exact
-        //with -1*(codeg-(kth element)) (the negative 1 is to the values are still increasing)
-        //this is just the sequence of NEGATIVE degrees
-        //e.g codeg=(0,1,2,...,10)
-        //goes to (-(10-0), -(10-1), ...,-(10-10))=(-10,-9,...,0)
-
-    }
-    //X axis is given by function in Vietoris-Rips complex
-    else {
-        //vector of discrete time indexes for each point; max_unsigned shall represent undefined time (is this reasonable?)
-        time_indexes = std::vector<unsigned>(num_points, max_unsigned);
-        build_grade_vectors(*data, time_set, time_indexes, data->x_exact, input_params.x_bins);
-    }
-
-    //discrete distance matrix (triangle); max_unsigned shall represent undefined distance
-    std::vector<unsigned> dist_indexes((num_points * (num_points - 1)) / 2 + 1, max_unsigned);
-    build_grade_vectors(*data, dist_set, dist_indexes, data->y_exact, input_params.y_bins);
-    */
-
     //update progress
     progress.progress(30);
 
-    // STEP 4: build the bifiltration
+    // STEP 3: build the bifiltration
 
     //bifiltration_data stores only DISCRETE information!
     //this only requires (suppose there are k points):
@@ -401,25 +317,24 @@ FileContent DataReader::read_point_cloud(std::ifstream& stream, Progress& progre
     //  3. max dimension of simplices to construct, which is one more than the dimension of homology to be computed
 
     if (verbosity >= 4) {
-        if (hasFunction) {
-            debug() << "  Building Vietoris-Rips bifiltration.";
-        } else {
+        if (input_params.bifil == "degree") {
             debug() << "  Building Degree-Rips bifiltration.";
+        } else {
+            debug() << "  Building Vietoris-Rips bifiltration.";
         }
         debug() << "     x-grades: " << data->x_exact.size();
         debug() << "     y-grades: " << data->y_exact.size();
     }
 
     data->bifiltration_data.reset(new BifiltrationData(input_params.hom_degree, input_params.verbosity));
-    if (hasFunction) {
-        data->bifiltration_data->build_VR_complex(dist_mat.function_indexes, dist_mat.dist_indexes, data->x_exact.size(), data->y_exact.size());
-
-    } else {
-
+    if (input_params.bifil == "degree") {
         data->bifiltration_data->build_DR_complex(num_points, dist_mat.dist_indexes, dist_mat.degree_indexes, data->x_exact.size(), data->y_exact.size());
         //convert data->x_exact from codegree sequence to negative degree sequence
         exact max_x_exact = *(data->x_exact.end() - 1); //should it be max_degree instead?
         std::transform(data->x_exact.begin(), data->x_exact.end(), data->x_exact.begin(), [max_x_exact](exact x) { return x - max_x_exact; });
+
+    } else {
+        data->bifiltration_data->build_VR_complex(dist_mat.function_indexes, dist_mat.dist_indexes, data->x_exact.size(), data->y_exact.size());
     }
 
     if (verbosity >= 8) {
@@ -433,10 +348,6 @@ FileContent DataReader::read_point_cloud(std::ifstream& stream, Progress& progre
     }
 
     data->free_implicit_rep.reset(new FIRep(*(data->bifiltration_data), input_params.verbosity));
-
-    // if (!hasFunction) {
-    //     delete dist_mat.degree;
-    // }
 
     //remember the axis directions
     data->x_reverse = x_reverse;
@@ -458,14 +369,16 @@ FileContent DataReader::read_discrete_metric_space(std::ifstream& stream, Progre
     //prepare data structures
     ExactSet value_set; //stores all unique values of the function; must DELETE all elements later
     ExactSet dist_set; //stores all unique values of the distance metric; must DELETE all elements later
+
+    // set variables from input parameters
     unsigned num_points = input_params.dimension;
-    unsigned expectedNumTokens = num_points;
 
-    bool hasFunction = input_params.old_function || input_params.new_function;
-    unsigned* degree; //stores the degree of each point; must FREE later if used
-    std::pair<ExactSet::iterator, bool> ret; //for return value upon insert()
+    bool hasFunction;
+    if (input_params.bifil == "function")
+        hasFunction = true;
+    else
+        hasFunction = false;
 
-    // set all variables from input parameters
     bool x_reverse = input_params.x_reverse;
     bool y_reverse = input_params.y_reverse;
 
@@ -477,24 +390,40 @@ FileContent DataReader::read_discrete_metric_space(std::ifstream& stream, Progre
     std::pair<std::vector<std::string>, unsigned> line_info;
 
     // store function values if supplied
+
     std::vector<std::string> val;
-    if (hasFunction) {
-        for (int i = 0; i < input_params.function_line; i++)
+    if (input_params.old_function) {
+        for (int i = 0; i < 3; i++)
             line_info = reader.next_line(0);
 
         num_points = line_info.first.size();
         for (unsigned i = 0; i < num_points; i++) {
             val.push_back(line_info.first[i]);
         }
+        for (int i = 0; i < input_params.to_skip - 3; i++)
+            line_info = reader.next_line(0);
+    } else if (input_params.new_function) {
+        input_params.to_skip++;
+        for (int i = 0; i < input_params.to_skip; i++)
+            line_info = reader.next_line(0);
+
+        num_points = line_info.first.size();
+        for (unsigned i = 0; i < num_points; i++) {
+            val.push_back(line_info.first[i]);
+        }
+    } else {
+        for (int i = 0; i < input_params.to_skip; i++)
+            line_info = reader.next_line(0);
     }
 
-    // skip lines with flags
-    for (int i = 0; i < input_params.to_skip - input_params.function_line - 1; i++)
-        line_info = reader.next_line(0);
+    // DistanceMatrix builds or reads in the DistanceMatrix
+    // If functions are supplied, it computes function values
+    // After that, it builds all vectors necessary for building the bifiltration
 
     DistanceMatrix dist_mat(input_params, num_points);
 
     try {
+        // axis reversal
         std::vector<exact> values;
 
         if (hasFunction) {
@@ -519,87 +448,14 @@ FileContent DataReader::read_discrete_metric_space(std::ifstream& stream, Progre
             }
         }
 
-        // STEP 2: read data file and store exact (rational) values for all distances
-
         if (verbosity >= 4) {
             std::ostringstream oss;
             oss << max_dist;
             debug() << "  Maximum distance of edges in Rips complex:" << oss.str().c_str();
         }
 
-        if (!hasFunction) {
-            degree = new unsigned[num_points]();
-        }
-
-        dist_mat.read_distance_matrix(stream, values);
+        dist_mat.read_distance_matrix(values);
         dist_mat.build_all_vectors(data);
-
-        /*
-        ret = dist_set.insert(ExactValue(exact(0))); //distance from a point to itself is always zero
-        //store distance 0 at index 0
-        (ret.first)->indexes.push_back(0);
-
-        //consider all points
-        for (unsigned i = 0; i < num_points; i++) {
-            if (hasFunction) {
-                //store value, if it doesn't exist already
-                ret = value_set.insert(ExactValue(values[i]));
-
-                //remember that point i has this value
-                (ret.first)->indexes.push_back(i);
-            }
-
-            // TODO: Add error more error handling?
-
-            //read distances from this point to all following points
-            if (i < num_points - 1) //then there is at least one point after point i, and there should be another line to read
-            {
-                if (reader.has_next_line())
-                    line_info = reader.next_line(0);
-
-                std::vector<std::string> tokens;
-
-                // skip lower triangle if full distance matrix is supplied
-                if (line_info.first.size() == num_points && num_points == expectedNumTokens) {
-                    for (unsigned k = i + 1; k < num_points; k++)
-                        tokens.push_back(line_info.first[k]);
-                } else if (line_info.first.size() == expectedNumTokens - 1) {
-                    for (unsigned k = 0; k < expectedNumTokens - 1; k++)
-                        tokens.push_back(line_info.first[k]);
-                    expectedNumTokens--;
-                } else {
-                    throw std::runtime_error("Expected " + std::to_string(expectedNumTokens - 1) + " numbers, got " + std::to_string(line_info.first.size()) + " at line " + std::to_string(line_info.second));
-                }
-
-                try {
-                    for (unsigned j = i + 1; j < num_points; j++) {
-
-                        std::string str = tokens[j - i - 1];
-
-                        exact cur_dist = str_to_exact(str);
-
-                        if (max_dist == -1 || cur_dist <= max_dist) //then this distance is allowed
-                        {
-                            //store distance value, if it doesn't exist already
-                            ret = dist_set.insert(ExactValue(cur_dist));
-
-                            //remember that the pair of points (i,j) has this distance value, which will go in entry j(j-1)/2 + i + 1
-                            (ret.first)->indexes.push_back((j * (j - 1)) / 2 + i + 1);
-
-                            //need to keep track of degree for degree-Rips complex
-                            if (!hasFunction) {
-                                //there is an edge between i and j so update degree
-                                degree[i]++;
-                                degree[j]++;
-                            }
-                        }
-                    }
-                } catch (std::exception& e) {
-                    throw InputError(line_info.second, e.what());
-                }
-            }
-        } //end for
-        */
 
     } catch (InputError& e) {
         throw;
@@ -611,53 +467,17 @@ FileContent DataReader::read_discrete_metric_space(std::ifstream& stream, Progre
     }
 
     progress.advanceProgressStage(); //advance progress box to stage 2: building bifiltration
-    // STEP 3: build vectors of discrete indexes for constructing the bifiltration
-
-    /*
-    std::vector<unsigned> value_indexes, degree_indexes;
-    ExactSet degree_set;
-    unsigned max_unsigned = std::numeric_limits<unsigned>::max();
-
-    //X axis is degrees for Degree-Rips complex
-    if (!hasFunction) {
-        //determine the max degree
-        unsigned max_degree = 0;
-        for (unsigned i = 0; i < num_points; i++)
-            if (max_degree < degree[i])
-                max_degree = degree[i];
-
-        //build vector of discrete degree indices from 0 to max_degree and bins those degree values
-        //WARNING: assumes that the number of distinct degree grades will be equal to max_degree which may not hold
-        for (unsigned i = 0; i <= max_degree; i++) {
-            ret = degree_set.insert(ExactValue(max_degree - i)); //store degree -i because degree is wrt opposite ordering on R
-            (ret.first)->indexes.push_back(i); //degree i is stored at index i
-        }
-        //make degrees
-        degree_indexes = std::vector<unsigned>(max_degree + 1, 0);
-        build_grade_vectors(*data, degree_set, degree_indexes, data->x_exact, input_params.x_bins);
-    }
-    //X axis is given by function in Vietoris-Rips complex
-    else {
-        //vector of discrete time indexes for each point; max_unsigned shall represent undefined time (is this reasonable?)
-        value_indexes = std::vector<unsigned>(num_points, max_unsigned);
-        build_grade_vectors(*data, value_set, value_indexes, data->x_exact, input_params.x_bins);
-    }
-
-    //second, distances
-    std::vector<unsigned> dist_indexes((num_points * (num_points - 1)) / 2 + 1, max_unsigned); //discrete distance matrix (triangle); max_unsigned shall represent undefined distance
-    build_grade_vectors(*data, dist_set, dist_indexes, data->y_exact, input_params.y_bins);
-    */
 
     //update progress
     progress.progress(30);
 
-    // STEP 4: build the bifiltration
+    // build the bifiltration
 
     if (verbosity >= 4) {
-        if (hasFunction) {
-            debug() << "  Building Vietoris-Rips bifiltration.";
-        } else {
+        if (input_params.bifil == "degree") {
             debug() << "  Building Degree-Rips bifiltration.";
+        } else {
+            debug() << "  Building Vietoris-Rips bifiltration.";
         }
         debug() << "     x-grades: " << data->x_exact.size();
         debug() << "     y-grades: " << data->y_exact.size();
@@ -665,15 +485,14 @@ FileContent DataReader::read_discrete_metric_space(std::ifstream& stream, Progre
 
     //build the Vietoris-Rips bifiltration from the discrete index vectors
     data->bifiltration_data.reset(new BifiltrationData(input_params.hom_degree, input_params.verbosity));
-    if (hasFunction) {
-        data->bifiltration_data->build_VR_complex(dist_mat.function_indexes, dist_mat.dist_indexes, data->x_exact.size(), data->y_exact.size());
-    } else {
-
+    if (input_params.bifil == "degree") {
         data->bifiltration_data->build_DR_complex(num_points, dist_mat.dist_indexes, dist_mat.degree_indexes, data->x_exact.size(), data->y_exact.size());
 
         //convert data->x_exact from codegree sequence to negative degree sequence
         exact max_x_exact = *(data->x_exact.end() - 1); //should it be max_degree instead?
         std::transform(data->x_exact.begin(), data->x_exact.end(), data->x_exact.begin(), [max_x_exact](exact x) { return x - max_x_exact; });
+    } else {
+        data->bifiltration_data->build_VR_complex(dist_mat.function_indexes, dist_mat.dist_indexes, data->x_exact.size(), data->y_exact.size());
     }
 
     if (verbosity >= 8) {
@@ -689,11 +508,6 @@ FileContent DataReader::read_discrete_metric_space(std::ifstream& stream, Progre
     data->free_implicit_rep.reset(new FIRep(*(data->bifiltration_data), input_params.verbosity));
     data->x_reverse = x_reverse;
     data->y_reverse = y_reverse;
-
-    //clean up
-    // if (!hasFunction) {
-    //     delete dist_mat.degree;
-    // }
 
     return FileContent(data);
 } //end read_discrete_metric_space()

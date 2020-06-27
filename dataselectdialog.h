@@ -52,6 +52,11 @@ protected:
 private slots:
     void on_computeButton_clicked();
     void on_openFileButton_clicked();
+    void on_maxDistHelp_clicked();
+
+    void on_filterComboBox_currentIndexChanged(int index);
+
+    void on_functionComboBox_currentIndexChanged(int index);
 
 private:
     Ui::DataSelectDialog* ui;

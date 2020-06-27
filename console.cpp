@@ -52,7 +52,8 @@ static const char USAGE[] =
       rivet_console <module_invariants_file> --barcodes <line_file> [-V <verbosity>]
       rivet_console <input_file> <module_invariants_file> [-H <hom_degree>] [-V <verbosity>] [-x <xbins>] [-y <ybins>] [-f <format>] [--binary] [--koszul] 
                                                           [--maxdist <distance>] [--num_threads <num_threads>] [--xreverse] [--yreverse] 
-                                                          [--type <type>] [--xlabel <label>] [--ylabel <label>]
+                                                          [--datatype <datatype>] [--xlabel <label>] [--ylabel <label>] [--bifil <filtration>]
+                                                          [--function <function>]
 
 
     Options:
@@ -77,10 +78,12 @@ static const char USAGE[] =
                                                an approach based on computing presentations.
       --xreverse                               Reverse the direction of the values in the x-axis.
       --yreverse                               Reverse the direction of the values in the y-axis.
-      --type <type>                            Type of the input file. (Default: points)
+      --datatype <datatype>                    Type of the input file. (Default: points)
       --maxdist <distance>                     Maximum distance to be considered while building the Rips complex. (Default: Infinity)
-      --xlabel <label>                         Name of the parameter displayed along the x-axis. (Default: degree (if no function specified))
+      --xlabel <label>                         Name of the parameter displayed along the x-axis. (Default: degree (if no function values specified))
       --ylabel <label>                         Name of the parameter displayed along the y-axis. (Default: distance)
+      --bifil <filtration>                     Specify the type of bifiltration to build. (Default: degree (if no function values specified) or function (if function values specified))
+      --function <function>                    Specify the type of function values to be calculated from the dataset. (Not enabled when input file does not have function values)
       --barcodes <line_file>                   Print barcodes for the line queries in line_file, then exit.
                                                
 
@@ -302,6 +305,7 @@ int main(int argc, char* argv[])
     bool barcodes = args["--barcodes"].isString();
 
     // check if set in file and override if also set in command line
+    // only booleans
     params.minpres = (args["--minpres"].isBool() && args["--minpres"].asBool()) || params.minpres;
     params.betti = (args["--betti"].isBool() && args["--betti"].asBool()) || params.betti;
     params.binary = (args["--binary"].isBool() && args["--binary"].asBool()) || params.binary;
@@ -312,7 +316,8 @@ int main(int argc, char* argv[])
 
     // these flags have arguments
     bool max_dist = args["--maxdist"].isString();
-    bool type = args["--type"].isString();
+    bool type = args["--datatype"].isString();
+    bool bif = args["--bifil"].isString();
     bool homology = args["--homology"].isString();
     bool xbins = args["--xbins"].isString();
     bool ybins = args["--ybins"].isString();
@@ -321,8 +326,12 @@ int main(int argc, char* argv[])
     bool num_threads = args["--num_threads"].isString();
     bool x_label = args["--xlabel"].isString();
     bool y_label = args["--ylabel"].isString();
+    bool fil = args["--function"].isString();
 
+    // go through each flag that was set
+    // error check
     // override whichever flag has been set in the command line
+    // similar to InputManager::parse_args()
     std::string slices;
     if (barcodes) {
         slices = args["--barcodes"].asString();
@@ -345,10 +354,23 @@ int main(int argc, char* argv[])
     }
 
     if (type) {
-        std::string str = args["--type"].asString();
-        if (str != "points" && str != "metric" && str != "bifiltration" && str != "firep" && str != "RIVET_msgpack")
-            throw std::runtime_error("Invalid argument for --type");
+        std::string str = args["--datatype"].asString();
+        if (str != "points" && str != "points_fn" && 
+            str != "metric" && str != "metric_fn" && 
+            str != "bifiltration" && str != "firep" && str != "RIVET_msgpack")
+            throw std::runtime_error("Invalid argument for --datatype");
         params.type = str;
+        if ((str == "points_fn" || str == "metric_fn") && !params.old_function)
+            params.new_function = true;
+        else
+            params.new_function = false;
+    }
+
+    if (bif) {
+        std::string str = args["--bifil"].asString();
+        if (str != "degree" && str != "function")
+            throw std::runtime_error("Invalid argument for --bifil");
+        params.bifil = str;
     }
 
     if (homology) {
@@ -405,6 +427,65 @@ int main(int argc, char* argv[])
             throw std::runtime_error("Invalid argument for --ylabel");
     }
 
+    if (fil) {
+        std::string str = args["--function"].asString();
+        std::string f = "";
+        int b = -1;
+        for (unsigned i = 0; i < str.length(); i++) {
+            if (str[i] != '[' && str[i] != ' ') {
+                f += str[i];
+            }
+            else {
+                b = i;
+                break;
+            }
+        }
+        if (f != "balldensity" && f != "eccentricity" && f != "knndensity" && f != "user")
+            throw std::runtime_error("Invalid argument for --function");
+        if (b == -1 && f != "user")
+            throw std::runtime_error("No parameter specified for function");
+        params.function_type = f;
+        f = "";
+        if (params.function_type != "user") {
+            for (unsigned i = b+1; i < str.length(); i++) {
+                if (str[i] != ']' && str[i] != ' ') {
+                    f += str[i];
+                }
+                else
+                    break;
+            }
+        }
+        if (f == "inf")
+            throw std::runtime_error("Parameter cannot be infinity");
+        if (f == "")
+            params.filter_param = 0;
+        else {
+            double p = atof(f.c_str());
+            if (p <= 0)
+                throw std::runtime_error("Invalid parameter for function");
+            params.filter_param = p;
+        }
+    }
+
+    if ((params.type == "points" || params.type == "metric") && params.bifil == "function" && params.function_type == "none")
+        throw std::runtime_error("Cannot create function rips without function values. If you have provided function values, please specify the correct data type.");
+
+    if (params.type != "bifiltration") {
+        params.y_reverse = false;
+    }
+    if (params.type == "firep") {
+        params.x_reverse = false;
+    }
+    if (params.bifil == "degree") {
+        params.x_reverse = true;
+    }
+    if (params.bifil == "degree") {
+        params.x_label = "degree";
+    }
+    if (params.bifil == "function" && params.function_type == "none") {
+        params.function_type = "user";
+    }
+
     // all input parameters should be set by this point
 
     // Setup the requested number of threads to use for computations via OpenMP
@@ -417,7 +498,7 @@ int main(int argc, char* argv[])
     bool binary = params.binary;
     bool minpres_only = params.minpres;
     bool betti_only = params.betti;
-    bool bounds = params.bounds;
+    bool bounds = params.bounds; 
     bool koszul = params.koszul;
 
     std::atexit(clean_temp_files);
@@ -517,12 +598,6 @@ int main(int argc, char* argv[])
     DataReader dataReader(params);
     content = dataReader.process(progress);
 
-    // try {
-    //    content = inputManager.start(progress);
-    // } catch (const std::exception& e) {
-    //     input_error(e.what());
-    //     return 1;
-    // }
     if (params.verbosity >= 4) {
         debug() << "Input processed.";
     }

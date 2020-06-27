@@ -1,4 +1,4 @@
---type bifiltration
+--datatype bifiltration
 --xlabel x-label
 --ylabel y-label
 

@@ -1,4 +1,4 @@
---type firep
+--datatype firep
 --xlabel parameter 1
 --ylabel parameter 2
 

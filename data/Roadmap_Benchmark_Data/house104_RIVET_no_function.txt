@@ -1,4 +1,4 @@
---type metric
+--datatype metric
 --ylabel Rips Scale
 #changed max scale from .72344 to .475 for visualization purposes.
 --maxdist .475

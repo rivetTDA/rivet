@@ -2,9 +2,12 @@
 
 Input Data Files
 ================
+
+[NOTE: The documentation for the first four formats has been cleaned up/simplified, and uses a structure where details about the flags usage appears after a specification of the basic input format.  This change still needs to be made for the last two input formats.]
+
 As explained in :ref:`runningRIVET`, RIVET requires an *input data file*.  
 
-Starting with version 1.1 (released in 2019), the format for input data files has been redesigned to be more flexible; this page describes the new format.  [RIVET still supports the older, less-flexible input file formats required by RIVET 1.0; details about these can be found in ":ref:`oldInputData`".  However, the use of the old input formats is discouraged, and support may be discontinued in future versions of RIVET.]
+Starting with version 1.1 (released in 2020), the format for input data files has been redesigned to be more flexible; this page describes the new format.  [RIVET still supports the older, less-flexible input file formats required by RIVET 1.0; details about these can be found in ":ref:`oldInputData`".  However, the use of the old input formats is discouraged, and support may be discontinued in future versions of RIVET.]
 
 RIVET accepts six types of input data files; the flag :code:`--datatype` tells RIVET which file type to expect.  The six file types are listed below, together with the associated value of the flag :code:`--datatype` in parentheses:
 
@@ -19,7 +22,7 @@ RIVET accepts six types of input data files; the flag :code:`--datatype` tells R
 
 If the flag :code:`--datatype` is not given, RIVET uses the default value of :code:`points`.  As noted in :ref:`runningRIVET`, any of the command-line flags described in :ref:`_flags` can be placed either in an input data file or given directly on the command line, and this is true in particular for the flag :code:`--datatype`.
 
-In general, flags in the input data file must be provided in the top lines of the file, before the data is givens and as noted in :ref:`runningRIVET`, flags provided to **rivet_console** override those given in the input file.  [MUST EACH FLAG APPEAR ON ITS OWN LINE?].  
+In general, flags in the input data file must be provided in the top lines of the file, before the data is given and as noted in :ref:`runningRIVET`,[REMOVE THIS] flags provided to **rivet_console** override those given in the input file.  [MUST EACH FLAG APPEAR ON ITS OWN LINE?].  
 
 RIVET ignores lines in an input data file that begin with the symbol `#`; such lines may be used for comments.  Blank lines are also ignored.
 
@@ -35,8 +38,9 @@ The file has the following format:
 
 Flag usage:
 
-* :code:`maxdist <distance>` sets the maximum scale parameter.
-* [TO BE IMPLEMENTED] :code:`--function <fn>` tells RIVET to construct a function-Rips bifiltrations rather a degree-Rips bifiltration, using the built-in function <fn>.  
+* :code:`--maxdist <distance>` sets the maximum scale parameter.
+* :code:`--bifil function` tells RIVET to construct a function-Rips bifiltration from the Point Cloud input.
+* :code:`--function <fn>` makes RIVET use the function `<fn>`.     
 
 Here is an example specifying three points in :math:`\mathbb R^2`::
 	
@@ -52,11 +56,7 @@ Here is an example specifying three points in :math:`\mathbb R^2`::
 	1.1,2
 	-2,3
 
-.. 
-        COMMENTED MATERIAL, TO BE DELETED
-	Axis label defaults for MI File computation:
-	* The default label for the :math:`y`-axis is **distance**.
-	* [To be implemented] If the flag :code:`--function <fn>` is not used, the default label for the :math:`x`-axis is **degree**.  Use of :code:`--function <fn>` changes the default label for 		the :math:`x`-axis as described in :ref:`_flags`
+ADD AN EXAMPLE OF FLAG USAGE FOR A DISTANCE FUNCTION?
 
 Point Cloud with Function
 ---------------------------
@@ -69,12 +69,13 @@ The file has the following format:
 * Each subsequent line contains the coordinates of exactly one point, specified as :math:`n` decimal numbers separated by white space or commas.
 
 Flag usage:
-* the flag :code:`--datatype points_fn` must 
-* :code:`maxdist <distance>` sets the maximum scale parameter.
-* :code:`--bifil degreeRips` tells RIVET to constructs a degree-Rips bifiltration rather than a function-Rips bifiltration, thereby ignoring the function values given in the file.  
-* [TO BE IMPLEMENTED] :code:`--function <fn>` tells RIVET to use a built-in function to construct the function-Rips bifiltration, thereby ignoring the function values given in the file.    
+* :code:`--datatype points_fn` must be provided.
+* :code:`--maxdist <distance>` sets the maximum scale parameter.
+* :code:`--bifil degree` tells RIVET to constructs a degree-Rips bifiltration rather than a function-Rips bifiltration, thereby ignoring the function values given in the file.  
+* :code:`--function <fn>` tells RIVET to use the function `<fn>` to construct the function-Rips bifiltration, only if `--bifil function` has also been specified. [IS THIS CORRECT?  WHY DO I HAVE TO SPECIFY --BIFIL FUNCTION HERE?  THIS SHOULD BE THE DEFAULT.]  
 * :code:`--xreverse` indicates that the function filtration direction should be descending. (This is useful, e.g.,  when taking :math:`\gamma` to be a density function.)
-* When computing an MI-file, :code:`--xlabel <label>` provides a label for the function axis, for use by **rivet_GUI**.  CAN Y-LABEL EVEN BE USED?
+* When computing an MI-file, :code:`--xlabel <label>` provides a label for the function axis, for use by **rivet_GUI**.
+
 
 Here is an example specifying three points in :math:`\mathbb R^2`, together with a function on these points::
 
@@ -94,34 +95,33 @@ Here is an example specifying three points in :math:`\mathbb R^2`, together with
 	-2,3
 
 
-Finite Metric Space
----------------------------------
+Metric Space
+-----------------------------
 
-This format specifies a :math:`n\times n` matrix, which we think of as representing a metric on a finite set :math:`\{p_1, \ldots, p_n\}`: the entry in row :math:`i`, column :math:`j` of the matrix gives the distance between :math:`p_i` and :math:`p_j`.  Accordingly, the matrix is required to be symmetric, with zeros on the diagonal.  (The given distances are not required to satisfy the triangle inequality, and off-diagonal entries may be zero [IS THIS CORRECT?])
+This format specifies a symmetric :math:`n\times n` matrix, with zeros on the diagonal, which we think of as representing a (semi-pseudo-)metric on a finite set :math:`\{p_1, \ldots, p_n\}`: the entry in row :math:`i`, column :math:`j` of the matrix gives the distance between :math:`p_i` and :math:`p_j`.  The given distances are not required to satisfy the triangle inequality, and off-diagonal entries may be zero.
 
 By default, when given input of this type, RIVET constructs the degree-Rips bifiltration.  
 
-
-
-As with point cloud data, if function values are provided using the :code:`--function` flag, then RIVET constructs a function-Rips bifiltration from the input. Otherwise, RIVET constructs a degree-Rips bifiltration.
-A maximum distance :math:`d` may be specified with the :code:`--max-dist` flag, which causes RIVET to only consider entries in the matrix with value less than :math:`d`.
-
 The file has the following format:
+* Following the flags, the distance matrix is given in either of two formats; RIVET automatically detects the format.
+  + Format 1: The full matrix is explicitly provided, one row per line. Each row is specified as a list of decimal numbers separated by white space or commas.
+  + Format 2: The matrix is given in triangular format, specifying only the entries above the diagonal of the distance matrix. The first line of data contains :math:`n-1` numbers, which give the distances from :math:`p_1` to :math:`p_2, \ldots, p_n`. The next line contains :math:`n-2` numbers, which give the distances from :math:`p_2` to :math:`p_3, \ldots, p_n`, and so on. The last line of data gives only the distance from :math:`p_{n-1}` to :math:`p_n`.
 
-* Flags may be specified at the top of the file. Note that the :code:`--type` flag must be given with the argument :code:`metric`. For a full list of possible flags, run :code:`rivet_console (-h | --help)`. 
-* After all flags have been specified (including :code:`--function` and its values), the distance matrix  must be given. RIVET supports two formats for specifying the distance matrix:
-  + The matrix may be given as a :math:`n \times n` matrix. Each of the :math:`n` rows of the matrix must be provided as one line of the file, specified as :math:`n` decimal numbers separated by white space or commas.
-  + The matrix may be given in a triangular format, specifying only the entries above the diagonal of the distance matrix. The first line of data contains :math:`n-1` numbers, which give the distances from :math:`p_1` to :math:`p_2, \ldots, p_n`. The next line of data contains :math:`n-2` numbers, which give the distances from :math:`p_2` to :math:`p_3, \ldots, p_n`, and so on. The last line of data gives only the distance from :math:`p_{n-1}` to :math:`p_n`.
+
+Flag Usage:
+* :code:`--datatype metric` must be provided.
+* :code:`--maxdist <distance>` sets the maximum scale parameter.
+* :code:`--bifil function` tells RIVET to construct a function-Rips bifiltration from the Point Cloud input.
+* :code:`--function <fn>` makes RIVET use the function `<fn>`. 
+
 
 Here is an example, for a metric space of cardinality 3::
 
 	#required flag:
-	--type metric
+	--datatype metric
 
         #optional flags:
 	--xlabel birth time
-	--function
-	1,1.1,-2
 	--ylabel geodesic distance
 
 	# distance matrix (symmetric matrix, with zeros on the diagonal)
@@ -131,7 +131,35 @@ Here is an example, for a metric space of cardinality 3::
 
 The same distance data can be given in the following upper triangular format:
 
-	# upper triangular distance matrix
+
+Metric Space with Function
+-----------------------------
+
+This format is similar to the one just described above, except that this file contains function values associated with the points in the matrix.
+By default, when given input of this type, RIVET constructs the function-Rips bifiltration.
+
+The file has the following format:
+* The first line following any flags lists the function values on the points, in the same order that the points appear later in the file.  The function values are specified by decimal numbers separated by white space or commas.
+* The remaining lines specify the distance matrix, in either of the two formats specified above for the Metric data type.
+
+Flag Usage:
+* :code:`--datatype metric_fn` must be provided.
+* :code:`--maxdist <distance>` sets the maximum scale parameter.
+* :code:`--bifil degree` tells RIVET to constructs a degree-Rips bifiltration rather than a function-Rips bifiltration, thereby ignoring the function values given in the file.  
+* :code:`--function <fn>` tells RIVET to use the function `<fn>` to construct the function-Rips bifiltration, only if `--bifil function` has also been specified.  [AGAIN, IT SHOULD NOT BE NECESSARY TO SPECIFY BIFIL FUNCTION.]
+
+Here is an example, for a metric space of cardinality 3::
+
+	#required flag:
+	--datatype metric_fn
+
+        #optional flags:
+	--xlabel birth time
+	--ylabel geodesic distance
+
+	#function values
+	1,1.1,-2
+	# distance matrix, given in upper triangular format
 	2,3.2
 	1.25
 
@@ -145,17 +173,18 @@ Let :math:`v_1, v_2, \ldots, v_n` denote the vertices (0-simplices) of the bifil
 Specifying the bifiltration requires specifying each simplex (given as a subset of :math:`v_1, v_2, \ldots, v_n`) and its birth indices. 
 Simplices are specified, one simplex per line, in the bifiltration input file.
 
+The file has the following format:
+* After all flags are specified, each remaining line of the file specifies a simplex and its bigrades of appearance.  A line specifying a :math:`j`-simplex with :math:`n` grades of appearance must have :math:`j+1` non-negative integers (separated by white space), followed by a semicolon, followed by :math:`2n` numbers (which may be integers or decimals.  The semicolon must be surrounded by spaces.  The first :math:`j+1` integers give the vertices of the simplex. The remaining numbers specify the bigrades at which the simplex appears.
+
 The user must ensure that the input file specifies a valid bifiltration, in the sense that a simplex is never born before its faces; RIVET does not error-check this.
 
-A file in the bifiltration format must have the following format:
+Flag Usage:
+* :code:`--datatype bifiltration` must be provided.
+* The flags :code:`--xreverse` and :code:`--yreverse` specify that the filtration is to be constructed with respect to descending x-coordinates or y-coordinates.  These flags cannot be used (or omitted) freely; the coordinate directions specified must be compatible with given bigrades of simplices, so that no simplex before one of its faces.  The code does not detect the correct flags  automatically, and the user is responsible for supplying them.
 
-* Flags may be specified at the top of the file. Note that the :code:`--type` flag must be given with the argument :code:`bifiltration`. For a full list of possible flags, run :code:`rivet_console (-h | --help)`. 
-* The :code:`--xlabel` and :code:`--ylabel` flags are often specified for bifiltration input. To reverse either (or both) axis directions, provide the flags :code:`--xreverse` or :code:`--yreverse`.
-* After all flags are specified, the remaining lines of the file each specify a simplex and its bigrades of appearance.  A line specifying a :math:`j`-simplex with :math:`n` grades of appearance must have :math:`j+1` non-negative integers (separated by white space), followed by a semicolon, followed by :math:`2n` numbers (which may be integers or decimals.  The semicolon must be surrounded by spaces.  The first :math:`j+1` integers give the vertices of the simplex. The remaining numbers specify the bigrades at which the simplex appears.
+An example appears below. This consists of: the boundary of a triangle born at :math:`(0,0)`; the interior of the triangle born at both :math:`(1,0)` and :math:`(0,1)`; two edges that complete the boundary of a second triangle adjacent to the first, born at :math:`(1,1)`::
 
-A sample multicritical bifiltration file appears below. This consists of: the boundary of a triangle born at :math:`(0,0)`; the interior of the triangle born at both :math:`(1,0)` and :math:`(0,1)`; two edges that complete the boundary of a second triangle adjacent to the first, born at :math:`(1,1)`::
-
-	--type bifiltration
+	--datatype bifiltration
 	--xlabel time of appearance
 	--ylabel network distance
 
@@ -192,14 +221,17 @@ An FIRep
 
    \[ C_2 \xrightarrow{f} C_1 \xrightarrow{g} C_0. \]
 
-is specified as follows:
-
-* Flags may be specified at the top of the file. Note that the :code:`--type` flag must be given with the argument :code:`firep`. For a full list of possible flags, run :code:`rivet_console (-h | --help)`. 
-* The :code:`--xlabel` and :code:`--ylabel` flags are often specified for bifiltration input. To reverse either (or both) axis directions, provide the flags :code:`--xreverse` or :code:`--yreverse`.
-* After all flags are specified, the remaining lines of the file give the FIRep data. The first line of this data must be of the form ``t s r``, where ``t``, ``s``, and ``r`` are, repsectively, the number of generators in bases for :math:`C_2`, :math:`C_1`, and :math:`C_0`.
+is specified in the following format:
+* Following any flags, the first line must be of the form ``t s r``, where ``t``, ``s``, and ``r`` are, repsectively, the ranks of :math:`C_2`, :math:`C_1`, and :math:`C_0`.
 * Each of the next ``t`` lines specifies the bigrade of appearance of a basis element for :math:`C_2`, together with the corresponding column of the matrix representing :math:`f`: the format for such a line is: ``x y ; b1 b2 b3``, where the ``bi`` are the row indices of nonzero column entries.  (Recall that we work with :math:`\mathbb{Z}/2\mathbb{Z}` coefficients.) 
 * Each of the next ``s`` lines specifies the bigrade of appearance of a basis element for :math:`C_1`, together with the corresponding column of the matrix representing :math:`g`.
    
+As with the Bifiltration input format, the user must ensure that the input file specifies a valid FIRep.  [Does this need to be capitalized?]
+
+Flag Usage:
+* :code:`--datatype firep` must be provided.
+* The flags :code:`--xreverse` and :code:`--yreverse` specify that the filtration is to be constructed with respect to descending x-coordinates or y-coordinates.  The flags behave for FIRep input in essentially the same way as for bifiltration input, and the user must be sure to supply flags in a way that is compatible with the bigrades of the input.
+
 An example FIRep input is shown below::
 
 	--type firep
@@ -214,7 +246,5 @@ An example FIRep input is shown below::
 	0 0 ; 0 2
 	0 0 ; 0 1
 
-This example has a natural geometric interpretation.  
-The boundary of a triangle is born at :math:`(0,0)`, and the triangle is filled in at both :math:`(1,0)` and :math:`(0,1)`. 
-The input gives the portion of the resulting chain complex required to compute the 1st persistent homology module. 
+This example has a natural geometric interpretation: The boundary of a triangle is born at :math:`(0,0)`, and the triangle is filled in at both :math:`(1,0)` and :math:`(0,1)`.  The input gives the portion of the resulting chain complex required to compute the 1st persistent homology module. 
 

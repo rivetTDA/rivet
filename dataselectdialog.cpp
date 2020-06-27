@@ -55,8 +55,9 @@ DataSelectDialog::DataSelectDialog(InputParameters& params, QWidget* parent)
         ui->xbinSpinBox->setValue(10);
         ui->ybinSpinBox->setValue(10);
     }
-
-
+    // infinity button
+    ui->maxDistHelp->setText(QChar(0x221E));
+    ui->maxDistHelp->setStyleSheet("QPushButton { font : 20px; padding-top: -4px;}"); // doesn't work:  qproperty-alignment: AlignTop;
 }
 
 DataSelectDialog::~DataSelectDialog()
@@ -79,15 +80,23 @@ void DataSelectDialog::showEvent(QShowEvent* event)
     event->accept();
 
     // reset the parameter frame when a new dialog is created
+    // every object should be set to default
+
+    ui->fileLabel->setText("First, select a file.");
+    ui->fileTypeLabel->setText("You can start from a point cloud, finite metric space, bifiltration, FIRep, or a module invariants file.");
 
     ui->xAxisLabel->setText("");
     ui->yAxisLabel->setText("");
     ui->xRevCheckBox->setChecked(false);
     ui->yRevCheckBox->setChecked(false);
+    ui->xRevCheckBox->setEnabled(true);
+    ui->yRevCheckBox->setEnabled(true);
     ui->maxDistBox->setEnabled(true);
     ui->maxDistBox->setText("");
     ui->maxDistHelp->setToolTip("");
-    ui->maxDistHelp->setStyleSheet("QLabel { color: #808080; }");
+    ui->maxDistHelp->setEnabled(false);
+    if (ui->dataTypeComboBox->findText("N/A") != -1)
+        ui->dataTypeComboBox->removeItem(ui->dataTypeComboBox->findText("N/A"));
     ui->dataTypeComboBox->setCurrentIndex(0);
     ui->dataTypeComboBox->setEnabled(true);
     ui->xbinSpinBox->setValue(10);
@@ -96,22 +105,52 @@ void DataSelectDialog::showEvent(QShowEvent* event)
     ui->homDimSpinBox->setEnabled(true);
     ui->homDimSpinBox->setValue(0);
     ui->parameterFrame->setEnabled(false);
-    ui->computeButton->setEnabled(false);    
+    ui->computeButton->setEnabled(false);
+    if (ui->filterComboBox->findText("N/A") != -1)
+        ui->filterComboBox->removeItem(ui->filterComboBox->findText("N/A"));
+    ui->filterComboBox->setEnabled(true);
+    ui->filterComboBox->setCurrentIndex(0);
+    ui->maxDistBox->setPalette(this->style()->standardPalette());
+    ui->maxDistBox->setToolTip("");
+    ui->functionComboBox->setEditable(true);
+    ui->functionComboBox->setCurrentText("none");
+    ui->functionComboBox->setEnabled(true);
+    ui->parameterSpinBox->setEnabled(true);
+    ui->parameterSpinBox->setValue(0.00);
+    ui->parameterSpinBox->setSpecialValueText("");
+    ui->parameterLabel->setText("Parameter:");
+
 }
 
 void DataSelectDialog::on_computeButton_clicked()
 {
+    // check if max_dist value is invalid
+    // turns box red if it is and does not proceed
+    params.md_string = ui->maxDistBox->text().toStdString();
+    if (params.md_string != "N/A" && (params.md_string.length() != 3 || params.md_string != "inf")) {
+        double md = atof(params.md_string.c_str());
+        if (md <= 0 || md == std::numeric_limits<double>::infinity()) {
+            ui->maxDistBox->setPalette(QPalette(QColor("red")));
+            ui->maxDistBox->setToolTip("Distance must be a number greater than 0");
+            return;
+        }
+    }
+    
     // read in the input parameters from the dialog
-
     params.hom_degree = ui->homDimSpinBox->value();
     params.x_bins = ui->xbinSpinBox->value();
     params.y_bins = ui->ybinSpinBox->value();
     params.x_label = ui->xAxisLabel->text().toStdString();
     params.y_label = ui->yAxisLabel->text().toStdString();
-    params.md_string = ui->maxDistBox->text().toStdString();
     params.x_reverse = ui->xRevCheckBox->checkState();
     params.y_reverse = ui->yRevCheckBox->checkState();
     params.type = ui->dataTypeComboBox->currentText().toStdString();
+    if (params.type != "bifiltration" && params.type != "firep" && params.type != "RIVET_msgpack")
+        params.bifil = ui->filterComboBox->currentText().toStdString();
+    if (params.bifil == "function") {
+        params.function_type = ui->functionComboBox->currentText().toStdString();
+        params.filter_param = ui->parameterSpinBox->value();
+    }
 
     data_selected = true;
 
@@ -140,10 +179,18 @@ void DataSelectDialog::on_openFileButton_clicked()
     }
 } //end on_openFileButton_clicked()
 
+void DataSelectDialog::on_maxDistHelp_clicked()
+{
+    ui->maxDistBox->setText("inf");
+}
+
 void DataSelectDialog::detect_file_type()
 {
-    // set this once filtration functions have been implemented
-    ui->filterComboBox->setEnabled(false);
+    // set everything to default here
+    // this is necessary for the load new data feature
+
+    ui->fileLabel->setText("First, select a file.");
+    ui->fileTypeLabel->setText("You can start from a point cloud, finite metric space, bifiltration, FIRep, or a module invariants file.");
 
     ui->homDimSpinBox->setSpecialValueText("");
     //this turns off the special value text (i.e. zero is displayed like normal)
@@ -151,7 +198,42 @@ void DataSelectDialog::detect_file_type()
     ui->homDimSpinBox->setEnabled(true);
     ui->homDimSpinBox->setValue(0);
 
-    // reset the values and states of everything when a new file is selected
+    ui->maxDistBox->setEnabled(true);
+    ui->maxDistBox->setText("");
+    ui->maxDistHelp->setToolTip("");
+    ui->maxDistHelp->setEnabled(false);
+
+    if (ui->dataTypeComboBox->findText("N/A") != -1)
+        ui->dataTypeComboBox->removeItem(ui->dataTypeComboBox->findText("N/A"));
+    ui->dataTypeComboBox->setCurrentIndex(0);
+    ui->dataTypeComboBox->setEnabled(true);
+    // disable bifiltration and FIRep types -- maybe unnecessary
+    qobject_cast<QStandardItemModel*>(ui->dataTypeComboBox->model())->item(4)->setEnabled(true);
+    qobject_cast<QStandardItemModel*>(ui->dataTypeComboBox->model())->item(5)->setEnabled(true);
+
+    if (ui->filterComboBox->findText("N/A") != -1)
+        ui->filterComboBox->removeItem(ui->filterComboBox->findText("N/A"));
+    ui->filterComboBox->setCurrentIndex(0);
+    ui->filterComboBox->setEnabled(true);
+
+    ui->xbinSpinBox->setValue(10);
+    ui->ybinSpinBox->setValue(10);
+
+    ui->xRevCheckBox->setChecked(false);
+    ui->yRevCheckBox->setChecked(false);
+
+    ui->maxDistBox->setPalette(this->style()->standardPalette());
+    ui->maxDistBox->setToolTip("");
+
+    ui->functionComboBox->setEditable(true);
+    ui->functionComboBox->setCurrentText("none");
+    ui->functionComboBox->setEnabled(true);
+    ui->parameterSpinBox->setEnabled(true);
+    ui->parameterSpinBox->setValue(0.00);
+    ui->parameterSpinBox->setSpecialValueText("");
+    ui->parameterLabel->setText("Parameter:");
+
+    // also remember to reset input parameter values
     params.x_label = "";
     params.y_label = "distance";
 
@@ -161,21 +243,16 @@ void DataSelectDialog::detect_file_type()
     params.x_bins = 10;
     params.y_bins = 10;
 
+    params.bifil = "";
+    params.new_function = false;
+
     params.type = "points";
     params.max_dist = -1;
     params.md_string = "inf";
     params.hom_degree = 0;
 
-    ui->maxDistBox->setEnabled(true);
-    ui->maxDistBox->setText("");
-    ui->maxDistHelp->setToolTip("");
-    ui->maxDistHelp->setStyleSheet("QLabel { color: #808080; }");
-
-    ui->dataTypeComboBox->setCurrentIndex(0);
-    ui->dataTypeComboBox->setEnabled(true);
-
-    ui->xbinSpinBox->setValue(10);
-    ui->ybinSpinBox->setValue(10);
+    params.function_type = "none";
+    params.filter_param = 0;
 
     std::ifstream infile(params.fileName);
 
@@ -204,36 +281,85 @@ void DataSelectDialog::detect_file_type()
     ui->homDimSpinBox->setValue(params.hom_degree);
     ui->maxDistBox->setText(QString::fromStdString(params.md_string));
 
+    if (inputManager.type_set)
+        ui->dataTypeComboBox->setEnabled(false);
+
     if (params.type == "points") {
         type_string += "point-cloud data.";
         ui->dataTypeComboBox->setCurrentIndex(0);
+
+        // disable bifiltration and FIRep types
+        qobject_cast<QStandardItemModel*>(ui->dataTypeComboBox->model())->item(4)->setEnabled(false);
+        qobject_cast<QStandardItemModel*>(ui->dataTypeComboBox->model())->item(5)->setEnabled(false);
+
+        // disable user function values
+        qobject_cast<QStandardItemModel*>(ui->functionComboBox->model())->item(0)->setEnabled(false);
+
+        ui->xRevCheckBox->setEnabled(false);
+        ui->yRevCheckBox->setEnabled(false);
+    }
+    else if (params.type == "points_fn") {
+        type_string += "point-cloud data with function values.";
+        ui->dataTypeComboBox->setCurrentIndex(1);
+        ui->yRevCheckBox->setEnabled(false);
     }
     else if (params.type == "metric") {
         type_string += "metric data.";
-        ui->dataTypeComboBox->setCurrentIndex(1);
+        ui->dataTypeComboBox->setCurrentIndex(2);
+        ui->xRevCheckBox->setEnabled(false);
+        ui->yRevCheckBox->setEnabled(false);
+
+        // disable user function values
+        qobject_cast<QStandardItemModel*>(ui->functionComboBox->model())->item(0)->setEnabled(false);
+    }
+    else if (params.type == "metric_fn") {
+        type_string += "metric data with function values.";
+        ui->dataTypeComboBox->setCurrentIndex(3);
+        ui->yRevCheckBox->setEnabled(false);
     }
     else if (params.type == "bifiltration") {
-        ui->dataTypeComboBox->setCurrentIndex(2);
+        ui->dataTypeComboBox->setCurrentIndex(4);
         ui->dataTypeComboBox->setEnabled(false);
         type_string += "bifiltration data.";
         ui->maxDistBox->setText("N/A");
         ui->maxDistBox->setEnabled(false);
+        ui->filterComboBox->addItem("N/A");
+        ui->filterComboBox->setCurrentIndex(ui->filterComboBox->count()-1);
+        ui->filterComboBox->setEnabled(false);
+        ui->functionComboBox->setEnabled(false);
+        ui->xAxisLabel->setEnabled(true);
+        ui->yAxisLabel->setEnabled(true);
+        ui->xRevCheckBox->setEnabled(true);
+        ui->xRevCheckBox->setChecked(false);
+        ui->yRevCheckBox->setEnabled(true);
+        ui->yRevCheckBox->setChecked(false);
     }
     else if (params.type == "firep") {
-        ui->dataTypeComboBox->setCurrentIndex(3);
+        ui->dataTypeComboBox->setCurrentIndex(5);
         ui->dataTypeComboBox->setEnabled(false);
         type_string += "free implicit representation data.";
 
         ui->homDimSpinBox->setSpecialValueText("N/A");
-        //the spinbox will show the special value text when the value is the minimum value (i.e. zero)
         ui->homDimSpinBox->setValue(0);
         ui->homDimSpinBox->setEnabled(false);
 
         ui->maxDistBox->setText("N/A");
         ui->maxDistBox->setEnabled(false);
+        ui->filterComboBox->addItem("N/A");
+        ui->filterComboBox->setCurrentIndex(ui->filterComboBox->count()-1);
+        ui->filterComboBox->setEnabled(false);
+        ui->functionComboBox->setEnabled(false);
+
+        ui->xRevCheckBox->setEnabled(false);
+        ui->xRevCheckBox->setChecked(false);
+        ui->yRevCheckBox->setEnabled(false);
+        ui->yRevCheckBox->setChecked(false);
     }
     else if (params.type == "RIVET_msgpack") {
-        ui->dataTypeComboBox->setCurrentIndex(4);
+        ui->dataTypeComboBox->addItem("RIVET_msgpack");
+        ui->dataTypeComboBox->setCurrentIndex(ui->dataTypeComboBox->count()-1);
+        ui->filterComboBox->addItem("N/A");
+        ui->filterComboBox->setCurrentIndex(ui->filterComboBox->count()-1);
         ui->dataTypeComboBox->setEnabled(false);
         type_string += "pre-computed RIVET data.";
         raw = false;
@@ -241,6 +367,52 @@ void DataSelectDialog::detect_file_type()
 
     ui->xAxisLabel->setText(QString::fromStdString(params.x_label));
     ui->yAxisLabel->setText(QString::fromStdString(params.y_label));
+
+    if (params.type != "firep" && params.type != "bifiltration" && params.type != "RIVET_msgpack") {
+        if (params.bifil == "degree") {
+            ui->filterComboBox->setCurrentIndex(0);
+            ui->xAxisLabel->setText("degree");
+            ui->xAxisLabel->setEnabled(false);
+            ui->xRevCheckBox->setChecked(true);
+            ui->xRevCheckBox->setEnabled(false);
+            ui->functionComboBox->setEditable(true);
+            ui->functionComboBox->setCurrentText("none");
+            ui->functionComboBox->setEnabled(false);
+            ui->parameterSpinBox->setEnabled(false);
+            ui->parameterSpinBox->setSpecialValueText("N/A");
+            ui->parameterSpinBox->setValue(0.00);
+        }
+        else {
+            if (params.bifil == "function")
+                ui->filterComboBox->setCurrentIndex(1);
+            ui->xAxisLabel->setText(QString::fromStdString(params.x_label));
+            ui->xAxisLabel->setEnabled(true);
+            ui->xRevCheckBox->setChecked(false);
+            ui->xRevCheckBox->setEnabled(true);
+            ui->functionComboBox->setEnabled(true);
+            ui->functionComboBox->setEditable(false);
+            ui->functionComboBox->setCurrentText(QString::fromStdString(params.function_type));
+            if (params.function_type == "user" || params.function_type == "none") {
+                ui->parameterSpinBox->setEnabled(false);
+                ui->parameterSpinBox->setSpecialValueText("N/A");
+                ui->parameterSpinBox->setValue(0.00);
+            }
+            else {
+                if (params.function_type == "balldensity")
+                    ui->parameterLabel->setText("Radius:");
+                else if (params.function_type == "knndensity")
+                    ui->parameterLabel->setText("K:");
+                else if (params.function_type == "eccentricity")
+                    ui->parameterLabel->setText("P Norm:");
+                ui->parameterSpinBox->setEnabled(true);
+                ui->parameterSpinBox->setSpecialValueText("");
+                if ((params.function_type == "knndensity" || params.function_type == "eccentricity") && params.filter_param == 0)
+                    ui->parameterSpinBox->setValue(1.0);
+                else
+                    ui->parameterSpinBox->setValue(params.filter_param);
+            } 
+        }
+    }
 
     if (params.x_reverse)
         ui->xRevCheckBox->setChecked(true);
@@ -264,8 +436,8 @@ void DataSelectDialog::detect_file_type()
     ui->parameterFrame->setEnabled(raw);
 
     if (ui->maxDistBox->isEnabled()) {
-        ui->maxDistHelp->setToolTip("Enter \"inf\" for infinity");
-        ui->maxDistHelp->setStyleSheet("QLabel { color: blue; }");
+        ui->maxDistHelp->setToolTip("Set distance to infinity");
+        ui->maxDistHelp->setEnabled(true);
     }
 
     ui->computeButton->setEnabled(true);
@@ -285,4 +457,80 @@ void DataSelectDialog::invalid_file(const QString& message)
     ui->fileTypeLabel->setText(nullptr);
     QMessageBox errorBox(QMessageBox::Warning, "Error", message);
     errorBox.exec();
+}
+
+void DataSelectDialog::on_filterComboBox_currentIndexChanged(int index)
+{
+    // make certain options available or unavailable
+    // depends on what is selected for bifiltration
+    if (index == 0) {
+        ui->xAxisLabel->setText("degree");
+        ui->xAxisLabel->setEnabled(false);
+        ui->xRevCheckBox->setChecked(true);
+        ui->xRevCheckBox->setEnabled(false);
+        ui->functionComboBox->setEditable(true);
+        ui->functionComboBox->setCurrentText("none");
+        ui->functionComboBox->setEnabled(false);
+        ui->parameterSpinBox->setEnabled(false);
+        ui->parameterSpinBox->setSpecialValueText("N/A");
+        ui->parameterSpinBox->setValue(0.00);
+    }
+    else {
+        ui->xAxisLabel->setText(QString::fromStdString(params.x_label));
+        ui->xAxisLabel->setEnabled(true);
+        ui->xRevCheckBox->setChecked(false);
+        ui->xRevCheckBox->setEnabled(true);
+        ui->functionComboBox->setEnabled(true);
+        ui->functionComboBox->setEditable(false);
+        if (!params.old_function && !params.new_function && params.function_type == "none")
+            params.function_type = "balldensity";
+        ui->functionComboBox->setCurrentText(QString::fromStdString(params.function_type));
+        if (params.function_type == "user" || params.function_type == "none") {
+            ui->parameterSpinBox->setEnabled(false);
+            ui->parameterSpinBox->setSpecialValueText("N/A");
+            ui->parameterSpinBox->setValue(0.00);
+        }
+        else {
+            if (params.function_type == "balldensity")
+                ui->parameterLabel->setText("Radius:");
+            else if (params.function_type == "knndensity")
+                ui->parameterLabel->setText("K:");
+            else if (params.function_type == "eccentricity")
+                ui->parameterLabel->setText("P Norm:");
+            ui->parameterSpinBox->setEnabled(true);
+            ui->parameterSpinBox->setSpecialValueText("");
+            if ((params.function_type == "knndensity" || params.function_type == "eccentricity") && params.filter_param == 0)
+                ui->parameterSpinBox->setValue(1.0);
+            else
+                ui->parameterSpinBox->setValue(params.filter_param);
+        }
+    }
+}
+
+void DataSelectDialog::on_functionComboBox_currentIndexChanged(int index)
+{
+    if (index == 0) {
+        ui->parameterLabel->setText("Parameter:");
+        ui->parameterSpinBox->setEnabled(false);
+        ui->parameterSpinBox->setSpecialValueText("N/A");
+        ui->parameterSpinBox->setValue(0.00);
+    }
+    else {
+        if (index == 1)
+            ui->parameterLabel->setText("Radius:");
+        else if (index == 2)
+            ui->parameterLabel->setText("K:");
+        else if (index == 3)
+            ui->parameterLabel->setText("P Norm:");
+        if (index == 1 || index == 3)
+            ui->xRevCheckBox->setChecked(true);
+        else
+            ui->xRevCheckBox->setChecked(false);
+        ui->parameterSpinBox->setEnabled(true);
+        ui->parameterSpinBox->setSpecialValueText("");
+        if ((index == 2 || index == 3) && params.filter_param == 0)
+            ui->parameterSpinBox->setValue(1.0);    
+        else
+            ui->parameterSpinBox->setValue(params.filter_param);
+    }
 }

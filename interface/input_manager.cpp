@@ -119,6 +119,7 @@ void InputManager::parse_args()
 
     std::pair<std::vector<std::string>, unsigned> line_info;
     int num_lines = 0;
+    type_set = false;
 
     try {
         while (reader.has_next_line()) {
@@ -127,6 +128,7 @@ void InputManager::parse_args()
             if (line_info.first[0] == "points" || line_info.first[0] == "metric" || line_info.first[0] == "bifiltration" || line_info.first[0] == "firep" || line_info.first[0] == "RIVET_msgpack") {
                 input_params.type = line_info.first[0];
                 input_file.close();
+                type_set = true;
                 if (input_params.type == "points")
                     parse_points_old();
                 if (input_params.type == "metric")
@@ -151,8 +153,7 @@ void InputManager::parse_args()
                     if (line[1] == "inf") {
                         input_params.max_dist = -1;
                         input_params.md_string = "inf";
-                    }
-                    else {
+                    } else {
                         // max distance cannot be less than 0
                         exact dist = str_to_exact(line[1]);
                         if (dist <= 0)
@@ -233,17 +234,54 @@ void InputManager::parse_args()
                 // everything coming after --y-label is the label
                 for (unsigned i = 1; i < line.size(); i++)
                     input_params.y_label += line[i] + " ";
+            } else if (line[0] == "--function") {
+                std::string str = line[1];
+                std::string f = "";
+                int b = -1;
+                // determine argument before the first '['
+                // the parameter is supplied in '[]' after specifying the function type
+                for (unsigned i = 0; i < str.length(); i++) {
+                    if (str[i] != '[' && str[i] != ' ') {
+                        f += str[i];
+                    } else {
+                        b = i;
+                        break;
+                    }
+                }
+                if (f != "balldensity" && f != "eccentricity" && f != "knndensity" && f != "user")
+                    throw std::runtime_error("Invalid argument for --function");
+                // must specify '[]' without anything inside brackets to denote default
+                // only "user" does not need '[]'
+                if (b == -1 && f != "user")
+                    throw std::runtime_error("No parameter specified for function");
+                input_params.function_type = f;
+                f = "";
+                // parse parameter value
+                if (input_params.function_type != "user") {
+                    for (unsigned i = b + 1; i < str.length(); i++) {
+                        if (str[i] != ']' && str[i] != ' ') {
+                            f += str[i];
+                        } else
+                            break;
+                    }
+                }
+                if (f == "inf")
+                    throw std::runtime_error("Parameter cannot be infinity");
+                // default is 0, actual default set in distance matrix class
+                if (f == "")
+                    input_params.filter_param = 0;
+                else {
+                    double p = atof(f.c_str());
+                    if (p <= 0)
+                        throw std::runtime_error("Invalid parameter for function");
+                    input_params.filter_param = p;
+                }
+                if (input_params.function_type == "balldensity" || input_params.function_type == "eccentricity")
+                    input_params.x_reverse = true;
             } else if (line[0] == "--xreverse") {
                 input_params.x_reverse = true;
             } else if (line[0] == "--yreverse") {
                 input_params.y_reverse = true;
-            } else if (line[0] == "--function") {
-                input_params.new_function = true;
-                input_params.function_line = ++num_lines;
-                line_info = reader.next_line(0);
-                // the line after the flag should be a list of values
-                if (is_flag(line_info.first[0]))
-                    throw std::runtime_error("Function values not specified");
             } else if (line[0] == "--binary") {
                 input_params.binary = true;
             } else if (line[0] == "--minpres") {
@@ -254,11 +292,19 @@ void InputManager::parse_args()
                 input_params.bounds = true;
             } else if (line[0] == "--koszul" || line[0] == "-k") {
                 input_params.koszul = true;
-            } else if (line[0] == "--type") {
+            } else if (line[0] == "--datatype") {
                 // specifies file type, throw error if unknown
-                if (line[1] != "points" && line[1] != "metric" && line[1] != "bifiltration" && line[1] != "firep" && line[1] != "RIVET_msgpack")
-                    throw std::runtime_error("Invalid argument for --type");
+                if (line[1] != "points" && line[1] != "points_fn" && line[1] != "metric" && line[1] != "metric_fn" && line[1] != "bifiltration" && line[1] != "firep" && line[1] != "RIVET_msgpack")
+                    throw std::runtime_error("Invalid argument for --datatype");
                 input_params.type = line[1];
+                type_set = true; // this is used to enable/disable options in GUI
+                if (line[1] == "points_fn" || line[1] == "metric_fn") {
+                    input_params.new_function = true;
+                }
+            } else if (line[0] == "--bifil") {
+                if (line[1] != "degree" && line[1] != "function")
+                    throw std::runtime_error("Invalid argument for --bifil");
+                input_params.bifil = line[1];
             } else {
                 throw std::runtime_error("Invalid option" + line[0] + "at line " + std::to_string(line_info.second));
             }
@@ -267,17 +313,51 @@ void InputManager::parse_args()
         throw InputError(line_info.second, e.what());
     }
 
+    if ((input_params.type == "points" || input_params.type == "metric") && input_params.bifil == "function")
+        throw std::runtime_error("Cannot create function rips without function values. If you have provided function values, please specify the correct data type.");
+
     // skip stores number of lines to skip
     input_params.to_skip = num_lines;
+
+    // determine parameter values from available information
+    if (input_params.bifil == "") {
+        if (input_params.new_function)
+            input_params.bifil = "function";
+        else
+            input_params.bifil = "degree";
+    }
     // determine dimension in which points live
+    if (input_params.type == "points" || input_params.type == "points_fn")
+        line_info = reader.next_line(0);
     input_params.dimension = line_info.first.size();
-    if (input_params.type == "metric") {
+    if (input_params.type == "metric" || input_params.type == "metric_fn") {
         line_info = reader.next_line(0);
         if (input_params.dimension == line_info.first.size())
             ;
         else if (input_params.dimension == line_info.first.size() + 1)
             input_params.dimension++; // this is the number of points for metric space
     }
+
+    // set parameters here based on parsed input file
+    if (input_params.type == "metric" || input_params.type == "points") {
+        input_params.x_reverse = true;
+        input_params.y_reverse = false;
+    }
+    if (input_params.type == "metric_fn" || input_params.type == "points_fn") {
+        input_params.y_reverse = false;
+    }
+    if (input_params.type == "firep") {
+        input_params.x_reverse = false;
+        input_params.y_reverse = false;
+    }
+
+    if (input_params.bifil == "function" && input_params.function_type == "none") {
+        if (input_params.new_function)
+            input_params.function_type = "user";
+        else
+            input_params.function_type = "balldensity";
+    }
+
     input_file.close();
 }
 
@@ -290,7 +370,7 @@ void InputManager::parse_points_old()
     //skip first line
     reader.next_line();
 
-    auto line_info = reader.next_line();
+    auto line_info = reader.next_line(); 
     try {
         //read dimension of the points from the first line of the file
         std::vector<std::string> dimension_line = line_info.first;
@@ -313,6 +393,7 @@ void InputManager::parse_points_old()
         }
 
         input_params.max_dist = str_to_exact(distance_line[0]);
+        input_params.md_string = distance_line[0];
 
         if (input_params.max_dist <= 0) {
             throw std::runtime_error("An invalid input was received for the max distance.");
@@ -322,15 +403,19 @@ void InputManager::parse_points_old()
         line_info = reader.next_line();
         if (InputManager::join(line_info.first).compare("no function") == 0) {
             input_params.old_function = false;
+            input_params.bifil = "degree";
             //set label for x-axis to "degree"
             input_params.x_label = "degree";
             input_params.x_reverse = true; //higher degrees will be shown on the left
 
         } else {
             input_params.old_function = true;
+            input_params.bifil = "function";
             auto is_reversed_and_label = detect_axis_reversed(line_info.first);
             input_params.x_reverse = is_reversed_and_label.first;
             input_params.x_label = is_reversed_and_label.second;
+            input_params.function_type = "user";
+            input_params.type = "points_fn";
         }
 
         //set label for y-axis to "distance"
@@ -359,6 +444,7 @@ void InputManager::parse_metric_old()
 
         if (InputManager::join(line_info.first).compare("no function") == 0) {
             input_params.old_function = false;
+            input_params.bifil = "degree";
             //set label for x-axis to "degree"
             input_params.x_label = "degree";
 
@@ -376,7 +462,9 @@ void InputManager::parse_metric_old()
         } else {
             // if function values are there
             input_params.old_function = true;
-            input_params.function_line = 3;
+            input_params.bifil = "function";
+            input_params.function_type = "user";
+            input_params.type = "metric_fn";
 
             //check for axis reversal
             auto is_reversed_and_label = detect_axis_reversed(line_info.first);
@@ -396,6 +484,7 @@ void InputManager::parse_metric_old()
         //read the maximum length of edges to construct
         line_info = reader.next_line();
         input_params.max_dist = str_to_exact(line_info.first[0]);
+        input_params.md_string = line_info.first[0];
 
     } catch (InputError& e) {
         throw;

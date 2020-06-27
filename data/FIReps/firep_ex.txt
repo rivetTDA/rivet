@@ -1,4 +1,4 @@
---type firep
+--datatype firep
 --xlabel x-label
 --ylabel y-label
 

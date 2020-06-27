@@ -136,20 +136,19 @@ void IndexMatrix::print_bigrades_vector() const
 
     int prev_entry = -1;
     //print the matrix
-    Debug qd = debug(true);
-    qd << "| ";
+    std::cout << "| ";
     for (unsigned i = 0; i < num_rows; i++) {
         for (unsigned j = 0; j < num_cols; j++) {
             //note that we use the (x,y) convention to print, not the (rows,cols) convention.
             int curr_entry = get(i, j);
             while (curr_entry > prev_entry) {
-                qd << "(" << j << "," << i << ") ";
+                std::cout << "(" << j << "," << i << ") ";
                 curr_entry--;
             }
             prev_entry = get(i, j);
         }
     }
-    qd << "|\n";
+    std::cout << "|\n";
 } //end print()
 
 /********** Defs for IndexMatrixLex **********/
@@ -179,18 +178,17 @@ void IndexMatrixLex::print_bigrades_vector() const
 
     int prev_entry = -1;
     //print the matrix
-    Debug qd = debug(true);
-    qd << "| ";
+    std::cout << "| ";
     for (unsigned j = 0; j < num_cols; j++) {
         for (unsigned i = 0; i < num_rows; i++) {
             //note that we use the (x,y) convention to print, not the (rows,cols) convention.
             int curr_entry = get(i, j);
             while (curr_entry > prev_entry) {
-                qd << "(" << j << "," << i << ") ";
+                std::cout << "(" << j << "," << i << ") ";
                 curr_entry--;
             }
             prev_entry = get(i, j);
         }
     }
-    qd << "|\n";
+    std::cout << "|\n";
 } //end print()
