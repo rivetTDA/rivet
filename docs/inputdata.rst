@@ -3,8 +3,6 @@
 Input Data Files
 ================
 
-[NOTE: The documentation for the first four formats has been cleaned up/simplified, and uses a structure where details about the flags usage appears after a specification of the basic input format.  This change still needs to be made for the last two input formats.]
-
 As explained in :ref:`runningRIVET`, RIVET requires an *input data file*.  
 
 Starting with version 1.1 (released in 2020), the format for input data files has been redesigned to be more flexible; this page describes the new format.  [RIVET still supports the older, less-flexible input file formats required by RIVET 1.0; details about these can be found in ":ref:`oldInputData`".  However, the use of the old input formats is discouraged, and support may be discontinued in future versions of RIVET.]
