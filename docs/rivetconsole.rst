@@ -3,18 +3,7 @@
 Running RIVET from the Console
 ==============================
 
-[THIS PAGE SHOULD BE A THOROUGH DISCUSSION OF rivet_console. THE VISUALIZATION CONTENT AT THE BOTTOM SHOULD BE DELETED OR MOVED.]
-
-The RIVET software consists of two separate but closely related executables: **rivet_console**, a command-line program, and **rivet_GUI**, a GUI application.  **rivet_console** is the computational engine of RIVET; it implements the computation pipeline described in the previous section.   
-
-**rivet_GUI** is responsible for RIVET’s visualizations,  **rivet_GUI** also provides a convenient graphical front-end to  functionality of **rivet_console** needed for RIVET's visualizations.  Thanks to this, RIVET's visualizations can be carried out entirely from within **rivet_GUI**.  
-
-For new users looking to acquaint themselves with RIVET, we recommend starting by using **rivet_GUI** to explore RIVET's visualization capabilities.  In the following section, we provide a "quick start" guide to running RIVET via **rivet_GUI**.  Later sections of the documentation provide more detail on how to use **rivet_console** and **rivet_GUI**.  Users who wish to use RIVET for purposes other than visualization (e.g. machine learning or statistics applications) will want to familiarize themselves with the command-line syntax of **rivet_console**, but we recommend the quick start guide for all users.
-
-**rivet_console**
---------------------------
-
-**rivet_console** has three main functions: 
+Recall from the :ref:`gettingStarted` page that RIVET can be run from the console via the executable **rivet_console**.  This executable has three main functions: 
 
 * Given an *input data file* in one of the formats described in the :ref:`inputData` section of this documentation, **rivet_console** can compute a file called the *module invariants (MI) file*.  The MI file stores the Hilbert function, bigraded Betti numbers, and augmented arrangement of a persistent homology module of the input data.  The MI file is used by the RIVET visualization, and also for the following:
 
