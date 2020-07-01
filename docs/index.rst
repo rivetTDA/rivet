@@ -15,11 +15,10 @@ RIVET Documentation
    preliminaries
    pipeline		
    gettingstarted
-   inputdata
-   rivetconsole   
    visualization
-   example
-
+   rivetconsole
+   inputdata
+   
 
 Indices and tables
 ==================
