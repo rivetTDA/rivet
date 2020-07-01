@@ -3,6 +3,8 @@
 The RIVET Visualization
 =======================
 
+[THIS PAGE NEEDS UPDATES]
+
 .. For more details, see `the RIVET paper <a href="https://arxiv.org/pdf/1512.00180v1.pdf>`_.
 
 The RIVET interface contains two main windows, the *Line Selection Window* and the *Persistence Diagram Window*, shown in the screenshot below.

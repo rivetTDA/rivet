@@ -15,8 +15,8 @@ RIVET Documentation
    preliminaries
    pipeline		
    gettingstarted
-   running
-   inputdata   
+   inputdata
+   rivetconsole   
    visualization
    example
 

@@ -1,9 +1,10 @@
-.. _runningRIVET:
+.. _rivetconsole:
 
-Running RIVET
+RIVET Console
 =============
 
-[NEEDS TO BE UPDATED TO ACCOMMODATE NEW STRUCTURE]
+[THIS PAGE SHOULD BE A THOROUGH DISCUSSION OF rivet_console. THE VISUALIZATION CONTENT AT THE BOTTOM SHOULD BE DELETED OR MOVED.]
+
 The RIVET software consists of two separate but closely related executables: **rivet_console**, a command-line program, and **rivet_GUI**, a GUI application.  **rivet_console** is the computational engine of RIVET; it implements the computation pipeline described in the previous section.   
 
 **rivet_GUI** is responsible for RIVET’s visualizations,  **rivet_GUI** also provides a convenient graphical front-end to  functionality of **rivet_console** needed for RIVET's visualizations.  Thanks to this, RIVET's visualizations can be carried out entirely from within **rivet_GUI**.  
