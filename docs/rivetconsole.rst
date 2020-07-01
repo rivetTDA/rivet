@@ -220,7 +220,7 @@ The remaining lines specify the points where the Betti numbers are non-zero, alo
 
 **rivet_GUI**
 ----------------------------
-  
+[TODO: Cut this, moving some material to the rivet visualization page.]  
 The visualizations performed by **rivet_GUI** require an MI file as input.  This can be computed by an explicit call to **rivet_console** and then opened in **rivet_GUI**.  Alternatively, **rivet_GUI** can call **rivet_console** directly to compute the MI file.
 
 When the user runs **rivet_GUI**, a window opens which allows the user to select a file.
