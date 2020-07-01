@@ -60,6 +60,12 @@ The most important flags are the following:
 
 * :code:`--bifil <type>` specifies the type of bifiltration to be built.  Specifying a bifiltration type only makes sense for certain input data types, and hence this flag can only be used for such input.  In cases where the flag can be used, the available bifiltration types are :code:`function` and :code:`degree`.  The default depends on the choice of input data type.  For details, see the :ref:`inputData` section of this documentation.  For details, see :ref:`inputData`.
 
+* :code:`--function <fn>` tells RIVET to construct a function-Rips bifiltration using the function <fn>.  RIVET supports both user-specified functions and three built-in function types.  The options for <fn> are as follows (see :ref:`preliminaries`):
+
+	+ :code:`balldensity[r]`, where :code:`r` is a positive decimal number, for a closed-ball density estimator with radius :code:`r`.  If :code:`[r]` is ommitted, the default value of :code:`r` is taken to be the 20th percentile of all non-zero distances between points.  The filtration direction for this function is automatically set to be descending. 
+	+ :code:`knndensity[k]`, where :code:`k` is a positive integer, for a :code:`k`-nearest-neighbors codensity estimator, [update this later].  The default value of :code:`k` is 1.
+	+ :code:`eccentricity[p]`, where :code:`p` is the exponent for the eccentricity function.  The default value of :code:`k` is 1.  The filtration direction for this function is automatically set to be descending. 
+	+ :code:`user`.  This option requires that the input data file specify a function, as explained in :ref:`inputData` section of this documentation.  If a function is provided in the file, the user-specified function is used by default, so it is never necessary to use this option, but can be included for clarity's sake.  It is not possible to specify a user-defined function directly from the command line.
 
 The following flags are also available, and are useful in many cases:
 
@@ -68,8 +74,6 @@ The following flags are also available, and are useful in many cases:
 * When computing an MI file, :code:`--xlabel <label>` and :code:`--ylabel <label>` respectively specify labels for the :math:`x`-axis and :math:`y`-axis in the **rivet_GUI** visualization window.  The labels are stored as metadata in the MI file.  If either of these flags are not given, RIVET provides default labels, which depend on the input data type and (where applicable), the type of bifiltration being constructed.  For example, when constructing a degree-Rips filtration, the default labels for the :math:`x`-axis and :math:`y`-axis are **degree** and **distance**, respectively.
 
 * :code:`--xreverse` and :code:`--yreverse` reverse the direction of the :math:`x`-axis and :math:`y`-axis, respectively.  Reversing an axis direction only makes sense for certain bifiltration constructions, and hence these flags can only be used in certain circumstances.  For example, for a function-Rips filtration, the :math:`x`-axis indexes the function threshold parameter in RIVET's visualization, while the `y`-axis indexes the scale parameter.  In general, it makes equal sense to construct a function-Rips bilftration with respect to increasing or decreasing function values; the flag :code:`--xreverse` tells RIVET to use decreasing values.  But we don't have a good way of building a function-Rips bifiltration using a decreasing scale parameter, so :code:`--yreverse` is not available for the construction of a function-Rips bifiltration;  including this flag has no effect.  See :ref:`inputData` for the specifics of when and how `--xreverse` and `--yreverse` can be used.
-
-
 
 Some additional flags which concern the internals of RIVET's computations are also available, but can be disregarded by most users:
 
