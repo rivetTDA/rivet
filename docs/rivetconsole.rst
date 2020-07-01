@@ -1,7 +1,7 @@
 .. _rivetconsole:
 
-RIVET Console
-=============
+Running RIVET from the Console
+==============================
 
 [THIS PAGE SHOULD BE A THOROUGH DISCUSSION OF rivet_console. THE VISUALIZATION CONTENT AT THE BOTTOM SHOULD BE DELETED OR MOVED.]
 
