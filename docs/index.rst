@@ -14,6 +14,7 @@ RIVET Documentation
    installing    
    preliminaries
    pipeline		
+   gettingstarted
    running
    inputdata   
    visualization
