@@ -5,10 +5,9 @@ Getting Started with RIVET
 ==========================
 
 The RIVET software consists of two separate but closely related executables: **rivet_console**, a command-line program, and **rivet_GUI**, a GUI application.  **rivet_console** is the computational engine of RIVET; it implements the computation pipeline described in the previous section.   
-
 **rivet_GUI** is responsible for RIVET’s visualizations and also provides a convenient graphical front-end to the functionality of **rivet_console**.  Thanks to this, RIVET's visualizations can be carried out entirely from within **rivet_GUI**.  
 
-For new users looking to acquaint themselves with RIVET, we recommend starting by using **rivet_GUI** to explore RIVET's visualization capabilities.  In the remainder of this section, we provide a simple introduction to running RIVET via **rivet_GUI**.  Later sections of the documentation provide more detail on how to use **rivet_console** and **rivet_GUI**.  Users who wish to use RIVET for purposes other than visualization (e.g. machine learning or statistics applications) will want to familiarize themselves with the command-line syntax of **rivet_console**, but we recommend all users read this introduction first.
+For new users looking to acquaint themselves with RIVET, we recommend starting by using **rivet_GUI** to explore RIVET's visualization capabilities.  In this section, we provide a simple introduction to running RIVET via **rivet_GUI**.  Later sections of the documentation provide more detail on how to use **rivet_console** and **rivet_GUI**.  Users who wish to use RIVET for purposes other than visualization (e.g. machine learning or statistics applications) will want to familiarize themselves with the command-line syntax of **rivet_console**, but we recommend all users read this introduction first.
 
 
 Getting started with **rivet_GUI**
@@ -21,7 +20,7 @@ When the user runs **rivet_GUI**, the following window opens:
    :alt: The file input dialog box of rivet_GUI
    :align: center
 
-To start a computation, first select a file by clicking the “choose file” button.    **rivet_GUI** can handle files in several formats, representing several different types of input; this is discussed in detail in :ref:`inputData`.  In this first introduction, we consider just one simple type of input file, a CSV file specifying a point cloud in :math:`\mathbb{R}^n`. We call this type of file a “points” file. Each line of the file gives the n coordinates of one point; these coordinates are written as numbers separated by commas or white space. 
+To start a computation, first select a file by clicking the “choose file” button.    **rivet_GUI** can handle files in several formats, representing several different types of input; this is discussed in detail in :ref:`inputData`.  In this first introduction, we consider just one simple type of input file, a CSV file specifying a point cloud in :math:`\mathbb{R}^n`. We call this type of file a “points” file. Each line of the file gives the :math:`n` coordinates of one point; these coordinates are written as numbers separated by commas or white space. 
 
 For concreteness, we will use the file `data/Test_Point_Clouds/circle_300pts_nofunction.csv` from the RIVET repository. This file specifies 300 points in :math:`\mathbb{R}^2`. The first five lines of the file are as follows::
 
@@ -35,7 +34,11 @@ Note that the file does not specify the values of any function, such as a densit
 
 The 300 points in the file `data/Test_Point_Clouds/circle_300pts_nofunction.csv` form a noisy circle in :math:`\mathbb{R}^2`, as pictured below. We provide the plot below as an example; it is not necessary to visualize the input data prior to using RIVET. Indeed, the most common use of RIVET (and any persistent homology software) is to discern structure in data that is *not* easily visualized. Nonetheless, the present example demonstrates how RIVET detects the dense circle of points that is evident in this point cloud.
 
-PLOT OF NOISY CIRCLE
+.. image:: images/circle300_point_plot.png
+   :width: 353px
+   :height: 347px
+   :alt: point cloud plot
+   :align: center
 
 Upon selecting a file, RIVET activates the input selectors in the **Options** panel of the dialog box, which we briefly discuss here. 
 
@@ -45,13 +48,13 @@ The *Homology Degree* selector allows the user to choose which degree of homolog
 
 The *Max Distance* selector allows the user to specify the maximum length of edges that RIVET will include in the simplicial complex that it constructs from the input data. This is useful to reduce the size of the simplicial complex, which allows the RIVET computation to run faster and with less memory. Choosing an appropriate maximum distance requires knowing something about the scale of the data. We choose a max distance of 5 for our example. The max distance can be set to infinity, which includes an edge connecting every pair of points in the point cloud, by typing “inf” or clicking on the button with an infinity symbol.
 
-Three input selectors on the right side of the box determine what filtration RIVET will build from the point cloud. The **Filtration** selector contains two options: *degree* and *function*. The *degree* option builds a degree-Rips filtration, as described in [SECTION REFERENCE]. Here, we choose the *function* option to build a function-Rips filtration.
+Three input selectors on the right side of the box determine what filtration RIVET will build from the point cloud. The **Filtration** selector contains two options: *degree* and *function*. The *degree* option builds a degree-Rips filtration, as described in :ref:`degreeRipsBifil`. Here, we choose the *function* option to build a function-Rips filtration.
 
 The function-Rips filtration depends on the choice of a real-valued function on the point cloud, which is specified in the **Function** selector. In this selector, a choice of *user* selects user-provided function values; since our input file does not contain such values, we must choose a different option. The other three options cause RIVET to compute density estimators on the points; these are explained in [SECTION REFERENCE]. For the present example, we choose the “balldensity” option. 
 
 The density estimators each require the choice of a parameter, which must be provided in the **Parameter** selector. The “Parameter” label changes, depending on the selected function, to provide additional context. Specifically, the ball density estimator requires the specification of a radius. RIVET computes the number of neighbors within this radius for each point in the point cloud. Here, we choose a radius of 2. 
 
-The selectors in the lower portion of the **Options** box deal with the axes. The user may specify the number of **Bins**, which are used to coarsen the bipersistence module. The bin values limit the number of distinct grades that occur in the module, as described in [SECTION REFERENCE]. Specifying smaller bin values will speed the RIVET computation, but will result in less precise output. For the present example, we set both bin values to 30. 
+The selectors in the lower portion of the **Options** box deal with the axes. The user may specify the number of **Bins**, which are used to coarsen the bipersistence module. The bin values limit the number of distinct grades that occur in the module, as described in :ref:`coarsening`. Specifying smaller bin values will speed the RIVET computation, but will result in less precise output. For the present example, we set both bin values to 30. 
 
 Next, the user may specify the labels for each axis in the RIVET visualization. For a function-Rips filtration, RIVET presents the function values along the x-axis. Since we are computing a density estimator, we enter “density” for the x-axis label. We keep the default “distance” label for the y-axis.
 
@@ -65,17 +68,20 @@ The RIVET file input box, with all options selected as discussed above, is shown
    :alt: The file input dialog box with selected options
    :align: center
 
-We now click **Compute**. This starts the RIVET computational pipeline, as described in [SECTION]. A progress box appears, as shown below.
+We now click **Compute**. This starts the RIVET computational pipeline, as described in :ref:`structure`. A progress box appears, as shown below.
 
-PROGRESS BAR SCREENSHOT
-
+.. image:: images/RIVET_progress_box.png
+   :width: 302px
+   :height: 187px
+   :alt: The RIVET computation progress box
+   :align: center
 
 
 Key Features of the RIVET Visualization
 ---------------------------------------
 
 When the computation finishes, RIVET displays the following visualization.
-This page gives a brief overview of the visualization elements; more details can appear in [SECTION].
+This page gives a brief overview of the visualization elements; more details can appear in :ref:`visualization`.
 
 The RIVET visualization contains two main windows, the *Line Selection Window* and the *Persistence Diagram Window*, shown in the screenshot below.
 
@@ -150,5 +156,5 @@ Finally, there is a number in the bottom left corner of the persistence diagram 
 Customizing the Visualization
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The look of the visualization can be customized by choosing RIVET -> Preferences on Mac, or Edit -> Configure on Linux, and adjusting the settings there.  
+The look of the visualization can be customized by choosing *RIVET → Preferences* on Mac, or *Edit → Configure* on Linux, and adjusting the settings there.  
 

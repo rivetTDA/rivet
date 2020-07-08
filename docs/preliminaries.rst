@@ -26,6 +26,8 @@ Given a finite metric space :math:`P` and any function :math:`\gamma:P\to \mathb
 
 :math:`\gamma` is often chosen to be a density estimate on :math:`P`.  Another common choice is to take :math:`\gamma` to be a coeccentricity function on :math:`P`, e.g., :math:`\gamma(x):= \sum_{y\in P} d(x,y)`.
 
+.. _degreeRipsBifil:
+
 Degree-Rips Bifiltration
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
