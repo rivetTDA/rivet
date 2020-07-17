@@ -1,3 +1,6 @@
+.. _preliminaries:
+
+
 Mathematical Preliminaries
 ==========================
 To prepare for a detailed explaination of what RIVET can do and how it is used, we review some basic mathematical notions and establish some terminology.

@@ -3,32 +3,32 @@
 The RIVET Visualization
 =======================
 
-[THIS PAGE NEEDS UPDATES]
-
-.. For more details, see `the RIVET paper <a href="https://arxiv.org/pdf/1512.00180v1.pdf>`_.
 
 The RIVET interface contains two main windows, the *Line Selection Window* and the *Persistence Diagram Window*, shown in the screenshot below.
 
-.. image:: images/RIVET_screenshot.png
-   :width: 556px
-   :height: 419px
-   :alt: Screenshot of the RIVET GUI
+.. image:: images/RIVET_screenshot_circle300_balldensity.png
+   :width: 600px
+   :height: 449px
+   :alt: The file input dialog box with selected options
    :align: center
 
 Line Selection Window
 ---------------------
 
+The *Line Selection Window* not only visualizes the Hilbert function values and the bigraded Betti numbers of a bipersistence module :math:`M`, but also allows the user choose linear slices along which barcodes are displayed. 
+
 By default, the *Line Selection Window* plots a rectangle in :math:`\mathbb{R}^2` containing the union of the supports of bigraded Betti number functions :math:`\xi_i^M`, :math:`i\in \{0,1,2\}`.
 (If the input to RIVET is an firep and the Betti numbers are not supported on a horizontal or vertical line, this will be the smallest such rectangle.  If the input is a point cloud, metric space, or bifiltration, and the birth indices of all simplices in the bifiltration do not lie on a single line, the rectangle will be the smallest one containing the birth indices of all simplices.)
- 
+
+The Hilbert function values are shown as grayscale shading.
+Specifically, the greyscale shading at a point :math:`a` in this rectangle represents :math:`\dim M_a`: :math:`a` is unshaded when :math:`\dim M_a=0`, and larger :math:`\dim M_a` corresponds to darker shading. 
+Hovering the mouse over :math:`a` brings up a popup box which gives the precise value of :math:`\dim M_a`.
+
 Points in the supports of :math:`\xi_0^M`, :math:`\xi_1^M`, and :math:`\xi_2^M` are marked with green, red, and yellow dots, respectively (though these colors are customizable via the Edit menu on Linux or the Preferences menu on Mac). 
 The area of each dot is proportional to the corresponding function value. 
 The dots are translucent, so that, for example, overlaid red and green dots appear brown on their intersection. 
 This allows the user to read the values of the Betti numbers at points which are in the support of more than one of the functions. 
 Furthermore, hovering the mouse over a dot produces a popup box that gives the values of the bigraded Betti numbers at that point.
-
-The greyscale shading at a point :math:`a` in this rectangle represents :math:`\dim M_a`: :math:`a` is unshaded when :math:`\dim M_a=0`, and larger :math:`\dim M_a` corresponds to darker shading. 
-Hovering the mouse over :math:`a` brings up a popup box which gives the precise value of :math:`\dim M_a`.
 
 A key feature of the RIVET visualization is the ability to interactively select the line :math:`L` via the mouse and have the barcode :math:`\mathcal B(M^L)` update in real time.
 The Line Selection Window contains a blue line :math:`L` of non-negative slope, with endpoints on the boundary of the displayed region of :math:`\mathbb{R}^2`. 
@@ -47,15 +47,15 @@ As the line moves, both the barcode in the Line Selection Window and its persist
 The *Angle* and *Offset* controls below the Line Selection Window can also be used to select the line.
 
 The coordinate bounds of the viewable rectangle may be adjusted using the *Top*, *Bottom*, *Left*, and *Right* control boxes at the bottom of the RIVET window.
-The window can be reset to the default by clicking on “Restore Default Window,” under the “View” menu.  Clicking on “Betti number window” under the “View” menu sets the window to the smallest rectangle containing all non-zero Betti numbers.
+The window can be reset to the default by choosing *View → Restore Default Window*.  Choosing *View → Betti number window* sets the window to the smallest rectangle containing all non-zero Betti numbers.
 
 
 Persistence Diagram Window
 --------------------------
 
-The Persistence Diagram Window (at right in the screenshot above) displays a persistence diagram representation of the barcode for :math:`M^L`.
+The *Persistence Diagram Window* (at right in the screenshot above) displays a persistence diagram representation of the barcode for :math:`M^L`.
 
-The bounds for the square viewable region (surrounded by dashed lines) in this window are chosen automatically.  They depend  on the bounds of the viewable region in the slice diagram window, but not on :math:`L`.
+The bounds for the square viewable region (surrounded by dashed lines) in this window are chosen automatically.  They depend on the bounds of the viewable region in the slice diagram window, but not on :math:`L`.
 
 Let the square :math:`[0,B]\times[0,B]` be the viewable region.  It may be that the barcode contains some intervals :math:`[\alpha,\beta)` with either :math:`\alpha` or :math:`\beta` not contained in :math:`[0,B]`.  To represent such intervals on the screen, RIVET displays some information at the top and left of the persistence diagram which is not found in typical persistence diagrams.
 
@@ -78,6 +78,8 @@ Finally, there is a number in the bottom left corner of the persistence diagram 
 As with the bigraded Betti numbers in the Line Selection Window, the multiplicity of a point in the persistence diagram is indicated by the area of the corresponding dot. 
 Additionally, hovering the mouse over a dot produces a popup that displays the multiplicity of the dot.
 
+
 Customizing the Visualization
 ----------------------------------------------
-The look of the visualization can be customized by clicking on “Preferences” in the “RIVET” menu, and adjusting the settings there.  
+
+The look of the visualization can be customized by choosing *RIVET → Preferences* on Mac, or *Edit → Configure* on Linux, and adjusting the settings there.  
