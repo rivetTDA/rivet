@@ -60,12 +60,12 @@ The most important flags are the following:
 
 * :code:`--bifil <type>` specifies the type of bifiltration to be built.  Specifying a bifiltration type only makes sense for certain input data types, and hence this flag can only be used for such input.  In cases where the flag can be used, the available bifiltration types are :code:`function` and :code:`degree`.  The default depends on the choice of input data type.  For details, see the :ref:`inputData` section of this documentation.  For details, see :ref:`inputData`.
 
-* :code:`--function <fn>` tells RIVET to construct a function-Rips bifiltration using the function <fn>.  RIVET supports both user-specified functions and three built-in function types.  The options for <fn> are as follows (see :ref:`preliminaries`):
+* :code:`--function <fn>` tells RIVET to construct a function-Rips bifiltration using the function <fn>.  RIVET supports both user-specified functions and three built-in function types.  The options for <fn> are as follows (see :ref:`funRipsBifil` for definitions.):
 
-	+ :code:`balldensity[r]`, where :code:`r` is a positive decimal number, for a closed-ball density estimator with radius :code:`r`.  If :code:`[r]` is ommitted, the default value of :code:`r` is taken to be the 20th percentile of all non-zero distances between points.  The filtration direction for this function is automatically set to be descending. 
-	+ :code:`knndensity[k]`, where :code:`k` is a positive integer, for a :code:`k`-nearest-neighbors codensity estimator, [update this later].  The default value of :code:`k` is 1.
-	+ :code:`eccentricity[p]`, where :code:`p` is the exponent for the eccentricity function.  The default value of :code:`k` is 1.  The filtration direction for this function is automatically set to be descending. 
-	+ :code:`user`.  This option requires that the input data file specify a function, as explained in :ref:`inputData` section of this documentation.  If a function is provided in the file, the user-specified function is used by default, so it is never necessary to use this option, but can be included for clarity's sake.  It is not possible to specify a user-defined function directly from the command line.
+	+ :code:`balldensity[r]`, where :code:`r` is a positive decimal number, for a closed-ball density function with radius parameter :code:`r`.  If :code:`[r]` is omitted, the default value of :code:`r` is taken to be the 20th percentile of all non-zero distances between points.  The filtration direction for this function is automatically set to be descending. 
+	+ :code:`gaussiandensity[σ]`, where :code:`σ` is a positive decimal number, for a gaussian density functor with standard deviation :math:`σ`.  The default value of :code:`σ` is chosen in the same way that the default radius value for the ball density estimator is chosen.  The filtration direction is set to be descending. 
+	+ :code:`eccentricity[p]`, where :code:`p` is the exponent for the eccentricity function.  The default value of :code:`p` is 1.  The filtration direction is set to be descending. 
+	+ :code:`user`.  This option requires that the input data file specify a function, as explained in :ref:`inputData`.  If a function is provided in the file, the user-specified function is used by default, so it is in fact never necessary to use this flag, but it can be included for clarity's sake.  Specifying a user-defined function directly from the command line is not supported.
 
 The following flags are also available, and are useful in many cases:
 

@@ -13,7 +13,9 @@ A *bifiltration* :math:`F` is a collection of finite simplicial complexes indexe
 
 We next introduce two contructions of bifiltrations from data.
 
-Function-Rips Bifiltraiton
+.. _funRipsBifil:
+
+Function-Rips Bifiltration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 For :math:`P` a finite metric space and :math:`r\geq 0`, let :math:`N(P)_r` denote the :math:`r`-neighborhood graph of :math:`P`, i.e., the vertex set of :math:`N(P)_r` is :math:`P`, and edge :math:`[i,j]\in N(P)_r` if and only if :math:`d(i,j)\leq r`.  If :math:`r<0`, we define :math:`N(P):=\emptyset.`  We define the *Vietoris-Rips complex* :math:`R(P)_r` to be the clique complex on :math:`N(P)_r`, i.e. the largest simplical complex with 1-skeleton :math:`N(P)_r`.
 
