@@ -27,7 +27,31 @@ Given a finite metric space :math:`P` and any function :math:`\gamma:P\to \mathb
 
 :math:`FR(\gamma)` is always 1-critical.
 
-:math:`\gamma` is often chosen to be a density estimate on :math:`P`.  Another common choice is to take :math:`\gamma` to be a coeccentricity function on :math:`P`, e.g., :math:`\gamma(x):= \sum_{y\in P} d(x,y)`.
+:math:`\gamma` is often chosen to be a density function on :math:`P`.  One common choice  is the ball density function, defined by 
+
+.. math::
+   :nowrap:
+
+   \[\gamma(x)=C[\# \text{ points in } P \text{ within distance }r \text{ of }x],\]
+
+where :math:`r>0` is a fixed parameter, the "radius", and :math:`C` is a normalization constant, i.e. :math:`C` is chosen so that :math:`\sum_{x\in P} \gamma(x)=1`.  A second common choice is the Gaussian density function, given by 
+
+.. math::
+   :nowrap:
+
+   \[\gamma(x)=C\sum_{y\in P} e^{\frac{-d(x,y)^2}{2\sigma}},\]
+
+where :math:`\sigma>0` is a parameter, the "standard deviation," and :math:`C` is a normalization constant.
+
+Another natural option is to take :math:`\gamma` to be an eccentricity function, i.e.,
+
+.. math::
+   :nowrap:
+
+   \[\gamma(x):= \left(\frac{\sum_{y\in P} d(x,y)^q`}{|P|}\right)^{\frac{1}{q}},\]
+where :math:`q\in [1,\infty)` is a parameter.
+
+RIVET provides built-in support for each of these functions.  
 
 .. _degreeRipsBifil:
 
