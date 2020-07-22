@@ -40,7 +40,15 @@ The 300 points in the file `data/Test_Point_Clouds/circle_300pts_nofunction.csv`
    :alt: point cloud plot
    :align: center
 
-Upon selecting a file, RIVET activates the input selectors in the **Options** panel of the dialog box, which we briefly discuss here. 
+Upon selecting a file, RIVET activates the input selectors in the **Options** panel of the dialog box. 
+We must choose appropriate values for these input selectors.
+In this example, we will set the values as shown in the following figure; each selector and value is discussed briefly below the figure.
+
+.. image:: images/file_input_selections.png
+   :width: 482px
+   :height: 393px
+   :alt: The file input dialog box with selected options
+   :align: center
 
 The *File Type* menu allows the user to tell RIVET how to interpret the input file. This is most important for CSV files, which may specify several different types of data. The default selection, *points*, is correct for the input file mentioned above. Other options include *points_fn*, which would be used if the file contained function values in addition to the coordinates of points. Alternately, a CSV file may specify a discrete metric space, with or without function values, corresponding to to the *metric* and *metric_fn* menu items. RIVET can also accept *bifiltration* and free implicit representation (*firep*) input; these input types are not given as CSV files but have their own specifications as described in :ref:`inputData`.
 
@@ -59,14 +67,6 @@ The selectors in the lower portion of the **Options** box deal with the axes. Th
 Next, the user may specify the labels for each axis in the RIVET visualization. For a function-Rips filtration, RIVET presents the function values along the x-axis. Since we are computing a density estimator, we enter “density” for the x-axis label. We keep the default “distance” label for the y-axis.
 
 Lastly, the **Reverse** checkboxes allow the user to reverse axis directions. For example, when using a density estimator, we typically want points with larger density values to enter the filtration before points with smaller density values; thus, we check the **Reverse** box for the x-axis. It is not possible to reverse the distance axis for a Rips filtration, so the y-axis reverse box is unavailable.
-
-The RIVET file input box, with all options selected as discussed above, is shown in the following figure.
-
-.. image:: images/file_input_selections.png
-   :width: 482px
-   :height: 393px
-   :alt: The file input dialog box with selected options
-   :align: center
 
 We now click **Compute**. This starts the RIVET computational pipeline, as described in :ref:`structure`. A progress box appears, as shown below.
 
