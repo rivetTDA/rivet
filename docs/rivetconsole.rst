@@ -221,6 +221,8 @@ The remaining lines specify the points where the Betti numbers are non-zero, alo
 **rivet_GUI**
 ----------------------------
 
+TODO: This shouldn't live on a page titled RIVET console, but some of the material is not suitable for the getting started page.  So either make a short new page for this, or find a slick way to incorporate it into another page, e.g., the RIVET visualization page.
+
 The visualizations performed by **rivet_GUI** require an MI file as input.  This can be computed by an explicit call to **rivet_console** and then opened in **rivet_GUI**.  Alternatively, **rivet_GUI** can call **rivet_console** directly to compute the MI file.
 When the user runs **rivet_GUI**, a window opens which allows the user to select a file.
 This file can be either an input data file in one of the input formats described in :ref:`inputData`, or a MI file.
