@@ -248,7 +248,7 @@ void InputManager::parse_args()
                         break;
                     }
                 }
-                if (f != "balldensity" && f != "eccentricity" && f != "knndensity" && f != "user")
+                if (f != "balldensity" && f != "eccentricity" && f != "gaussian" && f != "user")
                     throw std::runtime_error("Invalid argument for --function");
                 // must specify '[]' without anything inside brackets to denote default
                 // only "user" does not need '[]'

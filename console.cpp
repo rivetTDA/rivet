@@ -440,7 +440,7 @@ int main(int argc, char* argv[])
                 break;
             }
         }
-        if (f != "balldensity" && f != "eccentricity" && f != "knndensity" && f != "user")
+        if (f != "balldensity" && f != "eccentricity" && f != "gaussian" && f != "user")
             throw std::runtime_error("Invalid argument for --function");
         if (b == -1 && f != "user")
             throw std::runtime_error("No parameter specified for function");
