@@ -470,20 +470,20 @@ int main(int argc, char* argv[])
     if ((params.type == "points" || params.type == "metric") && params.bifil == "function" && params.function_type == "none")
         throw std::runtime_error("Cannot create function rips without function values. If you have provided function values, please specify the correct data type.");
 
+    if (params.bifil == "degree") {
+        params.x_reverse = true;
+    }
+    if (params.bifil == "degree" && params.type != "firep" && params.type != "bifiltration") {
+        params.x_label = "degree";
+    }
+    if (params.bifil == "function" && params.function_type == "none") {
+        params.function_type = "user";
+    }
     if (params.type != "bifiltration") {
         params.y_reverse = false;
     }
     if (params.type == "firep") {
         params.x_reverse = false;
-    }
-    if (params.bifil == "degree") {
-        params.x_reverse = true;
-    }
-    if (params.bifil == "degree") {
-        params.x_label = "degree";
-    }
-    if (params.bifil == "function" && params.function_type == "none") {
-        params.function_type = "user";
     }
 
     // all input parameters should be set by this point

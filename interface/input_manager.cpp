@@ -320,7 +320,7 @@ void InputManager::parse_args()
     input_params.to_skip = num_lines;
 
     // determine parameter values from available information
-    if (input_params.bifil == "") {
+    if (input_params.bifil == "" && input_params.type != "bifiltration" && input_params.type != "firep") {
         if (input_params.new_function)
             input_params.bifil = "function";
         else
