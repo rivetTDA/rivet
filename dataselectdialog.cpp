@@ -228,6 +228,7 @@ void DataSelectDialog::detect_file_type()
     ui->functionComboBox->setEditable(true);
     ui->functionComboBox->setCurrentText("none");
     ui->functionComboBox->setEnabled(true);
+    qobject_cast<QStandardItemModel*>(ui->functionComboBox->model())->item(0)->setEnabled(true);
     ui->parameterSpinBox->setEnabled(true);
     ui->parameterSpinBox->setValue(0.00);
     ui->parameterSpinBox->setSpecialValueText("");
@@ -400,13 +401,13 @@ void DataSelectDialog::detect_file_type()
             else {
                 if (params.function_type == "balldensity")
                     ui->parameterLabel->setText("Radius:");
-                else if (params.function_type == "knndensity")
-                    ui->parameterLabel->setText("K:");
+                else if (params.function_type == "gaussian")
+                    ui->parameterLabel->setText("Smoothing:");
                 else if (params.function_type == "eccentricity")
                     ui->parameterLabel->setText("P Norm:");
                 ui->parameterSpinBox->setEnabled(true);
                 ui->parameterSpinBox->setSpecialValueText("");
-                if ((params.function_type == "knndensity" || params.function_type == "eccentricity") && params.filter_param == 0)
+                if ((params.function_type == "gaussian" || params.function_type == "eccentricity") && params.filter_param == 0)
                     ui->parameterSpinBox->setValue(1.0);
                 else
                     ui->parameterSpinBox->setValue(params.filter_param);
@@ -482,7 +483,8 @@ void DataSelectDialog::on_filterComboBox_currentIndexChanged(int index)
         ui->xRevCheckBox->setEnabled(true);
         ui->functionComboBox->setEnabled(true);
         ui->functionComboBox->setEditable(false);
-        if (!params.old_function && !params.new_function && params.function_type == "none")
+        if (!params.old_function && !params.new_function && params.function_type == "none" &&
+            ((ui->dataTypeComboBox->currentText().toStdString() == "points") || (ui->dataTypeComboBox->currentText().toStdString() == "metric")) )
             params.function_type = "balldensity";
         ui->functionComboBox->setCurrentText(QString::fromStdString(params.function_type));
         if (params.function_type == "user" || params.function_type == "none") {
@@ -493,13 +495,13 @@ void DataSelectDialog::on_filterComboBox_currentIndexChanged(int index)
         else {
             if (params.function_type == "balldensity")
                 ui->parameterLabel->setText("Radius:");
-            else if (params.function_type == "knndensity")
-                ui->parameterLabel->setText("K:");
+            else if (params.function_type == "gaussian")
+                ui->parameterLabel->setText("Smoothing:");
             else if (params.function_type == "eccentricity")
                 ui->parameterLabel->setText("P Norm:");
             ui->parameterSpinBox->setEnabled(true);
             ui->parameterSpinBox->setSpecialValueText("");
-            if ((params.function_type == "knndensity" || params.function_type == "eccentricity") && params.filter_param == 0)
+            if ((params.function_type == "gaussian" || params.function_type == "eccentricity") && params.filter_param == 0)
                 ui->parameterSpinBox->setValue(1.0);
             else
                 ui->parameterSpinBox->setValue(params.filter_param);
@@ -519,7 +521,7 @@ void DataSelectDialog::on_functionComboBox_currentIndexChanged(int index)
         if (index == 1)
             ui->parameterLabel->setText("Radius:");
         else if (index == 2)
-            ui->parameterLabel->setText("K:");
+            ui->parameterLabel->setText("Smoothing:");
         else if (index == 3)
             ui->parameterLabel->setText("P Norm:");
         if (index == 1 || index == 3)
@@ -532,5 +534,17 @@ void DataSelectDialog::on_functionComboBox_currentIndexChanged(int index)
             ui->parameterSpinBox->setValue(1.0);    
         else
             ui->parameterSpinBox->setValue(params.filter_param);
+    }
+}
+
+void DataSelectDialog::on_dataTypeComboBox_currentIndexChanged(int index)
+{
+    if (index == 0 || index == 2) {
+        if (ui->functionComboBox->currentText().toStdString() == "user")
+            ui->functionComboBox->setCurrentText(QString::fromStdString("balldensity"));
+        qobject_cast<QStandardItemModel*>(ui->functionComboBox->model())->item(0)->setEnabled(false);
+    }
+    else if (index == 1 || index == 3) {
+        qobject_cast<QStandardItemModel*>(ui->functionComboBox->model())->item(0)->setEnabled(true);
     }
 }

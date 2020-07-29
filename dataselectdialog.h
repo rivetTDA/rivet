@@ -55,8 +55,8 @@ private slots:
     void on_maxDistHelp_clicked();
 
     void on_filterComboBox_currentIndexChanged(int index);
-
     void on_functionComboBox_currentIndexChanged(int index);
+    void on_dataTypeComboBox_currentIndexChanged(int index);
 
 private:
     Ui::DataSelectDialog* ui;

@@ -42,6 +42,7 @@ public:
     void ball_density_estimator(double radius); // function to add a ball density estimator to provided data
     void knn_density_estimator(int k); // function calculate distance to kth nearest neighbor of every point
     void eccentricity_estimator(int p); // function calculate eccentricity of every point
+    void gaussian_estimator(double s);
 
     // these are required by bifiltration data and hence made public
     std::vector<unsigned> dist_indexes;

@@ -25,12 +25,11 @@ Here the basic syntax for computing a module invariants file::
 
 	 rivet_console <input> <output> [options]
 
-* <input> is an input data file;
-* <output> is the name of the module invariants file to be computed.
+* :code:`<input>` is an input data file;
+* :code:`<output>` is the name of the module invariants file to be computed.
+* :code:`[options]` are command-line flags control the computation, as specified below.
 
-* [options] are command-line flags control the computation, as specified below.
-
-For example, a typical call to rivet_console to compute an MI file *MI_output.rivet* from an input file *my_data.txt* might look as follows::
+For example, a typical call to **rivet_console** to compute an MI file *MI_output.rivet* from an input file *my_data.txt* might look as follows::
 
 	 rivet_console input.txt output.rivet --datatype metric --homology 1 --xbins 100 --ybins 100
 
@@ -46,7 +45,7 @@ Command-Line Flags for Use with Input Data Files
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 We now explain in detail **rivet_console**'s use of command-line flags to control computations taking an *input data file* as input.  
 
-Some or all of the command-line flags can be placed in the input data file itself, rather than given on the command line. Flags in the input data file must be provided in the top lines of the file, before the data is given.  If the same flag is given in both the input data file and the command line, then rivet_console ignores the copy of the flag in the input file and uses the flag given on the command line.
+Some or all of the command-line flags can be placed in the input data file itself, rather than given on the command line. Flags in the input data file must be provided in the top lines of the file, before the data is given.  If the same flag is given in both the input data file and the command line, then **rivet_console** ignores the copy of the flag in the input file and uses the flag given on the command line.
 
 Whether on the command line or in an input file, flags can appear in any order.
 
@@ -54,7 +53,7 @@ The most important flags are the following:
 
 * :code:`--datatype <type>` specifies the type of data contained in the input file. The default is :code:`points`.  For details, see :ref:`inputData`.
 
-* :code:`-H <hom_degree>` or :code:`--homology <hom`_degree>` specifies degree of homology to compute. If unspecified, the default value is zero.  (RIVET handles only one homology degree at a time.)
+* :code:`-H <hom_degree>` or :code:`--homology <hom_degree>` specifies degree of homology to compute. If unspecified, the default value is zero.  (RIVET handles only one homology degree at a time.)
 
 * :code:`-x <xbins>` and :code:`-y <ybins>` specify the dimensions of the grid used for coarsening. The grid spacing is taken to be uniform in each dimension. (For details on grids and coarsening, see :ref:`coarsening`.) If unspecified, each flag takes a default value of 0, which means that no coarsening is done at all in that coordinate direction. However, to control the size of the augmented arrangement, most computations of a MI file should use some coarsening of the module. These flags can also be specified in the longer forms :code:`--xbins <xbins>`. and :code:`--ybins <ybins>`.
 
@@ -88,7 +87,7 @@ Here is the basic syntax for computing the barcodes of 1-D slices of a bipersist
 
 	 rivet_console <module_invariants_file> --barcodes <line_file>
 
-<line_file> is a file specifying a list of affine lines in :math:`\mathbb R^2` with non-negative slope.  Each line is specified by its *angle* and *offset* parameters.
+:code:`<line_file>` is a file specifying a list of affine lines in :math:`\mathbb R^2` with non-negative slope.  Each line is specified by its *angle* and *offset* parameters.
 The following diagram shows these parameters for a particular line, with *angle* denoted :math:`\theta` and *offset* denoted :math:`t`.
 
 .. image:: images/line_diagram.png
@@ -109,7 +108,7 @@ The following gives a sample line file::
 	10 0.92
 	#100 0.92   <-- will error if uncommented, 100 > 90
 	
-For each line specified in <line_file>, **rivet_console** will print barcode information as a single line of text, beginning by repeating the query parameters. For example, output corresponding to the sample line file above might be::
+For each line specified in :code:`<line_file>`, **rivet_console** will print barcode information as a single line of text, beginning by repeating the query parameters. For example, output corresponding to the sample line file above might be::
 
 	23 -0.22: 88.1838 inf x1, 88.1838 91.2549 x5, 88.1838 89.7194 x12
 	67 0.88: 23.3613 inf x1
@@ -127,8 +126,8 @@ The basic syntax for computing and printing minimal presentation of a bipersiste
 
 	rivet_console <input_file> --minpres [command-line flags]
 
-* <input> is an input data file;
-* [command-line flags] work as specified in :ref:`flags`.
+* :code:`<input>` is an input data file;
+* :code:`[command-line flags]` work as specified in :ref:`flags`.
 
 The following example shows the output format for the minimal presentation::
 
@@ -171,8 +170,8 @@ Here is the basic syntax for computing both the Hilbert function and bigraded Be
 
 As above,
 
-* <input> is an input data file;
-* [command-line flags] work as specified in :ref:`flags`.
+* :code:`<input>` is an input data file;
+* :code:`[command-line flags]` work as specified in :ref:`flags`.
 
 **NOTE**: Currently, one cannot print the Hilbert function and bigraded Betti numbers of a module separately.  Nor can one print the minimal presentation, Betti numbers, and Hilbert Function together.  This will change soon.
 

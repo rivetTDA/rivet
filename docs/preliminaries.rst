@@ -54,7 +54,7 @@ where :math:`\sigma>0` is a parameter, the "standard deviation," and :math:`C` i
 .. math::
    :nowrap:
 
-   \[\gamma(x):= \left(\frac{\sum_{y\in P} d(x,y)^q`}{|P|}\right)^{\frac{1}{q}},\]
+   \[\gamma(x):= \left(\frac{\sum_{y\in P} d(x,y)^q}{|P|}\right)^{\frac{1}{q}},\]
 where :math:`q\in [1,\infty)` is a parameter.
 
  

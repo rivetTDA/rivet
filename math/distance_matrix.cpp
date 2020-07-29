@@ -110,6 +110,59 @@ void DistanceMatrix::ball_density_estimator(double radius)
     delete[] distance_matrix; // free up the memory
 }
 
+void DistanceMatrix::gaussian_estimator(double s)
+{
+    // first we reconstruct the actual distance matrix from the distance set
+    // it is a diagonal matrix
+    unsigned size = (num_points * (num_points - 1)) / 2 + 1;
+    double* distance_matrix = new double[size];
+    double* gvalues = new double[num_points];
+    double total = 0;
+
+    ExactSet::iterator it;
+
+    // look at ExactValue struct to understand better
+    for (it = dist_set.begin(); it != dist_set.end(); it++) {
+        ExactValue curr_dist = *it;
+        double val = curr_dist.double_value;
+        for (unsigned j = 0; j < curr_dist.indexes.size(); j++) {
+            unsigned index = curr_dist.indexes[j];
+            distance_matrix[index] = val;
+        }
+    }
+
+    if (s == 0)
+        s = 1.0;
+
+    for (unsigned i = 0; i < num_points; i++) {
+        double d = 0;
+        for (unsigned j = 0; j < num_points; j++) {
+            if (i > j)
+                d += exp(-1*pow(distance_matrix[(i * (i - 1)) / 2 + j + 1], 2)/s);
+            if (j > i)
+                d += exp(-1*pow(distance_matrix[(j * (j - 1)) / 2 + i + 1], 2)/s);
+            if (i == j)
+                d += 1;
+        }
+        gvalues[i] = d;
+        total += d;
+    }
+
+    for (unsigned i = 0; i < num_points; i++) {
+        gvalues[i] /= total;
+        exact value = gvalues[i];
+        if (input_params.x_reverse)
+            value = -1*value;
+        ret = function_set.insert(ExactValue(value));
+        (ret.first)->indexes.push_back(i);
+
+        debug() << gvalues[i];
+    }
+
+    delete[] gvalues;
+    delete[] distance_matrix; // free up the memory
+}
+
 void DistanceMatrix::knn_density_estimator(int k)
 {
     // first we reconstruct the actual distance matrix from the distance set
@@ -262,6 +315,8 @@ void DistanceMatrix::build_all_vectors(InputData* data)
             knn_density_estimator(input_params.filter_param);
         if (func_type == "eccentricity")
             eccentricity_estimator(input_params.filter_param);
+        if (func_type == "gaussian")
+            gaussian_estimator(input_params.filter_param);
     }
 
     // remove all values from distance set that are greater than max_dist
