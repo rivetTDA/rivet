@@ -50,7 +50,7 @@ Another natural option is to take :math:`\gamma` to be an eccentricity function,
 .. math::
    :nowrap:
 
-   \[\gamma(x):= \left(\frac{\sum_{y\in P} d(x,y)^q`}{|P|}\right)^{\frac{1}{q}},\]
+   \[\gamma(x):= \left(\frac{\sum_{y\in P} d(x,y)^q}{|P|}\right)^{\frac{1}{q}},\]
 where :math:`q\in [1,\infty)` is a parameter.
 
 RIVET provides built-in support for each of these functions.  
