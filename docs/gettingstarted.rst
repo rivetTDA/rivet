@@ -4,8 +4,9 @@
 Getting Started with RIVET
 ==========================
 
+
 The RIVET software consists of two separate but closely related executables: **rivet_console**, a command-line program, and **rivet_GUI**, a GUI application.  **rivet_console** is the computational engine of RIVET; it implements the computation pipeline described in the previous section.   
-**rivet_GUI** is responsible for RIVET’s visualizations and also provides a convenient graphical front-end to the functionality of **rivet_console**.  Thanks to this, RIVET's visualizations can be carried out entirely from within **rivet_GUI**.  
+**rivet_GUI** is responsible for RIVET’s visualizations and also provides a convenient graphical front-end to the functionality of **rivet_console**.  Thanks to this front-end, RIVET's visualizations can be carried out entirely from within **rivet_GUI**.  
 
 For new users looking to acquaint themselves with RIVET, we recommend starting by using **rivet_GUI** to explore RIVET's visualization capabilities.  In this section, we provide a simple introduction to running RIVET via **rivet_GUI**.  Later sections of the documentation provide more detail on how to use **rivet_console** and **rivet_GUI**.  Users who wish to use RIVET for purposes other than visualization (e.g. machine learning or statistics applications) will want to familiarize themselves with the command-line syntax of **rivet_console**, but we recommend all users read this introduction first.
 
@@ -20,7 +21,7 @@ When the user runs **rivet_GUI**, the following window opens:
    :alt: The file input dialog box of rivet_GUI
    :align: center
 
-To start a computation, first select a file by clicking the “choose file” button.    **rivet_GUI** can handle files in several formats, representing several different types of input; this is discussed in detail in :ref:`inputData`.  In this first introduction, we consider just one simple type of input file, a CSV file specifying a point cloud in :math:`\mathbb{R}^n`. We call this type of file a “points” file. Each line of the file gives the :math:`n` coordinates of one point; these coordinates are written as numbers separated by commas or white space. 
+To start a computation, first select a file by clicking the “choose file” button.    **rivet_GUI** can handle files in several formats, representing several different types of input; these formats are discussed in detail in :ref:`inputData`.  In this first introduction, we consider just one simple type of input file, a CSV file specifying a point cloud in :math:`\mathbb{R}^n`. We call this type of file a “points” file. Each line of the file gives the :math:`n` coordinates of one point; these coordinates are written as numbers separated by commas or white space. 
 
 For concreteness, we will use the file `data/Test_Point_Clouds/circle_300pts_nofunction.csv` from the RIVET repository. This file specifies 300 points in :math:`\mathbb{R}^2`. The first five lines of the file are as follows::
 
@@ -30,9 +31,9 @@ For concreteness, we will use the file `data/Test_Point_Clouds/circle_300pts_nof
 	-2.44,-2.24
 	-2.54,-1.25
 
-Note that the file does not specify the values of any function, such as a density estimator, on the points. RIVET is able to compute three common density estimators on a point cloud. Alternately, a user may supply values of a function on each point, as described in :ref:`inputData`.
+Note that the file does not specify the values of any function, such as a density estimator, on the points. RIVET is able to compute three common density estimators on a point cloud. Alternatively, a user may supply values of a function on each point, as described in :ref:`inputData`.
 
-The 300 points in the file `data/Test_Point_Clouds/circle_300pts_nofunction.csv` form a noisy circle in :math:`\mathbb{R}^2`, as pictured below. We provide the plot below as an example; it is not necessary to visualize the input data prior to using RIVET. Indeed, the most common use of RIVET (and any persistent homology software) is to discern structure in data that is *not* easily visualized. Nonetheless, the present example demonstrates how RIVET detects the dense circle of points that is evident in this point cloud.
+The 300 points in the file `data/Test_Point_Clouds/circle_300pts_nofunction.csv` form a noisy circle in :math:`\mathbb{R}^2`, as pictured below.  [*Also cut this, perhaps*: We will illustrate how the RIVET visualization detects the dense circle of points that is evident in this point cloud.]
 
 .. image:: images/circle300_point_plot.png
    :width: 353px
