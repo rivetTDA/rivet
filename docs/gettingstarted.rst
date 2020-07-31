@@ -21,9 +21,11 @@ When the user runs **rivet_GUI**, the following window opens:
    :alt: The file input dialog box of rivet_GUI
    :align: center
 
-To start a computation, first select a file by clicking the “choose file” button.    **rivet_GUI** can handle files in several formats, representing several different types of input; these formats are discussed in detail in :ref:`inputData`.  In this first introduction, we consider just one simple type of input file, a CSV file specifying a point cloud in :math:`\mathbb{R}^n`. We call this type of file a “points” file. Each line of the file gives the :math:`n` coordinates of one point; these coordinates are written as numbers separated by commas or white space. 
+To start a computation, first select a file by clicking the “choose file” button.    **rivet** can handle several different types of input: Point clouds, finite metric spaces, simplicial bifiltrations, and short chain complexes.  These file formats for these input types are discussed in detail in :ref:`inputData`. 
 
-For concreteness, we will use the file `data/Test_Point_Clouds/circle_300pts_nofunction.csv` from the RIVET repository. This file specifies 300 points in :math:`\mathbb{R}^2`. The first five lines of the file are as follows::
+In this introduction, we consider just one simple type of input file, a CSV file specifying a point cloud in :math:`\mathbb{R}^n`. We call this type of file a “points” file. [TODO: Do we want quotes or some other font?]. Each line of the file gives the :math:`n` coordinates of one point; these coordinates are written as numbers separated by commas or white space. 
+
+We will use the file `data/Test_Point_Clouds/circle_300pts_nofunction.csv` from the RIVET repository. This file specifies 300 points in :math:`\mathbb{R}^2`. The first five lines of the file are as follows::
 
 	1.57,2.40
 	1.21,2.70
@@ -31,9 +33,9 @@ For concreteness, we will use the file `data/Test_Point_Clouds/circle_300pts_nof
 	-2.44,-2.24
 	-2.54,-1.25
 
-Note that the file does not specify the values of any function, such as a density estimator, on the points. RIVET is able to compute three common density estimators on a point cloud. Alternatively, a user may supply values of a function on each point, as described in :ref:`inputData`.
+In this example, RIVET will compute a ball density function function on this point cloud, and construct the function-Rips bifiltration with respect to this density function.  (See :ref:`funRipsBifil` for the definitions of these terms.
 
-The 300 points in the file `data/Test_Point_Clouds/circle_300pts_nofunction.csv` form a noisy circle in :math:`\mathbb{R}^2`, as pictured below.  [*Also cut this, perhaps*: We will illustrate how the RIVET visualization detects the dense circle of points that is evident in this point cloud.]
+The 300 points in the file `data/Test_Point_Clouds/circle_300pts_nofunction.csv` form a noisy circle in :math:`\mathbb{R}^2`, as pictured below.  The 1st persistent homology module of the function-Rips bifiltration of this data algebraic detects the presence of a "loop" in the data.  We will illustrate how RIVET visualizes this persistence module.
 
 .. image:: images/circle300_point_plot.png
    :width: 353px
@@ -41,33 +43,35 @@ The 300 points in the file `data/Test_Point_Clouds/circle_300pts_nofunction.csv`
    :alt: point cloud plot
    :align: center
 
-Upon selecting a file, RIVET activates the input selectors in the **Options** panel of the dialog box. 
-We must choose appropriate values for these input selectors.
-In this example, we will set the values as shown in the following figure; each selector and value is discussed briefly below the figure.
+Upon selecting a file, RIVET activates the input selectors in the **Options** panel of the dialog box.  We now briefly discuss this panel: 
 
-.. image:: images/file_input_selections.png
-   :width: 482px
-   :height: 393px
-   :alt: The file input dialog box with selected options
-   :align: center
+The *File Type* menu allows the user to tell RIVET what type of input file it should expect.  For this data file, we must select the default option, *points*.  
 
-The *File Type* menu allows the user to tell RIVET how to interpret the input file. This is most important for CSV files, which may specify several different types of data. The default selection, *points*, is correct for the input file mentioned above. Other options include *points_fn*, which would be used if the file contained function values in addition to the coordinates of points. Alternately, a CSV file may specify a discrete metric space, with or without function values, corresponding to to the *metric* and *metric_fn* menu items. RIVET can also accept *bifiltration* and free implicit representation (*firep*) input; these input types are not given as CSV files but have their own specifications as described in :ref:`inputData`.
+The *Homology Degree* selector allows the user to choose which degree of homology RIVET will compute. Currently, RIVET computes only a single degree of homology. A user who wishes to examine homology in multiple degrees, e.g., in degrees 0 and 1, will need to run multiple RIVET computations on the same input data. Since we want to discern a "loop" in the data, in this example we select homology degree 1.
 
-The *Homology Degree* selector allows the user to choose which degree of homology RIVET will compute. Currently, RIVET computes only a single degree of homology. A user who wishes to examine homology in multiple degrees, such as :math:`H_0` and :math:`H_1` homology, will need to run multiple RIVET computations on the same input data. Since we want to discern a central hole surrounded by a circle of points, we select homology degree 1.
-
-The *Max Distance* selector allows the user to specify the maximum length of edges that RIVET will include in the simplicial complex that it constructs from the input data. This is useful to reduce the size of the simplicial complex, which allows the RIVET computation to run faster and with less memory. Choosing an appropriate maximum distance requires knowing something about the scale of the data. We choose a max distance of 5 for our example. The max distance can be set to infinity, which includes an edge connecting every pair of points in the point cloud, by typing “inf” or clicking on the button with an infinity symbol.
+The *Max Distance* selector allows the user to specify the maximum length of edges that RIVET will include in the simplicial complex that it constructs from the input data. This controls the size of the bifiltration, allowing the RIVET computation to run faster and with less memory. Choosing an appropriate maximum distance requires knowing something about the scale of the data. We choose a max distance of 5 for our example. The max distance can be set to infinity, which includes an edge connecting every pair of points in the point cloud, by typing “inf” or clicking on the button with an infinity symbol.  [TODO: What is the default?]
 
 Three input selectors on the right side of the box determine what filtration RIVET will build from the point cloud. The **Filtration** selector contains two options: *degree* and *function*. The *degree* option builds a degree-Rips filtration, as described in :ref:`degreeRipsBifil`. Here, we choose the *function* option to build a function-Rips filtration.
 
-The function-Rips filtration depends on the choice of a real-valued function on the point cloud, which is specified in the **Function** selector. In this selector, a choice of *user* selects user-provided function values; since our input file does not contain such values, we must choose a different option. The other three options cause RIVET to compute density estimators on the points; these are explained in [SECTION REFERENCE]. For the present example, we choose the “balldensity” option. 
+The function-Rips filtration depends on the choice of a real-valued function on the point cloud, which is specified in the **Function** selector.  For the present example, we choose the “balldensity” option, which specifies the function to be a ball density function.  Other options for the function include a Gaussian density function, a coeccentricity function, and a user-defined function, which must specified in the input file; ref:`inputData`
 
-The density estimators each require the choice of a parameter, which must be provided in the **Parameter** selector. The “Parameter” label changes, depending on the selected function, to provide additional context. Specifically, the ball density estimator requires the specification of a radius. RIVET computes the number of neighbors within this radius for each point in the point cloud. Here, we choose a radius of 2. 
+The ball density function depends on a choice of radius parameter, which must be provided in the box below the function selector. Here, we choose a radius of 2. 
+
+[Mike's edits end here]
 
 The selectors in the lower portion of the **Options** box deal with the axes. The user may specify the number of **Bins**, which are used to coarsen the bipersistence module. The bin values limit the number of distinct grades that occur in the module, as described in :ref:`coarsening`. Specifying smaller bin values will speed the RIVET computation, but will result in less precise output. For the present example, we set both bin values to 30. 
 
 Next, the user may specify the labels for each axis in the RIVET visualization. For a function-Rips filtration, RIVET presents the function values along the x-axis. Since we are computing a density estimator, we enter “density” for the x-axis label. We keep the default “distance” label for the y-axis.
 
 Lastly, the **Reverse** checkboxes allow the user to reverse axis directions. For example, when using a density estimator, we typically want points with larger density values to enter the filtration before points with smaller density values; thus, we check the **Reverse** box for the x-axis. It is not possible to reverse the distance axis for a Rips filtration, so the y-axis reverse box is unavailable.
+
+The RIVET file input box, with all options selected as discussed above, is shown in the following figure.
+
+.. image:: images/file_input_selections.png
+   :width: 482px
+   :height: 393px
+   :alt: The file input dialog box with selected options
+   :align: center
 
 We now click **Compute**. This starts the RIVET computational pipeline, as described in :ref:`structure`. A progress box appears, as shown below.
 
