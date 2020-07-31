@@ -155,8 +155,6 @@ void DistanceMatrix::gaussian_estimator(double s)
             value = -1*value;
         ret = function_set.insert(ExactValue(value));
         (ret.first)->indexes.push_back(i);
-
-        debug() << gvalues[i];
     }
 
     delete[] gvalues;
