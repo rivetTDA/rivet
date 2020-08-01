@@ -140,7 +140,9 @@ void DistanceMatrix::gaussian_estimator(double s)
     }
 
     if (s == 0)
-        s = 1.0;
+        s = 2.0;
+    else
+        s = 2*s*s;
 
     for (unsigned i = 0; i < num_points; i++) {
         double d = 0;
