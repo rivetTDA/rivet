@@ -35,7 +35,7 @@ We mention three natural choices of :math:`\gamma`, each of which is implemented
 
 .. math::
    :nowrap:
-
+   
    \[\gamma(x)=C[\# \text{ points in } P \text{ within distance }r \text{ of }x],\]
 
 where :math:`r>0` is a fixed parameter, the "radius", and :math:`C` is a normalization constant, chosen so that :math:`\sum_{x\in P} \gamma(x)=1`.  
