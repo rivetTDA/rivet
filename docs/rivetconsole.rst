@@ -217,21 +217,4 @@ The next few lines specify the points in :math:`G` where the Hilbert function is
 The remaining lines specify the points where the Betti numbers are non-zero, along with the value of the Betti number at that point.  (0th, 1st, and 2nd Betti numbers are handled separately.)  Again, for each such point, a triple (x-index, y-index, value) is printed.   
 
 
-**rivet_GUI**
-----------------------------
-
-TODO: This shouldn't live on a page titled RIVET console, but some of the material is not suitable for the getting started page.  So either make a short new page for this, or find a slick way to incorporate it into another page, e.g., the RIVET visualization page.
-
-The visualizations performed by **rivet_GUI** require an MI file as input.  This can be computed by an explicit call to **rivet_console** and then opened in **rivet_GUI**.  Alternatively, **rivet_GUI** can call **rivet_console** directly to compute the MI file.
-When the user runs **rivet_GUI**, a window opens which allows the user to select a file.
-This file can be either an input data file in one of the input formats described in :ref:`inputData`, or a MI file.
-
-If an input data file is chosen, the GUI allows the user to graphically select options for  computation of a MI file.  Any option that can be selected via a command line flag as described above can also be selected in the GUI.  
-After the user clicks the *Compute* button, the MI file is computed via a call to **rivet_console** and the visualization is started.  
-(Note that after the Hilbert Function and Betti numbers are shown in the visualization, it may take a significant amount of additional time to prepare the interactive visualization of the barcodes of 1-D slices.)
-Using the *File* menu in the GUI, the user may save the MI file; the file is not saved automatically.
-
-If an MI file is selected in the file dialogue window, the data in the file is loaded immediately into the RIVET visualization, and the visualization begins. 
-
-The RIVET visualization itself is explained in the section :ref:`visualization`.
 
