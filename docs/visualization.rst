@@ -1,8 +1,8 @@
 .. _visualization:
 
-The RIVET Visualization
-=======================
-
+The RIVET Visualization: Further Details
+========================================
+In the section :ref:`overviewVisualization`, we gave brief overview of RIVET's visualization of bipersistence modules.  Here we provide a more detailed description of the visualization.  To make this description self-contained, we revisit the material of :ref:overviewVisualization along the way.
 
 The RIVET interface contains two main windows, the *Line Selection Window* and the *Persistence Diagram Window*, shown in the screenshot below.
 

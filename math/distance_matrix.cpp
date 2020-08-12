@@ -64,6 +64,8 @@ void DistanceMatrix::ball_density_estimator(double radius)
     // it is a diagonal matrix
     unsigned size = (num_points * (num_points - 1)) / 2 + 1;
     double* distance_matrix = new double[size];
+    double* gvalues = new double[num_points];
+    double total = 0;
 
     ExactSet::iterator it;
 
@@ -91,22 +93,28 @@ void DistanceMatrix::ball_density_estimator(double radius)
     // check if distance less than supplied radius
     // if yes, increase density value by 1
     for (unsigned i = 0; i < num_points; i++) {
-        exact value = 0;
+        double d = 0;
         for (unsigned j = 0; j < num_points; j++) {
             if ((i == j)
                 || (j > i && (distance_matrix[(j * (j - 1)) / 2 + i + 1] <= radius))
                 || (i > j && (distance_matrix[(i * (i - 1)) / 2 + j + 1] <= radius))) {
-                value = value + 1;
+                d = d + 1;
             }
         }
+        gvalues[i] = d;
+        total += d;
+    }
 
+    for (unsigned i = 0; i < num_points; i++) {
+        gvalues[i] /= total;
+        exact value = gvalues[i];
         if (input_params.x_reverse)
             value = -1*value;
-        // store value in function_set
         ret = function_set.insert(ExactValue(value));
         (ret.first)->indexes.push_back(i);
     }
 
+    delete[] gvalues;
     delete[] distance_matrix; // free up the memory
 }
 
@@ -132,7 +140,9 @@ void DistanceMatrix::gaussian_estimator(double s)
     }
 
     if (s == 0)
-        s = 1.0;
+        s = 2.0;
+    else
+        s = 2*s*s;
 
     for (unsigned i = 0; i < num_points; i++) {
         double d = 0;

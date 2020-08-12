@@ -21,9 +21,9 @@ When the user runs **rivet_GUI**, the following window opens:
    :alt: The file input dialog box of rivet_GUI
    :align: center
 
-To start a computation, first select a file by clicking the *Choose File* button.    RIVET can handle several different types of input: Point clouds, finite metric spaces, simplicial bifiltrations, and short chain complexes.  These file formats for these input types are discussed in detail in :ref:`inputData`. 
+To start a computation, we first select a file by clicking the *Choose File* button.  RIVET can handle several different types of input: Point clouds, finite metric spaces, simplicial bifiltrations, and short chain complexes.  These file formats for these input types are discussed in detail in :ref:`inputData`. 
 
-In this introduction, we consider just one simple type of input file, a CSV file specifying a point cloud in :math:`\mathbb{R}^n`. We call this type of file a *points* file. Each line of the file gives the :math:`n` coordinates of one point; these coordinates are written as numbers separated by commas or white space. 
+In this introduction, we consider just one simple type of input file, a CSV file specifying a point cloud in :math:`\mathbb{R}^n`. Each line of the file gives the :math:`n` coordinates of one point; these coordinates are written as numbers separated by commas or white space. 
 
 We will use the file `data/Test_Point_Clouds/circle_300pts_nofunction.csv` from the RIVET repository. This file specifies 300 points in :math:`\mathbb{R}^2`. The first five lines of the file are as follows::
 
@@ -33,9 +33,8 @@ We will use the file `data/Test_Point_Clouds/circle_300pts_nofunction.csv` from 
 	-2.44,-2.24
 	-2.54,-1.25
 
-In this example, RIVET will compute a ball density function function on this point cloud, and construct the function-Rips bifiltration with respect to this density function.  (See :ref:`funRipsBifil` for the definitions of these terms.
+The 300 points in the file `data/Test_Point_Clouds/circle_300pts_nofunction.csv` form a noisy circle in :math:`\mathbb{R}^2`, as pictured below.  
 
-The 300 points in the file `data/Test_Point_Clouds/circle_300pts_nofunction.csv` form a noisy circle in :math:`\mathbb{R}^2`, as pictured below.  The 1st persistent homology module of the function-Rips bifiltration of this data algebraic detects the presence of a "loop" in the data.  We will illustrate how RIVET visualizes this persistence module.
 
 .. image:: images/circle300_point_plot.png
    :width: 353px
@@ -43,27 +42,10 @@ The 300 points in the file `data/Test_Point_Clouds/circle_300pts_nofunction.csv`
    :alt: point cloud plot
    :align: center
 
-Upon selecting a file, RIVET activates the input selectors in the *Options* panel of the dialog box.  We now briefly discuss this panel: 
+We will use RIVET to compute a ball density function :math:`\gamma` on this data set, and construct the function-Rips bifiltration with respect to :math:`\gamma`.  (See :ref:`funRipsBifil` for the definitions of these terms.)
+The 1st persistent homology module of the function-Rips bifiltration of this data algebraically detects the presence of a "loop" in the data.  Below, we illustrate how RIVET visualizes this persistence module.
 
-The *File Type* menu allows the user to tell RIVET what type of input file it should expect.  For this data file, we must select the default option, *points*.  
-
-The *Homology Degree* selector allows the user to choose which degree of homology RIVET will compute. Currently, RIVET computes only a single degree of homology. A user who wishes to examine homology in multiple degrees, e.g., in degrees 0 and 1, will need to run multiple RIVET computations on the same input data. Since we want to discern a "loop" in the data, in this example we select homology degree 1.
-
-The *Max Distance* selector allows the user to specify the maximum length of edges that RIVET will include in the simplicial complex that it constructs from the input data. This controls the size of the bifiltration, allowing the RIVET computation to run faster and with less memory. Choosing an appropriate maximum distance requires knowing something about the scale of the data. We choose a max distance of 5 for our example. The max distance can be set to infinity, which includes an edge connecting every pair of points in the point cloud, by typing “inf” or clicking on the button with an infinity symbol.  The default max distance is infinity.
-
-Three input selectors on the right side of the box determine what filtration RIVET will build from the point cloud. The *Filtration* selector contains two options: *degree* and *function*. The *degree* option builds a degree-Rips filtration, as described in :ref:`degreeRipsBifil`. Here, we choose the *function* option to build a function-Rips filtration.
-
-The function-Rips filtration depends on the choice of a real-valued function on the point cloud, which is specified in the *Function* selector.  For the present example, we choose the *balldensity* option, which specifies the function to be a ball density function.  Other options for the function include a Gaussian density function, a coeccentricity function, and a user-defined function, which must specified in the input file; see :ref:`inputData` for details.
-
-The ball density function depends on a choice of radius parameter, which must be provided in the box below the function selector. Here, we choose a radius of 2. 
-
-The selectors in the lower portion of the *Options* box deal with the coordinate axes. The user may specify the number of *Bins*, to be used in the coarsening the bipersistence module. The number of bins is set separately for the x-axis and the y-axis.  The number of bins controls the number of distinct grades that occur in the module, as described in :ref:`coarsening`. Thus, specifying smaller bin values will speed the RIVET computation, but will result in less precise output.  In this example, we set both bin values to 30.
-
-Next, the user may specify the *Label* for each axis in the RIVET visualization. For a function-Rips filtration, RIVET presents the function values along the x-axis. Since we are computing a density estimator, we enter “density” for the x-axis label. We keep the default “distance” label for the y-axis.
-
-Lastly, the *Reverse* checkboxes allow the user to reverse axis directions. For example, when using a density function, we typically want points with larger density values to enter the filtration before points with smaller density values; thus, when we select the "balldensity" function, the *Reverse* box for the x-axis is checked by default. It is not possible to reverse the distance axis for a Rips filtration, so in this example, the y-axis *Reverse* selector is unavailable.
-
-The RIVET file input box, with all options selected as discussed above, is shown in the following figure.
+Upon selecting a file, RIVET activates the input selectors in the *Options* panel of the dialog box.  The following figure shows RIVET file input window, with the selection of options we will use in this example.
 
 .. image:: images/file_input_selections.png
    :width: 482px
@@ -71,7 +53,30 @@ The RIVET file input box, with all options selected as discussed above, is shown
    :alt: The file input dialog box with selected options
    :align: center
 
-We now click *Compute*. This starts the RIVET computational pipeline, as described in :ref:`structure`. A progress box appears, as shown below.
+
+We now briefly discuss the available options.
+
+The *File Type* selector tells RIVET what type of input file it should expect.  For this data file, we must select the default option, *points*.  
+
+The *Homology Degree* selector chooses the degree of the homology module RIVET computes. (Currently, RIVET computes only a single degree of homology at a time.  A user who wishes to examine homology in multiple degrees, e.g., in degrees 0 and 1, will need to run multiple RIVET computations on the same input data.)  Since we want to discern a "loop" in the data, in this example we select homology degree 1.
+
+The *Max Distance* selector specifies the maximum length of edges that RIVET will include in the bifiltration it constructs. This controls the size of the bifiltration, allowing the RIVET computation to run faster and with less memory. Choosing an appropriate maximum distance requires knowing something about the scale of the data. We choose a max distance of 5 for our example. The max distance can be set to infinity, so that every possible edge appears in the bifiltration; this is done by typing “inf” or clicking on the button with an infinity symbol.  The default max distance is infinity.
+
+Three input selectors on the right side of the box determine what filtration RIVET will build from the point cloud. The *Filtration* selector offers two options: *degree* and *function*. The *degree* option builds a degree-Rips filtration, as described in :ref:`degreeRipsBifil`. Here, we choose the *function* option to build a function-Rips filtration.
+
+The function-Rips filtration depends on the choice of a real-valued function on the point cloud, which is specified by the *Function* selector.  Here, we choose the *balldensity* option, which specifies the function to be a ball density function.  Other options for the function include a Gaussian density function, a coeccentricity function, and a user-defined function, which must specified in the input file; see :ref:`inputData` for details.
+
+The ball density function depends on a choice of radius parameter, which must be provided in the box below the *Function* selector. Here, we choose a radius of 2. 
+
+The selectors in the lower portion of the *Options* box deal with the coordinate axes. The  *Bins* selectors specify the coarsening of the homology module, as described in :ref:`coarsening`. The number of bins is set separately for the x-axis and the y-axis.  The coarsening controls the number of distinct bigrades where generators and relations of the module can appear. Thus, specifying a smaller number of bin values will speed the RIVET computation and reduce its memory, but will result in less accurate approximation to the uncoarsened homology module.  In this example, we set both bin values to 30.
+
+
+Next, the user may specify the *Label* for each axis in the RIVET visualization. For a function-Rips filtration, RIVET presents the function values along the x-axis. Since we are computing a density estimator, we enter “density” for the x-axis label. We keep the default “distance” label for the y-axis.
+
+Lastly, the *Reverse* checkboxes allow the user to reverse axis directions. For example, when using a density function, we typically want points with larger density values to enter the filtration before points with smaller density values; thus, when we select the "balldensity" function, the *Reverse* box for the x-axis is checked by default. It is not possible to reverse the distance axis for a Rips filtration, so in this example, the y-axis *Reverse* selector is unavailable.
+
+
+We now click *Compute* at the bottom of the file input window. This starts the RIVET computational pipeline, as described in :ref:`structure`. A progress box appears, as shown below.
 
 .. image:: images/RIVET_progress_box.png
    :width: 302px
@@ -80,7 +85,9 @@ We now click *Compute*. This starts the RIVET computational pipeline, as describ
    :align: center
 
 
-Key Features of the RIVET Visualization
+.. _overviewVisualization:
+
+Overview of the RIVET Visualization
 ---------------------------------------
 
 When the computation finishes, RIVET displays the following visualization.
