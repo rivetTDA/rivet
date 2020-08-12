@@ -21,7 +21,7 @@ When the user runs **rivet_GUI**, the following window opens:
    :alt: The file input dialog box of rivet_GUI
    :align: center
 
-To start a computation, first select a file by clicking the *Choose File* button.    **rivet** can handle several different types of input: Point clouds, finite metric spaces, simplicial bifiltrations, and short chain complexes.  These file formats for these input types are discussed in detail in :ref:`inputData`. 
+To start a computation, first select a file by clicking the *Choose File* button.    RIVET can handle several different types of input: Point clouds, finite metric spaces, simplicial bifiltrations, and short chain complexes.  These file formats for these input types are discussed in detail in :ref:`inputData`. 
 
 In this introduction, we consider just one simple type of input file, a CSV file specifying a point cloud in :math:`\mathbb{R}^n`. We call this type of file a *points* file. Each line of the file gives the :math:`n` coordinates of one point; these coordinates are written as numbers separated by commas or white space. 
 
@@ -53,7 +53,7 @@ The *Max Distance* selector allows the user to specify the maximum length of edg
 
 Three input selectors on the right side of the box determine what filtration RIVET will build from the point cloud. The *Filtration* selector contains two options: *degree* and *function*. The *degree* option builds a degree-Rips filtration, as described in :ref:`degreeRipsBifil`. Here, we choose the *function* option to build a function-Rips filtration.
 
-The function-Rips filtration depends on the choice of a real-valued function on the point cloud, which is specified in the *Function* selector.  For the present example, we choose the *balldensity* option, which specifies the function to be a ball density function.  Other options for the function include a Gaussian density function, a coeccentricity function, and a user-defined function, which must specified in the input file; ref:`inputData`
+The function-Rips filtration depends on the choice of a real-valued function on the point cloud, which is specified in the *Function* selector.  For the present example, we choose the *balldensity* option, which specifies the function to be a ball density function.  Other options for the function include a Gaussian density function, a coeccentricity function, and a user-defined function, which must specified in the input file; see :ref:`inputData` for details.
 
 The ball density function depends on a choice of radius parameter, which must be provided in the box below the function selector. Here, we choose a radius of 2. 
 

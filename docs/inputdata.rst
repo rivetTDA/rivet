@@ -20,7 +20,7 @@ RIVET accepts six types of input data files; the flag :code:`--datatype` tells R
 
 If the flag :code:`--datatype` is not given, RIVET uses the default value of :code:`points`.  As noted in :ref:`runningRIVET`, any of the command-line flags described in :ref:`_flags` can be placed either in an input data file or given directly on the command line, and this is true in particular for the flag :code:`--datatype`.
 
-In general, flags in the input data file must be provided in the top lines of the file, before the data is given and as noted in :ref:`runningRIVET`,[REMOVE THIS] flags provided to **rivet_console** override those given in the input file.  [MUST EACH FLAG APPEAR ON ITS OWN LINE?].  
+In general, flags in the input data file must be provided in the top lines of the file, one flag per line, before the data is given. As noted in :ref:`flags`, flags provided to **rivet_console** override those given in the input file. 
 
 RIVET ignores lines in an input data file that begin with the symbol `#`; such lines may be used for comments.  Blank lines are also ignored.
 
