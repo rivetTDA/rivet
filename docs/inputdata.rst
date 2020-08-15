@@ -230,9 +230,7 @@ is specified in the following format:
 
 * Following any flags, the first line must be of the form ``t s r``, where ``t``, ``s``, and ``r`` are, repsectively, the ranks of :math:`C_2`, :math:`C_1`, and :math:`C_0`.
 * Each of the next ``t`` lines specifies the bigrade of appearance of a basis element for :math:`C_2`, together with the corresponding column of the matrix representing :math:`f`.  The format for such a line is (e.g. if the column has three non-zero entries):
-
 ``x y ; b1 b2 b3``,
-
 where (x,y) is the bigrade and the ``bi`` are the row indices of nonzero column entries.  (Recall that we work with :math:`\mathbb{Z}/2\mathbb{Z}` coefficients.) 
 * Each of the next ``s`` lines specifies the bigrade of appearance of a basis element for :math:`C_1`, together with the corresponding column of the matrix representing :math:`g`.
  
