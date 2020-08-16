@@ -399,15 +399,21 @@ void DataSelectDialog::detect_file_type()
                 ui->parameterSpinBox->setValue(0.00);
             }
             else {
-                if (params.function_type == "balldensity")
+                if (params.function_type == "balldensity") {
                     ui->parameterLabel->setText("Radius:");
-                else if (params.function_type == "gaussian")
+                    ui->xAxisLabel->setText("ball density");
+                }
+                else if (params.function_type == "gaussian") {
                     ui->parameterLabel->setText("Std Dev:");
-                else if (params.function_type == "eccentricity")
+                    ui->xAxisLabel->setText("gaussian density");
+                }
+                else if (params.function_type == "eccentricity") {
                     ui->parameterLabel->setText("P Norm:");
+                    ui->xAxisLabel->setText("coeccentricity");
+                }
                 ui->parameterSpinBox->setEnabled(true);
                 ui->parameterSpinBox->setSpecialValueText("");
-                if ((params.function_type == "gaussian" || params.function_type == "eccentricity") && params.filter_param == 0)
+                if (params.function_type == "eccentricity" && params.filter_param == 0)
                     ui->parameterSpinBox->setValue(1.0);
                 else
                     ui->parameterSpinBox->setValue(params.filter_param);
@@ -493,12 +499,18 @@ void DataSelectDialog::on_filterComboBox_currentIndexChanged(int index)
             ui->parameterSpinBox->setValue(0.00);
         }
         else {
-            if (params.function_type == "balldensity")
+            if (params.function_type == "balldensity") {
                 ui->parameterLabel->setText("Radius:");
-            else if (params.function_type == "gaussian")
+                ui->xAxisLabel->setText("ball density");
+            }
+            else if (params.function_type == "gaussian") {
                 ui->parameterLabel->setText("Std Dev:");
-            else if (params.function_type == "eccentricity")
+                ui->xAxisLabel->setText("gaussian density");
+            }
+            else if (params.function_type == "eccentricity") {
                 ui->parameterLabel->setText("P Norm:");
+                ui->xAxisLabel->setText("coeccentricity");
+            }
             ui->parameterSpinBox->setEnabled(true);
             ui->parameterSpinBox->setSpecialValueText("");
             if ((params.function_type == "gaussian" || params.function_type == "eccentricity") && params.filter_param == 0)
@@ -518,14 +530,21 @@ void DataSelectDialog::on_functionComboBox_currentIndexChanged(int index)
         ui->parameterSpinBox->setValue(0.00);
     }
     else {
-        if (index == 1)
+        if (index == 1) {
             ui->parameterLabel->setText("Radius:");
-        else if (index == 2) 
+            ui->xAxisLabel->setText("ball density");
+        }
+        else if (index == 2) {
             ui->parameterLabel->setText("Std Dev:");
-        else if (index == 3)
+            ui->xAxisLabel->setText("gaussian density");
+        }
+        else if (index == 3) {
             ui->parameterLabel->setText("P Norm:");
-        if (index == 1 || index == 2 || index == 3)
+            ui->xAxisLabel->setText("coeccentricity");
+        }
+        if (index == 1 || index == 2 || index == 3) {
             ui->xRevCheckBox->setChecked(true);
+        }
         else
             ui->xRevCheckBox->setChecked(false);
         ui->parameterSpinBox->setEnabled(true);
