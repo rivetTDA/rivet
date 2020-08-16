@@ -83,7 +83,7 @@ static const char USAGE[] =
       --xlabel <label>                         Name of the parameter displayed along the x-axis. (Default: degree (if no function values specified))
       --ylabel <label>                         Name of the parameter displayed along the y-axis. (Default: distance)
       --bifil <filtration>                     Specify the type of bifiltration to build. (Default: degree (if no function values specified) or function (if function values specified))
-      --function <function>                    Specify the type of function values to be calculated from the dataset. (Not enabled when input file does not have function values)
+      --function <function>                    Specify the type of function values to be calculated from the dataset.
       --barcodes <line_file>                   Print barcodes for the line queries in line_file, then exit.
                                                
 
@@ -465,11 +465,15 @@ int main(int argc, char* argv[])
                 throw std::runtime_error("Invalid parameter for function");
             params.filter_param = p;
         }
+        params.bifil = "function";
     }
 
-    if ((params.type == "points" || params.type == "metric") && params.bifil == "function" && params.function_type == "none")
-        throw std::runtime_error("Cannot create function rips without function values. If you have provided function values, please specify the correct data type.");
-
+    if (params.bifil == "function" && params.function_type == "none") {
+        if (params.new_function)
+            params.function_type = "user";
+        else
+            params.function_type = "balldensity";
+    }
     if (params.bifil == "degree") {
         params.x_reverse = true;
     }

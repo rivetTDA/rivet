@@ -313,9 +313,6 @@ void InputManager::parse_args()
         throw InputError(line_info.second, e.what());
     }
 
-    if ((input_params.type == "points" || input_params.type == "metric") && input_params.bifil == "function")
-        throw std::runtime_error("Cannot create function rips without function values. If you have provided function values, please specify the correct data type.");
-
     // skip stores number of lines to skip
     input_params.to_skip = num_lines;
 
