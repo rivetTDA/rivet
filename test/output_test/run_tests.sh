@@ -26,6 +26,10 @@ command_firep="$rivet_home/rivet_console $input/test-firep_ex.txt $output --bina
 
 # TESTS
 
+printf "Running RIVET Tests.\n"
+printf "Only expected errors will be printed out on the console.\n"
+printf "If all tests don't pass, look at diff between the files: correct, latest\n\n"
+
 # rivet test
 
 printf "Test 0 (old points)\n----------------\n\n" > latest
@@ -51,11 +55,10 @@ printf "\n\nTest 3 (--bifil degree)\n----------------\n\n" >> latest
 	$command --bifil degree
 } 2>&1 | (head -n 5 && tail -n 5) >> latest
 
-printf "\n\nTest 4 (--bifil function)\n----------------\n\n"
 printf "\n\nTest 4 (--bifil function)\n----------------\n\n" >> latest
 { 
-	$command_points_1 --bifil function
-} | (head -n 5 && tail -n 5) >> latest
+	$command_points_1 --bifil function --binary
+} 2>&1 | (head -n 5 && tail -n 5) >> latest
 
 # max-dist flag
 
@@ -210,32 +213,32 @@ printf "\n\nTest 29 (--function balldensity[1])\n----------------\n\n" >> latest
 	$command_metric --function balldensity[1]
 } 2>&1 | (head -n 5 && tail -n 5) >> latest
 
-printf "\n\nTest 30 (--bifil function --function balldensity[1])\n----------------\n\n" >> latest
+printf "\n\nTest 30 (--function balldensity[1])\n----------------\n\n" >> latest
 { 
-	$command_metric_1 --bifil function --function balldensity[1]
+	$command_metric_1 --function balldensity[1]
 } 2>&1 | (head -n 5 && tail -n 5) >> latest
 
-# knn density
+# gaussian density
 
-printf "\n\nTest 31 (--function knndensity[])\n----------------\n\n" >> latest
+printf "\n\nTest 31 (--function gaussian[])\n----------------\n\n" >> latest
 { 
-	$command_points --function knndensity[] --binary
+	$command_points --function gaussian[] --binary
 } 2>&1 | (head -n 5 && tail -n 5) >> latest
 
-printf "\n\nTest 32 (--function knndensity)\n----------------\n\n"
-printf "\n\nTest 32 (--function knndensity)\n----------------\n\n" >> latest
+printf "\n\nTest 32 (--function gaussian)\n----------------\n\n"
+printf "\n\nTest 32 (--function gaussian)\n----------------\n\n" >> latest
 { 
-	$command_points --function knndensity --binary
+	$command_points --function gaussian --binary
 } | (head -n 5 && tail -n 5) >> latest
 
-printf "\n\nTest 33 (--function knndensity[2])\n----------------\n\n" >> latest
+printf "\n\nTest 33 (--function gaussian[2])\n----------------\n\n" >> latest
 { 
-	$command_metric --function knndensity[2]
+	$command_metric --function gaussian[2]
 } 2>&1 | (head -n 5 && tail -n 5) >> latest
 
-printf "\n\nTest 34 (--bifil function --function knndensity[2])\n----------------\n\n" >> latest
+printf "\n\nTest 34 (--bifil function --function gaussian[2])\n----------------\n\n" >> latest
 { 
-	$command_metric_1 --bifil function --function knndensity[2]
+	$command_metric_1 --bifil function --function gaussian[2]
 } 2>&1 | (head -n 5 && tail -n 5) >> latest
 
 # eccentricity
@@ -268,7 +271,7 @@ printf "\n\nTest 38 (--bifil function --function eccentricity[2])\n-------------
 
 # CHECK IF TESTS PASSED
 
-changes=`diff $latest $correct`
+changes=`diff -u $correct $latest`
 if [ -z "$changes" ]; then
 	printf "\n\nALL TESTS PASSED.\n"
 else

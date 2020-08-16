@@ -51,6 +51,16 @@ XI: ./rivet-test.rivet-tmp
 Test 4 (--bifil function)
 ----------------
 
+STAGE
+PROGRESS 30
+STAGE
+PROGRESS 40
+PROGRESS 55
+PROGRESS 75
+STAGE
+STEPS_IN_STAGE 0
+ARRANGEMENT: ./rivet-test
+XI: ./rivet-test.rivet-tmp
 
 
 Test 5 (--maxdist 3.5)
@@ -358,7 +368,7 @@ ARRANGEMENT: ./rivet-test
 XI: ./rivet-test.rivet-tmp
 
 
-Test 30 (--bifil function --function balldensity[1])
+Test 30 (--function balldensity[1])
 ----------------
 
 STAGE
@@ -373,7 +383,7 @@ ARRANGEMENT: ./rivet-test
 XI: ./rivet-test.rivet-tmp
 
 
-Test 31 (--function knndensity[])
+Test 31 (--function gaussian[])
 ----------------
 
 STAGE
@@ -388,12 +398,12 @@ ARRANGEMENT: ./rivet-test
 XI: ./rivet-test.rivet-tmp
 
 
-Test 32 (--function knndensity)
+Test 32 (--function gaussian)
 ----------------
 
 
 
-Test 33 (--function knndensity[2])
+Test 33 (--function gaussian[2])
 ----------------
 
 STAGE
@@ -401,14 +411,14 @@ PROGRESS 30
 STAGE
 PROGRESS 40
 PROGRESS 55
-PROGRESS 41
-PROGRESS 42
-PROGRESS 43
+PROGRESS 84
+PROGRESS 85
+PROGRESS 86
 ARRANGEMENT: ./rivet-test
 XI: ./rivet-test.rivet-tmp
 
 
-Test 34 (--bifil function --function knndensity[2])
+Test 34 (--bifil function --function gaussian[2])
 ----------------
 
 STAGE
@@ -416,9 +426,9 @@ PROGRESS 30
 STAGE
 PROGRESS 40
 PROGRESS 55
-PROGRESS 41
-PROGRESS 42
-PROGRESS 43
+PROGRESS 87
+PROGRESS 88
+PROGRESS 89
 ARRANGEMENT: ./rivet-test
 XI: ./rivet-test.rivet-tmp
 
@@ -466,8 +476,8 @@ PROGRESS 30
 STAGE
 PROGRESS 40
 PROGRESS 55
-PROGRESS 87
-PROGRESS 88
-PROGRESS 89
+PROGRESS 84
+PROGRESS 85
+PROGRESS 86
 ARRANGEMENT: ./rivet-test
 XI: ./rivet-test.rivet-tmp
