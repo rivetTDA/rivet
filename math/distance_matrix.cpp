@@ -139,10 +139,17 @@ void DistanceMatrix::gaussian_estimator(double s)
         }
     }
 
-    if (s == 0)
-        s = 2.0;
-    else
-        s = 2*s*s;
+    if (s == 0) {
+        std::vector<double> sorted; // sorted will hold sorted values of distance matrix
+        for (unsigned i = 0; i < size; i++)
+            sorted.push_back(distance_matrix[i]);
+        std::sort(sorted.begin(), sorted.end());
+        int twenty_percentile = (int)(sorted.size() * 0.2); // we select the 20th percentile
+        s = sorted[twenty_percentile];
+        std::vector<double>().swap(sorted); // free up the memory
+    }
+
+    s = 2*s*s;
 
     for (unsigned i = 0; i < num_points; i++) {
         double d = 0;
