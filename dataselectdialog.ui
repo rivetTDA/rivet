@@ -304,7 +304,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>File Type:</string>
+     <string>Data Type:</string>
     </property>
    </widget>
    <widget class="QComboBox" name="dataTypeComboBox">
