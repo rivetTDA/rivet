@@ -246,6 +246,7 @@ void DataSelectDialog::detect_file_type()
 
     params.bifil = "";
     params.new_function = false;
+    params.old_function = false;
 
     params.type = "points";
     params.max_dist = -1;
@@ -399,6 +400,7 @@ void DataSelectDialog::detect_file_type()
                 ui->parameterSpinBox->setValue(0.00);
             }
             else {
+                params.x_reverse = true;
                 if (params.function_type == "balldensity") {
                     ui->parameterLabel->setText("Radius:");
                     ui->xAxisLabel->setText("ball density");
@@ -489,16 +491,22 @@ void DataSelectDialog::on_filterComboBox_currentIndexChanged(int index)
         ui->xRevCheckBox->setEnabled(true);
         ui->functionComboBox->setEnabled(true);
         ui->functionComboBox->setEditable(false);
-        if (!params.old_function && !params.new_function && params.function_type == "none" &&
-            ((ui->dataTypeComboBox->currentText().toStdString() == "points") || (ui->dataTypeComboBox->currentText().toStdString() == "metric")) )
-            params.function_type = "balldensity";
+        if (!params.old_function && !params.new_function && params.function_type == "none") {
+            if ((ui->dataTypeComboBox->currentText().toStdString() == "points") || (ui->dataTypeComboBox->currentText().toStdString() == "metric"))
+                params.function_type = "balldensity";
+            else if ((ui->dataTypeComboBox->currentText().toStdString() == "points_fn") || (ui->dataTypeComboBox->currentText().toStdString() == "metric_fn"))
+                params.function_type = "user";
+        }
+            
         ui->functionComboBox->setCurrentText(QString::fromStdString(params.function_type));
         if (params.function_type == "user" || params.function_type == "none") {
             ui->parameterSpinBox->setEnabled(false);
             ui->parameterSpinBox->setSpecialValueText("N/A");
             ui->parameterSpinBox->setValue(0.00);
+            ui->xRevCheckBox->setChecked(false);
         }
         else {
+            ui->xRevCheckBox->setChecked(true);
             if (params.function_type == "balldensity") {
                 ui->parameterLabel->setText("Radius:");
                 ui->xAxisLabel->setText("ball density");
@@ -559,11 +567,14 @@ void DataSelectDialog::on_functionComboBox_currentIndexChanged(int index)
 void DataSelectDialog::on_dataTypeComboBox_currentIndexChanged(int index)
 {
     if (index == 0 || index == 2) {
-        if (ui->functionComboBox->currentText().toStdString() == "user")
+        if (ui->functionComboBox->currentText().toStdString() == "user") {
             ui->functionComboBox->setCurrentText(QString::fromStdString("balldensity"));
+            ui->xRevCheckBox->setChecked(true);
+        }
         qobject_cast<QStandardItemModel*>(ui->functionComboBox->model())->item(0)->setEnabled(false);
     }
     else if (index == 1 || index == 3) {
         qobject_cast<QStandardItemModel*>(ui->functionComboBox->model())->item(0)->setEnabled(true);
+        ui->xRevCheckBox->setChecked(false);
     }
 }
