@@ -133,6 +133,9 @@ void VisualizationWindow::init()
     ui->xi0CheckBox->setEnabled(false);
     ui->xi1CheckBox->setEnabled(false);
     ui->xi2CheckBox->setEnabled(false);
+    ui->xi0CheckBox->setChecked(true);
+    ui->xi1CheckBox->setChecked(true);
+    ui->xi2CheckBox->setChecked(false);
     ui->normCoordCheckBox->setEnabled(false);
 
     ui->angleLabel->setEnabled(false);
