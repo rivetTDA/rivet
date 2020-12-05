@@ -343,10 +343,6 @@ void InputManager::parse_args()
     if (input_params.type == "metric_fn" || input_params.type == "points_fn") {
         input_params.y_reverse = false;
     }
-    if (input_params.type == "firep") {
-        input_params.x_reverse = false;
-        input_params.y_reverse = false;
-    }
 
     if (input_params.bifil == "function" && input_params.function_type == "none") {
         if (input_params.new_function)

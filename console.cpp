@@ -483,12 +483,6 @@ int main(int argc, char* argv[])
     if (params.bifil == "function" && params.function_type == "none") {
         params.function_type = "user";
     }
-    if (params.type != "bifiltration") {
-        params.y_reverse = false;
-    }
-    if (params.type == "firep") {
-        params.x_reverse = false;
-    }
 
     // all input parameters should be set by this point
 

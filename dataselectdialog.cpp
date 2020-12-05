@@ -352,9 +352,9 @@ void DataSelectDialog::detect_file_type()
         ui->filterComboBox->setEnabled(false);
         ui->functionComboBox->setEnabled(false);
 
-        ui->xRevCheckBox->setEnabled(false);
+        ui->xRevCheckBox->setEnabled(true);
         ui->xRevCheckBox->setChecked(false);
-        ui->yRevCheckBox->setEnabled(false);
+        ui->yRevCheckBox->setEnabled(true);
         ui->yRevCheckBox->setChecked(false);
     }
     else if (params.type == "RIVET_msgpack") {
