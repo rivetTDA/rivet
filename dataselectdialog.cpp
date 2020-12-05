@@ -435,6 +435,9 @@ void DataSelectDialog::detect_file_type()
     if (params.y_bins > 0)
         ui->xbinSpinBox->setValue(params.y_bins);
 
+    if (!inputManager.type_set)
+        type_string = "This file does not contain the datatype. Please select the appropriate type below.";
+
     ui->fileTypeLabel->setText(type_string);
     QFileInfo fileInfo(QString::fromStdString(params.fileName));
     ui->fileLabel->setText("Selected file: " + fileInfo.fileName());
