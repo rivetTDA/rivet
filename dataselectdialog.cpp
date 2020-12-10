@@ -411,7 +411,7 @@ void DataSelectDialog::detect_file_type()
                 }
                 else if (params.function_type == "eccentricity") {
                     ui->parameterLabel->setText("P Norm:");
-                    ui->xAxisLabel->setText("coeccentricity");
+                    ui->xAxisLabel->setText("eccentricity");
                 }
                 ui->parameterSpinBox->setEnabled(true);
                 ui->parameterSpinBox->setSpecialValueText("");
@@ -436,7 +436,7 @@ void DataSelectDialog::detect_file_type()
         ui->xbinSpinBox->setValue(params.y_bins);
 
     if (!inputManager.type_set)
-        type_string = "This file does not contain the datatype. Please select the appropriate type below.";
+        type_string = "This file does not specify the datatype. Please select the appropriate type below.";
 
     ui->fileTypeLabel->setText(type_string);
     QFileInfo fileInfo(QString::fromStdString(params.fileName));
@@ -520,7 +520,7 @@ void DataSelectDialog::on_filterComboBox_currentIndexChanged(int index)
             }
             else if (params.function_type == "eccentricity") {
                 ui->parameterLabel->setText("P Norm:");
-                ui->xAxisLabel->setText("coeccentricity");
+                ui->xAxisLabel->setText("eccentricity");
             }
             ui->parameterSpinBox->setEnabled(true);
             ui->parameterSpinBox->setSpecialValueText("");
@@ -551,7 +551,7 @@ void DataSelectDialog::on_functionComboBox_currentIndexChanged(int index)
         }
         else if (index == 3) {
             ui->parameterLabel->setText("P Norm:");
-            ui->xAxisLabel->setText("coeccentricity");
+            ui->xAxisLabel->setText("eccentricity");
         }
         if (index == 1 || index == 2 || index == 3) {
             ui->xRevCheckBox->setChecked(true);
