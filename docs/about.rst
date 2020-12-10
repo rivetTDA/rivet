@@ -34,9 +34,9 @@ Here is a list of contributors, with a brief, incomplete summary of contribution
 * `Bryn Keller`_ : Parallel-friendly code organization, command line interactivity, APIs, software design leadership.
 * `Michael Lesnick`_ : Design, performance optimizations, computation of minimal presentations
 * Phil Nadolny : Error handling, code for constructing path through dual graph
-* `Matthew Wright`_ : Design, primary developer
 * Simon Segert : Major improvements to the GUI, extensions of RIVET 
 * David Turner : Parallel minimization of a presentation
+* `Matthew Wright`_ : Design, primary developer
 * Alex Yu : Extensions of RIVET 
 * `Roy Zhao`_ : Multicritical bifiltrations and Degree-Rips bifiltrations, performance optimizations 
 
@@ -47,9 +47,6 @@ Here is a list of contributors, with a brief, incomplete summary of contribution
 .. _Bryn Keller: http://www.xoltar.org/
 
 .. _Roy Zhao: https://math.berkeley.edu/~rhzhao/
-
-The RIVET development team can be reached by email at info@rivet.online.
-
 
 Contributing
 ------------
