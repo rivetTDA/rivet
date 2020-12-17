@@ -37,8 +37,8 @@ The file has the following format:
 Flag usage:
 
 * :code:`--maxdist <distance>` sets the maximum scale parameter.
-* :code:`--bifil function` tells RIVET to construct a function-Rips bifiltration from the Point Cloud input.
-* :code:`--function <fn>` makes RIVET use the function `<fn>`.     
+* :code:`--bifil function` tells RIVET to construct a function-Rips bifiltration. Alternately, :code:`--bifil degree` tells RIVET to construct a degree-Rips bifiltration.
+* :code:`--function <fn>` tells RIVET to construct a function-Rips bifiltration using the function :code:`<fn>`.  See :ref:`flags` for details.
 
 Here is an example specifying three points in :math:`\mathbb R^2`::
 	
@@ -54,7 +54,8 @@ Here is an example specifying three points in :math:`\mathbb R^2`::
 	1.1,2
 	-2,3
 
-[TODO: ADD AN EXAMPLE USING A BUILT-IN RIVET FUNCTION?]
+..
+    [TODO: ADD AN EXAMPLE USING A BUILT-IN RIVET FUNCTION?]
 
 Point Cloud with Function
 ---------------------------
@@ -70,8 +71,8 @@ Flag usage:
 
 * :code:`--datatype points_fn` must be provided.
 * :code:`--maxdist <distance>` sets the maximum scale parameter.
-* :code:`--bifil degree` tells RIVET to constructs a degree-Rips bifiltration rather than a function-Rips bifiltration, thereby ignoring the function values given in the file.  
-* :code:`--function <fn>` tells RIVET to use the function `<fn>` to construct the function-Rips bifiltration, only if `--bifil function` has also been specified. [IS THIS CORRECT?  WHY DO I HAVE TO SPECIFY --BIFIL FUNCTION HERE?  THIS SHOULD BE THE DEFAULT.]  
+* :code:`--bifil function` tells RIVET to construct a function-Rips bifiltration. Alternately, :code:`--bifil degree` tells RIVET to construct a degree-Rips bifiltration.
+* :code:`--function <fn>` tells RIVET to construct a function-Rips bifiltration using the function :code:`<fn>`.  See :ref:`flags` for details. Choosing a function other than :code:`user` will cause RIVET to ignore the function values given in the input file.
 * :code:`--xreverse` indicates that the function filtration direction should be descending. (This is useful, e.g.,  when taking :math:`\gamma` to be a density function.)
 * When computing an MI-file, :code:`--xlabel <label>` provides a label for the function axis, for use by **rivet_GUI**.
 
@@ -112,8 +113,8 @@ Flag Usage:
 
 * :code:`--datatype metric` must be provided.
 * :code:`--maxdist <distance>` sets the maximum scale parameter.
-* :code:`--bifil function` tells RIVET to construct a function-Rips bifiltration from the Point Cloud input.
-* :code:`--function <fn>` makes RIVET use the function `<fn>`. 
+* :code:`--bifil function` tells RIVET to construct a function-Rips bifiltration. Alternately, :code:`--bifil degree` tells RIVET to construct a degree-Rips bifiltration.
+* :code:`--function <fn>` tells RIVET to construct a function-Rips bifiltration using the function :code:`<fn>`.  See :ref:`flags` for details.
 
 
 Here is an example, for a metric space of cardinality 3::
@@ -132,6 +133,10 @@ Here is an example, for a metric space of cardinality 3::
 
 The same distance data can be given in the following upper triangular format:
 
+	# distance matrix (upper triangular format)
+	2,3.2
+	1.25
+
 
 Metric Space with Function
 -----------------------------
@@ -148,8 +153,8 @@ Flag Usage:
 
 * :code:`--datatype metric_fn` must be provided.
 * :code:`--maxdist <distance>` sets the maximum scale parameter.
-* :code:`--bifil degree` tells RIVET to constructs a degree-Rips bifiltration rather than a function-Rips bifiltration, thereby ignoring the function values given in the file.  
-* :code:`--function <fn>` tells RIVET to use the function `<fn>` to construct the function-Rips bifiltration, only if `--bifil function` has also been specified.  [AGAIN, IT SHOULD NOT BE NECESSARY TO SPECIFY BIFIL FUNCTION.]
+* :code:`--bifil function` tells RIVET to construct a function-Rips bifiltration. Alternately, :code:`--bifil degree` tells RIVET to construct a degree-Rips bifiltration.
+* :code:`--function <fn>` tells RIVET to construct a function-Rips bifiltration using the function :code:`<fn>`. See :ref:`flags` for details. Choosing a function other than :code:`user` will cause RIVET to ignore the function values given in the input file.
 
 Here is an example, for a metric space of cardinality 3::
 
