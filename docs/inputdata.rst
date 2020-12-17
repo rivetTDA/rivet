@@ -131,7 +131,7 @@ Here is an example, for a metric space of cardinality 3::
 	2,0,1.25
 	3.2,1.25,0
 
-The same distance data can be given in the following upper triangular format:
+The same distance data can be given in the following upper triangular format::
 
 	# distance matrix (upper triangular format)
 	2,3.2
