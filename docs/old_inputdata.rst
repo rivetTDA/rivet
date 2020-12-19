@@ -172,7 +172,7 @@ For instance, the following variant of the last example replaces the y-coordinat
 	1 3 ; 1 -1
 	2 3 ; 1 -1
 
-.. _firep:
+.. _oldfirep:
 
 FIRep (Algebraic Input) 
 -----------------------
