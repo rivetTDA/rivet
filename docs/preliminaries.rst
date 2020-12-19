@@ -129,7 +129,7 @@ We define a *FIRep* to be chain complex of free bipersistence modules of length 
 
    \[ C_2 \xrightarrow{f} C_1 \xrightarrow{g} C_0. \]
 
-such that :math:`g\circ f=0`.  Associated to an firep is a unique homology module :math:`\ker g/\mathrm{im}\ f`.  A presentation of a bipersistence module can be thought of as a special case of an FIRep, where the last module is trivial.
+such that :math:`g\circ f=0`.  Associated to an FIRep is a unique homology module :math:`\ker g/\mathrm{im}\ f`.  A presentation of a bipersistence module can be thought of as a special case of an FIRep, where the last module is trivial.
 
 Homology of a Bifiltration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^

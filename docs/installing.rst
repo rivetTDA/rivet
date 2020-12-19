@@ -147,14 +147,15 @@ To solve the problem, try running::
     sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
 
 
-Building in the Bash Shell on Windows 10
-----------------------------------------
+Building in the Windows Subsystem for Linux
+-------------------------------------------
 
-First, ensure that you have the `Windows 10 Creators Update <https://support.microsoft.com/en-us/instantanswers/d4efb316-79f0-1aa1-9ef3-dcada78f3fa0/get-the-windows-10-creators-update>`_.
-Then activate the `Windows 10 Bash Shell <https://www.howtogeek.com/249966/how-to-install-and-use-the-linux-bash-shell-on-windows-10/>`_.
-This will provide a Bash shell with Ubuntu 16.04 inside of Windows 10.
+If your operating system is Windows 10, you can install RIVET using the Windows Subsystem for Linux, which allows you to run Linux software in Windows 10.
+To install the Windows Subsystem for Linux, follow `these instructions from Microsoft <https://docs.microsoft.com/en-us/windows/wsl/install-win10>`_.
+Alternately, see `this page on How-To Geek <https://www.howtogeek.com/249966/how-to-install-and-use-the-linux-bash-shell-on-windows-10/>`_.
+This will give you a console running Ubuntu (or the Linux distribution of your choice) inside of Windows 10.
 
-Open the Bash shell and install dependencies. Use the following command to install cmake, a compiler, and Qt5::
+Next, open the Linux console and install dependencies. Use the following command to install cmake, a compiler, and Qt5::
 
     sudo apt-get update
     sudo apt-get install cmake build-essential qt5-default qt5-qmake qtbase5-dev-tools libboost-all-dev

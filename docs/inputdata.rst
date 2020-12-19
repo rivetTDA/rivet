@@ -5,7 +5,7 @@ Input Data Files
 
 As explained in :ref:`rivetconsole`, RIVET requires an *input data file*.  
 
-Starting with version 1.1 (released in 2020), the format for input data files has been redesigned to be more flexible; this page describes the new format.  [RIVET still supports the older, less-flexible input file formats required by RIVET 1.0; details about these can be found in ":ref:`oldInputData`".  However, the use of the old input formats is discouraged, and support may be discontinued in future versions of RIVET.]
+Starting with version 1.1 (released in 2020), the format for input data files has been redesigned to be more flexible; this page describes the new format.  [RIVET still supports the older, less-flexible input file formats required by RIVET 1.0; details about these can be found in ":ref:`oldInputData`". Additionally, the repository includes the Python script **data/convert.py** for converting data files from the old to the new format. However, the use of the old input formats is discouraged, and support may be discontinued in future versions of RIVET.]
 
 RIVET accepts six types of input data files; the flag :code:`--datatype` tells RIVET which file type to expect.  The six file types are listed below, together with the associated value of the flag :code:`--datatype` in parentheses:
 
@@ -37,7 +37,7 @@ The file has the following format:
 Flag usage:
 
 * :code:`--maxdist <distance>` sets the maximum scale parameter.
-* :code:`--bifil function` tells RIVET to construct a function-Rips bifiltration. Alternately, :code:`--bifil degree` tells RIVET to construct a degree-Rips bifiltration.
+* :code:`--bifil function` tells RIVET to construct a function-Rips bifiltration. Alternately, :code:`--bifil degree` tells RIVET to construct a degree-Rips bifiltration (which is also the default action if this flag is omitted).
 * :code:`--function <fn>` tells RIVET to construct a function-Rips bifiltration using the function :code:`<fn>`.  See :ref:`flags` for details.
 
 Here is an example specifying three points in :math:`\mathbb R^2`::
@@ -71,7 +71,7 @@ Flag usage:
 
 * :code:`--datatype points_fn` must be provided.
 * :code:`--maxdist <distance>` sets the maximum scale parameter.
-* :code:`--bifil function` tells RIVET to construct a function-Rips bifiltration. Alternately, :code:`--bifil degree` tells RIVET to construct a degree-Rips bifiltration.
+* :code:`--bifil degree` tells RIVET to construct a degree-Rips bifiltration, thus ignorinf the function values in the file. Alternately, :code:`--bifil function` tells RIVET to construct a function-Rips bifiltration (which is also the default action if this flag is omitted). 
 * :code:`--function <fn>` tells RIVET to construct a function-Rips bifiltration using the function :code:`<fn>`.  See :ref:`flags` for details. Choosing a function other than :code:`user` will cause RIVET to ignore the function values given in the input file.
 * :code:`--xreverse` indicates that the function filtration direction should be descending. (This is useful, e.g.,  when taking :math:`\gamma` to be a density function.)
 * When computing an MI-file, :code:`--xlabel <label>` provides a label for the function axis, for use by **rivet_GUI**.
@@ -105,6 +105,7 @@ By default, when given input of this type, RIVET constructs the degree-Rips bifi
 The file has the following format:
 
 * Following the flags, the distance matrix is given in either of two formats; RIVET automatically detects the format.
+
   + Format 1: The full matrix is explicitly provided, one row per line. Each row is specified as a list of decimal numbers separated by white space or commas.
   + Format 2: The matrix is given in triangular format, specifying only the entries above the diagonal of the distance matrix. The first line of data contains :math:`n-1` numbers, which give the distances from :math:`p_1` to :math:`p_2, \ldots, p_n`. The next line contains :math:`n-2` numbers, which give the distances from :math:`p_2` to :math:`p_3, \ldots, p_n`, and so on. The last line of data gives only the distance from :math:`p_{n-1}` to :math:`p_n`.
 
@@ -113,7 +114,7 @@ Flag Usage:
 
 * :code:`--datatype metric` must be provided.
 * :code:`--maxdist <distance>` sets the maximum scale parameter.
-* :code:`--bifil function` tells RIVET to construct a function-Rips bifiltration. Alternately, :code:`--bifil degree` tells RIVET to construct a degree-Rips bifiltration.
+* :code:`--bifil function` tells RIVET to construct a function-Rips bifiltration. Alternately, :code:`--bifil degree` tells RIVET to construct a degree-Rips bifiltration (which is also the default action if this flag is omitted).
 * :code:`--function <fn>` tells RIVET to construct a function-Rips bifiltration using the function :code:`<fn>`.  See :ref:`flags` for details.
 
 
@@ -153,7 +154,7 @@ Flag Usage:
 
 * :code:`--datatype metric_fn` must be provided.
 * :code:`--maxdist <distance>` sets the maximum scale parameter.
-* :code:`--bifil function` tells RIVET to construct a function-Rips bifiltration. Alternately, :code:`--bifil degree` tells RIVET to construct a degree-Rips bifiltration.
+* :code:`--bifil degree` tells RIVET to construct a degree-Rips bifiltration, thus ignorinf the function values in the file. Alternately, :code:`--bifil function` tells RIVET to construct a function-Rips bifiltration (which is also the default action if this flag is omitted). 
 * :code:`--function <fn>` tells RIVET to construct a function-Rips bifiltration using the function :code:`<fn>`. See :ref:`flags` for details. Choosing a function other than :code:`user` will cause RIVET to ignore the function values given in the input file.
 
 Here is an example, for a metric space of cardinality 3::
@@ -234,10 +235,10 @@ An FIRep
 is specified in the following format:
 
 * Following any flags, the first line must be of the form ``t s r``, where ``t``, ``s``, and ``r`` are, repsectively, the ranks of :math:`C_2`, :math:`C_1`, and :math:`C_0`.
-* Each of the next ``t`` lines specifies the bigrade of appearance of a basis element for :math:`C_2`, together with the corresponding column of the matrix representing :math:`f`.  The format for such a line is (e.g. if the column has three non-zero entries): ``x y ; b1 b2 b3``, where (x,y) is the bigrade and the ``bi`` are the row indices of nonzero column entries.  (Recall that we work with :math:`\mathbb{Z}/2\mathbb{Z}` coefficients.) 
+* Each of the next ``t`` lines specifies the bigrade of appearance of a basis element for :math:`C_2`, together with the corresponding column of the matrix representing :math:`f`.  The format for such a line is (e.g. if the column has three non-zero entries): ``x y ; b1 b2 b3``, where :math:`(x,y)` is the bigrade and the ``bi`` are the row indices of nonzero column entries.  (Recall that we work with :math:`\mathbb{Z}/2\mathbb{Z}` coefficients.) 
 * Each of the next ``s`` lines specifies the bigrade of appearance of a basis element for :math:`C_1`, together with the corresponding column of the matrix representing :math:`g`.
  
-As with the Bifiltration input format, the user must ensure that the input file specifies a valid FIRep.  [Does this need to be capitalized?]
+As with the bifiltration input format, the user must ensure that the input file specifies a valid FIRep. 
 
 Flag Usage:
 

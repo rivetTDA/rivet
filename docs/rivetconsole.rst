@@ -11,7 +11,7 @@ Recall from the :ref:`gettingStarted` page that RIVET can be run from the consol
 
 * Given an *input data file* as input, **rivet_console** can print a minimal presentation of a persistent homology module of the input data.  It can also print the Hilbert function and Bigraded Betti numbers.
 
-In version 1.1 of RIVET, the syntax for running **rivet_console** and the format requirements for input files have been redesigned to be more flexible and user-friendly.  **rivet_GUI**'s interface for computing MI files has also been updated accordingly.  However,  **rivet_console** is backwards-compatible with older input files.
+In version 1.1 of RIVET, the syntax for running **rivet_console** and the format requirements for input files have been redesigned to be more flexible and user-friendly.  **rivet_GUI**'s interface for computing MI files has also been updated accordingly.  However,  **rivet_console** is backwards-compatible with older input files. 
 
 In what follows, we explain in more detail how to use **rivet_console**.  The syntax for running  **rivet_console** is also described in the executable's help information, which can be accessed via the command::
 
@@ -33,7 +33,7 @@ For example, a typical call to **rivet_console** to compute an MI file *MI_outpu
 
 	 rivet_console input.txt output.rivet --datatype metric --homology 1 --xbins 100 --ybins 100
 
-* :code:`--datatype metric` tells RIVET that input_data.txt contains a distance matrix (specifying a finite metric space).
+* :code:`--datatype metric` tells RIVET that input.txt contains a distance matrix (specifying a finite metric space).
 * :code:`--homology 1` tells RIVET to consider persistent homology in degree 1.
 * :code:`--xbins 100` and :code:`--ybins 100` tell RIVET to compute a coarsened version of the homology module such that the support of the 0th and 1st Betti numbers lies on a 100x100 grid in :math:`\mathbb R^2`.  (This is done for the sake of computational efficiency.)  
 
@@ -68,16 +68,16 @@ The most important flags are the following:
 
 The following flags are also available, and are useful in many cases:
 
-* :code:`--maxdist <distance>` specifies the maximum distance to be considered when building a vietoris-Rips bifiltration. Any edges whose length is greater than this distance will not be included in the complex.  If unspecified, this flag takes the default value of infinity.   Choosing a small value for <distance> reduces the amount of memory required for the computation, relative to the default.
+* :code:`--maxdist <distance>` specifies the maximum distance to be considered when building a Vietoris-Rips bifiltration. Any edges whose length is greater than this distance will not be included in the complex.  If unspecified, this flag takes the default value of infinity.   Choosing a small value for :code:`<distance>` reduces the amount of memory required for the computation, relative to the default.
 
 * When computing an MI file, :code:`--xlabel <label>` and :code:`--ylabel <label>` respectively specify labels for the :math:`x`-axis and :math:`y`-axis in the **rivet_GUI** visualization window.  The labels are stored as metadata in the MI file.  If either of these flags are not given, RIVET provides default labels, which depend on the input data type and (where applicable), the type of bifiltration being constructed.  For example, when constructing a degree-Rips filtration, the default labels for the :math:`x`-axis and :math:`y`-axis are **degree** and **distance**, respectively.
 
-* :code:`--xreverse` and :code:`--yreverse` reverse the direction of the :math:`x`-axis and :math:`y`-axis, respectively.  Reversing an axis direction only makes sense for certain bifiltration constructions, and hence these flags can only be used in certain circumstances.  For example, for a function-Rips filtration, the :math:`x`-axis indexes the function threshold parameter in RIVET's visualization, while the `y`-axis indexes the scale parameter.  In general, it makes equal sense to construct a function-Rips bilftration with respect to increasing or decreasing function values; the flag :code:`--xreverse` tells RIVET to use decreasing values.  But we don't have a good way of building a function-Rips bifiltration using a decreasing scale parameter, so :code:`--yreverse` is not available for the construction of a function-Rips bifiltration;  including this flag has no effect.  See :ref:`inputData` for the specifics of when and how `--xreverse` and `--yreverse` can be used.
+* :code:`--xreverse` and :code:`--yreverse` reverse the direction of the :math:`x`-axis and :math:`y`-axis, respectively.  Reversing an axis direction only makes sense for certain bifiltration constructions, and hence these flags can only be used in certain circumstances.  For example, for a function-Rips filtration, the :math:`x`-axis indexes the function threshold parameter in RIVET's visualization, while the `y`-axis indexes the scale parameter.  In general, it makes equal sense to construct a function-Rips bilftration with respect to increasing or decreasing function values; the flag :code:`--xreverse` tells RIVET to use decreasing values.  But we don't have a good way of building a function-Rips bifiltration using a decreasing scale parameter, so :code:`--yreverse` is not available for the construction of a function-Rips bifiltration;  including this flag has no effect.  See :ref:`inputData` for the specifics of when and how :code:`--xreverse` and :code:`--yreverse` can be used.
 
 Some additional flags which concern the internals of RIVET's computations are also available, but can be disregarded by most users:
 
 * :code:`--num_threads <num_threads>` This flag specifies the maximum number of threads to use for parallel computation. The default value is 0, which lets OpenMP decide how many threads to use.
-* :code:`-V <verbosity>` or :code:`--verbosity <verbosity>` This flag controls the amount of text that rivet_console prints to the terminal window. The verbosity may be specified as an integer between 0 and 10: greater values produce more output. A value of 0 results in minimal output, a value of 10 produces extensive output.
+* :code:`-V <verbosity>` or :code:`--verbosity <verbosity>` This flag controls the amount of text that **rivet_console** prints to the terminal window. The verbosity may be specified as an integer between 0 and 10: greater values produce more output. A value of 0 results in minimal output, a value of 10 produces extensive output.
 * :code:`-k` or :code:`--koszul` This flag causes RIVET to use a koszul homology-based algorithm to compute the Betti numbers, instead of the default approach based on computing a minimal presentation.
 
 

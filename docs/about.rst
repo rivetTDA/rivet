@@ -7,7 +7,7 @@ Many of the mathematical and algorithmic ideas behind RIVET are explained in det
 Additional papers describing other aspects of RIVET are in preparation.
 
 RIVET is written in C++, and depends on the `Qt <https://www.qt.io/>`_, `Boost <http://www.boost.org/>`_, and `MessagePack <https://msgpack.org/index.html>`_ libraries.  
-In addition, RIVET now incorporates some modified code from `PHAT <https://bitbucket.org/phat-code/phat/src/master/>`_.  
+In addition, RIVET incorporates some modified code from `PHAT <https://bitbucket.org/phat-code/phat/src/master/>`_.  
 
 A python API for RIVET called `pyrivet <https://github.com/rivetTDA/rivet-python/>`_ is available in a separate repository.  pyrivet has separate documentation, and is not discussed elsewhere in this document.
 
