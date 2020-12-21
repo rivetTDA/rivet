@@ -2,7 +2,7 @@
 
 The RIVET Visualization: Further Details
 ========================================
-In the section :ref:`overviewVisualization`, we gave brief overview of RIVET's visualization of bipersistence modules.  Here we provide a more detailed description.  To make this self-contained, along the way we revisit the material on visualization covered earlier.
+In the section :ref:`overviewVisualization`, we gave brief overview of RIVET's visualization of bipersistence modules.  Here we provide a more detailed description.  To make this self-contained, we also revisit the material on visualization covered earlier.
 
 
 **Handling MI Files with rivet_GUI**
@@ -10,7 +10,7 @@ In the section :ref:`overviewVisualization`, we gave brief overview of RIVET's v
 
 As explained earlier, RIVET's visualizations are handled by the executable **rivet_GUI**, and require an MI file as input.  The MI file can be computed by a direct call to **rivet_console**, as explained on the :ref:`rivetconsole` page, and then opened in **rivet_GUI**.  Alternatively, **rivet_GUI** can call **rivet_console** to compute the MI file.  (The example on the :ref:`gettingstarted` page is an instance of the latter approach, though MI files were not explicitly mentioned there.)
 
-When the user runs **rivet_GUI**, a window opens which allows the user to select a file
+When the user runs **rivet_GUI**, a window opens which allows the user to select a file.
 This file can be either an input data file in one of the input formats described in :ref:`inputData`, or an MI file.
 
 If an input data file is chosen, the GUI allows the user to graphically select options for  computation of a MI file, as we have seen earlier on the :ref:`gettingstarted` page.  Most options that can be selected via a command line flag, as described on the :ref:`rivetconsole` page, can also be selected in the GUI.  (However, some technical options, such as choosing the maximum number of cores to use in a parallel computation, are not available through the **rivet_GUI**.)  After the user clicks the *Compute* button, the MI file is computed via a call to **rivet_console** and the visualization is started.  
@@ -31,13 +31,13 @@ The RIVET interface contains two main windows, the *Line Selection Window* and t
    :align: center
 
 
-The *Line Selection Window* not only visualizes the Hilbert function values and the bigraded Betti numbers of a bipersistence module :math:`M`, but also allows the user choose linear slices along which barcodes are displayed. 
+The *Line Selection Window* not only visualizes the Hilbert function values and the bigraded Betti numbers of a bipersistence module :math:`M`, but also allows the user to choose linear slices along which barcodes are displayed. 
 
 By default, the *Line Selection Window* plots a rectangle in :math:`\mathbb{R}^2` containing the union of the supports of bigraded Betti number functions :math:`\xi_i^M`, :math:`i\in \{0,1,2\}`.
 (If the input to RIVET is an FIRep and the Betti numbers are not supported on a horizontal or vertical line, this will be the smallest such rectangle.  If the input is a point cloud, metric space, or bifiltration, and the birth indices of all simplices in the bifiltration do not lie on a single line, the rectangle will be the smallest one containing the birth indices of all simplices.)
 
-The Hilbert function values are shown as grayscale shading.
-Specifically, the greyscale shading at a point :math:`a` in this rectangle represents :math:`\dim M_a`: :math:`a` is unshaded when :math:`\dim M_a=0`, and larger :math:`\dim M_a` corresponds to darker shading. 
+The Hilbert function values are plotted using grayscale shading.
+Specifically, the greyscale shading at a point :math:`a` in this rectangle represents :math:`\dim M_a`: :math:`a` is unshaded when :math:`\dim M_a=0`, and larger :math:`\dim M_a` corresponds to darker shading.  
 Hovering the mouse over :math:`a` brings up a popup box which gives the precise value of :math:`\dim M_a`.
 
 Points in the supports of :math:`\xi_0^M`, :math:`\xi_1^M`, and :math:`\xi_2^M` are marked with green, red, and yellow dots, respectively (though these colors are customizable via the Edit menu on Linux or the Preferences menu on Mac). 
