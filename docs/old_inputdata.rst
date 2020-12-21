@@ -1,7 +1,7 @@
 .. _oldInputData:
 
-Old Input Data
-===============
+Old Input Formats
+=================
 
 This page contains specifications for the input files used by version 1.0 of RIVET.
 RIVET 1.1 introduced more user-friendly input file formats, that allow the specification of input parameters using syntax that matches the command-line flags uzed by ``rivet_console``.

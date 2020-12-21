@@ -97,10 +97,3 @@ For convenient citation of RIVET in your own work, we provide the following BibT
 	}
 
 
-.. 
-	Documentation Todos:  
-	
-	* The descussion of the Persistence Diagram Window has now been updated to reflect the recent improvements to the visualization.  However, some details about how the persistence diagram is drawn appear in the appendix of the arXiv paper, but not in the documentation.  For example, the way we handle normalization when "fit to window" is selected is only discussed in the appendix.  I suggest that all details be given in the documentation and removed from the paper.
-	* The examples could use some polish. More examples are desirable.
-
-
