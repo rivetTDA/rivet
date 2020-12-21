@@ -64,7 +64,7 @@ The *Max Distance* selector specifies the maximum length of edges that RIVET wil
 
 Three input selectors on the right side of the box determine what filtration RIVET will build from the point cloud. The *Filtration* selector offers two options: *degree* and *function*. The *degree* option builds a degree-Rips filtration, as described in :ref:`degreeRipsBifil`. Here, we choose the *function* option to build a function-Rips filtration.
 
-The function-Rips filtration depends on the choice of a real-valued function on the point cloud, which is specified by the *Function* selector.  Here, we choose the *balldensity* option, which specifies the function to be a ball density function.  Other options for the function include a Gaussian density function, a coeccentricity function, and a user-defined function, which must be specified in the input file; see :ref:`inputData` for details.
+The function-Rips filtration depends on the choice of a real-valued function on the point cloud, which is specified by the *Function* selector.  Here, we choose the *balldensity* option, which specifies the function to be a ball density function.  Other options for the function include a Gaussian density function, an eccentricity function, and a user-defined function, which must be specified in the input file; see :ref:`inputData` for details.
 
 The ball density function depends on a choice of radius parameter, which must be provided in the box below the *Function* selector. Here, we choose a radius of 2. 
 

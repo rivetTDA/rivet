@@ -16,9 +16,9 @@ The following figure illustrates RIVET’s pipeline for working with the 2-param
 
 We now explain this pipeline:
 
-RIVET can accept as input a data set, a bifiltration, or an FIRep.  RIVET always works with a single homology degree at a time; when giving data or a bifiltration as input, specifies the degree of homology to consider.
+RIVET can accept as input a data set, a bifiltration, or an FIRep.  RIVET always works with a single homology degree at a time; when giving data or a bifiltration as input, one specifies the degree of homology to consider.
 
-RIVET accepts data in the form of either a point cloud in :math:`\mathbb R^n`, or a finite metric space (represented as distance matrix).  Optionally, a function on each point can also be given.  If a function is given, RIVET computes a function-Rips bifiltration.  If no function is given, it computes the degree-Rips bifiltration.
+RIVET accepts data in the form of either a point cloud in :math:`\mathbb R^n`, or a finite metric space (represented as distance matrix).  Optionally, a function on the points can also be given by the user or precomputed by RIVET. If a function is specified, then RIVET computes a function-Rips bifiltration.  If no function is specified, then RIVET computes the degree-Rips bifiltration.
 
 Given a bifiltration :math:`F`, RIVET constructs an FIRep for :math:`H_j(F)` in the specified degree :math:`j`.  If :math:`F` is multi-critical, RIVET uses the trick of Chacholski et al. LINK to obtain the FIRep.
 

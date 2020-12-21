@@ -36,7 +36,7 @@ We mention three natural choices of :math:`\gamma`, each of which is implemented
 .. math::
    :nowrap:
    
-   \[\gamma(x)=C[\# \text{ points in } P \text{ within distance }r \text{ of }x],\]
+   \[\gamma(x)=C\cdot (\# \text{ points in } P \text{ within distance }r \text{ of }x),\]
 
 where :math:`r>0` is a fixed parameter, the "radius", and :math:`C` is a normalization constant, chosen so that :math:`\sum_{x\in P} \gamma(x)=1`.  
 
@@ -65,7 +65,14 @@ where :math:`q\in [1,\infty)` is a parameter.
 Degree-Rips Bifiltration
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-For :math:`d\in \mathbb R`, let :math:`N(P)_{d,r}` be the subgraph of :math:`N(P)_r` obtained by removing all vertices of degree less than :math:`d`.  We define the *degree-Rips bifiltration*  :math:`DR(P)` by taking :math:`DR(P)_{d,r}:=N(P)_{d,r}.`  (Note that this is in fact a bifiltration indexed by :math:`\mathbb R^{\mathrm{op}}\times \mathbb R`, where :math:`\mathbb R^{\mathrm{op}}` denotes the opposite poset of :math:`\mathbb R`; that is, :math:`DR(P)_{a,b}\subset DR(P)_{a',b'}` whenever :math:`a\geq a'` and :math:`b\leq b’`.). If :math:`P` has more than one point, then :math:`DR(P)` is multi-critical.
+For :math:`r,d\in \mathbb R`, let :math:`P_{d,r}\subset P` be the set of vertices in :math:`N(P)_r`  of degree at least :math:`d`.  We define the *degree-Rips bifiltration*  :math:`DR(P)` by taking
+
+.. math::
+   :nowrap:
+
+   \[DR(P)_{d,r}:=R(P_{d,r})_r.\]
+
+Note that this is in fact a bifiltration indexed by :math:`\mathbb R^{\mathrm{op}}\times \mathbb R`, where :math:`\mathbb R^{\mathrm{op}}` denotes the opposite poset of :math:`\mathbb R`; that is, :math:`DR(P)_{a,b}\subset DR(P)_{a',b'}` whenever :math:`a\geq a'` and :math:`b\leq b’`. If :math:`P` has more than one point, then :math:`DR(P)` is multi-critical.
 
 Bipersistence Modules 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -161,6 +168,6 @@ for :math:`M`, :math:`\xi_i^M(r)` is the number of elements at bigrade :math:`r`
 
 Coarsening a Persistence Module
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Given a finitely presented bipersistence module :math:`M`, we can *coarsen* :math:`M` to obtain an algebraically simpler module carrying approximately the same persistence information as :math:`M`.  As we will describe it here, the coarsening operation depends on a choice of finite grid :math:`G\subset\mathbb R^2`, such that :math:`G` contains some element ordered after all points in the support of the Betti numbers of :math:`M`.  The coarsened module, denoted :math:`M^G`, is defined by taking :math:`M^G_a:= M_g`, where :math:`g\in G` is the minimum grid element such that :math:`a\leq g`.  The internal maps of :math:`M^G` are induced by those of :math:`M` in the obvious way.
+Given a finitely presented bipersistence module :math:`M`, we can *coarsen* :math:`M` to obtain an algebraically simpler module carrying approximately the same persistence information as :math:`M`.  The coarsening operation depends on a choice of finite grid :math:`G\subset\mathbb R^2`, such that :math:`G` contains some upper bound of the support of the Betti numbers of :math:`M`.  The coarsened module, denoted :math:`M^G`, is defined by taking :math:`M^G_a:= M_g`, where :math:`g\in G` is the minimum grid element such that :math:`a\leq g`.  The internal maps of :math:`M^G` are induced by those of :math:`M` in the obvious way.
 
 .. We can describe the coarsening operation succinctly in the language of category theory: Let :math:`G\subset\mathbb R^2` be a finite grid.  First, we take the restriction of :math:`M` along :math:`G`, and then take the left (or right) Kan extension of this along the inclusion of :math:`G\hookrightarrow \mathbb R^2`.  Currently, RIVET uses the right Kan extension.
