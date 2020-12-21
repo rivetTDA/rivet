@@ -3,7 +3,7 @@
 Running RIVET from the Console
 ==============================
 
-Recall from the :ref:`gettingStarted` page that RIVET can be run from the console via the executable **rivet_console**.  This executable has three main functions: 
+As mentioned on the :ref:`gettingStarted` page, RIVET can be run from the console via the executable **rivet_console**.  This executable has three main functions: 
 
 * Given an *input data file* in one of the formats described in the :ref:`inputData` section of this documentation, **rivet_console** can compute a file called the *module invariants (MI) file*.  The MI file stores the Hilbert function, bigraded Betti numbers, and augmented arrangement of a persistent homology module of the input data.  The MI file is used by the RIVET visualization, and also for the following:
 
@@ -11,13 +11,14 @@ Recall from the :ref:`gettingStarted` page that RIVET can be run from the consol
 
 * Given an *input data file* as input, **rivet_console** can print a minimal presentation of a persistent homology module of the input data.  It can also print the Hilbert function and Bigraded Betti numbers.
 
-In version 1.1 of RIVET, the syntax for running **rivet_console** and the format requirements for input files have been redesigned to be more flexible and user-friendly.  **rivet_GUI**'s interface for computing MI files has also been updated accordingly.  However,  **rivet_console** is backwards-compatible with older input files. 
+In version 1.1 of RIVET, the syntax for running **rivet_console** and the format requirements for input files have been redesigned to be more flexible and user-friendly.  **rivet_GUI**'s interface for computing MI files has also been updated accordingly.  However,  **rivet_console** is backwards-compatible with older input files.
+
 
 In what follows, we explain in more detail how to use **rivet_console**.  The syntax for running  **rivet_console** is also described in the executable's help information, which can be accessed via the command::
 
 	rivet_console (-h | --help)
 	
-The help file also describes some additional technical functionality of  **rivet_console** that we will not discuss here. 
+The help information also describes some additional technical functionality of  **rivet_console** that we will not discuss here. 
 
 Computing a Module Invariants File
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -45,9 +46,7 @@ Command-Line Flags for Use with Input Data Files
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 We now explain in detail **rivet_console**'s use of command-line flags to control computations taking an *input data file* as input.  
 
-Some or all of the command-line flags can be placed in the input data file itself, rather than given on the command line. Flags in the input data file must be provided in the top lines of the file, before the data is given.  If the same flag is given in both the input data file and the command line, then **rivet_console** ignores the copy of the flag in the input file and uses the flag given on the command line.
-
-Whether on the command line or in an input file, flags can appear in any order.
+Command-line flags can be placed in the input data file itself, rather than given on the command line.  Flags in the input data file must be provided in the top lines of the file, before the data is given.  It is possible to specify flags both in the file and on the command line.  If the same flag is given in both the input data file and the command line, then **rivet_console** ignores the copy of the flag in the input file and uses the flag given on the command line.  Whether on the command line or in an input file, flags can appear in any order.
 
 The most important flags are the following:
 
@@ -59,16 +58,16 @@ The most important flags are the following:
 
 * :code:`--bifil <type>` specifies the type of bifiltration to be built.  Specifying a bifiltration type only makes sense for certain input data types, and hence this flag can only be used for such input.  In cases where the flag can be used, the available bifiltration types are :code:`function` and :code:`degree`.  The default depends on the choice of input data type.  For details, see the :ref:`inputData` section of this documentation. 
 
-* :code:`--function <fn>` tells RIVET to construct a function-Rips bifiltration using the function :code:`<fn>`.  RIVET supports both user-specified functions and three built-in function types.  The options for :code:`<fn>` are as follows (see :ref:`funRipsBifil` for definitions). The built-in functions each depend on a parameter, which is specified in square brackets. The square brackets are required, even if the user chooses not to specify the parameter value, in which case RIVET uses a default parameter value. (The user is encouraged to view the empty square brackets as a reminder that they are voluntarily choosing to use the default parameter value.) The supported functions :code:`<fn>` are:
+* :code:`--function <fn>` tells RIVET to construct a function-Rips bifiltration using the function :code:`<fn>`.  RIVET supports both user-specified functions and three built-in function types.  The options for :code:`<fn>` are as follows (see :ref:`funRipsBifil` for definitions). The built-in functions each depend on a parameter, which is specified in square brackets. The square brackets are required, even if the user chooses not to specify the parameter value, in which case RIVET uses a default parameter value. (The user is encouraged to view the empty square brackets as a reminder that they are choosing the default parameter value.) The supported functions :code:`<fn>` are:
 
 	+ :code:`balldensity[r]`, where :code:`r` is a positive decimal number, for a closed-ball density function with radius parameter :code:`r`. If :code:`balldensity[]` is entered, the default value of :code:`r` is taken to be the 20th percentile of all non-zero distances between points.  The filtration direction for this function is automatically set to be descending. 
 	+ :code:`gaussian[σ]`, where :code:`σ` is a positive decimal number, for a gaussian density functor with standard deviation :math:`σ`. If :code:`gaussian[]` is entered, the default value of :code:`σ` is chosen in the same way that the default radius value for the ball density estimator is chosen.  The filtration direction is set to be descending. 
-	+ :code:`eccentricity[p]`, where :code:`p` is the exponent for the eccentricity function.  If :code:`eccentricity[]` is entered, the default value of :code:`p` is 1.  The filtration direction is set to be descending. 
+	+ :code:`eccentricity[p]`, where :code:`p` is the exponent for the eccentricity function.  If :code:`eccentricity[]` is entered, :code:`p` is set to the default value of 1.  The filtration direction is set to be descending. 
 	+ :code:`user`.  This option requires that the input data file specify a function, as explained in :ref:`inputData`.  If a function is provided in the file, the user-specified function is used by default, so it is in fact never necessary to use this flag, but it can be included for clarity's sake.  Specifying a user-defined function directly from the command line is not supported.
 
 The following flags are also available, and are useful in many cases:
 
-* :code:`--maxdist <distance>` specifies the maximum distance to be considered when building a Vietoris-Rips bifiltration. Any edges whose length is greater than this distance will not be included in the complex.  If unspecified, this flag takes the default value of infinity.   Choosing a small value for :code:`<distance>` reduces the amount of memory required for the computation, relative to the default.
+* :code:`--maxdist <distance>` specifies the maximum distance to be considered when building a Vietoris-Rips bifiltration. Any edge whose length is greater than this distance will not be included in the complex.  If unspecified, this flag takes the default value of infinity.   Choosing a small value for :code:`<distance>` reduces the amount of memory required for the computation, relative to the default.
 
 * When computing an MI file, :code:`--xlabel <label>` and :code:`--ylabel <label>` respectively specify labels for the :math:`x`-axis and :math:`y`-axis in the **rivet_GUI** visualization window.  The labels are stored as metadata in the MI file.  If either of these flags are not given, RIVET provides default labels, which depend on the input data type and (where applicable), the type of bifiltration being constructed.  For example, when constructing a degree-Rips filtration, the default labels for the :math:`x`-axis and :math:`y`-axis are **degree** and **distance**, respectively.
 
@@ -127,7 +126,7 @@ The basic syntax for computing and printing minimal presentation of a bipersiste
 	rivet_console <input_file> --minpres [command-line flags]
 
 * :code:`<input>` is an input data file;
-* :code:`[command-line flags]` work as specified in :ref:`flags`.
+* :code:`[command-line flags]` work as specified above, in :ref:`flags`.
 
 The following example shows the output format for the minimal presentation::
 
@@ -161,6 +160,9 @@ The final three lines specify columns of the matrix in sparse format.  Rows are 
 	1 0 1 
 	1 1 0
 
+**NOTE**: It would be better design to have the minimal presentation printed in the format of the FIrep datatype described on the :ref:`inputData` page.  But as this would require some restructuring of the code, this has not yet been implemented.  
+
+
 
 Printing Hilbert Function and Bigraded Betti Numbers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -171,9 +173,9 @@ Here is the basic syntax for computing both the Hilbert function and bigraded Be
 As above,
 
 * :code:`<input>` is an input data file;
-* :code:`[command-line flags]` work as specified in :ref:`flags`.
+* :code:`[command-line flags]` work as specified above, in :ref:`flags`.
 
-**NOTE**: Currently, one cannot print the Hilbert function and bigraded Betti numbers of a module separately.  Nor can one print the minimal presentation, Betti numbers, and Hilbert Function together.  This will change soon.
+**NOTE**: Currently, one cannot print the Hilbert function and bigraded Betti numbers of a module separately.  Nor can one print the minimal presentation, Betti numbers, and Hilbert Function together.  This will change in the future.
 
 The following shows the output format for the Hilbert function and bigraded Betti numbers, for the minimal presentation in the example above::
 

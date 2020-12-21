@@ -60,20 +60,20 @@ The *File Type* selector tells RIVET what type of input file it should expect.  
 
 The *Homology Degree* selector chooses the degree of the homology module RIVET computes. (Currently, RIVET computes only a single degree of homology at a time.  A user who wishes to examine homology in multiple degrees, e.g., in degrees 0 and 1, will need to run multiple RIVET computations on the same input data.)  Since we want to discern a "loop" in the data, in this example we select homology degree 1.
 
-The *Max Distance* selector specifies the maximum length of edges that RIVET will include in the bifiltration it constructs. This controls the size of the bifiltration, allowing the RIVET computation to run faster and with less memory. Choosing an appropriate maximum distance requires knowing something about the scale of the data. We choose a max distance of 5 for our example. The max distance can be set to infinity, so that every possible edge appears in the bifiltration; this is done by typing “inf” or clicking on the button with an infinity symbol.  The default max distance is infinity.
+The *Max Distance* selector specifies the maximum length of edges that RIVET will include in the bifiltration it constructs. This controls the size of the bifiltration, and thus the cost of the computation.  We choose a max distance of 5 for our example. The max distance can be set to infinity, so that every possible edge appears in the bifiltration; this is done by typing “inf” or clicking on the button with an infinity symbol.  The default max distance is infinity.
 
-Three input selectors on the right side of the box determine what filtration RIVET will build from the point cloud. The *Filtration* selector offers two options: *degree* and *function*. The *degree* option builds a degree-Rips filtration, as described in :ref:`degreeRipsBifil`. Here, we choose the *function* option to build a function-Rips filtration.
+Three input selectors on the right side of the box determine what bifiltration RIVET will build from the point cloud. The *Filtration* selector offers two options: *degree* and *function*. The *degree* option builds a degree-Rips filtration, as described in :ref:`degreeRipsBifil`. Here, we choose the *function* option to build a function-Rips bifiltration.
 
-The function-Rips filtration depends on the choice of a real-valued function on the point cloud, which is specified by the *Function* selector.  Here, we choose the *balldensity* option, which specifies the function to be a ball density function.  Other options for the function include a Gaussian density function, an eccentricity function, and a user-defined function, which must be specified in the input file; see :ref:`inputData` for details.
+The function-Rips bifiltration depends on the choice of a real-valued function on the point cloud, which is specified by the *Function* selector.  Here, we choose the *balldensity* option, which specifies the function to be a ball density function.  Other options for the function include a Gaussian density function, an eccentricity function, and a user-defined function, which must be specified in the input file; see :ref:`inputData` for details.
 
 The ball density function depends on a choice of radius parameter, which must be provided in the box below the *Function* selector. Here, we choose a radius of 2. 
 
-The selectors in the lower portion of the *Options* box deal with the coordinate axes. The  *Bins* selectors specify the coarsening of the homology module, as described in :ref:`coarsening`. The number of bins is set separately for the x-axis and the y-axis.  The coarsening controls the number of distinct bigrades where generators and relations of the module can appear. Thus, specifying a smaller number of bin values will speed the RIVET computation and reduce its memory, but will result in less accurate approximation to the uncoarsened homology module.  In this example, we set both bin values to 30.
+The selectors in the lower portion of the *Options* box deal with the coordinate axes. The  *Bins* selectors specify the coarsening of the homology module, as described in :ref:`coarsening`. The number of bins is set separately for the x-axis and the y-axis.  The coarsening controls the number of distinct bigrades where generators and relations of the module can appear. Thus, specifying a smaller number of bin values will speed the RIVET computation and reduce its memory, but will result in less accurate approximation to the uncoarsened homology module.  In this example, we set both bin values to 30, though higher values could also be used without difficulty.
 
 
 Next, the user may specify the *Label* for each axis in the RIVET visualization. For a function-Rips filtration, RIVET presents the function values along the x-axis. Since we are computing a density estimator, we enter “density” for the x-axis label. We keep the default “distance” label for the y-axis.
 
-Lastly, the *Reverse* checkboxes allow the user to reverse axis directions. For example, when using a density function, we typically want points with larger density values to enter the filtration before points with smaller density values; thus, when we select the "balldensity" function, the *Reverse* box for the x-axis is checked by default. It is not possible to reverse the distance axis for a Rips filtration, so in this example, the y-axis *Reverse* selector is unavailable.
+Lastly, the *Reverse* checkboxes allow the user to reverse axis directions. For example, when using a density function, we typically want points with larger density values to enter the bifiltration before points with smaller density values; thus, when we select the "balldensity" function, the *Reverse* box for the x-axis is checked by default. It is not possible to reverse the distance axis for a Rips filtration, so in this example, the y-axis *Reverse* selector is unavailable.
 
 
 We now click *Compute* at the bottom of the file input window. This starts the RIVET computational pipeline, as described in :ref:`structure`. A progress box appears, as shown below.
@@ -91,7 +91,7 @@ Overview of the RIVET Visualization
 ---------------------------------------
 
 When the computation finishes, RIVET displays the following visualization.
-This page gives a brief overview of the visualization elements; much more detail is found in :ref:`visualization`.
+This section gives a brief overview of the visualization elements; much more detail is found in :ref:`visualization`.
 
 The RIVET visualization contains two main windows, the *Line Selection Window* and the *Persistence Diagram Window*, shown in the screenshot below.
 

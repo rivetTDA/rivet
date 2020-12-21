@@ -2,7 +2,7 @@
 
 The RIVET Visualization: Further Details
 ========================================
-In the section :ref:`overviewVisualization`, we gave brief overview of RIVET's visualization of bipersistence modules.  Here we provide a more detailed description.  To make this self-contained, we revisit the material of :ref:`overviewVisualization` along the way.
+In the section :ref:`overviewVisualization`, we gave brief overview of RIVET's visualization of bipersistence modules.  Here we provide a more detailed description.  To make this self-contained, along the way we revisit the material on visualization covered earlier.
 
 
 **Handling MI Files with rivet_GUI**
@@ -11,10 +11,10 @@ In the section :ref:`overviewVisualization`, we gave brief overview of RIVET's v
 As explained earlier, RIVET's visualizations are handled by the executable **rivet_GUI**, and require an MI file as input.  The MI file can be computed by a direct call to **rivet_console**, as explained on the :ref:`rivetconsole` page, and then opened in **rivet_GUI**.  Alternatively, **rivet_GUI** can call **rivet_console** to compute the MI file.  (The example on the :ref:`gettingstarted` page is an instance of the latter approach, though MI files were not explicitly mentioned there.)
 
 When the user runs **rivet_GUI**, a window opens which allows the user to select a file
-This file can be either an input data file in one of the input formats described in :ref:`inputData`, or a MI file.
+This file can be either an input data file in one of the input formats described in :ref:`inputData`, or an MI file.
 
 If an input data file is chosen, the GUI allows the user to graphically select options for  computation of a MI file, as we have seen earlier on the :ref:`gettingstarted` page.  Most options that can be selected via a command line flag, as described on the :ref:`rivetconsole` page, can also be selected in the GUI.  (However, some technical options, such as choosing the maximum number of cores to use in a parallel computation, are not available through the **rivet_GUI**.)  After the user clicks the *Compute* button, the MI file is computed via a call to **rivet_console** and the visualization is started.  
-(Note that after the Hilbert Function and Betti numbers are shown in the visualization, it may take a significant amount of additional time to prepare the interactive visualization of the barcodes of 1-D slices.). Using the *File* menu in the GUI, the user may save the MI file; a module invariants file computed by **rivet_GUI** is not saved automatically.
+(Note that after the Hilbert Function and Betti numbers are shown in the visualization, it may take a significant amount of additional time to prepare the interactive visualization of the barcodes of 1-D slices.) Using the *File* menu in the GUI, the user may save the MI file; a module invariants file computed by **rivet_GUI** is not saved automatically.
 
 If an MI file is selected in the file dialogue window, the data in the file is loaded immediately into the RIVET visualization, and the visualization begins. 
 
