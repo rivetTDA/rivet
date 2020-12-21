@@ -9,6 +9,7 @@ RIVET Documentation
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
+   :numbered:
    
    about
    installing    
@@ -18,6 +19,7 @@ RIVET Documentation
    rivetconsole
    visualization
    inputdata
+   old_inputdata
    
 
 Indices and tables
