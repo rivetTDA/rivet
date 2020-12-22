@@ -9,16 +9,18 @@ RIVET Documentation
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
+   :numbered:
    
    about
    installing    
    preliminaries
    pipeline		
-   running
-   inputdata   
+   gettingstarted
+   rivetconsole
    visualization
-   example
-
+   inputdata
+   old_inputdata
+   
 
 Indices and tables
 ==================

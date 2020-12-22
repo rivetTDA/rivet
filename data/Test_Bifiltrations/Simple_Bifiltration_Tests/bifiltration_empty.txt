@@ -1,4 +1,6 @@
-bifiltration
-x-label
-y-label
+--datatype bifiltration
+--xlabel x-label
+--ylabel y-label
+
+# data starts here
 #empty bifiltration

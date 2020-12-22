@@ -149,15 +149,46 @@ void ComputationThread::compute_from_file()
 {
     QStringList args;
 
+    // rivet_console will be called with this list of arguments
+
     args << QString::fromStdString(params.fileName)
          << QDir(QCoreApplication::applicationDirPath()).filePath("rivet_arrangement_temp")
-         << "-H" << QString::number(params.dim)
+         << "-H" << QString::number(params.hom_degree)
          << "-x" << QString::number(params.x_bins)
          << "-y" << QString::number(params.y_bins)
          << "-V" << QString::number(params.verbosity)
+         << "--datatype" << QString::fromStdString(params.type)
          << "-f"
          << "msgpack"
          << "--binary";
+
+    if (params.md_string != "N/A")
+        args << "--maxdist" << QString::fromStdString(params.md_string);
+
+    if (params.y_label != "")
+        args << "--ylabel" << QString::fromStdString(params.y_label);
+
+    if (params.x_label != "")
+        args << "--xlabel" << QString::fromStdString(params.x_label);
+
+    if (params.x_reverse)
+        args << "--xreverse";
+
+    if (params.y_reverse)
+        args << "--yreverse";
+
+    if (params.bifil != "")
+        args << "--bifil" << QString::fromStdString(params.bifil);
+
+    if (params.bifil == "function" && params.function_type != "none" && params.function_type != "user") {
+        std::string p = "";
+        if (params.filter_param != 0)
+            p = boost::lexical_cast<std::string>(params.filter_param);
+        args << "--function" << QString::fromStdString(params.function_type+"["+p+"]");
+    }
+
+
+
 
     auto console = RivetConsoleApp::start(args);
 

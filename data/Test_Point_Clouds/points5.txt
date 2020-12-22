@@ -1,9 +1,13 @@
-points
-2
-4.5
-birth time
-1 5 1
-2 7 1
-1 8 1
-5 4 1
-2 4 2
+--datatype points_fn
+--maxdist 4.5
+--xlabel birth time
+
+# function values
+1 1 1 1 2 
+
+# data starts here
+1 5
+2 7
+1 8
+5 4
+2 4

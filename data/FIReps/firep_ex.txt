@@ -1,6 +1,8 @@
-firep
-x-label
-y-label
+--datatype firep
+--xlabel x-label
+--ylabel y-label
+
+# data starts here
 2 2 0
 3 2 ; 0
 2 3 ; 0 1

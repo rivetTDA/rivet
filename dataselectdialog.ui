@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>600</width>
-    <height>400</height>
+    <height>436</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -28,7 +28,7 @@
   <property name="maximumSize">
    <size>
     <width>600</width>
-    <height>400</height>
+    <height>500</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -44,7 +44,7 @@
    <property name="geometry">
     <rect>
      <x>200</x>
-     <y>350</y>
+     <y>385</y>
      <width>200</width>
      <height>40</height>
     </rect>
@@ -62,7 +62,7 @@
      <x>7</x>
      <y>135</y>
      <width>586</width>
-     <height>171</height>
+     <height>241</height>
     </rect>
    </property>
    <property name="frameShape">
@@ -71,37 +71,37 @@
    <property name="frameShadow">
     <enum>QFrame::Raised</enum>
    </property>
-   <widget class="QLabel" name="xbinLabel">
+   <widget class="QLabel" name="xLabel">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>102</y>
-      <width>44</width>
+      <x>60</x>
+      <y>175</y>
+      <width>21</width>
       <height>17</height>
      </rect>
     </property>
     <property name="text">
-     <string>x-bins:</string>
+     <string>X:</string>
     </property>
    </widget>
-   <widget class="QLabel" name="ybinLabel">
+   <widget class="QLabel" name="yLabel">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>135</y>
-      <width>44</width>
+      <x>60</x>
+      <y>208</y>
+      <width>21</width>
       <height>17</height>
      </rect>
     </property>
     <property name="text">
-     <string>y-bins:</string>
+     <string>Y:</string>
     </property>
    </widget>
    <widget class="QSpinBox" name="xbinSpinBox">
     <property name="geometry">
      <rect>
-      <x>64</x>
-      <y>97</y>
+      <x>97</x>
+      <y>170</y>
       <width>81</width>
       <height>27</height>
      </rect>
@@ -122,8 +122,8 @@
    <widget class="QSpinBox" name="ybinSpinBox">
     <property name="geometry">
      <rect>
-      <x>64</x>
-      <y>130</y>
+      <x>97</x>
+      <y>203</y>
       <width>81</width>
       <height>27</height>
      </rect>
@@ -142,21 +142,24 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>33</y>
+      <y>72</y>
       <width>150</width>
       <height>17</height>
      </rect>
     </property>
     <property name="text">
-     <string>Homology Dimension:</string>
+     <string>Homology Degree:</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
     </property>
    </widget>
    <widget class="QSpinBox" name="homDimSpinBox">
     <property name="geometry">
      <rect>
-      <x>170</x>
-      <y>28</y>
-      <width>48</width>
+      <x>155</x>
+      <y>67</y>
+      <width>61</width>
       <height>27</height>
      </rect>
     </property>
@@ -164,11 +167,11 @@
      <number>99</number>
     </property>
    </widget>
-   <widget class="QLabel" name="parameterLabel">
+   <widget class="QLabel" name="parametersLabel">
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>6</y>
+      <y>10</y>
       <width>111</width>
       <height>21</height>
      </rect>
@@ -181,26 +184,328 @@
      </font>
     </property>
     <property name="text">
-     <string>Parameters</string>
+     <string>Options</string>
     </property>
    </widget>
-   <widget class="QLabel" name="coarseningLabel">
+   <widget class="QLabel" name="xbinLabel_2">
+    <property name="geometry">
+     <rect>
+      <x>100</x>
+      <y>146</y>
+      <width>71</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Bins</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="axesLabel">
+    <property name="geometry">
+     <rect>
+      <x>209</x>
+      <y>146</y>
+      <width>161</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Label</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="revLabel">
+    <property name="geometry">
+     <rect>
+      <x>398</x>
+      <y>146</y>
+      <width>61</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Reverse</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="xRevCheckBox">
+    <property name="geometry">
+     <rect>
+      <x>420</x>
+      <y>172</y>
+      <width>31</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="yRevCheckBox">
+    <property name="geometry">
+     <rect>
+      <x>420</x>
+      <y>205</y>
+      <width>31</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="xAxisLabel">
+    <property name="geometry">
+     <rect>
+      <x>210</x>
+      <y>171</y>
+      <width>161</width>
+      <height>25</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="yAxisLabel">
+    <property name="geometry">
+     <rect>
+      <x>210</x>
+      <y>204</y>
+      <width>161</width>
+      <height>25</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="maxDistLabel">
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>70</y>
-      <width>91</width>
-      <height>21</height>
+      <y>104</y>
+      <width>111</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Max Distance:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="typeLabel">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>40</y>
+      <width>71</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Data Type:</string>
+    </property>
+   </widget>
+   <widget class="QComboBox" name="dataTypeComboBox">
+    <property name="geometry">
+     <rect>
+      <x>90</x>
+      <y>36</y>
+      <width>151</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="maxVisibleItems">
+     <number>5</number>
+    </property>
+    <item>
+     <property name="text">
+      <string>points</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>points_fn</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>metric</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>metric_fn</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>bifiltration</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>firep</string>
+     </property>
+    </item>
+   </widget>
+   <widget class="QLabel" name="filterLabel">
+    <property name="geometry">
+     <rect>
+      <x>320</x>
+      <y>40</y>
+      <width>71</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Filtration:</string>
+    </property>
+   </widget>
+   <widget class="QComboBox" name="filterComboBox">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>400</x>
+      <y>36</y>
+      <width>140</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <item>
+     <property name="text">
+      <string>degree</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>function</string>
+     </property>
+    </item>
+   </widget>
+   <widget class="QLineEdit" name="maxDistBox">
+    <property name="geometry">
+     <rect>
+      <x>122</x>
+      <y>100</y>
+      <width>71</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="maxLength">
+     <number>8</number>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="maxDistHelp">
+    <property name="geometry">
+     <rect>
+      <x>200</x>
+      <y>100</y>
+      <width>40</width>
+      <height>25</height>
      </rect>
     </property>
     <property name="font">
      <font>
-      <weight>75</weight>
-      <bold>true</bold>
+      <pointsize>11</pointsize>
      </font>
     </property>
+    <property name="toolTipDuration">
+     <number>-1</number>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>16</width>
+      <height>16</height>
+     </size>
+    </property>
+   </widget>
+   <widget class="QComboBox" name="functionComboBox">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>396</x>
+      <y>68</y>
+      <width>140</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <item>
+     <property name="text">
+      <string>user</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>balldensity</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>gaussian</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>eccentricity</string>
+     </property>
+    </item>
+   </widget>
+   <widget class="QDoubleSpinBox" name="parameterSpinBox">
+    <property name="geometry">
+     <rect>
+      <x>410</x>
+      <y>99</y>
+      <width>100</width>
+      <height>27</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="functionLabel">
+    <property name="geometry">
+     <rect>
+      <x>320</x>
+      <y>72</y>
+      <width>71</width>
+      <height>17</height>
+     </rect>
+    </property>
     <property name="text">
-     <string>Coarsening</string>
+     <string>Function:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="parameterLabel">
+    <property name="geometry">
+     <rect>
+      <x>320</x>
+      <y>104</y>
+      <width>91</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Parameter:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="axesMainLabel">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>146</y>
+      <width>71</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Axes:</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
     </property>
    </widget>
   </widget>

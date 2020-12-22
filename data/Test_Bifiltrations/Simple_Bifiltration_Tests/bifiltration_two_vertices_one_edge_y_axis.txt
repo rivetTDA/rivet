@@ -1,6 +1,8 @@
-bifiltration
-x-label
-y-label
+--datatype bifiltration
+--xlabel x-label
+--ylabel y-label
+
+# data starts here
 1 ; 0 0 
 2 ; 0 1
 1 2 ; 0 2

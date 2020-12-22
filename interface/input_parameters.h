@@ -22,27 +22,84 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define INPUT_PARAMETERS_H
 
 #include <string>
+
+#include <boost/multiprecision/cpp_int.hpp>
+typedef boost::multiprecision::cpp_rational exact;
 //TODO: this class currently conflates 3 things: command line arguments, file load dialog arguments, and viewer configuration state
+
+// Error that is raised when the input file does not match format correctly
+class InputError : public std::runtime_error {
+public:
+    InputError(unsigned line, std::string message)
+        : std::runtime_error("line " + std::to_string(line) + ": " + message)
+    {
+    }
+};
 
 //these parameters are set by the user via the console or the DataSelectDialog before computation can begin
 struct InputParameters {
     std::string fileName; //name of data file
     std::string shortName; //name of data file, without path
     std::string outputFile; //name of the file where the augmented arrangement should be saved
-    int dim; //dimension of homology to compute
-    unsigned x_bins; //number of bins for x-coordinate (if 0, then bins are not used for x)
-    unsigned y_bins; //number of bins for y-coordinate (if 0, then bins are not used for y)
+    int hom_degree; //degree of homology to compute
+    int x_bins; //number of bins for x-coordinate (if 0, then bins are not used for x)
+    int y_bins; //number of bins for y-coordinate (if 0, then bins are not used for y)
     int verbosity; //controls the amount of console output printed
     std::string x_label; //used by configuration dialog
     std::string y_label; //used by configuration dialog
     std::string outputFormat; // Supported values: R0, R1
+    int num_threads; //number of openmp threads to be created
+    bool binary; //include binary data in MI file
+    bool minpres; //print minimal presentation and exit
+    bool betti; //print betti number information
+    bool bounds; //print lower and upper bounds of module in MI file
+    bool koszul; //use koszul homology based algorithm
+    exact max_dist; //maximum distance to be considered while building Rips complex
+    std::string md_string; //holds max distance in string format
+    unsigned dimension; //dimension of the space where the points lie
+    bool old_function; //specifies if the data has a function value like the old format
+    bool new_function; //specifies if the data has function values in the new format
+    bool x_reverse, y_reverse; //specifies if the axes need to be reversed or not
+    std::string type; //type of file being worked with
+    std::string bifil; //type of bifiltration to build
+    int to_skip; //number of lines after which the actual data begins
+    std::string function_type; //type of function values to calculate
+    double filter_param; //parameter value for calculating function values
+
+    InputParameters()
+    {
+        // default values for all input parameters - should include first 3?
+        type = "points";
+        bifil = "";
+        hom_degree = 0;
+        x_bins = 0;
+        y_bins = 0;
+        verbosity = 0;
+        outputFormat = "msgpack";
+        num_threads = 0;
+        old_function = false;
+        new_function = false;
+        max_dist = -1;
+        dimension = 0;
+        x_reverse = false;
+        y_reverse = false;
+        x_label = "";
+        y_label = "distance";
+        binary = false;
+        minpres = false;
+        betti = false;
+        bounds = false;
+        koszul = false;
+        filter_param = 0;
+        function_type = "none";
+    }
 
     template <typename Archive>
     void serialize(Archive& ar, const unsigned int /*version*/)
     {
-        ar& fileName& shortName& outputFile& dim& x_bins& y_bins& verbosity& x_label& y_label& outputFormat;
+        ar& fileName& shortName& outputFile& hom_degree& x_bins& y_bins& verbosity& x_label& y_label& outputFormat;
     }
-    MSGPACK_DEFINE(fileName, shortName, outputFile, dim, x_bins, y_bins, verbosity, x_label, y_label, outputFormat);
+    MSGPACK_DEFINE(fileName, shortName, outputFile, hom_degree, x_bins, y_bins, verbosity, x_label, y_label, outputFormat);
 };
 
 #endif // INPUT_PARAMETERS_H

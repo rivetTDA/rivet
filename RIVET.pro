@@ -26,7 +26,7 @@ SOURCES	+= main.cpp                         \
 		dcel/dcel.cpp                       \
 		dcel/arrangement.cpp                       \
 		interface/control_dot.cpp           \
-		#interface/input_manager.cpp         \
+		interface/input_manager.cpp         \
 		interface/persistence_bar.cpp       \
 		interface/persistence_diagram.cpp   \
 		interface/persistence_dot.cpp       \
@@ -59,6 +59,7 @@ SOURCES	+= main.cpp                         \
 
 HEADERS  += visualizationwindow.h			\
 		dataselectdialog.h					\
+		debug.h 							\
 		dcel/dcel.h							\
 		dcel/arrangement.h							\
 		interface/control_dot.h				\

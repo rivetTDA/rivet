@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
     //parse the command line options
     parser.process(app);
 
-    params.dim = 0;
+    params.hom_degree = 0;
     params.verbosity = parser.value(verbosityOption).toInt();
     params.x_bins = 0;
     params.y_bins = 0;

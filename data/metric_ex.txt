@@ -1,15 +1,17 @@
-metric
+--datatype metric_fn
 #x-axis label
-function values
+--xlabel function values
+
+#y-axis label
+--ylabel distance
+
+#max distance to be a 1-simplex
+--maxdist 3
 
 #function values for five points
 0 1 0.5 1 0.7
 
-#y-axis label
-distance
-
-#max distance to be a 1-simplex
-3
+# data starts here
 
 #distances
 0.2 2.5 3.4 0.5 

@@ -1,137 +1,205 @@
 .. _inputData:
 
-Input Data
-==========
+Input Data Files
+================
 
-As explained in the section “:ref:`runningRIVET`” above, RIVET requires an *input data file*.  This file can specify input of the following types:
+As explained in :ref:`rivetconsole`, RIVET requires an *input data file*.  
 
-* Point Cloud or finite metric space, with or without a real-valued function. 
-* Bifiltration
-* FIRep (i.e., short chain complex of free modules).
+Starting with version 1.1 (released in 2020), the format for input data files has been redesigned to be more flexible; this page describes the new format.  [RIVET still supports the older, less-flexible input file formats required by RIVET 1.0; details about these can be found in ":ref:`oldInputData`". Additionally, the repository includes the Python script **data/convert.py** for converting data files from the old to the new format. However, the use of the old input formats is discouraged, and support may be discontinued in future versions of RIVET.]
 
-(These are exactly the objects in green boxes in the figure of the section “:ref:`structure`” in this documentation.)
+RIVET accepts six types of input data files; the flag :code:`--datatype` tells RIVET which file type to expect.  The six file types are listed below, together with the associated value of the flag in parentheses:
 
-We now specify the formats of the input data file for each of these types of input.
+* Point cloud (:code:`--datatype points`)
+* Point cloud with function (:code:`--datatype points_fn`)
+* Metric space (:code:`--datatype metric`)
+* Metric space with function (:code:`--datatype metric_fn`)
+* Bifiltration (:code:`--datatype bilfiltration`)
+* FIRep, i.e., a short chain complex of free modules (:code:`--datatype firep`)
 
-**NOTE**: RIVET ignores lines that begin with the symbol `#`; such lines may be used for comments.  Blank lines are also ignored.
+(Observe that these are exactly the objects in green boxes in the figure in the “:ref:`structure`” section of this documentation.)
 
-Point Cloud with a Function
+If the flag :code:`--datatype` is not given, RIVET uses the default value of :code:`points`.  As noted in :ref:`rivetconsole`, any of the command-line flags described in :ref:`flags` can be placed either in an input data file or given directly on the command line, and this is true in particular for the flag :code:`--datatype`.
+
+In general, flags in the input data file must be provided in the top lines of the file, one flag per line, before the data is given. As noted in :ref:`flags`, flags provided to **rivet_console** override those given in the input file. 
+
+RIVET ignores lines in an input data file that begin with the symbol `#`; such lines may be used for comments.  Blank lines are also ignored.
+
+We next specify the file format for each input type, and provide type-specific details about how flags are used.
+
+Point Cloud (Default)
+---------------------------
+This format specifies a set of points in Euclidean :math:`n`-space.  By default, when given input of this type, RIVET constructs the degree-Rips bifiltration.  
+
+The file has the following format:
+ 
+* Following any flags, each line contains the coordinates of exactly one point, specified as :math:`n` decimal numbers separated by white space or commas.
+
+Flag usage:
+
+* :code:`--maxdist <distance>` sets the maximum scale parameter.
+* :code:`--bifil function` tells RIVET to construct a function-Rips bifiltration. Alternately, :code:`--bifil degree` tells RIVET to construct a degree-Rips bifiltration (which is also the default action if this flag is omitted).
+* :code:`--function <fn>` tells RIVET to construct a function-Rips bifiltration using the function :code:`<fn>`.  See :ref:`flags` for details.
+
+Here is an example specifying three points in :math:`\mathbb R^2`::
+	
+	#the following flag is optional, because "points" is the default value of datatype
+	#however, it is not a bad idea to include the flag for readability
+	--datatype points
+
+        #optional flags
+	--maxdist 0.5
+
+	#data
+	0,0
+	1.1,2
+	-2,3
+
+..
+    [TODO: ADD AN EXAMPLE USING A BUILT-IN RIVET FUNCTION?]
+
+Point Cloud with Function
 ---------------------------
 
-This format specifies a set of points :math:`X` in Euclidean :math:`n`-space, a function :math:`\gamma:X\to \mathbb R`, and a maximum scale parameter :math:`d`.  Given this, RIVET builds the function-Rips bifltration :math:`R(\gamma)`, including only simplices with diameter at most :math:`d`. 
+This format specifies a set of points :math:`X=\{x_1,\ldots,x_k\}` in Euclidean :math:`n`-space, together with a function :math:`\gamma:X\to \mathbb R`.  By default, when given input of this type, RIVET constructs the a function-Rips bifiltration using the given function.  
 
 The file has the following format:
 
-#. The first (non-empty, uncommented) line contains the word "points" and no other characters.
-#. The second line specifies the dimension :math:`n` of Euclidean space in which the point cloud is embedded.
-#. The third line specifies the maximum distance :math:`d` of edges constructed in the Vietoris-Rips complex. This must be a positive number (integer or decimal).
-#. The fourth line gives the label for the axis along which the values of :math:`\gamma` appear.
-#. The remaining lines of the file specify the points, one point per line. Each line must specify the coordinates of a point (:math:`n` decimal numbers specified by white space), followed by the value of :math:`\gamma` on the point.
+* The first line following any flags lists the function values :math:`\gamma(x_1),\gamma(x_2),\ldots \gamma(x_k)`.  The function values are specified by decimal numbers separated by white space or commas.
+* Each subsequent line contains the coordinates of exactly one point, specified as :math:`n` decimal numbers separated by white space or commas.
 
-Here is an example with three points in :math:`\mathbb R^2`::
+Flag usage:
 
-	points
-	2
-	3.2
-	birth time
-	0 0 3
-	1.1 2 0.5
-	-2 3 4
+* :code:`--datatype points_fn` must be provided.
+* :code:`--maxdist <distance>` sets the maximum scale parameter.
+* :code:`--bifil degree` tells RIVET to construct a degree-Rips bifiltration, thus ignoring the function values in the file. Alternately, :code:`--bifil function` tells RIVET to construct a function-Rips bifiltration (which is also the default action if this flag is omitted). 
+* :code:`--function <fn>` tells RIVET to construct a function-Rips bifiltration using the function :code:`<fn>`.  See :ref:`flags` for details. Choosing a function other than :code:`user` will cause RIVET to ignore the function values given in the input file.
+* :code:`--xreverse` indicates that the function filtration direction should be descending. (This is useful, e.g.,  when taking :math:`\gamma` to be a density function.)
+* When computing an MI-file, :code:`--xlabel <label>` provides a label for the function axis, for use by **rivet_GUI**.
 
-Putting the characters ``[-]`` at the beginning of the line before the label tells RIVET to take the filtration direction on vertices to be descending rather than ascending, as in the following example::
 
-	points
-	2
-	3.2
-	[-] birth time 
-	0 0 3
-	1.1 2 0.5
-	-2 3 4
+Here is an example specifying three points in :math:`\mathbb R^2`, together with a function on these points::
 
-This is useful, e.g.,  when taking :math:`\gamma` to be a density function.
+	#required flag (can be given instead on the command line)
+	--datatype points_fn
 
-Finite Metric Space with Function
----------------------------------
+        #optional flags
+	--xlabel birth time
+	--xreverse 
 
-This format is similar to the one just described, except one specifies the entries of a symmetric distance matrix rather than the coordinates of points in :math:`\mathbb R^n`.  
-As above, RIVET constructs a function-Rips bifiltration from the input.  
-The given distances are not required to satisfy the triangle inequality.
+        #function
+        3,0.5,4
+
+	#data
+	0,0
+	1.1,2
+	-2,3
+
+
+Metric Space
+-----------------------------
+
+This format specifies a symmetric :math:`n\times n` matrix, with zeros on the diagonal, which we think of as representing a (semi-pseudo-)metric on a finite set :math:`\{p_1, \ldots, p_n\}`: the entry in row :math:`i`, column :math:`j` of the matrix gives the distance between :math:`p_i` and :math:`p_j`.  The given distances are not required to satisfy the triangle inequality, and off-diagonal entries may be zero.
+
+By default, when given input of this type, RIVET constructs the degree-Rips bifiltration.  
 
 The file has the following format:
 
-#. The first (non-empty, uncommented) line contains the word the word "metric" and no other printed characters.
-#. The second line gives the label for the function :math:`\gamma`.
-#. The third line specifies :math:`\gamma`. This line consists of a list of :math:`n` decimal numbers, separated by white space.
-#. The fourth line gives the label for the "distance" axis.
-#. The fifth line specifies the maximum distance :math:`d` of edges constructed in the Vietoris-Rips complex. This must be a positive number (integer or decimal).
-#. The remaining line(s) of the file specify the distances between pairs of points. These distances appear as :math:`\frac{n(n-1)}{2}` numbers (integer or decimal), separated by white space or line breaks. Let the points be denoted :math:`p_1, p_2, \ldots, p_n`. The first :math:`n-1` numbers are the distance from :math:`p_1` to :math:`p_2, \ldots, p_n`. The next :math:`n-2` numbers give the distances from :math:`p_2` to :math:`p_3, \ldots, p_n`, and so on. The last number gives the distance from :math:`p_{n-1}` to :math:`p_n`.
+* Following the flags, the distance matrix is given in either of two formats; RIVET automatically detects the format.
+
+  + Format 1: The full matrix is explicitly provided, one row per line. Each row is specified as a list of decimal numbers separated by white space or commas.
+  + Format 2: The matrix is given in triangular format, specifying only the entries above the diagonal of the distance matrix. The first line of data contains :math:`n-1` numbers, which give the distances from :math:`p_1` to :math:`p_2, \ldots, p_n`. The next line contains :math:`n-2` numbers, which give the distances from :math:`p_2` to :math:`p_3, \ldots, p_n`, and so on. The last line of data gives only the distance from :math:`p_{n-1}` to :math:`p_n`.
+
+
+Flag Usage:
+
+* :code:`--datatype metric` must be provided.
+* :code:`--maxdist <distance>` sets the maximum scale parameter.
+* :code:`--bifil function` tells RIVET to construct a function-Rips bifiltration. Alternately, :code:`--bifil degree` tells RIVET to construct a degree-Rips bifiltration (which is also the default action if this flag is omitted).
+* :code:`--function <fn>` tells RIVET to construct a function-Rips bifiltration using the function :code:`<fn>`.  See :ref:`flags` for details.
+
 
 Here is an example, for a metric space of cardinality 3::
 
-	metric
-	birth time
-	1 1.1 -2
-	geodesic distance
-	2.5
-	2 3.2
+	#required flag:
+	--datatype metric
+
+        #optional flags:
+	--xlabel birth time
+	--ylabel geodesic distance
+
+	# distance matrix (symmetric matrix, with zeros on the diagonal)
+	0,2,3.2
+	2,0,1.25
+	3.2,1.25,0
+
+The same distance data can be given in the following upper triangular format::
+
+	# distance matrix (upper triangular format)
+	2,3.2
 	1.25
 
-As above, we can reverse the filtration direction on vertices by placing ``[-]`` at the beginning of the appropriate label.
 
-Point Cloud / Finite Metric Space without Function
------------------------------------------------------------------------------
+Metric Space with Function
+-----------------------------
 
-Given either a point cloud in Euclidean space or a finite metric space with no function on vertices specified, RIVET constructs the degree-Rips bifiltration.
+This format is similar to the one just described above, except that this file contains function values associated with the points in the matrix.
+By default, when given input of this type, RIVET constructs the function-Rips bifiltration.
 
-A point cloud with no function is specified as in the following example::
+The file has the following format:
 
-	points
-	2
-	3.2
-	no function
-	0 0 
-	1.1 2 
-	-2 3
+* The first line following any flags lists the function values on the points, in the same order that the points appear later in the file.  The function values are specified by decimal numbers separated by white space or commas.
+* The remaining lines specify the distance matrix, in either of the two formats specified above for the Metric data type.
 
-Given the input specification for a point cloud with a function, this variant should be self-explanatory.  
+Flag Usage:
 
-A finite metric space with no function is specified as in the following example::
+* :code:`--datatype metric_fn` must be provided.
+* :code:`--maxdist <distance>` sets the maximum scale parameter.
+* :code:`--bifil degree` tells RIVET to construct a degree-Rips bifiltration, thus ignoring the function values in the file. Alternately, :code:`--bifil function` tells RIVET to construct a function-Rips bifiltration (which is also the default action if this flag is omitted). 
+* :code:`--function <fn>` tells RIVET to construct a function-Rips bifiltration using the function :code:`<fn>`. See :ref:`flags` for details. Choosing a function other than :code:`user` will cause RIVET to ignore the function values given in the input file.
 
-	metric
-	no function
-	3
-	Rips scale
-	2.5
-	2 3.2
+Here is an example, for a metric space of cardinality 3::
+
+	#required flag:
+	--datatype metric_fn
+
+        #optional flags:
+	--xlabel birth time
+	--ylabel geodesic distance
+
+	#function values
+	1,1.1,-2
+	# distance matrix, given in upper triangular format
+	2,3.2
 	1.25
-
-As above, this format is mostly self-explanatory, given the input specification for a metric space with a function.    However, the 3 appearing on the third line requires explanation: This is the number of points in the finite metric space.  
-(This input convention is redundant: the number in the third line is always one greater than the number of entries on sixth line.  The reason for this choice of convention is that it made it simpler to write the code to parse this input, given what we already had.)
 
 
 Bifiltration
 ------------
-RIVET can accept as input any essentially finite bifiltration.  (Multicritical bifiltrations are allowed.)
 
+RIVET can accept as input any essentially finite bifiltration.  (Multicritical bifiltrations are allowed.)
 
 Let :math:`v_1, v_2, \ldots, v_n` denote the vertices (0-simplices) of the bifiltration. 
 Specifying the bifiltration requires specifying each simplex (given as a subset of :math:`v_1, v_2, \ldots, v_n`) and its birth indices. 
 Simplices are specified, one simplex per line, in the bifiltration input file.
 
+The file has the following format:
+
+* After all flags are specified, each remaining line of the file specifies a simplex and its bigrades of appearance.  A line specifying a :math:`j`-simplex with :math:`n` grades of appearance must have :math:`j+1` non-negative integers (separated by white space), followed by a semicolon, followed by :math:`2n` numbers (which may be integers or decimals.  The semicolon must be surrounded by spaces.  The first :math:`j+1` integers give the vertices of the simplex. The remaining numbers specify the bigrades at which the simplex appears.
+
 The user must ensure that the input file specifies a valid bifiltration, in the sense that a simplex is never born before its faces; RIVET does not error-check this.
 
-A file in the bifiltration format must have the following format:
+Flag Usage:
 
-#. The first (non-empty, uncommented) line contains the word "bifiltration" and no other printed characters.
-#. The second line gives a label for the first filtration parameter.
-#. The third line gives a label for the second filtration parameter.
-#. The remaining lines of the file each specify a simplex and its bigrades of appearance.  A line specifying a :math:`j`-simplex with :math:`n` grades of appearance must have :math:`j+1` non-negative integers (separated by white space), followed by a semicolon, followed by :math:`2n` numbers (which may be integers or decimals.  The semicolon must be surrounded by spaces.  The first :math:`j+1` integers give the vertices of the simplex. The remaining numbers specify the bigrades at which the simplex appears.
+* :code:`--datatype bifiltration` must be provided.
+* The flags :code:`--xreverse` and :code:`--yreverse` specify that the filtration is to be constructed with respect to descending x-coordinates or y-coordinates.  These flags cannot be used (or omitted) freely; the coordinate directions specified must be compatible with given bigrades of simplices, so that no simplex before one of its faces.  The code does not detect the correct flags  automatically, and the user is responsible for supplying them.
 
-A sample multicritical bifiltration file appears below. This consists of: the boundary of a triangle born at :math:`(0,0)`; the interior of the triangle born at both :math:`(1,0)` and :math:`(0,1)`; two edges that complete the boundary of a second triangle adjacent to the first, born at :math:`(1,1)`::
+An example appears below. This consists of: the boundary of a triangle born at :math:`(0,0)`; the interior of the triangle born at both :math:`(1,0)` and :math:`(0,1)`; two edges that complete the boundary of a second triangle adjacent to the first, born at :math:`(1,1)`::
 
-	bifiltration
-	time of appearance
-	network distance
+	--datatype bifiltration
+	--xlabel time of appearance
+	--ylabel network distance
+
+	#data
 	0 ; 0 0
 	1 ; 0 0
 	2 ; 0 0
@@ -143,30 +211,16 @@ A sample multicritical bifiltration file appears below. This consists of: the bo
 	1 3 ; 1 1
 	2 3 ; 1 1
 
-The minimal grades of appearance of a given simplex may be given in arbitrary order.  For example, it is also valid to take the seventh of the above input file to be::
+The minimal grades of appearance of a given simplex may be given in arbitrary order.  For example, the line specifying a 2-simplex in the sample above may be equivalently written as:
 
 	0 1 2 ; 1 0 0 1
 
 Moreover, the code can handle non-minimial bigrades of appearance; it simply removes them.  (However, in the current code, non-minimal bigrades of appearance may change the coarsening behavior, as the :math:`x`- and :math:`y`-grades of such bigrades are currently not ignored when performing coarsening.)
 
-One can also take the filtration direction for either of the axes to be decreasing, by placing ``[-]`` in front of an axis label. 
-For instance, the following variant of the last example replaces the y-coordinate of each bigrade with its negative, and takes the filtration direction for the :math:`y`-coordinate to be descending::
-
-	bifiltration
-	time of appearance
-	[-] network distance
-	0 ; 0 0
-	1 ; 0 0
-	2 ; 0 0
-	3 ; 0 0
-	0 1 ; 0 0
-	0 2 ; 0 0
-	1 2 ; 0 0
-	0 1 2 ; 0 -1 1 0
-	1 3 ; 1 -1
-	2 3 ; 1 -1
+One can also take the filtration direction for either of the axes to be decreasing, by using the :code:`--xreverse` or :code:`--yreverse` flags.
 
 .. _firep:
+
 
 FIRep (Algebraic Input) 
 -----------------------
@@ -178,20 +232,26 @@ An FIRep
 
    \[ C_2 \xrightarrow{f} C_1 \xrightarrow{g} C_0. \]
 
-is specified as follows:
+is specified in the following format:
 
-#. The first (non-empty, uncommented) line says "firep".
-#. The second line is the :math:`x`-label.
-#. The third line is the :math:`y`-label.
-#. The fourth line is of the form ``t s r``, where ``t``, ``s``, and ``r`` are, repsectively, the number of generators in bases for :math:`C_2`, :math:`C_1`, and :math:`C_0`.
-#. Each of the next ``t`` lines specifies the bigrade of appearance of a basis element for :math:`C_2`, together with the corresponding column of the matrix representing :math:`f`.  The format for such a line is (e.g. if the column has three non-zero entries): ``x y ; b1 b2 b3``, where ``(x,y)`` is the bigrade and the ``bi`` are the row indices of the nonzero column entries.  (Recall that we work with :math:`\mathbb{Z}/2\mathbb{Z}` coefficients.) 
-#. Each of the next ``s`` lines specifies the bigrade of appearance of a basis element for :math:`C_1`, together with the corresponding column of the matrix representing :math:`g`.
-   
+* Following any flags, the first line must be of the form ``t s r``, where ``t``, ``s``, and ``r`` are, repsectively, the ranks of :math:`C_2`, :math:`C_1`, and :math:`C_0`.
+* Each of the next ``t`` lines specifies the bigrade of appearance of a basis element for :math:`C_2`, together with the corresponding column of the matrix representing :math:`f`.  The format for such a line is (e.g. if the column has three non-zero entries): ``x y ; b1 b2 b3``, where :math:`(x,y)` is the bigrade and the ``bi`` are the row indices of nonzero column entries.  (Recall that we work with :math:`\mathbb{Z}/2\mathbb{Z}` coefficients.) Column entries are indexed starting from 0.
+* Each of the next ``s`` lines specifies the bigrade of appearance of a basis element for :math:`C_1`, together with the corresponding column of the matrix representing :math:`g`.
+ 
+As with the bifiltration input format, the user must ensure that the input file specifies a valid FIRep. 
+
+Flag Usage:
+
+* :code:`--datatype firep` must be provided.
+* The flags :code:`--xreverse` and :code:`--yreverse` specify that the filtration is to be constructed with respect to descending x-coordinates or y-coordinates.  The flags behave for FIRep input in essentially the same way as for bifiltration input, and the user must be sure to supply flags in a way that is compatible with the bigrades of the input.
+
 An example FIRep input is shown below::
 
-	firep
-	parameter 1
-	parameter 2
+	--type firep
+	--xlabel parameter 1
+	--ylabel parameter 2
+
+	# data
 	2 3 3 
 	1 0 ; 0 1 2
 	0 1 ; 0 1 2  
@@ -199,7 +259,5 @@ An example FIRep input is shown below::
 	0 0 ; 0 2
 	0 0 ; 0 1
 
-This example has a natural geometric interpretation.  
-The boundary of a triangle is born at :math:`(0,0)`, and the triangle is filled in at both :math:`(1,0)` and :math:`(0,1)`. 
-The input gives the portion of the resulting chain complex required to compute the 1st persistent homology module. 
+This example has a natural geometric interpretation: The boundary of a triangle is born at :math:`(0,0)`, and the triangle is filled in at both :math:`(1,0)` and :math:`(0,1)`.  The input gives the portion of the resulting chain complex required to compute the 1st persistent homology module. 
 

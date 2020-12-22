@@ -47,10 +47,16 @@ signals:
 
 protected:
     void closeEvent(QCloseEvent* event);
+    void showEvent(QShowEvent* event);
 
 private slots:
     void on_computeButton_clicked();
     void on_openFileButton_clicked();
+    void on_maxDistHelp_clicked();
+
+    void on_filterComboBox_currentIndexChanged(int index);
+    void on_functionComboBox_currentIndexChanged(int index);
+    void on_dataTypeComboBox_currentIndexChanged(int index);
 
 private:
     Ui::DataSelectDialog* ui;
@@ -59,6 +65,15 @@ private:
 
     void invalid_file(const QString& message);
     void detect_file_type();
+
+    void parse_args();
+
+    int to_skip;
+
+    void parse_points_old();
+    void parse_metric_old();
+    void parse_bifiltration_old();
+    void parse_firep_old();
 
     bool data_selected; //false until user clicks "compute" button
 };

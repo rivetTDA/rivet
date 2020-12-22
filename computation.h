@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "dcel/barcode_template.h"
 #include "dcel/dcel.h"
 #include "interface/input_manager.h"
+#include "interface/data_reader.h"
 #include "interface/input_parameters.h"
 #include "math/bifiltration_data.h"
 #include "math/firep.h"

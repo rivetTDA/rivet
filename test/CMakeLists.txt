@@ -12,6 +12,7 @@ add_executable (unit_tests
         ../interface/file_writer.cpp
         ../interface/file_input_reader.cpp
         ../interface/input_manager.cpp
+        ../interface/data_reader.cpp
         ../dcel/arrangement.cpp
         ../dcel/anchor.cpp
         ../dcel/barcode_template.cpp

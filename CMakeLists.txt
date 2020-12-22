@@ -55,6 +55,7 @@ add_library(rivet
         interface/file_writer.cpp
         interface/file_input_reader.cpp
         interface/input_manager.cpp
+        interface/data_reader.cpp
         dcel/barcode.cpp
         dcel/arrangement.cpp
         dcel/arrangement_builder.cpp
@@ -63,6 +64,7 @@ add_library(rivet
         dcel/dcel.cpp
         dcel/arrangement_message.cpp
 	math/bifiltration_data.cpp
+    math/distance_matrix.cpp
 	math/bigraded_matrix.cpp
 	math/firep.cpp
         math/map_matrix.cpp
@@ -97,6 +99,7 @@ add_executable (rivet_console
         interface/file_writer.cpp
         interface/file_input_reader.cpp
         interface/input_manager.cpp
+        interface/data_reader.cpp
 	interface/progress.cpp
         numerics.cpp
         timer.cpp
@@ -112,6 +115,7 @@ add_executable (rivet_console
 	math/bool_array.cpp
 	math/bool_array.h
 	math/bifiltration_data.cpp
+    math/distance_matrix.cpp
 	math/bigraded_matrix.cpp
 	math/firep.cpp
      	math/index_matrix.cpp
@@ -140,6 +144,7 @@ add_executable(unit_tests
         interface/file_writer.cpp
         interface/file_input_reader.cpp
         interface/input_manager.cpp
+        interface/data_reader.cpp
 	interface/progress.cpp
         numerics.cpp
         timer.cpp
@@ -155,6 +160,7 @@ add_executable(unit_tests
 	math/bool_array.cpp
 	math/bool_array.h
 	math/bifiltration_data.cpp
+    math/distance_matrix.cpp
 	math/bigraded_matrix.cpp
 	math/firep.cpp
      	math/index_matrix.cpp

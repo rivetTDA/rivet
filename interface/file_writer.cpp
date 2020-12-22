@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "file_writer.h"
 
 #include "../dcel/barcode_template.h"
+#include "data_reader.h"
 #include "input_manager.h"
 
 #include <chrono>
@@ -43,7 +44,7 @@ void FileWriter::write_augmented_arrangement(std::ofstream& stream)
     //write header info, in comment form
     stream << "# augmented arrangement data" << std::endl;
     stream << "# computed by RIVET from the input file " << input_params.fileName << std::endl;
-    stream << "# homology dimension: " << input_params.dim << std::endl;
+    stream << "# homology dimension: " << input_params.hom_degree << std::endl;
     stream << "# bins: " << input_params.x_bins << " " << input_params.y_bins << std::endl;
     stream << "# file created at: "
            << now_as_string
@@ -51,7 +52,7 @@ void FileWriter::write_augmented_arrangement(std::ofstream& stream)
 
     //write parameters
     stream << "RIVET_0" << std::endl;
-    stream << input_params.dim << std::endl;
+    stream << input_params.hom_degree << std::endl;
     stream << input_data.x_label << std::endl;
     stream << input_data.y_label << std::endl
            << std::endl;
