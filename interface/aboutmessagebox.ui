@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>250</height>
+    <width>430</width>
+    <height>370</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,18 +16,18 @@
   <property name="modal">
    <bool>true</bool>
   </property>
-  <widget class="QLabel" name="label">
+  <widget class="QLabel" name="title">
    <property name="geometry">
     <rect>
      <x>10</x>
      <y>10</y>
-     <width>67</width>
-     <height>17</height>
+     <width>81</width>
+     <height>20</height>
     </rect>
    </property>
    <property name="font">
     <font>
-     <pointsize>16</pointsize>
+     <pointsize>18</pointsize>
      <weight>75</weight>
      <bold>true</bold>
     </font>
@@ -36,62 +36,43 @@
     <string>RIVET</string>
    </property>
   </widget>
-  <widget class="QLabel" name="label_2">
+  <widget class="QLabel" name="codeURL">
    <property name="geometry">
     <rect>
-     <x>10</x>
-     <y>35</y>
-     <width>381</width>
-     <height>17</height>
+     <x>110</x>
+     <y>40</y>
+     <width>281</width>
+     <height>20</height>
     </rect>
    </property>
-   <property name="font">
-    <font>
-     <weight>75</weight>
-     <bold>true</bold>
-    </font>
-   </property>
    <property name="text">
-    <string>Rank Invariant Visualization and Exploration Tool</string>
+    <string>https://github.com/rivetTDA/rivet/</string>
    </property>
   </widget>
-  <widget class="QLabel" name="label_3">
+  <widget class="QLabel" name="doclabel">
    <property name="geometry">
     <rect>
      <x>10</x>
      <y>70</y>
-     <width>381</width>
-     <height>17</height>
+     <width>121</width>
+     <height>20</height>
     </rect>
    </property>
    <property name="text">
-    <string>Created by Mike Lesnick and Matthew Wright</string>
+    <string>Documentation:</string>
    </property>
   </widget>
-  <widget class="QLabel" name="label_4">
+  <widget class="QLabel" name="licenselabel">
    <property name="geometry">
     <rect>
      <x>10</x>
      <y>100</y>
-     <width>67</width>
-     <height>17</height>
+     <width>410</width>
+     <height>91</height>
     </rect>
    </property>
    <property name="text">
-    <string>2015</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_5">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>140</y>
-     <width>381</width>
-     <height>51</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>This work was made possible by the Institute for Mathematics and its Applications, with funds provided by the National Science Foundation.</string>
+    <string>RIVET is made available under the under the terms of the GNU General Public License. The software is provided “as is,” without warranty of any kind, even the implied warranty of merchantability or fitness for a particular purpose. See the GNU General Public License for details.</string>
    </property>
    <property name="wordWrap">
     <bool>true</bool>
@@ -100,14 +81,56 @@
   <widget class="QPushButton" name="pushButton">
    <property name="geometry">
     <rect>
-     <x>150</x>
-     <y>210</y>
+     <x>165</x>
+     <y>330</y>
      <width>100</width>
      <height>27</height>
     </rect>
    </property>
    <property name="text">
     <string>Close</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="supportlabel">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>200</y>
+     <width>410</width>
+     <height>111</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Development of RIVET has been supported in part by the National Science Foundation under grant DMS-1606967. Additional support has been been provided by the Institute for Mathematics and its Applications, Columbia University, Princeton Neuroscience Institute, St. Olaf College, and the NIH (grant U54-CA193313-01).</string>
+   </property>
+   <property name="wordWrap">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QLabel" name="codelabel">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>40</y>
+     <width>111</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Source code:</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="docURL">
+   <property name="geometry">
+    <rect>
+     <x>130</x>
+     <y>70</y>
+     <width>240</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>https://rivet.readthedocs.io/</string>
    </property>
   </widget>
  </widget>

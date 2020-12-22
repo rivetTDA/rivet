@@ -287,7 +287,7 @@ int main(int argc, char* argv[])
     InputParameters params; //parameter values stored here, defaults set
 
     std::map<std::string, docopt::value> args = docopt::docopt(USAGE, { argv + 1, argv + argc }, true,
-        "RIVET Console 1.0.0");
+        "RIVET Console 1.1.0");
 
     std::shared_ptr<ArrangementMessage> arrangement_message;
     std::shared_ptr<TemplatePointsMessage> points_message;

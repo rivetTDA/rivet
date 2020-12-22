@@ -30,7 +30,8 @@ RIVET project was founded by `Michael Lesnick`_ and `Matthew Wright`_, who desig
 
 Here is a list of contributors, with a brief, incomplete summary of contributions:
 
-* Madkour Abdel-Rahman : Error handling 	
+* Madkour Abdel-Rahman : Error handling 
+* Anway De : Improvements to RIVET's GUI and input handling
 * `Bryn Keller`_ : Parallel-friendly code organization, command line interactivity, APIs, software design leadership.
 * `Michael Lesnick`_ : Design, performance optimizations, computation of minimal presentations
 * Phil Nadolny : Error handling, code for constructing path through dual graph
@@ -91,9 +92,9 @@ For convenient citation of RIVET in your own work, we provide the following BibT
 	@software{rivet,
 		author = {{The RIVET Developers}},
 		title = {RIVET},
-		url = {http://rivet.online},
-		version = {1.0},
-		year = {2018}
+		url = {https://github.com/rivetTDA/rivet/},
+		version = {1.1.0},
+		year = {2020}
 	}
 
 

@@ -26,6 +26,16 @@ AboutMessageBox::AboutMessageBox(QWidget* parent)
     , ui(new Ui::AboutMessageBox)
 {
     ui->setupUi(this);
+
+    ui->codeURL->setTextInteractionFlags(Qt::LinksAccessibleByMouse);
+    ui->codeURL->setOpenExternalLinks(true);
+    ui->codeURL->setTextFormat(Qt::RichText);
+    ui->codeURL->setText("<a href=\"https://github.com/rivetTDA/rivet/\">https://github.com/rivetTDA/rivet/</a>");
+
+    ui->docURL->setTextInteractionFlags(Qt::LinksAccessibleByMouse);
+    ui->docURL->setOpenExternalLinks(true);
+    ui->docURL->setTextFormat(Qt::RichText);
+    ui->docURL->setText("<a href=\"https://rivet.readthedocs.io/\">https://rivet.readthedocs.io/</a>");
 }
 
 AboutMessageBox::~AboutMessageBox()
