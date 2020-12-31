@@ -45,25 +45,80 @@ namespace numeric {
     }
 
     //helper function to convert a string to an exact (rational)
-    //accepts string such as "12.34", "765", and "-10.8421"
+    //accepts string such as "12.34", "765", "-10.8421", "23.8e5", "60.31e-04"
     exact str_to_exact(const std::string& str)
     {
-        if (!is_number(str)) {
-            throw std::runtime_error("'" + str + "' is not a number");
+        exact r; //this will hold the result
+
+        //first look for "e", indicating scientific notation
+        std::string::size_type sci = str.find("e");
+
+        unsigned exponent = 0;
+        bool pos_exp = true;
+        std::string base_str = str;
+
+        if (sci != std::string::npos) { //then scientific notation detected
+            //get the base and exponent strings
+            std::string exp_str = str.substr(sci + 1);
+            base_str = str.substr(0, sci);
+
+            //test for negative, and sign character
+            if (exp_str.length() > 0) {
+                if (exp_str[0] == '-') {
+                    pos_exp = false;
+                    exp_str.erase(0, 1);
+                } else if (exp_str[0] == '+') {
+                    exp_str.erase(0, 1);
+                }
+            }
+
+            //remove leading zeros (otherwise, c++ thinks we are using octal numbers)
+            boost::algorithm::trim_left_if(exp_str, boost::is_any_of("0"));
+
+            //confirm that exp_str contains only digits; otherwise error
+            std::string::const_iterator it = exp_str.begin();
+            while (it != exp_str.end() && (std::isdigit(*it) || *it == '.'))
+                ++it;
+            if ( exp_str.empty() || it != exp_str.end() ) {
+                throw std::runtime_error("'" + exp_str + "' is not a number");
+            }
+
+            //now convert exp_str to numeric type
+            std::istringstream s(exp_str);
+            s >> exponent;
         }
-        exact r;
+
+        //the exponent has been removed, so now process the base
+        //simple numeric check
+        if (!is_number(base_str)) {
+            throw std::runtime_error("'" + base_str + "' is not a number");
+        }
 
         //find decimal point, if it exists
-        std::string::size_type dec = str.find(".");
+        std::string::size_type dec = base_str.find(".");
 
-        if (dec == std::string::npos) //then decimal point not found
-        {
-            r = exact(str);
-        } else //then decimal point found
-        {
+        boost::multiprecision::cpp_int ten = 10;
+
+        if (dec == std::string::npos) { //then decimal point not found
+            std::istringstream s(base_str);
+            boost::multiprecision::cpp_int num;
+            s >> num;
+
+            if (exponent == 0) {
+                r = exact(num);
+            } else {
+                boost::multiprecision::cpp_int exp_int = boost::multiprecision::pow(ten, exponent);
+                if (pos_exp) {
+                    r = exact(num * exp_int);
+                } else {
+                    r = exact(num, exp_int);
+                }
+            }
+
+        } else { //then decimal point found
             //get whole part and fractional part
-            std::string whole = str.substr(0, dec);
-            std::string frac = str.substr(dec + 1);
+            std::string whole = base_str.substr(0, dec);
+            std::string frac = base_str.substr(dec + 1);
             unsigned exp = frac.length();
 
             //test for negative, and remove minus sign character
@@ -81,13 +136,23 @@ namespace numeric {
             std::istringstream s(num_str);
             boost::multiprecision::cpp_int num;
             s >> num;
-            boost::multiprecision::cpp_int ten = 10;
+            
             boost::multiprecision::cpp_int denom = boost::multiprecision::pow(ten, exp);
 
+            if (exponent != 0) {
+                if (pos_exp) {
+                    num = num * boost::multiprecision::pow(ten, exponent);
+                } else {
+                    denom = denom * boost::multiprecision::pow(ten, exponent);
+                }
+            }
+
             r = exact(num, denom);
+            
             if (neg)
                 r = -1 * r;
         }
+
         return r;
     }
 
