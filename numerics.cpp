@@ -22,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
 #include "numerics.h"
+#include "debug.h"
+
 namespace rivet {
 
 namespace numeric {
@@ -48,6 +50,8 @@ namespace numeric {
     //accepts string such as "12.34", "765", "-10.8421", "23.8e5", "60.31e-04"
     exact str_to_exact(const std::string& str)
     {
+        debug() << "processing number: " << str;
+
         exact r; //this will hold the result
 
         //first look for "e", indicating scientific notation
@@ -75,11 +79,16 @@ namespace numeric {
             //remove leading zeros (otherwise, c++ thinks we are using octal numbers)
             boost::algorithm::trim_left_if(exp_str, boost::is_any_of("0"));
 
+            //if string is now empty, then the number is zero
+            if (exp_str.empty()) {
+                exp_str = "0";
+            }
+
             //confirm that exp_str contains only digits; otherwise error
             std::string::const_iterator it = exp_str.begin();
-            while (it != exp_str.end() && (std::isdigit(*it) || *it == '.'))
+            while (it != exp_str.end() && std::isdigit(*it))
                 ++it;
-            if ( exp_str.empty() || it != exp_str.end() ) {
+            if (it != exp_str.end()) {
                 throw std::runtime_error("'" + exp_str + "' is not a number");
             }
 
@@ -97,9 +106,19 @@ namespace numeric {
         //find decimal point, if it exists
         std::string::size_type dec = base_str.find(".");
 
+        //store ten as a multiprecision integer
         boost::multiprecision::cpp_int ten = 10;
 
         if (dec == std::string::npos) { //then decimal point not found
+            //remove leading zeros (otherwise, c++ thinks we are using octal numbers)
+            boost::algorithm::trim_left_if(base_str, boost::is_any_of("0"));
+
+            //if string is now empty, then the number is zero
+            if (base_str.empty()) {
+                base_str = "0";
+            }
+
+            //now convert to numeric type
             std::istringstream s(base_str);
             boost::multiprecision::cpp_int num;
             s >> num;
@@ -132,6 +151,11 @@ namespace numeric {
             std::string num_str = whole + frac;
             boost::algorithm::trim_left_if(num_str, boost::is_any_of("0"));
 
+            //if string is now empty, then the number is zero
+            if (num_str.empty()) {
+                num_str = "0";
+            }
+
             //now it is safe to convert to rational
             std::istringstream s(num_str);
             boost::multiprecision::cpp_int num;
@@ -152,6 +176,8 @@ namespace numeric {
             if (neg)
                 r = -1 * r;
         }
+
+        debug() << "   converted to " << r;
 
         return r;
     }
