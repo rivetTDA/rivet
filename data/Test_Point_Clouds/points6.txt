@@ -2,8 +2,8 @@
 --maxdist 100
 --xlabel time
 
-# function values
-1 6 3.2 2 5 7 4 3 
+# function values: examples of RIVET's scientific notation input
+1.23e+006 2.34e-006 3.2 2e4 -5.1e-1 7e+02 -4.02e2 3 
 
 # data starts here
 0 0
