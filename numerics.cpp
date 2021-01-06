@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
 #include "numerics.h"
-#include "debug.h"
 
 namespace rivet {
 
@@ -50,8 +49,6 @@ namespace numeric {
     //accepts string such as "12.34", "765", "-10.8421", "23.8e5", "60.31e-04"
     exact str_to_exact(const std::string& str)
     {
-        debug() << "processing number: " << str;
-
         exact r; //this will hold the result
 
         //first look for "e", indicating scientific notation
@@ -176,8 +173,6 @@ namespace numeric {
             if (neg)
                 r = -1 * r;
         }
-
-        debug() << "   converted to " << r;
 
         return r;
     }
