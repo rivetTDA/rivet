@@ -247,7 +247,7 @@ Flag Usage:
 
 An example FIRep input is shown below::
 
-	--type firep
+	--datatype firep
 	--xlabel parameter 1
 	--ylabel parameter 2
 
