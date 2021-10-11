@@ -12,7 +12,7 @@ externalproject_add(
   docopt_project
   PREFIX docopt
   GIT_REPOSITORY https://github.com/docopt/docopt.cpp
-  GIT_TAG a4177ccf1a6e36ebe268972732ddd456a3574f6d
+  GIT_TAG 6f5de76970be94a6f1e4556d1716593100e285d2
   CMAKE_ARGS -D CMAKE_CXX_STANDARD=11 -D CMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
   INSTALL_COMMAND ""
   )
@@ -133,7 +133,7 @@ add_executable (rivet_console
 
 add_dependencies(rivet_console docopt_project msgpack_project)
 
-target_link_libraries(rivet_console ${CMAKE_CURRENT_BINARY_DIR}/docopt/src/docopt_project-build/libdocopt_s.a ${Boost_LIBRARIES})
+target_link_libraries(rivet_console ${CMAKE_CURRENT_BINARY_DIR}/docopt/src/docopt_project-build/libdocopt.a ${Boost_LIBRARIES})
 # TODO: Make this file run the qmake build as well, and copy the rivet_console into the same dir where the viewer is built
 # TODO: make this not recompile everything we just compiled for rivet_console.
 # Maybe using https://cmake.org/Wiki/CMake/Tutorials/Object_Library ?
