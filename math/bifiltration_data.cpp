@@ -72,13 +72,13 @@ void BifiltrationData::add_simplex(Simplex const& vertices, const AppearanceGrad
     } else if (vertices.size() == hom_dim + 1) //simplex of dimension hom_dim
     {
         mid_simplices.push_back(MidHighSimplexData(vertices, grades, false));
-        mid_count++;
+        mid_count=mid_count+grades.size();
         return;
 
     } else if (vertices.size() == hom_dim + 2) //simplex of dimension hom_dim + 1
     {
         high_simplices.push_back(MidHighSimplexData(vertices, grades, true));
-        high_count++;
+        high_count=high_count+grades.size();
         return;
     }
 } //end add_faces()
