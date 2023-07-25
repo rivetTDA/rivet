@@ -603,6 +603,7 @@ FileContent DataReader::read_bifiltration(std::ifstream& stream, Progress& progr
             current_grade++;
         }
         
+        //update_grades sorts the gradesOfApp and removes any non-minimal grades
         data->bifiltration_data->update_grades(gradesOfApp);
         data->bifiltration_data->add_simplex(it->first, gradesOfApp);
     }
