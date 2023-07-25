@@ -607,6 +607,7 @@ FileContent DataReader::read_bifiltration(std::ifstream& stream, Progress& progr
         //Mike: I reorganized the code slightly so that the arguments of add_simplex are const references, which seems better, but that means any sorting should happen before.
         std::sort(gradesOfApp.begin(), gradesOfApp.end());
         std::sort(it->first.begin(), it->first.end());
+        data->bifiltration_data->update_grades(gradesOfApp);
         data->bifiltration_data->add_simplex(it->first, gradesOfApp);
     }
     if (verbosity >= 10) {

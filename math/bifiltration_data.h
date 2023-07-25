@@ -38,12 +38,11 @@
  Description: Stores a simplex of dimension hom_dim - 1, together
  with the greatest lower bound of all grades of appearance of that simplex.
  
- 
  Struct: MidHighSimplexData s
  
  Description: Stores a simplex s of dimension hom_dim or
  hom_dim+1, together with the bigrades of appearance of s.  Also can store the
- column indices corresponding corresponding to copies of s, though this is only 
+ column indices corresponding to copies of s, though this is only
  used for simplices of dimension hom_dim.  The reason for using a single data
  structure to handle simplces of dimension hom_dim and hom_dim+1 is that for 
  multicritical filtrations, columns in the high matrix in an FIRep can correspond 
@@ -115,6 +114,10 @@ struct MidHighSimplexData {
     {
     }
 };
+
+
+
+
 
 class BifiltrationData {
     friend class FIRep;
@@ -196,6 +199,10 @@ public:
     //controls display of output, for debugging
     const int verbosity;
 
+    //Sorts the grades of appearance in reverse lexicographic order
+    //and makes sure they are all incomparable
+    void update_grades(AppearanceGrades& grades);
+    
     //print bifiltration in the RIVET bifiltration input format
     void print_bifiltration();
 
@@ -233,10 +240,6 @@ private:
         const AppearanceGrades& grades1,
         const AppearanceGrades& grades2,
         unsigned mindist);
-
-    //Sorts the grades of appearance in reverse lexicographic order
-    //and makes sure they are all incomparable
-    void update_grades(AppearanceGrades& grades);
 
     //total number of simplces of dimensions hom_dim and hom_dim+1,
     //counting mutiplicity in grades of appearance.
