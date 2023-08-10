@@ -21,3 +21,6 @@ jobs:
         cd build
         cmake ..
         make
+        cd ..
+        qmake
+        make
