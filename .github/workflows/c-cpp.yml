@@ -1,0 +1,26 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: make
+      run: |
+        sudo apt-get update
+        sudo apt-get install cmake qt5-default qt5-qmake qtbase5-dev-tools libboost-all-dev
+        mkdir build
+        cd build
+        cmake ..
+        make
+        cd ..
+        qmake
+        make
